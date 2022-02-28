@@ -84,7 +84,7 @@ def test_zeep_caller_rmv_config_from_env_and_secrets_manager(reset_aws_env_vars,
 
     with moto.mock_secretsmanager():
         secrets_client = boto3.client("secretsmanager", region_name="us-east-1")
-        secrets_client.put_secret_value(SecretId="arn", SecretBinary=str.encode("hello"))
+        secrets_client.create_secret(Name="arn", SecretBinary=str.encode("hello"))
 
         # Generate the RMV Config and verify parsed attributes
         config = RmvConfig.from_env_and_secrets_manager()

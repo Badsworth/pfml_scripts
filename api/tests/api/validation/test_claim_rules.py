@@ -2,9 +2,14 @@ from datetime import date
 
 import pytest
 
-from massgov.pfml.api.models.claims.common import EmployerClaimReview
+from massgov.pfml.api.models.claims.common import (
+    ChangeRequest,
+    ChangeRequestType,
+    EmployerClaimReview,
+)
 from massgov.pfml.api.models.common import EmployerBenefit, PreviousLeave
 from massgov.pfml.api.validation.claim_rules import (
+    get_change_request_issues,
     get_employer_benefits_issues,
     get_employer_claim_review_issues,
     get_hours_worked_per_week_issues,
@@ -51,7 +56,8 @@ def uses_second_eform_version():
 
 class TestGetEmployerClaimReviewIssues:
     def test_valid(self, employer_claim_review):
-        assert not get_employer_claim_review_issues(employer_claim_review)
+        issues = get_employer_claim_review_issues(employer_claim_review)
+        assert not issues
 
     def test_with_multiple_issues(self, employer_claim_review, previous_leave, employer_benefit):
         previous_leave.leave_start_date = date(2020, 1, 1)
@@ -91,7 +97,8 @@ class TestGetHoursWorkedPerWeekIssues:
 
 class TestGetPreviousLeaveIssues:
     def test_valid(self, previous_leave):
-        assert not get_previous_leaves_issues([previous_leave])
+        issues = get_previous_leaves_issues([previous_leave])
+        assert not issues
 
     def test_with_too_early_date(self, previous_leave):
         previous_leave.leave_start_date = date(2020, 1, 1)
@@ -118,7 +125,8 @@ class TestGetPreviousLeaveIssues:
 
 class TestGetEmployerBenefitsIssues:
     def test_get_employer_benefits_issues(self, employer_benefit, uses_second_eform_version):
-        assert not get_employer_benefits_issues([employer_benefit], uses_second_eform_version)
+        issues = get_employer_benefits_issues([employer_benefit], uses_second_eform_version)
+        assert not issues
 
     def test_with_mismatched_dates(self, employer_benefit, uses_second_eform_version):
         employer_benefit.benefit_end_date = date(2020, 1, 1)
@@ -141,3 +149,39 @@ class TestGetEmployerBenefitsIssues:
         assert resp[0].type == IssueType.maximum
         assert resp[0].field == "employer_benefits"
         assert "cannot exceed limit" in resp[0].message
+
+
+@pytest.fixture
+def change_request():
+    return ChangeRequest(
+        claim_id="5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32",
+        change_request_type=ChangeRequestType.MODIFICATION,
+        start_date="2020-01-01",
+        end_date="2020-02-01",
+    )
+
+
+class TestGetChangeRequestIssues:
+    def test_no_issues(self, change_request):
+        issues = get_change_request_issues(change_request)
+        assert not issues
+
+    def test_no_start_date(self, change_request):
+        change_request.start_date = None
+        resp = get_change_request_issues(change_request)
+        assert resp[0].type == IssueType.required
+        assert resp[0].field == "start_date"
+        assert "Start date is required for this request type" in resp[0].message
+
+    def test_no_end_date(self, change_request):
+        change_request.end_date = None
+        resp = get_change_request_issues(change_request)
+        assert resp[0].type == IssueType.required
+        assert resp[0].field == "end_date"
+        assert "End date is required for this request type" in resp[0].message
+
+    def test_no_issues_on_dates_withdrawal(self, change_request):
+        change_request.change_request_type = ChangeRequestType.WITHDRAWAL
+        change_request.start_date = None
+        change_request.end_date = None
+        assert not get_change_request_issues(change_request)

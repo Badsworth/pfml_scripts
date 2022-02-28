@@ -31,6 +31,7 @@ from massgov.pfml.api.models.applications.requests import (
     TaxWithholdingPreferenceRequestBody,
 )
 from massgov.pfml.api.models.applications.responses import ApplicationResponse, DocumentResponse
+from massgov.pfml.api.models.common import OrderDirection
 from massgov.pfml.api.services.applications import get_document_by_id
 from massgov.pfml.api.services.fineos_actions import (
     complete_intake,
@@ -45,6 +46,7 @@ from massgov.pfml.api.services.fineos_actions import (
     submit_payment_preference,
     upload_document,
 )
+from massgov.pfml.api.util.paginate.paginator import PaginationAPIContext, page_for_api_context
 from massgov.pfml.api.validation.employment_validator import (
     get_contributing_employer_or_employee_issue,
 )
@@ -62,12 +64,8 @@ from massgov.pfml.fineos.exception import (
     FINEOSUnprocessableEntity,
 )
 from massgov.pfml.fineos.models.customer_api import Base64EncodedFileData
+from massgov.pfml.util.aws import cognito
 from massgov.pfml.util.logging.applications import get_application_log_attributes
-from massgov.pfml.util.paginate.paginator import (
-    ApplicationPaginationAPIContext,
-    OrderDirection,
-    page_for_api_context,
-)
 from massgov.pfml.util.sqlalchemy import get_or_404
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -112,7 +110,7 @@ def application_get(application_id):
 
 def applications_get():
     user = app.current_user()
-    with ApplicationPaginationAPIContext(Application, request=request) as pagination_context:
+    with PaginationAPIContext(Application, request=request) as pagination_context:
         with app.db_session() as db_session:
             is_asc = pagination_context.order_direction == OrderDirection.asc.value
             sort_fn = asc if is_asc else desc
@@ -154,11 +152,33 @@ def applications_import():
     )
     assert application_import_request.absence_case_id is not None
 
-    error = applications_service.claim_is_valid_for_application_import(claim)
-    if error is not None:
-        return error.to_api_response()
+    is_cognito_user_mfa_verified = cognito.is_mfa_phone_verified(application.user.email_address, app.get_app_config().cognito_user_pool_id)  # type: ignore
+
+    if not is_cognito_user_mfa_verified:
+        logger.info(
+            "application import failure - mfa not verified",
+            extra={
+                "absence_case_id": application.claim.fineos_absence_id
+                if application.claim
+                else None,
+                "user_id": application.user.user_id,
+            },
+        )
+        raise ValidationException(
+            errors=[
+                ValidationErrorDetail(
+                    field="mfa_delivery_preference",
+                    type=IssueType.required,
+                    message="User has not opted into MFA delivery preferences",
+                )
+            ]
+        )
 
     with app.db_session() as db_session:
+        error = applications_service.claim_is_valid_for_application_import(db_session, user, claim)
+        if error is not None:
+            return error.to_api_response()
+
         db_session.add(application)
         fineos = massgov.pfml.fineos.create_client()
         # we have already check that the claim is not None in
@@ -195,6 +215,13 @@ def applications_import():
         db_session.commit()
 
     log_attributes = get_application_log_attributes(application)
+    log_attributes["num_applications_on_account"] = str(
+        db_session.query(Application).filter(Application.user_id == user.user_id).count()
+    )
+    if claim:
+        time_elapsed = datetime_util.utcnow() - claim.created_at
+        minutes_elapsed = time_elapsed.total_seconds() / 60
+        log_attributes["minutes_between_claim_creation_and_import"] = str(minutes_elapsed)
     logger.info("applications_import success", extra=log_attributes)
 
     return response_util.success_response(

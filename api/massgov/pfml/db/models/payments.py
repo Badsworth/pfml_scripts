@@ -1046,12 +1046,25 @@ class FineosWritebackTransactionStatus(LookupTable):
     NAME_MISMATCH = LkFineosWritebackTransactionStatus(
         23, "InvalidPayment NameMismatch", ACTIVE_WRITEBACK_RECORD_STATUS
     )
+
     WITHHOLDING_ERROR = LkFineosWritebackTransactionStatus(
         24, "PrimaryPayment ProcessingErr", ACTIVE_WRITEBACK_RECORD_STATUS
     )
 
     PAYMENT_AUDIT_IN_PROGRESS = LkFineosWritebackTransactionStatus(
         25, "Payment Audit In Progress", PENDING_ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    VOID_CHECK = LkFineosWritebackTransactionStatus(
+        26, "PUB Check Voided", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    STOP_CHECK = LkFineosWritebackTransactionStatus(
+        27, "PUB Check Undeliverable", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    STALE_CHECK = LkFineosWritebackTransactionStatus(
+        28, "PUB Check Stale", ACTIVE_WRITEBACK_RECORD_STATUS
     )
 
 
@@ -1116,6 +1129,9 @@ class PaymentAuditReportType(LookupTable):
         "DIA Additional Income",
         AuditReportAction.INFORMATIONAL,
         "dia_additional_income_details",
+    )
+    PAYMENT_DATE_MISMATCH = LkPaymentAuditReportType(
+        7, "Payment Date Mismatch", AuditReportAction.REJECTED, "payment_date_mismatch_details",
     )
 
 
@@ -1371,6 +1387,11 @@ AUDIT_REJECT_DETAIL_GROUPS = [
         writeback_transaction_status=FineosWritebackTransactionStatus.NAME_MISMATCH,
         audit_report_type=PaymentAuditReportType.DOR_FINEOS_NAME_MISMATCH,
         inbound_reject_notes_override_str="Name mismatch",  # Rather than the "DOR FINEOS Name Mismatch" that we send
+    ),
+    AuditReportDetailGroup(
+        reject_notes_str=PaymentAuditReportType.PAYMENT_DATE_MISMATCH.payment_audit_report_type_description,
+        writeback_transaction_status=FineosWritebackTransactionStatus.LEAVE_DATES_CHANGE,
+        audit_report_type=PaymentAuditReportType.PAYMENT_DATE_MISMATCH,
     ),
     AuditReportDetailGroup(
         reject_notes_str="Self-Reported Additional Income",

@@ -7,6 +7,7 @@ import createMockClaimDetail, {
 import { AbsencePeriodTypes } from "src/models/AbsencePeriod";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { BenefitsApplicationDocument } from "src/models/Document";
+import { Payment } from "src/models/Payment";
 import { Payments } from "src/pages/applications/status/payments";
 import { Props } from "types/common";
 import React from "react";
@@ -29,8 +30,9 @@ const STATIC_DATES = {
 };
 
 const APPROVAL_TIME = {
-  BEFORE_FOURTEEN_DAYS: "Before fourteen days",
   AFTER_FOURTEEN_DAYS: "After fourteen days",
+  BEFORE_FOURTEEN_DAYS: "Before fourteen days",
+  BEFORE_LEAVE_START: "Before leave start date",
   RETROACTIVE: "Retroactive",
 };
 
@@ -44,7 +46,10 @@ const mappedApprovalDate: { [key: string]: string } = {
     .subtract(-16, "day")
     .format("YYYY-MM-DD"),
   "Before fourteen days": STATIC_DATES.absence_period_start_date
-    .subtract(20, "day")
+    .subtract(-7, "day")
+    .format("YYYY-MM-DD"),
+  "Before leave start date": STATIC_DATES.absence_period_start_date
+    .subtract(1, "day")
     .format("YYYY-MM-DD"),
   Retroactive: STATIC_DATES.absence_period_end_date
     .subtract(-14, "day")
@@ -215,10 +220,8 @@ export const DefaultStory = (
           args.Payments === PAYMENT_OPTIONS.RETROACTIVE,
         leaveScenario: args["Leave scenario"],
         leaveType: args["Leave type"],
-        payments,
       }),
       isLoadingClaimDetail: false,
-      hasLoadedPayments: () => true,
     },
     documents: {
       documents: new ApiResourceCollection<BenefitsApplicationDocument>(
@@ -232,6 +235,15 @@ export const DefaultStory = (
       ),
       hasLoadedClaimDocuments: () => true,
       loadAll: () => new Promise(() => {}),
+    },
+    payments: {
+      loadPayments: () => new Promise(() => {}),
+      loadedPaymentsData: new Payment({
+        payments,
+        absence_case_id: "mock-absence-case-id",
+      }),
+      hasLoadedPayments: () => true,
+      isLoadingPayments: false,
     },
     // Make the navigation tab appear active
     portalFlow: {

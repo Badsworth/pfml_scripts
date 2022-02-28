@@ -3,13 +3,13 @@ import {
   AbsencePeriodRequestDecisionEnum,
   AbsencePeriodTypes,
 } from "src/models/AbsencePeriod";
-import ClaimDetail, { PaymentDetail } from "src/models/ClaimDetail";
+import ClaimDetail from "src/models/ClaimDetail";
 
 import { ClaimEmployee } from "src/models/Claim";
 import LeaveReason from "src/models/LeaveReason";
 import { ReasonQualifier } from "src/models/BenefitsApplication";
 import { createAbsencePeriod } from "lib/mock-helpers/createAbsencePeriod";
-import faker from "faker";
+import { faker } from "@faker-js/faker";
 
 export const leaveScenarioMap: {
   [scenario: string]: Array<Partial<AbsencePeriod>>;
@@ -53,6 +53,7 @@ export const requestTypes: AbsencePeriodRequestDecisionEnum[] = [
   "Denied",
   "In Review",
   "Pending",
+  "Projected",
   "Withdrawn",
 ];
 
@@ -72,14 +73,12 @@ const createMockClaimDetail = ({
   hasPaidPayments,
   leaveScenario = "Bonding (adoption)",
   leaveType = "Continuous",
-  payments = [],
   requestDecision = "Approved",
 }: {
   absencePeriods?: AbsencePeriod[];
   hasPaidPayments?: boolean;
   leaveScenario?: keyof typeof leaveScenarioMap;
   leaveType?: AbsencePeriodTypes;
-  payments?: PaymentDetail[];
   requestDecision?: AbsencePeriodRequestDecisionEnum;
 }): ClaimDetail => {
   const reasonDetails = leaveScenarioMap[leaveScenario];
@@ -107,7 +106,6 @@ const createMockClaimDetail = ({
     fineos_notification_id: faker.datatype.uuid(),
     has_paid_payments: hasPaidPayments,
     managed_requirements: [],
-    payments,
     outstanding_evidence: {
       employee_evidence: [],
       employer_evidence: [],

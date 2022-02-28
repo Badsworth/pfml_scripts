@@ -3,6 +3,7 @@ import io
 import re
 from datetime import date, timedelta
 from unittest import mock
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -11,6 +12,7 @@ import massgov.pfml.fineos.mock.field
 import massgov.pfml.fineos.mock_client as fineos_mock
 from massgov.pfml.api.models.claims.responses import AbsencePeriodResponse
 from massgov.pfml.api.services import fineos_actions
+from massgov.pfml.db.models.absences import AbsencePeriodType
 from massgov.pfml.db.models.applications import (
     Application,
     LeaveReason,
@@ -19,13 +21,7 @@ from massgov.pfml.db.models.applications import (
     RelationshipQualifier,
     RelationshipToCaregiver,
 )
-from massgov.pfml.db.models.employees import (
-    AbsencePeriodType,
-    AddressType,
-    BankAccountType,
-    Employer,
-    PaymentMethod,
-)
+from massgov.pfml.db.models.employees import AddressType, BankAccountType, Employer, PaymentMethod
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,
@@ -846,7 +842,7 @@ def test_service_agreement_exempt_to_not_payload():
         is not None
     )
     assert payload.__contains__("<name>StartDate</name>")
-    assert re.search("<name>StartDate</name>\\s+<value>2021-02-09</value>", payload) is not None
+    assert re.search("<name>StartDate</name>\\s+<value>2021-02-10</value>", payload) is not None
 
 
 def test_service_agreement_not_exempt_to_exempt_payload():
@@ -1379,18 +1375,75 @@ def test_format_other_leaves_data_all_present(user, test_db_session):
     assert eform.eformAttributes == expected_attributes
 
 
-class TestGetAbsencePeriods:
+class TestRegisterEmployeeWithClaim:
+    # Run `initialize_factories_session` for all tests,
+    # so that it doesn't need to be manually included
+    @pytest.fixture(autouse=True)
+    def setup_factories(self, initialize_factories_session):
+        return
+
     @mock.patch("massgov.pfml.api.services.fineos_actions.register_employee")
-    def test_success(self, mock_register, test_db_session, user):
+    def test_success(self, mock_register, claim, test_db_session):
+        fineos_client = MagicMock()
+        fineos_actions.register_employee_with_claim(fineos_client, test_db_session, claim)
+
+        ssn = claim.employee_tax_identifier
+        fein = claim.employer_fein
+
+        mock_register.assert_called_once_with(fineos_client, ssn, fein, test_db_session)
+
+    def test_no_employee_tax_id_exception(self, claim, test_db_session):
+        claim.employee.tax_identifier = None
+
+        with pytest.raises(Exception) as exc_info:
+            fineos_actions.register_employee_with_claim(None, test_db_session, claim)
+
+        error = exc_info.value
+        assert type(error) == Exception
+
+        expected = "Unable to register employee with FINEOS - No employee tax ID for claim"
+        assert str(error) == expected
+
+    def test_no_employer_fein_exception(self, claim, test_db_session):
+        claim.employer = None
+
+        with pytest.raises(Exception) as exc_info:
+            fineos_actions.register_employee_with_claim(None, test_db_session, claim)
+
+        error = exc_info.value
+        assert type(error) == Exception
+
+        expected = "Unable to register employee with FINEOS - No employer FEIN for claim"
+        assert str(error) == expected
+
+
+class TestGetAbsencePeriods:
+    # Run `initialize_factories_session` for all tests,
+    # so that it doesn't need to be manually included
+    @pytest.fixture(autouse=True)
+    def setup_factories(self, initialize_factories_session):
+        return
+
+    def test_no_absence_id_exception(self, claim, test_db_session):
+        claim.fineos_absence_id = None
+
+        with pytest.raises(Exception) as exc_info:
+            fineos_actions.get_absence_periods(claim, test_db_session)
+
+        error = exc_info.value
+        assert type(error) == Exception
+
+        expected = "Can't get absence periods from FINEOS - No absence_id for claim"
+        assert str(error) == expected
+
+    @mock.patch("massgov.pfml.api.services.fineos_actions.register_employee")
+    def test_success(self, mock_register, test_db_session, claim):
         mock_register.return_value = "web_id"
 
-        employee_tax_id = "123-45-6789"
-        employer_fein = "12-3456789"
         # TODO (PORTAL-752): don't use magic string here
-        absence_case_id = "NTN-304363-ABS-01"
-        fineos_absence_periods = fineos_actions.get_absence_periods(
-            employee_tax_id, employer_fein, absence_case_id, test_db_session
-        )
+        claim.fineos_absence_id = "NTN-304363-ABS-01"
+
+        fineos_absence_periods = fineos_actions.get_absence_periods(claim, test_db_session)
         absence_periods = [
             convert_fineos_absence_period_to_claim_response_absence_period(
                 fineos_absence_period, {}
@@ -1438,17 +1491,14 @@ class TestGetAbsencePeriods:
         )
 
     @mock.patch("massgov.pfml.api.services.fineos_actions.register_employee")
-    def test_with_fineos_error(self, mock_register, test_db_session, user, caplog):
+    def test_with_fineos_error(self, mock_register, test_db_session, claim, caplog):
         error = exception.FINEOSForbidden("get_absence", 200, 403, "Unable to get absence periods")
         mock_register.side_effect = error
 
-        employee_tax_id = "123-45-6789"
-        employer_fein = "12-3456789"
-        absence_case_id = "NTN-304363-ABS-01"
+        claim.fineos_absence_id = "NTN-304363-ABS-01"
+
         try:
-            fineos_actions.get_absence_periods(
-                employee_tax_id, employer_fein, absence_case_id, test_db_session
-            )
+            fineos_actions.get_absence_periods(claim, test_db_session)
         except FINEOSForbidden:
             pass
 

@@ -1,10 +1,16 @@
 import json
-from datetime import date
+from datetime import date, datetime, timezone
 from unittest import mock
 
 import pytest
 
-from massgov.pfml.api.services.claims import ClaimWithdrawnError, get_claim_detail
+from massgov.pfml.api.models.claims.common import ChangeRequest, ChangeRequestType
+from massgov.pfml.api.services.claims import (
+    ClaimWithdrawnError,
+    add_change_request_to_db,
+    get_claim_detail,
+)
+from massgov.pfml.db.models.employees import ChangeRequest as change_request_db_model
 from massgov.pfml.db.models.factories import ManagedRequirementFactory
 from massgov.pfml.db.queries.absence_periods import (
     convert_fineos_absence_period_to_claim_response_absence_period,
@@ -44,42 +50,6 @@ class TestGetClaimDetail:
             app.app.preprocess_request()
 
             return get_claim_detail(claim, {})
-
-    def test_no_absence_id_exception(self, app, claim):
-        claim.fineos_absence_id = None
-
-        with pytest.raises(Exception) as exc_info:
-            self.get_claim_detail_with_app_context(claim, app)
-
-        error = exc_info.value
-        assert type(error) == Exception
-
-        expected = "Can't get absence periods from FINEOS - No absence_id for claim"
-        assert str(error) == expected
-
-    def test_no_employee_tax_id_exception(self, app, claim):
-        claim.employee.tax_identifier = None
-
-        with pytest.raises(Exception) as exc_info:
-            self.get_claim_detail_with_app_context(claim, app)
-
-        error = exc_info.value
-        assert type(error) == Exception
-
-        expected = "Can't get absence periods from FINEOS - No employee for claim"
-        assert str(error) == expected
-
-    def test_no_employer_fein_exception(self, app, claim):
-        claim.employer = None
-
-        with pytest.raises(Exception) as exc_info:
-            self.get_claim_detail_with_app_context(claim, app)
-
-        error = exc_info.value
-        assert type(error) == Exception
-
-        expected = "Can't get absence periods from FINEOS - No employer for claim"
-        assert str(error) == expected
 
     @mock.patch("massgov.pfml.api.services.claims.get_absence_periods")
     def test_withdrawn_claim_exception(self, mock_get_absence_periods, app, claim):
@@ -181,3 +151,38 @@ def managed_req_response_matches_managed_req(req_response, req):
         return False
 
     return True
+
+
+class TestAddChangeRequestToDB:
+    @pytest.fixture
+    def change_request(self, claim) -> ChangeRequest:
+        return ChangeRequest(
+            claim_id=claim.claim_id,
+            change_request_type=ChangeRequestType.WITHDRAWAL,
+            start_date=None,
+            end_date=None,
+        )
+
+    def test_successful_request(self, test_db_session, app, claim, change_request):
+        # Run app.preprocess_request before calling method, to ensure we have access to a db_session
+        # (set up by a @flask_app.before_request method in app.py)
+        with app.app.test_request_context(
+            f"/v1/change-request?fineos_absence_id={claim.fineos_absence_id}"
+        ):
+            app.app.preprocess_request()
+            submitted_time = datetime.now(timezone.utc)
+            db_model = add_change_request_to_db(change_request, claim.claim_id, submitted_time)
+            assert db_model.claim_id == claim.claim_id
+            assert db_model.start_date is None
+            assert db_model.end_date is None
+            assert (
+                db_model.change_request_type_instance.change_request_type_description
+                == "Withdrawal"
+            )
+            test_db_session.commit()
+            db_entry = (
+                test_db_session.query(change_request_db_model)
+                .filter(change_request_db_model.claim_id == claim.claim_id)
+                .one_or_none()
+            )
+            assert db_entry is not None

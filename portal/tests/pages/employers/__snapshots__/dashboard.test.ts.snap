@@ -89,7 +89,7 @@ exports[`Employer dashboard deprecated: renders a table of claims with links if 
 </table>
 `;
 
-exports[`Employer dashboard renders a table of claims, with links to review page 1`] = `
+exports[`Employer dashboard renders a table of claims, with links to status page 1`] = `
 <table
   class="usa-table usa-table--borderless width-full usa-table--stacked"
 >
@@ -126,7 +126,7 @@ exports[`Employer dashboard renders a table of claims, with links to review page
         scope="row"
       >
         <a
-          href="/employers/applications/new-application?absence_id=NTN-111-ABS-01"
+          href="/employers/applications/status?absence_id=NTN-111-ABS-01"
         >
           Jane Doe
           <div
@@ -188,7 +188,7 @@ exports[`Employer dashboard renders a table of claims, with links to review page
       >
         <a
           class="usa-button margin-bottom-05"
-          href="/employers/applications/new-application?absence_id=NTN-111-ABS-01"
+          href="/employers/applications/status?absence_id=NTN-111-ABS-01"
         >
           Review Application
         </a>
@@ -341,47 +341,51 @@ exports[`Employer dashboard renders the page with expected content and paginatio
       </div>
     </details>
   </section>
-  <div
-    class="bg-base-lightest padding-x-3 padding-top-1px padding-bottom-2"
+  <section
+    class="margin-top-2"
   >
-    <form
-      class="usa-form grid-row"
+    <div
+      class="bg-base-lightest padding-x-3 padding-top-1px padding-bottom-2"
     >
-      <div
-        class="grid-col-fill tablet:grid-col-auto"
+      <form
+        class="usa-form grid-row"
       >
         <div
-          class="usa-form-group"
+          class="grid-col-fill tablet:grid-col-auto"
         >
-          <label
-            class="usa-label text-bold font-heading-xs measure-5"
-            for="InputText1"
-            id="InputText1_label"
+          <div
+            class="usa-form-group"
           >
-            Search for employee name or application ID
-          </label>
-          <input
-            aria-labelledby="InputText1_label InputText1_hint InputText1_error"
-            class="usa-input maxw-mobile-lg"
-            id="InputText1"
-            name="search"
-            type="text"
-            value=""
-          />
+            <label
+              class="usa-label text-bold font-heading-xs measure-5"
+              for="InputText1"
+              id="InputText1_label"
+            >
+              Search for employee name or application ID
+            </label>
+            <input
+              aria-labelledby="InputText1_label InputText1_hint InputText1_error"
+              class="usa-input maxw-mobile-lg"
+              id="InputText1"
+              name="search"
+              type="text"
+              value=""
+            />
+          </div>
         </div>
-      </div>
-      <div
-        class="grid-col-auto flex-align-self-end"
-      >
-        <button
-          class="usa-button position-relative width-auto"
-          type="submit"
+        <div
+          class="grid-col-auto flex-align-self-end"
         >
-          Search
-        </button>
-      </div>
-    </form>
-  </div>
+          <button
+            class="usa-button position-relative width-auto"
+            type="submit"
+          >
+            Search
+          </button>
+        </div>
+      </form>
+    </div>
+  </section>
   <div
     class="padding-bottom-3 bg-base-lightest padding-x-3"
   >

@@ -133,6 +133,7 @@ def test_parse_payment_rejects_file_missing_columns(
         assert row.dua_additional_income_details is None
         assert row.dia_additional_income_details is None
         assert row.dor_fineos_name_mismatch_details is None
+        assert row.payment_date_mismatch_details is None
 
 
 def test_rejects_column_validation(test_db_session, payment_rejects_step):
@@ -681,9 +682,6 @@ def test_process_rejects_error(
 
 
 def test_transition_audit_pending_payment_state_withholdings(test_db_session, payment_rejects_step):
-
-    # Enable Tax Withholding processing for this test
-    os.environ["ENABLE_WITHHOLDING_PAYMENTS"] = "1"
 
     # Test Rejection of Primary
     payment_1 = DelegatedPaymentFactory(

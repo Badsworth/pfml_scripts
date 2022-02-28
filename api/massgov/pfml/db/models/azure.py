@@ -5,9 +5,18 @@ from sqlalchemy.orm import relationship
 import massgov.pfml.util.logging
 
 from ..lookup import LookupTable
-from .base import AzureLogMixin, Base, TimestampMixin
+from .base import Base, TimestampMixin
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
+
+
+# This is annotated as a @declarative_mixin when we upgrade to SQLAlchemy 1.4
+class AzureUserLogMixin:
+    email_address = Column(Text, nullable=False)
+    sub_id = Column(Text, nullable=False)
+    family_name = Column(Text, nullable=False)
+    given_name = Column(Text, nullable=False)
+    action = Column(Text, nullable=False)
 
 
 class LkAzurePermission(Base):
@@ -55,7 +64,7 @@ class LkAzureGroup(Base):
         self.azure_group_parent_id = azure_group_parent_id
 
 
-class UserAzurePermissionLog(Base, AzureLogMixin, TimestampMixin):
+class UserAzurePermissionLog(Base, AzureUserLogMixin, TimestampMixin):
     __tablename__ = "user_azure_permission_log"
     user_azure_permission_log_id = Column(Integer, primary_key=True, autoincrement=True)
     azure_permission_id = Column(Integer, ForeignKey("lk_azure_permission.azure_permission_id"))

@@ -6,8 +6,8 @@ import os
 import boto3
 
 import massgov.pfml.reductions.reports.dia_payments.create as dia_payments_reports_create
+from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.employees import (
-    AbsenceStatus,
     DiaReductionPaymentReferenceFile,
     ReferenceFile,
     ReferenceFileType,

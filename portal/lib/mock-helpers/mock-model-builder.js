@@ -17,7 +17,6 @@ import BenefitsApplication, {
   WorkPatternType,
 } from "../../src/models/BenefitsApplication";
 import EmployerBenefit, {
-  EmployerBenefitFrequency,
   EmployerBenefitType,
 } from "../../src/models/EmployerBenefit";
 import OtherIncome, {
@@ -90,6 +89,10 @@ export class BaseMockBenefitsApplicationBuilder {
         )
       )
     );
+    set(this.claimAttrs, "computed_start_dates", {
+      other_reason: "2021-01-01",
+      same_reason: "2021-01-01",
+    });
     return this;
   }
 
@@ -113,6 +116,10 @@ export class BaseMockBenefitsApplicationBuilder {
         )
       )
     );
+    set(this.claimAttrs, "computed_start_dates", {
+      other_reason: "2021-01-01",
+      same_reason: "2021-01-01",
+    });
     return this;
   }
 
@@ -131,6 +138,10 @@ export class BaseMockBenefitsApplicationBuilder {
         )
       )
     );
+    set(this.claimAttrs, "computed_start_dates", {
+      other_reason: "2021-01-01",
+      same_reason: "2021-01-01",
+    });
     return this;
   }
 
@@ -226,26 +237,16 @@ export class BaseMockBenefitsApplicationBuilder {
         ? attrs.map((attr) => new EmployerBenefit(attr))
         : [
             new EmployerBenefit({
-              benefit_amount_dollars: 500,
-              benefit_amount_frequency: EmployerBenefitFrequency.weekly,
-              benefit_end_date: "2022-02-01",
-              benefit_start_date: "2022-01-01",
               benefit_type: EmployerBenefitType.familyOrMedicalLeave,
               employer_benefit_id: 1,
               is_full_salary_continuous: false,
             }),
             new EmployerBenefit({
-              benefit_amount_dollars: 200,
-              benefit_amount_frequency: EmployerBenefitFrequency.unknown,
-              benefit_end_date: "2022-02-01",
-              benefit_start_date: "2022-01-01",
               benefit_type: EmployerBenefitType.familyOrMedicalLeave,
               employer_benefit_id: 2,
               is_full_salary_continuous: false,
             }),
             new EmployerBenefit({
-              benefit_amount_dollars: 0,
-              benefit_amount_frequency: EmployerBenefitFrequency.unknown,
               benefit_end_date: "2022-02-01",
               benefit_start_date: "2022-01-01",
               benefit_type: EmployerBenefitType.shortTermDisability,
@@ -253,10 +254,6 @@ export class BaseMockBenefitsApplicationBuilder {
               is_full_salary_continuous: true,
             }),
             new EmployerBenefit({
-              benefit_amount_dollars: 0,
-              benefit_amount_frequency: EmployerBenefitFrequency.unknown,
-              benefit_end_date: "2022-02-01",
-              benefit_start_date: "2022-01-01",
               benefit_type: EmployerBenefitType.permanentDisability,
               employer_benefit_id: 4,
               is_full_salary_continuous: false,
@@ -286,6 +283,10 @@ export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder
     // Defaults, can be overridden by calling instance methods
     this.claimAttrs = {
       absence_periods: [],
+      computed_start_dates: {
+        other_reason: "2021-02-01",
+        same_reason: "2021-02-01",
+      },
       employer_dba: "Work Inc.",
       employer_id: "dda903f-f093f-ff900",
       first_name: "Jane",
@@ -425,6 +426,7 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
     this.claimAttrs = {
       application_id: "mock_application_id",
       status: BenefitsApplicationStatus.started,
+      computed_start_dates: {},
     };
   }
 

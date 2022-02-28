@@ -47,8 +47,6 @@ class Constants:
     ARCHIVED_STATUS = "Archived: "
     ERRORED_STATUS = "Invalid: "
 
-    TAX_YEAR_CUTOFF = 6
-
     FEDERAL_WITHHOLDING_TYPE = "FEDERAL"
     STATE_WITHHOLDING_TYPE = "STATE"
 
@@ -183,7 +181,10 @@ def get_payments(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
                     .outerjoin(eft_payments, Payment.payment_id == eft_payments.c.payment_id)
                     .outerjoin(bank_errors, Payment.payment_id == bank_errors.c.payment_id)
                     .join(Pfml1099Request, Employee.employee_id == Pfml1099Request.employee_id)
-                    .filter(Pfml1099Request.employee_id == request.employee_id,)
+                    .filter(
+                        Pfml1099Request.employee_id == request.employee_id,
+                        Pfml1099Request.pfml_1099_batch_id == is_none,
+                    )
                     .filter(
                         or_(
                             check_payments.c.payment_id != is_none,
@@ -359,6 +360,8 @@ def get_mmars_payments(db_session: db.Session, batch: Pfml1099Batch) -> List[Any
 
     year = get_tax_year()
 
+    is_none = None
+
     payments = []
     if batch.correction_ind:
         # Get all the MMARS payment data for a reprint/correction run
@@ -386,6 +389,7 @@ def get_mmars_payments(db_session: db.Session, batch: Pfml1099Batch) -> List[Any
                         MmarsPaymentData.warrant_select_date >= date(year, 1, 1),
                         MmarsPaymentData.warrant_select_date < date(year + 1, 1, 1),
                         Pfml1099Request.employee_id == request.employee_id,
+                        Pfml1099Request.pfml_1099_batch_id == is_none,
                     )
                     .all()
                 )
@@ -456,6 +460,8 @@ def get_overpayments(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
 
     year = get_tax_year()
 
+    is_none = None
+
     refunds = []
     if batch.correction_ind:
         # Get all the overpayment repayment data for a reprint/correction run
@@ -507,7 +513,10 @@ def get_overpayments(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
                         == LkPaymentTransactionType.payment_transaction_type_id,
                     )
                     .join(Pfml1099Request, Employee.employee_id == Pfml1099Request.employee_id)
-                    .filter(Pfml1099Request.employee_id == request.employee_id,)
+                    .filter(
+                        Pfml1099Request.employee_id == request.employee_id,
+                        Pfml1099Request.pfml_1099_batch_id == is_none,
+                    )
                     .filter(
                         Payment.payment_transaction_type_id.in_(OVERPAYMENT_TYPES_1099_IDS),
                         func.extract("YEAR", overpayments.c.ended_at) == year,
@@ -678,7 +687,10 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
                         FineosExtractEmployeeFeed.customerno == Employee.fineos_customer_number,
                     )
                     .join(Pfml1099Request, Employee.employee_id == Pfml1099Request.employee_id)
-                    .filter(Employee.employee_id == request.employee_id)
+                    .filter(
+                        Employee.employee_id == request.employee_id,
+                        Pfml1099Request.pfml_1099_batch_id == is_none,
+                    )
                     .subquery()
                 )
 
@@ -858,6 +870,7 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
                         taxes.c.FEDERAL_TAX_WITHHOLDINGS,
                         overpayments.c.OVERPAYMENT_REPAYMENTS,
                         credits.c.OTHER_CREDITS,
+                        literal_column("TRUE").label("CORRECTION_IND"),
                         mmars_addresses.c.PAYMENT_DATE.label("MMARS_ADDRESS_DATE"),
                         pub_addresses.c.PAYMENT_DATE.label("PUB_ADDRESS_DATE"),
                         case(
@@ -1048,6 +1061,7 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
                         ).label("ZIP_CODE"),
                     )
                     .join(Employee, employees.c.customerno == Employee.fineos_customer_number)
+                    .join(Pfml1099Request, Employee.employee_id == Pfml1099Request.employee_id)
                     .outerjoin(payments, Employee.employee_id == payments.c.employee_id)
                     .outerjoin(credits, Employee.employee_id == credits.c.employee_id)
                     .outerjoin(mmars_payments, Employee.employee_id == mmars_payments.c.employee_id)
@@ -1063,7 +1077,11 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
                         (Employee.employee_id == pub_addresses.c.employee_id)
                         & (pub_addresses.c.R == 1),
                     )
-                    .filter(employees.c.R == 1)
+                    .filter(
+                        employees.c.R == 1,
+                        Pfml1099Request.employee_id == request.employee_id,
+                        Pfml1099Request.pfml_1099_batch_id == is_none,
+                    )
                     .all()
                 )
 
@@ -1092,6 +1110,7 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
                             Pfml1099.federal_tax_withholdings.label("FEDERAL_TAX_WITHHOLDINGS"),
                             Pfml1099.overpayment_repayments.label("OVERPAYMENT_REPAYMENTS"),
                             literal_column("0").label("OTHER_CREDITS"),
+                            literal_column("FALSE").label("CORRECTION_IND"),
                             literal_column("'Using Pfml1099 Address'").label("ADDRESS_SOURCE"),
                             Pfml1099.address_line_1.label("ADDRESS_LINE_1"),
                             Pfml1099.address_line_2.label("ADDRESS_LINE_2"),
@@ -1117,6 +1136,7 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
         #                         SELECT EMPLOYEE_ID FROM PFML_1099_MMARS_PAYMENT WHERE PFML_BATCH_ID = ''
         #                         UNION ALL
         #                         SELECT EMPLOYEE_ID FROM PFML_1099_REFUND WHERE PFML_BATCH_ID = ''
+        #                         UNION ALL
         #                         SELECT EMPLOYEE_ID FROM PFML_1099_WITHHOLDING WHERE PFML_BATCH_ID = ''),
         #     EMPLOYEE_FEED  AS (SELECT E.EMPLOYEE_ID, FEEF.FIRSTNAMES, FEEF.LASTNAME, FEEF.C, FEEF.I, FEEF.CUSTOMERNO, FEEF.ADDRESS1, FEEF.ADDRESS2, FEEF.ADDRESS4, FEEF.ADDRESS6, FEEF.POSTCODE, FEEF.COUNTRY,
         #                             FEEF.FINEOS_EXTRACT_IMPORT_LOG_ID, FEEF.EFFECTIVEFROM, FEEF.EFFECTIVETO, FEEF.CREATED_AT,
@@ -1150,7 +1170,7 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
         #                             SUM(CASE WHEN WITHHOLDING_TYPE_ID = 1 THEN WITHHOLDING_AMOUNT ELSE 0 END) FEDERAL_TAX_WITHHOLDINGS
         #                         FROM PFML_1099_WITHHOLDING
         #                         WHERE PFML_BATCH_ID = ''
-        #                         GROUP BY EMPLOYEE_ID)
+        #                         GROUP BY EMPLOYEE_ID),
         #     MMARS_PMT_ADD  AS (SELECT MP.EMPLOYEE_ID, CAST(MPD.SCHEDULED_PAYMENT_DATE AS DATE) PAYMENT_DATE, MPD.ADDRESS_LINE_1, MPD.ADDRESS_LINE_2, MPD.CITY,
         #                            MPD.STATE, MPD.ZIP_CODE,
         #                            RANK() OVER(PARTITION BY MP.EMPLOYEE_ID ORDER BY MPD.SCHEDULED_PAYMENT_DATE DESC, MPD.CREATED_AT DESC, MP.MMARS_PAYMENT_ID) R
@@ -1450,6 +1470,7 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
                 taxes.c.FEDERAL_TAX_WITHHOLDINGS,
                 overpayments.c.OVERPAYMENT_REPAYMENTS,
                 credits.c.OTHER_CREDITS,
+                literal_column("FALSE").label("CORRECTION_IND"),
                 mmars_addresses.c.PAYMENT_DATE.label("MMARS_ADDRESS_DATE"),
                 pub_addresses.c.PAYMENT_DATE.label("PUB_ADDRESS_DATE"),
                 case(
@@ -1730,10 +1751,7 @@ def get_last_1099_batch_for_employee(
 
 
 def get_tax_year() -> int:
-    if date.today().month > Constants.TAX_YEAR_CUTOFF:
-        return date.today().year
-    else:
-        return date.today().year - 1
+    return int(os.environ.get("IRS_1099_TAX_YEAR", "0"))
 
 
 def get_batch_counts(db_session: db.Session) -> Dict[int, int]:
@@ -1748,7 +1766,7 @@ def get_batch_counts(db_session: db.Session) -> Dict[int, int]:
         year = record[0]
         count = record[1]
         logger.info(
-            "[%i][%i]: %i", year, count, extra={"tax_year": year, "count": count},
+            "Batch year %i has %i entries.", year, count, extra={"tax_year": year, "count": count},
         )
         batch_counts[year] = count
 
@@ -1769,7 +1787,7 @@ def get_payment_counts(db_session: db.Session) -> Dict[str, int]:
         batch = record[0]
         count = record[1]
         logger.info(
-            "[%i][%i]: %i", batch, count, extra={"batch": batch, "count": count},
+            "Batch %i has %i payments.", batch, count, extra={"batch": batch, "count": count},
         )
         payment_counts[batch] = count
 
@@ -1791,7 +1809,7 @@ def get_mmars_payment_counts(db_session: db.Session) -> Dict[str, int]:
         batch = record[0]
         count = record[1]
         logger.info(
-            "[%i][%i]: %i", batch, count, extra={"batch": batch, "count": count},
+            "Batch %i has %i MMARS payments.", batch, count, extra={"batch": batch, "count": count},
         )
         payment_counts[batch] = count
 
@@ -1875,3 +1893,32 @@ def is_test_file() -> str:
 
 def is_correction_batch() -> bool:
     return os.environ.get("IRS_1099_CORRECTION_IND", "0") == "1"
+
+
+def get_1099_records_to_file(db_session: db.Session) -> List[Pfml1099]:
+
+    irs_1099_subquery = (
+        db_session.query(
+            Pfml1099,
+            Pfml1099Batch.batch_run_date,
+            func.rank()
+            .over(
+                order_by=[
+                    # Pfml1099.employee_id.desc(),
+                    Pfml1099Batch.batch_run_date.desc(),
+                    Pfml1099.created_at.desc(),
+                ],
+                partition_by=Pfml1099.employee_id,
+            )
+            .label("R"),
+        )
+        .join(Pfml1099Batch, Pfml1099Batch.pfml_1099_batch_id == Pfml1099.pfml_1099_batch_id)
+        .filter(Pfml1099Batch.tax_year == get_tax_year())
+        .subquery()
+    )
+    irs_1099_records = list(db_session.query(irs_1099_subquery).filter(irs_1099_subquery.c.R == 1))
+    logger.info(
+        "Filtered records with latest batch run date for each employee is : %s",
+        len(irs_1099_records),
+    )
+    return irs_1099_records

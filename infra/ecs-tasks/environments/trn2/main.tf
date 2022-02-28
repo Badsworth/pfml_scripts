@@ -1,5 +1,6 @@
 provider "aws" {
-  region = "us-east-1"
+  region  = "us-east-1"
+  version = "3.74.1"
 }
 
 terraform {
@@ -88,6 +89,5 @@ module "tasks" {
   upload_max_files_to_fineos      = "10"
   enable_1099_testfile_generation = "0"
 
-  enable_withholding_payments            = "1"
   enable_employer_reimbursement_payments = "0"
 }

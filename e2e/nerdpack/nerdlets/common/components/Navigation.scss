@@ -1,10 +1,30 @@
+@import "../scss/variables";
+
 .nav {
   display: flex;
   flex-direction: row;
 
   a {
-    padding: 5px 10px;
-    border: 1px #999 solid;
-    margin: 5px;
+    flex: 1 1 auto;
+    padding: 10px;
+    margin: 0px;
+    color: $LINK_COLOR;
+    text-align: center;
+    font-size: 16px;
+    border-bottom: 2px $LINK_COLOR solid;
+
+    &:hover {
+      color: $LINK_COLOR_HOVER;
+      text-decoration: none;
+      border-bottom: 2px $LINK_COLOR_HOVER solid;
+    }
+    &.active {
+      color: #fff;
+      background: $LINK_COLOR;
+      border-radius: 5px 5px 0 0;
+      &:hover {
+        background: $LINK_COLOR_HOVER;
+      }
+    }
   }
 }

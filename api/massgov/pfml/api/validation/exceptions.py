@@ -70,6 +70,9 @@ class IssueRule(str, Enum):
     # Employee must have wages from the Employer
     require_employee = "require_employee"
 
+    def __str__(self):
+        return str(self.value)
+
 
 class IssueType(str, Enum):
     """
@@ -162,6 +165,9 @@ class IssueType(str, Enum):
     pfml = ""
     # Generic value error
     value_error = "value_error"
+
+    def __str__(self):
+        return str(self.value)
 
 
 @dataclass

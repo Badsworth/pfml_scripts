@@ -2,11 +2,8 @@ from werkzeug.exceptions import NotFound
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
-import massgov.pfml.util.logging
 from massgov.pfml.api.models.flags.responses import FlagResponse
-from massgov.pfml.db.models.flags import LkFeatureFlag
-
-logger = massgov.pfml.util.logging.get_logger(__name__)
+from massgov.pfml.db.models.flags import FeatureFlag, LkFeatureFlag
 
 ##########################################
 # Handlers
@@ -15,8 +12,9 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 
 def flag_get(name):
     with app.db_session() as db_session:
-        flag = db_session.query(LkFeatureFlag).filter_by(name=name).one_or_none()
-        if flag is None:
+        try:
+            flag = FeatureFlag.get_instance(db_session, description=name)
+        except KeyError:
             raise NotFound(
                 description="Could not find {} with name {}".format(LkFeatureFlag.__name__, name)
             )

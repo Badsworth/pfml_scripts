@@ -124,6 +124,9 @@ create-erds:
 create-leave-admin-and-claims: ## Create local API Leave Admin user and claims
 	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create-leave-admin-and-claims.py $(args)
 
+create-benefit-years: ## Create local benefit years data
+	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create-benefit-years.py $(args)
+
 create-claim-with-payments-for-user: ## Create local API user with claims + payments (usable with payment status API)
 	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create_claim_with_payments_for_user.py $(args)
 
@@ -291,9 +294,22 @@ ifdef CI
  FLAKE8_FORMAT := '::warning file=api/%(path)s,line=%(row)d,col=%(col)d::%(path)s:%(row)d:%(col)d: %(code)s %(text)s'
  MYPY_FLAGS := --no-pretty
  MYPY_POSTPROC := | perl -pe "s/^(.+):(\d+):(\d+): error: (.*)/::warning file=api\/\1,line=\2,col=\3::\4/"
+ SPECTRAL_POSTPROC := --format=text | perl -pe "s/^\/tmp\/(.+):(\d+):(\d+) (error|warning) (.*)/::warning file=api\/\1,line=\2,col=\3::\4 \5/"
 else
  FLAKE8_FORMAT := default
 endif
+
+lint-changed: max := 0
+lint-changed: FILES := $(shell { \
+	git diff --name-only --relative HEAD~$(max); \
+	git diff --name-only --staged --relative HEAD~$(max); \
+	git ls-files --other --exclude-standard HEAD~$(max);} | \
+	grep '^[massgov|tests|bin].*\.py' | sort -u )
+lint-changed: FILES_MYPY := $(shell echo $(FILES) | tr " " "\n" | grep '^[massgov|bin]' | sort -t\\n -u -k1,1)
+lint-changed: 
+	$(PY_RUN_CMD) flake8 --format=$(FLAKE8_FORMAT) $(FILES) 
+	$(PY_RUN_CMD) mypy $(MYPY_FLAGS) $(FILES_MYPY) $(MYPY_POSTPROC)
+	
 
 lint: ## Run linting
 lint: lint-spectral lint-py db-check-model-parity
@@ -315,7 +331,7 @@ lint-security: ## Run security linting
 
 lint-spectral: ## Run OpenAPI Spec linting
 	docker run --rm --tty --cap-drop=ALL --network=none --read-only --volume=$(PWD):/tmp:ro \
-           stoplight/spectral:6 lint /tmp/$(OPEN_API_PATH) --ruleset /tmp/.spectral.yaml
+           stoplight/spectral:6 lint /tmp/$(OPEN_API_PATH) --ruleset /tmp/.spectral.yaml $(SPECTRAL_POSTPROC)
 
 login: start ## Start shell in running container
 	docker exec -it $(APP_NAME) bash

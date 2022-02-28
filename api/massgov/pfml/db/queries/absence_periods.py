@@ -15,15 +15,13 @@ from massgov.pfml.api.validation.exceptions import (
     ValidationErrorDetail,
     ValidationException,
 )
-from massgov.pfml.db.models.employees import (
-    AbsencePeriod,
+from massgov.pfml.db.models.absences import (
     AbsencePeriodType,
     AbsenceReason,
     AbsenceReasonQualifierOne,
     AbsenceReasonQualifierTwo,
-    Claim,
-    LeaveRequestDecision,
 )
+from massgov.pfml.db.models.employees import AbsencePeriod, Claim, LeaveRequestDecision
 from massgov.pfml.fineos.models.customer_api import AbsencePeriod as FineosAbsencePeriod
 from massgov.pfml.fineos.models.group_client_api import Period
 from massgov.pfml.fineos.models.group_client_api.spec import LeaveRequest
@@ -68,6 +66,22 @@ def get_absence_period_by_claim_id_and_fineos_ids(
         )
         .one_or_none()
     )
+
+
+def get_employee_absence_periods_for_leave_request(
+    db_session: Session, employee_id: UUID, fineos_leave_request_id: int
+) -> List[AbsencePeriod]:
+    absence_periods: List[AbsencePeriod] = (
+        db_session.query(AbsencePeriod)
+        .join(Claim)
+        .filter(
+            Claim.employee_id == employee_id,
+            AbsencePeriod.fineos_leave_request_id == fineos_leave_request_id,
+        )
+        .order_by(AbsencePeriod.absence_period_start_date)
+        .all()
+    )
+    return absence_periods
 
 
 def create_absence_period_from_fineos_id_and_claim_id(

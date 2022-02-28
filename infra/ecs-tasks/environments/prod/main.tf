@@ -2,7 +2,8 @@ locals {
   environment_name = "prod"
 }
 provider "aws" {
-  region = "us-east-1"
+  region  = "us-east-1"
+  version = "3.74.1"
 }
 
 terraform {
@@ -107,6 +108,5 @@ module "tasks" {
   enable_1099_testfile_generation = "0"
   irs_1099_correction_ind         = "0"
 
-  enable_withholding_payments            = "1"
   enable_employer_reimbursement_payments = "0"
 }

@@ -114,7 +114,7 @@ describe("BenefitsApplicationsApi", () => {
       it("sends GET request to /applications", async () => {
         await claimsApi.getClaims();
         expect(fetch).toHaveBeenCalledWith(
-          `${process.env.apiUrl}/applications?page_offset=1`,
+          `${process.env.apiUrl}/applications?order_by=created_at&order_direction=descending&page_offset=1`,
           {
             body: null,
             headers: baseRequestHeaders,
@@ -174,14 +174,19 @@ describe("BenefitsApplicationsApi", () => {
     describe("unsuccessful request", () => {
       beforeEach(() => {
         global.fetch = mockFetch({
-          response: { data: null },
+          response: { data: null, errors: [{ type: "invalid" }] },
           status: 400,
           ok: false,
         });
       });
 
       it("throws error", async () => {
-        await expect(claimsApi.createClaim()).rejects.toThrow();
+        try {
+          await claimsApi.createClaim({});
+        } catch (error) {
+          expect(error).toBeInstanceOf(ValidationError);
+          expect(error.i18nPrefix).toBe("applications");
+        }
       });
     });
   });
@@ -258,7 +263,12 @@ describe("BenefitsApplicationsApi", () => {
         ok: false,
       });
 
-      await expect(claimsApi.importClaim({})).rejects.toThrow(ValidationError);
+      try {
+        await claimsApi.importClaim({});
+      } catch (error) {
+        expect(error).toBeInstanceOf(ValidationError);
+        expect(error.i18nPrefix).toBe("applicationImport");
+      }
     });
   });
 
@@ -337,6 +347,22 @@ describe("BenefitsApplicationsApi", () => {
 
       expect(claimResponse).toBeInstanceOf(BenefitsApplication);
       expect(claimResponse).toEqual(claim);
+    });
+
+    it("makes a request using the FF header when splitClaimsAcrossBY is true", async () => {
+      process.env.featureFlags = JSON.stringify({ splitClaimsAcrossBY: true });
+      await claimsApi.submitClaim(claim.application_id);
+      expect(fetch).toHaveBeenCalledWith(
+        `${process.env.apiUrl}/applications/${claim.application_id}/submit_application`,
+        {
+          body: null,
+          headers: {
+            ...baseRequestHeaders,
+            "X-FF-Split-Claims-Across-BY": "true",
+          },
+          method: "POST",
+        }
+      );
     });
   });
 

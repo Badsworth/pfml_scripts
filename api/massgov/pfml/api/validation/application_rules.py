@@ -1459,7 +1459,7 @@ def validate_application_import_request_for_claim(
         raise ValidationException(
             [
                 ValidationErrorDetail(
-                    message="An issue occurred while trying to import the application",
+                    message="Code 1: An issue occurred while trying to import the application.",
                     type=IssueType.incorrect,
                 )
             ]
@@ -1475,7 +1475,7 @@ def validate_application_import_request_for_claim(
         raise ValidationException(
             [
                 ValidationErrorDetail(
-                    message="An issue occurred while trying to import the application",
+                    message="Code 2: An issue occurred while trying to import the application.",
                     type=IssueType.incorrect,
                 )
             ]

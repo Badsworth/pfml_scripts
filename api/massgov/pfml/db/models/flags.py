@@ -13,21 +13,13 @@ from sqlalchemy.orm import object_session, relationship
 import massgov.pfml.util.logging
 
 from ..lookup import LookupTable
-from .base import AzureLogMixin, Base, TimestampMixin
+from .azure import AzureUserLogMixin
+from .base import Base, TimestampMixin
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
-class UserAzureFeatureFlagLog(Base, AzureLogMixin, TimestampMixin):
-    __tablename__ = "user_azure_feature_flag_log"
-    user_azure_feature_flag_log_id = Column(Integer, primary_key=True, autoincrement=True)
-    azure_feature_flag_value_id = Column(
-        Integer, ForeignKey("feature_flag_value.feature_flag_value_id")
-    )
-    feature_flag_value = relationship("FeatureFlagValue")
-
-
-class FeatureFlagValue(Base, TimestampMixin):
+class FeatureFlagValue(Base, TimestampMixin, AzureUserLogMixin):
     __tablename__ = "feature_flag_value"
     feature_flag_value_id = Column(Integer, primary_key=True, autoincrement=True)
     feature_flag_id = Column(Integer, ForeignKey("lk_feature_flag.feature_flag_id"), nullable=False)
@@ -51,12 +43,11 @@ class LkFeatureFlag(Base):
 
     values = relationship("FeatureFlagValue")
 
-    def logs(self, limit: Optional[int] = 10) -> Optional[list[UserAzureFeatureFlagLog]]:
+    def logs(self, limit: Optional[int] = 10) -> Optional[list[FeatureFlagValue]]:
         # Use a query to include limit.
         return (
             object_session(self)
-            .query(UserAzureFeatureFlagLog)
-            .join(FeatureFlagValue)
+            .query(FeatureFlagValue)
             .filter(FeatureFlagValue.feature_flag_id == self.feature_flag_id)
             .order_by(FeatureFlagValue.updated_at.desc())
             .limit(limit)

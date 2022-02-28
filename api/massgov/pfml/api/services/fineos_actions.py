@@ -95,6 +95,23 @@ class LeaveNotificationReason(str, Enum):
     OUT_OF_WORK_FOR_ANOTHER_REASON = "Out of work for another reason"
 
 
+def register_employee_with_claim(
+    fineos: massgov.pfml.fineos.AbstractFINEOSClient,
+    db_session: massgov.pfml.db.Session,
+    claim: Claim,
+) -> str:
+    """Helper method for getting a FINEOS auth id for a user with a Claim"""
+    employee_tax_id = claim.employee_tax_identifier
+    if not employee_tax_id:
+        raise Exception("Unable to register employee with FINEOS - No employee tax ID for claim")
+
+    employer_fein = claim.employer_fein
+    if not employer_fein:
+        raise Exception("Unable to register employee with FINEOS - No employer FEIN for claim")
+
+    return register_employee(fineos, employee_tax_id, employer_fein, db_session)
+
+
 def register_employee(
     fineos: massgov.pfml.fineos.AbstractFINEOSClient,
     employee_ssn: str,
@@ -915,6 +932,7 @@ def upsert_week_based_work_pattern(
 
     if application.claim is not None:
         log_attributes["application.absence_case_id"] = application.claim.fineos_absence_id
+        log_attributes["absence_case_id"] = application.claim.fineos_absence_id
         logger.info(
             "upserting work_pattern for absence case %s",
             application.claim.fineos_absence_id,
@@ -1117,7 +1135,7 @@ def get_documents(
             lambda fd: fineos_document_response_to_document_response(fd, application),
             # Certain document types are Word documents when first created, then converted to PDF documents
             # Only PDF documents should be returned to the portal
-            filter(lambda fd: fd.fileExtension == ".pdf", fineos_documents),
+            filter(lambda fd: fd.fileExtension not in [".doc", ".docx"], fineos_documents),
         )
     )
 
@@ -1201,7 +1219,11 @@ def download_document(
     if not absence_case:
         logger.warning(
             "Document with that fineos_document_id could not be found",
-            extra={"absence_id": absence_id, "fineos_document_id": fineos_document_id,},
+            extra={
+                "absence_id": absence_id,
+                "absence_case_id": absence_id,
+                "fineos_document_id": fineos_document_id,
+            },
         )
         raise Exception("Document with that fineos_document_id could not be found")
 
@@ -1361,7 +1383,9 @@ def resolve_service_agreement_inputs(
         return CreateOrUpdateServiceAgreement(
             absence_management_flag=absence_management_flag,
             leave_plans=", ".join(leave_plans),
-            start_date=prev_exemption_cease_date,
+            start_date=prev_exemption_cease_date + datetime.timedelta(1)
+            if prev_exemption_cease_date
+            else None,
             unlink_leave_plans=True,
         )
     elif (was_not_exempt or was_partially_exempt) and is_exempt:
@@ -1470,18 +1494,26 @@ def create_other_leaves_and_other_incomes_eforms(
 
 
 def get_absence_periods(
-    employee_tax_id: str, employer_fein: str, absence_id: str, db_session: massgov.pfml.db.Session,
+    claim: Claim, db_session: massgov.pfml.db.Session,
 ) -> List[FineosAbsencePeriod]:
+    absence_id = claim.fineos_absence_id
+    if absence_id is None:
+        raise Exception("Can't get absence periods from FINEOS - No absence_id for claim")
+
     fineos = massgov.pfml.fineos.create_client()
 
     try:
         # Get FINEOS web admin id
-        web_id = register_employee(fineos, employee_tax_id, employer_fein, db_session)
+        web_id = register_employee_with_claim(fineos, db_session, claim)
 
         # Get absence periods
         response: AbsenceDetails = fineos.get_absence(web_id, absence_id)
     except FINEOSClientError as ex:
-        logger.warn("Unable to get absence periods", exc_info=ex, extra={"absence_id": absence_id})
+        logger.warn(
+            "Unable to get absence periods",
+            exc_info=ex,
+            extra={"absence_id": absence_id, "absence_case_id": absence_id},
+        )
         raise
     return response.absencePeriods or []
 

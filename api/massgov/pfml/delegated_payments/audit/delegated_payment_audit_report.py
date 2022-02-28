@@ -67,27 +67,25 @@ class PaymentAuditReportStep(Step):
             for item in state_logs:
                 state_logs_containers.append(item)
 
-        if payments_util.is_withholding_payments_enabled():
-            logger.info("Tax Withholding ENABLED")
-            federal_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-                state_log_util.AssociatedClass.PAYMENT,
-                State.FEDERAL_WITHHOLDING_ORPHANED_PENDING_AUDIT,
-                self.db_session,
-            )
+        federal_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
+            state_log_util.AssociatedClass.PAYMENT,
+            State.FEDERAL_WITHHOLDING_ORPHANED_PENDING_AUDIT,
+            self.db_session,
+        )
 
-            if len(federal_withholding_state_logs) > 0:
-                for item in federal_withholding_state_logs:
-                    state_logs_containers.append(item)
+        if len(federal_withholding_state_logs) > 0:
+            for item in federal_withholding_state_logs:
+                state_logs_containers.append(item)
 
-            state_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-                state_log_util.AssociatedClass.PAYMENT,
-                State.STATE_WITHHOLDING_ORPHANED_PENDING_AUDIT,
-                self.db_session,
-            )
+        state_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
+            state_log_util.AssociatedClass.PAYMENT,
+            State.STATE_WITHHOLDING_ORPHANED_PENDING_AUDIT,
+            self.db_session,
+        )
 
-            if len(state_withholding_state_logs) > 0:
-                for item in state_withholding_state_logs:
-                    state_logs_containers.append(item)
+        if len(state_withholding_state_logs) > 0:
+            for item in state_withholding_state_logs:
+                state_logs_containers.append(item)
 
         state_log_count = len(state_logs_containers)
         self.set_metrics({self.Metrics.SAMPLED_PAYMENT_COUNT: state_log_count})
@@ -163,34 +161,31 @@ class PaymentAuditReportStep(Step):
                 ),
             )
 
-            if payments_util.is_withholding_payments_enabled():
-                if (
-                    payment.payment_transaction_type_id
-                    == PaymentTransactionType.STANDARD.payment_transaction_type_id
-                ):
-                    linked_payments = _get_split_payments(self.db_session, payment)
-                    for payment in linked_payments:
-                        if payment.payment_transaction_type_id in [
-                            PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,
-                            PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id,
-                        ]:
-                            end_state = (
-                                State.STATE_WITHHOLDING_RELATED_PENDING_AUDIT
-                                if (
-                                    payment.payment_transaction_type_id
-                                    == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
-                                )
-                                else State.FEDERAL_WITHHOLDING_RELATED_PENDING_AUDIT
+            if (
+                payment.payment_transaction_type_id
+                == PaymentTransactionType.STANDARD.payment_transaction_type_id
+            ):
+                linked_payments = _get_split_payments(self.db_session, payment)
+                for payment in linked_payments:
+                    if payment.payment_transaction_type_id in [
+                        PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,
+                        PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id,
+                    ]:
+                        end_state = (
+                            State.STATE_WITHHOLDING_RELATED_PENDING_AUDIT
+                            if (
+                                payment.payment_transaction_type_id
+                                == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
                             )
-                            outcome = state_log_util.build_outcome(
-                                "Related Payment Audit report sent"
-                            )
-                            state_log_util.create_finished_state_log(
-                                associated_model=payment,
-                                end_state=end_state,
-                                outcome=outcome,
-                                db_session=self.db_session,
-                            )
+                            else State.FEDERAL_WITHHOLDING_RELATED_PENDING_AUDIT
+                        )
+                        outcome = state_log_util.build_outcome("Related Payment Audit report sent")
+                        state_log_util.create_finished_state_log(
+                            associated_model=payment,
+                            end_state=end_state,
+                            outcome=outcome,
+                            db_session=self.db_session,
+                        )
 
         logger.info("Done setting sampled payments to sent state: %i", len(state_logs))
 
@@ -377,16 +372,13 @@ class PaymentAuditReportStep(Step):
                 net_payment_amount = decimal.Decimal(0)
 
             linked_payments = _get_split_payments(self.db_session, payment)
-            federal_withholding_amount: decimal.Decimal = (
-                self.calculate_federal_withholding_amount(payment, linked_payments)
-                if payments_util.is_withholding_payments_enabled()
-                else decimal.Decimal(0)
+            federal_withholding_amount: decimal.Decimal = self.calculate_federal_withholding_amount(
+                payment, linked_payments
             )
-            state_withholding_amount: decimal.Decimal = (
-                self.calculate_state_withholding_amount(payment, linked_payments)
-                if payments_util.is_withholding_payments_enabled()
-                else decimal.Decimal(0)
+            state_withholding_amount: decimal.Decimal = self.calculate_state_withholding_amount(
+                payment, linked_payments
             )
+
             payment_audit_data = PaymentAuditData(
                 payment=payment,
                 is_first_time_payment=is_first_time_payment,
@@ -399,14 +391,10 @@ class PaymentAuditReportStep(Step):
                 ),
                 gross_payment_amount=str(
                     net_payment_amount + federal_withholding_amount + state_withholding_amount
-                )
-                if payments_util.is_withholding_payments_enabled()
-                else "",
+                ),
                 net_payment_amount=str(
                     net_payment_amount if decimal.Decimal(net_payment_amount) > 0 else ""
-                )
-                if payments_util.is_withholding_payments_enabled()
-                else str(payment.amount),
+                ),
                 federal_withholding_amount=str(
                     federal_withholding_amount
                     if decimal.Decimal(federal_withholding_amount) > 0
@@ -417,12 +405,8 @@ class PaymentAuditReportStep(Step):
                     if decimal.Decimal(state_withholding_amount) > 0
                     else ""
                 ),
-                federal_withholding_i_value=self.get_federal_withholding_i_value(linked_payments)
-                if payments_util.is_withholding_payments_enabled()
-                else "",
-                state_withholding_i_value=self.get_state_withholding_i_value(linked_payments)
-                if payments_util.is_withholding_payments_enabled()
-                else "",
+                federal_withholding_i_value=self.get_federal_withholding_i_value(linked_payments),
+                state_withholding_i_value=self.get_state_withholding_i_value(linked_payments),
             )
             payment_audit_data_set.append(payment_audit_data)
 

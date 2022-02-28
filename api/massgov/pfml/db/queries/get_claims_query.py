@@ -9,11 +9,17 @@ from sqlalchemy.sql.elements import UnaryExpression
 from sqlalchemy.sql.selectable import Alias
 
 from massgov.pfml import db
+from massgov.pfml.api.util.paginate.paginator import (
+    OrderDirection,
+    Page,
+    PaginationAPIContext,
+    page_for_api_context,
+)
+from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.applications import Application
 from massgov.pfml.db.models.base import Base
 from massgov.pfml.db.models.employees import (
     AbsencePeriod,
-    AbsenceStatus,
     Claim,
     Employee,
     Employer,
@@ -22,12 +28,6 @@ from massgov.pfml.db.models.employees import (
     ManagedRequirementStatus,
     ManagedRequirementType,
     User,
-)
-from massgov.pfml.util.paginate.paginator import (
-    OrderDirection,
-    Page,
-    PaginationAPIContext,
-    page_for_api_context,
 )
 
 

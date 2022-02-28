@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from dataclasses import asdict, dataclass
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type, Union
 
 import flask
 from werkzeug.exceptions import (
@@ -12,8 +14,10 @@ from werkzeug.exceptions import (
 )
 
 from massgov.pfml.api.validation.exceptions import PaymentRequired, ValidationErrorDetail
-from massgov.pfml.util.paginate.paginator import Page, PaginationAPIContext
 from massgov.pfml.util.pydantic import PydanticBaseModel
+
+if TYPE_CHECKING:
+    from massgov.pfml.api.util.paginate.paginator import Page, PaginationAPIContext
 
 
 # == response data structures ==

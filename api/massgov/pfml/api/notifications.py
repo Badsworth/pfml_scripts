@@ -156,12 +156,7 @@ def notifications_post():
                     "Unable to find Employee or Employee has no tax_identifier, can't get absence periods"
                 )
             else:
-                absence_periods = get_absence_periods(
-                    employee.tax_identifier.tax_identifier,
-                    employer.employer_fein,
-                    notification_request.absence_case_id,
-                    db_session,
-                )
+                absence_periods = get_absence_periods(claim, db_session)
                 sync_customer_api_absence_periods_to_db(
                     absence_periods, claim, db_session, log_attributes
                 )
@@ -228,7 +223,8 @@ def _err400_employer_fein_not_found(notification_request, log_attributes):
             "request.method": flask.request.method if flask.has_request_context() else None,
             "request.uri": flask.request.path if flask.has_request_context() else None,
             "request.headers.x-amzn-requestid": flask.request.headers.get("x-amzn-requestid", None),
-            "absence-id": notification_request.absence_case_id
+            "absence-id": notification_request.absence_case_id,
+            "absence_case_id": notification_request.absence_case_id
             if flask.has_request_context()
             else None,
         },
@@ -254,7 +250,8 @@ def _err400_multiple_employer_feins_found(notification_request, log_attributes):
             "request.method": flask.request.method if flask.has_request_context() else None,
             "request.uri": flask.request.path if flask.has_request_context() else None,
             "request.headers.x-amzn-requestid": flask.request.headers.get("x-amzn-requestid", None),
-            "absence-id": notification_request.absence_case_id
+            "absence-id": notification_request.absence_case_id,
+            "absence_case_id": notification_request.absence_case_id
             if flask.has_request_context()
             else None,
         },
@@ -271,6 +268,7 @@ def _err400_multiple_employer_feins_found(notification_request, log_attributes):
 def handle_managed_requirements(
     notification: NotificationRequest, claim_id: UUID, db_session: Session, log_attributes: dict
 ) -> None:
+    fineos_requirements = []
     if notification.recipient_type == FineosRecipientType.LEAVE_ADMINISTRATOR:
         fineos_requirements = get_fineos_managed_requirements_from_notification(
             notification, log_attributes

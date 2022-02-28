@@ -59,7 +59,7 @@ function MyApp({ Component, pageProps }: AppProps) {
           loadingState={loadingState}
           setLoadingState={setLoadingState}
         />
-        {user && <Sidebar user={user} />}
+        {/*user && <Sidebar user={user} />*/}
         <main className={pageMainClasses} tabIndex={0}>
           {loadingState.loading ? (
             <Loading

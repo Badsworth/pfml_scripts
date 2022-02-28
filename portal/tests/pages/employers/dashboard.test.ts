@@ -160,7 +160,7 @@ describe("Employer dashboard", () => {
     expect(screen.getByRole("table")).toMatchSnapshot();
   });
 
-  it("renders a table of claims, with links to review page", () => {
+  it("renders a table of claims, with links to status page", () => {
     process.env.featureFlags = JSON.stringify({
       employerShowMultiLeaveDashboard: true,
     });
@@ -671,5 +671,22 @@ describe("Employer dashboard", () => {
     setup({ claims, userAttrs });
 
     expect(screen.getByText("Review by 1/30/2050")).toBeInTheDocument();
+  });
+
+  // TODO (PORTAL-1560): Remove  this test
+  it("deprecated: renders status description section", () => {
+    setup();
+
+    expect(screen.getByText(/Status descriptions/)).toBeInTheDocument();
+  });
+
+  // TODO (PORTAL-1560): Remove  this test
+  it("deprecated: does not render status description section when employerShowMultiLeaveDashboard is enabled", () => {
+    process.env.featureFlags = JSON.stringify({
+      employerShowMultiLeaveDashboard: true,
+    });
+    setup();
+
+    expect(screen.queryByText(/Status descriptions/)).not.toBeInTheDocument();
   });
 });

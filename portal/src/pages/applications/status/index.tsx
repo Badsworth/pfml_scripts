@@ -8,6 +8,11 @@ import {
   getLegalNotices,
 } from "../../../models/Document";
 import React, { useEffect } from "react";
+import {
+  getInfoAlertContext,
+  paymentStatusViewHelper,
+  showPaymentsTab,
+} from "./payments";
 import withUser, { WithUserProps } from "../../../hoc/withUser";
 
 import { AbsencePeriod } from "../../../models/AbsencePeriod";
@@ -20,6 +25,7 @@ import Heading from "../../../components/core/Heading";
 import LeaveReason from "../../../models/LeaveReason";
 import LegalNoticeList from "../../../components/LegalNoticeList";
 import PageNotFound from "../../../components/PageNotFound";
+import { Payment } from "src/models/Payment";
 import Spinner from "../../../components/core/Spinner";
 import StatusNavigationTabs from "../../../components/status/StatusNavigationTabs";
 import Title from "../../../components/core/Title";
@@ -28,7 +34,6 @@ import { createRouteWithQuery } from "../../../utils/routeWithParams";
 import findKeyByValue from "../../../utils/findKeyByValue";
 import formatDate from "../../../utils/formatDate";
 import hasDocumentsLoadError from "../../../utils/hasDocumentsLoadError";
-import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
 
@@ -46,13 +51,14 @@ export const Status = ({
 }) => {
   const { t } = useTranslation();
   const {
-    claims: { claimDetail, isLoadingClaimDetail, loadClaimDetail },
+    claims: { claimDetail, loadClaimDetail, isLoadingClaimDetail },
     documents: {
       documents: allClaimDocuments,
       download: downloadDocument,
       hasLoadedClaimDocuments,
       loadAll: loadAllClaimDocuments,
     },
+    payments: { loadPayments, loadedPaymentsData },
   } = appLogic;
   const { absence_case_id, absence_id, uploaded_document_type } = query;
   const application_id = claimDetail?.application_id;
@@ -68,6 +74,7 @@ export const Status = ({
   useEffect(() => {
     if (absenceId) {
       loadClaimDetail(absenceId);
+      loadPayments(absenceId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [absenceId]);
@@ -123,19 +130,26 @@ export const Status = ({
   const absenceDetails = AbsencePeriod.groupByReason(
     claimDetail.absence_periods
   );
-  const hasPendingStatus = claimDetail.absence_periods.some(
-    (absenceItem) => absenceItem.request_decision === "Pending"
-  );
-  const hasApprovedStatus = claimDetail?.hasApprovedStatus;
 
   const documentsForApplication = filterByApplication(
     allClaimDocuments.items,
     claimDetail.application_id
   );
 
-  const approvalNotice = findDocumentsByTypes(documentsForApplication, [
-    DocumentType.approvalNotice,
-  ])[0];
+  const helper = paymentStatusViewHelper(
+    claimDetail,
+    allClaimDocuments,
+    loadedPaymentsData || new Payment()
+  );
+
+  const {
+    hasApprovedStatus,
+    hasPendingStatus,
+    hasInReviewStatus,
+    hasProjectedStatus,
+  } = helper;
+
+  const infoAlertContext = getInfoAlertContext(helper);
 
   const viewYourNotices = () => {
     const legalNotices = getLegalNotices(documentsForApplication);
@@ -211,36 +225,10 @@ export const Status = ({
     );
   };
 
-  const getInfoAlertContext = (absenceDetails: {
-    [key: string]: AbsencePeriod[];
-  }) => {
-    const hasBondingReason = LeaveReason.bonding in absenceDetails;
-    const hasPregnancyReason = LeaveReason.pregnancy in absenceDetails;
-    const hasNewBorn = claimDetail.absence_periods.some(
-      (absenceItem) =>
-        (absenceItem.reason_qualifier_one ||
-          absenceItem.reason_qualifier_two) === "Newborn"
-    );
-    if (hasBondingReason && !hasPregnancyReason && hasNewBorn) {
-      return "bonding";
-    }
-
-    if (hasPregnancyReason && !hasBondingReason) {
-      return "pregnancy";
-    }
-
-    return "";
-  };
-
-  const infoAlertContext = getInfoAlertContext(absenceDetails);
   const [firstAbsenceDetail] = Object.keys(absenceDetails);
 
-  // Determines if phase two payment features are displayed
-  const showPhaseTwoFeatures =
-    isFeatureEnabled("claimantShowPaymentsPhaseTwo") && hasApprovedStatus;
-
   // Determines if payment tab is displayed
-  const isPaymentsTab = Boolean(approvalNotice) && showPhaseTwoFeatures;
+  const isPaymentsTab = showPaymentsTab(helper);
 
   return (
     <React.Fragment>
@@ -259,40 +247,44 @@ export const Status = ({
         </Alert>
       )}
 
-      {!!infoAlertContext && (hasPendingStatus || hasApprovedStatus) && (
-        <Alert
-          className="margin-bottom-3"
-          data-test="info-alert"
-          heading={t("pages.claimsStatus.infoAlertHeading", {
-            context: infoAlertContext,
-          })}
-          headingLevel="2"
-          headingSize="4"
-          noIcon
-          state="info"
-        >
-          <p>
-            <Trans
-              i18nKey="pages.claimsStatus.infoAlertBody"
-              tOptions={{ context: infoAlertContext }}
-              components={{
-                "about-bonding-leave-link": (
-                  <a
-                    href={
-                      routes.external.massgov.benefitsGuide_aboutBondingLeave
-                    }
-                    target="_blank"
-                    rel="noreferrer noopener"
-                  />
-                ),
-                "contact-center-phone-link": (
-                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-                ),
-              }}
-            />
-          </p>
-        </Alert>
-      )}
+      {!!infoAlertContext &&
+        (hasPendingStatus ||
+          hasApprovedStatus ||
+          hasInReviewStatus ||
+          hasProjectedStatus) && (
+          <Alert
+            className="margin-bottom-3"
+            data-test="info-alert"
+            heading={t("pages.claimsStatus.infoAlertHeading", {
+              context: infoAlertContext,
+            })}
+            headingLevel="2"
+            headingSize="4"
+            noIcon
+            state="info"
+          >
+            <p>
+              <Trans
+                i18nKey="pages.claimsStatus.infoAlertBody"
+                tOptions={{ context: infoAlertContext }}
+                components={{
+                  "about-bonding-leave-link": (
+                    <a
+                      href={
+                        routes.external.massgov.benefitsGuide_aboutBondingLeave
+                      }
+                      target="_blank"
+                      rel="noreferrer noopener"
+                    />
+                  ),
+                  "contact-center-phone-link": (
+                    <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                  ),
+                }}
+              />
+            </p>
+          </Alert>
+        )}
       <BackButton
         label={t("pages.claimsStatus.backButtonLabel")}
         href={routes.applications.index}

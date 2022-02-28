@@ -48,7 +48,7 @@ from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
     stage_payment_fineos_writeback,
 )
 from massgov.pfml.util.converters.str_to_numeric import str_to_int
-from massgov.pfml.util.datetime import get_now_us_eastern
+from massgov.pfml.util.datetime import datetime_str_to_date, get_now_us_eastern
 
 logger = logging.get_logger(__name__)
 
@@ -128,6 +128,7 @@ class PaymentData:
     absence_case_creation_date: Optional[str] = None
     payment_amount: Optional[Decimal] = None
     amalgamation_c: Optional[str] = None
+    payment_type: Optional[str] = None
 
     claim_type_raw: Optional[str] = None
 
@@ -183,6 +184,10 @@ class PaymentData:
         # Not required, only care if it's set and a specific value
         self.amalgamation_c = payments_util.validate_db_input(
             "AMALGAMATIONC", pei_record, self.validation_container, False
+        )
+
+        self.payment_type = payments_util.validate_db_input(
+            "PAYMENTTYPE", pei_record, self.validation_container, False
         )
 
         self.payment_date = payments_util.validate_db_input(
@@ -358,14 +363,13 @@ class PaymentData:
             return PaymentTransactionType.ZERO_DOLLAR
 
         # Tax Withholdings
-        if payments_util.is_withholding_payments_enabled():
-            # SIT
-            if self.tin == STATE_TAX_WITHHOLDING_TIN:
-                return PaymentTransactionType.STATE_TAX_WITHHOLDING
+        # SIT
+        if self.tin == STATE_TAX_WITHHOLDING_TIN:
+            return PaymentTransactionType.STATE_TAX_WITHHOLDING
 
-            # FIT
-            if self.tin == FEDERAL_TAX_WITHHOLDING_TIN:
-                return PaymentTransactionType.FEDERAL_TAX_WITHHOLDING
+        # FIT
+        if self.tin == FEDERAL_TAX_WITHHOLDING_TIN:
+            return PaymentTransactionType.FEDERAL_TAX_WITHHOLDING
 
         # Employer reimbursements reimbursements are a very specific set of records
         if (
@@ -533,8 +537,8 @@ class PaymentData:
             ):
                 self.payment_detail_records.append(
                     PaymentDetails(
-                        period_start_date=payments_util.datetime_str_to_date(row_start_period),
-                        period_end_date=payments_util.datetime_str_to_date(row_end_period),
+                        period_start_date=datetime_str_to_date(row_start_period),
+                        period_end_date=datetime_str_to_date(row_end_period),
                         amount=Decimal(cast(str, row_amount_post_tax)),
                         business_net_amount=Decimal(cast(str, business_net_amount)),
                     )
@@ -570,10 +574,11 @@ class PaymentData:
         return f"[C={self.c_value},I={self.i_value},absence_case_id={self.absence_case_number}]"
 
     def is_adhoc_payment(self) -> bool:
-        # A payment is considered adhoc if it's marked as "Adhoc" often with
-        # a random number suffixed to it.
-        # This column can be empty/missing, and that's fine.
-        return self.amalgamation_c is not None and "Adhoc" in self.amalgamation_c
+        # In past iteration self.amalgamation_c was used to determine this field,
+        # but was switched to payment_type to future proof against fineos
+        # changing amalgamation_c field again.
+        # See: https://lwd.atlassian.net/browse/API-2235 for more details
+        return self.payment_type == "Adhoc"
 
 
 class PaymentExtractStep(Step):
@@ -639,6 +644,7 @@ class PaymentExtractStep(Step):
             .join(LkState, StateLog.end_state_id == LkState.state_id)
             .filter(
                 Payment.payment_id.in_(payment_ids),
+                Payment.exclude_from_payment_status != True,  # noqa: E712
                 StateLog.end_state_id.notin_(payments_util.Constants.RESTARTABLE_PAYMENT_STATE_IDS),
                 LkState.flow_id == Flow.DELEGATED_PAYMENT.flow_id,
             )
@@ -679,7 +685,8 @@ class PaymentExtractStep(Step):
                     self.increment(self.Metrics.TAX_IDENTIFIER_MISSING_IN_DB_COUNT)
                     payment_data.validation_container.add_validation_issue(
                         payments_util.ValidationReason.MISSING_IN_DB,
-                        f"tax_identifier: {payment_data.tin}",
+                        payment_data.tin,
+                        "tax_identifier",
                     )
                 else:
                     employee = (
@@ -692,7 +699,8 @@ class PaymentExtractStep(Step):
                         self.increment(self.Metrics.EMPLOYEE_MISSING_IN_DB_COUNT)
                         payment_data.validation_container.add_validation_issue(
                             payments_util.ValidationReason.MISSING_IN_DB,
-                            f"employee: {payment_data.tin}",
+                            payment_data.tin,
+                            "employee",
                         )
 
             claim = (
@@ -714,7 +722,8 @@ class PaymentExtractStep(Step):
         if not claim and payment_data.is_standard_payment:
             payment_data.validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISSING_IN_DB,
-                f"claim: {payment_data.absence_case_number}",
+                payment_data.absence_case_number,
+                "claim",
             )
             self.increment(self.Metrics.CLAIM_NOT_FOUND_COUNT)
             return None, None
@@ -826,14 +835,10 @@ class PaymentExtractStep(Step):
             payment.claim = claim
         if employee:
             payment.employee = employee
-        payment.period_start_date = payments_util.datetime_str_to_date(
-            payment_data.payment_start_period
-        )
-        payment.period_end_date = payments_util.datetime_str_to_date(
-            payment_data.payment_end_period
-        )
-        payment.payment_date = payments_util.datetime_str_to_date(payment_data.payment_date)
-        payment.absence_case_creation_date = payments_util.datetime_str_to_date(
+        payment.period_start_date = datetime_str_to_date(payment_data.payment_start_period)
+        payment.period_end_date = datetime_str_to_date(payment_data.payment_end_period)
+        payment.payment_date = datetime_str_to_date(payment_data.payment_date)
+        payment.absence_case_creation_date = datetime_str_to_date(
             payment_data.absence_case_creation_date
         )
 
@@ -991,7 +996,9 @@ class PaymentExtractStep(Step):
             self.db_session.add(new_eft)
             self.db_session.add(employee_pub_eft_pair)
 
-            extra |= payments_util.get_traceable_pub_eft_details(new_eft, employee)
+            extra |= payments_util.get_traceable_pub_eft_details(
+                new_eft, employee, state=State.DELEGATED_EFT_SEND_PRENOTE
+            )
             logger.info(
                 "Starting DELEGATED_EFT prenote flow for employee associated with payment",
                 extra=extra,
@@ -1181,22 +1188,18 @@ class PaymentExtractStep(Step):
 
         # set status FEDERAL_WITHHOLDING_READY_FOR_PROCESSING
         elif (
-            payments_util.is_withholding_payments_enabled()
-            and payment.payment_transaction_type_id
+            payment.payment_transaction_type_id
             == PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
         ):
-            logger.info("Tax Withholding ENABLED")
             end_state = State.FEDERAL_WITHHOLDING_READY_FOR_PROCESSING
             message = "Federal Withholding payment processed"
             self.increment(self.Metrics.FEDERAL_WITHHOLDING_PAYMENT_COUNT)
 
         # set status  STATE_WITHHOLDING_READY_FOR_PROCESSING
         elif (
-            payments_util.is_withholding_payments_enabled()
-            and payment.payment_transaction_type_id
+            payment.payment_transaction_type_id
             == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
         ):
-            logger.info("Tax Withholding ENABLED")
             end_state = State.STATE_WITHHOLDING_READY_FOR_PROCESSING
             message = "State Withholding payment processed"
             self.increment(self.Metrics.STATE_WITHHOLDING_PAYMENT_COUNT)
@@ -1215,14 +1218,27 @@ class PaymentExtractStep(Step):
         )
         extra = payments_util.get_traceable_payment_details(payment, end_state)
         extra["is_for_standard_payment"] = payment_data.is_employee_required
+
+        # Keep track of stale payments
+        earliest_matching_payment = payments_util.get_earliest_matching_payment(
+            self.db_session, payment_data.c_value, payment_data.i_value
+        )
+        if earliest_matching_payment:
+            extra["days_since_payment_first_seen"] = (
+                datetime.utcnow().date() - earliest_matching_payment.created_at.date()
+            ).days + 1
+            extra["day_payment_first_seen"] = str(earliest_matching_payment.created_at.date())
+
         logger.info(
             "After consuming extracts and performing initial validation, payment added to state",
             extra=extra,
         )
         # For the payments that failed validation, log their reason codes
-        # so that we can collect metrics on the most common error types
-        for reason in payment_data.validation_container.get_reasons():
-            extra["validation_reason"] = str(reason)  # Replaced each iteration
+        # and field names so that we can collect metrics on the most common error types
+        for reason, field_name in payment_data.validation_container.get_reasons_with_field_names():
+            # Replaced each iteration
+            extra["validation_reason"] = str(reason)
+            extra["field_name"] = field_name
             logger.info("Payment failed validation", extra=extra)
 
     def _manage_pei_writeback_state(

@@ -353,6 +353,10 @@ export interface UserLeaveAdminResponse {
   has_fineos_registration?: boolean;
   verified?: boolean;
 }
+
+export interface GETUsersCurrentResponse extends SuccessfulResponse {
+  data: UserResponse;
+}
 export interface UserResponse {
   user_id?: string;
   auth_id?: string;
@@ -1255,7 +1259,7 @@ export async function patchUsersByUser_id(
  */
 export async function getUsersCurrent(
   options?: RequestOptions
-): Promise<ApiResponse<UserResponse>> {
+): Promise<ApiResponse<GETUsersCurrentResponse>> {
   return await http.fetchJson("/users/current", {
     ...options,
   });

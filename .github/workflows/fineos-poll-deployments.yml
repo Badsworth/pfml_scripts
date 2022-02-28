@@ -55,5 +55,7 @@ jobs:
               "run_stable": "true",
               "run_unstable": "false",
               "run_morning": "false",
+              "run_targeted": "false",
+              "targeted_pattern": "cypress/specs/stable/feature/**",
               "title_override": "${{ format('Fineos Deploy: {0} to {1}', steps.publish-deployments.outputs.version, matrix.environment) }}"
             }

@@ -43,6 +43,7 @@ exports[`PhoneNumber renders the page 1`] = `
       >
         <input
           aria-labelledby="InputText1_label InputText1_hint InputText1_error"
+          autocomplete="tel-national"
           class="usa-input maxw-mobile-lg"
           id="InputText1"
           inputmode="numeric"

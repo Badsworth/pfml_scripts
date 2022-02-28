@@ -125,12 +125,10 @@ def _process_pub_payments(
             db_session=db_session, log_entry_db_session=log_entry_db_session
         ).run()
 
-    if payments_util.is_withholding_payments_enabled():
-        logger.info("Tax Withholding ENABLED")
-        if config.do_related_payment_post_processing:
-            RelatedPaymentsPostProcessingStep(
-                db_session=db_session, log_entry_db_session=log_entry_db_session
-            ).run()
+    if config.do_related_payment_post_processing:
+        RelatedPaymentsPostProcessingStep(
+            db_session=db_session, log_entry_db_session=log_entry_db_session
+        ).run()
 
     if config.create_pei_writeback:
         FineosPeiWritebackStep(

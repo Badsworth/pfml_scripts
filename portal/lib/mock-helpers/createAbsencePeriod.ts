@@ -3,7 +3,7 @@ import {
   AbsencePeriodRequestDecision,
 } from "src/models/AbsencePeriod";
 import LeaveReason from "../../src/models/LeaveReason";
-import faker from "faker";
+import { faker } from "@faker-js/faker";
 
 // Cache the previously used date so we incrementally increase it,
 // producing more realistic data.
@@ -16,8 +16,8 @@ let endDate: Date;
 export const createAbsencePeriod = (
   partialAttrs: Partial<AbsencePeriod> = {}
 ) => {
-  const startDate = faker.date.soon(14, endDate);
-  endDate = faker.date.soon(14, startDate);
+  const startDate = faker.date.soon(14, endDate?.toISOString());
+  endDate = faker.date.soon(14, startDate.toISOString());
 
   const defaultAbsencePeriod = {
     absence_period_start_date: startDate.toISOString().substring(0, 10),

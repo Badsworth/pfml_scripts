@@ -32,7 +32,7 @@ You can set the profile for all future commands using `export AWS_PROFILE=eolwd-
 
 ### Using the Browser
 
-Visit [https://coma.awsapps.com/start](https://coma.awsapps.com/start) and log in with your Azure AD credentials. The UI will provide CLI credentials via `export` commands that you can paste into your terminal.
+Visit [https://coma.awsapps.com/start](https://coma.awsapps.com/start) and log in with your Azure AD credentials. The UI will provide CLI credentials via `export` commands that you can paste into your terminal or add to an `~/.aws/credentials` or `~/.aws/config` file.
 
 ## 2. Install Terraform
 

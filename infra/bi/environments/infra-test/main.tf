@@ -16,7 +16,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 3.66.0"
+      version = "3.74.1"
     }
   }
 }
@@ -24,5 +24,6 @@ terraform {
 module "pfml" {
   source = "../../template"
 
-  environment_name = "infra-test"
+  environment_name                 = "infra-test"
+  redshift_daily_import_bucket_key = "56bb1454-0332-41aa-96eb-9befbe4ff59e"
 }

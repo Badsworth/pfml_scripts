@@ -23,7 +23,6 @@ from massgov.pfml.api.models.applications.responses import DocumentResponse
 from massgov.pfml.api.models.common import LookupEnum
 from massgov.pfml.api.services.administrator_fineos_actions import EformTypes
 from massgov.pfml.api.services.fineos_actions import get_documents
-from massgov.pfml.api.util.phone import convert_to_E164
 from massgov.pfml.api.util.response import Response
 from massgov.pfml.api.validation.exceptions import (
     IssueRule,
@@ -31,6 +30,7 @@ from massgov.pfml.api.validation.exceptions import (
     ValidationErrorDetail,
     ValidationException,
 )
+from massgov.pfml.db.models.absences import AbsencePeriodType
 from massgov.pfml.db.models.applications import (
     AmountFrequency,
     Application,
@@ -64,7 +64,6 @@ from massgov.pfml.db.models.applications import (
     WorkPatternType,
 )
 from massgov.pfml.db.models.employees import (
-    AbsencePeriodType,
     Address,
     AddressType,
     Claim,
@@ -72,10 +71,11 @@ from massgov.pfml.db.models.employees import (
     LkAddressType,
     LkGender,
     MFADeliveryPreference,
+    User,
 )
 from massgov.pfml.db.models.geo import GeoState
 from massgov.pfml.fineos import AbstractFINEOSClient
-from massgov.pfml.fineos.models.customer_api import PhoneNumber
+from massgov.pfml.fineos.models.customer_api import AbsencePeriodStatus, PhoneNumber
 from massgov.pfml.fineos.models.customer_api.spec import (
     AbsenceDetails,
     AbsencePeriod,
@@ -87,6 +87,10 @@ from massgov.pfml.fineos.transforms.from_fineos.eforms import (
     TransformPreviousLeaveFromOtherLeaveEform,
 )
 from massgov.pfml.util.datetime import utcnow
+from massgov.pfml.util.logging.applications import (
+    get_absence_period_log_attributes,
+    get_application_log_attributes,
+)
 from massgov.pfml.util.pydantic.types import Regexes
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -892,7 +896,7 @@ def add_or_update_phone(
     if not phone:
         return
 
-    internationalized_phone_number = convert_to_E164(phone)
+    internationalized_phone_number = phone.e164
 
     # If Phone exists, update with what we have, otherwise, create a new Phone
     # if process_masked_phone_number did not remove the phone_number field, update the db
@@ -961,12 +965,41 @@ def get_document_by_id(
     return document
 
 
-def claim_is_valid_for_application_import(claim: Optional[Claim]) -> Optional[Response]:
+def claim_is_valid_for_application_import(
+    db_session: db.Session, user: User, claim: Optional[Claim]
+) -> Optional[Response]:
     if claim is not None and (claim.employee_tax_identifier is None or claim.employer_fein is None):
         message = "Claim data incomplete for application import."
         validation_error = ValidationErrorDetail(message=message, type=IssueType.conflicting)
         error = response_util.error_response(Conflict, message=message, errors=[validation_error])
         return error
+    if claim:
+        existing_application = (
+            db_session.query(Application)
+            .filter(Application.claim_id == claim.claim_id)
+            .one_or_none()
+        )
+        if existing_application and existing_application.user_id != user.user_id:
+            message = "An application linked to a different account already exists for this claim."
+            validation_error = ValidationErrorDetail(message=message, type=IssueType.exists)
+            logger.info(
+                "applications_import failure - exists_different_account",
+                extra=get_application_log_attributes(existing_application),
+            )
+            return response_util.error_response(
+                Forbidden, message=message, errors=[validation_error]
+            )
+
+        if existing_application:
+            message = "An application already exists for this claim."
+            validation_error = ValidationErrorDetail(message=message, type=IssueType.duplicate)
+            logger.info(
+                "applications_import failure - exists_same_account",
+                extra=get_application_log_attributes(existing_application),
+            )
+            return response_util.error_response(
+                Forbidden, message=message, errors=[validation_error]
+            )
     return None
 
 
@@ -1133,6 +1166,18 @@ def _set_reduced_leave_periods(application: Application, absence_details: Absenc
     application.reduced_schedule_leave_periods = reduced_schedule_leave_periods
 
 
+def _set_has_future_child_date(
+    application: Application, imported_absence_period: AbsencePeriod
+) -> None:
+    if (
+        application.leave_reason_id == DBLeaveReason.CHILD_BONDING.leave_reason_id
+        and imported_absence_period.status == AbsencePeriodStatus.ESTIMATED.value
+    ):
+        application.has_future_child_date = True
+    else:
+        application.has_future_child_date = False
+
+
 def _get_open_absence_period(absence_details: AbsenceDetails) -> Optional[AbsencePeriod]:
     if absence_details.absencePeriods:
         for absence_period in absence_details.absencePeriods:
@@ -1165,10 +1210,25 @@ def _get_absence_period_from_absence_details(
     if absence_details.absencePeriods is None:
         return None
     absence_period = _get_open_absence_period(absence_details)
-    if absence_period is not None:
-        return absence_period
-    application.completed_time = utcnow()
-    return _get_latest_absence_period(absence_details)
+    if absence_period is None:
+        application.completed_time = utcnow()
+        absence_period = _get_latest_absence_period(absence_details)
+
+    if len(absence_details.absencePeriods) > 1:
+        logger.info(
+            "multiple absence periods found during application import",
+            extra={
+                "application_id": application.application_id,
+                "absence_case_id": (
+                    application.claim.fineos_absence_id if application.claim else None
+                ),
+                "absence_period_attributes": get_absence_period_log_attributes(
+                    absence_details.absencePeriods, absence_period
+                ),
+            },
+        )
+
+    return absence_period
 
 
 def set_application_absence_and_leave_period(
@@ -1213,6 +1273,7 @@ def set_application_absence_and_leave_period(
         application.pregnant_or_recent_birth = (
             application.leave_reason_id == DBLeaveReason.PREGNANCY_MATERNITY.leave_reason_id
         )
+        _set_has_future_child_date(application, absence_period)
     application.submitted_time = absence_details.creationDate
     application.employer_notification_date = absence_details.notificationDate
     application.employer_notified = application.employer_notification_date is not None
@@ -1377,62 +1438,54 @@ def set_customer_contact_detail_fields(
         logger.info("No contact details returned from FINEOS")
         return
 
-    if (
-        application.user.mfa_delivery_preference_id
-        != MFADeliveryPreference.SMS.mfa_delivery_preference_id
-    ):
-        raise ValidationException(
-            errors=[
-                ValidationErrorDetail(
-                    field="mfa_delivery_preference",
-                    type=IssueType.required,
-                    message="User has not opted into MFA delivery preferences",
-                )
-            ]
-        )
+    mfa_phone_number = None
+    for phone_num in contact_details.phoneNumbers:
+        country_code = phone_num.intCode if phone_num.intCode else "1"
+        fineos_phone = f"+{country_code}{phone_num.areaCode}{phone_num.telephoneNo}"
+        if application.user.mfa_phone_number == fineos_phone:
+            mfa_phone_number = fineos_phone
 
-    mfa_phone_number = next(
-        (
-            phone_num
-            for phone_num in contact_details.phoneNumbers
-            if f"+{phone_num.intCode}{phone_num.areaCode}{phone_num.telephoneNo}"
-            == application.user.mfa_phone_number
-        ),
-        None,
+    preferred_phone_number = next(
+        (phone_num for phone_num in contact_details.phoneNumbers if phone_num.preferred),
+        contact_details.phoneNumbers[0],
     )
 
-    if mfa_phone_number is None:
+    if (
+        mfa_phone_number is None
+        or application.user.mfa_delivery_preference_id
+        != MFADeliveryPreference.SMS.mfa_delivery_preference_id
+    ):
         logger.info(
-            "application import failure - phone number mismatch",
-            extra={"absence_case_id": application.claim_id, "user_id": application.user.user_id,},
+            "application import failure - phone number mismatch / no SMS phone available ",
+            extra={
+                "absence_case_id": application.claim.fineos_absence_id
+                if application.claim
+                else None,
+                "mfa_delivery_preference_id": application.user.mfa_delivery_preference_id,
+            },
         )
         raise ValidationException(
             errors=[
                 ValidationErrorDetail(
                     type=IssueType.incorrect,
-                    message="An issue occurred while trying to import the application",
+                    message="Code 3: An issue occurred while trying to import the application.",
                 )
             ]
         )
 
-    phone_number_from_fineos = next(
-        (phone_num for phone_num in contact_details.phoneNumbers if phone_num.preferred),
-        contact_details.phoneNumbers[0],
-    )
-
     # Handles the potential case of a phone number list existing, but phone fields are null
     if not (
-        phone_number_from_fineos.intCode
-        or phone_number_from_fineos.areaCode
-        or phone_number_from_fineos.telephoneNo
+        preferred_phone_number.intCode
+        or preferred_phone_number.areaCode
+        or preferred_phone_number.telephoneNo
     ):
         logger.info(
             "Field missing from FINEOS phoneNumber list",
-            extra={"phoneNumbers": str(phone_number_from_fineos)},
+            extra={"phoneNumbers": str(preferred_phone_number)},
         )
         return
 
-    phone_to_create = create_common_io_phone_from_fineos(phone_number_from_fineos, db_session)
+    phone_to_create = create_common_io_phone_from_fineos(preferred_phone_number, db_session)
     add_or_update_phone(db_session, phone_to_create, application)
 
 

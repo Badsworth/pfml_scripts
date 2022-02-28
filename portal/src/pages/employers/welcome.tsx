@@ -1,7 +1,7 @@
 import { IconMail, IconPdf } from "@massds/mayflower-react/dist/Icon";
 import Alert from "../../components/core/Alert";
 import { AppLogic } from "../../hooks/useAppLogic";
-import EmployerNavigationTabs from "../../components/employers/EmployerNavigationTabs";
+import EmployerNavigationTabs from "../../components/EmployerNavigationTabs";
 import Heading from "../../components/core/Heading";
 import Icon from "../../components/core/Icon";
 import Link from "next/link";

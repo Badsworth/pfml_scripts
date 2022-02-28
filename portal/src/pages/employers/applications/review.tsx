@@ -1,8 +1,3 @@
-import {
-  DocumentType,
-  DocumentTypeEnum,
-  findDocumentsByTypes,
-} from "../../../models/Document";
 import LeaveReason, { LeaveReasonType } from "../../../models/LeaveReason";
 import PreviousLeave, {
   PreviousLeaveType,
@@ -12,29 +7,29 @@ import { get, isEqual } from "lodash";
 import withEmployerClaim, {
   WithEmployerClaimProps,
 } from "../../../hoc/withEmployerClaim";
-
 import Alert from "../../../components/core/Alert";
 import AppErrorInfo from "../../../models/AppErrorInfo";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/core/Button";
-import CaringLeaveQuestion from "src/components/employers/CaringLeaveQuestion";
-import CertificationsAndAbsencePeriods from "../../../components/employers/CertificationsAndAbsencePeriods";
-import ConcurrentLeave from "../../../components/employers/ConcurrentLeave";
+import CaringLeaveQuestion from "src/features/employer-review/CaringLeaveQuestion";
+import CertificationsAndAbsencePeriods from "../../../features/employer-review/CertificationsAndAbsencePeriods";
+import ConcurrentLeave from "../../../features/employer-review/ConcurrentLeave";
 import ConcurrentLeaveModel from "../../../models/ConcurrentLeave";
-import EmployeeInformation from "../../../components/employers/EmployeeInformation";
-import EmployeeNotice from "../../../components/employers/EmployeeNotice";
+import EmployeeInformation from "../../../features/employer-review/EmployeeInformation";
+import EmployeeNotice from "../../../features/employer-review/EmployeeNotice";
 import EmployerBenefit from "../../../models/EmployerBenefit";
-import EmployerBenefits from "../../../components/employers/EmployerBenefits";
-import EmployerDecision from "../../../components/employers/EmployerDecision";
-import Feedback from "../../../components/employers/Feedback";
-import FraudReport from "../../../components/employers/FraudReport";
+import EmployerBenefits from "../../../features/employer-review/EmployerBenefits";
+import EmployerDecision from "../../../features/employer-review/EmployerDecision";
+import Feedback from "../../../features/employer-review/Feedback";
+import FraudReport from "../../../features/employer-review/FraudReport";
 import Heading from "../../../components/core/Heading";
 import HeadingPrefix from "src/components/core/HeadingPrefix";
-import PreviousLeaves from "../../../components/employers/PreviousLeaves";
+import PreviousLeaves from "../../../features/employer-review/PreviousLeaves";
 import ReviewHeading from "../../../components/ReviewHeading";
 import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
-import WeeklyHoursWorkedRow from "../../../components/employers/WeeklyHoursWorkedRow";
+import WeeklyHoursWorkedRow from "../../../features/employer-review/WeeklyHoursWorkedRow";
+import { findDocumentsByLeaveReason } from "../../../models/Document";
 import formatDate from "../../../utils/formatDate";
 import { getSoonestReviewableFollowUpDate } from "../../../models/ManagedRequirement";
 import isBlank from "../../../utils/isBlank";
@@ -177,22 +172,10 @@ export const Review = (props: WithEmployerClaimProps) => {
   // only cert forms should be shown
   const allDocuments = claimDocumentsMap.get(absenceId)?.items || [];
 
-  // TODO (CP-1983): Remove caring leave feature flag check
-  // after turning on caring leave feature flag, use `findDocumentsByLeaveReason`
-  // instead of `findDocumentsByTypes`
-  const leaveReason: LeaveReasonType | undefined = get(
-    claim,
-    "leave_details.reason"
-  );
-  const certificationDocumentTypes: DocumentTypeEnum[] = [
-    DocumentType.certification.medicalCertification,
-  ];
-  if (leaveReason) {
-    certificationDocumentTypes.push(DocumentType.certification[leaveReason]);
-  }
-  const certificationDocuments = findDocumentsByTypes(
+  const leaveReason = claim.leave_details?.reason as LeaveReasonType;
+  const certificationDocuments = findDocumentsByLeaveReason(
     allDocuments,
-    certificationDocumentTypes
+    leaveReason
   );
 
   const handleBenefitInputAdd = () => {
@@ -402,8 +385,6 @@ export const Review = (props: WithEmployerClaimProps) => {
     }
   };
 
-  const otherLeaveStartDate = formatDate(claim.otherLeaveStartDate).full();
-
   return (
     <div className="maxw-desktop-lg">
       <BackButton />
@@ -517,13 +498,13 @@ export const Review = (props: WithEmployerClaimProps) => {
             </div>
             <PreviousLeaves
               appErrors={appErrors}
+              claim={claim}
               previousLeaves={formState.previousLeaves}
               addedPreviousLeaves={formState.addedPreviousLeaves}
               onAdd={handlePreviousLeaveAdd}
               onChange={handlePreviousLeavesChange}
               onRemove={handlePreviousLeaveRemove}
               shouldShowV2={shouldShowV2}
-              otherLeaveStartDate={otherLeaveStartDate}
             />
             <ConcurrentLeave
               appErrors={appErrors}

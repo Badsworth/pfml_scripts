@@ -90,11 +90,12 @@ def create_check_file(
         check_number = max(db_check_num, int(starting_check_number))
 
     for payment in eligible_check_payments:
+        extra = payments_util.get_traceable_payment_details(payment)
+
         try:
             if count_incrementer:
                 count_incrementer("check_payment_count")
 
-            extra = payments_util.get_traceable_payment_details(payment)
             logger.info("Adding check payment to PUB check files", extra=extra)
             check_number += 1
             payment.check = PaymentCheck(check_number=check_number)

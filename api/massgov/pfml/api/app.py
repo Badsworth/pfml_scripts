@@ -98,6 +98,7 @@ def create_app(
     def push_db():
         g.db = db_session_factory
         g.start_time = time.monotonic()
+        g.connexion_flask_app = app
         massgov.pfml.util.logging.access.access_log_start(flask.request)
         newrelic.agent.add_custom_parameter(
             "api_release_version", os.environ.get("RELEASE_VERSION")

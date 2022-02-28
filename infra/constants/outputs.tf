@@ -27,7 +27,6 @@ output "infra_admin_sso_arn" {
 #       https://lwd.atlassian.net/wiki/spaces/DD/pages/272072807/Tagging+Standards.
 output "environment_tags" {
   value = {
-    "adhoc"       = "test"
     "breakfix"    = "qa"
     "cps-preview" = "qa"
     "infra-test"  = "test"
@@ -72,7 +71,6 @@ output "environment_shorthand" {
 #
 output "smartronix_environment_tags" {
   value = {
-    "adhoc"       = "Adhoc"
     "breakfix"    = "Breakfix"
     "cps-preview" = "CPSPreview"
     "infra-test"  = "Sandbox"
@@ -238,6 +236,9 @@ output "admin_portal_waf_whitelist" {
     "75.134.71.16/32",   # Last Call Media WFH IP
     "68.204.24.240/32",  # Last Call Media WFH IP - Tyler
     "68.84.12.117/32",   # Last Call Media WFH IP - Niki Ramlogan
+    "71.227.169.195/32", # Last Call Media WFH IP - Jessi Murray
+    "73.39.112.119/32",  # Last Call Media WFH IP - Jim Ruggiero
+    "73.47.218.158/32",  # Chris Griffith WFH
     "47.200.176.201/32", # Ben WFH
     "47.199.161.99/32",  # Jamie WFH
     "76.202.246.67/32",  # Mark WFH

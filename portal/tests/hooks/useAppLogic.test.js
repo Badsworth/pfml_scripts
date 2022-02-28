@@ -15,6 +15,7 @@ describe("useAppLogic", () => {
       documents,
       employers,
       featureFlags,
+      payments,
       portalFlow,
       rest,
       setAppErrors,
@@ -27,6 +28,7 @@ describe("useAppLogic", () => {
         auth,
         benefitsApplications,
         catchError,
+        payments,
         claims,
         clearErrors,
         documents,
@@ -66,6 +68,7 @@ describe("useAppLogic", () => {
     expect(employers.loadWithholding).toBeInstanceOf(Function);
     expect(employers.submitClaimReview).toBeInstanceOf(Function);
     expect(employers.submitWithholding).toBeInstanceOf(Function);
+    expect(payments.loadPayments).toBeInstanceOf(Function);
     expect(users.user).toBeUndefined();
     expect(users).toEqual(expect.anything());
     expect(featureFlags).toBeInstanceOf(Object);

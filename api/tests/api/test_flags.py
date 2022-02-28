@@ -12,6 +12,11 @@ def test_flags_get_enabled_feature_flag_with_start_end_options(client, test_db_s
     feature_flag_value.end = "2021-06-26 18:00:00-04"
     feature_flag_value.start = "2021-06-26 17:00:00-04"
     feature_flag_value.options = dict(page_routes=["/applications/*", "/employers/*"])
+    feature_flag_value.email_address = "johndoe@example.com"
+    feature_flag_value.sub_id = "1234"
+    feature_flag_value.family_name = "doe"
+    feature_flag_value.given_name = "john"
+    feature_flag_value.action = "INSERT"
     test_db_session.add(feature_flag_value)
     response = client.get(f"/v1/flags/{flag_name}")
     assert response.status_code == 200
@@ -30,6 +35,11 @@ def test_flags_get_enabled_feature_flags_with_start_end_options(client, test_db_
     feature_flag_value.end = "2021-06-26 18:00:00-04"
     feature_flag_value.start = "2021-06-26 17:00:00-04"
     feature_flag_value.options = dict(page_routes=["/applications/*", "/employers/*"])
+    feature_flag_value.email_address = "johndoe@example.com"
+    feature_flag_value.sub_id = "1234"
+    feature_flag_value.family_name = "doe"
+    feature_flag_value.given_name = "john"
+    feature_flag_value.action = "INSERT"
     test_db_session.add(feature_flag_value)
     response = client.get("/v1/flags")
     assert response.status_code == 200

@@ -1,6 +1,6 @@
 import uuid
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import date, timedelta
 from typing import Dict, List, Optional
 
 import faker
@@ -10,8 +10,9 @@ import massgov.pfml.experian.address_validate_soap.client as soap_api
 import massgov.pfml.experian.address_validate_soap.models as sm
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
+from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.employees import (
-    AbsenceStatus,
+    AbsencePeriod,
     Address,
     Claim,
     Employee,
@@ -24,6 +25,7 @@ from massgov.pfml.db.models.employees import (
     TaxIdentifier,
 )
 from massgov.pfml.db.models.factories import (
+    AbsencePeriodFactory,
     AddressFactory,
     ClaimFactory,
     CtrAddressPairFactory,
@@ -307,6 +309,7 @@ def generate_scenario_data_in_db(
     absence_case_id = f"{fineos_notification_id}-ABS-001"
 
     claim = construct_claim(scenario_descriptor, employee, employer, absence_case_id, db_session)
+    construct_absence_period(scenario_descriptor, claim, leave_request_id)
 
     return ScenarioData(
         scenario_descriptor=scenario_descriptor,
@@ -316,6 +319,33 @@ def generate_scenario_data_in_db(
         absence_case_id=absence_case_id,
         leave_request_id=leave_request_id,
     )
+
+
+def construct_absence_period(
+    scenario_descriptor: ScenarioDescriptor, claim: Optional[Claim], leave_request_id: int
+) -> Optional[AbsencePeriod]:
+    if claim is None or not scenario_descriptor.has_absence_period:
+        return None
+
+    absence_period_start_date = (
+        claim.absence_period_start_date if claim.absence_period_start_date else date(2021, 1, 3)
+    )
+    absence_period_end_date = absence_period_start_date + timedelta(weeks=26)
+
+    if scenario_descriptor.payment_date_mismatch:
+        absence_period_start_date = date(2022, 1, 5)
+        absence_period_end_date = date(2022, 1, 12)
+        scenario_descriptor.is_adhoc_payment = False
+
+    absence_period = AbsencePeriodFactory.create(
+        claim=claim,
+        absence_period_start_date=absence_period_start_date,
+        absence_period_end_date=absence_period_end_date,
+        absence_period_type_id=scenario_descriptor.absence_period_type.absence_period_type_id,
+        fineos_leave_request_id=leave_request_id,
+    )
+
+    return absence_period
 
 
 def construct_claim(

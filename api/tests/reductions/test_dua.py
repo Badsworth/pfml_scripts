@@ -18,8 +18,8 @@ import massgov.pfml.reductions.dua as dua
 import massgov.pfml.util.csv as csv_util
 import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.files as file_util
+from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.employees import (
-    AbsenceStatus,
     DuaReductionPayment,
     DuaReductionPaymentReferenceFile,
     LatestStateLog,

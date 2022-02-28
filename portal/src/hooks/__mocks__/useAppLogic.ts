@@ -9,6 +9,7 @@ import Claim from "../../models/Claim";
 import ClaimDetail from "../../models/ClaimDetail";
 import EmployerClaim from "../../models/EmployerClaim";
 import Flag from "../../models/Flag";
+import { Payment } from "src/models/Payment";
 import { uniqueId } from "lodash";
 
 export default jest.fn(() => ({
@@ -46,7 +47,6 @@ export default jest.fn(() => ({
     warningsLists: {},
   },
   claims: {
-    activeFilters: {},
     claimDetail: new ClaimDetail(),
     claims: new ApiResourceCollection<Claim>("fineos_absence_id"),
     clearClaims: jest.fn(),
@@ -89,6 +89,12 @@ export default jest.fn(() => ({
     loadWithholding: jest.fn(() => ({ filing_period: "2011-11-20" })),
     submitClaimReview: jest.fn(),
     submitWithholding: jest.fn(),
+  },
+  payments: {
+    loadPayments: jest.fn(),
+    loadedPaymentsData: new Payment(),
+    hasLoadedPayments: true,
+    isLoadingPayments: false,
   },
   portalFlow: {
     getNextPageRoute: jest.fn(),

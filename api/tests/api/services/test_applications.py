@@ -1,6 +1,6 @@
+import unittest.mock as mock
 from datetime import date, datetime
 
-import mock
 import pytest
 
 import massgov
@@ -17,6 +17,7 @@ from massgov.pfml.api.validation.exceptions import (
     ValidationErrorDetail,
     ValidationException,
 )
+from massgov.pfml.db.models.absences import AbsenceReason
 from massgov.pfml.db.models.applications import (
     ContinuousLeavePeriod,
     DayOfWeek,
@@ -24,7 +25,7 @@ from massgov.pfml.db.models.applications import (
     LeaveReason,
     LeaveReasonQualifier,
 )
-from massgov.pfml.db.models.employees import AbsenceReason, BankAccountType, Gender, PaymentMethod
+from massgov.pfml.db.models.employees import BankAccountType, Gender, PaymentMethod
 from massgov.pfml.db.models.factories import ApplicationFactory
 from massgov.pfml.fineos.models.customer_api import EForm, EFormAttribute, ModelEnum
 from massgov.pfml.fineos.models.customer_api.spec import (
@@ -354,6 +355,15 @@ def test_set_application_absence_and_leave_period(
     assert application.submitted_time == absence_details.creationDate
     assert application.employer_notification_date == absence_details.notificationDate
     assert application.employer_notified
+    assert application.has_future_child_date is False
+
+    absence_details.absencePeriods[0].reason = "Child Bonding"
+    absence_details.absencePeriods[0].status = "estimated"
+    mock_get_absence.return_value = absence_details
+    set_application_absence_and_leave_period(
+        fineos_client, fineos_web_id, application, absence_case_id
+    )
+    assert application.has_future_child_date is True
 
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")
@@ -735,6 +745,28 @@ def test_set_customer_contact_detail_fields(
     assert application.phone_id == application.phone.phone_id
 
 
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.read_customer_contact_details")
+def test_set_customer_contact_detail_fields_missing_country_code(
+    mock_read_customer_contact_details, fineos_client, fineos_web_id, application, test_db_session
+):
+    customer_contact_details_json = massgov.pfml.fineos.mock_client.mock_customer_contact_details()
+    # country code missing
+    for phone_num in customer_contact_details_json["phoneNumbers"]:
+        phone_num["intCode"] = None
+    customer_contact_details = massgov.pfml.fineos.models.customer_api.ContactDetails.parse_obj(
+        customer_contact_details_json
+    )
+
+    application.user.mfa_phone_number = "+13214567890"
+    application.user.mfa_delivery_preference_id = 1
+    mock_read_customer_contact_details.return_value = customer_contact_details
+    set_customer_contact_detail_fields(fineos_client, fineos_web_id, application, test_db_session)
+
+    # We still get a match, country code added
+    assert application.phone.phone_number == "+13214567890"
+    assert application.phone_id == application.phone.phone_id
+
+
 def test_set_customer_contact_detail_fields_without_mfa_enabled(
     fineos_client, fineos_web_id, application, test_db_session
 ):
@@ -747,9 +779,8 @@ def test_set_customer_contact_detail_fields_without_mfa_enabled(
 
     assert exc.value.errors == [
         ValidationErrorDetail(
-            type=IssueType.required,
-            message="User has not opted into MFA delivery preferences",
-            field="mfa_delivery_preference",
+            type=IssueType.incorrect,
+            message="Code 3: An issue occurred while trying to import the application.",
         )
     ]
     assert application.phone is None
@@ -768,7 +799,7 @@ def test_set_customer_contact_detail_fields_without_matching_mfa_phone_number(
     assert exc.value.errors == [
         ValidationErrorDetail(
             type=IssueType.incorrect,
-            message="An issue occurred while trying to import the application",
+            message="Code 3: An issue occurred while trying to import the application.",
         )
     ]
 

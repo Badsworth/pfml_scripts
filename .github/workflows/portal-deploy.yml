@@ -12,7 +12,19 @@ on:
           🛑 DO NOT CHANGE THE DROPDOWN ABOVE FOR THE WORKFLOW. KEEP IT ON "main" BRANCH.                         
           --------------------------------------                                                                     
           ⬇️ Environment to be deployed.
-            (test, performance, stage, training, uat and prod)
+        type: choice
+        options:
+          - breakfix
+          - cps-preview
+          - infra-test
+          - long
+          - performance
+          - prod
+          - stage
+          - test
+          - training
+          - trn2
+          - uat
       version:
         required: true
         default: "main"
@@ -319,7 +331,7 @@ jobs:
         run: npm ci --prefix portal
 
       - name: Build
-        run: npm run build:${{ needs.deploy-info.outputs.portal-env }} --prefix portal
+        run: BUILD_ENV=${{ needs.deploy-info.outputs.portal-env }} npm run build --prefix portal
 
       - name: Sync S3 Bucket
         env:
@@ -578,10 +590,10 @@ jobs:
     with:
       # We're not allowed to reference the env context when invoking reusable workflows,
       # only inputs, needs, github, and secrets.
-      target_environment: ${{ github.event.inputs.deployment_env }}
+      target_environment: ${{ github.event.inputs.deployment_env || 'test' }}
       cypress_tags: "Deploy,Deploy-Portal"
       run_stable: true
-      title_override: "${{ format('Portal Deploy: {0} to {1}', github.event.inputs.version, github.event.inputs.deployment_env) }}"
+      title_override: "${{ format('Portal Deploy: {0} to {1}', github.event.inputs.version || 'main', github.event.inputs.deployment_env || 'test') }}"
     secrets:
       E2E_FINEOS_PASSWORD: ${{ secrets.E2E_FINEOS_PASSWORD }}
       E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
@@ -594,6 +606,7 @@ jobs:
       CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
       CYPRESS_RECORD_KEY_UNSTABLE: ${{ secrets.CYPRESS_RECORD_KEY_UNSTABLE }}
       CYPRESS_RECORD_KEY_MORNING: ${{ secrets.CYPRESS_RECORD_KEY_MORNING }}
+      CYPRESS_RECORD_KEY_TARGETED: ${{ secrets.CYPRESS_RECORD_KEY_TARGETED }}
       PFML_AWS_ACCESS_KEY_ID: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
       PFML_AWS_SECRET_ACCESS_KEY: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
 

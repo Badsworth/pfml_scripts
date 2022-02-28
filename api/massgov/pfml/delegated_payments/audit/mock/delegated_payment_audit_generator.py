@@ -2,7 +2,6 @@ import argparse
 import decimal
 import random
 import uuid
-from collections import OrderedDict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
@@ -13,8 +12,8 @@ import faker
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
 import massgov.pfml.util.logging as logging
+from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.employees import (
-    AbsenceStatus,
     Claim,
     ClaimType,
     ExperianAddressPair,
@@ -119,114 +118,95 @@ class AuditScenarioNameWithCount:
 ## Scenarios ##
 ###############
 
-AUDIT_SCENARIO_DESCRIPTORS: Dict[AuditScenarioName, AuditScenarioDescriptor] = OrderedDict()
-
-AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.FAMILY_LEAVE_ACH] = AuditScenarioDescriptor(
-    scenario_name=AuditScenarioName.FAMILY_LEAVE_ACH,
-    claim_type=ClaimType.FAMILY_LEAVE,
-    payment_method=PaymentMethod.ACH,
+DESCRIPTORS = (
+    AuditScenarioDescriptor(
+        scenario_name=AuditScenarioName.FAMILY_LEAVE_ACH,
+        claim_type=ClaimType.FAMILY_LEAVE,
+        payment_method=PaymentMethod.ACH,
+    ),
+    AuditScenarioDescriptor(
+        scenario_name=AuditScenarioName.FAMILY_LEAVE_CHECK,
+        claim_type=ClaimType.FAMILY_LEAVE,
+        payment_method=PaymentMethod.CHECK,
+    ),
+    AuditScenarioDescriptor(
+        scenario_name=AuditScenarioName.MEDICAL_LEAVE_ACH,
+        claim_type=ClaimType.MEDICAL_LEAVE,
+        payment_method=PaymentMethod.ACH,
+    ),
+    AuditScenarioDescriptor(
+        scenario_name=AuditScenarioName.MEDICAL_LEAVE_CHECK,
+        claim_type=ClaimType.MEDICAL_LEAVE,
+        payment_method=PaymentMethod.CHECK,
+    ),
+    AuditScenarioDescriptor(
+        scenario_name=AuditScenarioName.SECOND_TIME_PAYMENT, is_first_time_payment=False
+    ),
+    AuditScenarioDescriptor(
+        scenario_name=AuditScenarioName.ERROR_PAYMENT,
+        previous_error_states=[State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT],
+    ),
+    AuditScenarioDescriptor(
+        scenario_name=AuditScenarioName.ERROR_PAYMENT_RESTARTABLE,
+        previous_error_states=[State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE],
+    ),
+    AuditScenarioDescriptor(
+        scenario_name=AuditScenarioName.ADDRESS_VALIDATION_ERROR,
+        previous_error_states=[State.PAYMENT_FAILED_ADDRESS_VALIDATION],
+    ),
+    AuditScenarioDescriptor(
+        scenario_name=AuditScenarioName.REJECTED_PAYMENT,
+        previous_rejection_states=[State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT],
+    ),
+    AuditScenarioDescriptor(
+        scenario_name=AuditScenarioName.REJECTED_PAYMENT_RESTARTABLE,
+        previous_rejection_states=[
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE
+        ],
+    ),
+    AuditScenarioDescriptor(
+        scenario_name=AuditScenarioName.MULTIPLE_DAYS_IN_ERROR_STATE,
+        previous_error_states=[
+            State.PAYMENT_FAILED_ADDRESS_VALIDATION,
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE,
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
+        ],
+    ),
+    AuditScenarioDescriptor(
+        scenario_name=AuditScenarioName.MULTIPLE_DAYS_IN_REJECTED_STATE,
+        previous_rejection_states=[
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
+        ],
+    ),
+    AuditScenarioDescriptor(
+        scenario_name=AuditScenarioName.MIXED_DAYS_IN_ERROR_OR_REJECTED_STATE,
+        previous_error_states=[
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE,
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
+        ],
+        previous_rejection_states=[
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
+        ],
+    ),
+    AuditScenarioDescriptor(
+        scenario_name=AuditScenarioName.ADDRESS_PAIR_DOES_NOT_EXIST, has_address_pair=False,
+    ),
+    AuditScenarioDescriptor(
+        scenario_name=AuditScenarioName.ADDRESS_IS_NOT_VERIFIED, is_address_verified=False,
+    ),
+    AuditScenarioDescriptor(
+        scenario_name=AuditScenarioName.AUDIT_REPORT_DETAIL_INFORMATIONAL,
+        audit_report_detail_informational=True,
+    ),
 )
 
-AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.FAMILY_LEAVE_CHECK] = AuditScenarioDescriptor(
-    scenario_name=AuditScenarioName.FAMILY_LEAVE_CHECK,
-    claim_type=ClaimType.FAMILY_LEAVE,
-    payment_method=PaymentMethod.CHECK,
-)
-
-AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.MEDICAL_LEAVE_ACH] = AuditScenarioDescriptor(
-    scenario_name=AuditScenarioName.MEDICAL_LEAVE_ACH,
-    claim_type=ClaimType.MEDICAL_LEAVE,
-    payment_method=PaymentMethod.ACH,
-)
-
-AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.MEDICAL_LEAVE_CHECK] = AuditScenarioDescriptor(
-    scenario_name=AuditScenarioName.MEDICAL_LEAVE_CHECK,
-    claim_type=ClaimType.MEDICAL_LEAVE,
-    payment_method=PaymentMethod.CHECK,
-)
-
-AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.SECOND_TIME_PAYMENT] = AuditScenarioDescriptor(
-    scenario_name=AuditScenarioName.SECOND_TIME_PAYMENT, is_first_time_payment=False
-)
-
-AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.ERROR_PAYMENT] = AuditScenarioDescriptor(
-    scenario_name=AuditScenarioName.ERROR_PAYMENT,
-    previous_error_states=[State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT],
-)
-
-AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.ERROR_PAYMENT_RESTARTABLE] = AuditScenarioDescriptor(
-    scenario_name=AuditScenarioName.ERROR_PAYMENT_RESTARTABLE,
-    previous_error_states=[State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE],
-)
-
-AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.ADDRESS_VALIDATION_ERROR] = AuditScenarioDescriptor(
-    scenario_name=AuditScenarioName.ADDRESS_VALIDATION_ERROR,
-    previous_error_states=[State.PAYMENT_FAILED_ADDRESS_VALIDATION],
-)
-
-AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.REJECTED_PAYMENT] = AuditScenarioDescriptor(
-    scenario_name=AuditScenarioName.REJECTED_PAYMENT,
-    previous_rejection_states=[State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT],
-)
-
-AUDIT_SCENARIO_DESCRIPTORS[
-    AuditScenarioName.REJECTED_PAYMENT_RESTARTABLE
-] = AuditScenarioDescriptor(
-    scenario_name=AuditScenarioName.REJECTED_PAYMENT_RESTARTABLE,
-    previous_rejection_states=[State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE],
-)
-
-AUDIT_SCENARIO_DESCRIPTORS[
-    AuditScenarioName.MULTIPLE_DAYS_IN_ERROR_STATE
-] = AuditScenarioDescriptor(
-    scenario_name=AuditScenarioName.MULTIPLE_DAYS_IN_ERROR_STATE,
-    previous_error_states=[
-        State.PAYMENT_FAILED_ADDRESS_VALIDATION,
-        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE,
-        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
-    ],
-)
-
-AUDIT_SCENARIO_DESCRIPTORS[
-    AuditScenarioName.MULTIPLE_DAYS_IN_REJECTED_STATE
-] = AuditScenarioDescriptor(
-    scenario_name=AuditScenarioName.MULTIPLE_DAYS_IN_REJECTED_STATE,
-    previous_rejection_states=[
-        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
-        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
-        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
-    ],
-)
-
-AUDIT_SCENARIO_DESCRIPTORS[
-    AuditScenarioName.MIXED_DAYS_IN_ERROR_OR_REJECTED_STATE
-] = AuditScenarioDescriptor(
-    scenario_name=AuditScenarioName.MIXED_DAYS_IN_ERROR_OR_REJECTED_STATE,
-    previous_error_states=[
-        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE,
-        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
-    ],
-    previous_rejection_states=[
-        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
-        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
-        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
-    ],
-)
-
-AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.ADDRESS_PAIR_DOES_NOT_EXIST] = AuditScenarioDescriptor(
-    scenario_name=AuditScenarioName.ADDRESS_PAIR_DOES_NOT_EXIST, has_address_pair=False,
-)
-
-AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.ADDRESS_IS_NOT_VERIFIED] = AuditScenarioDescriptor(
-    scenario_name=AuditScenarioName.ADDRESS_IS_NOT_VERIFIED, is_address_verified=False,
-)
-
-AUDIT_SCENARIO_DESCRIPTORS[
-    AuditScenarioName.AUDIT_REPORT_DETAIL_INFORMATIONAL
-] = AuditScenarioDescriptor(
-    scenario_name=AuditScenarioName.AUDIT_REPORT_DETAIL_INFORMATIONAL,
-    audit_report_detail_informational=True,
-)
+AUDIT_SCENARIO_DESCRIPTORS: Dict[AuditScenarioName, AuditScenarioDescriptor] = {
+    scenario.scenario_name: scenario for scenario in DESCRIPTORS
+}
 
 DEFAULT_AUDIT_SCENARIO_DATA_SET = [
     AuditScenarioNameWithCount(scenario_name, 1)
@@ -530,11 +510,8 @@ def generate_payment_rejects_file():
     args = parser.parse_args()
     folder_path = args.folder
 
-    config: List[AuditScenarioNameWithCount] = [
-        AuditScenarioNameWithCount(scenario_name, 1)
-        for scenario_name in AUDIT_SCENARIO_DESCRIPTORS.keys()
-    ]
-
-    generate_payment_audit_data_set_and_rejects_file(config, folder_path, db_session)
+    generate_payment_audit_data_set_and_rejects_file(
+        DEFAULT_AUDIT_SCENARIO_DATA_SET, folder_path, db_session
+    )
 
     logger.info("Done generating payment rejects file.")

@@ -34,7 +34,7 @@ a:focus {
 .page {
   background: #e5e5e5;
   display: grid;
-  grid-template-columns: 15.79em auto;
+  // grid-template-columns: 15.79em auto;
   grid-template-rows: minmax(min-content, max-content) auto;
   height: 100vh;
 }

@@ -9,7 +9,7 @@ import createAbsencePeriod from "lib/mock-helpers/createAbsencePeriod";
 import createMockClaim from "lib/mock-helpers/createMockClaim";
 import { createMockManagedRequirement } from "lib/mock-helpers/createMockManagedRequirement";
 import createMockUserLeaveAdministrator from "lib/mock-helpers/createMockUserLeaveAdministrator";
-import faker from "faker";
+import { faker } from "@faker-js/faker";
 import routes from "src/routes";
 import { times } from "lodash";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";

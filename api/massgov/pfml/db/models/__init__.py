@@ -7,8 +7,10 @@ import time
 import massgov.pfml.util.logging
 
 from . import (  # noqa: F401
+    absences,
     applications,
     azure,
+    dua,
     employees,
     flags,
     geo,
@@ -24,6 +26,7 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 def init_lookup_tables(db_session):
     """Initialize models in the database if necessary."""
     start_time = time.monotonic()
+    absences.sync_lookup_tables(db_session)
     applications.sync_lookup_tables(db_session)
     geo.sync_lookup_tables(db_session)
     state.sync_lookup_tables(db_session)

@@ -231,7 +231,7 @@ export class ClaimPage {
       }
       cy.wrap(el).click();
       waitForAjaxComplete();
-      cy.get('input[type="submit"][value="Continue"]').click();
+      cy.get('input[type="submit"][value="Continue"]').click({ force: true });
       cy.contains(".TreeNodeContainer", type, {
         timeout: 20000,
       })
@@ -309,6 +309,17 @@ export class ClaimPage {
       .find("select")
       .select(reason);
     cy.get('input[type="submit"][value="OK"]').click();
+    return this;
+  }
+
+  approveExtendedTime(): this {
+    waitForAjaxComplete();
+    cy.get("table[id$='leaveRequestListviewWidget']").within(() => {
+      cy.get("tr.ListRowSelected").click();
+    });
+    cy.get('a[title="Approve the Pending Leaving Request"]').click({
+      force: true,
+    });
     return this;
   }
 

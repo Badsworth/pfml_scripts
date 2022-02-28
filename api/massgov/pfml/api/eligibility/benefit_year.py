@@ -10,8 +10,8 @@ import massgov.pfml.util.logging
 from massgov.pfml import db
 from massgov.pfml.api.eligibility.benefit_year_dates import get_benefit_year_dates
 from massgov.pfml.api.eligibility.wage import WageCalculator, get_retroactive_base_period
+from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.employees import (
-    AbsenceStatus,
     BenefitYear,
     BenefitYearContribution,
     Claim,
@@ -23,7 +23,8 @@ from massgov.pfml.util.pydantic import PydanticBaseModel
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 # any other statuses we should include?
-AbsenceStatusesWithBenefitYear = [
+ABSENCE_STATUSES_WITH_BENEFIT_YEAR = [
+    AbsenceStatus.IN_REVIEW.absence_status_id,
     AbsenceStatus.APPROVED.absence_status_id,
     AbsenceStatus.COMPLETED.absence_status_id,
 ]
@@ -59,16 +60,13 @@ def _find_employee_by_ssn(db_session: db.Session, tax_identifier: str) -> Employ
     )
 
 
-def _query_approved_or_completed_claims_by_employee_id(
+# "Relevant" here is defined by the list of absence statuses stored in ABSENCE_STATUSES_WITH_BENEFIT_YEAR
+def _query_relevant_claims_by_employee_id(
     db_session: db.Session, employee_id: UUID4
 ) -> "Query[Claim]":
-    query = (
-        db_session.query(Claim)
-        .join(Employee, Claim.employee_id == Employee.employee_id)
-        .filter(
-            Employee.employee_id == employee_id,
-            Claim.fineos_absence_status_id.in_(AbsenceStatusesWithBenefitYear),
-        )
+    query = db_session.query(Claim).filter(
+        Claim.employee_id == employee_id,
+        Claim.fineos_absence_status_id.in_(ABSENCE_STATUSES_WITH_BENEFIT_YEAR),
     )
     return query
 
@@ -114,6 +112,13 @@ def _get_persisted_benefit_year_for_date(
 def _get_benefit_year_contribution_from_claim(
     claim: Claim,
 ) -> Optional[CreateBenefitYearContribution]:
+    if not claim.employer_id:
+        logger.warning(
+            "Cannot find employer_id on claim.",
+            extra={"claim_id": claim.claim_id, "employee_id": claim.employee_id,},
+        )
+
+        return None
 
     absence_periods = claim.absence_periods if claim and claim.absence_periods else []
     for absence_period in absence_periods:
@@ -197,10 +202,10 @@ def _create_benefit_year(
 
 
 def _create_benefit_years_from_leave_absence_history(
-    db_session: db.Session, employee_id: UUID4, leave_start_date: date
+    db_session: db.Session, employee_id: UUID4
 ) -> List[BenefitYear]:
     claims = (
-        _query_approved_or_completed_claims_by_employee_id(db_session, employee_id)
+        _query_relevant_claims_by_employee_id(db_session, employee_id)
         .order_by(Claim.absence_period_start_date)
         .all()
     )
@@ -208,7 +213,7 @@ def _create_benefit_years_from_leave_absence_history(
     if len(claims) == 0:
         logger.warning(
             "Cannot get Benefit Year from previous leave absence, there are no claims.",
-            extra={"leave_start_date": leave_start_date, "employee_id": employee_id},
+            extra={"employee_id": employee_id},
         )
         return []
 
@@ -240,9 +245,7 @@ def get_benefit_year_from_leave_absence_history(
     db_session: db.Session, employee_id: UUID4, leave_start_date: date
 ) -> Optional[BenefitYear]:
 
-    benefit_years = _create_benefit_years_from_leave_absence_history(
-        db_session, employee_id, leave_start_date
-    )
+    benefit_years = _create_benefit_years_from_leave_absence_history(db_session, employee_id)
 
     if len(benefit_years) == 0:
         return None

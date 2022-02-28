@@ -52,8 +52,8 @@ securityGroups.forEach(([userSecurityGroup, canUseSecureAction]) => {
       canUseSecureAction ? "" : "'t"
     } create/modify/delete historical absence case within Absence Case`, () => {
       // Login as second SSO account
-      fineos.before(ssoAccount2Credentials);
       cy.dependsOnPreviousPass([claimSubmit]);
+      fineos.before(ssoAccount2Credentials);
       cy.unstash<DehydratedClaim>("claim").then(() => {
         cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
           // Expect failure if user can't perform secure action.

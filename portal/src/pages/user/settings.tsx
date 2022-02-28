@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import User, { MFAPreference } from "src/models/User";
-import AmendmentForm from "src/components/employers/AmendmentForm";
+import AmendmentForm from "src/components/AmendmentForm";
 import { AppLogic } from "src/hooks/useAppLogic";
 import BackButton from "src/components/BackButton";
 import Button from "src/components/core/Button";

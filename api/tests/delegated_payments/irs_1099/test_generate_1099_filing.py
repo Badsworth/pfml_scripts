@@ -7,7 +7,7 @@ import pytest
 
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
-from massgov.pfml.db.models.factories import Pfml1099BatchFactory, Pfml1099Factory
+from massgov.pfml.db.models.factories import Pfml1099Factory
 from massgov.pfml.delegated_payments.irs_1099.generate_1099_irs_filing import (
     Generate1099IRSfilingStep,
 )
@@ -123,7 +123,7 @@ def test_create_t_template(generate_1099_step: Generate1099IRSfilingStep):
 def test_load_t_rec_data(generate_1099_step: Generate1099IRSfilingStep):
     t_template = generate_1099_step._create_t_template()
     t_entries = generate_1099_step._load_t_rec_data(t_template)
-    assert len(t_entries) == 751
+    assert len(t_entries) == 750
 
 
 def test_create_a_template(generate_1099_step: Generate1099IRSfilingStep):
@@ -134,13 +134,13 @@ def test_create_a_template(generate_1099_step: Generate1099IRSfilingStep):
 def test_load_a_rec_data(generate_1099_step: Generate1099IRSfilingStep):
     a_template = generate_1099_step._create_a_template()
     a_entries = generate_1099_step._load_a_rec_data(a_template)
-    assert len(a_entries) == 751
+    assert len(a_entries) == 750
 
 
 def test_create_k_template(generate_1099_step: Generate1099IRSfilingStep):
     k_template = generate_1099_step._create_k_template()
     k_entries = generate_1099_step._load_k_rec_data(k_template, 10000, 0, 0)
-    assert len(k_entries) == 751
+    assert len(k_entries) == 750
 
 
 def test_create_f_template(generate_1099_step: Generate1099IRSfilingStep):
@@ -152,7 +152,7 @@ def test_create_f_template(generate_1099_step: Generate1099IRSfilingStep):
 def test_create_c_template(generate_1099_step: Generate1099IRSfilingStep):
     c_template = generate_1099_step._create_c_template()
     c_entries = generate_1099_step._load_c_rec_data(c_template, 10000)
-    assert len(c_entries) == 751
+    assert len(c_entries) == 750
 
 
 def test_create_b_template(generate_1099_step: Generate1099IRSfilingStep, create_pfml_1099):
@@ -162,7 +162,7 @@ def test_create_b_template(generate_1099_step: Generate1099IRSfilingStep, create
     b_entries = generate_1099_step._load_b_rec_data(b_template, create_pfml_1099)
     for b_records in b_entries:
         print(b_records)
-        assert len(b_records) == 751
+        assert len(b_records) == 750
 
 
 def test_get_correction_ind(generate_1099_step: Generate1099IRSfilingStep):
@@ -190,14 +190,13 @@ def test_get_totals(generate_1099_step: Generate1099IRSfilingStep, create_pfml_1
     assert expected_fed == fed_tax
 
 
-def test_get_pfml_batch_as_empty(
-    local_test_db_session, generate_1099_step: Generate1099IRSfilingStep
+def test_generate_1099_irs_filing(
+    local_test_db_session, generate_1099_step: Generate1099IRSfilingStep, create_pfml_1099
 ):
 
-    current_batch = Pfml1099BatchFactory.build()
     mock.patch(
-        "massgov.pfml.delegated_payments.irs_1099.pfml_1099_util.get_current_1099_batch",
-        return_value=current_batch,
+        "massgov.pfml.delegated_payments.irs_1099.pfml_1099_util.get_1099_records_to_file",
+        return_value=create_pfml_1099,
     )
     generate_1099_step.run_step()
 

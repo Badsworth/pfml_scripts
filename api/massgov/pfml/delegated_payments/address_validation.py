@@ -118,6 +118,11 @@ class AddressValidationStep(Step):
                 message=Constants.MESSAGE_ADDRESS_MISSING_PART,
             )
             self.increment(self.Metrics.ADDRESS_MISSING_COMPONENT_COUNT)
+            logger.info(
+                "Address missing components, skipping Experian call",
+                extra=get_traceable_payment_details(payment, Constants.ERROR_STATE),
+            )
+
             return None
 
         # When we fully switch over to using the SOAP API,

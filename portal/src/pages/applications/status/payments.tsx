@@ -15,6 +15,7 @@ import ClaimDetail from "src/models/ClaimDetail";
 import Heading from "../../../components/core/Heading";
 import LeaveReason from "../../../models/LeaveReason";
 import PageNotFound from "../../../components/PageNotFound";
+import { Payment } from "src/models/Payment";
 import Spinner from "../../../components/core/Spinner";
 import StatusNavigationTabs from "../../../components/status/StatusNavigationTabs";
 import Table from "../../../components/core/Table";
@@ -46,27 +47,25 @@ export const Payments = ({
   const { absence_id } = query;
   const {
     appErrors,
-    claims: { claimDetail, loadClaimDetail, hasLoadedPayments },
+    claims: { claimDetail, loadClaimDetail },
     documents: {
       documents: allClaimDocuments,
       loadAll: loadAllClaimDocuments,
       hasLoadedClaimDocuments,
     },
+    payments: { loadPayments, loadedPaymentsData, hasLoadedPayments },
     portalFlow,
   } = appLogic;
 
   const application_id = claimDetail?.application_id;
-  const shouldLoad =
-    !!absence_id &&
-    (claimDetail?.fineos_absence_id !== absence_id ||
-      !hasLoadedPayments(absence_id));
 
   useEffect(() => {
-    if (shouldLoad) {
+    if (absence_id) {
       loadClaimDetail(absence_id);
+      loadPayments(absence_id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shouldLoad, absence_id]);
+  }, [absence_id]);
 
   useEffect(() => {
     if (application_id) {
@@ -84,28 +83,38 @@ export const Payments = ({
     );
   }
 
-  // Check both because claimDetail could be cached from a different status page.
-  if (shouldLoad || !hasLoadedClaimDocuments(application_id || "")) {
-    return (
-      <div className="text-center">
-        <Spinner aria-label={t("pages.payments.loadingClaimDetailLabel")} />
-      </div>
-    );
-  }
   /**
    * If there is no absence_id query parameter,
    * then return the PFML 404 page.
    */
   if (!absence_id || !claimDetail) return <PageNotFound />;
 
-  const helper = paymentStatusViewHelper(claimDetail, allClaimDocuments);
+  // Check both because claimDetail could be cached from a different status page.
+  if (
+    claimDetail.fineos_absence_id !== absence_id ||
+    !hasLoadedPayments(absence_id) ||
+    !hasLoadedClaimDocuments(application_id || "")
+  ) {
+    return (
+      <div className="text-center">
+        <Spinner aria-label={t("pages.payments.loadingClaimDetailLabel")} />
+      </div>
+    );
+  }
+
+  const helper = paymentStatusViewHelper(
+    claimDetail,
+    allClaimDocuments,
+    loadedPaymentsData || new Payment()
+  );
 
   const {
     hasApprovedStatus,
     hasPendingStatus,
+    hasInReviewStatus,
+    hasProjectedStatus,
     hasPayments,
     hasWaitingWeek,
-    hasApprovalNotice,
     checkbackDate,
     payments,
   } = helper;
@@ -113,11 +122,7 @@ export const Payments = ({
   const infoAlertContext = getInfoAlertContext(helper);
   const checkbackDateContext = getPaymentIntroContext(helper);
 
-  // Determines if phase two payment features are displayed
-  const showPhaseTwoFeatures =
-    isFeatureEnabled("claimantShowPaymentsPhaseTwo") && hasApprovedStatus;
-
-  if (!showPhaseTwoFeatures || !hasApprovalNotice) {
+  if (!showPaymentsTab(helper)) {
     portalFlow.goTo(routes.applications.status.claim, {
       absence_id,
     });
@@ -129,8 +134,7 @@ export const Payments = ({
     t("pages.payments.tableStatusHeader"),
   ];
 
-  const shouldShowPaymentsTable =
-    hasPayments || (hasWaitingWeek && showPhaseTwoFeatures);
+  const shouldShowPaymentsTable = hasPayments || hasWaitingWeek;
 
   const getPaymentAmount = (status: string, amount: number | null) => {
     if (status === "Sent to bank") {
@@ -159,40 +163,44 @@ export const Payments = ({
 
   return (
     <React.Fragment>
-      {infoAlertContext && (hasPendingStatus || hasApprovedStatus) && (
-        <Alert
-          className="margin-bottom-3"
-          data-test="info-alert"
-          heading={t("pages.payments.infoAlertHeading", {
-            context: infoAlertContext,
-          })}
-          headingLevel="2"
-          headingSize="4"
-          noIcon
-          state="info"
-        >
-          <p>
-            <Trans
-              i18nKey="pages.payments.infoAlertBody"
-              tOptions={{ context: infoAlertContext }}
-              components={{
-                "about-bonding-leave-link": (
-                  <a
-                    href={
-                      routes.external.massgov.benefitsGuide_aboutBondingLeave
-                    }
-                    target="_blank"
-                    rel="noreferrer noopener"
-                  />
-                ),
-                "contact-center-phone-link": (
-                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-                ),
-              }}
-            />
-          </p>
-        </Alert>
-      )}
+      {!!infoAlertContext &&
+        (hasPendingStatus ||
+          hasApprovedStatus ||
+          hasInReviewStatus ||
+          hasProjectedStatus) && (
+          <Alert
+            className="margin-bottom-3"
+            data-test="info-alert"
+            heading={t("pages.payments.infoAlertHeading", {
+              context: infoAlertContext,
+            })}
+            headingLevel="2"
+            headingSize="4"
+            noIcon
+            state="info"
+          >
+            <p>
+              <Trans
+                i18nKey="pages.payments.infoAlertBody"
+                tOptions={{ context: infoAlertContext }}
+                components={{
+                  "about-bonding-leave-link": (
+                    <a
+                      href={
+                        routes.external.massgov.benefitsGuide_aboutBondingLeave
+                      }
+                      target="_blank"
+                      rel="noreferrer noopener"
+                    />
+                  ),
+                  "contact-center-phone-link": (
+                    <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                  ),
+                }}
+              />
+            </p>
+          </Alert>
+        )}
 
       <BackButton
         label={t("pages.payments.backButtonLabel")}
@@ -432,16 +440,16 @@ export default withUser(Payments);
 
 type PaymentStatusViewHelper = ReturnType<typeof paymentStatusViewHelper>;
 
-function paymentStatusViewHelper(
+// Function to calculate and return the various pieces of data the status and payments pages need.
+// Pending a restructure of the Payments and Status components it's going to be tempting to return
+// things like 'showPaymentsTab' from here. Instead, create a new function like 'showPaymentsTab'.
+export function paymentStatusViewHelper(
   claimDetail: ClaimDetail,
-  documents: ApiResourceCollection<BenefitsApplicationDocument>
+  documents: ApiResourceCollection<BenefitsApplicationDocument>,
+  paymentList: Payment
 ) {
-  const {
-    absence_periods: _absencePeriods,
-    has_paid_payments: _isPaid,
-    payments,
-  } = claimDetail;
-
+  const { absence_periods: _absencePeriods, has_paid_payments: _isPaid } =
+    claimDetail;
   // private variables
   const _absenceDetails = AbsencePeriod.groupByReason(_absencePeriods);
   const _hasBondingReason = LeaveReason.bonding in _absenceDetails;
@@ -473,8 +481,10 @@ function paymentStatusViewHelper(
   // 2. info alerts, if any, should show if claim is approved
   const hasApprovedStatus = claimDetail.hasApprovedStatus;
 
-  // info alerts, if any, should show if claim is pending
+  // info alerts, if any, should show if claim is pending, in review, or projected
   const hasPendingStatus = claimDetail.hasPendingStatus;
+  const hasInReviewStatus = claimDetail?.hasInReviewStatus;
+  const hasProjectedStatus = claimDetail?.hasProjectedStatus;
 
   // changes InfoAlert text
   const onlyHasNewBornBondingReason =
@@ -484,11 +494,17 @@ function paymentStatusViewHelper(
   // only show waiting period row in the payments table if there is a waiting week on the claim detail
   // intermittent claims never have waiting weeks.
   const hasWaitingWeek =
-    !isBlank(claimDetail.waitingWeek?.startDate) && !isIntermittent;
-
+    !isBlank(claimDetail.waitingWeek.startDate) && !isIntermittent;
   // 1. only show payments table if claimant has payments to show.
   // 2. changes intro text
+  const payments = hasWaitingWeek
+    ? paymentList.validPayments(claimDetail.waitingWeek.startDate)
+    : paymentList.payments;
   const hasPayments = !!payments.length;
+
+  const phaseTwoFeaturesEnabled = isFeatureEnabled(
+    "claimantShowPaymentsPhaseTwo"
+  );
 
   // changes intro text
   const isUnpaid = !_isPaid;
@@ -498,6 +514,10 @@ function paymentStatusViewHelper(
   // if the user can also access the approval notice.
   const hasApprovalNotice = !!_approvalDate;
 
+  // Check that either the status is "Approved" or we have the approval notice document
+  const isApprovedAndHasApprovalDocument =
+    hasApprovedStatus && hasApprovalNotice;
+
   // if payment is retroactive
   // and/or if the claim was approved within the first 14 days of the leave period
   // 1. changes intro text
@@ -506,6 +526,7 @@ function paymentStatusViewHelper(
     ? _absencePeriods[_absencePeriods.length - 1]?.absence_period_end_date <
       _approvalDate
     : false;
+  // case where claim is approved before 14th day but after claim has started
   const isApprovedBeforeFourteenthDayOfClaim =
     _approvalDate < _fourteenthDayOfClaim;
 
@@ -520,9 +541,11 @@ function paymentStatusViewHelper(
     }
 
     let result;
+    // claim is approved after second week of leave start date (includes retroactive)
     if (isRetroactive || !isApprovedBeforeFourteenthDayOfClaim) {
-      result = dayjs(_approvalDate).addBusinessDays(3);
+      result = dayjs(_approvalDate).addBusinessDays(5);
     } else {
+      // claim is approved before the second week of leave start date (includes before leave starts)
       result = dayjs(_initialClaimStartDate).add(14, "day").addBusinessDays(3);
     }
 
@@ -538,6 +561,9 @@ function paymentStatusViewHelper(
     isContinuous,
     hasApprovedStatus,
     hasPendingStatus,
+    hasInReviewStatus,
+    hasProjectedStatus,
+    isApprovedAndHasApprovalDocument,
     onlyHasNewBornBondingReason,
     onlyHasPregnancyReason,
     hasWaitingWeek,
@@ -548,10 +574,23 @@ function paymentStatusViewHelper(
     isApprovedBeforeFourteenthDayOfClaim,
     checkbackDate,
     hasCheckbackDate,
+    phaseTwoFeaturesEnabled,
   };
 }
 
-function getInfoAlertContext(helper: PaymentStatusViewHelper) {
+// Determine whether the payments tab should be shown
+export function showPaymentsTab(helper: PaymentStatusViewHelper) {
+  const {
+    isApprovedAndHasApprovalDocument,
+    phaseTwoFeaturesEnabled,
+    hasPayments,
+  } = helper;
+  return (
+    phaseTwoFeaturesEnabled && (isApprovedAndHasApprovalDocument || hasPayments)
+  );
+}
+
+export function getInfoAlertContext(helper: PaymentStatusViewHelper) {
   const { onlyHasNewBornBondingReason, onlyHasPregnancyReason } = helper;
   if (onlyHasNewBornBondingReason) {
     return "bonding";

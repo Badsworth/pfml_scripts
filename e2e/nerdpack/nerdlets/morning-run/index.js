@@ -466,7 +466,7 @@ export default class MorningRunNerdlet extends React.Component {
 
     const since = `${startOfDay} UNTIL ${endOfDay}`;
     return [
-      <Navigation></Navigation>,
+      <Navigation active="morning-v1" />,
       <h2>Runs for {dateFormat(now, "MM/dd/yyyy")}</h2>,
       <FilterByEnv
         handleUpdate={this.handleUpdateEnv}

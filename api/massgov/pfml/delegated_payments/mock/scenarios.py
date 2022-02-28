@@ -2,8 +2,10 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, List, Optional
 
+from massgov.pfml.db.models.absences import AbsencePeriodType
 from massgov.pfml.db.models.employees import (
     BankAccountType,
+    LkAbsencePeriodType,
     LkBankAccountType,
     LkPaymentMethod,
     LkPaymentTransactionType,
@@ -43,6 +45,7 @@ class ScenarioName(Enum):
     HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH = "HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH"
     HAPPY_PATH_DUA_ADDITIONAL_INCOME = "HAPPY_PATH_DUA_ADDITIONAL_INCOME"
     HAPPY_PATH_DIA_ADDITIONAL_INCOME = "HAPPY_PATH_DIA_ADDITIONAL_INCOME"
+    HAPPY_PATH_PAYMENT_DATE_MISMATCH = "HAPPY_PATH_PAYMENT_DATE_MISMATCH"
 
     # Non-Standard Payments
     ZERO_DOLLAR_PAYMENT = "ZERO_DOLLAR_PAYMENT"
@@ -174,6 +177,13 @@ class ScenarioDescriptor:
     dor_fineos_name_mismatch: bool = False
     dua_additional_income: bool = False
     dia_additional_income: bool = False
+    payment_date_mismatch: bool = False
+
+    # Payment date mismatch processor fails this check otherwise.
+    has_absence_period: bool = True
+    absence_period_type: LkAbsencePeriodType = AbsencePeriodType.CONTINUOUS
+
+    max_leave_duration_exceeded: bool = False
 
     is_audit_rejected: bool = False
     is_audit_skipped: bool = False
@@ -455,6 +465,11 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME, dia_additional_income=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH,
+        payment_date_mismatch=True,
+        is_adhoc_payment=False,
     ),
 ]
 

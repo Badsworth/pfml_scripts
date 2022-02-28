@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from typing import List, Optional
 
@@ -6,32 +6,22 @@ from pydantic import UUID4
 
 from massgov.pfml.api.models.claims.common import (
     Address,
+    ChangeRequestType,
     EmployerBenefit,
     LeaveDetails,
     PreviousLeave,
 )
-from massgov.pfml.api.models.common import ConcurrentLeave
+from massgov.pfml.api.models.common import ComputedStartDates, ConcurrentLeave
 from massgov.pfml.api.models.employees.responses import EmployeeBasicResponse
 from massgov.pfml.api.models.employers.responses import EmployerResponse
-from massgov.pfml.db.models.employees import (
-    AbsencePeriod,
-    AbsencePeriodType,
-    Claim,
-    ManagedRequirement,
-)
+from massgov.pfml.db.models.absences import AbsencePeriodType
+from massgov.pfml.db.models.employees import AbsencePeriod, Claim, ManagedRequirement
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import (
     FEINFormattedStr,
     MaskedDateStr,
     MaskedTaxIdFormattedStr,
 )
-
-
-class EmployeeResponse(PydanticBaseModel):
-    first_name: Optional[str]
-    middle_name: Optional[str]
-    last_name: Optional[str]
-    other_name: Optional[str]
 
 
 class ManagedRequirementResponse(PydanticBaseModel):
@@ -198,6 +188,7 @@ class ClaimReviewResponse(PydanticBaseModel):
     uses_second_eform_version: bool
     absence_periods: List[AbsencePeriodResponse] = []
     managed_requirements: List[ManagedRequirementResponse] = []
+    computed_start_dates: Optional[ComputedStartDates]
 
 
 class DocumentResponse(PydanticBaseModel):
@@ -207,3 +198,11 @@ class DocumentResponse(PydanticBaseModel):
     fineos_document_id: str
     name: Optional[str]
     description: Optional[str]
+
+
+class ChangeRequestResponse(PydanticBaseModel):
+    fineos_absence_id: str
+    change_request_type: ChangeRequestType
+    start_date: Optional[date]
+    end_date: Optional[date]
+    submitted_time: datetime

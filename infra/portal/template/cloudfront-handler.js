@@ -16,30 +16,31 @@
  * @param {object} event - https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/functions-event-structure.html
  * @returns {object} mutated request/response (depends on the eventType)
  */
-function handler(event) {
+ function handler(event) {
   if (event.context.eventType === "viewer-request") {
-    return addTrailingSlashToRequest(event.request);
+    return addIndexHtmlToRequest(event.request);
   }
 }
 
 /**
- * Add trailing slashes to origin requests so that S3 doesn't return a 302 redirect,
- * which results in unexpected 404 behavior (https://lwd.atlassian.net/browse/CP-144)
+ * Add index.html to origin requests without a file extension
+ * so S3 doesn't return a 403 Access Denied on directory paths
  * @param {object} request
  * @returns {object} updated request
  */
-function addTrailingSlashToRequest(request) {
+function addIndexHtmlToRequest(request) {
   var uri = request.uri;
 
-  if (
-    // Don't add a slash if there's already a slash
-    uri.endsWith("/") ||
-    // or if the URI includes a file extension
-    uri.match(/\.[\w\d?-_]+$/i)
-  ) {
-    return request;
-  }
-
-  request.uri = `${uri}/`;
+  // Only add index.html if the URI doesn't include a file extension 
+  if (!uri.match(/\.[\w\d?-_]+$/i))  {
+      // If URI has a trailing slash "index.html"
+      if (uri.endsWith("/")) {
+          request.uri = `${uri}index.html`;
+      }
+      // Else add "/index.html"
+      else {
+          request.uri = `${uri}/index.html`;
+      }
+  }        
   return request;
 }

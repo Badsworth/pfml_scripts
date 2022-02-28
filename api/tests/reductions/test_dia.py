@@ -15,8 +15,8 @@ import sqlalchemy
 import massgov.pfml.reductions.dia as dia
 import massgov.pfml.util.csv as csv_util
 import massgov.pfml.util.files as file_util
+from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.employees import (
-    AbsenceStatus,
     DiaReductionPayment,
     ReferenceFile,
     ReferenceFileType,
@@ -409,9 +409,9 @@ def test_create_list_of_claimants_skips_claims_with_missing_data(
     dest_filepath_and_prefix = os.path.join(dest_dir, Constants.CLAIMAINT_LIST_FILENAME_PREFIX)
     assert s3_filename.startswith(dest_filepath_and_prefix)
 
-    # Confirm the file we uploaded to S3 contains a single row for each claim and no header row.
-    with smart_open.open(full_s3_filepath) as s3_file:
-        assert 0 == len(list(s3_file))
+    # Confirm the file we uploaded to S3 is a 0-byte file.
+    resp = s3.head_object(Bucket=mock_s3_bucket, Key=s3_filename)
+    assert resp["ContentLength"] == 0
 
     ref_file = (
         test_db_session.query(ReferenceFile)

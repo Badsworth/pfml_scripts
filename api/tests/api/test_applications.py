@@ -18,6 +18,7 @@ import tests.api
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
 from massgov.pfml.api.models.applications.responses import ApplicationStatus
 from massgov.pfml.api.services.fineos_actions import LeaveNotificationReason
+from massgov.pfml.api.util.paginate.paginator import DEFAULT_PAGE_SIZE
 from massgov.pfml.api.validation.exceptions import IssueRule, IssueType
 from massgov.pfml.db.models.applications import (
     Application,
@@ -86,7 +87,6 @@ from massgov.pfml.fineos.models.customer_api.spec import (
     ReportedReducedScheduleLeavePeriod,
     TimeOffLeavePeriod,
 )
-from massgov.pfml.util.paginate.paginator import DEFAULT_PAGE_SIZE
 from massgov.pfml.util.strings import format_tax_identifier
 
 
@@ -325,6 +325,16 @@ class TestApplicationsImport:
         user.mfa_delivery_preference_id = 1
         user.mfa_phone_number = "+13214567890"
 
+    @pytest.fixture(autouse=True)
+    def mock_cognito_user_mfa_status(self, mock_cognito, monkeypatch) -> None:
+        def admin_get_user(Username: str = None, UserPoolId: str = None):
+            return {
+                "Username": Username,
+                "UserAttributes": [{"Name": "phone_number_verified", "Value": "true"}],
+            }
+
+        monkeypatch.setattr(mock_cognito, "admin_get_user", admin_get_user)
+
     def test_applications_import(
         self, client, test_db_session, auth_token, claim, valid_request_body
     ):
@@ -348,6 +358,69 @@ class TestApplicationsImport:
         assert imported_application.tax_identifier_id == claim.employee.tax_identifier_id
         assert imported_application.employer_fein == claim.employer_fein
         assert imported_application.imported_from_fineos_at is not None
+
+    def test_applications_import_application_for_claim_already_exists(
+        self, client, user, auth_token, claim, valid_request_body
+    ):
+        ApplicationFactory.create(user=user, claim=claim)
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
+        response_body = response.get_json()
+        assert response.status_code == 403
+        assert response_body["message"] == "An application already exists for this claim."
+        assert response_body["errors"][0]["type"] == "duplicate"
+
+    def test_applications_import_mfa_not_verified(
+        self,
+        client,
+        test_db_session,
+        auth_token,
+        claim,
+        valid_request_body,
+        monkeypatch,
+        mock_cognito,
+    ):
+        def admin_get_user(Username: str = None, UserPoolId: str = None):
+            return {
+                "Username": Username,
+                "UserAttributes": [{"Name": "phone_number_verified", "Value": "false"}],
+            }
+
+        monkeypatch.setattr(mock_cognito, "admin_get_user", admin_get_user)
+
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
+        assert response.status_code == 400
+        assert response.get_json().get("errors") == [
+            {
+                "field": "mfa_delivery_preference",
+                "message": "User has not opted into MFA delivery preferences",
+                "type": "required",
+            }
+        ]
+
+    def test_applications_import_application_for_claim_already_exists_diff_account(
+        self, client, user_with_mfa, auth_token, claim, valid_request_body
+    ):
+        ApplicationFactory.create(user=user_with_mfa, claim=claim)
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
+        response_body = response.get_json()
+        assert response.status_code == 403
+        assert (
+            response_body["message"]
+            == "An application linked to a different account already exists for this claim."
+        )
+        assert response_body["errors"][0]["type"] == "exists"
 
     def test_applications_import_missing_required_fields(self, client, auth_token, claim):
         response = client.post(
@@ -385,7 +458,7 @@ class TestApplicationsImport:
         assert response.status_code == 400
         assert response.get_json().get("errors") == [
             {
-                "message": "An issue occurred while trying to import the application",
+                "message": "Code 1: An issue occurred while trying to import the application.",
                 "type": "incorrect",
             },
         ]

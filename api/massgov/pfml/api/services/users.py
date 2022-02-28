@@ -5,7 +5,6 @@ import massgov.pfml.db as db
 import massgov.pfml.db.lookups as db_lookups
 import massgov.pfml.util.logging
 from massgov.pfml.api.models.users.requests import UserUpdateRequest
-from massgov.pfml.api.util.phone import convert_to_E164
 from massgov.pfml.db.models.employees import (
     LkMFADeliveryPreference,
     LkMFADeliveryPreferenceUpdatedBy,
@@ -28,7 +27,7 @@ def update_user(
 
         if key == "mfa_phone_number":
             if value is not None:
-                value = convert_to_E164(value)
+                value = value.e164
 
         setattr(user, key, value)
 

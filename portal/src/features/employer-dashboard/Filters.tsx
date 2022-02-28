@@ -1,9 +1,9 @@
 import React, { FormEvent, useCallback, useEffect, useState } from "react";
 import { camelCase, get, isEqual, startCase } from "lodash";
 import { AbsenceCaseStatus } from "../../models/Claim";
-import { ApiParams } from "../../hoc/withClaims";
 import Button from "../../components/core/Button";
 import Dropdown from "../../components/core/Dropdown";
+import { GetClaimsParams } from "../../api/ClaimsApi";
 import Icon from "../../components/core/Icon";
 import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import { PageQueryParam } from "../../features/employer-dashboard/SortDropdown";
@@ -14,7 +14,7 @@ import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 
 interface FiltersProps {
-  params: ApiParams;
+  params: GetClaimsParams;
   updatePageQuery: (params: PageQueryParam[]) => void;
   verifiedEmployers: UserLeaveAdministrator[];
 }
@@ -337,7 +337,7 @@ function RequestDecisionFilter(props: {
   const { t } = useTranslation();
   const choices: Array<{
     label: string;
-    value: "" | Required<ApiParams>["request_decision"];
+    value: "" | Required<GetClaimsParams>["request_decision"];
   }> = [
     {
       label: t("pages.employersDashboard.filterRequestDecision", {
@@ -400,7 +400,7 @@ function ReviewableFilter(props: {
   const { t } = useTranslation();
   const choices: Array<{
     label: string;
-    value: "" | Required<ApiParams>["is_reviewable"];
+    value: "" | Required<GetClaimsParams>["is_reviewable"];
   }> = [
     {
       label: t("pages.employersDashboard.filterReviewable", {

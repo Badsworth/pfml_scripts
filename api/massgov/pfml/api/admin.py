@@ -24,16 +24,11 @@ from massgov.pfml.api.models.users.responses import (
     AuthURIResponse,
     UserResponse,
 )
+from massgov.pfml.api.util.paginate.paginator import PaginationAPIContext, page_for_api_context
 from massgov.pfml.api.validation.exceptions import IssueType, ValidationErrorDetail
 from massgov.pfml.db.models.azure import AzurePermission, LkAzurePermission
 from massgov.pfml.db.models.employees import User
-from massgov.pfml.db.models.flags import (
-    FeatureFlag,
-    FeatureFlagValue,
-    LkFeatureFlag,
-    UserAzureFeatureFlagLog,
-)
-from massgov.pfml.util.paginate.paginator import PaginationAPIContext, page_for_api_context
+from massgov.pfml.db.models.flags import FeatureFlag, FeatureFlagValue, LkFeatureFlag
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -123,18 +118,18 @@ def admin_get_flag_logs(name):
     else:
         raise Unauthorized
     with app.db_session() as db_session:
-        logs = db_session.query(LkFeatureFlag).filter_by(name=name).one().logs()
+        logs = FeatureFlag.get_instance(db_session, description=name).logs()
         response = response_util.success_response(
             data=[
                 FlagLogResponse(
                     first_name=log.given_name,
                     last_name=log.family_name,
                     updated_at=log.updated_at,
-                    enabled=log.feature_flag_value.enabled,
-                    name=log.feature_flag_value.name,
-                    start=log.feature_flag_value.start,
-                    end=log.feature_flag_value.end,
-                    options=log.feature_flag_value.options,
+                    enabled=log.enabled,
+                    name=log.name,
+                    start=log.start,
+                    end=log.end,
+                    options=log.options,
                 ).__dict__
                 for log in logs
             ],
@@ -160,28 +155,24 @@ def admin_flags_patch(name):
     body = FlagRequest.parse_obj(connexion.request.json)
 
     with app.db_session() as db_session:
-        flag = db_session.query(LkFeatureFlag).filter_by(name=name).one_or_none()
-        if flag is None:
+        try:
+            flag = FeatureFlag.get_instance(db_session, description=name)
+        except KeyError:
             raise NotFound(
                 description="Could not find {} with name {}".format(LkFeatureFlag.__name__, name)
             )
         feature_flag_value = FeatureFlagValue()
         feature_flag_value.feature_flag = flag
+        feature_flag_value.email_address = azure_user.email_address
+        feature_flag_value.sub_id = azure_user.sub_id
+        feature_flag_value.given_name = azure_user.first_name
+        feature_flag_value.family_name = azure_user.last_name
+        feature_flag_value.action = "INSERT"
 
         for key in body.__fields_set__:
             value = getattr(body, key)
             setattr(feature_flag_value, key, value)
         db_session.add(feature_flag_value)
-        db_session.flush()
-        log = UserAzureFeatureFlagLog(
-            azure_feature_flag_value_id=feature_flag_value.feature_flag_value_id,
-            email_address=azure_user.email_address,
-            sub_id=azure_user.sub_id,
-            given_name=azure_user.first_name,
-            family_name=azure_user.last_name,
-            action="INSERT",
-        )
-        db_session.add(log)
         db_session.commit()
 
     return response_util.success_response(

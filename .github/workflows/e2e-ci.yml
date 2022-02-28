@@ -100,7 +100,7 @@ jobs:
     # See https://github.community/t/ref-head-in-reusable-workflows/203690/70
     runs-on: ubuntu-latest
     needs: changed-files
-    if: needs.changed-files.outputs.has-cypress-changes == 'true'
+    if: needs.changed-files.outputs.has-cypress-changes == 'true' && !contains(github.event.pull_request.labels.*.name,'work in progress')
     steps:
       - name: Trigger E2E Workflow
         uses: aurelien-baudet/workflow-dispatch@v2.1.1
@@ -114,7 +114,9 @@ jobs:
               "target_environment": "test",
               "cypress_tags": "PR",
               "run_stable": "true",
-              "run_unstable": "true",
+              "run_unstable": "false",
               "run_morning": "false",
+              "run_targeted": "false",
+              "targeted_pattern": "cypress/specs/stable/feature/**",
               "title_override": ${{ toJSON(format('PR: {0}', github.event.pull_request.title)) }}
             }

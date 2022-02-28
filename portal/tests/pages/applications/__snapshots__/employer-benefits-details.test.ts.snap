@@ -18,7 +18,7 @@ exports[`EmployerBenefitsDetails when the user's claim has employer benefits ren
       Tell us about employer-sponsored benefits you will use during your leave dates for paid leave from PFML.
     </h2>
     <div
-      aria-labelledby="alert-heading1403"
+      aria-labelledby="alert-heading1121"
       class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-2 margin-bottom-4"
       role="region"
       tabindex="-1"
@@ -28,7 +28,7 @@ exports[`EmployerBenefitsDetails when the user's claim has employer benefits ren
       >
         <h3
           class="usa-alert__heading font-heading-md text-bold"
-          id="alert-heading1403"
+          id="alert-heading1121"
         >
           Your leave dates for paid leave from PFML
         </h3>
@@ -44,7 +44,7 @@ exports[`EmployerBenefitsDetails when the user's claim has employer benefits ren
     >
       <div
         class="margin-bottom-3 measure-5 padding-3 border-2px border-base-lighter js-repeated-fieldset-card"
-        data-key="RepeatableFieldsetCard1406"
+        data-key="RepeatableFieldsetCard1124"
         data-testid="repeatable-fieldset-card"
       >
         <fieldset
@@ -71,14 +71,14 @@ exports[`EmployerBenefitsDetails when the user's claim has employer benefits ren
               >
                 <input
                   class="usa-radio__input"
-                  id="InputChoice1407"
+                  id="InputChoice1125"
                   name="employer_benefits[0].benefit_type"
                   type="radio"
                   value="Short-term disability insurance"
                 />
                 <label
                   class="usa-radio__label"
-                  for="InputChoice1407"
+                  for="InputChoice1125"
                 >
                   Temporary disability insurance
                   <span
@@ -94,14 +94,14 @@ exports[`EmployerBenefitsDetails when the user's claim has employer benefits ren
               >
                 <input
                   class="usa-radio__input"
-                  id="InputChoice1408"
+                  id="InputChoice1126"
                   name="employer_benefits[0].benefit_type"
                   type="radio"
                   value="Permanent disability insurance"
                 />
                 <label
                   class="usa-radio__label"
-                  for="InputChoice1408"
+                  for="InputChoice1126"
                 >
                   Permanent disability insurance
                 </label>
@@ -112,14 +112,14 @@ exports[`EmployerBenefitsDetails when the user's claim has employer benefits ren
                 <input
                   checked=""
                   class="usa-radio__input"
-                  id="InputChoice1409"
+                  id="InputChoice1127"
                   name="employer_benefits[0].benefit_type"
                   type="radio"
                   value="Family or medical leave insurance"
                 />
                 <label
                   class="usa-radio__label"
-                  for="InputChoice1409"
+                  for="InputChoice1127"
                 >
                   Family or medical leave insurance
                   <span
@@ -129,173 +129,6 @@ exports[`EmployerBenefitsDetails when the user's claim has employer benefits ren
                     For example, a paid parental leave policy
                   </span>
                 </label>
-              </div>
-            </div>
-          </fieldset>
-          <fieldset
-            class="usa-fieldset margin-top-3 usa-form-group"
-          >
-            <legend
-              class="usa-label text-bold usa-legend font-heading-xs measure-5"
-            >
-              What is the first day of leave from work that this benefit will pay you for?
-            </legend>
-            <span
-              class="display-block line-height-sans-5 usa-hint text-base-dark measure-5"
-            >
-              MM / DD / YYYY
-            </span>
-            <div
-              class="usa-memorable-date"
-            >
-              <div
-                class="usa-form-group usa-form-group--month"
-              >
-                <label
-                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText1410"
-                  id="InputText1410_label"
-                >
-                  Month
-                </label>
-                <input
-                  aria-labelledby="InputText1410_label InputText1410_hint InputText1410_error"
-                  class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText1410"
-                  inputmode="numeric"
-                  maxlength="2"
-                  name="employer_benefits[0].benefit_start_date_month"
-                  type="text"
-                  value="01"
-                />
-              </div>
-              <div
-                class="usa-form-group usa-form-group--day"
-              >
-                <label
-                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText1411"
-                  id="InputText1411_label"
-                >
-                  Day
-                </label>
-                <input
-                  aria-labelledby="InputText1411_label InputText1411_hint InputText1411_error"
-                  class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText1411"
-                  inputmode="numeric"
-                  maxlength="2"
-                  name="employer_benefits[0].benefit_start_date_day"
-                  type="text"
-                  value="01"
-                />
-              </div>
-              <div
-                class="usa-form-group usa-form-group--year"
-              >
-                <label
-                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText1412"
-                  id="InputText1412_label"
-                >
-                  Year
-                </label>
-                <input
-                  aria-labelledby="InputText1412_label InputText1412_hint InputText1412_error"
-                  class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText1412"
-                  inputmode="numeric"
-                  maxlength="4"
-                  name="employer_benefits[0].benefit_start_date_year"
-                  type="text"
-                  value="2021"
-                />
-              </div>
-            </div>
-          </fieldset>
-          <fieldset
-            class="usa-fieldset margin-top-3 usa-form-group"
-          >
-            <legend
-              class="usa-label text-bold usa-legend font-heading-xs measure-5"
-            >
-              What is the last day of leave from work that this benefit will pay you for?
-              <span
-                class="usa-hint text-base-dark text-normal"
-              >
-                 (optional)
-              </span>
-            </legend>
-            <span
-              class="display-block line-height-sans-5 usa-hint text-base-dark measure-5"
-            >
-              MM / DD / YYYY
-            </span>
-            <div
-              class="usa-memorable-date"
-            >
-              <div
-                class="usa-form-group usa-form-group--month"
-              >
-                <label
-                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText1413"
-                  id="InputText1413_label"
-                >
-                  Month
-                </label>
-                <input
-                  aria-labelledby="InputText1413_label InputText1413_hint InputText1413_error"
-                  class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText1413"
-                  inputmode="numeric"
-                  maxlength="2"
-                  name="employer_benefits[0].benefit_end_date_month"
-                  type="text"
-                  value="02"
-                />
-              </div>
-              <div
-                class="usa-form-group usa-form-group--day"
-              >
-                <label
-                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText1414"
-                  id="InputText1414_label"
-                >
-                  Day
-                </label>
-                <input
-                  aria-labelledby="InputText1414_label InputText1414_hint InputText1414_error"
-                  class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText1414"
-                  inputmode="numeric"
-                  maxlength="2"
-                  name="employer_benefits[0].benefit_end_date_day"
-                  type="text"
-                  value="01"
-                />
-              </div>
-              <div
-                class="usa-form-group usa-form-group--year"
-              >
-                <label
-                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText1415"
-                  id="InputText1415_label"
-                >
-                  Year
-                </label>
-                <input
-                  aria-labelledby="InputText1415_label InputText1415_hint InputText1415_error"
-                  class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText1415"
-                  inputmode="numeric"
-                  maxlength="4"
-                  name="employer_benefits[0].benefit_end_date_year"
-                  type="text"
-                  value="2021"
-                />
               </div>
             </div>
           </fieldset>
@@ -316,14 +149,14 @@ exports[`EmployerBenefitsDetails when the user's claim has employer benefits ren
                 <input
                   checked=""
                   class="usa-radio__input"
-                  id="InputChoice1416"
+                  id="InputChoice1128"
                   name="employer_benefits[0].is_full_salary_continuous"
                   type="radio"
                   value="true"
                 />
                 <label
                   class="usa-radio__label"
-                  for="InputChoice1416"
+                  for="InputChoice1128"
                 >
                   Yes
                 </label>
@@ -333,19 +166,190 @@ exports[`EmployerBenefitsDetails when the user's claim has employer benefits ren
               >
                 <input
                   class="usa-radio__input"
-                  id="InputChoice1417"
+                  id="InputChoice1129"
                   name="employer_benefits[0].is_full_salary_continuous"
                   type="radio"
                   value="false"
                 />
                 <label
                   class="usa-radio__label"
-                  for="InputChoice1417"
+                  for="InputChoice1129"
                 >
                   No
                 </label>
               </div>
             </div>
+          </fieldset>
+          <fieldset
+            class="usa-fieldset margin-top-3"
+          >
+            <fieldset
+              class="usa-fieldset margin-top-3 usa-form-group"
+            >
+              <legend
+                class="usa-label text-bold usa-legend font-heading-xs measure-5"
+              >
+                What is the first day of leave from work that this benefit will pay you for?
+              </legend>
+              <span
+                class="display-block line-height-sans-5 usa-hint text-base-dark measure-5"
+              >
+                MM / DD / YYYY
+              </span>
+              <div
+                class="usa-memorable-date"
+              >
+                <div
+                  class="usa-form-group usa-form-group--month"
+                >
+                  <label
+                    class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+                    for="InputText1130"
+                    id="InputText1130_label"
+                  >
+                    Month
+                  </label>
+                  <input
+                    aria-labelledby="InputText1130_label InputText1130_hint InputText1130_error"
+                    class="usa-input usa-input--inline maxw-mobile-lg"
+                    id="InputText1130"
+                    inputmode="numeric"
+                    maxlength="2"
+                    name="employer_benefits[0].benefit_start_date_month"
+                    type="text"
+                    value="01"
+                  />
+                </div>
+                <div
+                  class="usa-form-group usa-form-group--day"
+                >
+                  <label
+                    class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+                    for="InputText1131"
+                    id="InputText1131_label"
+                  >
+                    Day
+                  </label>
+                  <input
+                    aria-labelledby="InputText1131_label InputText1131_hint InputText1131_error"
+                    class="usa-input usa-input--inline maxw-mobile-lg"
+                    id="InputText1131"
+                    inputmode="numeric"
+                    maxlength="2"
+                    name="employer_benefits[0].benefit_start_date_day"
+                    type="text"
+                    value="01"
+                  />
+                </div>
+                <div
+                  class="usa-form-group usa-form-group--year"
+                >
+                  <label
+                    class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+                    for="InputText1132"
+                    id="InputText1132_label"
+                  >
+                    Year
+                  </label>
+                  <input
+                    aria-labelledby="InputText1132_label InputText1132_hint InputText1132_error"
+                    class="usa-input usa-input--inline maxw-mobile-lg"
+                    id="InputText1132"
+                    inputmode="numeric"
+                    maxlength="4"
+                    name="employer_benefits[0].benefit_start_date_year"
+                    type="text"
+                    value="2021"
+                  />
+                </div>
+              </div>
+            </fieldset>
+            <fieldset
+              class="usa-fieldset margin-top-3 usa-form-group"
+            >
+              <legend
+                class="usa-label text-bold usa-legend font-heading-xs measure-5"
+              >
+                What is the last day of leave from work that this benefit will pay you for?
+                <span
+                  class="usa-hint text-base-dark text-normal"
+                >
+                   (optional)
+                </span>
+              </legend>
+              <span
+                class="display-block line-height-sans-5 usa-hint text-base-dark measure-5"
+              >
+                MM / DD / YYYY
+              </span>
+              <div
+                class="usa-memorable-date"
+              >
+                <div
+                  class="usa-form-group usa-form-group--month"
+                >
+                  <label
+                    class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+                    for="InputText1133"
+                    id="InputText1133_label"
+                  >
+                    Month
+                  </label>
+                  <input
+                    aria-labelledby="InputText1133_label InputText1133_hint InputText1133_error"
+                    class="usa-input usa-input--inline maxw-mobile-lg"
+                    id="InputText1133"
+                    inputmode="numeric"
+                    maxlength="2"
+                    name="employer_benefits[0].benefit_end_date_month"
+                    type="text"
+                    value="02"
+                  />
+                </div>
+                <div
+                  class="usa-form-group usa-form-group--day"
+                >
+                  <label
+                    class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+                    for="InputText1134"
+                    id="InputText1134_label"
+                  >
+                    Day
+                  </label>
+                  <input
+                    aria-labelledby="InputText1134_label InputText1134_hint InputText1134_error"
+                    class="usa-input usa-input--inline maxw-mobile-lg"
+                    id="InputText1134"
+                    inputmode="numeric"
+                    maxlength="2"
+                    name="employer_benefits[0].benefit_end_date_day"
+                    type="text"
+                    value="01"
+                  />
+                </div>
+                <div
+                  class="usa-form-group usa-form-group--year"
+                >
+                  <label
+                    class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+                    for="InputText1135"
+                    id="InputText1135_label"
+                  >
+                    Year
+                  </label>
+                  <input
+                    aria-labelledby="InputText1135_label InputText1135_hint InputText1135_error"
+                    class="usa-input usa-input--inline maxw-mobile-lg"
+                    id="InputText1135"
+                    inputmode="numeric"
+                    maxlength="4"
+                    name="employer_benefits[0].benefit_end_date_year"
+                    type="text"
+                    value="2021"
+                  />
+                </div>
+              </div>
+            </fieldset>
           </fieldset>
           <div
             class="border-top border-base-lighter padding-top-2 margin-top-2"
@@ -362,7 +366,7 @@ exports[`EmployerBenefitsDetails when the user's claim has employer benefits ren
       </div>
       <div
         class="margin-bottom-3 measure-5 padding-3 border-2px border-base-lighter js-repeated-fieldset-card"
-        data-key="RepeatableFieldsetCard1418"
+        data-key="RepeatableFieldsetCard1136"
         data-testid="repeatable-fieldset-card"
       >
         <fieldset
@@ -389,14 +393,14 @@ exports[`EmployerBenefitsDetails when the user's claim has employer benefits ren
               >
                 <input
                   class="usa-radio__input"
-                  id="InputChoice1419"
+                  id="InputChoice1137"
                   name="employer_benefits[1].benefit_type"
                   type="radio"
                   value="Short-term disability insurance"
                 />
                 <label
                   class="usa-radio__label"
-                  for="InputChoice1419"
+                  for="InputChoice1137"
                 >
                   Temporary disability insurance
                   <span
@@ -413,14 +417,14 @@ exports[`EmployerBenefitsDetails when the user's claim has employer benefits ren
                 <input
                   checked=""
                   class="usa-radio__input"
-                  id="InputChoice1420"
+                  id="InputChoice1138"
                   name="employer_benefits[1].benefit_type"
                   type="radio"
                   value="Permanent disability insurance"
                 />
                 <label
                   class="usa-radio__label"
-                  for="InputChoice1420"
+                  for="InputChoice1138"
                 >
                   Permanent disability insurance
                 </label>
@@ -430,14 +434,14 @@ exports[`EmployerBenefitsDetails when the user's claim has employer benefits ren
               >
                 <input
                   class="usa-radio__input"
-                  id="InputChoice1421"
+                  id="InputChoice1139"
                   name="employer_benefits[1].benefit_type"
                   type="radio"
                   value="Family or medical leave insurance"
                 />
                 <label
                   class="usa-radio__label"
-                  for="InputChoice1421"
+                  for="InputChoice1139"
                 >
                   Family or medical leave insurance
                   <span
@@ -447,173 +451,6 @@ exports[`EmployerBenefitsDetails when the user's claim has employer benefits ren
                     For example, a paid parental leave policy
                   </span>
                 </label>
-              </div>
-            </div>
-          </fieldset>
-          <fieldset
-            class="usa-fieldset margin-top-3 usa-form-group"
-          >
-            <legend
-              class="usa-label text-bold usa-legend font-heading-xs measure-5"
-            >
-              What is the first day of leave from work that this benefit will pay you for?
-            </legend>
-            <span
-              class="display-block line-height-sans-5 usa-hint text-base-dark measure-5"
-            >
-              MM / DD / YYYY
-            </span>
-            <div
-              class="usa-memorable-date"
-            >
-              <div
-                class="usa-form-group usa-form-group--month"
-              >
-                <label
-                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText1422"
-                  id="InputText1422_label"
-                >
-                  Month
-                </label>
-                <input
-                  aria-labelledby="InputText1422_label InputText1422_hint InputText1422_error"
-                  class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText1422"
-                  inputmode="numeric"
-                  maxlength="2"
-                  name="employer_benefits[1].benefit_start_date_month"
-                  type="text"
-                  value="01"
-                />
-              </div>
-              <div
-                class="usa-form-group usa-form-group--day"
-              >
-                <label
-                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText1423"
-                  id="InputText1423_label"
-                >
-                  Day
-                </label>
-                <input
-                  aria-labelledby="InputText1423_label InputText1423_hint InputText1423_error"
-                  class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText1423"
-                  inputmode="numeric"
-                  maxlength="2"
-                  name="employer_benefits[1].benefit_start_date_day"
-                  type="text"
-                  value="05"
-                />
-              </div>
-              <div
-                class="usa-form-group usa-form-group--year"
-              >
-                <label
-                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText1424"
-                  id="InputText1424_label"
-                >
-                  Year
-                </label>
-                <input
-                  aria-labelledby="InputText1424_label InputText1424_hint InputText1424_error"
-                  class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText1424"
-                  inputmode="numeric"
-                  maxlength="4"
-                  name="employer_benefits[1].benefit_start_date_year"
-                  type="text"
-                  value="2021"
-                />
-              </div>
-            </div>
-          </fieldset>
-          <fieldset
-            class="usa-fieldset margin-top-3 usa-form-group"
-          >
-            <legend
-              class="usa-label text-bold usa-legend font-heading-xs measure-5"
-            >
-              What is the last day of leave from work that this benefit will pay you for?
-              <span
-                class="usa-hint text-base-dark text-normal"
-              >
-                 (optional)
-              </span>
-            </legend>
-            <span
-              class="display-block line-height-sans-5 usa-hint text-base-dark measure-5"
-            >
-              MM / DD / YYYY
-            </span>
-            <div
-              class="usa-memorable-date"
-            >
-              <div
-                class="usa-form-group usa-form-group--month"
-              >
-                <label
-                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText1425"
-                  id="InputText1425_label"
-                >
-                  Month
-                </label>
-                <input
-                  aria-labelledby="InputText1425_label InputText1425_hint InputText1425_error"
-                  class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText1425"
-                  inputmode="numeric"
-                  maxlength="2"
-                  name="employer_benefits[1].benefit_end_date_month"
-                  type="text"
-                  value="02"
-                />
-              </div>
-              <div
-                class="usa-form-group usa-form-group--day"
-              >
-                <label
-                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText1426"
-                  id="InputText1426_label"
-                >
-                  Day
-                </label>
-                <input
-                  aria-labelledby="InputText1426_label InputText1426_hint InputText1426_error"
-                  class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText1426"
-                  inputmode="numeric"
-                  maxlength="2"
-                  name="employer_benefits[1].benefit_end_date_day"
-                  type="text"
-                  value="05"
-                />
-              </div>
-              <div
-                class="usa-form-group usa-form-group--year"
-              >
-                <label
-                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText1427"
-                  id="InputText1427_label"
-                >
-                  Year
-                </label>
-                <input
-                  aria-labelledby="InputText1427_label InputText1427_hint InputText1427_error"
-                  class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText1427"
-                  inputmode="numeric"
-                  maxlength="4"
-                  name="employer_benefits[1].benefit_end_date_year"
-                  type="text"
-                  value="2021"
-                />
               </div>
             </div>
           </fieldset>
@@ -633,14 +470,14 @@ exports[`EmployerBenefitsDetails when the user's claim has employer benefits ren
               >
                 <input
                   class="usa-radio__input"
-                  id="InputChoice1428"
+                  id="InputChoice1140"
                   name="employer_benefits[1].is_full_salary_continuous"
                   type="radio"
                   value="true"
                 />
                 <label
                   class="usa-radio__label"
-                  for="InputChoice1428"
+                  for="InputChoice1140"
                 >
                   Yes
                 </label>
@@ -651,112 +488,17 @@ exports[`EmployerBenefitsDetails when the user's claim has employer benefits ren
                 <input
                   checked=""
                   class="usa-radio__input"
-                  id="InputChoice1429"
+                  id="InputChoice1141"
                   name="employer_benefits[1].is_full_salary_continuous"
                   type="radio"
                   value="false"
                 />
                 <label
                   class="usa-radio__label"
-                  for="InputChoice1429"
+                  for="InputChoice1141"
                 >
                   No
                 </label>
-              </div>
-            </div>
-          </fieldset>
-          <fieldset
-            class="usa-fieldset margin-top-3"
-          >
-            <legend
-              class="usa-label text-bold usa-legend font-heading-xs measure-5"
-            >
-              How much will you receive?
-            </legend>
-            <div
-              class="usa-form-group margin-top-05"
-            >
-              <label
-                class="usa-label text-normal margin-top-0 font-heading-xs measure-5"
-                for="InputText1430"
-                id="InputText1430_label"
-              >
-                Amount
-              </label>
-              <div
-                class="usa-input-group"
-              >
-                <div
-                  aria-hidden="true"
-                  class="usa-input-prefix"
-                >
-                  <svg
-                    aria-hidden="true"
-                    class="usa-icon"
-                    focusable="false"
-                    role="img"
-                  >
-                    <use
-                      xlink:href="/img/sprite.svg#attach_money"
-                    />
-                  </svg>
-                </div>
-                <input
-                  aria-labelledby="InputText1430_label InputText1430_hint InputText1430_error"
-                  class="usa-input maxw-mobile-lg padding-left-0"
-                  data-value-type="float"
-                  id="InputText1430"
-                  inputmode="decimal"
-                  name="employer_benefits[1].benefit_amount_dollars"
-                  type="text"
-                  value="700"
-                />
-              </div>
-            </div>
-            <div
-              class="usa-form-group"
-            >
-              <label
-                class="usa-label text-normal margin-top-0 font-heading-xs measure-5"
-                for="Dropdown1431"
-                id="Dropdown1431_label"
-              >
-                Frequency
-              </label>
-              <div
-                class=""
-                data-default-value="Per Month"
-              >
-                <select
-                  aria-labelledby="Dropdown1431_label Dropdown1431_hint Dropdown1431_error"
-                  class="usa-select maxw-mobile-lg"
-                  id="Dropdown1431"
-                  name="employer_benefits[1].benefit_amount_frequency"
-                >
-                  <option
-                    value=""
-                  />
-                  <option
-                    value="Per Day"
-                  >
-                    Daily
-                  </option>
-                  <option
-                    value="Per Week"
-                  >
-                    Weekly
-                  </option>
-                  <option
-                    value="Per Month"
-                  >
-                    Monthly
-                  </option>
-                  <option
-                    value="In Total"
-                  >
-                    All at once
-                  </option>
-                </select>
               </div>
             </div>
           </fieldset>
@@ -928,173 +670,6 @@ exports[`EmployerBenefitsDetails when the user's claim has no employer benefits 
             <legend
               class="usa-label text-bold usa-legend font-heading-xs measure-5"
             >
-              What is the first day of leave from work that this benefit will pay you for?
-            </legend>
-            <span
-              class="display-block line-height-sans-5 usa-hint text-base-dark measure-5"
-            >
-              MM / DD / YYYY
-            </span>
-            <div
-              class="usa-memorable-date"
-            >
-              <div
-                class="usa-form-group usa-form-group--month"
-              >
-                <label
-                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText7"
-                  id="InputText7_label"
-                >
-                  Month
-                </label>
-                <input
-                  aria-labelledby="InputText7_label InputText7_hint InputText7_error"
-                  class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText7"
-                  inputmode="numeric"
-                  maxlength="2"
-                  name="employer_benefits[0].benefit_start_date_month"
-                  type="text"
-                  value=""
-                />
-              </div>
-              <div
-                class="usa-form-group usa-form-group--day"
-              >
-                <label
-                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText8"
-                  id="InputText8_label"
-                >
-                  Day
-                </label>
-                <input
-                  aria-labelledby="InputText8_label InputText8_hint InputText8_error"
-                  class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText8"
-                  inputmode="numeric"
-                  maxlength="2"
-                  name="employer_benefits[0].benefit_start_date_day"
-                  type="text"
-                  value=""
-                />
-              </div>
-              <div
-                class="usa-form-group usa-form-group--year"
-              >
-                <label
-                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText9"
-                  id="InputText9_label"
-                >
-                  Year
-                </label>
-                <input
-                  aria-labelledby="InputText9_label InputText9_hint InputText9_error"
-                  class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText9"
-                  inputmode="numeric"
-                  maxlength="4"
-                  name="employer_benefits[0].benefit_start_date_year"
-                  type="text"
-                  value=""
-                />
-              </div>
-            </div>
-          </fieldset>
-          <fieldset
-            class="usa-fieldset margin-top-3 usa-form-group"
-          >
-            <legend
-              class="usa-label text-bold usa-legend font-heading-xs measure-5"
-            >
-              What is the last day of leave from work that this benefit will pay you for?
-              <span
-                class="usa-hint text-base-dark text-normal"
-              >
-                 (optional)
-              </span>
-            </legend>
-            <span
-              class="display-block line-height-sans-5 usa-hint text-base-dark measure-5"
-            >
-              MM / DD / YYYY
-            </span>
-            <div
-              class="usa-memorable-date"
-            >
-              <div
-                class="usa-form-group usa-form-group--month"
-              >
-                <label
-                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText10"
-                  id="InputText10_label"
-                >
-                  Month
-                </label>
-                <input
-                  aria-labelledby="InputText10_label InputText10_hint InputText10_error"
-                  class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText10"
-                  inputmode="numeric"
-                  maxlength="2"
-                  name="employer_benefits[0].benefit_end_date_month"
-                  type="text"
-                  value=""
-                />
-              </div>
-              <div
-                class="usa-form-group usa-form-group--day"
-              >
-                <label
-                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText11"
-                  id="InputText11_label"
-                >
-                  Day
-                </label>
-                <input
-                  aria-labelledby="InputText11_label InputText11_hint InputText11_error"
-                  class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText11"
-                  inputmode="numeric"
-                  maxlength="2"
-                  name="employer_benefits[0].benefit_end_date_day"
-                  type="text"
-                  value=""
-                />
-              </div>
-              <div
-                class="usa-form-group usa-form-group--year"
-              >
-                <label
-                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
-                  for="InputText12"
-                  id="InputText12_label"
-                >
-                  Year
-                </label>
-                <input
-                  aria-labelledby="InputText12_label InputText12_hint InputText12_error"
-                  class="usa-input usa-input--inline maxw-mobile-lg"
-                  id="InputText12"
-                  inputmode="numeric"
-                  maxlength="4"
-                  name="employer_benefits[0].benefit_end_date_year"
-                  type="text"
-                  value=""
-                />
-              </div>
-            </div>
-          </fieldset>
-          <fieldset
-            class="usa-fieldset margin-top-3 usa-form-group"
-          >
-            <legend
-              class="usa-label text-bold usa-legend font-heading-xs measure-5"
-            >
               Does this employer-sponsored benefit fully replace your wages?
             </legend>
             <div
@@ -1105,14 +680,14 @@ exports[`EmployerBenefitsDetails when the user's claim has no employer benefits 
               >
                 <input
                   class="usa-radio__input"
-                  id="InputChoice13"
+                  id="InputChoice7"
                   name="employer_benefits[0].is_full_salary_continuous"
                   type="radio"
                   value="true"
                 />
                 <label
                   class="usa-radio__label"
-                  for="InputChoice13"
+                  for="InputChoice7"
                 >
                   Yes
                 </label>
@@ -1122,14 +697,14 @@ exports[`EmployerBenefitsDetails when the user's claim has no employer benefits 
               >
                 <input
                   class="usa-radio__input"
-                  id="InputChoice14"
+                  id="InputChoice8"
                   name="employer_benefits[0].is_full_salary_continuous"
                   type="radio"
                   value="false"
                 />
                 <label
                   class="usa-radio__label"
-                  for="InputChoice14"
+                  for="InputChoice8"
                 >
                   No
                 </label>
