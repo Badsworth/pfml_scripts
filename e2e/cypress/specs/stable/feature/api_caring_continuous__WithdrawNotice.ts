@@ -1,31 +1,28 @@
 import { fineos, fineosPages, portal } from "../../../actions";
 import { Submission } from "../../../../src/types";
 
-describe("Create a new caring leave claim in FINEOS and add Historical Absence case. Then withdraw the Absence Case", () => {
+describe("Create a new caring leave claim in FINEOS. Then withdraw the Absence Case", () => {
   after(() => {
     portal.deleteDownloadsFolder();
   });
 
-  const submit =
-    it("Create historical absence case within Absence Case", () => {
-      fineos.before();
-      cy.task("generateClaim", "HIST_CASE").then((claim) => {
-        cy.task("submitClaimToAPI", claim).then((res) => {
-          cy.stash("claim", claim.claim);
-          cy.stash("submission", {
-            application_id: res.application_id,
-            fineos_absence_id: res.fineos_absence_id,
-            timestamp_from: Date.now(),
-          });
-          fineosPages.ClaimPage.visit(
-            res.fineos_absence_id
-          ).addHistoricalAbsenceCase();
+  const submit = it("Create an Absence Case by submit through the API", () => {
+    fineos.before();
+    cy.task("generateClaim", "HIST_CASE").then((claim) => {
+      cy.task("submitClaimToAPI", claim).then((res) => {
+        cy.stash("claim", claim.claim);
+        cy.stash("submission", {
+          application_id: res.application_id,
+          fineos_absence_id: res.fineos_absence_id,
+          timestamp_from: Date.now(),
         });
+        fineosPages.ClaimPage.visit(res.fineos_absence_id);
       });
     });
+  });
 
   const withdraw =
-    it('Check the Suppress Correspondence secure action. Withdraw a claim in FINEOS and check for a "Pending Application Withdrawn" notice', () => {
+    it('Withdraw a claim in FINEOS and check for a "Pending Application Withdrawn" notice', () => {
       cy.dependsOnPreviousPass([submit]);
       fineos.before();
       cy.unstash<Submission>("submission").then((submission) => {
