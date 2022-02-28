@@ -27,13 +27,13 @@ on:
 env:
   working-directory: ./infra/api/environments/
   tasks-working-directory: ./infra/ecs-tasks/environments/
-  terraform-version: 0.14.7
+  terraformVersion: 0.14.7
   default-environment: training
 
 jobs:
   sync:
     runs-on: ubuntu-latest
-    
+
     env:
       TF_CLI_ARGS: '-lock-timeout=120s'
     outputs:
@@ -54,7 +54,7 @@ jobs:
 
       - uses: hashicorp/setup-terraform@v1.2.1
         with:
-          terraform_version: ${{ env.terraform-version }}
+          terraform_version: ${{ env.terraformVersion }}
           terraform_wrapper: false
 
       - name: Terraform Init
@@ -133,7 +133,7 @@ jobs:
         method: 'POST'
         contentType: 'application/json'
         data: "{
-          \"routing_key\": \"6b02445c7be347beab083af7544913eb\", 
+          \"routing_key\": \"6b02445c7be347beab083af7544913eb\",
           \"event_action\": \"trigger\",
           \"dedup_key\":\"${{ github.event.inputs.environment || env.default-environment }} RDS API Sync\",
           \"payload\": {

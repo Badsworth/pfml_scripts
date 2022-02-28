@@ -5,14 +5,14 @@ name: Infra CI Validation
 on:
   # This workflow only needs to run on pull requests, since all infra is automatically deployed to the
   # test environment when merged to the main branch.
-  pull_request: 
+  pull_request:
     paths:
       - infra/**
       - .github/workflows/infra-validate.yml
 
 env:
   working-dir: ./infra
-  tf-version-default: 0.14.7
+  terraformVersion: 0.14.7
 
 jobs:
   tf-format-check:
@@ -21,9 +21,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - uses: hashicorp/setup-terraform@v1
+      - uses: hashicorp/setup-terraform@v1.2.1
         with:
-          terraform_version: env.tf-version-default
+          terraform_version: ${{ env.terraformVersion }}
 
       - run: terraform fmt -recursive -check ${{ env.working-dir }}
 
@@ -92,20 +92,18 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
+      - uses: hashicorp/setup-terraform@v1.2.1
+        with:
+          terraform_version: ${{ env.terraformVersion }}
+          terraform_wrapper: false
+
       - name: tf-init
         if: steps.check-for-changes.outputs.has-changes == 'true'
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env[format('{0}-{1}', 'tf-version', matrix.component)] || env.tf-version-default }}
-          tf_actions_subcommand: "init"
-          tf_actions_working_dir: ${{ steps.check-for-changes.outputs.tf_working_dir }}
-          tf_actions_comment: false
+        run: terraform init
+        working-directory: ${{ steps.check-for-changes.outputs.tf_working_dir }}
+
 
       - name: tf-plan
         if: steps.check-for-changes.outputs.has-changes == 'true'
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env[format('{0}-{1}', 'tf-version', matrix.component)] || env.tf-version-default }}
-          tf_actions_subcommand: "plan"
-          tf_actions_working_dir: ${{ steps.check-for-changes.outputs.tf_working_dir }}
-          tf_actions_comment: false
+        run: terraform plan
+        working-directory: ${{ steps.check-for-changes.outputs.tf_working_dir }}
