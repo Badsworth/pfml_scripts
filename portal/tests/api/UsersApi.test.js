@@ -138,6 +138,39 @@ describe("users API", () => {
     });
   });
 
+  describe("convertUserToEmployer", () => {
+    beforeEach(() => {
+      global.fetch = mockFetch({
+        response: getResponse(),
+        status: 201,
+        ok: true,
+      });
+    });
+
+    it("Calls successfully with expected return", async () => {
+      const resp = await usersApi.convertUserToEmployer("mock_user_id", {
+        employer_fein: "mock_fein",
+      });
+      expect(resp.user).toBeInstanceOf(User);
+      expect(resp.user.roles).toHaveLength(2);
+      expect(resp.user.user_leave_administrators).toHaveLength(2);
+
+      expect(fetch).toHaveBeenCalledWith(
+        `${process.env.apiUrl}/users/mock_user_id/convert_employer`,
+        {
+          body: JSON.stringify({
+            employer_fein: "mock_fein",
+          }),
+          headers: {
+            Authorization: `Bearer ${accessTokenJwt}`,
+            "Content-Type": "application/json",
+          },
+          method: "POST",
+        }
+      );
+    });
+  });
+
   describe("updateUser", () => {
     const user = new User({
       user_id: "mock-user_id",
