@@ -845,18 +845,21 @@ def test_benefit_year_search(
             "benefit_year_start_date": date(2019, 12, 29).strftime("%Y-%m-%d"),
             "employee_id": employee.employee_id.__str__(),
             "current_benefit_year": True,
+            "benefit_year_id": by_2.benefit_year_id.__str__()
         },
         {
             "benefit_year_end_date": date(2019, 12, 28).strftime("%Y-%m-%d"),
             "benefit_year_start_date": date(2018, 12, 30).strftime("%Y-%m-%d"),
             "employee_id": employee.employee_id.__str__(),
             "current_benefit_year": False,
+            "benefit_year_id": by_1.benefit_year_id.__str__()
         },
         {
             "benefit_year_end_date": date(2020, 12, 26).strftime("%Y-%m-%d"),
             "benefit_year_start_date": date(2019, 12, 29).strftime("%Y-%m-%d"),
             "employee_id": employee_2.employee_id.__str__(),
             "current_benefit_year": True,
+            "benefit_year_id": by_3.benefit_year_id.__str__()
         },
     ]
     assert len(benefit_years) == 3
@@ -882,6 +885,7 @@ def test_benefit_year_search_current_year_at_edge_start_and_end(
             "benefit_year_start_date": date(2019, 12, 29).strftime("%Y-%m-%d"),
             "employee_id": employee.employee_id.__str__(),
             "current_benefit_year": True,
+            "benefit_year_id": by.benefit_year_id.__str__()
         }
     ]
 

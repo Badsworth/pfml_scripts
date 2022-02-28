@@ -29,6 +29,8 @@ class BenefitYearsSearchResponse(PydanticBaseModel):
     benefit_year_start_date: date
     employee_id: str
     current_benefit_year: bool
+    benefit_year_id: str
+    
 
     @classmethod
     def from_orm(cls, benefit_year: BenefitYear) -> "BenefitYearsSearchResponse":
@@ -39,6 +41,7 @@ class BenefitYearsSearchResponse(PydanticBaseModel):
             benefit_year_start_date=benefit_year.start_date,
             employee_id=benefit_year.employee_id.__str__(),
             current_benefit_year=current_benefit_year,
+            benefit_year_id=benefit_year.benefit_year_id.__str__()
         )
 
 
