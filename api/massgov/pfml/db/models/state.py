@@ -608,10 +608,6 @@ class State(LookupTable):
         212, "Employer Reimbursement Related Pending Audit", Flow.DELEGATED_PAYMENT.flow_id
     )
 
-    EMPLOYER_REIMBURSEMENT_PENDING_AUDIT = LkState(
-        213, "Employer Reimbursement Pending Audit", Flow.DELEGATED_PAYMENT.flow_id
-    )
-
     EMPLOYER_REIMBURSEMENT_ERROR = LkState(
         214, "Employer Reimbursement Error", Flow.DELEGATED_PAYMENT.flow_id
     )

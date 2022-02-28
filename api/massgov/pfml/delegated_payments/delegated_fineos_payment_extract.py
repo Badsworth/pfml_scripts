@@ -223,7 +223,6 @@ class PaymentData:
         # There is no need to error a cancellation/overpayment/etc. if the payment
         # is missing EFT or address info that we are never going to use.
 
-        # TODO change this to generic variable to cover all payments like employer reimbursement
         self.is_standard_payment = (
             self.payment_transaction_type.payment_transaction_type_id
             == PaymentTransactionType.STANDARD.payment_transaction_type_id
@@ -275,14 +274,9 @@ class PaymentData:
         if self.is_standard_payment or (
             self.is_employer_reimbursement and self.is_employer_reimbursement_enabled
         ):
-            disallowed_lookup_values = (
-                [PaymentMethod.DEBIT.payment_method_description]
-                if self.is_standard_payment
-                else [
-                    PaymentMethod.DEBIT.payment_method_description,
-                    PaymentMethod.ACH.payment_method_description,
-                ]
-            )
+            disallowed_lookup_values = [PaymentMethod.DEBIT.payment_method_description]
+            if self.is_employer_reimbursement:
+                disallowed_lookup_values.append(PaymentMethod.ACH.payment_method_description)
 
             self.raw_payment_method = payments_util.validate_db_input(
                 "PAYMENTMETHOD",
@@ -725,13 +719,6 @@ class PaymentExtractStep(Step):
                     payment_data.is_employer_reimbursement
                     and payment_data.is_employer_reimbursement_enabled
                 ):
-                    if claim is None:
-                        self.increment(self.Metrics.CLAIM_NOT_FOUND_COUNT)
-                        payment_data.validation_container.add_validation_issue(
-                            payments_util.ValidationReason.MISSING_IN_DB,
-                            payment_data.absence_case_number,
-                            "claim",
-                        )
                     employee = claim.employee if claim is not None else None
                 else:
                     tax_identifier = (
@@ -772,7 +759,7 @@ class PaymentExtractStep(Step):
         # If we cannot find the claim, we want to error only for standard
         # payments. While we'd like to attach the claim to other payment types
         # it's less of a concern to us.
-        if not claim and payment_data.is_standard_payment:
+        if not claim:
             payment_data.validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISSING_IN_DB,
                 payment_data.absence_case_number,

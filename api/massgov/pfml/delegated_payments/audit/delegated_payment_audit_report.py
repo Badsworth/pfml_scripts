@@ -84,23 +84,6 @@ class PaymentAuditReportStep(Step):
         if len(state_withholding_state_logs) > 0:
             state_logs_containers += state_withholding_state_logs
 
-        employer_reimbursement_primary_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-            state_log_util.AssociatedClass.PAYMENT,
-            State.EMPLOYER_REIMBURSEMENT_PENDING_AUDIT,
-            self.db_session,
-        )
-        if len(employer_reimbursement_primary_state_logs) > 0:
-            state_logs_containers += employer_reimbursement_primary_state_logs
-
-        # employer_reimbursement_related_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-        #         state_log_util.AssociatedClass.PAYMENT,
-        #         State.EMPLOYER_REIMBURSEMENT_RELATED_PENDING_AUDIT,
-        #         self.db_session,
-        #     )
-        # if len(employer_reimbursement_related_state_logs) > 0:
-        #     for item in employer_reimbursement_related_state_logs:
-        #         state_logs_containers.append(item)
-
         state_log_count = len(state_logs_containers)
         self.set_metrics({self.Metrics.SAMPLED_PAYMENT_COUNT: state_log_count})
 

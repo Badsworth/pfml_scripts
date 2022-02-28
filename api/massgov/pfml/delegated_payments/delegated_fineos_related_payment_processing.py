@@ -37,7 +37,7 @@ class RelatedPaymentsProcessingStep(Step):
 
     # End state when we have no primary payments
     primary_not_found_states: Dict[int, LkState] = {
-        PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id: State.EMPLOYER_REIMBURSEMENT_PENDING_AUDIT,
+        PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id: State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
         PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id: State.STATE_WITHHOLDING_ORPHANED_PENDING_AUDIT,
         PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id: State.FEDERAL_WITHHOLDING_ORPHANED_PENDING_AUDIT,
     }
@@ -158,7 +158,7 @@ class RelatedPaymentsProcessingStep(Step):
                         transaction_status: Optional[
                             LkFineosWritebackTransactionStatus
                         ] = self._get_payment_writeback_transaction_status(related_payment)
-                        if transaction_status and transaction_status.transaction_status_description:
+                        if transaction_status:
                             message = "Employer reimbursement failed validation, need to wait for it to be fixed."
                             stage_payment_fineos_writeback(
                                 payment=payment,
@@ -166,6 +166,14 @@ class RelatedPaymentsProcessingStep(Step):
                                 outcome=state_log_util.build_outcome(message),
                                 db_session=self.db_session,
                                 import_log_id=self.get_import_log_id(),
+                            )
+                        else:
+                            related_payment_log_details = payments_util.get_traceable_payment_details(
+                                related_payment
+                            )
+                            logger.info(
+                                "Writeback details not found for the related payment",
+                                extra=related_payment_log_details,
                             )
 
     def _get_standard_payments(self, db_session: db.Session) -> List[Payment]:
@@ -319,7 +327,7 @@ class RelatedPaymentsProcessingStep(Step):
                     transaction_status: Optional[
                         LkFineosWritebackTransactionStatus
                     ] = self._get_payment_writeback_transaction_status(primary_payment_records[0])
-                    if transaction_status and transaction_status.transaction_status_description:
+                    if transaction_status:
                         message = "Employer reimbursement record error due to an issue with the primary payment."
                         stage_payment_fineos_writeback(
                             payment=payment,
@@ -327,6 +335,14 @@ class RelatedPaymentsProcessingStep(Step):
                             outcome=state_log_util.build_outcome(message),
                             db_session=self.db_session,
                             import_log_id=self.get_import_log_id(),
+                        )
+                    else:
+                        primary_payment_log_details = payments_util.get_traceable_payment_details(
+                            primary_payment_records[0]
+                        )
+                        logger.info(
+                            "Writeback details not found for the primary payment",
+                            extra=primary_payment_log_details,
                         )
 
     def _get_payment_writeback_transaction_status(
