@@ -33,7 +33,7 @@ module "api" {
   source = "../../template"
 
   environment_name                = local.environment_name
-  service_app_count               = 5 # high enough to not break immediately (?), but low enough to maybe see how autoscaling behaves in LST.
+  service_app_count               = 10 # high enough to not break immediately (?), but low enough to maybe see how autoscaling behaves in LST.
   service_max_app_count           = 10
   service_docker_tag              = local.service_docker_tag
   service_ecs_cluster_arn         = data.aws_ecs_cluster.performance.arn
