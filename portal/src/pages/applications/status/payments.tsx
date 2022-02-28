@@ -15,7 +15,7 @@ import ClaimDetail from "src/models/ClaimDetail";
 import Heading from "../../../components/core/Heading";
 import LeaveReason from "../../../models/LeaveReason";
 import PageNotFound from "../../../components/PageNotFound";
-import { Payment } from "src/models/Payment";
+import { Payment, WritebackTransactionStatus } from "src/models/Payment";
 import Spinner from "../../../components/core/Spinner";
 import StatusNavigationTabs from "../../../components/status/StatusNavigationTabs";
 import Table from "../../../components/core/Table";
@@ -30,6 +30,7 @@ import isBlank from "../../../utils/isBlank";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
+import { now } from "lodash";
 
 // TODO(PORTAL-1482): remove test cases for checkback dates
 // remove dayjs and dayjsBusinessTime imports
@@ -151,12 +152,61 @@ export const Payments = ({
     }
   };
 
-  const getPaymentStatus = (status: string, payment_method: string) => {
+  const rejectedStatuses = [
+    "EFT Account Information Error",
+    "Bank Processing Error",
+  ];
+  const delayedByRejection = (
+    status: string,
+    writeback_transaction_status: WritebackTransactionStatus
+  ) => {
+    return (
+      status === "Delayed" && writeback_transaction_status in rejectedStatuses
+    );
+  };
+  const delayedByAddressValidation = (
+    status: string,
+    writeback_transaction_status: WritebackTransactionStatus,
+    transaction_date: string
+  ) => {
+    const todaysDate = dayjs();
+    const transactionDate = dayjs(transaction_date);
+    const twoBusinessDaysFromTransaction = transactionDate.addBusinessDays(2);
+    return (
+      status === "Delayed" &&
+      writeback_transaction_status === "Address Validation Error" &&
+      todaysDate.isSame(twoBusinessDaysFromTransaction, "day")
+    );
+  };
+
+  const getPaymentStatus = (
+    status: string,
+    payment_method: string,
+    writeback_transaction_status: WritebackTransactionStatus,
+    transaction_date: string,
+    transaction_date_could_change: boolean
+  ) => {
     if (status === "Sent to bank" && payment_method === "Check") {
       return "Check";
-    } else {
-      return status;
     }
+    if (transaction_date_could_change) {
+      // What do we do with this?
+    }
+    if (delayedByRejection(status, writeback_transaction_status)) {
+      return "Delay_Rejected";
+    }
+    if (
+      delayedByAddressValidation(
+        status,
+        writeback_transaction_status,
+        transaction_date
+      )
+    ) {
+      return "Delay_AddressValidation";
+    }
+    // More of these should go here
+
+    return status;
   };
 
   return (
@@ -258,6 +308,9 @@ export const Payments = ({
                       expected_send_date_start,
                       expected_send_date_end,
                       status,
+                      writeback_transaction_status,
+                      transaction_date,
+                      transaction_date_could_change,
                     }) => (
                       <tr key={payment_id}>
                         <td
@@ -273,7 +326,13 @@ export const Payments = ({
                           <Trans
                             i18nKey="pages.payments.tablePaymentStatus"
                             tOptions={{
-                              context: getPaymentStatus(status, payment_method),
+                              context: getPaymentStatus(
+                                status,
+                                payment_method,
+                                writeback_transaction_status,
+                                transaction_date,
+                                transaction_date_could_change
+                              ),
                               paymentMethod: getPaymentMethod(payment_method),
                               payPeriod: formatDateRange(
                                 expected_send_date_start,
