@@ -64,6 +64,10 @@ data "aws_iam_policy_document" "storybook" {
       variable = "s3:TlsVersion"
       values   = ["1.2"]
     }
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
   }
 }
 
