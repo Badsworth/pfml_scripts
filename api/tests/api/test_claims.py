@@ -5986,6 +5986,8 @@ class TestPostChangeRequest:
 
     @mock.patch("massgov.pfml.api.claims.get_claim_from_db")
     def test_validation_issues(self, mock_get_claim, auth_token, claim, client, request_body):
+        claim.absence_period_start_date = date(2021, 1, 1)
+        claim.fineos_absence_status_id = 1
         mock_get_claim.return_value = claim
         del request_body["end_date"]
         response = client.post(

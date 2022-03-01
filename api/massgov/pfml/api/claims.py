@@ -761,11 +761,6 @@ def post_change_request(fineos_absence_id: str) -> flask.Response:
     body = connexion.request.json
     change_request: ChangeRequest = ChangeRequest.parse_obj(body)
 
-    if issues := claim_rules.get_change_request_issues(change_request):
-        return response_util.error_response(
-            status_code=BadRequest, message="Invalid change request body", errors=issues, data={},
-        ).to_api_response()
-
     claim = get_claim_from_db(fineos_absence_id)
     if claim is None:
         logger.warning(
@@ -779,6 +774,11 @@ def post_change_request(fineos_absence_id: str) -> flask.Response:
             data={},
         )
         return error.to_api_response()
+
+    if issues := claim_rules.get_change_request_issues(change_request, claim):
+        return response_util.error_response(
+            status_code=BadRequest, message="Invalid change request body", errors=issues, data={},
+        ).to_api_response()
 
     # Post change request to FINEOS - https://lwd.atlassian.net/browse/PORTAL-1710
     submitted_time = utcnow()
