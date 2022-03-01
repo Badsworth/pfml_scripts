@@ -23,9 +23,6 @@ describe("usePaymentsLogic", () => {
   });
 
   it("gets payments from API", async () => {
-    process.env.featureFlags = JSON.stringify({
-      claimantShowPaymentsPhaseTwo: true,
-    });
     const mockResponseData = {
       absence_case_id: "mock-absence-case-id",
       payments: [createMockPayment({ status: "Sent to bank" }, true)],
@@ -47,9 +44,6 @@ describe("usePaymentsLogic", () => {
   });
 
   it("it sets isLoadingPayments to true when a claim is being loaded", async () => {
-    process.env.featureFlags = JSON.stringify({
-      claimantShowPaymentsPhaseTwo: true,
-    });
     mockFetch();
     const { appLogic, waitFor } = setup();
 
@@ -68,9 +62,6 @@ describe("usePaymentsLogic", () => {
   });
 
   it("clears prior errors before API request is made", async () => {
-    process.env.featureFlags = JSON.stringify({
-      claimantShowPaymentsPhaseTwo: true,
-    });
     mockFetch();
     const { appLogic } = setup();
 
@@ -86,9 +77,6 @@ describe("usePaymentsLogic", () => {
   });
 
   it("catches exceptions thrown from the API module and sets isLoadingPayments to be false", async () => {
-    process.env.featureFlags = JSON.stringify({
-      claimantShowPaymentsPhaseTwo: true,
-    });
     jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
     mockFetch({
       status: 400,

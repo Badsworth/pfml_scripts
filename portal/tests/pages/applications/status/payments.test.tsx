@@ -94,34 +94,7 @@ const props = {
 };
 
 describe("Payments", () => {
-  it("redirects to status page if feature flag is not enabled", () => {
-    process.env.featureFlags = JSON.stringify({
-      claimantShowPaymentsPhaseTwo: false,
-    });
-
-    const goToMock = jest.fn();
-    renderPage(
-      Payments,
-      {
-        // Set includeApprovalNotice, otherwise this test will pass regardless of feature flag value
-        addCustomSetup: setupHelper({
-          goTo: goToMock,
-          includeApprovalNotice: true,
-        }),
-      },
-      props
-    );
-
-    expect(goToMock).toHaveBeenCalledWith(routes.applications.status.claim, {
-      absence_id: props.query.absence_id,
-    });
-  });
-
   it("redirects to status page if claim is not approved and has no payments", () => {
-    process.env.featureFlags = JSON.stringify({
-      claimantShowPaymentsPhaseTwo: true,
-    });
-
     const goToMock = jest.fn();
 
     renderPage(
@@ -402,13 +375,7 @@ describe("Payments", () => {
   });
 
   // TODO(PORTAL-1482): remove test cases for checkback dates
-  describe("Phase 2 Checkback date implementation", () => {
-    beforeEach(() => {
-      process.env.featureFlags = JSON.stringify({
-        claimantShowPaymentsPhaseTwo: true,
-      });
-    });
-
+  describe("Checkback date implementation", () => {
     const approvalDate = {
       "approved before claim start date": dayjs(
         defaultAbsencePeriod.absence_period_start_date
@@ -544,6 +511,11 @@ describe("Payments", () => {
         }
       );
 
+      const intermittentUnpaidIntroText =
+        "Your application has an unpaid 7-day waiting period that begins the first day you report taking leave";
+      expect(
+        screen.getByText(intermittentUnpaidIntroText, { exact: false })
+      ).toBeInTheDocument();
       expect(screen.getByTestId("your-payments-intro")).toMatchSnapshot();
       const table = screen.queryByRole("table");
       expect(table).not.toBeInTheDocument();

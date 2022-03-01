@@ -31,8 +31,8 @@ const flagsConfig = {
     // When this flag is false, you can bypass the deparment capture form when applying
     claimantShowOrganizationUnits: false,
 
-    // When this flag is enabled payment status phase two work will be displayed.
-    claimantShowPaymentsPhaseTwo: true,
+    // When this flag is enabled payment status phase three work will be displayed.
+    claimantShowPaymentsPhaseThree: false,
 
     // Show multiple leave request UI updates to leave admins (dashboard++)
     // TODO (PORTAL-1560) Remove flag
@@ -73,37 +73,29 @@ const flagsConfig = {
     example: true,
     pfmlTerriyay: true,
     claimantShowMFA: true,
-    claimantShowPaymentsPhaseTwo: true,
   },
   test: {
     claimantShowMFA: true,
-    claimantShowPaymentsPhaseTwo: true,
   },
   stage: {
     claimantShowMFA: true,
-    claimantShowPaymentsPhaseTwo: true,
   },
   training: {
     claimantShowMFA: true,
-    claimantShowPaymentsPhaseTwo: true,
   },
   performance: {
     claimantShowMFA: true,
-    claimantShowPaymentsPhaseTwo: true,
   },
   uat: {
     claimantShowMFA: true,
-    claimantShowPaymentsPhaseTwo: true,
   },
   local: {
     pfmlTerriyay: true,
     claimantShowMFA: true,
-    claimantShowPaymentsPhaseTwo: true,
   },
   prod: {
     pfmlTerriyay: true,
     claimantShowMFA: true,
-    claimantShowPaymentsPhaseTwo: true,
   },
 };
 

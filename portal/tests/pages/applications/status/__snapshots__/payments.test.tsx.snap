@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Payments Phase 2 Checkback date implementation does not render checkback dates for claims that have at least one payment row 1`] = `
+exports[`Payments Checkback date implementation does not render checkback dates for claims that have at least one payment row 1`] = `
 <section
   data-testid="your-payments-intro"
 >
@@ -8,7 +8,7 @@ exports[`Payments Phase 2 Checkback date implementation does not render checkbac
 </section>
 `;
 
-exports[`Payments Phase 2 Checkback date implementation does not render the Payments table when no payments are available and leave is intermittent 1`] = `
+exports[`Payments Checkback date implementation does not render the Payments table when no payments are available and leave is intermittent 1`] = `
 <section
   data-testid="your-payments-intro"
 >
@@ -30,7 +30,7 @@ exports[`Payments Phase 2 Checkback date implementation does not render the Paym
 </section>
 `;
 
-exports[`Payments Phase 2 Checkback date implementation renders intro text for continous leaves approved after fourteenth claim date if claim has reduced and continuous leaves 1`] = `
+exports[`Payments Checkback date implementation renders intro text for continous leaves approved after fourteenth claim date if claim has reduced and continuous leaves 1`] = `
 <section
   data-testid="your-payments-intro"
 >
@@ -40,7 +40,7 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for c
 </section>
 `;
 
-exports[`Payments Phase 2 Checkback date implementation renders intro text for continous leaves approved before claim start date if claim has reduced and continuous leaves 1`] = `
+exports[`Payments Checkback date implementation renders intro text for continous leaves approved before claim start date if claim has reduced and continuous leaves 1`] = `
 <section
   data-testid="your-payments-intro"
 >
@@ -50,7 +50,7 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for c
 </section>
 `;
 
-exports[`Payments Phase 2 Checkback date implementation renders intro text for continous leaves approved before fourteenth claim date if claim has reduced and continuous leaves 1`] = `
+exports[`Payments Checkback date implementation renders intro text for continous leaves approved before fourteenth claim date if claim has reduced and continuous leaves 1`] = `
 <section
   data-testid="your-payments-intro"
 >
@@ -60,7 +60,7 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for c
 </section>
 `;
 
-exports[`Payments Phase 2 Checkback date implementation renders intro text for continous leaves with retroactive claim date if claim has reduced and continuous leaves 1`] = `
+exports[`Payments Checkback date implementation renders intro text for continous leaves with retroactive claim date if claim has reduced and continuous leaves 1`] = `
 <section
   data-testid="your-payments-intro"
 >
@@ -70,7 +70,7 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for c
 </section>
 `;
 
-exports[`Payments Phase 2 Checkback date implementation renders intro text for continuous leaves approved after fourteenth claim date  1`] = `
+exports[`Payments Checkback date implementation renders intro text for continuous leaves approved after fourteenth claim date  1`] = `
 <section
   data-testid="your-payments-intro"
 >
@@ -80,7 +80,7 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for c
 </section>
 `;
 
-exports[`Payments Phase 2 Checkback date implementation renders intro text for continuous leaves approved before claim start date  1`] = `
+exports[`Payments Checkback date implementation renders intro text for continuous leaves approved before claim start date  1`] = `
 <section
   data-testid="your-payments-intro"
 >
@@ -90,7 +90,7 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for c
 </section>
 `;
 
-exports[`Payments Phase 2 Checkback date implementation renders intro text for continuous leaves approved before fourteenth claim date  1`] = `
+exports[`Payments Checkback date implementation renders intro text for continuous leaves approved before fourteenth claim date  1`] = `
 <section
   data-testid="your-payments-intro"
 >
@@ -100,7 +100,7 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for c
 </section>
 `;
 
-exports[`Payments Phase 2 Checkback date implementation renders intro text for continuous leaves with retroactive claim date  1`] = `
+exports[`Payments Checkback date implementation renders intro text for continuous leaves with retroactive claim date  1`] = `
 <section
   data-testid="your-payments-intro"
 >
@@ -110,7 +110,7 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for c
 </section>
 `;
 
-exports[`Payments Phase 2 Checkback date implementation renders intro text for reduced schedule leaves approved after fourteenth claim date  1`] = `
+exports[`Payments Checkback date implementation renders intro text for reduced schedule leaves approved after fourteenth claim date  1`] = `
 <section
   data-testid="your-payments-intro"
 >
@@ -120,7 +120,7 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for r
 </section>
 `;
 
-exports[`Payments Phase 2 Checkback date implementation renders intro text for reduced schedule leaves approved before claim start date  1`] = `
+exports[`Payments Checkback date implementation renders intro text for reduced schedule leaves approved before claim start date  1`] = `
 <section
   data-testid="your-payments-intro"
 >
@@ -130,7 +130,7 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for r
 </section>
 `;
 
-exports[`Payments Phase 2 Checkback date implementation renders intro text for reduced schedule leaves approved before fourteenth claim date  1`] = `
+exports[`Payments Checkback date implementation renders intro text for reduced schedule leaves approved before fourteenth claim date  1`] = `
 <section
   data-testid="your-payments-intro"
 >
@@ -140,7 +140,7 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for r
 </section>
 `;
 
-exports[`Payments Phase 2 Checkback date implementation renders intro text for reduced schedule leaves with retroactive claim date  1`] = `
+exports[`Payments Checkback date implementation renders intro text for reduced schedule leaves with retroactive claim date  1`] = `
 <section
   data-testid="your-payments-intro"
 >
@@ -152,7 +152,7 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for r
 
 exports[`Payments displays info alert if claimant has bonding-newborn but not pregnancy claims 1`] = `
 <div
-  aria-labelledby="alert-heading10"
+  aria-labelledby="alert-heading7"
   class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
   role="region"
   tabindex="-1"
@@ -162,7 +162,7 @@ exports[`Payments displays info alert if claimant has bonding-newborn but not pr
   >
     <h2
       class="usa-alert__heading font-heading-xs text-bold"
-      id="alert-heading10"
+      id="alert-heading7"
     >
       If you are giving birth, you may also be eligible for paid medical leave
     </h2>
@@ -193,7 +193,7 @@ exports[`Payments displays info alert if claimant has bonding-newborn but not pr
 
 exports[`Payments displays info alert if claimant has pregnancy but not bonding claims 1`] = `
 <div
-  aria-labelledby="alert-heading14"
+  aria-labelledby="alert-heading11"
   class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
   role="region"
   tabindex="-1"
@@ -203,7 +203,7 @@ exports[`Payments displays info alert if claimant has pregnancy but not bonding 
   >
     <h2
       class="usa-alert__heading font-heading-xs text-bold"
-      id="alert-heading14"
+      id="alert-heading11"
     >
       You may also be eligible for paid family leave
     </h2>
@@ -282,7 +282,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
         class="usa-accordion__heading margin-y-2"
       >
         <button
-          aria-controls="accordion30"
+          aria-controls="accordion27"
           aria-expanded="false"
           class="usa-accordion__button"
           type="button"
@@ -292,9 +292,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       </h2>
       <div
         class="usa-accordion__content usa-prose"
-        data-testid="accordion30"
+        data-testid="accordion27"
         hidden=""
-        id="accordion30"
+        id="accordion27"
       >
         <strong>
           What may cause a delayed payment
@@ -360,7 +360,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       class="usa-accordion__heading margin-y-2"
     >
       <button
-        aria-controls="accordion31"
+        aria-controls="accordion28"
         aria-expanded="false"
         class="usa-accordion__button"
         type="button"
@@ -370,9 +370,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
     </h2>
     <div
       class="usa-accordion__content usa-prose"
-      data-testid="accordion31"
+      data-testid="accordion28"
       hidden=""
-      id="accordion31"
+      id="accordion28"
     >
       <p>
         To see your maximum weekly benefit amount, view your approval notice in the 
@@ -421,7 +421,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       class="usa-accordion__heading margin-y-2"
     >
       <button
-        aria-controls="accordion32"
+        aria-controls="accordion29"
         aria-expanded="false"
         class="usa-accordion__button"
         type="button"
@@ -431,9 +431,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
     </h2>
     <div
       class="usa-accordion__content usa-prose"
-      data-testid="accordion32"
+      data-testid="accordion29"
       hidden=""
-      id="accordion32"
+      id="accordion29"
     >
       <p>
         To make changes to your payment method or banking information, call the Contact Center at 

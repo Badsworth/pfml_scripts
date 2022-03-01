@@ -148,12 +148,6 @@ const props = {
 };
 
 describe("Status", () => {
-  beforeEach(() => {
-    process.env.featureFlags = JSON.stringify({
-      claimantShowPaymentsPhaseTwo: true,
-    });
-  });
-
   describe("Payments tab display", () => {
     it("does not show StatusNavigationTabs if feature flag is enabled, claim has no payments, and is not approved", () => {
       renderPage(
@@ -177,33 +171,6 @@ describe("Status", () => {
             new Payment(), // payments, default
             false // don't include the approval notice
           ),
-        },
-        props
-      );
-
-      expect(
-        screen.queryByRole("link", { name: "Payments" })
-      ).not.toBeInTheDocument();
-    });
-
-    it("does not show StatusNavigationTabs if claimantShowPaymentsPhaseTwo feature flag is disabled", () => {
-      process.env.featureFlags = JSON.stringify({
-        claimantShowPaymentsPhaseTwo: false,
-      });
-      renderPage(
-        Status,
-        {
-          addCustomSetup: setupHelper({
-            ...defaultClaimDetail,
-            absence_periods: [
-              createAbsencePeriod({
-                period_type: "Reduced Schedule",
-                reason: LeaveReason.bonding,
-                request_decision: "Approved",
-                reason_qualifier_one: "Newborn",
-              }),
-            ],
-          }),
         },
         props
       );
