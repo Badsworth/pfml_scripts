@@ -1213,28 +1213,28 @@
 <h2 id="baseapi">BaseAPI</h2>
 <p>The normal API error response includes an <code>errors</code> property in its body representing the request's issues. When <code>errors</code> are present, the <code>BaseAPI</code> throws a <code>ValidationError</code> that holds all API errors that were in the response body. The <code>BaseAPI</code> may also throw other error types, such as <code>NotFoundError</code> or <code>ForbiddenError</code>, depending on the response's status code.</p>
 <h2 id="logic-hook">Logic hook</h2>
-<p>The logic hooks, like <code>useBenefitsApplicationsLogic</code>, are responsible for catching any errors thrown by the API module and sending the error into <code>appErrorsLogic</code>. A typical pattern for this looks like:</p>
+<p>The logic hooks, like <code>useBenefitsApplicationsLogic</code>, are responsible for catching any errors thrown by the API module and sending the error into <code>errorsLogic</code>. A typical pattern for this looks like:</p>
 <div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="nx">updateClaim</span><span class="p">(</span><span class="nx">patchData</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">try</span> <span class="p">{</span>
     <span class="c1">// Send the API request</span>
     <span class="k">await</span> <span class="nx">myApi</span><span class="p">.</span><span class="nx">update</span><span class="p">(</span><span class="nx">patchData</span><span class="p">)</span>
   <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
     <span class="c1">// Handle any API errors</span>
-    <span class="nx">appErrorsLogic</span><span class="p">.</span><span class="nx">catchError</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span>
+    <span class="nx">errorsLogic</span><span class="p">.</span><span class="nx">catchError</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span>
   <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
 <h2 id="app-errors-logic-hook">App Errors Logic hook</h2>
-<p>The <code>useAppErrorsLogic</code> hook is where errors get sent to for processing and storing.</p>
-<p>When <code>appErrorsLogic.catchError</code> receives a <code>ValidationError</code> holding the API response's errors, it parses each API error and creates an <code>AppErrorInfo</code> instance with a <code>message</code> generated from the API issue's <code>type</code>, <code>rule</code>, and <code>field</code> properties. See the <code>getMessageFromApiIssue</code> method for how i18n keys are generated.</p>
+<p>The <code>useErrorsLogic</code> hook is where errors get sent to for processing and storing.</p>
+<p>When <code>errorsLogic.catchError</code> receives a <code>ValidationError</code> holding the API response's errors, it parses each API error and creates an <code>ErrorInfo</code> instance with a <code>message</code> generated from the API issue's <code>type</code>, <code>rule</code>, and <code>field</code> properties. See the <code>getMessageFromApiIssue</code> method for how i18n keys are generated.</p>
 <p>If you're unsure what i18n key will be generated for the issue, you can trigger the error in local development and view the console to see what key it says is missing:</p>
 <p><img alt="Missing i18n keys" src="../assets/missing-i18n-key-log.png" /></p>
 <p>If a matching i18n key isn't found for the API issue, the app falls back to the original error message sent from the API. We should always have an internationalized error message, and this fallback behavior should not be relied upon.</p>
 <h2 id="errorssummary"><code>&lt;ErrorsSummary&gt;</code></h2>
 <p>The <code>ErrorsSummary</code> component is rendered by our app container (<code>_app.js</code>) above the page component.</p>
-<p>When the <code>appErrorsLogic</code> module has errors present, the <code>ErrorsSummary</code> component renders each error's <code>message</code>.</p>
+<p>When the <code>errorsLogic</code> module has errors present, the <code>ErrorsSummary</code> component renders each error's <code>message</code>.</p>
 <h2 id="inline-errors">Inline errors</h2>
-<p>Each page has access to <code>appErrorsLogic</code> via the <code>appLogic</code> prop. The errors can be read from <code>appLogic.appErrors</code>.</p>
+<p>Each page has access to <code>errorsLogic</code> via the <code>appLogic</code> prop. The errors can be read from <code>appLogic.errors</code>.</p>
 <p>If the errors are associated with a specific field on the page, you can render them inline by setting the field component's <code>errorMsg</code> prop. The easiest way to do this is by using the <code>useFunctionalInputProps</code> to set the common props for your fields, one of which is <code>errorMsg</code>.</p>
 <p>A common pattern for forms in our app looks like this:</p>
 <div class="highlight"><pre><span></span><code>const { formState, updateFields } = useFormState({
@@ -1242,7 +1242,7 @@
 });
 
 const getFunctionalInputProps = useFunctionalInputProps({
-  appErrors: props.appLogic.appErrors,
+  errors: props.appLogic.errors,
   formState,
   updateFields,
 });
@@ -1256,9 +1256,9 @@ return (
   &lt;/form&gt;
 );
 </code></pre></div>
-<p>Alternatively, if you're not using <code>useFunctionalInputProps</code>, you can use <code>AppErrorInfo.fieldErrorMessage(fieldName)</code> to return the error message for a specific field:</p>
+<p>Alternatively, if you're not using <code>useFunctionalInputProps</code>, you can use <code>ErrorInfo.fieldErrorMessage(fieldName)</code> to return the error message for a specific field:</p>
 <div class="highlight"><pre><span></span><code>&lt;InputText
-  errorMsg={AppErrorInfo.fieldErrorMessage(errors, &quot;first_name&quot;)}
+  errorMsg={ErrorInfo.fieldErrorMessage(errors, &quot;first_name&quot;)}
   name=&quot;first_name&quot;
   ...
 </code></pre></div>
