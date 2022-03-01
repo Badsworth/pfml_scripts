@@ -151,6 +151,15 @@ def eligibility_post():
         employer = db_session.query(Employer).filter_by(employer_fein=fein.replace("-", "")).first()
         employee = db_session.query(Employee).filter_by(tax_identifier=tax_record).first()
 
+        logger.info(
+            "Record lookup complete.",
+            extra={
+                "employee_id": employee.employee_id if employee else None,
+                "employer_id": employer.employer_id if employer else None,
+                "tax_identifier_id": tax_record.tax_identifier_id if tax_record else None,
+            },
+        )
+
         if tax_record is None or employer is None or employee is None:
             logger.warning("Unable to find record. Tax record or employee or employer is None")
             return response_util.error_response(
