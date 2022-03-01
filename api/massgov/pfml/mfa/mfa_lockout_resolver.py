@@ -2,9 +2,9 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 from massgov.pfml.api.models.users.requests import UserUpdateRequest
 from massgov.pfml.api.services.users import update_user
-from massgov.pfml.db.models.employees import User
+from massgov.pfml.db.models.employees import MFADeliveryPreference, User
 from massgov.pfml.db.queries.users import get_user_by_email
-from massgov.pfml.util.aws.cognito import disable_user_mfa
+from massgov.pfml.util.aws.cognito import admin_disable_user_mfa
 from massgov.pfml.util.aws.sns import check_phone_number_opt_out, opt_in_phone_number
 
 logger = logging.get_logger(__name__)
@@ -79,7 +79,7 @@ class MfaLockoutResolver:
 
         try:
             if self.should_commit_changes:
-                disable_user_mfa(self.user_email)
+                admin_disable_user_mfa(self.user_email)
             else:
                 self._log_info("(DRY RUN: Skipping API call to disable user MFA)")
         except Exception as e:
@@ -118,17 +118,14 @@ class MfaLockoutResolver:
     def _disable_mfa_pfml(self, user: User) -> None:
         self._log_info("Disabling user MFA in PFML db")
 
-        update_request = UserUpdateRequest(mfa_delivery_preference="Opt Out")
-
-        with db.session_scope(self.db_session_raw) as db_session:
-            try:
-                if self.should_commit_changes:
-                    update_user(db_session, user, update_request, "Admin")
-                else:
-                    self._log_info("(DRY RUN: Skipping API call to disable MFA in PFML DB)")
-            except Exception as e:
-                self._log_error("Error disabling user MFA in PFML db", e)
-                raise e
+        try:
+            if self.should_commit_changes:
+                setattr(user, "mfa_delivery_preference", MFADeliveryPreference.OPT_OUT)
+            else:
+                self._log_info("(DRY RUN: Skipping API call to disable MFA in PFML DB)")
+        except Exception as e:
+            self._log_error("Error disabling user MFA in PFML db", e)
+            raise e
 
         self._log_info("...Done!")
 
