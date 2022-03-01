@@ -3,7 +3,7 @@
   border-radius: $Border-Radius;
   box-shadow: $Box-Shadow;
   margin-bottom: 2.43em;
-  padding: 1.43em 1.71em;
+  padding: 1.18em 1.71em;
 }
 
 .maintenance-info {
@@ -13,17 +13,21 @@
 
 .maintenance-info__title {
   color: $Color-RevolutionGray;
-  display: inline;
+  display: inline-block;
   font-size: 1.14em;
   font-weight: 400;
-  line-height: 1.71;
-  margin-bottom: 0.4em;
-  margin-right: 0.4em;
+  line-height: 1.71em;
+  margin-bottom: 0.18em;
+  margin-right: 0.6em;
 }
 
 .maintenance-info__text {
   color: $Color-GraniteGray-700;
   flex: 1 1 auto;
+}
+
+.maintenance-info__body {
+  line-height: 1.36em;
 }
 
 .maintenance-configure {
@@ -169,7 +173,7 @@
   color: $Color-RevolutionGray;
   font-size: 1em;
   line-height: 1.33;
-  margin-top: 1.45em;
+  margin-top: 1.1em;
 }
 
 .maintenance-status__row {
