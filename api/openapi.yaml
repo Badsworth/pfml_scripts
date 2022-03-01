@@ -398,10 +398,13 @@ paths:
         - name: employer_id
           in: query
           schema:
-            type: string
-            format: uuid
-          description: ID of Employer to query claims for
+            type: array
+            items:
+                type: string
+                format: uuid
+          description: ID(s) of Employers to query claims for
           required: false
+          explode: false
         - name: employee_id
           in: query
           schema:
@@ -3093,8 +3096,10 @@ components:
           default: "descending"
           enum: ["ascending", "descending"]
         employer_id:
-          type: string
-          format: uuid
+          type: array
+          items:
+            type: string
+            format: uuid
           description: ID of Employer to query claims for
         employee_id:
           type: array
