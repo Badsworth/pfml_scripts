@@ -28,6 +28,7 @@ from massgov.pfml.fineos.util.response import (
     get_fineos_correlation_id,
     log_validation_error,
 )
+from massgov.pfml.fineos.wscomposer.schemas import fineos_wscomposer_schema
 from massgov.pfml.util.converters.json_to_obj import set_empty_dates_to_none
 
 from . import client, exception, models
@@ -42,16 +43,12 @@ EXPECTED_UNPROCESSABLE_ENTITY_FAILURES = {
     "is not a valid file",
 }
 
-employee_register_request_schema = xmlschema.XMLSchema(
-    os.path.join(os.path.dirname(__file__), "wscomposer", "EmployeeRegisterService.Request.xsd")
-)
+employee_register_request_schema = fineos_wscomposer_schema("EmployeeRegisterService.Request.xsd")
 
-update_or_create_party_request_schema = xmlschema.XMLSchema(
-    os.path.join(os.path.dirname(__file__), "wscomposer", "UpdateOrCreateParty.Request.xsd")
-)
+update_or_create_party_request_schema = fineos_wscomposer_schema("UpdateOrCreateParty.Request.xsd")
 
-update_or_create_party_response_schema = xmlschema.XMLSchema(
-    os.path.join(os.path.dirname(__file__), "wscomposer", "UpdateOrCreateParty.Response.xsd")
+update_or_create_party_response_schema = fineos_wscomposer_schema(
+    "UpdateOrCreateParty.Response.xsd"
 )
 
 create_or_update_leave_admin_request_schema = xmlschema.XMLSchema(
@@ -66,30 +63,26 @@ create_or_update_leave_admin_response_schema = xmlschema.XMLSchema(
     )
 )
 
-service_agreement_service_request_schema = xmlschema.XMLSchema(
-    os.path.join(os.path.dirname(__file__), "wscomposer", "ServiceAgreementService.Request.xsd")
+service_agreement_service_request_schema = fineos_wscomposer_schema(
+    "ServiceAgreementService.Request.xsd"
 )
 
-service_agreement_service_response_schema = xmlschema.XMLSchema(
-    os.path.join(os.path.dirname(__file__), "wscomposer", "ServiceAgreementService.Response.xsd")
+service_agreement_service_response_schema = fineos_wscomposer_schema(
+    "ServiceAgreementService.Response.xsd"
 )
 
-occupation_detail_update_service_request_schema = xmlschema.XMLSchema(
-    os.path.join(
-        os.path.dirname(__file__), "wscomposer", "OccupationDetailUpdateService.Request.xsd"
-    )
+occupation_detail_update_service_request_schema = fineos_wscomposer_schema(
+    "OccupationDetailUpdateService.Request.xsd"
 )
 
-read_employer_response_schema = xmlschema.XMLSchema(
-    os.path.join(os.path.dirname(__file__), "wscomposer", "ReadEmployer.Response.xsd")
+read_employer_response_schema = fineos_wscomposer_schema("ReadEmployer.Response.xsd")
+
+update_tax_withholding_pref_request_schema = fineos_wscomposer_schema(
+    "OptInSITFITService.Request.xsd"
 )
 
-update_tax_withholding_pref_request_schema = xmlschema.XMLSchema(
-    os.path.join(os.path.dirname(__file__), "wscomposer", "OptInSITFITService.Request.xsd")
-)
-
-update_tax_withholding_pref_response_schema = xmlschema.XMLSchema(
-    os.path.join(os.path.dirname(__file__), "wscomposer", "OptInSITFITService.Response.xsd")
+update_tax_withholding_pref_response_schema = fineos_wscomposer_schema(
+    "OptInSITFITService.Response.xsd"
 )
 
 
