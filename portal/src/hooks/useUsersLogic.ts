@@ -3,6 +3,7 @@ import {
   setMFAPreference,
   updateMFAPhoneNumber,
 } from "src/services/mfa";
+import { isFeatureEnabled } from "../services/featureFlags";
 import routes, { isApplicationsRoute, isEmployersRoute } from "../routes";
 import { useMemo, useState } from "react";
 import { AppErrorsLogic } from "./useAppErrorsLogic";
@@ -45,14 +46,15 @@ const useUsersLogic = ({
       if (mfa_phone_number) {
         getMfaValidationErrors(mfa_phone_number?.phone_number);
       }
-      // todo: send ff to BE
       // Get api validation errors and update the user
       const { user } = await usersApi.updateUser(user_id, patchData);
-      /*
-      // Update Cognito
-      if (mfa_delivery_preference)
-        await setMFAPreference(mfa_delivery_preference);
-      */
+
+      // Update Cognito unless the API will be doing that synchronization
+      // todo: will this break any metrics?
+      if (!isFeatureEnabled("claimantSyncCognitoPreferences")) {
+        if (mfa_delivery_preference)
+          await setMFAPreference(mfa_delivery_preference);
+      }
       if (mfa_phone_number?.phone_number)
         await updateMFAPhoneNumber(mfa_phone_number.phone_number);
       // Change internal state
