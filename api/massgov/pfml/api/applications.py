@@ -215,6 +215,13 @@ def applications_import():
         db_session.commit()
 
     log_attributes = get_application_log_attributes(application)
+    log_attributes["num_applications_on_account"] = str(
+        db_session.query(Application).filter(Application.user_id == user.user_id).count()
+    )
+    if claim:
+        time_elapsed = datetime_util.utcnow() - claim.created_at
+        minutes_elapsed = time_elapsed.total_seconds() / 60
+        log_attributes["minutes_between_claim_creation_and_import"] = str(minutes_elapsed)
     logger.info("applications_import success", extra=log_attributes)
 
     return response_util.success_response(

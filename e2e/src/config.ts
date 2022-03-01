@@ -82,6 +82,7 @@ function getRawEnvironment() {
     LST_FILE_RANGE: process.env.E2E_LST_FILE_RANGE, // valid values are "small", "large", "full_range"
     MFA_ENABLED: process.env.MFA_ENABLED,
     S3_INTELLIGENCE_TOOL_BUCKET: process.env.E2E_S3_INTELLIGENCE_TOOL_BUCKET,
+    HAS_UPDATED_ER_DASHBOARD: process.env.E2E_HAS_UPDATED_ER_DASHBOARD,
   };
 }
 

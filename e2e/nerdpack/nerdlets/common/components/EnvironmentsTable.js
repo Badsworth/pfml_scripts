@@ -28,11 +28,11 @@ function RunIndicators({ runs, env, link, simpleView = false }) {
     );
   }
   // EXPECTED TO BE DOWN, REMOVE AFTER Feb 21, 2022
-  else if (env === "trn2" || env === "long") {
+  else if (env === "trn2") {
     return (
       <span class="warning">
         <Icon type={Icon.TYPE.INTERFACE__STATE__WARNING} />
-        Env expected offline until Feb 21, 2022
+        Env expected offline
       </span>
     );
   }

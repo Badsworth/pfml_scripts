@@ -291,6 +291,12 @@ def get_benefit_year_by_employee_id(
     ) or get_benefit_year_from_leave_absence_history(db_session, employee_id, leave_start_date)
 
 
+def get_all_benefit_years_by_employee_id(
+    db_session: db.Session, employee_id: UUID4,
+) -> List[BenefitYear]:
+    return db_session.query(BenefitYear).filter(BenefitYear.employee_id == employee_id).all()
+
+
 def get_benefit_year_by_ssn(
     db_session: db.Session, tax_identifier: str, leave_start_date: date
 ) -> Optional[BenefitYear]:

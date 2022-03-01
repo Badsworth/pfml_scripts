@@ -861,6 +861,15 @@ class MmarsPaymentData(Base, TimestampMixin):
     )
     payment_i_value = Column(Text)
 
+    claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True, nullable=True)
+    claim = relationship(Claim)
+
+    employee_id = Column(
+        PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True, nullable=True
+    )
+    employee = relationship(Employee)
+    payment_i_value = Column(Text)
+
 
 class MmarsPaymentRefunds(Base, TimestampMixin):
     __tablename__ = "mmars_payment_refunds"
@@ -1073,6 +1082,10 @@ class FineosWritebackTransactionStatus(LookupTable):
         28, "PUB Check Stale", ACTIVE_WRITEBACK_RECORD_STATUS
     )
 
+    LEAVE_DURATION_MAX_EXCEEDED = LkFineosWritebackTransactionStatus(
+        29, "Max Leave Duration Exceeded", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
 
 class AuditReportAction(str, Enum):
     REJECTED = "REJECTED"
@@ -1138,6 +1151,12 @@ class PaymentAuditReportType(LookupTable):
     )
     PAYMENT_DATE_MISMATCH = LkPaymentAuditReportType(
         7, "Payment Date Mismatch", AuditReportAction.REJECTED, "payment_date_mismatch_details",
+    )
+    EXCEEDS_26_WEEKS_TOTAL_LEAVE = LkPaymentAuditReportType(
+        8,
+        "Exceeds 26 weeks of total leave",
+        AuditReportAction.INFORMATIONAL,
+        "exceeds_26_weeks_total_leave_details",
     )
 
 
@@ -1393,6 +1412,11 @@ AUDIT_REJECT_DETAIL_GROUPS = [
         writeback_transaction_status=FineosWritebackTransactionStatus.NAME_MISMATCH,
         audit_report_type=PaymentAuditReportType.DOR_FINEOS_NAME_MISMATCH,
         inbound_reject_notes_override_str="Name mismatch",  # Rather than the "DOR FINEOS Name Mismatch" that we send
+    ),
+    AuditReportDetailGroup(
+        reject_notes_str=PaymentAuditReportType.EXCEEDS_26_WEEKS_TOTAL_LEAVE.payment_audit_report_type_description,
+        writeback_transaction_status=FineosWritebackTransactionStatus.LEAVE_DURATION_MAX_EXCEEDED,
+        audit_report_type=PaymentAuditReportType.EXCEEDS_26_WEEKS_TOTAL_LEAVE,
     ),
     AuditReportDetailGroup(
         reject_notes_str=PaymentAuditReportType.PAYMENT_DATE_MISMATCH.payment_audit_report_type_description,

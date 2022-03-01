@@ -101,6 +101,11 @@ module "api" {
   service_now_base_url  = "https://savilinxpreview.servicenowservices.com"
   admin_portal_base_url = "https://paidleave-admin-cps-preview.dfml.eol.mass.gov"
 
+  azure_ad_authority_domain = "login.microsoftonline.com"
+  azure_ad_client_id        = "ecc75e15-cd60-4e28-b62f-d1bf80e05d4d"
+  azure_ad_parent_group     = "TSS-SG-PFML_ADMIN_PORTAL_NON_PROD"
+  azure_ad_tenant_id        = "3e861d16-48b7-4a0e-9806-8c04d81b7b2a"
+
   enable_document_multipart_upload = "1"
   enable_application_import        = "1"
   enable_employee_endpoints        = "1"

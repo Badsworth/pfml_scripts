@@ -28,6 +28,7 @@ def test_get_application_log_attributes(user, test_db_session, initialize_factor
     log_attributes = get_application_log_attributes(application)
 
     expected_attributes = {
+        "absence_case_id": None,
         "application.absence_case_id": None,
         "application.application_id": str(application.application_id),
         "application.completed_time": None,

@@ -55,6 +55,8 @@ function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
     claimantShowPaymentsPhaseTwo: true,
     claimantShowMFA: config("MFA_ENABLED") === "true",
     employerShowMultiLeave: true,
+    employerShowMultiLeaveDashboard:
+      config("HAS_UPDATED_ER_DASHBOARD") === "true",
   };
   cy.setCookie("_ff", JSON.stringify({ ...defaults, ...flags }), { log: true });
 }
@@ -869,10 +871,22 @@ export function checkConcurrentLeave(startDate: string, endDate: string): void {
   });
 }
 
-export function visitActionRequiredERFormPage(fineosAbsenceId: string): void {
-  cy.visit(
-    `/employers/applications/new-application/?absence_id=${fineosAbsenceId}`
-  );
+export function visitActionRequiredERFormPage(
+  fineosAbsenceId: string,
+  useDashboardReviewButton?: boolean
+): void {
+  if (useDashboardReviewButton) {
+    cy.contains("th[data-label='Employee (Application ID)']", fineosAbsenceId)
+      .parent()
+      .within(() => {
+        cy.contains("Review Application").click();
+      });
+  } else {
+    cy.visit(
+      `/employers/applications/new-application/?absence_id=${fineosAbsenceId}`
+    );
+  }
+  if (config("HAS_UPDATED_ER_DASHBOARD") === "true") return;
   cy.contains("Are you the right person to respond to this application?", {
     timeout: 20000,
   });
@@ -2019,12 +2033,14 @@ const leaveReasonHeadings: Readonly<
   "Care for a Family Member":
     /(Leave to )?care for a family member( schedule)?/i,
   "Military Exigency Family": "Active duty",
+  "Pregnancy/Maternity": "Medical leave for pregnancy or birth",
 } as const;
 
 type LeaveStatus = {
   leave: keyof typeof leaveReasonHeadings;
   status: ClaimantStatus;
   leavePeriods?: [string, string];
+  leavePeriodType?: "Continuous" | "Intermittent" | "Reduced";
 };
 
 export function claimantAssertClaimStatus(leaves: LeaveStatus[]): void {
@@ -2265,5 +2281,37 @@ export function assertPaymentCheckBackDate(date: Date) {
         `Check back on (${dateFormatPrevious}|${dateFormatUpdated}) to see when you can expect your first payment.`
       )
     );
+  });
+}
+
+/**
+ * Asserts for claim statuses within the leave admin dashboard
+ * @param leaves - LeaveStatus[]
+ * @example leaveAdminAssertClaimStatusFromDashboard([{}])
+ */
+export function leaveAdminAssertClaimStatusFromDashboard(
+  leaves: LeaveStatus[]
+) {
+  cy.get("table tbody").within(() => {
+    for (const { leave, status, leavePeriods, leavePeriodType } of leaves) {
+      if (leavePeriods) {
+        const formatStart = format(new Date(leavePeriods[0]), "M/d/yyyy");
+        const formatEnd = format(new Date(leavePeriods[1]), "M/d/yyyy");
+        cy.contains(
+          "td[data-label='Leave details']",
+          `${formatStart} to ${formatEnd}`
+        );
+      }
+      if (leavePeriodType) {
+        cy.contains("td[data-label='Leave details']", leavePeriodType);
+      }
+      cy.contains("td[data-label='Leave details']", status);
+      const leaveReason = leaveReasonHeadings[leave];
+      if (!leaveReason)
+        throw Error(
+          `Leave reason "${leave}" property is undefined in Object "leaveReasonHeadings"`
+        );
+      cy.contains("td[data-label='Leave details']", leaveReason);
+    }
   });
 }

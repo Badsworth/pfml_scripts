@@ -10,17 +10,27 @@ on:
     paths:
       - infra/pfml-aws/**
       - infra/constants/**
-     
-env: 
+
+  workflow_dispatch:
+    inputs:
+      version:
+        required: true
+        default: "main"
+        description: |
+          --------------------------------------
+          ⬇️ Tag or branch to be deployed.
+
+env:
   deploys_channel: "C01HEAJPE76" #mass-pfml-deploys-shared
   workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+  terraformVersion: 0.14.7
 
 jobs:
   pfml-aws-deploy:
     runs-on: ubuntu-latest
     env:
       TF_CLI_ARGS: '-lock-timeout=120s'
-      
+
     steps:
       - uses: actions/checkout@v2
 
@@ -33,34 +43,25 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
+      - uses: hashicorp/setup-terraform@v1.2.1
+        with:
+          terraform_version: ${{ env.terraformVersion }}
+          terraform_wrapper: false
+
       - name: Terraform Init
         id: terraform_init
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: "0.14.7"
-          tf_actions_subcommand: init
-          tf_actions_comment: false
-          tf_actions_working_dir: infra/pfml-aws
+        run: terraform init
+        working-directory: infra/pfml-aws
 
       - name: Terraform Plan
         id: terraform_plan
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: "0.14.7"
-          tf_actions_subcommand: plan
-          tf_actions_comment: false
-          tf_actions_working_dir: infra/pfml-aws
-          args: "-out=plan.tfplan"
+        run: terraform plan -out=plan.tfplan
+        working-directory: infra/pfml-aws
 
       - name: Terraform Apply from execution plan
         id: terraform_apply
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: "0.14.7"
-          tf_actions_subcommand: apply
-          tf_actions_comment: false
-          tf_actions_working_dir: infra/pfml-aws
-          args: "plan.tfplan"
+        run: terraform apply plan.tfplan
+        working-directory: infra/pfml-aws
 
   get-deploy-state:
     name: Finalize deployment state

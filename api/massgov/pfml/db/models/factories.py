@@ -1336,6 +1336,21 @@ class LinkSplitPaymentFactory(BaseFactory):
     related_payment_id = factory.LazyAttribute(lambda c: c.related_payment.payment_id)
 
 
+class BenefitYearFactory(BaseFactory):
+    class Meta:
+        model = employee_models.BenefitYear
+
+    employee = factory.SubFactory(EmployeeFactory)
+    employee_id = factory.LazyAttribute(lambda w: w.employee.employee_id)
+
+    start_date = date(2021, 1, 3)
+    end_date = date(2022, 1, 1)
+
+    base_period_start_date = None
+    base_period_end_date = None
+    total_wages = 0
+
+
 class Pfml1099RequestFactory(BaseFactory):
     class Meta:
         model = payment_models.Pfml1099Request

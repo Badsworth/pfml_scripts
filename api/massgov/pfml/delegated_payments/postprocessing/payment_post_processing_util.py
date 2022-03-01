@@ -43,6 +43,14 @@ class PostProcessingMetrics(str, enum.Enum):
     # Metrics specific to the in review processor
     PAYMENT_LEAVE_PLAN_IN_REVIEW_COUNT = "payment_leave_plan_in_review"
 
+    # Fineos leave duration
+    PAYMENT_LEAVE_DURATION_THRESHOLD_EXCEEDED_COUNT = (
+        "payment_leave_duration_threshold_exceeded_count"
+    )
+    PAYMENT_LEAVE_DURATION_PASS_COUNT = "payment_leave_duration_pass_count"
+    PAYMENT_LEAVE_DURATION_MISSING_BENEFIT_YEAR_COUNT = (
+        "payment_leave_duration_missing_benefit_year_count"
+    )
     # Payment dates mismatch
     PAYMENT_DATE_MISSING_REQUIRED_DATA_COUNT = "payment_date_missing_required_data_count"
     PAYMENT_DATE_MISMATCH_COUNT = "payment_date_mismatch_count"

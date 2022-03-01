@@ -111,6 +111,8 @@ export const Payments = ({
   const {
     hasApprovedStatus,
     hasPendingStatus,
+    hasInReviewStatus,
+    hasProjectedStatus,
     hasPayments,
     hasWaitingWeek,
     checkbackDate,
@@ -161,40 +163,44 @@ export const Payments = ({
 
   return (
     <React.Fragment>
-      {infoAlertContext && (hasPendingStatus || hasApprovedStatus) && (
-        <Alert
-          className="margin-bottom-3"
-          data-test="info-alert"
-          heading={t("pages.payments.infoAlertHeading", {
-            context: infoAlertContext,
-          })}
-          headingLevel="2"
-          headingSize="4"
-          noIcon
-          state="info"
-        >
-          <p>
-            <Trans
-              i18nKey="pages.payments.infoAlertBody"
-              tOptions={{ context: infoAlertContext }}
-              components={{
-                "about-bonding-leave-link": (
-                  <a
-                    href={
-                      routes.external.massgov.benefitsGuide_aboutBondingLeave
-                    }
-                    target="_blank"
-                    rel="noreferrer noopener"
-                  />
-                ),
-                "contact-center-phone-link": (
-                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-                ),
-              }}
-            />
-          </p>
-        </Alert>
-      )}
+      {!!infoAlertContext &&
+        (hasPendingStatus ||
+          hasApprovedStatus ||
+          hasInReviewStatus ||
+          hasProjectedStatus) && (
+          <Alert
+            className="margin-bottom-3"
+            data-test="info-alert"
+            heading={t("pages.payments.infoAlertHeading", {
+              context: infoAlertContext,
+            })}
+            headingLevel="2"
+            headingSize="4"
+            noIcon
+            state="info"
+          >
+            <p>
+              <Trans
+                i18nKey="pages.payments.infoAlertBody"
+                tOptions={{ context: infoAlertContext }}
+                components={{
+                  "about-bonding-leave-link": (
+                    <a
+                      href={
+                        routes.external.massgov.benefitsGuide_aboutBondingLeave
+                      }
+                      target="_blank"
+                      rel="noreferrer noopener"
+                    />
+                  ),
+                  "contact-center-phone-link": (
+                    <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                  ),
+                }}
+              />
+            </p>
+          </Alert>
+        )}
 
       <BackButton
         label={t("pages.payments.backButtonLabel")}
@@ -508,6 +514,10 @@ export function paymentStatusViewHelper(
   // if the user can also access the approval notice.
   const hasApprovalNotice = !!_approvalDate;
 
+  // Check that either the status is "Approved" or we have the approval notice document
+  const isApprovedAndHasApprovalDocument =
+    hasApprovedStatus && hasApprovalNotice;
+
   // if payment is retroactive
   // and/or if the claim was approved within the first 14 days of the leave period
   // 1. changes intro text
@@ -553,6 +563,7 @@ export function paymentStatusViewHelper(
     hasPendingStatus,
     hasInReviewStatus,
     hasProjectedStatus,
+    isApprovedAndHasApprovalDocument,
     onlyHasNewBornBondingReason,
     onlyHasPregnancyReason,
     hasWaitingWeek,
@@ -569,8 +580,14 @@ export function paymentStatusViewHelper(
 
 // Determine whether the payments tab should be shown
 export function showPaymentsTab(helper: PaymentStatusViewHelper) {
-  const { phaseTwoFeaturesEnabled, hasPayments } = helper;
-  return phaseTwoFeaturesEnabled && hasPayments;
+  const {
+    isApprovedAndHasApprovalDocument,
+    phaseTwoFeaturesEnabled,
+    hasPayments,
+  } = helper;
+  return (
+    phaseTwoFeaturesEnabled && (isApprovedAndHasApprovalDocument || hasPayments)
+  );
 }
 
 export function getInfoAlertContext(helper: PaymentStatusViewHelper) {

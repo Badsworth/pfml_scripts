@@ -142,6 +142,7 @@ class DelegatedPaymentFactory(MockData):
         self.absence_period_start_date = self.get_value(
             "absence_period_start_date", date(2021, 1, 7)
         )
+        self.absence_period_end_date = self.get_value("absence_period_end_date", None)
         self.organization_unit_name = self.get_value("organization_unit_name", None)
         self.organization_unit = self.get_value("organization_unit", None)
 
@@ -286,6 +287,7 @@ class DelegatedPaymentFactory(MockData):
                 employee_id=self.employee.employee_id if self.employee else None,
                 fineos_absence_status_id=self.fineos_absence_status_id,
                 absence_period_start_date=self.absence_period_start_date,
+                absence_period_end_date=self.absence_period_end_date,
                 organization_unit=self.organization_unit,
             )
 

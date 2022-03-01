@@ -548,13 +548,18 @@ export const WDCLAIM: ScenarioSpecification = {
   },
 };
 
-export const HIST_CASE: ScenarioSpecification = {
+export const HIST_CASE: ScenarioSpecification<CaringLeaveClaim> = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
     label: "HIST_CASE",
     shortClaim: true,
     has_continuous_leave_periods: true,
     reason: "Care for a Family Member",
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+      fraud: "No",
+    },
     docs: {
       MASSID: {},
       CARING: {},

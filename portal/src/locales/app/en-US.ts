@@ -1603,12 +1603,18 @@ const pages: {
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
   claimsOrganizationUnit: {
-    choiceNotListed: "My department is not listed",
+    choiceNo: "$t(shared.choiceNo)",
     choiceNotSure: "I'm not sure",
-    comboBoxLabel: "Select a department",
+    choiceYes: "$t(shared.choiceYes)",
+    comboBoxLabel: "Select your department",
+    confirmHint:
+      "Based on what you’ve entered, our records show you work at <strong>{{organization_unit}}</strong>. Is this the department where you are applying to take leave?",
+    confirmSectionLabel: "Confirm your department",
+    failureWarning:
+      "Failure to select the right department will delay your application.",
     followupInfo:
-      "We will follow up with you after you apply to make sure the right department reviews your application.",
-    sectionLabel: "Which department are you applying to take leave from?",
+      "Our team will check their records to find your department. If there is no match, someone from the Contact Center will follow up with you after you apply to make sure the right department reviews your application.",
+    sectionLabel: "Select the department where you are applying to take leave",
   },
   claimsOtherIncomes: {
     choiceNo: "$t(shared.choiceNo)",

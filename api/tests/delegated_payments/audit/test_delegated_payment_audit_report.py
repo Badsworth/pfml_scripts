@@ -143,6 +143,13 @@ def test_get_payment_audit_report_details(test_db_session, initialize_factories_
         None,
         test_db_session,
     )
+    stage_payment_audit_report_details(
+        payment,
+        PaymentAuditReportType.EXCEEDS_26_WEEKS_TOTAL_LEAVE,
+        "Total leave duration exceeded Test Message",
+        None,
+        test_db_session,
+    )
 
     stage_payment_audit_report_details(
         payment,
@@ -165,6 +172,10 @@ def test_get_payment_audit_report_details(test_db_session, initialize_factories_
     assert (
         audit_report_details.payment_date_mismatch_details == "Payment date mismatch Test Message"
     )
+    assert (
+        audit_report_details.exceeds_26_weeks_total_leave_details
+        == "Total leave duration exceeded Test Message"
+    )
     assert audit_report_details.rejected_by_program_integrity is True
     assert audit_report_details.skipped_by_program_integrity is False
     assert audit_report_details.rejected_notes == ", ".join(
@@ -172,13 +183,14 @@ def test_get_payment_audit_report_details(test_db_session, initialize_factories_
             PaymentAuditReportType.DUA_ADDITIONAL_INCOME.payment_audit_report_type_description,
             PaymentAuditReportType.DIA_ADDITIONAL_INCOME.payment_audit_report_type_description,
             PaymentAuditReportType.DOR_FINEOS_NAME_MISMATCH.payment_audit_report_type_description,
+            PaymentAuditReportType.EXCEEDS_26_WEEKS_TOTAL_LEAVE.payment_audit_report_type_description,
             f"{PaymentAuditReportType.PAYMENT_DATE_MISMATCH.payment_audit_report_type_description} (Rejected)",
         ]
     )
 
     # test that the audit report time was set
     audit_report_details = test_db_session.query(PaymentAuditReportDetails).all()
-    assert len(audit_report_details) == 4
+    assert len(audit_report_details) == 5
     for audit_report_detail in audit_report_details:
         assert audit_report_detail.added_to_audit_report_at == audit_report_time
 
@@ -601,6 +613,7 @@ def validate_payment_audit_csv_row_by_payment_audit_data(
 
     assert row[PAYMENT_AUDIT_CSV_HEADERS.dor_fineos_name_mismatch_details] == ""
 
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.exceeds_26_weeks_total_leave_details] == ""
     assert row[PAYMENT_AUDIT_CSV_HEADERS.payment_date_mismatch_details] == ""
 
     assert row[PAYMENT_AUDIT_CSV_HEADERS.rejected_by_program_integrity] == ""

@@ -15,8 +15,7 @@ export const ENVS = [
 export const GROUPS = ["Stable", "Unstable", "Morning", "Integration"];
 export const ENV_NOT_CONFIGURED = ["prod", "infra-test"];
 export const ENV_OFFLINE = {
-  long: "Env expected offline until March 1, 2022",
-  trn2: "Env expected offline until Feb 21, 2022",
+  trn2: "Env expected offline",
 };
 
 export const extractGroup = (item, name) => {

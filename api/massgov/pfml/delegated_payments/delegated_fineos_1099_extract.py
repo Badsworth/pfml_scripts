@@ -222,11 +222,6 @@ class Data1099ExtractStep(Step):
                     packed_data_str,
                     count_incrementer=self.increment,
                 )
-                logger.info(
-                    "Processing extract data for 1099 record %s",
-                    vbi_1099_data.get_1099_data_message_str(),
-                    extra=vbi_1099_data.get_traceable_details(),
-                )
                 if vbi_1099_data.validation_container.has_validation_issues():
                     self.increment(self.Metrics.SKIPPED_REQUESTS_ERRORED)
                     logger.info(

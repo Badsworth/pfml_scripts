@@ -366,6 +366,7 @@ WRITEBACK_SCENARIOS: Dict[
     WritebackStatus.DUA_ADDITIONAL_INCOME: reduction,
     WritebackStatus.DIA_ADDITIONAL_INCOME: reduction,
     WritebackStatus.DEPRECATED_TOTAL_BENEFITS_OVER_CAP: reduction,
+    WritebackStatus.LEAVE_DURATION_MAX_EXCEEDED: reduction,
     WritebackStatus.WEEKLY_BENEFITS_AMOUNT_EXCEEDS_850: reduction,
     WritebackStatus.SELF_REPORTED_ADDITIONAL_INCOME: reduction,
     WritebackStatus.DATA_ISSUE_IN_SYSTEM: delayed,
