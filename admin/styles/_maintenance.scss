@@ -95,6 +95,10 @@
   padding-left: 0;
 }
 
+.maintenance-configure__fieldset:last-child {
+  padding-right: 0;
+}
+
 .maintenance-configure__fieldset--advanced {
   margin-top: 1.21em;
 }
@@ -155,6 +159,7 @@
 
 .maintenance-configure__calendar-icon {
   color: $Color-GraniteGray-300;
+  cursor: text;
   font-size: 1.214em;
   margin: 0 1.214em;
   position: absolute;

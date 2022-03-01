@@ -11,11 +11,11 @@ import {
   useField,
   useFormikContext,
 } from "formik";
+import React, { useRef } from "react";
 
 import Breadcrumb from "../../components/Breadcrumb";
 import Datetime from "react-datetime";
 import { Helmet } from "react-helmet-async";
-import React from "react";
 import { StaticPropsPermissions } from "../../menus";
 import { Timezone } from "../index";
 import moment from "moment-timezone";
@@ -85,6 +85,14 @@ const TextField = (props: { label?: string } & FieldHookConfig<string>) => {
 const DateTimeField = (props: FieldHookConfig<string>) => {
   const { setFieldValue } = useFormikContext<FormValues>();
   const [field, meta] = useField(props);
+  const calInput = useRef<HTMLInputElement>(null);
+
+  const calIconClick = () => {
+    if (calInput.current) {
+      calInput.current.focus();
+      calInput.current.click();
+    }
+  };
 
   // Declared as any in react-datetime.
   const renderInput = (options: any) => {
@@ -92,8 +100,13 @@ const DateTimeField = (props: FieldHookConfig<string>) => {
     // https://github.com/arqex/react-datetime/blob/7e30d6c20cd864bf8e91bc94e6c3a0ee02864d19/src/DateTime.js#L524
     return (
       <>
-        <input {...options} />
-        <i className="maintenance-configure__calendar-icon"></i>
+        <input {...options} ref={calInput} />
+        <i
+          className="maintenance-configure__calendar-icon"
+          aria-hidden="true"
+          tabIndex={-1}
+          onClick={calIconClick}
+        ></i>
         {meta.error ? (
           <div className="maintenance-configure__error">{meta.error}</div>
         ) : null}
