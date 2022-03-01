@@ -1,3 +1,5 @@
+import classNames from "classnames";
+
 export type Props<T> = {
   rows: T[];
   cols: {
@@ -45,11 +47,10 @@ const Table = <T,>({
               return (
                 <td
                   key={hi}
-                  className={
-                    di === rows.length - 1
-                      ? colClasses + " table_col--last-row"
-                      : colClasses
-                  }
+                  className={classNames(colClasses, {
+                    "table__col--last-row": di === rows.length - 1,
+                    "table__col--last-cell": hi === cols.length - 1,
+                  })}
                   width={col.width}
                   align={col.align}
                 >

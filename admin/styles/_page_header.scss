@@ -51,22 +51,9 @@
   color: $Color-RevolutionGray;
   cursor: pointer;
   display: block;
-  padding: 0.43em 1.56em 0.43em 0;
+  padding: 0.43em 0;
   position: relative;
   text-decoration: none;
-}
-
-.user-options::after {
-  @include IconFontProps;
-  color: #fff;
-  content: $IconArrow4;
-  display: block;
-  font-size: 0.77em;
-  position: absolute;
-  right: 2px;
-  top: 16px;
-  transform: rotate(-90deg);
-  transition: transform 0.2s ease 0s;
 }
 
 .user-options--open::after {
@@ -76,6 +63,21 @@
 .user-options__trigger {
   align-items: center;
   display: flex;
+  padding-right: 1.56em;
+  position: relative;
+}
+
+.user-options__trigger::after {
+  @include IconFontProps;
+  color: #fff;
+  content: $IconArrow4;
+  display: block;
+  font-size: 0.77em;
+  position: absolute;
+  right: 2px;
+  top: 9px;
+  transform: rotate(-90deg);
+  transition: transform 0.2s ease 0s;
 }
 
 .user-options__trigger:hover,
@@ -86,6 +88,7 @@
 .user-options__name {
   color: #fff;
   display: block;
+  letter-spacing: 0.05em;
   margin-left: 0.57em;
 }
 

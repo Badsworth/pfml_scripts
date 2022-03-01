@@ -38,6 +38,11 @@
     border: 0;
   }
 
+  /* Last cell in each column */
+  &__col--last-cell {
+    text-align: right;
+  }
+
   &__col--tall {
     padding: 1.5em 1.714em;
   }
