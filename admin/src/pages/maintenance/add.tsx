@@ -1,4 +1,5 @@
 import "react-datetime/css/react-datetime.css";
+
 //import { Flag, HttpError, patchFlagsByName } from "../../api";
 import {
   Field,
@@ -10,14 +11,15 @@ import {
   useField,
   useFormikContext,
 } from "formik";
+
 import Breadcrumb from "../../components/Breadcrumb";
 import Datetime from "react-datetime";
-import { useRouter } from "next/router";
 import { Helmet } from "react-helmet-async";
 import React from "react";
 import { StaticPropsPermissions } from "../../menus";
 import { Timezone } from "../index";
 import moment from "moment-timezone";
+import { useRouter } from "next/router";
 
 // This is the dateTimeFormat that is rendered in the date time input element.
 // Date/times are converted to ISO8601 on save.
@@ -408,19 +410,14 @@ export default function Maintenance() {
                 </div>
                 {/* Transform css property, rotate + 90 or - 90*/}
                 <div className="maintenance-configure__advanced">
-                  <a
-                    className="maintenance-configure__show-advanced"
+                  <button
+                    className={`maintenance-configure__show-advanced maintenance-configure__show-advanced-icon--${
+                      showAdvanced ? "open" : "closed"
+                    }`}
                     onClick={showAdvancedOnClick}
                   >
                     Advanced
-                  </a>
-
-                  <i
-                    className={
-                      "maintenance-configure__show-advanced-icon maintenance-configure__show-advanced-icon--" +
-                      (showAdvanced ? "open" : "closed")
-                    }
-                  ></i>
+                  </button>
                   {showAdvanced && (
                     <fieldset className="maintenance-configure__fieldset maintenance-configure__fieldset--advanced">
                       <legend>
