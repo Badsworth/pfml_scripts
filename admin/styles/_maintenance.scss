@@ -34,7 +34,7 @@
   background: #fff;
   border-radius: $Border-Radius;
   box-shadow: $Box-Shadow;
-  padding: 1.43em 1.71em;
+  padding: 1.43em 0;
 }
 
 .maintenance-configure__container {
@@ -76,11 +76,17 @@
 }
 
 .maintenance-configure__description {
-  margin-bottom: 2em;
+  margin-bottom: 1.63em;
+  padding: 0 1.71em 1.35em;
+  border-bottom: solid 1px $Color-GraniteGray-50;
 }
 
 .maintenance-configure__error {
   color: $Color-ErrorRed;
+}
+
+.maintenance-configure__form {
+  padding: 0 1.71em;
 }
 
 .maintenance-configure__fieldset {
