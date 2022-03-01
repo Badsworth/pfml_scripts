@@ -376,12 +376,11 @@ class PaymentAuditReportStep(Step):
         self, payment: Payment, link_payments: List[Payment]
     ) -> str:
         employer_reimbursement_i_values = []
-        if payment:
-            if (
-                payment.payment_transaction_type_id
-                == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
-            ):
-                return str(payment.fineos_pei_i_value)
+        if (
+            payment.payment_transaction_type_id
+            == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+        ):
+            return str(payment.fineos_pei_i_value)
 
         for link_payment in link_payments:
             if (
@@ -442,23 +441,15 @@ class PaymentAuditReportStep(Step):
                     + state_withholding_amount
                     + employer_reimbursement_amount
                 ),
-                net_payment_amount=str(
-                    net_payment_amount if decimal.Decimal(net_payment_amount) > 0 else ""
-                ),
+                net_payment_amount=str(net_payment_amount if net_payment_amount > 0 else ""),
                 federal_withholding_amount=str(
-                    federal_withholding_amount
-                    if decimal.Decimal(federal_withholding_amount) > 0
-                    else ""
+                    federal_withholding_amount if federal_withholding_amount > 0 else ""
                 ),
                 state_withholding_amount=str(
-                    state_withholding_amount
-                    if decimal.Decimal(state_withholding_amount) > 0
-                    else ""
+                    state_withholding_amount if state_withholding_amount > 0 else ""
                 ),
                 employer_reimbursement_amount=str(
-                    employer_reimbursement_amount
-                    if decimal.Decimal(employer_reimbursement_amount) > 0
-                    else ""
+                    employer_reimbursement_amount if employer_reimbursement_amount > 0 else ""
                 ),
                 federal_withholding_i_value=self.get_federal_withholding_i_value(linked_payments),
                 state_withholding_i_value=self.get_state_withholding_i_value(linked_payments),
