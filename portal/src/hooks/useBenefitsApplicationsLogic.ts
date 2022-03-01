@@ -232,7 +232,10 @@ const useBenefitsApplicationsLogic = ({
     try {
       const { claim } = await applicationsApi.createClaim();
 
-      addBenefitsApplication(claim);
+      // Reset the applications pagination state to force applications to be refetched,
+      // so that this newly created claim is listed
+      setIsLoadingClaims(undefined);
+      setPaginationMeta({});
 
       const context = { claim };
       const params = { claim_id: claim.application_id };

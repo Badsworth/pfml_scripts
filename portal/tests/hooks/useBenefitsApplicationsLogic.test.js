@@ -403,18 +403,28 @@ describe("useBenefitsApplicationsLogic", () => {
       expect(mockRouter.push).not.toHaveBeenCalled();
     });
 
-    it("adds the claim to a new collection when claims weren't loaded yet", async () => {
+    it("updates state to force a new API request when needed", async () => {
       const claim = new BenefitsApplication({ application_id: "12345" });
       createClaimMock.mockResolvedValueOnce({
         claim,
         success: true,
       });
+      await act(async () => {
+        await claimsLogic.loadPage();
+      });
+      expect(getClaimsMock).toHaveBeenCalledTimes(1);
 
+      expect(claimsLogic.isLoadingClaims).toBe(false);
       await act(async () => {
         await claimsLogic.create();
       });
+      expect(claimsLogic.isLoadingClaims).toBeUndefined();
 
-      expect(claimsLogic.benefitsApplications.items).toContain(claim);
+      await act(async () => {
+        await claimsLogic.loadPage();
+      });
+
+      expect(getClaimsMock).toHaveBeenCalledTimes(2);
     });
 
     describe("when claims have previously been loaded", () => {
@@ -444,10 +454,6 @@ describe("useBenefitsApplicationsLogic", () => {
           await claimsLogic.loadPage();
           await claimsLogic.create();
         });
-      });
-
-      it("stores the new claim", () => {
-        expect(claimsLogic.benefitsApplications.items).toContain(claim);
       });
 
       it("doesn't affect existing claims", () => {
