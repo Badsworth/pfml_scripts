@@ -11,7 +11,7 @@ import {
   createRouteWithQuery,
 } from "../utils/routeWithParams";
 import { useMemo, useState } from "react";
-import { AppErrorsLogic } from "./useAppErrorsLogic";
+import { ErrorsLogic } from "./useErrorsLogic";
 import { PortalFlow } from "./usePortalFlow";
 import { RoleDescription } from "../models/User";
 import UsersApi from "../api/UsersApi";
@@ -36,10 +36,10 @@ type CognitoMFAUser = CognitoUser & {
 } & MFAChallenge;
 
 const useAuthLogic = ({
-  appErrorsLogic,
+  errorsLogic,
   portalFlow,
 }: {
-  appErrorsLogic: AppErrorsLogic;
+  errorsLogic: ErrorsLogic;
   portalFlow: PortalFlow;
 }) => {
   const usersApi = useMemo(() => new UsersApi(), []);
@@ -105,7 +105,7 @@ const useAuthLogic = ({
    * @returns Whether the code was sent successfully or not
    */
   const sendForgotPasswordConfirmation = async (username = "") => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
     const trimmedUsername = username.trim();
 
     const validationIssues = combineValidationIssues(
@@ -113,7 +113,7 @@ const useAuthLogic = ({
     );
 
     if (validationIssues) {
-      appErrorsLogic.catchError(new ValidationError(validationIssues, "auth"));
+      errorsLogic.catchError(new ValidationError(validationIssues, "auth"));
       return false;
     }
 
@@ -125,12 +125,12 @@ const useAuthLogic = ({
       return true;
     } catch (error) {
       if (!isCognitoError(error)) {
-        appErrorsLogic.catchError(error);
+        errorsLogic.catchError(error);
         return false;
       }
 
       const authError = getForgotPasswordError(error);
-      appErrorsLogic.catchError(authError);
+      errorsLogic.catchError(authError);
       return false;
     }
   };
@@ -144,7 +144,7 @@ const useAuthLogic = ({
    * @param [next] Redirect url after login
    */
   const login = async (username = "", password: string, next?: string) => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
     const trimmedUsername = username.trim();
 
     const validationIssues = combineValidationIssues(
@@ -153,7 +153,7 @@ const useAuthLogic = ({
     );
 
     if (validationIssues) {
-      appErrorsLogic.catchError(new ValidationError(validationIssues, "auth"));
+      errorsLogic.catchError(new ValidationError(validationIssues, "auth"));
       return;
     }
 
@@ -180,7 +180,7 @@ const useAuthLogic = ({
       }
     } catch (error) {
       if (!isCognitoError(error)) {
-        appErrorsLogic.catchError(error);
+        errorsLogic.catchError(error);
         return;
       }
 
@@ -189,7 +189,7 @@ const useAuthLogic = ({
         return;
       }
       const authError = getLoginError(error);
-      appErrorsLogic.catchError(authError);
+      errorsLogic.catchError(authError);
     }
   };
 
@@ -200,12 +200,12 @@ const useAuthLogic = ({
    * @param [next] Redirect url after login
    */
   const verifyMFACodeAndLogin = async (code: string, next?: string) => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     const trimmedCode = code ? code.trim() : "";
     const validationIssues = combineValidationIssues(validateCode(trimmedCode));
     if (validationIssues) {
-      appErrorsLogic.catchError(new ValidationError(validationIssues, "mfa"));
+      errorsLogic.catchError(new ValidationError(validationIssues, "mfa"));
       return;
     }
 
@@ -215,11 +215,11 @@ const useAuthLogic = ({
       tracker.markFetchRequestEnd();
     } catch (error) {
       if (!isCognitoError(error)) {
-        appErrorsLogic.catchError(error);
+        errorsLogic.catchError(error);
         return;
       }
       if (error.message.includes("User temporarily locked.")) {
-        appErrorsLogic.catchError(
+        errorsLogic.catchError(
           new CognitoAuthError(error, {
             field: "code",
             type: "attemptsExceeded",
@@ -227,7 +227,7 @@ const useAuthLogic = ({
         );
         return;
       }
-      appErrorsLogic.catchError(
+      errorsLogic.catchError(
         new CognitoAuthError(error, { field: "code", type: "invalidMFACode" })
       );
       return;
@@ -279,7 +279,7 @@ const useAuthLogic = ({
     role_description: ValuesOf<typeof RoleDescription>,
     employer_fein?: string
   ) => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
     const trimmedEmail = email_address.trim();
 
     const requestData = {
@@ -296,7 +296,7 @@ const useAuthLogic = ({
     try {
       await usersApi.createUser(requestData);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
       return;
     }
 
@@ -382,7 +382,7 @@ const useAuthLogic = ({
   };
 
   const resendVerifyAccountCode = async (username = "") => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
     const trimmedUsername = username.trim();
 
     const validationIssues = combineValidationIssues(
@@ -390,7 +390,7 @@ const useAuthLogic = ({
     );
 
     if (validationIssues) {
-      appErrorsLogic.catchError(new ValidationError(validationIssues, "auth"));
+      errorsLogic.catchError(new ValidationError(validationIssues, "auth"));
       return;
     }
 
@@ -402,11 +402,11 @@ const useAuthLogic = ({
       // TODO (CP-600): Show success message
     } catch (error) {
       if (!isCognitoError(error)) {
-        appErrorsLogic.catchError(error);
+        errorsLogic.catchError(error);
         return;
       }
 
-      appErrorsLogic.catchError(new CognitoAuthError(error));
+      errorsLogic.catchError(new CognitoAuthError(error));
     }
   };
 
@@ -415,7 +415,7 @@ const useAuthLogic = ({
    * and allow them to reset their password
    */
   const resetPassword = async (username = "", code = "", password = "") => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     const trimmedUsername = username.trim();
     const trimmedCode = code.trim();
@@ -427,7 +427,7 @@ const useAuthLogic = ({
     );
 
     if (validationIssues) {
-      appErrorsLogic.catchError(new ValidationError(validationIssues, "auth"));
+      errorsLogic.catchError(new ValidationError(validationIssues, "auth"));
       return;
     }
 
@@ -452,12 +452,12 @@ const useAuthLogic = ({
       portalFlow.goToPageFor("SET_NEW_PASSWORD");
     } catch (error) {
       if (!isCognitoError(error)) {
-        appErrorsLogic.catchError(error);
+        errorsLogic.catchError(error);
         return;
       }
 
       const authError = getResetPasswordError(error);
-      appErrorsLogic.catchError(authError);
+      errorsLogic.catchError(authError);
     }
   };
 
@@ -480,7 +480,7 @@ const useAuthLogic = ({
       );
     } catch (error) {
       if (!isCognitoError(error)) {
-        appErrorsLogic.catchError(error);
+        errorsLogic.catchError(error);
         return;
       }
 
@@ -502,7 +502,7 @@ const useAuthLogic = ({
       }
 
       const authError = getVerifyAccountError(error);
-      appErrorsLogic.catchError(authError);
+      errorsLogic.catchError(authError);
     }
   };
 
@@ -512,7 +512,7 @@ const useAuthLogic = ({
    * on the page.
    */
   const verifyAccount = async (username = "", code = "") => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     const trimmedUsername = username.trim();
     const trimmedCode = code.trim();
@@ -523,7 +523,7 @@ const useAuthLogic = ({
     );
 
     if (validationIssues) {
-      appErrorsLogic.catchError(new ValidationError(validationIssues, "auth"));
+      errorsLogic.catchError(new ValidationError(validationIssues, "auth"));
       return;
     }
 

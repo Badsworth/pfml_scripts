@@ -9,8 +9,8 @@ import {
 } from "../../test-utils";
 import { act, screen, waitFor } from "@testing-library/react";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
-import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import { AppLogic } from "../../../src/hooks/useAppLogic";
+import ErrorInfo from "../../../src/models/ErrorInfo";
 import UploadId from "../../../src/pages/applications/upload-id";
 import { ValidationError } from "../../../src/errors";
 import { createMockBenefitsApplicationDocument } from "../../../lib/mock-helpers/createMockDocument";
@@ -495,8 +495,8 @@ describe("UploadId", () => {
 
     it("renders alert when there is an error loading documents", () => {
       const cb = (appLogic: AppLogic) => {
-        appLogic.appErrors = [
-          new AppErrorInfo({
+        appLogic.errors = [
+          new ErrorInfo({
             meta: { application_id: "mock_application_id" },
             name: "DocumentsLoadError",
           }),

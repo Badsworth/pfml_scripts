@@ -44,13 +44,13 @@ export const UploadCertification = (props: UploadCertificationProps) => {
   const claimReason = claim.leave_details.reason;
   const claimReasonQualifier = claim.leave_details.reason_qualifier;
 
-  const { appErrors, portalFlow } = appLogic;
+  const { errors, portalFlow } = appLogic;
   const { files, processFiles, removeFile } = useFilesLogic({
     clearErrors: appLogic.clearErrors,
     catchError: appLogic.catchError,
   });
   const hasLoadingDocumentsError = hasDocumentsLoadError(
-    appErrors,
+    errors,
     claim.application_id
   );
   const [submissionInProgress, setSubmissionInProgress] = React.useState(false);
@@ -117,8 +117,8 @@ export const UploadCertification = (props: UploadCertificationProps) => {
       );
     }
   };
-  const fileErrors = appErrors.filter(
-    (appErrorInfo) => appErrorInfo.meta && appErrorInfo.meta.file_id
+  const fileErrors = errors.filter(
+    (errorInfo) => errorInfo.meta && errorInfo.meta.file_id
   );
 
   return (

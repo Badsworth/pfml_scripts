@@ -33,7 +33,7 @@ describe("PreviousLeaves", () => {
 
   const defaultProps = {
     addedPreviousLeaves: [],
-    appErrors: [],
+    errors: [],
     claim: new MockEmployerClaimBuilder().completed().create(),
     onAdd,
     onChange,

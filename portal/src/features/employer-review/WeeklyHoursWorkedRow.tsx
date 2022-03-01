@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import AmendButton from "./AmendButton";
 import AmendmentForm from "../../components/AmendmentForm";
-import AppErrorInfo from "../../models/AppErrorInfo";
 import ConditionalContent from "../../components/ConditionalContent";
+import ErrorInfo from "../../models/ErrorInfo";
 import Heading from "../../components/core/Heading";
 import InputNumber from "../../components/core/InputNumber";
 import ReviewRow from "../../components/ReviewRow";
@@ -12,7 +12,7 @@ import usePreviousValue from "../../hooks/usePreviousValue";
 import { useTranslation } from "../../locales/i18n";
 
 interface WeeklyHoursWorkedRowProps {
-  appErrors: AppErrorInfo[];
+  errors: ErrorInfo[];
   clearField: (arg: string) => void;
   getField: (arg: string) => string;
   getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
@@ -40,7 +40,7 @@ const WeeklyHoursWorkedRow = (props: WeeklyHoursWorkedRowProps) => {
   // - component re-renders.
   // - "errorMessage" is truthy; component opens amendment form.
   // - user cannot ever close the amendment form.
-  const errorMessage = get(props, "appErrors[0].message");
+  const errorMessage = get(props, "errors[0].message");
   const amendmentFormPreviouslyDisplayed = usePreviousValue(
     isAmendmentFormDisplayed
   );

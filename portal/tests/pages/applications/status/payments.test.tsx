@@ -6,9 +6,9 @@ import {
 import { createAbsencePeriod, renderPage } from "../../../test-utils";
 import { AbsencePeriod } from "../../../../src/models/AbsencePeriod";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
-import AppErrorInfo from "../../../../src/models/AppErrorInfo";
 import { AppLogic } from "../../../../src/hooks/useAppLogic";
 import ClaimDetail from "../../../../src/models/ClaimDetail";
+import ErrorInfo from "../../../../src/models/ErrorInfo";
 import LeaveReason from "../../../../src/models/LeaveReason";
 import { Payment } from "../../../../src/models/Payment";
 import { Payments } from "../../../../src/pages/applications/status/payments";
@@ -52,7 +52,7 @@ const setupHelper =
       absence_periods,
     });
     appLogicHook.claims.loadClaimDetail = jest.fn();
-    appLogicHook.appErrors = [];
+    appLogicHook.errors = [];
     appLogicHook.documents.loadAll = jest.fn();
     appLogicHook.documents.hasLoadedClaimDocuments = () => true;
     appLogicHook.portalFlow.goTo = goTo;
@@ -375,10 +375,10 @@ describe("Payments", () => {
             claimDetail: undefined,
             isLoadingClaimDetail: false,
           },
-          appErrors: [
-            new AppErrorInfo({
+          errors: [
+            new ErrorInfo({
               meta: { application_id: "foo" },
-              key: "AppErrorInfo1",
+              key: "ErrorInfo1",
               message:
                 "Sorry, we were unable to retrieve what you were looking for. Check that the link you are visiting is correct. If this continues to happen, please log out and try again.",
               name: "NotFoundError",

@@ -1,7 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import ApiResourceCollection from "../../src/models/ApiResourceCollection";
-import AppErrorInfo from "../../src/models/AppErrorInfo";
 import { DocumentType } from "../../src/models/Document";
+import ErrorInfo from "../../src/models/ErrorInfo";
 import FileCardList from "../../src/components/FileCardList";
 import React from "react";
 import TempFile from "../../src/models/TempFile";
@@ -145,7 +145,7 @@ describe("FileCardList", () => {
   it("passes through error messages as indicated", () => {
     renderComponent({
       fileErrors: [
-        new AppErrorInfo(
+        new ErrorInfo(
           { message: "Mock error message #1", meta: { file_id: "123" } },
           { message: "Mock error message #2", meta: { file_id: "222" } }
         ),

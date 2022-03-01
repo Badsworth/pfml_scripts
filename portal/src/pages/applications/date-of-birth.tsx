@@ -21,7 +21,7 @@ export const DateOfBirth = (props: WithBenefitsApplicationProps) => {
     appLogic.benefitsApplications.update(claim.application_id, formState);
 
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });

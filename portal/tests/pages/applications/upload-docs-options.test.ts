@@ -12,7 +12,7 @@ const goToNextPage = jest.fn(() => {
   return Promise.resolve();
 });
 
-const setAppErrors = jest.fn();
+const setErrors = jest.fn();
 
 const setup = (claim: BenefitsApplication) => {
   return renderPage(
@@ -21,7 +21,7 @@ const setup = (claim: BenefitsApplication) => {
       addCustomSetup: (appLogic) => {
         setupBenefitsApplications(appLogic, [claim]);
         appLogic.portalFlow.goToNextPage = goToNextPage;
-        appLogic.setAppErrors = setAppErrors;
+        appLogic.setErrors = setErrors;
       },
     },
     { query: { claim_id: "mock_application_id" } }
@@ -135,7 +135,7 @@ describe("UploadDocsOptions", () => {
         issueType: "required",
       });
       expect(goToNextPage).not.toHaveBeenCalled();
-      expect(setAppErrors).toHaveBeenCalledTimes(1);
+      expect(setErrors).toHaveBeenCalledTimes(1);
     });
   });
 });

@@ -1,9 +1,9 @@
 import { ClaimWithdrawnError, ValidationError } from "../errors";
 import ClaimsApi, { GetClaimsParams } from "../api/ClaimsApi";
 import ApiResourceCollection from "../models/ApiResourceCollection";
-import { AppErrorsLogic } from "./useAppErrorsLogic";
 import Claim from "../models/Claim";
 import ClaimDetail from "../models/ClaimDetail";
+import { ErrorsLogic } from "./useErrorsLogic";
 import PaginationMeta from "../models/PaginationMeta";
 import { PortalFlow } from "./usePortalFlow";
 import { isEqual } from "lodash";
@@ -11,9 +11,9 @@ import useCollectionState from "./useCollectionState";
 import { useState } from "react";
 
 const useClaimsLogic = ({
-  appErrorsLogic,
+  errorsLogic,
 }: {
-  appErrorsLogic: AppErrorsLogic;
+  errorsLogic: ErrorsLogic;
   portalFlow: PortalFlow;
 }) => {
   const claimsApi = new ClaimsApi();
@@ -58,7 +58,7 @@ const useClaimsLogic = ({
     }
 
     setIsLoadingClaims(true);
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
       const { claims, paginationMeta } = await claimsApi.getClaims(queryParams);
@@ -67,7 +67,7 @@ const useClaimsLogic = ({
       setPaginationMeta(paginationMeta);
       setIsLoadingClaims(false);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 
@@ -83,7 +83,7 @@ const useClaimsLogic = ({
     if (claimDetail?.fineos_absence_id !== absenceId) {
       try {
         setIsLoadingClaimDetail(true);
-        appErrorsLogic.clearErrors();
+        errorsLogic.clearErrors();
         const data = await claimsApi.getClaimDetail(absenceId);
         setClaimDetail(new ClaimDetail(data.claimDetail));
       } catch (error) {
@@ -92,11 +92,11 @@ const useClaimsLogic = ({
           error.issues[0].type === "fineos_claim_withdrawn"
         ) {
           // The claim was withdrawn -- we'll need to show an error message to the user
-          appErrorsLogic.catchError(
+          errorsLogic.catchError(
             new ClaimWithdrawnError(absenceId, error.issues[0])
           );
         } else {
-          appErrorsLogic.catchError(error);
+          errorsLogic.catchError(error);
         }
       } finally {
         setIsLoadingClaimDetail(false);

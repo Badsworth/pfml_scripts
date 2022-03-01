@@ -46,7 +46,7 @@ export const Payments = ({
   const { t } = useTranslation();
   const { absence_id } = query;
   const {
-    appErrors,
+    errors,
     claims: { claimDetail, loadClaimDetail },
     documents: {
       documents: allClaimDocuments,
@@ -74,7 +74,7 @@ export const Payments = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [application_id]);
 
-  if (appErrors.length > 0) {
+  if (errors.length > 0) {
     return (
       <BackButton
         label={t("pages.payments.backButtonLabel")}

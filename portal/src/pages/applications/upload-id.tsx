@@ -56,9 +56,9 @@ export const UploadId = (props: UploadIdProps) => {
   const contentContext = hasStateId ? "mass" : "other";
   const absence_id = get(claim, "fineos_absence_id");
 
-  const { appErrors, portalFlow } = appLogic;
+  const { errors, portalFlow } = appLogic;
   const hasLoadingDocumentsError = hasDocumentsLoadError(
-    appErrors,
+    errors,
     claim.application_id
   );
 
@@ -95,8 +95,8 @@ export const UploadId = (props: UploadIdProps) => {
     }
   };
 
-  const fileErrors = appErrors.filter(
-    (appErrorInfo) => appErrorInfo.meta && appErrorInfo.meta.file_id
+  const fileErrors = errors.filter(
+    (errorInfo) => errorInfo.meta && errorInfo.meta.file_id
   );
 
   return (

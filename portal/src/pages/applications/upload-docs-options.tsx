@@ -6,7 +6,7 @@ import {
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
-import AppErrorInfo from "../../models/AppErrorInfo";
+import ErrorInfo from "../../models/ErrorInfo";
 import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
@@ -52,17 +52,17 @@ export const UploadDocsOptions = (props: WithBenefitsApplicationProps) => {
 
   const handleSave = async () => {
     if (!upload_docs_options) {
-      const appErrorInfo = new AppErrorInfo({
+      const errorInfo = new ErrorInfo({
         field: "upload_docs_options",
         message: t("errors.applications.upload_docs_options.required"),
         type: "required",
       });
 
-      await appLogic.setAppErrors([appErrorInfo]);
+      await appLogic.setErrors([errorInfo]);
 
       tracker.trackEvent("ValidationError", {
-        issueField: appErrorInfo.field || "",
-        issueType: appErrorInfo.type || "",
+        issueField: errorInfo.field || "",
+        issueType: errorInfo.type || "",
       });
 
       return Promise.resolve();
@@ -87,7 +87,7 @@ export const UploadDocsOptions = (props: WithBenefitsApplicationProps) => {
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });

@@ -4,8 +4,7 @@ import useAppLogic from "../../src/hooks/useAppLogic";
 
 describe("useAppLogic", () => {
   it("returns app state and getter and setter methods", () => {
-    let _appErrorsLogic,
-      appErrors,
+    let _errorsLogic,
       auth,
       benefitsApplications,
       catchError,
@@ -14,17 +13,18 @@ describe("useAppLogic", () => {
       clearRequiredFieldErrors,
       documents,
       employers,
+      errors,
       featureFlags,
       payments,
       portalFlow,
       rest,
-      setAppErrors,
+      setErrors,
       users;
 
     renderHook(() => {
       ({
-        appErrors,
-        _appErrorsLogic,
+        errors,
+        _errorsLogic,
         auth,
         benefitsApplications,
         catchError,
@@ -36,15 +36,15 @@ describe("useAppLogic", () => {
         featureFlags,
         clearRequiredFieldErrors,
         portalFlow,
-        setAppErrors,
+        setErrors,
         users,
         ...rest
       } = useAppLogic());
     });
 
-    expect(appErrors).toBeInstanceOf(Array);
-    expect(appErrors).toHaveLength(0);
-    expect(_appErrorsLogic).toEqual(expect.anything());
+    expect(errors).toBeInstanceOf(Array);
+    expect(errors).toHaveLength(0);
+    expect(_errorsLogic).toEqual(expect.anything());
     expect(auth).toEqual(expect.anything());
     expect(catchError).toBeInstanceOf(Function);
     expect(benefitsApplications.benefitsApplications).toBeInstanceOf(
@@ -60,7 +60,7 @@ describe("useAppLogic", () => {
     expect(claims.claims).toBeInstanceOf(ApiResourceCollection);
     expect(claims.loadPage).toBeInstanceOf(Function);
     expect(users.updateUser).toBeInstanceOf(Function);
-    expect(setAppErrors).toBeInstanceOf(Function);
+    expect(setErrors).toBeInstanceOf(Function);
     expect(benefitsApplications.submit).toBeInstanceOf(Function);
     expect(documents.documents).toBeInstanceOf(ApiResourceCollection);
     expect(documents.loadAll).toBeInstanceOf(Function);

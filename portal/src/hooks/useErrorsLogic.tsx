@@ -11,7 +11,7 @@ import {
   ValidationError,
 } from "../errors";
 import React, { useState } from "react";
-import AppErrorInfo from "../models/AppErrorInfo";
+import ErrorInfo from "../models/ErrorInfo";
 import { PortalFlow } from "./usePortalFlow";
 import { Trans } from "react-i18next";
 import { get } from "lodash";
@@ -22,20 +22,20 @@ import { useTranslation } from "../locales/i18n";
 /**
  * React hook for creating and managing the state of app errors
  */
-const useAppErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
+const useErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
   const { i18n, t } = useTranslation();
 
   /**
    * State representing both application errors and
    * validation errors
    */
-  const [appErrors, setAppErrors] = useState<AppErrorInfo[]>([]);
-  const addError = (appError: AppErrorInfo) => {
-    setAppErrors((prevAppErrors) => [...prevAppErrors, appError]);
+  const [errors, setErrors] = useState<ErrorInfo[]>([]);
+  const addError = (error: ErrorInfo) => {
+    setErrors((prevErrors) => [...prevErrors, error]);
   };
 
   /**
-   * Converts a JavaScript error into an AppErrorInfo object and adds it to the app error collection
+   * Converts a JavaScript error into an ErrorInfo object and adds it to the app error collection
    */
   const catchError = (error: unknown) => {
     if (error instanceof AuthSessionMissingError) {
@@ -63,7 +63,7 @@ const useAppErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
    * Convenience method for setting errors to null
    */
   const clearErrors = () => {
-    setAppErrors([]);
+    setErrors([]);
   };
 
   /**
@@ -72,11 +72,9 @@ const useAppErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
    * that they need to go back and complete all required fields
    */
   const clearRequiredFieldErrors = () => {
-    const remainingErrors = appErrors.filter(
-      (error) => error.type !== "required"
-    );
+    const remainingErrors = errors.filter((error) => error.type !== "required");
 
-    setAppErrors(remainingErrors);
+    setErrors(remainingErrors);
   };
 
   /**
@@ -261,12 +259,12 @@ const useAppErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
   const handleError = (error: unknown) => {
     const errorName = error instanceof Error ? error.name : "";
 
-    const appError = new AppErrorInfo({
+    const errorInfo = new ErrorInfo({
       name: errorName,
       message: t("errors.caughtError", { context: errorName }),
     });
 
-    addError(appError);
+    addError(errorInfo);
 
     // Error may include the response data (potentially PII)
     // we should avoid tracking the entire error in New Relic
@@ -294,7 +292,7 @@ const useAppErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
     const issue =
       error instanceof DocumentsUploadError ? error.issue : undefined;
 
-    const appError = new AppErrorInfo({
+    const errorInfo = new ErrorInfo({
       name: error.name,
       message: issue
         ? getMessageFromIssue(issue, "documents")
@@ -306,7 +304,7 @@ const useAppErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
       },
     });
 
-    addError(appError);
+    addError(errorInfo);
 
     tracker.trackEvent(error.name, {
       issueField: get(issue, "field", ""),
@@ -319,14 +317,14 @@ const useAppErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
    * Add and track claim detail withdrawn error
    */
   const handleClaimWithdrawnError = (error: ClaimWithdrawnError) => {
-    const appError = new AppErrorInfo({
+    const errorInfo = new ErrorInfo({
       name: error.name,
       message: getMessageFromIssue(error.issue, "claimStatus", {
         absenceId: error.fineos_absence_id,
       }),
     });
 
-    addError(appError);
+    addError(errorInfo);
 
     tracker.trackEvent(error.name, {
       issueField: get(error.issue, "field", ""),
@@ -340,7 +338,7 @@ const useAppErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
    */
   const handleValidationError = (error: ValidationError) => {
     error.issues.forEach((issue) => {
-      const appError = new AppErrorInfo({
+      const errorInfo = new ErrorInfo({
         field: issue.field,
         message: getMessageFromIssue(issue, error.i18nPrefix),
         name: error.name,
@@ -348,7 +346,7 @@ const useAppErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
         type: issue.type,
       });
 
-      addError(appError);
+      addError(errorInfo);
     });
 
     // ValidationError can be expected, so to avoid adding noise to the
@@ -368,7 +366,7 @@ const useAppErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
    * Add and track issues in a CognitoAuthError
    */
   const handleCognitoAuthError = (error: CognitoAuthError) => {
-    const appError = new AppErrorInfo({
+    const errorInfo = new ErrorInfo({
       field: error.issue?.field,
       name: error.name,
       message: error.issue
@@ -376,7 +374,7 @@ const useAppErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
         : t("errors.network"),
     });
 
-    addError(appError);
+    addError(errorInfo);
 
     tracker.trackEvent("AuthError", {
       errorCode: error.cognitoError.code,
@@ -418,13 +416,13 @@ const useAppErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
   };
 
   return {
-    appErrors,
-    setAppErrors,
+    errors,
+    setErrors,
     catchError,
     clearErrors,
     clearRequiredFieldErrors,
   };
 };
 
-export default useAppErrorsLogic;
-export type AppErrorsLogic = ReturnType<typeof useAppErrorsLogic>;
+export default useErrorsLogic;
+export type ErrorsLogic = ReturnType<typeof useErrorsLogic>;

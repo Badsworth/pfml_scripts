@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react-hooks";
 import { mockAuth, mockFetch } from "../test-utils";
-import AppErrorInfo from "../../src/models/AppErrorInfo";
+import ErrorInfo from "../../src/models/ErrorInfo";
 import { Payment } from "../../src/models/Payment";
 import { createMockPayment } from "lib/mock-helpers/createMockPayment";
 import useAppLogic from "../../src/hooks/useAppLogic";
@@ -75,14 +75,14 @@ describe("usePaymentsLogic", () => {
     const { appLogic } = setup();
 
     act(() => {
-      appLogic.current.setAppErrors([new AppErrorInfo()]);
+      appLogic.current.setErrors([new ErrorInfo()]);
     });
 
     await act(async () => {
       await appLogic.current.payments.loadPayments("absence_id_1");
     });
 
-    expect(appLogic.current.appErrors).toHaveLength(0);
+    expect(appLogic.current.errors).toHaveLength(0);
   });
 
   it("catches exceptions thrown from the API module and sets isLoadingPayments to be false", async () => {
@@ -100,7 +100,7 @@ describe("usePaymentsLogic", () => {
       await appLogic.current.payments.loadPayments("absence_id_1");
     });
 
-    expect(appLogic.current.appErrors[0].name).toEqual("BadRequestError");
+    expect(appLogic.current.errors[0].name).toEqual("BadRequestError");
     expect(appLogic.current.payments.isLoadingPayments).toBe(false);
   });
 });

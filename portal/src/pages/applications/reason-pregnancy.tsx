@@ -19,7 +19,7 @@ export const ReasonPregnancy = (props: WithBenefitsApplicationProps) => {
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
 
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });

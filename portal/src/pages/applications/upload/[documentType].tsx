@@ -203,7 +203,7 @@ export interface DocumentUploadProps extends WithClaimDocumentsProps {
 
 export const DocumentUpload = (props: DocumentUploadProps) => {
   const { appLogic, documents, isLoadingDocuments, query } = props;
-  const { appErrors, portalFlow } = appLogic;
+  const { errors, portalFlow } = appLogic;
   const { t } = useTranslation();
   const { files, processFiles, removeFile } = useFilesLogic({
     clearErrors: appLogic.clearErrors,
@@ -212,7 +212,7 @@ export const DocumentUpload = (props: DocumentUploadProps) => {
   const [submissionInProgress, setSubmissionInProgress] = React.useState(false);
 
   const hasLoadingDocumentsError = hasDocumentsLoadError(
-    appErrors,
+    errors,
     query.claim_id
   );
 
@@ -270,8 +270,8 @@ export const DocumentUpload = (props: DocumentUploadProps) => {
     }
   };
 
-  const fileErrors = appErrors.filter(
-    (appErrorInfo) => appErrorInfo.meta && appErrorInfo.meta.file_id
+  const fileErrors = errors.filter(
+    (errorInfo) => errorInfo.meta && errorInfo.meta.file_id
   );
 
   return (

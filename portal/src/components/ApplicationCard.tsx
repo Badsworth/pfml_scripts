@@ -90,10 +90,7 @@ const LegalNoticeSection = (props: LegalNoticeSectionProps) => {
 
   const shouldShowSpinner =
     isLoadingClaimDocuments(props.claim.application_id) &&
-    !hasDocumentsLoadError(
-      props.appLogic.appErrors,
-      props.claim.application_id
-    );
+    !hasDocumentsLoadError(props.appLogic.errors, props.claim.application_id);
 
   if (!showNotices) return null;
 

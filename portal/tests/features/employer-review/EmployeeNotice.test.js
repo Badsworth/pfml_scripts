@@ -9,7 +9,7 @@ function setupGetFunctionalInputProps(updateFields) {
 
   renderHook(() => {
     getFunctionalInputProps = useFunctionalInputProps({
-      appErrors: [],
+      errors: [],
       formState: {},
       updateFields,
     });

@@ -12,7 +12,7 @@ const CONCURRENT_LEAVE = new ConcurrentLeaveModel({
 
 const defaultProps = {
   addedConcurrentLeave: null,
-  appErrors: [],
+  errors: [],
   concurrentLeave: CONCURRENT_LEAVE,
   claim: createMockEmployerClaim("completed"),
   onAdd: jest.fn(),

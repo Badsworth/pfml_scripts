@@ -74,7 +74,7 @@ export const ImportClaim = (props: WithUserProps) => {
    */
   const { formState, updateFields } = useFormState(initialFormState);
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: props.appLogic.appErrors,
+    errors: props.appLogic.errors,
     formState,
     updateFields,
   });

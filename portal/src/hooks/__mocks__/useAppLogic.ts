@@ -13,7 +13,7 @@ import { Payment } from "src/models/Payment";
 import { uniqueId } from "lodash";
 
 export default jest.fn(() => ({
-  appErrors: [],
+  errors: [],
   auth: {
     createAccount: jest.fn(),
     createEmployerAccount: jest.fn(),
@@ -108,7 +108,7 @@ export default jest.fn(() => ({
     removeOtherIncome: jest.fn(() => true),
     removePreviousLeave: jest.fn(() => true),
   },
-  setAppErrors: jest.fn(),
+  setErrors: jest.fn(),
   updateUser: jest.fn(),
   user: new User({
     user_id: "mock_user_id",

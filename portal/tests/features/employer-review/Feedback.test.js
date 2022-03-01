@@ -1,5 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
-import AppErrorInfo from "../../../src/models/AppErrorInfo";
+import ErrorInfo from "../../../src/models/ErrorInfo";
 import Feedback from "../../../src/features/employer-review/Feedback";
 import React from "react";
 import { renderHook } from "@testing-library/react-hooks";
@@ -25,7 +25,7 @@ describe("Feedback", () => {
 
   function setUpFunctionalInputProps(customArgs = {}) {
     const defaultArgs = {
-      appErrors: [],
+      errors: [],
       formState: {},
       updateFields,
     };
@@ -100,8 +100,8 @@ describe("Feedback", () => {
   it("renders inline error message when the text exceeds the limit", () => {
     renderHook(() => {
       getFunctionalInputProps = useFunctionalInputProps({
-        appErrors: [
-          new AppErrorInfo({
+        errors: [
+          new ErrorInfo({
             field: "comment",
             type: "maxLength",
             message:

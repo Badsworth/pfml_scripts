@@ -49,7 +49,7 @@ export const Login = (props: LoginProps) => {
   const accountVerified = query["account-verified"] === "true";
   const sessionTimedOut = query["session-timed-out"] === "true";
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });

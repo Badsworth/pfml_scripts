@@ -132,7 +132,7 @@ const PageWrapper = (props: PageWrapperProps) => {
             <div className="grid-col-fill">
               {/* Include a second ErrorBoundary here so that we still render a site header if we catch an error before it bubbles up any further */}
               <ErrorBoundary>
-                <ErrorsSummary errors={appLogic.appErrors} />
+                <ErrorsSummary errors={appLogic.errors} />
                 {pageBody}
               </ErrorBoundary>
             </div>

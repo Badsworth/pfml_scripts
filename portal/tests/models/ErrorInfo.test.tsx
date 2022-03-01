@@ -1,15 +1,15 @@
 import { render, screen } from "@testing-library/react";
-import AppErrorInfo from "../../src/models/AppErrorInfo";
+import ErrorInfo from "../../src/models/ErrorInfo";
 import React from "react";
 import { Trans } from "react-i18next";
 
-describe("AppErrorInfo", () => {
+describe("ErrorInfo", () => {
   it("generates a unique key for each instance", () => {
-    const errorInfo1 = new AppErrorInfo({ message: "One" });
-    const errorInfo2 = new AppErrorInfo({ message: "Two" });
+    const errorInfo1 = new ErrorInfo({ message: "One" });
+    const errorInfo2 = new ErrorInfo({ message: "Two" });
 
-    expect(errorInfo1.key).toEqual(expect.stringContaining("AppErrorInfo"));
-    expect(errorInfo2.key).toEqual(expect.stringContaining("AppErrorInfo"));
+    expect(errorInfo1.key).toEqual(expect.stringContaining("ErrorInfo"));
+    expect(errorInfo2.key).toEqual(expect.stringContaining("ErrorInfo"));
     expect(errorInfo1.key).not.toEqual(errorInfo2.key);
   });
 
@@ -19,21 +19,21 @@ describe("AppErrorInfo", () => {
     };
 
     it("returns null result if there are no errors", () => {
-      const result = AppErrorInfo.fieldErrorMessage([], "first_name");
+      const result = ErrorInfo.fieldErrorMessage([], "first_name");
 
       expect(result).toBeNull();
     });
 
     it("returns null if no errors match the given field's path", () => {
       const errors = [
-        new AppErrorInfo({
+        new ErrorInfo({
           field: "foo",
           message: "Field is required",
         }),
       ];
       const field = "first_name";
 
-      const result = AppErrorInfo.fieldErrorMessage(errors, field);
+      const result = ErrorInfo.fieldErrorMessage(errors, field);
       render(<TestErrorComponent errors={result} />);
       expect(screen.getByTestId("error-container")).toBeEmptyDOMElement();
     });
@@ -41,17 +41,17 @@ describe("AppErrorInfo", () => {
     it("returns merged string if multiple errors match the given field's path", () => {
       const field = "birthdate";
       const errors = [
-        new AppErrorInfo({
+        new ErrorInfo({
           field,
           message: "Day must be less than 31.",
         }),
-        new AppErrorInfo({
+        new ErrorInfo({
           field,
           message: "Year must be greater than 1900.",
         }),
       ];
 
-      const result = AppErrorInfo.fieldErrorMessage(errors, field);
+      const result = ErrorInfo.fieldErrorMessage(errors, field);
       const { container } = render(<TestErrorComponent errors={result} />);
 
       expect(container.firstChild).toMatchInlineSnapshot(`
@@ -68,7 +68,7 @@ describe("AppErrorInfo", () => {
     it("returns merged string and components if multiple errors match the given field's path", () => {
       const field = "birthdate";
       const errors = [
-        new AppErrorInfo({
+        new ErrorInfo({
           field,
           message: (
             <Trans
@@ -79,13 +79,13 @@ describe("AppErrorInfo", () => {
             />
           ),
         }),
-        new AppErrorInfo({
+        new ErrorInfo({
           field,
           message: "Fineos issues happened.",
         }),
       ];
 
-      const result = AppErrorInfo.fieldErrorMessage(errors, field);
+      const result = ErrorInfo.fieldErrorMessage(errors, field);
       const { container } = render(<TestErrorComponent errors={result} />);
       expect(container.firstChild).toMatchInlineSnapshot(`
         <div

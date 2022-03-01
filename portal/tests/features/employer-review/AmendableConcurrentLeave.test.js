@@ -11,11 +11,11 @@ const concurrentLeave = new ConcurrentLeaveModel({
 });
 const onChange = jest.fn();
 const onRemove = jest.fn();
-const appErrors = [];
+const errors = [];
 
 const renderComponent = (customProps) => {
   const props = {
-    appErrors,
+    errors,
     concurrentLeave,
     isAddedByLeaveAdmin: false,
     onChange,

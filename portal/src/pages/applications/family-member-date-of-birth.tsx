@@ -41,7 +41,7 @@ export const FamilyMemberDateOfBirth = (
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import ApiResourceCollection from "../models/ApiResourceCollection";
-import AppErrorInfo from "../models/AppErrorInfo";
 import { BenefitsApplicationDocument } from "../models/Document";
+import ErrorInfo from "../models/ErrorInfo";
 import FileCard from "./FileCard";
 import Spinner from "./core/Spinner";
 import TempFile from "../models/TempFile";
@@ -63,7 +63,7 @@ function renderDocumentFileCard(
 
 interface FileCardListProps {
   tempFiles: ApiResourceCollection<TempFile>;
-  fileErrors: AppErrorInfo[];
+  fileErrors: ErrorInfo[];
   onChange: (files: File[]) => Promise<void>;
   onRemoveTempFile: (id: string) => void;
   fileHeadingPrefix: string;
@@ -96,7 +96,7 @@ const FileCardList = (props: FileCardListProps) => {
 
   const fileCards = tempFiles.items.map((file, index) => {
     const fileError = fileErrors.find(
-      (appErrorInfo) => appErrorInfo.meta?.file_id === file.id
+      (errorInfo) => errorInfo.meta?.file_id === file.id
     );
     const errorMsg = fileError ? fileError.message : null;
     return renderFileCard(

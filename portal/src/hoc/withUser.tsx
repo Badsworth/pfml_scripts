@@ -34,12 +34,12 @@ function withUser<T extends WithUserProps>(Component: React.ComponentType<T>) {
       // isn't yet defined, then it'll be defined on a subsequent render, so we won't be able to
       // use the value on this render even if we used `await`
       auth.requireLogin();
-      if (auth.isLoggedIn && !appLogic.appErrors.length) {
+      if (auth.isLoggedIn && !appLogic.errors.length) {
         users.loadUser();
       }
 
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [auth.isLoggedIn, !appLogic.appErrors.length]);
+    }, [auth.isLoggedIn, !appLogic.errors.length]);
 
     useEffect(() => {
       if (users.user) {

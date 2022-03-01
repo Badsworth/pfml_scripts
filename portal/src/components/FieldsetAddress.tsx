@@ -1,4 +1,4 @@
-import AppErrorInfo from "../models/AppErrorInfo";
+import ErrorInfo from "../models/ErrorInfo";
 import Fieldset from "./core/Fieldset";
 import FormLabel from "./core/FormLabel";
 import InputText from "./core/InputText";
@@ -12,7 +12,7 @@ interface FieldsetAddressProps {
   /**
    * Error messages which may apply to one of the address fields
    */
-  appErrors: AppErrorInfo[];
+  errors: ErrorInfo[];
   /**
    * Localized hint text
    */
@@ -52,7 +52,7 @@ const FieldsetAddress = ({
   addressType = "residential",
   ...props
 }: FieldsetAddressProps) => {
-  const { appErrors, name, onChange, value } = props;
+  const { errors, name, onChange, value } = props;
   const { t } = useTranslation();
 
   const line1Label = t("components.fieldsetAddress.line1Label", {
@@ -70,7 +70,7 @@ const FieldsetAddress = ({
 
       <InputText
         autoComplete="address-line1"
-        errorMsg={AppErrorInfo.fieldErrorMessage(appErrors, `${name}.line_1`)}
+        errorMsg={ErrorInfo.fieldErrorMessage(errors, `${name}.line_1`)}
         label={line1Label}
         name={`${name}.line_1`}
         onChange={onChange}
@@ -80,7 +80,7 @@ const FieldsetAddress = ({
 
       <InputText
         autoComplete="address-line2"
-        errorMsg={AppErrorInfo.fieldErrorMessage(appErrors, `${name}.line_2`)}
+        errorMsg={ErrorInfo.fieldErrorMessage(errors, `${name}.line_2`)}
         label={line2Label}
         name={`${name}.line_2`}
         onChange={onChange}
@@ -91,7 +91,7 @@ const FieldsetAddress = ({
 
       <InputText
         autoComplete="address-level2"
-        errorMsg={AppErrorInfo.fieldErrorMessage(appErrors, `${name}.city`)}
+        errorMsg={ErrorInfo.fieldErrorMessage(errors, `${name}.city`)}
         label={t("components.fieldsetAddress.cityLabel")}
         name={`${name}.city`}
         onChange={onChange}
@@ -101,7 +101,7 @@ const FieldsetAddress = ({
 
       <StateDropdown
         emptyChoiceLabel={t("components.dropdown.emptyChoiceLabel")}
-        errorMsg={AppErrorInfo.fieldErrorMessage(appErrors, `${name}.state`)}
+        errorMsg={ErrorInfo.fieldErrorMessage(errors, `${name}.state`)}
         label={t("components.fieldsetAddress.stateLabel")}
         name={`${name}.state`}
         onChange={onChange}
@@ -111,7 +111,7 @@ const FieldsetAddress = ({
 
       <InputText
         autoComplete="postal-code"
-        errorMsg={AppErrorInfo.fieldErrorMessage(appErrors, `${name}.zip`)}
+        errorMsg={ErrorInfo.fieldErrorMessage(errors, `${name}.zip`)}
         inputMode="numeric"
         label={t("components.fieldsetAddress.zipLabel")}
         mask="zip"

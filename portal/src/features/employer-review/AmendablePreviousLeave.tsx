@@ -5,8 +5,8 @@ import PreviousLeave, {
 import React, { useRef, useState } from "react";
 import AmendButton from "./AmendButton";
 import AmendmentForm from "../../components/AmendmentForm";
-import AppErrorInfo from "../../models/AppErrorInfo";
 import ConditionalContent from "../../components/ConditionalContent";
+import ErrorInfo from "../../models/ErrorInfo";
 import Heading from "../../components/core/Heading";
 import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import InputDate from "../../components/core/InputDate";
@@ -17,7 +17,7 @@ import useAutoFocusEffect from "../../hooks/useAutoFocusEffect";
 import { useTranslation } from "../../locales/i18n";
 
 interface AmendablePreviousLeaveProps {
-  appErrors: AppErrorInfo[];
+  errors: ErrorInfo[];
   isAddedByLeaveAdmin: boolean;
   onChange: (
     arg: PreviousLeave | { [key: string]: unknown },
@@ -34,7 +34,7 @@ interface AmendablePreviousLeaveProps {
  */
 
 const AmendablePreviousLeave = ({
-  appErrors,
+  errors,
   isAddedByLeaveAdmin,
   onChange,
   onRemove,
@@ -52,7 +52,7 @@ const AmendablePreviousLeave = ({
     `previous_leaves[${amendment.previous_leave_id}].${field}`;
 
   const getErrorMessage = (field: string) =>
-    AppErrorInfo.fieldErrorMessage(appErrors, getFieldPath(field));
+    ErrorInfo.fieldErrorMessage(errors, getFieldPath(field));
 
   const getFormattedValue = (field: string, value: string) => {
     if (field === "leave_start_date" || field === "leave_end_date") {

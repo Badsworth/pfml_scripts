@@ -12,7 +12,7 @@ The normal API error response includes an `errors` property in its body represen
 
 ## Logic hook
 
-The logic hooks, like `useBenefitsApplicationsLogic`, are responsible for catching any errors thrown by the API module and sending the error into `appErrorsLogic`. A typical pattern for this looks like:
+The logic hooks, like `useBenefitsApplicationsLogic`, are responsible for catching any errors thrown by the API module and sending the error into `errorsLogic`. A typical pattern for this looks like:
 
 ```js
 async updateClaim(patchData) {
@@ -21,16 +21,16 @@ async updateClaim(patchData) {
     await myApi.update(patchData)
   } catch (error) {
     // Handle any API errors
-    appErrorsLogic.catchError(error)
+    errorsLogic.catchError(error)
   }
 }
 ```
 
 ## App Errors Logic hook
 
-The `useAppErrorsLogic` hook is where errors get sent to for processing and storing.
+The `useErrorsLogic` hook is where errors get sent to for processing and storing.
 
-When `appErrorsLogic.catchError` receives a `ValidationError` holding the API response's errors, it parses each API error and creates an `AppErrorInfo` instance with a `message` generated from the API issue's `type`, `rule`, and `field` properties. See the `getMessageFromApiIssue` method for how i18n keys are generated.
+When `errorsLogic.catchError` receives a `ValidationError` holding the API response's errors, it parses each API error and creates an `ErrorInfo` instance with a `message` generated from the API issue's `type`, `rule`, and `field` properties. See the `getMessageFromApiIssue` method for how i18n keys are generated.
 
 If you're unsure what i18n key will be generated for the issue, you can trigger the error in local development and view the console to see what key it says is missing:
 
@@ -42,11 +42,11 @@ If a matching i18n key isn't found for the API issue, the app falls back to the 
 
 The `ErrorsSummary` component is rendered by our app container (`_app.js`) above the page component.
 
-When the `appErrorsLogic` module has errors present, the `ErrorsSummary` component renders each error's `message`.
+When the `errorsLogic` module has errors present, the `ErrorsSummary` component renders each error's `message`.
 
 ## Inline errors
 
-Each page has access to `appErrorsLogic` via the `appLogic` prop. The errors can be read from `appLogic.appErrors`.
+Each page has access to `errorsLogic` via the `appLogic` prop. The errors can be read from `appLogic.errors`.
 
 If the errors are associated with a specific field on the page, you can render them inline by setting the field component's `errorMsg` prop. The easiest way to do this is by using the `useFunctionalInputProps` to set the common props for your fields, one of which is `errorMsg`.
 
@@ -58,7 +58,7 @@ const { formState, updateFields } = useFormState({
 });
 
 const getFunctionalInputProps = useFunctionalInputProps({
-  appErrors: props.appLogic.appErrors,
+  errors: props.appLogic.errors,
   formState,
   updateFields,
 });
@@ -73,11 +73,11 @@ return (
 );
 ```
 
-Alternatively, if you're not using `useFunctionalInputProps`, you can use `AppErrorInfo.fieldErrorMessage(fieldName)` to return the error message for a specific field:
+Alternatively, if you're not using `useFunctionalInputProps`, you can use `ErrorInfo.fieldErrorMessage(fieldName)` to return the error message for a specific field:
 
 ```jsx
 <InputText
-  errorMsg={AppErrorInfo.fieldErrorMessage(errors, "first_name")}
+  errorMsg={ErrorInfo.fieldErrorMessage(errors, "first_name")}
   name="first_name"
   ...
 ```

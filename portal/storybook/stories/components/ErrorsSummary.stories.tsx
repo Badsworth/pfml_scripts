@@ -1,4 +1,4 @@
-import AppErrorInfo from "src/models/AppErrorInfo";
+import ErrorInfo from "src/models/ErrorInfo";
 import ErrorsSummary from "src/components/ErrorsSummary";
 import React from "react";
 
@@ -9,15 +9,15 @@ export default {
 
 export const Default = () => (
   <ErrorsSummary
-    errors={[new AppErrorInfo({ message: "Your first name is required" })]}
+    errors={[new ErrorInfo({ message: "Your first name is required" })]}
   />
 );
 
 export const Multiple = () => (
   <ErrorsSummary
     errors={[
-      new AppErrorInfo({ message: "Your first name is required" }),
-      new AppErrorInfo({ message: "Your last name is required" }),
+      new ErrorInfo({ message: "Your first name is required" }),
+      new ErrorInfo({ message: "Your last name is required" }),
     ]}
   />
 );

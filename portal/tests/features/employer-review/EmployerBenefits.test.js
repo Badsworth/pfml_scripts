@@ -23,7 +23,7 @@ const BENEFITS = [
 function renderComponent(customProps) {
   const props = {
     addedBenefits: [],
-    appErrors: [],
+    errors: [],
     employerBenefits: BENEFITS,
     onAdd: () => {},
     onChange: () => {},

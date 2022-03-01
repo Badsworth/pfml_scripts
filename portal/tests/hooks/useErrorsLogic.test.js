@@ -9,10 +9,10 @@ import {
   ValidationError,
 } from "../../src/errors";
 import { act, renderHook } from "@testing-library/react-hooks";
-import AppErrorInfo from "../../src/models/AppErrorInfo";
+import ErrorInfo from "../../src/models/ErrorInfo";
 import { render } from "@testing-library/react";
 import tracker from "../../src/services/tracker";
-import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
+import useErrorsLogic from "../../src/hooks/useErrorsLogic";
 import usePortalFlow from "../../src/hooks/usePortalFlow";
 
 jest.mock("../../src/services/tracker");
@@ -120,15 +120,15 @@ const validationErrorIssues = [
 const setup = () => {
   return renderHook(() => {
     const portalFlow = usePortalFlow();
-    return useAppErrorsLogic({ portalFlow });
+    return useErrorsLogic({ portalFlow });
   });
 };
 
-describe("useAppErrorsLogic", () => {
+describe("useErrorsLogic", () => {
   it("returns methods for setting errors", () => {
     const { result } = setup();
-    expect(result.current.setAppErrors).toBeInstanceOf(Function);
-    expect(result.current.appErrors).toHaveLength(0);
+    expect(result.current.setErrors).toBeInstanceOf(Function);
+    expect(result.current.errors).toHaveLength(0);
   });
 
   it.each(errorMessages)(
@@ -139,10 +139,10 @@ describe("useAppErrorsLogic", () => {
       act(() => {
         result.current.catchError(error);
       });
-      expect(result.current.appErrors).toHaveLength(1);
-      expect(result.current.appErrors[0].message).toBe(message);
+      expect(result.current.errors).toHaveLength(1);
+      expect(result.current.errors[0].message).toBe(message);
       if (applicationId) {
-        expect(result.current.appErrors[0].meta).toEqual({
+        expect(result.current.errors[0].meta).toEqual({
           application_id: applicationId,
         });
       }
@@ -170,7 +170,7 @@ describe("useAppErrorsLogic", () => {
     act(() => {
       result.current.catchError(new Error());
     });
-    expect(result.current.appErrors[0].name).toEqual("Error");
+    expect(result.current.errors[0].name).toEqual("Error");
     expect(tracker.noticeError).toHaveBeenCalledTimes(1);
     expect(console.error).toHaveBeenCalledTimes(1);
   });
@@ -181,7 +181,7 @@ describe("useAppErrorsLogic", () => {
       const portalFlow = usePortalFlow();
       goToSpy = jest.spyOn(portalFlow, "goTo");
       portalFlow.pathWithParams = "/foo?bar=true";
-      return useAppErrorsLogic({ portalFlow });
+      return useErrorsLogic({ portalFlow });
     });
     act(() => {
       result.current.catchError(new AuthSessionMissingError("No current user"));
@@ -192,7 +192,7 @@ describe("useAppErrorsLogic", () => {
     });
   });
 
-  it("When ValidationError is thrown, it sets field, rule, and type properties of AppErrorInfo", () => {
+  it("When ValidationError is thrown, it sets field, rule, and type properties of ErrorInfo", () => {
     const issues = [
       {
         field: "tax_identifier",
@@ -207,9 +207,9 @@ describe("useAppErrorsLogic", () => {
       result.current.catchError(new ValidationError(issues, "applications"));
     });
 
-    const appErrorInfo = result.current.appErrors[0];
+    const errorInfo = result.current.errors[0];
 
-    expect(appErrorInfo).toEqual(
+    expect(errorInfo).toEqual(
       expect.objectContaining({
         field: "tax_identifier",
         type: "pattern",
@@ -219,7 +219,7 @@ describe("useAppErrorsLogic", () => {
   });
 
   it.each(validationErrorIssues)(
-    "When ValidationError is thrown, it sets AppErrorInfo.message based on the content of issue",
+    "When ValidationError is thrown, it sets ErrorInfo.message based on the content of issue",
     (issues, message, i18nPrefix) => {
       const { result } = setup();
 
@@ -227,11 +227,11 @@ describe("useAppErrorsLogic", () => {
         result.current.catchError(new ValidationError(issues, i18nPrefix));
       });
 
-      expect(result.current.appErrors[0].message).toBe(message);
+      expect(result.current.errors[0].message).toBe(message);
     }
   );
 
-  it("sets appErrors in same order as issues", () => {
+  it("sets errors in same order as issues", () => {
     const issues = [
       {
         field: "first_name",
@@ -248,10 +248,10 @@ describe("useAppErrorsLogic", () => {
       result.current.catchError(new ValidationError(issues, "applications"));
     });
 
-    expect(result.current.appErrors).toHaveLength(2);
-    expect(result.current.appErrors[0].field).toBe(issues[0].field);
-    expect(result.current.appErrors[0].name).toBe("ValidationError");
-    expect(result.current.appErrors[1].rule).toBe(issues[1].rule);
+    expect(result.current.errors).toHaveLength(2);
+    expect(result.current.errors[0].field).toBe(issues[0].field);
+    expect(result.current.errors[0].name).toBe("ValidationError");
+    expect(result.current.errors[1].rule).toBe(issues[1].rule);
   });
 
   it("For ValidationErrors, tracks each issue in New Relic", () => {
@@ -291,7 +291,7 @@ describe("useAppErrorsLogic", () => {
     const { result } = renderHook(() => {
       const portalFlow = usePortalFlow();
       portalFlow.pathWithParams = "/foo?bar=true";
-      return useAppErrorsLogic({ portalFlow });
+      return useErrorsLogic({ portalFlow });
     });
 
     act(() => {
@@ -321,7 +321,7 @@ describe("useAppErrorsLogic", () => {
       const portalFlow = usePortalFlow();
       goToSpy = jest.spyOn(portalFlow, "goTo");
       portalFlow.pathWithParams = "/foo?bar=true";
-      return useAppErrorsLogic({ portalFlow });
+      return useErrorsLogic({ portalFlow });
     });
 
     act(() => {
@@ -348,7 +348,7 @@ describe("useAppErrorsLogic", () => {
     const { result } = renderHook(() => {
       const portalFlow = usePortalFlow();
       portalFlow.pathWithParams = "/foo?bar=true";
-      return useAppErrorsLogic({ portalFlow });
+      return useErrorsLogic({ portalFlow });
     });
 
     act(() => {
@@ -378,7 +378,7 @@ describe("useAppErrorsLogic", () => {
       const portalFlow = usePortalFlow();
       goToSpy = jest.spyOn(portalFlow, "goTo");
       portalFlow.pathWithParams = "/foo?bar=true";
-      return useAppErrorsLogic({ portalFlow });
+      return useErrorsLogic({ portalFlow });
     });
 
     act(() => {
@@ -408,7 +408,7 @@ describe("useAppErrorsLogic", () => {
       result.current.catchError(new Error("error 2"));
     });
 
-    expect(result.current.appErrors).toHaveLength(2);
+    expect(result.current.errors).toHaveLength(2);
     expect(tracker.noticeError).toHaveBeenCalledTimes(2);
     expect(tracker.trackEvent).not.toHaveBeenCalled();
     expect(console.error).toHaveBeenCalledTimes(2);
@@ -439,7 +439,7 @@ describe("useAppErrorsLogic", () => {
         );
       });
 
-      const Message = result.current.appErrors[0].message;
+      const Message = result.current.errors[0].message;
 
       expect(render(Message).container).toMatchSnapshot();
     }
@@ -463,7 +463,7 @@ describe("useAppErrorsLogic", () => {
       );
     });
 
-    const Message = result.current.appErrors[0].message;
+    const Message = result.current.errors[0].message;
 
     expect(render(Message).container).toMatchSnapshot();
   });
@@ -479,9 +479,9 @@ describe("useAppErrorsLogic", () => {
       );
     });
 
-    const Message = result.current.appErrors[0].message;
+    const Message = result.current.errors[0].message;
 
-    expect(result.current.appErrors).toHaveLength(1);
+    expect(result.current.errors).toHaveLength(1);
     expect(render(Message).container).toMatchSnapshot();
   });
 
@@ -509,14 +509,14 @@ describe("useAppErrorsLogic", () => {
 
     // Safeguard that our test is actually testing against a `type` that sometimes
     // results in an HTML message.
-    expect(result.current.appErrors[0].message).toBeInstanceOf(Object);
+    expect(result.current.errors[0].message).toBeInstanceOf(Object);
 
     act(() => {
       result.current.clearErrors();
       result.current.catchError(errorWithNoMatchingI18nMessage);
     });
 
-    expect(result.current.appErrors[0].message).toBe(
+    expect(result.current.errors[0].message).toBe(
       "New error Portal doesn't yet support, but with a similar type."
     );
   });
@@ -524,23 +524,23 @@ describe("useAppErrorsLogic", () => {
   it("when clearErrors is called, prior errors are removed", () => {
     const { result } = setup();
     act(() => {
-      result.current.setAppErrors([new AppErrorInfo()]);
+      result.current.setErrors([new ErrorInfo()]);
     });
 
     act(() => {
       result.current.clearErrors();
     });
 
-    expect(result.current.appErrors).toHaveLength(0);
+    expect(result.current.errors).toHaveLength(0);
   });
 
   it("when clearRequiredFieldErrors is called, removes required field errors", () => {
     const { result } = setup();
 
     act(() => {
-      result.current.setAppErrors([
-        new AppErrorInfo(),
-        new AppErrorInfo({ type: "required" }),
+      result.current.setErrors([
+        new ErrorInfo(),
+        new ErrorInfo({ type: "required" }),
       ]);
     });
 
@@ -548,9 +548,9 @@ describe("useAppErrorsLogic", () => {
       result.current.clearRequiredFieldErrors();
     });
 
-    expect(result.current.appErrors).toHaveLength(1);
+    expect(result.current.errors).toHaveLength(1);
     expect(
-      result.current.appErrors.some((error) => error.type === "required")
+      result.current.errors.some((error) => error.type === "required")
     ).toBe(false);
   });
 });

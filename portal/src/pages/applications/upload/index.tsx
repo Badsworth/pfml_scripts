@@ -1,9 +1,9 @@
 import React, { useEffect } from "react";
 import { TFunction, useTranslation } from "react-i18next";
 import { AbsencePeriod } from "../../../models/AbsencePeriod";
-import AppErrorInfo from "../../../models/AppErrorInfo";
 import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
+import ErrorInfo from "../../../models/ErrorInfo";
 import InputChoiceGroup from "../../../components/core/InputChoiceGroup";
 import LeaveReason from "../../../models/LeaveReason";
 import QuestionPage from "../../../components/QuestionPage";
@@ -49,7 +49,7 @@ export const UploadDocsOptions = (props: Props) => {
   }, [absence_id]);
 
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });
@@ -59,7 +59,7 @@ export const UploadDocsOptions = (props: Props) => {
     : [];
 
   // we should still display content if there are exclusively DocumentsLoadErrors.
-  const hasNonDocumentsLoadError = appLogic.appErrors.some(
+  const hasNonDocumentsLoadError = appLogic.errors.some(
     (error) => error.name !== "DocumentsLoadError"
   );
   if (hasNonDocumentsLoadError) {
@@ -75,17 +75,17 @@ export const UploadDocsOptions = (props: Props) => {
 
   const handleSave = async () => {
     if (!upload_docs_options) {
-      const appErrorInfo = new AppErrorInfo({
+      const errorInfo = new ErrorInfo({
         field: "upload_docs_options",
         message: t("errors.applications.upload_docs_options.required"),
         type: "required",
       });
 
-      appLogic.setAppErrors([appErrorInfo]);
+      appLogic.setErrors([errorInfo]);
 
       tracker.trackEvent("ValidationError", {
-        issueField: appErrorInfo.field || "",
-        issueType: appErrorInfo.type || "",
+        issueField: errorInfo.field || "",
+        issueType: errorInfo.type || "",
       });
 
       return;

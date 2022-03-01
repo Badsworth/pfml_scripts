@@ -90,9 +90,9 @@ export const Review = (
   const { t } = useTranslation();
   const { appLogic, claim, documents, isLoadingDocuments } = props;
 
-  const { appErrors, clearRequiredFieldErrors } = appLogic;
+  const { errors, clearRequiredFieldErrors } = appLogic;
   const hasLoadingDocumentsError = hasDocumentsLoadError(
-    appErrors,
+    errors,
     claim.application_id
   );
 
@@ -155,7 +155,7 @@ export const Review = (
   // page with required fields.
   const [showNewFieldError, setShowNewFieldError] = useState(false);
   useEffect(() => {
-    const missingFields = getMissingRequiredFields(appErrors);
+    const missingFields = getMissingRequiredFields(errors);
     if (missingFields.length) {
       tracker.trackEvent("Missing required fields", {
         missingFields: JSON.stringify(missingFields),
@@ -168,7 +168,7 @@ export const Review = (
       }
     }
   }, [
-    appErrors,
+    errors,
     showNewFieldError,
     setShowNewFieldError,
     clearRequiredFieldErrors,

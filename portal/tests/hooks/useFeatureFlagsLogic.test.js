@@ -2,20 +2,20 @@ import { act, renderHook } from "@testing-library/react-hooks";
 import FeatureFlagsApi from "../../src/api/FeatureFlagsApi";
 import Flag from "../../src/models/Flag";
 import { NetworkError } from "../../src/errors";
-import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
+import useErrorsLogic from "../../src/hooks/useErrorsLogic";
 import useFeatureFlagsLogic from "../../src/hooks/useFeatureFlagsLogic";
 import usePortalFlow from "../../src/hooks/usePortalFlow";
 
 jest.mock("../../src/api/FeatureFlagsApi");
 
 describe("useFeatureFlagsLogic", () => {
-  let appErrorsLogic, featureFlagsApi, flagsLogic, portalFlow;
+  let errorsLogic, featureFlagsApi, flagsLogic, portalFlow;
 
   function setup() {
     renderHook(() => {
       portalFlow = usePortalFlow();
-      appErrorsLogic = useAppErrorsLogic({ portalFlow });
-      flagsLogic = useFeatureFlagsLogic({ appErrorsLogic });
+      errorsLogic = useErrorsLogic({ portalFlow });
+      flagsLogic = useFeatureFlagsLogic({ errorsLogic });
     });
   }
 
@@ -45,7 +45,7 @@ describe("useFeatureFlagsLogic", () => {
         await flagsLogic.loadFlags();
       });
 
-      expect(appErrorsLogic.appErrors).toHaveLength(0);
+      expect(errorsLogic.errors).toHaveLength(0);
     });
   });
 
