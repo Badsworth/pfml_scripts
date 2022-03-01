@@ -1928,7 +1928,12 @@ export function filterLADashboardBy(filters: FilterOptions): void {
   cy.findByText("Apply filters").should("not.be.disabled").click();
   cy.get('span[role="progressbar"]').should("be.visible");
   cy.wait("@dashboardClaimQueries");
-  cy.contains("table", "Employer ID number").should("be.visible");
+  // @BC: Table columns have been updated
+  // previous: "Employer ID number" (portal/v59.0-rc1 and below)
+  // updated: "Organization (FEIN)" (portal/v59.0-rc2)
+  cy.contains("table", /(Employer ID number)|(Organization \(FEIN\))/).should(
+    "be.visible"
+  );
 }
 /**Looks if dashboard is empty */
 function checkDashboardIsEmpty() {
