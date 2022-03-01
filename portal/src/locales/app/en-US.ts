@@ -1042,7 +1042,7 @@ const pages: {
   },
   authLogin: {
     accountVerified:
-      "Thanks for verifying your email address. You may now log into your account.",
+      "Thanks for verifying your email address. You may now log in to your account.",
     accountVerifiedHeading: "Email successfully verified",
     createClaimantAccount:
       "<strong>Need to apply for paid leave? <create-account-link>Create an account</create-account-link></strong>",
@@ -2595,7 +2595,7 @@ const pages: {
     companyNameLabel: "<strong>Organization:</strong> {{company}}",
     detailsLabel: "Where to find your paid leave contributions",
     detailsList:
-      "Log into <mass-tax-connect-link>MassTaxConnect</mass-tax-connect-link> or contact your payroll department to complete these steps:<ol><li>On the <strong>Summary</strong> page, scroll down to the <strong>Paid Family and Medical Leave</strong> section on the left. In the <strong>Account</strong> portion, select <strong>Returns</strong>.</li><li>Choose <strong>the last period</strong> for which a return has been <strong>received</strong>. For example, if you sent your contributions for 3-31-2021, and the return has been processed and designated as ‘received’, you can use the amount from that period to verify your account. If you have not yet sent your contributions or it is still being processed, use the amount from the most recent period for which you filed that has been processed.</li><li>Go into the return. Click <strong>View or Amend Return</strong>. Then select <strong>Next</strong> at the bottom. Look to <strong>line 6</strong> and you will find the <strong>Total Contributions Due</strong>.</li><li>Copy the <strong>Total Contributions Due</strong> amount for verification.</li></ol>If you have any questions about your paid leave contributions, please contact the Department of Revenue at <dor-phone-link><strong>$t(shared.departmentOfRevenuePhoneNumber)</strong></dor-phone-link> from 9am-4pm ET.",
+      "Log in to <mass-tax-connect-link>MassTaxConnect</mass-tax-connect-link> or contact your payroll department to complete these steps:<ol><li>On the <strong>Summary</strong> page, scroll down to the <strong>Paid Family and Medical Leave</strong> section on the left. In the <strong>Account</strong> portion, select <strong>Returns</strong>.</li><li>Choose <strong>the last period</strong> for which a return has been <strong>received</strong>. For example, if you sent your contributions for 3-31-2021, and the return has been processed and designated as ‘received’, you can use the amount from that period to verify your account. If you have not yet sent your contributions or it is still being processed, use the amount from the most recent period for which you filed that has been processed.</li><li>Go into the return. Click <strong>View or Amend Return</strong>. Then select <strong>Next</strong> at the bottom. Look to <strong>line 6</strong> and you will find the <strong>Total Contributions Due</strong>.</li><li>Copy the <strong>Total Contributions Due</strong> amount for verification.</li></ol>If you have any questions about your paid leave contributions, please contact the Department of Revenue at <dor-phone-link><strong>$t(shared.departmentOfRevenuePhoneNumber)</strong></dor-phone-link> from 9am-4pm ET.",
     employerIdNumberLabel: "<strong>Employer ID number (EIN):</strong> {{ein}}",
     haveAnAccount: "Have an account? <log-in-link>Log in</log-in-link>",
     lead: "We need more information to verify your identity. We require every employer to verify recent <mass-tax-connect-link>MassTaxConnect</mass-tax-connect-link> data when creating an account. This helps protect your employees and your organization's information.",
@@ -2620,7 +2620,7 @@ const pages: {
       "We require every employer to verify paid leave contributions when creating an account. You need to <your-organizations-link>complete this process</your-organizations-link> to review applications from your team.",
     verificationAlertTitle: "Verify your account to continue",
     viewApplicationsBody:
-      "When you log into your account you can now use the <dashboard-link>dashboard</dashboard-link> to see all the applications submitted by employees from your organization.",
+      "When you log in to your account you can now use the <dashboard-link>dashboard</dashboard-link> to see all the applications submitted by employees from your organization.",
     viewApplicationsTitle: "View all applications",
     viewFormsBody:
       "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the <healthcare-provider-form-link>$t(shared.certificationFormMedical) form</healthcare-provider-form-link> during the review process. For leave to care for a family member you can download the <caregiver-certification-form-link>Certification to Care for a Family Member</caregiver-certification-form-link> during the review process. ",
@@ -2679,7 +2679,7 @@ const pages: {
     employerCreateAccountButton: "Create an employer account",
     employerHeading: "Employers",
     seoTitle:
-      "Create or Log into your account for Massachusetts Paid Family and Medical Leave",
+      "Create or Log in to your account for Massachusetts Paid Family and Medical Leave",
     title:
       "People who work in Massachusetts can now apply for Paid Family and Medical Leave. Learn more about this <mass-paid-leave-link>new paid leave program</mass-paid-leave-link>.",
   },
