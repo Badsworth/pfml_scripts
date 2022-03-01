@@ -290,7 +290,7 @@ const useErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
     error: DocumentsLoadError | DocumentsUploadError
   ) => {
     const issue =
-      error instanceof DocumentsUploadError ? error.issue : undefined;
+      error instanceof DocumentsUploadError ? error.issues[0] : undefined;
 
     const errorInfo = new ErrorInfo({
       name: error.name,
@@ -317,9 +317,10 @@ const useErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
    * Add and track claim detail withdrawn error
    */
   const handleClaimWithdrawnError = (error: ClaimWithdrawnError) => {
+    const issue = error.issues[0];
     const errorInfo = new ErrorInfo({
       name: error.name,
-      message: getMessageFromIssue(error.issue, "claimStatus", {
+      message: getMessageFromIssue(issue, "claimStatus", {
         absenceId: error.fineos_absence_id,
       }),
     });
@@ -327,9 +328,9 @@ const useErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
     addError(errorInfo);
 
     tracker.trackEvent(error.name, {
-      issueField: get(error.issue, "field", ""),
-      issueRule: get(error.issue, "rule", ""),
-      issueType: get(error.issue, "type", ""),
+      issueField: get(issue, "field", ""),
+      issueRule: get(issue, "rule", ""),
+      issueType: get(issue, "type", ""),
     });
   };
 
@@ -366,12 +367,15 @@ const useErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
    * Add and track issues in a CognitoAuthError
    */
   const handleCognitoAuthError = (error: CognitoAuthError) => {
+    const issue = error.issues[0];
+
     const errorInfo = new ErrorInfo({
-      field: error.issue?.field,
+      field: issue?.field,
       name: error.name,
-      message: error.issue
-        ? getMessageFromIssue(error.issue, "auth")
-        : t("errors.network"),
+      message:
+        typeof issue === "undefined"
+          ? t("errors.network")
+          : getMessageFromIssue(issue, "auth"),
     });
 
     addError(errorInfo);
