@@ -19,6 +19,7 @@ def update_user(
     db_session: db.Session,
     user: User,
     update_request: UserUpdateRequest,
+    sync_cognito_preferences: bool,
     cognito_auth_token: str,
     updated_by: str = "User",
 ) -> User:
@@ -26,7 +27,15 @@ def update_user(
         value = getattr(update_request, key)
 
         if key == "mfa_delivery_preference":
-            _update_mfa_preference(db_session, user, key, value, updated_by, cognito_auth_token)
+            _update_mfa_preference(
+                db_session,
+                user,
+                key,
+                value,
+                updated_by,
+                sync_cognito_preferences,
+                cognito_auth_token,
+            )
             continue
 
         if key == "mfa_phone_number":
@@ -44,6 +53,7 @@ def _update_mfa_preference(
     key: str,
     value: Optional[str],
     updated_by: str,
+    sync_cognito_preferences: bool,
     cognito_auth_token: str,
 ) -> None:
     existing_mfa_preference = user.mfa_preference_description()
@@ -64,13 +74,18 @@ def _update_mfa_preference(
 
     _update_mfa_preference_audit_trail(db_session, user, updated_by)
 
-    log_attributes = {"mfa_preference": value, "updated_by": updated_by}
+    log_attributes = {
+        "mfa_preference": value,
+        "updated_by": updated_by,
+        "sync_cognito_preferences": sync_cognito_preferences,
+    }
     logger.info("MFA updated for user", extra=log_attributes)
 
     if value == "Opt Out" and existing_mfa_preference is not None:
-        handle_mfa_disabled(user, last_updated_at, updated_by, cognito_auth_token)
-        # todo: disable in cognito
-    elif value == "SMS":
+        handle_mfa_disabled(
+            user, last_updated_at, updated_by, sync_cognito_preferences, cognito_auth_token
+        )
+    elif value == "SMS" and sync_cognito_preferences:
         handle_mfa_enabled(user, cognito_auth_token)
 
 

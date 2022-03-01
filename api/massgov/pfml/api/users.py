@@ -181,9 +181,6 @@ def users_patch(user_id):
     """This endpoint modifies the user specified by the user_id"""
     body = UserUpdateRequest.parse_obj(connexion.request.json)
 
-    auth_header = flask.request.headers.get("Authorization", None)
-    cognito_auth_token = auth_header[7:]
-
     issues = get_users_patch_issues(body)
     if issues:
         logger.info("users_patch failure - request has invalid fields")
@@ -199,7 +196,13 @@ def users_patch(user_id):
 
         ensure(EDIT, user)
 
-    updated_user = update_user(db_session, user, body, cognito_auth_token)
+    headers = flask.request.headers
+    auth_header = headers.get("Authorization", None)
+    # todo (PORTAL-1828): Remove X-FF-Sync-Cognito-Preferences feature flag header
+    sync_cognito_preferences = headers.get("X-FF-Sync-Cognito-Preferences", None) == "true"
+    cognito_auth_token = auth_header[7:]
+
+    updated_user = update_user(db_session, user, body, sync_cognito_preferences, cognito_auth_token)
     data = UserResponse.from_orm(updated_user).dict()
 
     return response_util.success_response(

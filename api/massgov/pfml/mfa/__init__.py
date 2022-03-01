@@ -28,7 +28,11 @@ def handle_mfa_enabled(user: User, cognito_auth_token: str) -> None:
 
 
 def handle_mfa_disabled(
-    user: User, last_enabled_at: Optional[datetime], updated_by: str, cognito_auth_token: str
+    user: User,
+    last_enabled_at: Optional[datetime],
+    updated_by: str,
+    sync_cognito_preferences: bool,
+    cognito_auth_token: str,
 ) -> None:
     # todo: update comment
     """Helper method for handling necessary actions after MFA is disabled for a user (send email, logging, etc)"""
@@ -41,9 +45,9 @@ def handle_mfa_disabled(
     logger.info("MFA disabled for user", extra=log_attributes)
 
     try:
-        logger.info("About to disable cognito mfa")
-        disable_user_mfa(user.email_address, cognito_auth_token)
-        logger.info("Disabled cognito mfa")
+        if sync_cognito_preferences:
+            # todo: add logging?
+            disable_user_mfa(user.email_address, cognito_auth_token)
         if app.get_config().environment == "local" and app.get_config().disable_sending_emails:
             logger.info(
                 "Skipping sending an MFA disabled notification email", extra=log_attributes,
