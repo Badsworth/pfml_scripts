@@ -91,6 +91,32 @@ class EmployerClaim extends BaseBenefitsApplication {
 
     return false;
   }
+
+  /**
+   * Returns earliest start date across all absence periods
+   */
+  get leaveStartDate() {
+    const startDates: string[] = this.absence_periods
+      .map((period) => period.absence_period_start_date)
+      .sort();
+
+    if (!startDates.length) return null;
+
+    return startDates[0];
+  }
+
+  /**
+   * Returns latest end date across all absence periods
+   */
+  get leaveEndDate() {
+    const endDates: string[] = this.absence_periods
+      .map((period) => period.absence_period_end_date)
+      .sort();
+
+    if (!endDates.length) return null;
+
+    return endDates[endDates.length - 1];
+  }
 }
 
 export default EmployerClaim;

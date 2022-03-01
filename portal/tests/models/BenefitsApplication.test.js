@@ -127,6 +127,28 @@ describe("BenefitsApplication", () => {
     expect(claimWithReason.isMedicalOrPregnancyLeave).toBe(true);
   });
 
+  describe("#leaveStartDate", () => {
+    it("returns earliest start_date", () => {
+      const claimWithMultipleLeavePeriods = new MockBenefitsApplicationBuilder()
+        .continuous()
+        .reducedSchedule()
+        .create();
+      expect(claimWithMultipleLeavePeriods.leaveStartDate).toEqual(
+        "2022-01-01"
+      );
+    });
+  });
+
+  describe("#leaveEndDate", () => {
+    it("returns latest end_date", () => {
+      const claimWithMultipleLeavePeriods = new MockBenefitsApplicationBuilder()
+        .continuous()
+        .reducedSchedule()
+        .create();
+      expect(claimWithMultipleLeavePeriods.leaveEndDate).toEqual("2022-07-01");
+    });
+  });
+
   describe("WorkPattern", () => {
     it("defaults work_pattern_days to a 7 day week with null minutes", () => {
       const workPattern = new WorkPattern();
