@@ -79,7 +79,7 @@ resource "aws_cloudwatch_metric_alarm" "sns_sms_rate_exceeded" {
 
 resource "aws_cloudwatch_metric_alarm" "sns_mfa_delivery_time_exceeded" {
   alarm_name          = "sns-mfa-delivery-time-exceeded"
-  alarm_description   = "At least 1 SNS SMS rate exceeded error in 5 minutes"
+  alarm_description   = "SNS MFA Delivery Time exceeded threshold"
   comparison_operator = local.cloudwatch_comparison_operator
   evaluation_periods  = "1"
   metric_name         = aws_cloudwatch_log_metric_filter.sns_mfa_delivery_time_exceeded.metric_transformation[0].name
