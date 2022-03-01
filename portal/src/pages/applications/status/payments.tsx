@@ -167,15 +167,12 @@ export const Payments = ({
   const delayedByAddressValidation = (
     status: string,
     writeback_transaction_status: WritebackTransactionStatus,
-    transaction_date: string
+    displayDate: any
   ) => {
-    const todaysDate = dayjs();
-    const transactionDate = dayjs(transaction_date);
-    const twoBusinessDaysFromTransaction = transactionDate.addBusinessDays(2);
     return (
       status === "Delayed" &&
       writeback_transaction_status === "Address Validation Error" &&
-      todaysDate.isSame(twoBusinessDaysFromTransaction, "day")
+      displayDate
     );
   };
 
@@ -183,7 +180,7 @@ export const Payments = ({
     status: string,
     payment_method: string,
     writeback_transaction_status: WritebackTransactionStatus,
-    transaction_date: string,
+    displayDate: any,
     transaction_date_could_change: boolean
   ) => {
     if (status === "Sent to bank" && payment_method === "Check") {
@@ -199,7 +196,7 @@ export const Payments = ({
       delayedByAddressValidation(
         status,
         writeback_transaction_status,
-        transaction_date
+        displayDate
       )
     ) {
       return "Delay_AddressValidation";
@@ -309,7 +306,7 @@ export const Payments = ({
                       expected_send_date_end,
                       status,
                       writeback_transaction_status,
-                      transaction_date,
+                      displayDate,
                       transaction_date_could_change,
                     }) => (
                       <tr key={payment_id}>
@@ -330,7 +327,7 @@ export const Payments = ({
                                 status,
                                 payment_method,
                                 writeback_transaction_status,
-                                transaction_date,
+                                displayDate,
                                 transaction_date_could_change
                               ),
                               paymentMethod: getPaymentMethod(payment_method),

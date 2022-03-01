@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 /**
  * Payment response associated with the Claim from API
  */
@@ -38,6 +39,12 @@ export type WritebackTransactionStatus =
   | "PUB Check Undeliverable"
   | "PUB Check Stale";
 
+export const DelayTimeMap = {
+  "Address Validation Error": 2,
+  "EFT Account Information Error": 2,
+  "Bank Processing Error": 2,
+};
+
 /**
  * Payment details associated with the Claim
  */
@@ -62,6 +69,15 @@ export class PaymentDetail {
     }
 
     Object.assign(this, attrs);
+  }
+
+  displayDate() {
+    const todaysDate = dayjs();
+    return (
+      dayjs(this.transaction_date).addBusinessDays(
+        DelayTimeMap[this.transaction_status]
+      ) < todaysDate
+    );
   }
 }
 
