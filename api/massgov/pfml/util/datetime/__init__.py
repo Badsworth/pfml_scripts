@@ -85,6 +85,14 @@ def datetime_str_to_date(datetime_str: Optional[str]) -> Optional[date]:
     return datetime.fromisoformat(datetime_str).date()
 
 
+def is_date_contained(container_range: Tuple[date, date], test_date: date) -> bool:
+    """
+    Determine if test_date is within container_range (inclusive)
+    """
+    c_start, c_end = container_range
+    return c_start <= test_date and test_date <= c_end
+
+
 def is_range_contained(container_range: Tuple[date, date], test_range: Tuple[date, date]) -> bool:
     """
     Determine if test_range is within container_range (inclusive)

@@ -14,6 +14,7 @@ from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.employees import (
     AbsencePeriod,
     Address,
+    BenefitYear,
     Claim,
     Employee,
     Employer,
@@ -27,6 +28,7 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.db.models.factories import (
     AbsencePeriodFactory,
     AddressFactory,
+    BenefitYearFactory,
     ClaimFactory,
     CtrAddressPairFactory,
     DiaReductionPaymentFactory,
@@ -273,6 +275,8 @@ def generate_scenario_data_in_db(
 
     employee = create_employee(ssn, fineos_customer_number, db_session)
 
+    construct_benefit_year(employee)
+
     if scenario_descriptor.dua_additional_income:
         create_dua_additional_income(fineos_customer_number)
 
@@ -321,6 +325,18 @@ def generate_scenario_data_in_db(
     )
 
 
+def construct_benefit_year(employee: Employee) -> BenefitYear:
+    # We should assume Benefit Year data exists for all claimants
+    # since this data has been backfilled in prod.
+    #
+    # The dates below were chosen to include claims that start
+    # on 2021-1-1, with the exact values given from the benefit
+    # year dates calculator as 2020-12-27 to 2021-12-25
+    return BenefitYearFactory.create(
+        employee=employee, start_date=date(2020, 12, 27), end_date=date(2021, 12, 25),
+    )
+
+
 def construct_absence_period(
     scenario_descriptor: ScenarioDescriptor, claim: Optional[Claim], leave_request_id: int
 ) -> Optional[AbsencePeriod]:
@@ -328,14 +344,28 @@ def construct_absence_period(
         return None
 
     absence_period_start_date = (
-        claim.absence_period_start_date if claim.absence_period_start_date else date(2021, 1, 3)
+        # This default start date prevents the payment date mismatch processer to fail based on the payment period date
+        claim.absence_period_start_date
+        if claim.absence_period_start_date
+        else date(2021, 5, 1)
     )
-    absence_period_end_date = absence_period_start_date + timedelta(weeks=26)
 
-    if scenario_descriptor.payment_date_mismatch:
-        absence_period_start_date = date(2022, 1, 5)
-        absence_period_end_date = date(2022, 1, 12)
+    absence_period_end_date = (
+        # This default end date prevents the total leave duration processer to fail
+        claim.absence_period_end_date
+        if claim.absence_period_end_date
+        else absence_period_start_date + timedelta(weeks=26, days=-1)
+    )
+
+    if scenario_descriptor.max_leave_duration_exceeded:
+        absence_period_end_date = absence_period_start_date + timedelta(weeks=26)
+    elif scenario_descriptor.payment_date_mismatch:
+        absence_period_start_date = date(2021, 1, 5)
+        absence_period_end_date = date(2021, 1, 12)
         scenario_descriptor.is_adhoc_payment = False
+
+    claim.absence_period_start_date = absence_period_start_date
+    claim.absence_period_end_date = absence_period_end_date
 
     absence_period = AbsencePeriodFactory.create(
         claim=claim,
