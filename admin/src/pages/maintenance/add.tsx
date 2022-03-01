@@ -1,4 +1,5 @@
 import "react-datetime/css/react-datetime.css";
+
 //import { Flag, HttpError, patchFlagsByName } from "../../api";
 import {
   Field,
@@ -10,14 +11,15 @@ import {
   useField,
   useFormikContext,
 } from "formik";
+import React, { useRef } from "react";
+
 import Breadcrumb from "../../components/Breadcrumb";
 import Datetime from "react-datetime";
-import { useRouter } from "next/router";
 import { Helmet } from "react-helmet-async";
-import React from "react";
 import { StaticPropsPermissions } from "../../menus";
 import { Timezone } from "../index";
 import moment from "moment-timezone";
+import { useRouter } from "next/router";
 
 // This is the dateTimeFormat that is rendered in the date time input element.
 // Date/times are converted to ISO8601 on save.
@@ -83,6 +85,14 @@ const TextField = (props: { label?: string } & FieldHookConfig<string>) => {
 const DateTimeField = (props: FieldHookConfig<string>) => {
   const { setFieldValue } = useFormikContext<FormValues>();
   const [field, meta] = useField(props);
+  const calInput = useRef<HTMLInputElement>(null);
+
+  const calIconClick = () => {
+    if (calInput.current) {
+      calInput.current.focus();
+      calInput.current.click();
+    }
+  };
 
   // Declared as any in react-datetime.
   const renderInput = (options: any) => {
@@ -90,8 +100,13 @@ const DateTimeField = (props: FieldHookConfig<string>) => {
     // https://github.com/arqex/react-datetime/blob/7e30d6c20cd864bf8e91bc94e6c3a0ee02864d19/src/DateTime.js#L524
     return (
       <>
-        <input {...options} />
-        <i className="maintenance-configure__calendar-icon"></i>
+        <input {...options} ref={calInput} />
+        <i
+          className="maintenance-configure__calendar-icon"
+          aria-hidden="true"
+          tabIndex={-1}
+          onClick={calIconClick}
+        ></i>
         {meta.error ? (
           <div className="maintenance-configure__error">{meta.error}</div>
         ) : null}
@@ -318,7 +333,7 @@ export default function Maintenance() {
         <title>Maintenance</title>
       </Helmet>
 
-      <h1>Edit Maintenance</h1>
+      <h1>{router.query?.action || "Configure New Maintenance"}</h1>
 
       <div className="maintenance-configure">
         <div className="maintenance-configure__description">
@@ -408,19 +423,14 @@ export default function Maintenance() {
                 </div>
                 {/* Transform css property, rotate + 90 or - 90*/}
                 <div className="maintenance-configure__advanced">
-                  <a
-                    className="maintenance-configure__show-advanced"
+                  <button
+                    className={`maintenance-configure__show-advanced maintenance-configure__show-advanced-icon--${
+                      showAdvanced ? "open" : "closed"
+                    }`}
                     onClick={showAdvancedOnClick}
                   >
                     Advanced
-                  </a>
-
-                  <i
-                    className={
-                      "maintenance-configure__show-advanced-icon maintenance-configure__show-advanced-icon--" +
-                      (showAdvanced ? "open" : "closed")
-                    }
-                  ></i>
+                  </button>
                   {showAdvanced && (
                     <fieldset className="maintenance-configure__fieldset maintenance-configure__fieldset--advanced">
                       <legend>
