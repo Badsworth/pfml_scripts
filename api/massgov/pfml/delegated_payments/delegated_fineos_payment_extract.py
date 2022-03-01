@@ -759,7 +759,13 @@ class PaymentExtractStep(Step):
         # If we cannot find the claim, we want to error only for standard
         # payments. While we'd like to attach the claim to other payment types
         # it's less of a concern to us.
-        if not claim:
+        if not claim and (
+            payment_data.is_standard_payment
+            or (
+                payment_data.is_employer_reimbursement
+                and payment_data.is_employer_reimbursement_enabled
+            )
+        ):
             payment_data.validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISSING_IN_DB,
                 payment_data.absence_case_number,
