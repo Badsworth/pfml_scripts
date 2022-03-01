@@ -9,7 +9,7 @@ import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import Claim, Employee, ImportLog, Payment, ReferenceFile
 
 from ..lookup import LookupTable
-from .base import Base, TimestampMixin, uuid_gen
+from .base import Base, TimestampMixin, deprecated_column, uuid_gen
 from .common import PostgreSQLUUID
 from .common import XMLType as XML
 
@@ -851,9 +851,15 @@ class MmarsPaymentData(Base, TimestampMixin):
     doc_last_modified_by = Column(Text)
     doc_last_modified_on = Column(TIMESTAMP)
     NoFilter = Column(Text)
-    payment_id = Column(PostgreSQLUUID, ForeignKey("payment.payment_id"), index=True, nullable=True)
+    payment_id = deprecated_column(
+        PostgreSQLUUID, ForeignKey("payment.payment_id"), index=True, nullable=True
+    )
 
-    payment = relationship(Payment)
+    claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True, nullable=True)
+    employee_id = Column(
+        PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True, nullable=True
+    )
+    payment_i_value = Column(Text)
 
     claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True, nullable=True)
     claim = relationship(Claim)
