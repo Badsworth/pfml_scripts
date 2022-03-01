@@ -320,7 +320,7 @@ export default function Maintenance() {
         <title>Maintenance</title>
       </Helmet>
 
-      <h1>Edit Maintenance</h1>
+      <h1>{router.query?.action || "Configure New Maintenance"}</h1>
 
       <div className="maintenance-configure">
         <div className="maintenance-configure__description">
