@@ -18,7 +18,16 @@ export interface Issue {
   type?: string;
 }
 
-class BasePortalError extends Error {
+// Any error in this shape can be internationalized in our app.
+export interface TranslatableError {
+  name: string;
+  message: string;
+  issues?: Issue[];
+  // TODO (PORTAL-1825): Refactor where we set i18nPrefix
+  i18nPrefix?: string;
+}
+
+export class BasePortalError extends Error {
   constructor(message?: string) {
     super(message);
 

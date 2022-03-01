@@ -1,0 +1,12 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ErrorMessage renders listing of each issues entry when present on the error 1`] = `
+<ul>
+  <li>
+    Enter a first name.
+  </li>
+  <li>
+    Enter a last name.
+  </li>
+</ul>
+`;
