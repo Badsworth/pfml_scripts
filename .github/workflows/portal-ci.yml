@@ -141,8 +141,8 @@ jobs:
         id: test-state
         run: echo "::set-output name=test-state::${{ env.WORKFLOW_CONCLUSION }}"
 
-  post-to-slack:
-    name: post failures to slack
+  post-to-teams:
+    name: post failures to teams
     needs: [get-test-state]
     if: always() && (needs.get-test-state.outputs.test-state == 'failure' || needs.get-test-state.outputs.test-state == 'timed_out')
     runs-on: ubuntu-latest
@@ -158,20 +158,20 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
-      - name: Pull slackbot API token from SSM
+      - name: Pull teams uri from SSM
         uses: "marvinpinto/action-inject-ssm-secrets@latest"
         with:
-          ssm_parameter: "/admin/common/nava-slackbot-api-key"
-          env_variable_name: "slackbot_token"
+          ssm_parameter: "/admin/common/teams-deploy-uri"
+          env_variable_name: "teams_uri"
 
-      - name: Post to Slack
+      - name: Post to Teams
         run: |
-          SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
-          -H 'Content-Type: application/json;charset=utf-8' \
-          --data '{
-            "channel": "${{ env.deploys_channel }}",
-            "attachments": [{
-              "title": "Portal tests failed in main (<${{ env.workflow_self_link }}|build logs>)",
-              "color": "danger"
-            }]
-          }' https://slack.com/api/chat.postMessage)
+          RESPONSE=$(curl -fsLS -X POST ${{ env.TEAMS_URI }} \
+          --header 'Content-Type: application/json' \
+          --data '{   
+            "@type": "MessageCard",
+            "themeColor": "2986CC",
+            "title": "Portal Tests Failed",
+            "text": "Portal tests failed in main [build logs](${{ env.workflow_self_link }})"
+            }'
+          )
