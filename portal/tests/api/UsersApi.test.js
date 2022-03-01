@@ -223,5 +223,17 @@ describe("users API", () => {
         }
       `);
     });
+
+    // todo (PORTAL-1828): Remove claimantSyncCognitoPreferences feature flag
+    it("sends the X-FF-Sync-Cognito-Preferences header if the claimantSyncCognitoPreferences feature flag is set", async () => {
+      process.env.featureFlags = JSON.stringify({
+        claimantSyncCognitoPreferences: true,
+      });
+      await usersApi.updateUser(user.user_id, user);
+      expect(global.fetch).toHaveBeenCalled();
+      expect(
+        global.fetch.mock.calls[0][1]?.headers["X-FF-Sync-Cognito-Preferences"]
+      ).toBe("true");
+    });
   });
 });

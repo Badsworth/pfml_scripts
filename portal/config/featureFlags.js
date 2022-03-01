@@ -21,6 +21,7 @@ const flagsConfig = {
 
     // When this flag is enabled optional MFA will be enabled for claimant users.
     claimantShowMFA: false,
+    claimantSyncCognitoPreferences: false,
 
     // When this flag is enabled, the military leave options are selectable on
     // the Leave Reason page in the claimant flow (CP-1145)

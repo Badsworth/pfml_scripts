@@ -177,6 +177,11 @@ paths:
             type: string
           description: ID of User to update
           required: true
+        - name: X-FF-Sync-Cognito-Preferences
+          description: Synchronize the user's Cognito MFA preference to Cognito
+          in: header
+          schema:
+            type: string
       responses:
         "200":
           description: A successful request returns a 200 status code and a user object.
