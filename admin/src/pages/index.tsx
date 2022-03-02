@@ -36,7 +36,9 @@ export default function Maintenance() {
   React.useEffect(() => {
     getAdminFlagLogsByName({ name: "maintenance" }).then(
       (response: ApiResponse<FlagWithLogsResponse>) => {
-        const logs = response.data;
+        // The stubbed API endpoint returns an object unfortunately. It will
+        // be an array once the endpoint is updated.
+        const logs = Array.isArray(response.data) ? response.data : [];
         setMaintenance(logs.shift() || null);
         setMaintenanceHistory(logs);
       },
