@@ -1,4 +1,19 @@
 import { Payment, PaymentDetail } from "../../src/models/Payment";
+import dayjs from "dayjs";
+import dayjsBusinessTime from "dayjs-business-time";
+dayjs.extend(dayjsBusinessTime);
+
+const defaultPayment = {
+  payment_id: "12343",
+  period_start_date: "2020-12-01",
+  period_end_date: "2020-12-07",
+  amount: 124,
+  sent_to_bank_date: "2020-12-08",
+  payment_method: "Check",
+  expected_send_date_start: null,
+  expected_send_date_end: null,
+  status: "Sent to bank",
+};
 
 describe("creates payments", () => {
   it("to be initialized as an empty array", () => {
@@ -87,5 +102,38 @@ describe("creates payments", () => {
     expect(payments.payments.length - validSamplePayments.length).toBe(
       invalidSamplePayments.length
     );
+  });
+
+  // TODO (PORTAL-1737) Do this in the next delay reason ticket, when we implement UI. These tests should be moved
+  // into payments.test.tsx and rewritten to test for the presence of the relevant text on the screen
+  describe("delay reasons", () => {
+    it("returns delayedByRejection when conditions met", () => {
+      const delayedByRejectionPayment = new PaymentDetail({
+        ...defaultPayment,
+        status: "Delayed",
+        writeback_transaction_status: "EFT Account Information Error",
+      });
+
+      expect(delayedByRejectionPayment.getDelayReason()).toEqual(
+        "delayedByRejection"
+      );
+    });
+
+    it("returns delayedByAddressValidation when conditions met", () => {
+      // Set the system time to today
+      const todaysDate = dayjs();
+      const twoBusinessDaysAgo = todaysDate.subtractBusinessDays(2);
+
+      const delayedByAddressValidationPayment = new PaymentDetail({
+        ...defaultPayment,
+        status: "Delayed",
+        writeback_transaction_status: "Address Validation Error",
+        transaction_date: twoBusinessDaysAgo.format("YYYY-MM-DD"),
+      });
+
+      expect(delayedByAddressValidationPayment.getDelayReason()).toEqual(
+        "delayedByAddressValidation"
+      );
+    });
   });
 });
