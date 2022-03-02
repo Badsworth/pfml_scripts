@@ -157,13 +157,10 @@ describe("DepartmentPage", () => {
       userEvent.click(screen.getByRole("radio", { name: "No" }));
       // Select an alternative department
       userEvent.type(
-        screen.getByRole(
-          "combobox",
-          {
-            name: "Select your department",
-          },
-          { hidden: true }
-        ),
+        screen.getByRole("combobox", {
+          name: "Select your department",
+          hidden: true,
+        }),
         department.name + "{enter}" // Needs {enter} to confirm option in combobox
       );
       // Click Save and continue button

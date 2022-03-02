@@ -16,9 +16,9 @@ function AccordionItem(props: AccordionItemProps) {
   const id = useUniqueId("accordion");
   const [isExpanded, setExpanded] = useState(false);
 
-  function handleClick() {
+  const handleClick = () => {
     setExpanded(!isExpanded);
-  }
+  };
 
   return (
     <React.Fragment>
