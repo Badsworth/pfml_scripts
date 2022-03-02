@@ -27,7 +27,6 @@ import dayjsBusinessTime from "dayjs-business-time";
 import formatDate from "src/utils/formatDate";
 import formatDateRange from "../../../utils/formatDateRange";
 import isBlank from "../../../utils/isBlank";
-import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
 
@@ -46,7 +45,7 @@ export const Payments = ({
   const { t } = useTranslation();
   const { absence_id } = query;
   const {
-    appErrors,
+    errors,
     claims: { claimDetail, loadClaimDetail },
     documents: {
       documents: allClaimDocuments,
@@ -74,7 +73,7 @@ export const Payments = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [application_id]);
 
-  if (appErrors.length > 0) {
+  if (errors.length > 0) {
     return (
       <BackButton
         label={t("pages.payments.backButtonLabel")}
@@ -502,10 +501,6 @@ export function paymentStatusViewHelper(
     : paymentList.payments;
   const hasPayments = !!payments.length;
 
-  const phaseTwoFeaturesEnabled = isFeatureEnabled(
-    "claimantShowPaymentsPhaseTwo"
-  );
-
   // changes intro text
   const isUnpaid = !_isPaid;
 
@@ -574,20 +569,13 @@ export function paymentStatusViewHelper(
     isApprovedBeforeFourteenthDayOfClaim,
     checkbackDate,
     hasCheckbackDate,
-    phaseTwoFeaturesEnabled,
   };
 }
 
 // Determine whether the payments tab should be shown
 export function showPaymentsTab(helper: PaymentStatusViewHelper) {
-  const {
-    isApprovedAndHasApprovalDocument,
-    phaseTwoFeaturesEnabled,
-    hasPayments,
-  } = helper;
-  return (
-    phaseTwoFeaturesEnabled && (isApprovedAndHasApprovalDocument || hasPayments)
-  );
+  const { isApprovedAndHasApprovalDocument, hasPayments } = helper;
+  return isApprovedAndHasApprovalDocument || hasPayments;
 }
 
 export function getInfoAlertContext(helper: PaymentStatusViewHelper) {
@@ -613,35 +601,22 @@ function getPaymentIntroContext(helper: PaymentStatusViewHelper) {
     isApprovedBeforeFourteenthDayOfClaim,
   } = helper;
 
-  if (isFeatureEnabled("claimantShowPaymentsPhaseTwo")) {
-    /* Remove once phasetwo feature flag is removed */
-    if (isUnpaid && isIntermittent) {
-      return "Intermittent_Unpaid";
-    }
-
-    if (hasCheckbackDate) {
-      /* Keys for text that include checkbackDate */
-      const contextSuffix = isApprovedBeforeFourteenthDayOfClaim
-        ? "PreFourteenthClaimDate"
-        : isRetroactive
-        ? "Retroactive"
-        : "PostFourteenthClaimDate";
-      return isContinuous
-        ? `Continuous_${contextSuffix}`
-        : `ReducedSchedule_${contextSuffix}`;
-    }
-
-    /* Remove once phasetwo feature flag is removed */
-    return isIntermittent
-      ? "Intermittent"
+  if (hasCheckbackDate) {
+    /* Keys for text that include checkbackDate */
+    const contextSuffix = isApprovedBeforeFourteenthDayOfClaim
+      ? "PreFourteenthClaimDate"
       : isRetroactive
-      ? "NonIntermittent_Retro"
-      : "NonIntermittent_NonRetro";
+      ? "Retroactive"
+      : "PostFourteenthClaimDate";
+    return isContinuous
+      ? `Continuous_${contextSuffix}`
+      : `ReducedSchedule_${contextSuffix}`;
   }
 
-  /* add intermittent_unpaid once phasetwo flag is removed */
   return isIntermittent
-    ? "Intermittent"
+    ? isUnpaid
+      ? "Intermittent_Unpaid"
+      : "Intermittent"
     : isRetroactive
     ? "NonIntermittent_Retro"
     : "NonIntermittent_NonRetro";

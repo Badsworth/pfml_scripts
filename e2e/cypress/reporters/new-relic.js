@@ -50,7 +50,6 @@ module.exports = class NewRelicCypressReporter extends reporters.Spec {
     events.push(this.buildTestResult(metadata, test));
     //@TODO: remove after dashboard V1 sunset
     events.push(this.buildCypressTestResult(metadata, test));
-
     return this.send(events);
   }
 
@@ -116,14 +115,21 @@ module.exports = class NewRelicCypressReporter extends reporters.Spec {
 
   buildTestResultInstances(metadata, test) {
     const events = [];
-    events.push(this.buildTestResultInstance(metadata, test, null, 1));
     if (test?.prevAttempts && test.prevAttempts.length) {
-      test.prevAttempts.forEach((attempt, i) => {
+      test.prevAttempts.forEach((attempt) => {
         events.push(
-          this.buildTestResultInstance(metadata, test, attempt, i + 2)
+          this.buildTestResultInstance(
+            metadata,
+            test,
+            attempt,
+            events.length + 1
+          )
         );
       });
     }
+    events.push(
+      this.buildTestResultInstance(metadata, test, null, events.length + 1)
+    );
     return events;
   }
 
@@ -165,7 +171,7 @@ module.exports = class NewRelicCypressReporter extends reporters.Spec {
   getErrorMessage(test) {
     let errorMessage = "";
     if (test.err) {
-      errorMessage = test.err.message;
+      errorMessage = this.getAnonymizedErrorMessage(test.err.message);
       // custom attibute length is 4096 chars https://docs.newrelic.com/docs/data-apis/custom-data/custom-events/data-requirements-limits-custom-event-data/
       // Error messages could cause failures by posting an event by going over the NR character limit
       // to stay within these contraints, excess characters need to be sliced off
@@ -174,8 +180,47 @@ module.exports = class NewRelicCypressReporter extends reporters.Spec {
         errorMessage = errorMessage.slice(0, -charsOver);
       }
     }
-
     return errorMessage;
+  }
+
+  getAnonymizedErrorMessage(message) {
+    return (
+      message
+        // Take off the "Timed out after retrying..." prefix. It's not helpful.
+        .replace(/Timed out retrying after \d+ms: /g, "")
+        // Anonymize UUIDs.
+        .replace(
+          /[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}/g,
+          "XXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+        )
+        // Anonymize domains for portal, API and fineos.
+        .replace(/paidleave-api-([a-z-]+)(\.dfml)?(\.eol)?\.mass\.gov/g, "api")
+        .replace(/[a-z0-9]+.execute-api.us-east-1.amazonaws.com/g, "api")
+        .replace(/\/api\/performance\/api/g, "/api/api")
+        .replace(/paidleave-([a-z-]+)(\.eol)?\.mass\.gov/g, "portal")
+        .replace(/[a-z0-9-]+-claims-webapp.masspfml.fineos.com/g, "fineos")
+        // Anonymize NTNs, preserving the ABS/AP suffixes without their digits.
+        .replace(/NTN-\d+/g, "NTN-XXX")
+        .replace(/-(ABS|AP)-\d+/g, "-$1-XX")
+        // Anonymize dates and times.
+        .replace(/\d{2}\/\d{2}\/\d{4}/g, "XX/XX/XXXX") // Raw dates
+        .replace(/\d{2}\\\/\d{2}\\\/\d{4}/g, "XX\\/XX\\/XXXX") // Regex formatted dates.
+        .replace(/\d+ms/g, "Xms") // Milliseconds.
+        .replace(/\d+ seconds/g, "X seconds")
+        // Anomymize Fineos element selectors, which are prone to change (eg: SomethingWidget_un19_Something).
+        .replace(/_un(\d+)_/g, "_unXX_")
+        .replace(/_PL_\d+_\d+_/g, "_PL_X_X_")
+        .replace(/__TE:\d+:\d+_/g, "__TE:X:X_")
+        // Anonymize temp directories used by cy.stash().
+        .replace(/\/tmp\/[\d-]+/g, "/tmp/XXX")
+        // Drop excess Ajax request waiting data.
+        .replace(/(In-flight Ajax requests should be 0).*/g, "$1")
+        // Drop debug information...
+        .split("Here are the matching elements:")[0]
+        .split("Debug information")[0]
+        .split("Debug Information")[0]
+        .trim()
+    );
   }
 
   async send(event) {

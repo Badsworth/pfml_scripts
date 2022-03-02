@@ -31,7 +31,7 @@ export const ConcurrentLeavesDetails = (
     concurrent_leave: new ConcurrentLeave(get(claim, "concurrent_leave") || {}),
   });
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });

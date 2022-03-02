@@ -1,4 +1,5 @@
 import "react-datetime/css/react-datetime.css";
+import ActionMenu from "../components/ActionMenu";
 import {
   ApiResponse,
   Flag,
@@ -10,15 +11,14 @@ import {
 } from "../api";
 import Alert from "../components/Alert";
 import ConfirmationDialog from "../components/ConfirmationDialog";
-import Link from "next/link";
 import { Helmet } from "react-helmet-async";
-import { useRouter } from "next/router";
+import Link from "next/link";
 import React from "react";
+import { StaticPropsPermissions } from "../menus";
 import Table from "../components/Table";
 import Toggle from "../components/Toggle";
-import ActionMenu from "../components/ActionMenu";
-import { StaticPropsPermissions } from "../menus";
 import moment from "moment-timezone";
+import { useRouter } from "next/router";
 
 export const Timezone = "America/New_York";
 export const TimezoneAbbr = moment().tz(Timezone).zoneAbbr();
@@ -148,13 +148,16 @@ export default function Maintenance() {
   };
 
   const getOptions = (m: Flag) => {
-    const linkValues = getLinkOptions(m, false);
     return (
       <>
         <Link
           href={{
             pathname: "/maintenance/add",
-            query: linkValues,
+            query: {
+              ...getLinkOptions(m, false),
+              action:
+                "Clone " + ((m?.options as options)?.name || "Maintenance"),
+            },
           }}
         >
           <a>Clone</a>
@@ -196,7 +199,10 @@ export default function Maintenance() {
             options={[
               {
                 enabled: !getMaintenanceEnabled(),
-                href: "/maintenance/add",
+                href: {
+                  pathname: "/maintenance/add",
+                  query: { action: "Configure New Maintenance" },
+                },
                 text: "Configure",
                 type: "link",
               },
@@ -204,7 +210,10 @@ export default function Maintenance() {
                 enabled: getMaintenanceEnabled(),
                 href: {
                   pathname: "/maintenance/add",
-                  query: getLinkOptions(maintenance, true),
+                  query: {
+                    ...getLinkOptions(maintenance, true),
+                    action: "Edit Maintenance",
+                  },
                 },
                 text: "Edit",
                 type: "link",

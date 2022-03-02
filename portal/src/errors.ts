@@ -51,13 +51,13 @@ export function isCognitoError(error: unknown): error is CognitoError {
  */
 export class CognitoAuthError extends BasePortalError {
   cognitoError: CognitoError;
-  issue: Issue | null;
+  issues: Issue[];
 
   constructor(cognitoError: CognitoError, issue: Issue | null = null) {
     super();
     this.name = "CognitoAuthError";
     this.cognitoError = cognitoError;
-    this.issue = issue;
+    this.issues = issue ? [issue] : [];
   }
 }
 
@@ -174,7 +174,7 @@ export class DocumentsUploadError extends BasePortalError {
   // ID of the file causing errors, so the issues can be displayed inline
   file_id: string;
   // the validation issue returned by the API
-  issue: Issue | null;
+  issues: Issue[];
 
   constructor(
     application_id: string,
@@ -185,7 +185,7 @@ export class DocumentsUploadError extends BasePortalError {
     super(message);
     this.application_id = application_id;
     this.file_id = file_id;
-    this.issue = issue;
+    this.issues = issue ? [issue] : [];
     this.name = "DocumentsUploadError";
   }
 }
@@ -196,12 +196,12 @@ export class DocumentsUploadError extends BasePortalError {
 export class ClaimWithdrawnError extends BasePortalError {
   // ID of the Claim that was withdrawn
   fineos_absence_id: string;
-  issue: Issue;
+  issues: Issue[];
 
   constructor(fineos_absence_id: string, issue: Issue, message?: string) {
     super(message);
     this.fineos_absence_id = fineos_absence_id;
-    this.issue = issue;
+    this.issues = [issue];
     this.name = "ClaimWithdrawnError";
   }
 }

@@ -1,7 +1,7 @@
 import AddButton from "./AddButton";
 import AmendableEmployerBenefit from "./AmendableEmployerBenefit";
-import AppErrorInfo from "../../models/AppErrorInfo";
 import EmployerBenefit from "../../models/EmployerBenefit";
+import ErrorInfo from "../../models/ErrorInfo";
 import Heading from "../../components/core/Heading";
 import React from "react";
 import Table from "../../components/core/Table";
@@ -11,7 +11,7 @@ import { useTranslation } from "../../locales/i18n";
 
 interface EmployerBenefitsProps {
   addedBenefits: EmployerBenefit[];
-  appErrors: AppErrorInfo[];
+  errors: ErrorInfo[];
   employerBenefits: EmployerBenefit[];
   onAdd: React.MouseEventHandler<HTMLButtonElement>;
   onChange: (
@@ -31,7 +31,7 @@ const EmployerBenefits = (props: EmployerBenefitsProps) => {
   const { t } = useTranslation();
   const {
     addedBenefits,
-    appErrors,
+    errors,
     employerBenefits,
     onAdd,
     onChange,
@@ -79,7 +79,7 @@ const EmployerBenefits = (props: EmployerBenefitsProps) => {
           {employerBenefits.length ? (
             employerBenefits.map((employerBenefit) => (
               <AmendableEmployerBenefit
-                appErrors={appErrors}
+                errors={errors}
                 isAddedByLeaveAdmin={false}
                 employerBenefit={employerBenefit}
                 key={employerBenefit.employer_benefit_id}
@@ -98,7 +98,7 @@ const EmployerBenefits = (props: EmployerBenefitsProps) => {
           {shouldShowV2 &&
             addedBenefits.map((addedBenefit) => (
               <AmendableEmployerBenefit
-                appErrors={appErrors}
+                errors={errors}
                 isAddedByLeaveAdmin
                 employerBenefit={addedBenefit}
                 key={addedBenefit.employer_benefit_id}

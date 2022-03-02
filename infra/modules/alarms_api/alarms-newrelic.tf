@@ -276,6 +276,35 @@ resource "newrelic_nrql_alert_condition" "get_claims_response_time" {
   }
 }
 
+resource "newrelic_nrql_alert_condition" "employee_search_snow_response_time" {
+  # WARN: 95th percentile response time for POST /employees/search queries is > 1 second for any 15 minute period
+  # CRIT: 95th percentile response time for POST /employees/search queries is > 2 seconds for any 15-minute period
+  policy_id                    = newrelic_alert_policy.low_priority_api_alerts.id
+  name                         = "POST Employee Search response time too high (${upper(var.environment_name)})"
+  aggregation_window           = 900 # units: seconds
+  value_function               = "single_value"
+  violation_time_limit_seconds = 86400 # 24 hours
+
+  nrql {
+    query             = "SELECT percentile(duration, 95) FROM Transaction WHERE appName = 'PFML-API-${upper(var.environment_name)}' AND request.uri LIKE '/v1/employees/search' AND request.method = 'POST'"
+    evaluation_offset = 1
+  }
+
+  warning {
+    threshold_occurrences = "ALL"
+    threshold_duration    = 900 # units: seconds
+    operator              = "above"
+    threshold             = 1 # units: seconds
+  }
+
+  critical {
+    threshold_occurrences = "ALL"
+    threshold_duration    = 900 # units: seconds
+    operator              = "above"
+    threshold             = 2 # units: seconds
+  }
+}
+
 resource "newrelic_nrql_alert_condition" "verifications_response_time" {
   # WARN: 95th percentile response time for POST /verifications queries is > 8 second for any 15 minute period
   # CRIT: 95th percentile response time for POST /verifications queries is > 15 seconds for any 15-minute period

@@ -10,8 +10,8 @@ import UploadDocument, {
 import { act, screen, waitFor } from "@testing-library/react";
 import { makeFile, renderPage } from "../../../test-utils";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
-import AppErrorInfo from "../../../../src/models/AppErrorInfo";
 import { AppLogic } from "../../../../src/hooks/useAppLogic";
+import ErrorInfo from "../../../../src/models/ErrorInfo";
 import LeaveReason from "../../../../src/models/LeaveReason";
 import { createMockBenefitsApplicationDocument } from "../../../../lib/mock-helpers/createMockDocument";
 import userEvent from "@testing-library/user-event";
@@ -119,7 +119,7 @@ describe(UploadDocument, () => {
       await act(async () => await userEvent.click(submitButton));
 
       await waitFor(() => {
-        expect(appLogic?.appErrors[0].message).toEqual(
+        expect(appLogic?.errors[0].message).toEqual(
           "Upload at least one file to continue."
         );
       });
@@ -262,8 +262,8 @@ describe(UploadDocument, () => {
 
   it("renders alert when there is an error loading documents ", async () => {
     setup("state-id", (appLogic) => {
-      appLogic.appErrors = [
-        new AppErrorInfo({
+      appLogic.errors = [
+        new ErrorInfo({
           meta: { application_id: "mock-claim-id" },
           name: "DocumentsLoadError",
         }),

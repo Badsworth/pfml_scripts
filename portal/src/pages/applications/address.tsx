@@ -54,7 +54,7 @@ export const Address = (props: WithBenefitsApplicationProps) => {
     appLogic.benefitsApplications.update(claim.application_id, formState);
 
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });
@@ -74,7 +74,7 @@ export const Address = (props: WithBenefitsApplicationProps) => {
   return (
     <QuestionPage title={t("pages.claimsAddress.title")} onSave={handleSave}>
       <FieldsetAddress
-        appErrors={appLogic.appErrors}
+        errors={appLogic.errors}
         label={t("pages.claimsAddress.sectionLabel")}
         hint={t("pages.claimsAddress.hint")}
         {...residentialAddressProps}
@@ -105,7 +105,7 @@ export const Address = (props: WithBenefitsApplicationProps) => {
         visible={has_mailing_address}
       >
         <FieldsetAddress
-          appErrors={appLogic.appErrors}
+          errors={appLogic.errors}
           label={t("pages.claimsAddress.mailingAddressLabel")}
           hint={t("pages.claimsAddress.mailingAddressHint")}
           addressType="mailing"

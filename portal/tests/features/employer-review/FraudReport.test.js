@@ -12,7 +12,7 @@ describe("FraudReport", () => {
   beforeEach(() => {
     renderHook(() => {
       getFunctionalInputProps = useFunctionalInputProps({
-        appErrors: [],
+        errors: [],
         formState: {},
         updateFields,
       });

@@ -6,11 +6,11 @@ import {
   getDocumentsMock,
 } from "../../src/api/DocumentsApi";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
-import AppErrorInfo from "../../src/models/AppErrorInfo";
+import ErrorInfo from "../../src/models/ErrorInfo";
 import { makeFile } from "../test-utils";
 import { uniqueId } from "lodash";
-import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import useDocumentsLogic from "../../src/hooks/useDocumentsLogic";
+import useErrorsLogic from "../../src/hooks/useErrorsLogic";
 import usePortalFlow from "../../src/hooks/usePortalFlow";
 
 jest.mock("../../src/api/DocumentsApi");
@@ -21,13 +21,13 @@ describe("useDocumentsLogic", () => {
   const application_id2 = "mock-application-id-2";
   const mockDocumentType = "Medical Certification";
   const mockFilename = "test_file.png";
-  let appErrorsLogic, documentsLogic;
+  let documentsLogic, errorsLogic;
 
   function setup() {
     renderHook(() => {
       const portalFlow = usePortalFlow();
-      appErrorsLogic = useAppErrorsLogic({ portalFlow });
-      documentsLogic = useDocumentsLogic({ appErrorsLogic });
+      errorsLogic = useErrorsLogic({ portalFlow });
+      documentsLogic = useDocumentsLogic({ errorsLogic });
     });
   }
 
@@ -36,7 +36,7 @@ describe("useDocumentsLogic", () => {
   });
 
   afterEach(() => {
-    appErrorsLogic = null;
+    errorsLogic = null;
     documentsLogic = null;
   });
 
@@ -262,7 +262,7 @@ describe("useDocumentsLogic", () => {
           false
         );
       });
-      expect(appErrorsLogic.appErrors[0]).toEqual(
+      expect(errorsLogic.errors[0]).toEqual(
         expect.objectContaining({
           field: "file",
           message: "Upload at least one file to continue.",
@@ -310,17 +310,17 @@ describe("useDocumentsLogic", () => {
         );
       });
 
-      const appErrorInfos = appErrorsLogic.appErrors;
+      const errorInfos = errorsLogic.errors;
 
-      expect(appErrorInfos).toHaveLength(2);
-      expect(appErrorInfos[0].name).toBe("DocumentsUploadError");
-      expect(appErrorInfos[0].meta).toMatchInlineSnapshot(`
+      expect(errorInfos).toHaveLength(2);
+      expect(errorInfos[0].name).toBe("DocumentsUploadError");
+      expect(errorInfos[0].meta).toMatchInlineSnapshot(`
         {
           "application_id": "mock-application-id-1",
           "file_id": "2",
         }
       `);
-      expect(appErrorInfos[0].message).toMatchInlineSnapshot(
+      expect(errorInfos[0].message).toMatchInlineSnapshot(
         `"We encountered an error when uploading your file. Try uploading your file again. If this continues to happen, call the Contact Center at (833) 344‑7365."`
       );
     });
@@ -328,7 +328,7 @@ describe("useDocumentsLogic", () => {
 
   it("clears prior errors", async () => {
     act(() => {
-      appErrorsLogic.setAppErrors([new AppErrorInfo()]);
+      errorsLogic.setErrors([new ErrorInfo()]);
     });
 
     attachDocumentMock.mockResolvedValueOnce({
@@ -354,7 +354,7 @@ describe("useDocumentsLogic", () => {
       await Promise.all(uploadPromises);
     });
 
-    expect(appErrorsLogic.appErrors).toHaveLength(0);
+    expect(errorsLogic.errors).toHaveLength(0);
   });
 
   describe("loadAll", () => {
@@ -474,8 +474,8 @@ describe("useDocumentsLogic", () => {
           await documentsLogic.loadAll(application_id);
         });
 
-        expect(appErrorsLogic.appErrors[0].name).toEqual("DocumentsLoadError");
-        expect(appErrorsLogic.appErrors[0].meta).toEqual({
+        expect(errorsLogic.errors[0].name).toEqual("DocumentsLoadError");
+        expect(errorsLogic.errors[0].meta).toEqual({
           application_id,
         });
       });
@@ -483,14 +483,14 @@ describe("useDocumentsLogic", () => {
 
     it("clears prior errors", async () => {
       act(() => {
-        appErrorsLogic.setAppErrors([new AppErrorInfo()]);
+        errorsLogic.setErrors([new ErrorInfo()]);
       });
 
       await act(async () => {
         await documentsLogic.loadAll(application_id);
       });
 
-      expect(appErrorsLogic.appErrors).toHaveLength(0);
+      expect(errorsLogic.errors).toHaveLength(0);
     });
 
     it("resolves race conditions", async () => {
@@ -608,7 +608,7 @@ describe("useDocumentsLogic", () => {
   describe("download", () => {
     it("clears prior errors", async () => {
       act(() => {
-        appErrorsLogic.setAppErrors([new AppErrorInfo()]);
+        errorsLogic.setErrors([new ErrorInfo()]);
       });
 
       const document = {
@@ -621,7 +621,7 @@ describe("useDocumentsLogic", () => {
         await documentsLogic.download(document);
       });
 
-      expect(appErrorsLogic.appErrors).toHaveLength(0);
+      expect(errorsLogic.errors).toHaveLength(0);
     });
 
     it("makes a request to the API", () => {
@@ -664,7 +664,7 @@ describe("useDocumentsLogic", () => {
         await documentsLogic.download();
       });
 
-      expect(appErrorsLogic.appErrors[0].name).toEqual("BadRequestError");
+      expect(errorsLogic.errors[0].name).toEqual("BadRequestError");
     });
   });
 });

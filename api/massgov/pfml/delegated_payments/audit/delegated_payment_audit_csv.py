@@ -59,6 +59,7 @@ class PaymentAuditCSV(AbstractRecord):
     rejected_notes: Optional[str] = None
     previously_paid_payment_count: str = "0"
     previously_paid_payments: Optional[str] = None
+    exceeds_26_weeks_total_leave_details: Optional[str] = None
     payment_date_mismatch_details: Optional[str] = None
 
 
@@ -72,6 +73,7 @@ class PaymentAuditDetails:
     rejected_by_program_integrity: bool = False
     skipped_by_program_integrity: bool = False
     rejected_notes: Optional[str] = None
+    exceeds_26_weeks_total_leave_details: Optional[str] = None
     payment_date_mismatch_details: Optional[str] = None
 
 
@@ -126,5 +128,6 @@ PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
     rejected_notes="Reject Notes",
     previously_paid_payment_count="Previously Paid Payment Count",
     previously_paid_payments="List of Previously Paid Payments",
+    exceeds_26_weeks_total_leave_details=">26 weeks",
     payment_date_mismatch_details=PaymentAuditReportType.PAYMENT_DATE_MISMATCH.payment_audit_report_type_description,
 )

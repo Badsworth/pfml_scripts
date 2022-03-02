@@ -15,6 +15,7 @@ from massgov.pfml.api.eligibility.benefit_year import (
     create_benefit_year_by_employee_id,
     create_benefit_year_by_ssn,
     create_employer_contribution_for_benefit_year,
+    get_all_benefit_years_by_employee_id,
     get_benefit_year_by_ssn,
     set_base_period_for_benefit_year,
 )
@@ -32,6 +33,7 @@ from massgov.pfml.db.models.employees import (
 )
 from massgov.pfml.db.models.factories import (
     AbsencePeriodFactory,
+    BenefitYearFactory,
     ClaimFactory,
     EmployeeFactory,
     EmployerFactory,
@@ -919,3 +921,27 @@ def test_create_employer_contribution_for_benefit_year_should_return_none_if_inv
     else:
         assert contribution is None
         assert len(by.contributions) == 0
+
+
+def test_find_all_benefit_years(
+    test_db_session: db.Session,
+    include_employee: Employee,
+    include_employee_benefit_years: List[BenefitYear],
+):
+    # No benefit years exist for employee
+    employee = EmployeeFactory.create()
+    benefit_years = get_all_benefit_years_by_employee_id(test_db_session, employee.employee_id)
+    assert len(benefit_years) == 0
+
+    # Same employee now has benefit years
+    employee_benefit_years = [BenefitYearFactory.create(employee=employee) for _ in range(3)]
+    benefit_years = get_all_benefit_years_by_employee_id(test_db_session, employee.employee_id)
+    assert len(benefit_years) == len(employee_benefit_years)
+    assert employee_benefit_years == benefit_years
+
+    # Other employee already has some benefit years
+    benefit_years = get_all_benefit_years_by_employee_id(
+        test_db_session, include_employee.employee_id
+    )
+    assert len(benefit_years) == len(include_employee_benefit_years)
+    assert include_employee_benefit_years == benefit_years

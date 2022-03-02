@@ -1,12 +1,12 @@
 import React, { useEffect } from "react";
 import Alert from "./core/Alert";
-import AppErrorInfo from "../models/AppErrorInfo";
+import ErrorInfo from "../models/ErrorInfo";
 import { Trans } from "react-i18next";
 import { groupBy } from "lodash";
 import { useTranslation } from "../locales/i18n";
 
 interface ErrorsSummaryProps {
-  errors: AppErrorInfo[];
+  errors: ErrorInfo[];
 }
 
 /**
@@ -36,7 +36,7 @@ function ErrorsSummary(props: ErrorsSummaryProps) {
   }
 
   // TODO (CP-1532): Remove once links in error messages are fully supported
-  const getUniqueMessageKey = (error: AppErrorInfo) => {
+  const getUniqueMessageKey = (error: ErrorInfo) => {
     if (typeof error.message !== "string" && error.message?.type === Trans) {
       return error.message.props.i18nKey;
     }

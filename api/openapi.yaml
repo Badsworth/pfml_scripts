@@ -177,6 +177,11 @@ paths:
             type: string
           description: ID of User to update
           required: true
+        - name: X-FF-Sync-Cognito-Preferences
+          description: Synchronize the user's Cognito MFA preference to Cognito
+          in: header
+          schema:
+            type: string
       responses:
         "200":
           description: A successful request returns a 200 status code and a user object.
@@ -2895,9 +2900,35 @@ components:
         reason_qualifier_one:
           type: string
           enum:
-            - Newborn
+            - Not Work Related
+            - Work Related
+            - Blood
+            - Blood Stem Cell
+            - Bone Marrow
+            - Organ
+            - Other
+            - Postnatal Disability
+            - Prenatal Care
+            - Prenatal Disability
             - Adoption
             - Foster Care
+            - Newborn
+            - Pregnancy Related
+            - Right to Leave
+            - Serious Health Condition
+            - Sickness - Non-Serious Health Condition
+            - Childcare
+            - Counseling
+            - Financial & Legal Arrangements
+            - Military Events & Related Activities
+            - Other Additional Activities
+            - Post Deployment Activities - Including Bereavement
+            - Rest & Recuperation
+            - Short Notice Deployment
+            - Closure of School/Childcare
+            - Quarantine/Isolation - Not Sick
+            - Birth Disability
+            - Childcare and School Activities
           example: "Newborn"
         reason_qualifier_two:
           type: string
@@ -3448,8 +3479,13 @@ components:
           nullable: true
           enum:
             - Newborn
+            - Serious Health Condition
+            - Work Related Accident/Injury
             - Adoption
             - Foster Care
+            - Not Work Related
+            - Sickness
+            - Postnatal Disability
           example: "Newborn"
         reduced_schedule_leave_periods:
           type: array

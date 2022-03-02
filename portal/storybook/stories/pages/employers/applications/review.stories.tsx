@@ -2,8 +2,8 @@ import { ClaimDocument, DocumentType } from "src/models/Document";
 import LeaveReason, { LeaveReasonType } from "src/models/LeaveReason";
 import { AbsencePeriod } from "src/models/AbsencePeriod";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
-import AppErrorInfo from "src/models/AppErrorInfo";
 import EmployerClaim from "src/models/EmployerClaim";
+import ErrorInfo from "src/models/ErrorInfo";
 import { ManagedRequirement } from "src/models/ManagedRequirement";
 import { MockEmployerClaimBuilder } from "lib/mock-helpers/mock-model-builder";
 import { Props } from "types/common";
@@ -139,7 +139,7 @@ export const Default = (
     : [];
 
   const appLogic = useMockableAppLogic({
-    appErrors: getAppErrorInfoCollection(errorTypes),
+    errors: getErrorInfoCollection(errorTypes),
     employers: {
       claimDocumentsMap: new Map([
         [
@@ -247,12 +247,12 @@ function createCertificationDocumentForReason(
   return document;
 }
 
-function getAppErrorInfoCollection(errorTypes: string[] = []) {
+function getErrorInfoCollection(errorTypes: string[] = []) {
   const errors = [];
 
   if (errorTypes.includes("Hours worked per week - minimum")) {
     errors.push(
-      new AppErrorInfo({
+      new ErrorInfo({
         message: "Enter the average weekly hours.",
         type: "minimum",
         field: "hours_worked_per_week",
@@ -262,7 +262,7 @@ function getAppErrorInfoCollection(errorTypes: string[] = []) {
 
   if (errorTypes.includes("Hours worked per week - maximum")) {
     errors.push(
-      new AppErrorInfo({
+      new ErrorInfo({
         message: "Average weekly hours must be 168 or fewer.",
         type: "maximum",
         field: "hours_worked_per_week",
@@ -272,7 +272,7 @@ function getAppErrorInfoCollection(errorTypes: string[] = []) {
 
   if (errorTypes.includes("Employer benefit - benefit end date")) {
     errors.push(
-      new AppErrorInfo({
+      new ErrorInfo({
         message: "benefit_end_date cannot be earlier than benefit_start_date",
         type: "minimum",
         field: "employer_benefits[0].benefit_end_date",
@@ -282,7 +282,7 @@ function getAppErrorInfoCollection(errorTypes: string[] = []) {
 
   if (errorTypes.includes("Previous leave - leave start date")) {
     errors.push(
-      new AppErrorInfo({
+      new ErrorInfo({
         message: "Previous leaves cannot start before 2021",
         type: "invalid_previous_leave_start_date",
         field: "previous_leaves[0].leave_start_date",
@@ -292,7 +292,7 @@ function getAppErrorInfoCollection(errorTypes: string[] = []) {
 
   if (errorTypes.includes("Previous leave - leave end date")) {
     errors.push(
-      new AppErrorInfo({
+      new ErrorInfo({
         message: "leave_end_date cannot be earlier than leave_start_date",
         type: "minimum",
         field: "previous_leaves[0].leave_end_date",
