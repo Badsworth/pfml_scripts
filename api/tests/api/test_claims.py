@@ -5997,3 +5997,58 @@ class TestPostChangeRequest:
         )
         assert response.status_code == 400
         assert response.get_json()["message"] == "Invalid change request body"
+
+
+class TestGetChangeRequests:
+    @mock.patch("massgov.pfml.api.services.claims.get_change_requests_from_db")
+    def test_successful_get_request(
+        self, mock_get_change_requests_from_db, claim, change_request, client, auth_token, user,
+    ):
+        mock_get_change_requests_from_db.return_value = [change_request]
+
+        response = client.get(
+            "/v1/change-request?fineos_absence_id={}".format(claim.fineos_absence_id),
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+
+        assert response.status_code == 200
+        response_body = response.get_json()
+        assert len(response_body["data"]["change_requests"]) == 1
+        assert response_body["message"] == "Successfully retrieved change requests"
+
+    @mock.patch("massgov.pfml.api.services.claims.get_change_requests_from_db")
+    def test_successful_get_request_no_change_requests(
+        self, mock_get_change_requests_from_db, claim, client, auth_token, user,
+    ):
+        mock_get_change_requests_from_db.return_value = []
+
+        response = client.get(
+            "/v1/change-request?fineos_absence_id={}".format(claim.fineos_absence_id),
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+
+        assert response.status_code == 200
+        response_body = response.get_json()
+        assert len(response_body["data"]["change_requests"]) == 0
+
+    def test_no_existing_claim(
+        self, client, auth_token, user,
+    ):
+        response = client.get(
+            "/v1/change-request?fineos_absence_id={}".format("fake_absence_id"),
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+
+        assert response.status_code == 404
+        response_body = response.get_json()
+        assert response_body["message"] == "Claim does not exist for given absence ID"
+
+    def test_unauthorized_user_unsuccessful(
+        self, claim, client, user,
+    ):
+        response = client.get(
+            "/v1/change-request?fineos_absence_id={}".format(claim.fineos_absence_id),
+            headers={"Authorization": "Bearer fake_auth_token"},
+        )
+
+        assert response.status_code == 401

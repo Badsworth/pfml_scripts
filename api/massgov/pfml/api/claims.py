@@ -35,6 +35,7 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
 from massgov.pfml.api.services.claims import (
     ClaimWithdrawnError,
     add_change_request_to_db,
+    get_change_requests_from_db,
     get_claim_detail,
 )
 from massgov.pfml.api.services.managed_requirements import update_employer_confirmation_requirements
@@ -794,4 +795,31 @@ def post_change_request(fineos_absence_id: str) -> flask.Response:
 
     return response_util.success_response(
         message="Successfully posted change request", data=response_data.dict(), status_code=201,
+    ).to_api_response()
+
+
+def get_change_requests(fineos_absence_id: str) -> flask.Response:
+    claim = get_claim_from_db(fineos_absence_id)
+
+    if claim is None:
+        logger.warning(
+            "Claim does not exist for given absence ID",
+            extra={"absence_case_id": fineos_absence_id},
+        )
+        error = response_util.error_response(
+            NotFound, "Claim does not exist for given absence ID", errors=[],
+        )
+        return error.to_api_response()
+
+    change_requests = get_change_requests_from_db(claim.claim_id)
+
+    # TODO: (PORTAL-1864) Convert the change_request_type to return the enum value rather than the id
+    change_requests_dict = []
+    for request in change_requests:
+        change_requests_dict.append(request.dict())
+
+    return response_util.success_response(
+        message="Successfully retrieved change requests",
+        data={"absence_case_id": fineos_absence_id, "change_requests": change_requests_dict},
+        status_code=200,
     ).to_api_response()
