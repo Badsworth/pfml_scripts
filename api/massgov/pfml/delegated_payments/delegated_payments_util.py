@@ -1239,6 +1239,9 @@ def get_traceable_payment_details(
         "fineos_employer_id": employer.fineos_employer_id if employer else None,
         # Misc
         "current_state": state.state_description if state else None,
+        "relevant_party": payment.payment_relevant_party.payment_relevant_party_description
+        if payment.payment_relevant_party
+        else None,
     }
 
 
