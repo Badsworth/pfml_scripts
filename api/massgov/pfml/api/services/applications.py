@@ -981,7 +981,9 @@ def claim_is_valid_for_application_import(
         )
         if existing_application and existing_application.user_id != user.user_id:
             message = "An application linked to a different account already exists for this claim."
-            validation_error = ValidationErrorDetail(message=message, type=IssueType.exists)
+            validation_error = ValidationErrorDetail(
+                message=message, type=IssueType.exists, field="absence_case_id"
+            )
             logger.info(
                 "applications_import failure - exists_different_account",
                 extra=get_application_log_attributes(existing_application),
@@ -992,7 +994,9 @@ def claim_is_valid_for_application_import(
 
         if existing_application:
             message = "An application already exists for this claim."
-            validation_error = ValidationErrorDetail(message=message, type=IssueType.duplicate)
+            validation_error = ValidationErrorDetail(
+                message=message, type=IssueType.duplicate, field="absence_case_id"
+            )
             logger.info(
                 "applications_import failure - exists_same_account",
                 extra=get_application_log_attributes(existing_application),
