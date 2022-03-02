@@ -47,7 +47,7 @@ data "aws_iam_policy_document" "env_kms_key_policy" {
 
     principals {
       type        = "AWS"
-      identifiers = module.constants.prod_admin_roles
+      identifiers = each.key == "prod" ? module.constants.prod_admin_roles : module.constants.nonprod_admin_roles
     }
   }
   statement {

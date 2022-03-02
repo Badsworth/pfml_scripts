@@ -16,6 +16,8 @@ from massgov.pfml.api.validation.claim_rules import (
     get_previous_leaves_issues,
 )
 from massgov.pfml.api.validation.exceptions import IssueType
+from massgov.pfml.db.models.employees import AbsencePeriod
+from massgov.pfml.db.models.factories import AbsencePeriodFactory, ClaimFactory
 
 
 @pytest.fixture
@@ -151,37 +153,126 @@ class TestGetEmployerBenefitsIssues:
         assert "cannot exceed limit" in resp[0].message
 
 
+# Run `initialize_factories_session` for all tests,
+# so that it doesn't need to be manually included
+@pytest.fixture(autouse=True)
+def setup_factories(initialize_factories_session):
+    return
+
+
 @pytest.fixture
-def change_request():
+def modification_change_request():
+    return ChangeRequest(change_request_type=ChangeRequestType.MODIFICATION, end_date="2020-03-01",)
+
+
+@pytest.fixture
+def withdrawal_change_request():
+    return ChangeRequest(change_request_type=ChangeRequestType.WITHDRAWAL,)
+
+
+@pytest.fixture
+def mtb_change_request():
     return ChangeRequest(
-        claim_id="5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32",
-        change_request_type=ChangeRequestType.MODIFICATION,
-        start_date="2020-01-01",
-        end_date="2020-02-01",
+        change_request_type=ChangeRequestType.MEDICAL_TO_BONDING,
+        start_date="2020-02-01",
+        end_date="2020-03-01",
     )
 
 
+@pytest.fixture()
+def claim():
+    claim = ClaimFactory.create()
+    claim.absence_period_start_date = date(2020, 1, 1)
+    absence_period: AbsencePeriod = AbsencePeriodFactory.create(claim=claim)
+    absence_period.leave_request_decision_id = 3
+    absence_period.absence_reason_qualifier_one_id = 29
+    claim.absence_periods = [absence_period]
+    return claim
+
+
 class TestGetChangeRequestIssues:
-    def test_no_issues(self, change_request):
-        issues = get_change_request_issues(change_request)
-        assert not issues
+    def test_wrong_absence_status(self, modification_change_request, claim):
+        claim.absence_periods[0].leave_request_decision_id = 2
+        resp = get_change_request_issues(modification_change_request, claim)
+        assert resp[0].type == IssueType.must_be_approved_claim
+        assert resp[0].field == "fineos_absence_id"
+        assert (
+            "Claim must have at least one approved absence period to submit a change request"
+            in resp[0].message
+        )
 
-    def test_no_start_date(self, change_request):
-        change_request.start_date = None
-        resp = get_change_request_issues(change_request)
-        assert resp[0].type == IssueType.required
-        assert resp[0].field == "start_date"
-        assert "Start date is required for this request type" in resp[0].message
-
-    def test_no_end_date(self, change_request):
-        change_request.end_date = None
-        resp = get_change_request_issues(change_request)
-        assert resp[0].type == IssueType.required
+    def test_start_date_later_than_end_date(self, mtb_change_request, claim):
+        mtb_change_request.start_date = date(2020, 5, 1)
+        resp = get_change_request_issues(mtb_change_request, claim)
+        assert resp[0].type == IssueType.maximum
         assert resp[0].field == "end_date"
-        assert "End date is required for this request type" in resp[0].message
+        assert "Start date must be less than end date" in resp[0].message
 
-    def test_no_issues_on_dates_withdrawal(self, change_request):
-        change_request.change_request_type = ChangeRequestType.WITHDRAWAL
-        change_request.start_date = None
-        change_request.end_date = None
-        assert not get_change_request_issues(change_request)
+    class TestChangeRequestTypeModification:
+        # Test rules specific to the Modification type
+
+        def test_no_issues(self, modification_change_request, claim):
+            issues = get_change_request_issues(modification_change_request, claim)
+            assert not issues
+
+        def test_start_date_error(self, modification_change_request, claim):
+            modification_change_request.start_date = date(2020, 2, 1)
+            resp = get_change_request_issues(modification_change_request, claim)
+            assert resp[0].type == IssueType.change_start_date_is_unsupported
+            assert resp[0].field == "start_date"
+            assert "Start date is invalid for this request type" in resp[0].message
+
+        def test_no_end_date_error(self, modification_change_request, claim):
+            modification_change_request.end_date = None
+            resp = get_change_request_issues(modification_change_request, claim)
+            assert resp[0].type == IssueType.required
+            assert resp[0].field == "end_date"
+            assert "End date is required for this request type" in resp[0].message
+
+    class TestChangeRequestTypeWithdrawal:
+        # Test rules specific to the Withdrawal type
+
+        def test_no_issues(self, withdrawal_change_request, claim):
+            assert not get_change_request_issues(withdrawal_change_request, claim)
+
+        def test_start_date_error(self, withdrawal_change_request, claim):
+            withdrawal_change_request.start_date = date(2020, 2, 1)
+            resp = get_change_request_issues(withdrawal_change_request, claim)
+            assert resp[0].type == IssueType.withdrawal_dates_must_be_null
+            assert resp[0].field == "start_date"
+            assert "Start date is invalid for this request type" in resp[0].message
+
+        def test_end_date_error(self, withdrawal_change_request, claim):
+            withdrawal_change_request.end_date = date(2020, 2, 1)
+            resp = get_change_request_issues(withdrawal_change_request, claim)
+            assert resp[0].type == IssueType.withdrawal_dates_must_be_null
+            assert resp[0].field == "end_date"
+            assert "End date is invalid for this request type" in resp[0].message
+
+    class TestChangeRequestTypeMedicalToBonding:
+        # Test rules specific to the Medical To Bonding type
+
+        def test_no_issues(self, mtb_change_request, claim):
+            assert not get_change_request_issues(mtb_change_request, claim)
+
+        def test_no_start_date_error(self, mtb_change_request, claim):
+            mtb_change_request.start_date = None
+            resp = get_change_request_issues(mtb_change_request, claim)
+            assert resp[0].type == IssueType.required
+            assert resp[0].field == "start_date"
+            assert "Start date is required for this request type" in resp[0].message
+
+        def test_no_end_date_error(self, mtb_change_request, claim):
+            mtb_change_request.end_date = None
+            resp = get_change_request_issues(mtb_change_request, claim)
+            assert resp[0].type == IssueType.required
+            assert resp[0].field == "end_date"
+            assert "End date is required for this request type" in resp[0].message
+
+        def test_missing_absence_period(self, mtb_change_request, claim):
+            claim.absence_periods[0].absence_reason_qualifier_one_id = 1
+            resp = get_change_request_issues(mtb_change_request, claim)
+            assert resp[0].type == IssueType.not_medical_to_bonding_claim
+            assert (
+                "Claimant did not apply for bonding leave in initial application" in resp[0].message
+            )

@@ -30,6 +30,7 @@ import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.models.claims.responses import AbsencePeriodResponse
 from massgov.pfml.db.models.factories import (
+    ChangeRequestFactory,
     ClaimFactory,
     EmployeeFactory,
     EmployerFactory,
@@ -142,6 +143,11 @@ def absence_period():
         request_decision="Pending",
         evidence_status=None,
     )
+
+
+@pytest.fixture
+def change_request(claim):
+    return ChangeRequestFactory.create(claim_id=claim.claim_id, change_request_type_id=2,)
 
 
 @pytest.fixture

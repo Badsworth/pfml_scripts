@@ -178,6 +178,16 @@ class LkPrenoteState(Base):
         self.prenote_state_description = prenote_state_description
 
 
+class LkPaymentRelevantParty(Base):
+    __tablename__ = "lk_payment_relevant_party"
+    payment_relevant_party_id = Column(Integer, primary_key=True, autoincrement=True)
+    payment_relevant_party_description = Column(Text, nullable=False)
+
+    def __init__(self, payment_relevant_party_id, payment_relevant_party_description):
+        self.payment_relevant_party_id = payment_relevant_party_id
+        self.payment_relevant_party_description = payment_relevant_party_description
+
+
 class LkPaymentTransactionType(Base):
     __tablename__ = "lk_payment_transaction_type"
     payment_transaction_type_id = Column(Integer, primary_key=True, autoincrement=True)
@@ -748,6 +758,10 @@ class LkChangeRequestType(Base):
         self.change_request_type_id = change_request_type_id
         self.change_request_type_description = change_request_type_description
 
+    @typed_hybrid_property
+    def description(self) -> str:
+        return self.change_request_type_description
+
 
 class ChangeRequest(Base, TimestampMixin):
     __tablename__ = "change_request"
@@ -762,6 +776,10 @@ class ChangeRequest(Base, TimestampMixin):
 
     change_request_type_instance = relationship(LkChangeRequestType)
     claim = relationship("Claim", back_populates="change_request")
+
+    @typed_hybrid_property
+    def type(self) -> str:
+        return self.change_request_type_instance.description
 
 
 class Claim(Base, TimestampMixin):
@@ -995,6 +1013,9 @@ class Payment(Base, TimestampMixin):
     payment_transaction_type_id = Column(
         Integer, ForeignKey("lk_payment_transaction_type.payment_transaction_type_id")
     )
+    payment_relevant_party_id = Column(
+        Integer, ForeignKey("lk_payment_relevant_party.payment_relevant_party_id")
+    )
     period_start_date = Column(Date)
     period_end_date = Column(Date)
     payment_date = Column(Date)
@@ -1046,6 +1067,7 @@ class Payment(Base, TimestampMixin):
     employee = relationship("Employee")
     claim_type = relationship(LkClaimType)
     payment_transaction_type = relationship(LkPaymentTransactionType)
+    payment_relevant_party = relationship(LkPaymentRelevantParty)
     disb_method = relationship(LkPaymentMethod, foreign_keys=disb_method_id)
     pub_eft = relationship(PubEft)
     experian_address_pair = relationship(ExperianAddressPair, foreign_keys=experian_address_pair_id)
@@ -1914,6 +1936,17 @@ class SharedPaymentConstants:
     PAID_STATE_IDS = frozenset([state.state_id for state in PAID_STATES])
 
 
+class PaymentRelevantParty(LookupTable):
+    model = LkPaymentRelevantParty
+    column_names = ("payment_relevant_party_id", "payment_relevant_party_description")
+
+    UNKNOWN = LkPaymentRelevantParty(1, "Unknown")
+    CLAIMANT = LkPaymentRelevantParty(2, "Claimant")
+    STATE_TAX = LkPaymentRelevantParty(3, "State tax withholding")
+    FEDERAL_TAX = LkPaymentRelevantParty(4, "Federal tax withholding")
+    REIMBURSED_EMPLOYER = LkPaymentRelevantParty(5, "Reimbursed employer")
+
+
 class PaymentTransactionType(LookupTable):
     model = LkPaymentTransactionType
     column_names = ("payment_transaction_type_id", "payment_transaction_type_description")
@@ -2091,6 +2124,7 @@ def sync_lookup_tables(db_session):
     ReferenceFileType.sync_to_database(db_session)
     Title.sync_to_database(db_session)
     ReferenceFileType.sync_to_database(db_session)
+    PaymentRelevantParty.sync_to_database(db_session)
     PaymentTransactionType.sync_to_database(db_session)
     PaymentCheckStatus.sync_to_database(db_session)
     PrenoteState.sync_to_database(db_session)

@@ -84,13 +84,13 @@ describe("ConcurrentLeave", () => {
   it("displays correct conditional text for reduced concurrent leave", () => {
     renderComponent({
       addedConcurrentLeave: CONCURRENT_LEAVE,
-      claim: createMockEmployerClaim("reducedSchedule"),
+      claim: createMockEmployerClaim("reducedScheduleAbsencePeriod"),
       concurrentLeave: null,
     });
 
     expect(
       screen.getByText(
-        /your employee won’t receive pfml payments for the first 7 calendar days of their pfml leave from 2\/1\/2022 to 2\/7\/2022\./i
+        /your employee won’t receive pfml payments for the first 7 calendar days of their pfml leave from 5\/1\/2022 to 5\/7\/2022\./i
       )
     ).toBeInTheDocument();
   });
@@ -98,7 +98,7 @@ describe("ConcurrentLeave", () => {
   it("displays correct conditional text for continuous concurrent leave", () => {
     renderComponent({
       addedConcurrentLeave: CONCURRENT_LEAVE,
-      claim: createMockEmployerClaim("continuous"),
+      claim: createMockEmployerClaim("continuousAbsencePeriod"),
       concurrentLeave: null,
     });
 

@@ -21,7 +21,6 @@ on:
           ⬇️ Tag or branch to be deployed.
 
 env:
-  deploys_channel: "C01HEAJPE76" #mass-pfml-deploys-shared
   workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
   terraformVersion: 0.14.7
 
@@ -78,12 +77,15 @@ jobs:
         id: deploy-state
         run: echo "::set-output name=deploy-state::${{ env.WORKFLOW_CONCLUSION }}"
 
-  post-to-slack:
-    name: post failures to slack
+  post-to-teams:
+    name: post failures to teams
     needs: [get-deploy-state]
     if: always() && (needs.get-deploy-state.outputs.deploy-state == 'failure' || needs.get-deploy-state.outputs.deploy-state == 'timed_out')
     runs-on: ubuntu-latest
+
     steps:
+      - uses: actions/checkout@v2
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -93,20 +95,20 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
-      - name: Pull slackbot API token from SSM
+      - name: Pull teams uri from SSM
         uses: "marvinpinto/action-inject-ssm-secrets@latest"
         with:
-          ssm_parameter: "/admin/common/nava-slackbot-api-key"
-          env_variable_name: "slackbot_token"
+          ssm_parameter: "/admin/common/teams-deploy-uri"
+          env_variable_name: "teams_uri"
 
-      - name: Post to Slack
+      - name: Post to Teams
         run: |
-          SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
-          -H 'Content-Type: application/json;charset=utf-8' \
+          RESPONSE=$(curl -fsLS -X POST ${{ env.TEAMS_URI }} \
+          --header 'Content-Type: application/json' \
           --data '{
-            "channel": "${{ env.deploys_channel }}",
-            "attachments": [{
-              "title": "Failed to deploy pfml-aws changes (<${{ env.workflow_self_link }}|build logs>)",
-              "color": "danger"
-            }]
-          }' https://slack.com/api/chat.postMessage)
+              "@type": "MessageCard",
+              "themeColor": "FF0000",
+              "title": "Failed to deploy PFML-AWS changes",
+              "text": "Failed to deploy PFML-AWS changes: ${{ env.workflow_self_link }}",
+            }'
+          )

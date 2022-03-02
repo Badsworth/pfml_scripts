@@ -398,10 +398,13 @@ paths:
         - name: employer_id
           in: query
           schema:
-            type: string
-            format: uuid
-          description: ID of Employer to query claims for
+            type: array
+            items:
+                type: string
+                format: uuid
+          description: ID(s) of Employers to query claims for
           required: false
+          explode: false
         - name: employee_id
           in: query
           schema:
@@ -506,6 +509,8 @@ paths:
     post:
       summary: Submit a change request to FINEOS
       operationId: massgov.pfml.api.claims.post_change_request
+      tags:
+        - ChangeRequest
       parameters:
         - name: fineos_absence_id
           in: query
@@ -538,6 +543,31 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+    get:
+      summary: Get list of change requests for a claim
+      operationId: massgov.pfml.api.claims.get_change_requests
+      tags:
+        - ChangeRequest
+      parameters:
+        - name: fineos_absence_id
+          in: query
+          schema:
+            type: string
+            example: "NTN-00-ABS-00"
+          description: "FINEOS absence ID of the claim associated with change request data to be retrieved"
+          required: false
+      responses:
+        "200":
+          description: The change requests for this absence case.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessfulResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/ChangeRequestsResponse"
+
   /payments:
     get:
       summary: Retrieve payments with status for a specified absence ID
@@ -563,7 +593,7 @@ paths:
                   - properties:
                       data:
                         $ref: '#/components/schemas/PaymentsResponse'
-
+  
   /employers/claims/{fineos_absence_id}/documents/{fineos_document_id}:
     get:
       summary: Retrieve a FINEOS documents for a specified absence ID and document ID
@@ -694,6 +724,38 @@ paths:
       requestBody:
         $ref: "#/components/requestBodies/EmployerClaimRequestBody"
 
+  /application-imports:
+    post:
+      tags:
+        - Application Import
+      summary: >
+        Creates a new application in the PFML database from a FINEOS application that was created through the
+        contact center.
+      operationId: massgov.pfml.api.applications.applications_import
+      responses:
+        "201":
+          $ref: "#/components/responses/ApplicationImportedResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          description: Application with requested absence_case_id was not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Application could not be completed in Claims Processing System.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/ApplicationResponse"
+      requestBody:
+        $ref: '#/components/requestBodies/ApplicationImportRequestBody'
+
   /applications:
     post:
       tags:
@@ -788,7 +850,7 @@ paths:
       summary: >
         Creates a new application in the PFML database from a FINEOS application that was created through the
         contact center.
-      operationId: massgov.pfml.api.applications.applications_import
+      operationId: massgov.pfml.api.applications.deprecated_applications_import
       responses:
         "201":
           $ref: "#/components/responses/ApplicationImportedResponse"
@@ -1432,6 +1494,7 @@ tags:
   - name: Employees
   - name: Employers
   - name: Claims
+  - name: Application Import
   - name: Applications
   - name: Financial Eligibility
   - name: ID Proofing
@@ -3060,8 +3123,10 @@ components:
           default: "descending"
           enum: ["ascending", "descending"]
         employer_id:
-          type: string
-          format: uuid
+          type: array
+          items:
+            type: string
+            format: uuid
           description: ID of Employer to query claims for
         employee_id:
           type: array
@@ -3172,6 +3237,11 @@ components:
         transaction_date_could_change:
           type: boolean
           example: false
+  
+    ChangeRequestsResponse:
+      type: array
+      items:
+        $ref: "#/components/schemas/ChangeRequestResponse"
 
     EvidenceStatusDetail:
       type: object
