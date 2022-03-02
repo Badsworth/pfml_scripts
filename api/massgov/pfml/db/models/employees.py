@@ -748,6 +748,10 @@ class LkChangeRequestType(Base):
         self.change_request_type_id = change_request_type_id
         self.change_request_type_description = change_request_type_description
 
+    @typed_hybrid_property
+    def description(self) -> str:
+        return self.change_request_type_description
+
 
 class ChangeRequest(Base, TimestampMixin):
     __tablename__ = "change_request"
@@ -762,6 +766,10 @@ class ChangeRequest(Base, TimestampMixin):
 
     change_request_type_instance = relationship(LkChangeRequestType)
     claim = relationship("Claim", back_populates="change_request")
+
+    @typed_hybrid_property
+    def type(self) -> str:
+        return self.change_request_type_instance.description
 
 
 class Claim(Base, TimestampMixin):
