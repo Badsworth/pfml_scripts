@@ -1,4 +1,4 @@
-import { NetworkError, ValidationError } from "src/errors";
+import { NetworkError, TranslatableError, ValidationError } from "src/errors";
 import { render, screen } from "@testing-library/react";
 import ErrorMessage from "src/components/ErrorMessage";
 import React from "react";
@@ -43,6 +43,18 @@ describe("ErrorMessage", () => {
     const error = new NetworkError("Network error");
     const { container } = render(<ErrorMessage error={error} />);
     expect(container).toHaveTextContent(/losing an internet connection/);
+  });
+
+  it("renders generic message when the error has an empty issues property", () => {
+    const error: TranslatableError = {
+      name: "TestError",
+      issues: [],
+      i18nPrefix: "test",
+      message: "This is a test error",
+    };
+
+    const { container } = render(<ErrorMessage error={error} />);
+    expect(container).toHaveTextContent(/unexpected error/);
   });
 
   it("falls back to generic error message when an i18n key doesn't exist for the error type", () => {
