@@ -87,6 +87,7 @@ export default function Maintenance() {
     );
   };
   const getName = (m: FlagWithLog) => <>{(m?.options as options)?.name}</>;
+  const getEnabled = (m: FlagWithLog) => (m?.enabled ? "True" : "False");
   const getDuration = (m: FlagWithLog) => (
     <>
       {(m.start ? formatHistoryDateTime(m.start) : "No start provided") +
@@ -119,6 +120,9 @@ export default function Maintenance() {
       {m.first_name} {m.last_name}
     </>
   );
+
+  const getCreatedAt = (m: FlagWithLog) =>
+    moment.tz(m.updated_at, Timezone).format("YYYY-MM-DD HH:mm:ss z");
 
   const getLinkOptions = (
     m: Flag | null,
@@ -286,12 +290,20 @@ export default function Maintenance() {
             content: getName,
           },
           {
+            title: "Enabled",
+            content: getEnabled,
+          },
+          {
             title: "Duration",
             content: getDuration,
           },
           {
             title: "Created By",
             content: getCreatedBy,
+          },
+          {
+            title: "Created at",
+            content: getCreatedAt,
           },
           {
             title: "",
