@@ -115,10 +115,29 @@ input[type='checkbox'] {
 }
 
 input[type='radio'] {
-  height: 1.228em;
+  height: 1.143em;
   margin: 0 0.571em 0 0;
   vertical-align: bottom;
-  width: 1.228em;
+  width: 1.143em;
+  appearance: none;
+  border: solid 1px $Color-GraniteGray-200;
+  border-radius: 50%;
+}
+
+input[type='radio']:checked {
+  border-color: $Color-BayBlue-500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+input[type='radio']:checked:before {
+  content: "";
+  display: block;
+  width: 0.714em;
+  height: 0.714em;
+  background: $Color-BayBlue-500;
+  border-radius: 50%;
 }
 
 legend {
