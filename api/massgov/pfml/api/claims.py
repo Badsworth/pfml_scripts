@@ -1,5 +1,4 @@
 import base64
-import uuid
 from typing import Dict, List, Optional, Set, Type, Union
 from uuid import UUID
 
@@ -546,20 +545,14 @@ def retrieve_claims() -> flask.Response:
 
 
 def get_claims() -> flask.Response:
-
-    employer_id: Optional[UUID]
     employer_id_str = flask.request.args.get("employer_id")
-    if employer_id_str is not None:
-        employer_id = uuid.UUID(employer_id_str)
-    else:
-        employer_id = employer_id_str
-
     employee_id_str = flask.request.args.get("employee_id")
 
     claim_request = ClaimRequest()
-    claim_request.employer_id = employer_id
+    if employer_id_str is not None:
+        claim_request.employer_ids = {UUID(eid.strip()) for eid in employer_id_str.split(",")}
     if employee_id_str is not None:
-        claim_request.employee_ids = [UUID(eid.strip()) for eid in employee_id_str.split(",")]
+        claim_request.employee_ids = {UUID(eid.strip()) for eid in employee_id_str.split(",")}
     claim_request.search = flask.request.args.get("search", type=str)
     claim_request.claim_status = flask.request.args.get("claim_status")
     claim_request.request_decision = flask.request.args.get("request_decision")
@@ -571,6 +564,7 @@ def get_claims() -> flask.Response:
 def _process_claims_request(claim_request: ClaimRequest, method_name: str) -> flask.Response:
 
     employee_ids = claim_request.employee_ids
+    employer_ids = claim_request.employer_ids
     search_string = claim_request.search
     absence_statuses = parse_filterable_absence_statuses(claim_request.claim_status)
     is_reviewable = claim_request.is_reviewable
@@ -592,15 +586,8 @@ def _process_claims_request(claim_request: ClaimRequest, method_name: str) -> fl
                 #
                 # The CRM user does not use use /claims/{claim_id} yet, so this logic has explicitly not been added to user_has_access_to_claim
                 pass
-            elif is_employer and current_user and current_user.employers:
-                if claim_request.employer_id:
-                    employers_list = (
-                        db_session.query(Employer)
-                        .filter(Employer.employer_id == claim_request.employer_id)
-                        .all()
-                    )
-                else:
-                    employers_list = list(current_user.employers)
+            elif is_employer and current_user.employers:
+                employers_list = list(current_user.employers)
 
                 verified_employers = [
                     employer
@@ -611,14 +598,15 @@ def _process_claims_request(claim_request: ClaimRequest, method_name: str) -> fl
 
                 # filters claims by employer id - shows all claims of those employers
                 # if those employers use org units, then more filters are applied
-                query.add_employers_filter(verified_employers, current_user)
+                query.add_leave_admin_filter(verified_employers, current_user)
             else:
                 query.add_user_owns_claim_filter(current_user)
 
+            if employer_ids:
+                query.add_employers_filter(employer_ids)
+
             if employee_ids:
-                # convert List[UUID] to Set[str]
-                employee_ids_set = {str(eid) for eid in employee_ids}
-                query.add_employees_filter(employee_ids_set)
+                query.add_employees_filter(employee_ids)
 
             if len(absence_statuses):
                 # Log the values from the query params rather than the enum groups they
@@ -773,11 +761,6 @@ def post_change_request(fineos_absence_id: str) -> flask.Response:
     body = connexion.request.json
     change_request: ChangeRequest = ChangeRequest.parse_obj(body)
 
-    if issues := claim_rules.get_change_request_issues(change_request):
-        return response_util.error_response(
-            status_code=BadRequest, message="Invalid change request body", errors=issues, data={},
-        ).to_api_response()
-
     claim = get_claim_from_db(fineos_absence_id)
     if claim is None:
         logger.warning(
@@ -791,6 +774,11 @@ def post_change_request(fineos_absence_id: str) -> flask.Response:
             data={},
         )
         return error.to_api_response()
+
+    if issues := claim_rules.get_change_request_issues(change_request, claim):
+        return response_util.error_response(
+            status_code=BadRequest, message="Invalid change request body", errors=issues, data={},
+        ).to_api_response()
 
     # Post change request to FINEOS - https://lwd.atlassian.net/browse/PORTAL-1710
     submitted_time = utcnow()

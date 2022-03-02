@@ -73,6 +73,24 @@ def test_datetime_str_to_date():
 
 
 @pytest.mark.parametrize(
+    "test_date,is_contained",
+    [
+        (date(2021, 5, 1), False),  # before
+        ((date(2021, 5, 16)), False),  # after
+        (date(2021, 5, 7), True),  # on start
+        ((date(2021, 5, 15)), True),  # on end
+        # within
+        (date(2021, 5, 8), True),
+        (date(2021, 5, 12), True),
+        (date(2021, 5, 14), True),
+    ],
+)
+def test_is_date_contained(test_date, is_contained):
+    c_range = [date(2021, 5, 7), date(2021, 5, 15)]
+    assert datetime_util.is_date_contained(c_range, test_date) == is_contained
+
+
+@pytest.mark.parametrize(
     "test_range,is_contained",
     [
         ((date(2021, 4, 1), date(2021, 5, 1)), False),  # before

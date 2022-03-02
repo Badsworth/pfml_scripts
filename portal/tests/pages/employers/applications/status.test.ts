@@ -3,15 +3,10 @@ import {
   DocumentType,
   DocumentTypeEnum,
 } from "../../../../src/models/Document";
-import {
-  MockEmployerClaimBuilder,
-  createAbsencePeriod,
-  renderPage,
-} from "../../../test-utils";
+import { MockEmployerClaimBuilder, renderPage } from "../../../test-utils";
 import { screen, waitFor } from "@testing-library/react";
 import { AbsenceCaseStatus } from "../../../../src/models/Claim";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
-import LeaveReason from "../../../../src/models/LeaveReason";
 import Status from "../../../../src/pages/employers/applications/status";
 import { faker } from "@faker-js/faker";
 import routes from "../../../../src/routes";
@@ -28,12 +23,6 @@ function setup(models = {}) {
     .completed()
     .absenceId(absence_id)
     .create();
-  newClaim.absence_periods = [
-    createAbsencePeriod({
-      absence_period_start_date: "2020-01-01",
-      reason: LeaveReason.care,
-    }),
-  ];
   const { claim, claimDocumentsMap } = {
     claim: newClaim,
     claimDocumentsMap: new Map([
@@ -112,16 +101,11 @@ describe("Status", () => {
 
   it("shows intermittent leave dates", () => {
     setup({
-      claim: new MockEmployerClaimBuilder()
-        .completed()
-        .intermittent({
-          start_date: "2019-01-30",
-        })
-        .create(),
+      claim: new MockEmployerClaimBuilder().completed(true).create(),
     });
 
     expect(screen.queryByText(/intermittent/i)).toBeInTheDocument();
-    expect(screen.queryAllByText(/2019/).length).toBe(2);
+    expect(screen.queryAllByText(/2022/).length).toBe(2);
   });
 
   it("loads the documents when they're not yet loaded", async () => {
@@ -249,7 +233,7 @@ describe("Status", () => {
     setup({ claimDocumentsMap: newMap });
     expect(screen.getByText("Documentation")).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "Care for a family member" })
+      screen.getByRole("heading", { name: "Medical leave" })
     ).toBeInTheDocument();
     expect(screen.getByTestId("absence periods")).toBeInTheDocument();
   });

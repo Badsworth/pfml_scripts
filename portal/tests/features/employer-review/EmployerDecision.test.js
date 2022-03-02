@@ -12,7 +12,7 @@ describe("EmployerDecision", () => {
   beforeEach(() => {
     renderHook(() => {
       getFunctionalInputProps = useFunctionalInputProps({
-        appErrors: [],
+        errors: [],
         formState: { employerDecision: "Approve" },
         updateFields,
       });

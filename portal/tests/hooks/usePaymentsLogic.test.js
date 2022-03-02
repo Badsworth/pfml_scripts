@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react-hooks";
 import { mockAuth, mockFetch } from "../test-utils";
-import AppErrorInfo from "../../src/models/AppErrorInfo";
+import ErrorInfo from "../../src/models/ErrorInfo";
 import { Payment } from "../../src/models/Payment";
 import { createMockPayment } from "lib/mock-helpers/createMockPayment";
 import useAppLogic from "../../src/hooks/useAppLogic";
@@ -23,9 +23,6 @@ describe("usePaymentsLogic", () => {
   });
 
   it("gets payments from API", async () => {
-    process.env.featureFlags = JSON.stringify({
-      claimantShowPaymentsPhaseTwo: true,
-    });
     const mockResponseData = {
       absence_case_id: "mock-absence-case-id",
       payments: [createMockPayment({ status: "Sent to bank" }, true)],
@@ -47,9 +44,6 @@ describe("usePaymentsLogic", () => {
   });
 
   it("it sets isLoadingPayments to true when a claim is being loaded", async () => {
-    process.env.featureFlags = JSON.stringify({
-      claimantShowPaymentsPhaseTwo: true,
-    });
     mockFetch();
     const { appLogic, waitFor } = setup();
 
@@ -68,27 +62,21 @@ describe("usePaymentsLogic", () => {
   });
 
   it("clears prior errors before API request is made", async () => {
-    process.env.featureFlags = JSON.stringify({
-      claimantShowPaymentsPhaseTwo: true,
-    });
     mockFetch();
     const { appLogic } = setup();
 
     act(() => {
-      appLogic.current.setAppErrors([new AppErrorInfo()]);
+      appLogic.current.setErrors([new ErrorInfo()]);
     });
 
     await act(async () => {
       await appLogic.current.payments.loadPayments("absence_id_1");
     });
 
-    expect(appLogic.current.appErrors).toHaveLength(0);
+    expect(appLogic.current.errors).toHaveLength(0);
   });
 
   it("catches exceptions thrown from the API module and sets isLoadingPayments to be false", async () => {
-    process.env.featureFlags = JSON.stringify({
-      claimantShowPaymentsPhaseTwo: true,
-    });
     jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
     mockFetch({
       status: 400,
@@ -100,7 +88,7 @@ describe("usePaymentsLogic", () => {
       await appLogic.current.payments.loadPayments("absence_id_1");
     });
 
-    expect(appLogic.current.appErrors[0].name).toEqual("BadRequestError");
+    expect(appLogic.current.errors[0].name).toEqual("BadRequestError");
     expect(appLogic.current.payments.isLoadingPayments).toBe(false);
   });
 });

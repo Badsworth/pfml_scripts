@@ -102,7 +102,7 @@ resource "newrelic_nrql_alert_condition" "sns_sms_phone_carrier_unavailable" {
 resource "newrelic_nrql_alert_condition" "sns_sms_blocked_as_spam" {
   # More than 10 SMS have been blocked as spam over 2 hours.
 
-  name               = "sns_sms_blocked_as_spam"
+  name               = "sns-sms-blocked-as-spam"
   policy_id          = newrelic_alert_policy.sns_alerts.id
   type               = local.condition_type
   value_function     = local.value_function
@@ -131,7 +131,7 @@ resource "newrelic_nrql_alert_condition" "sns_sms_blocked_as_spam" {
 resource "newrelic_nrql_alert_condition" "sns_sms_rate_exceeded" {
   # At least 1 SNS SMS rate exceeded error in 5 minutes
 
-  name               = "sns-spending-limit"
+  name               = "sns-sms-rate-exceeded"
   policy_id          = newrelic_alert_policy.sns_alerts.id
   type               = local.condition_type
   value_function     = local.value_function

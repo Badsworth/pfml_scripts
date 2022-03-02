@@ -9,8 +9,8 @@ import {
 } from "../../test-utils";
 import { act, screen, waitFor } from "@testing-library/react";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
-import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import { AppLogic } from "../../../src/hooks/useAppLogic";
+import ErrorInfo from "../../../src/models/ErrorInfo";
 import UploadCertification from "../../../src/pages/applications/upload-certification";
 import { ValidationError } from "../../../src/errors";
 import { createMockBenefitsApplicationDocument } from "../../../lib/mock-helpers/createMockDocument";
@@ -37,7 +37,7 @@ const setup = (
         setupBenefitsApplications(appLogic, [claim]);
         if (cb) cb(appLogic);
         appLogic.portalFlow.goToNextPage = goToNextPage;
-        appLogic._appErrorsLogic.catchError = catchError;
+        appLogic._errorsLogic.catchError = catchError;
         appLogic.documents.attach = attach;
       },
     },
@@ -301,8 +301,8 @@ describe("UploadCertification", () => {
 
   it("renders alert when there is an error loading documents", () => {
     const cb = (appLogic: AppLogic) => {
-      appLogic.appErrors = [
-        new AppErrorInfo({
+      appLogic.errors = [
+        new ErrorInfo({
           meta: { application_id: "mock_application_id" },
           name: "DocumentsLoadError",
         }),

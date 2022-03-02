@@ -11,8 +11,8 @@ import { uniqueId } from "lodash";
  * @property [rule] - Name of validation issue rule (e.g "min_leave_periods", "conditional", etc)
  * @property [type] - Name of validation issue type (e.g "required", "pattern", "date", etc)
  */
-class AppErrorInfo {
-  key: string = uniqueId("AppErrorInfo");
+class ErrorInfo {
+  key: string = uniqueId("ErrorInfo");
   message?: string | JSX.Element;
   name?: string;
   field?: string;
@@ -20,7 +20,7 @@ class AppErrorInfo {
   rule?: string;
   type?: string;
 
-  constructor(attrs: Partial<AppErrorInfo>) {
+  constructor(attrs: Partial<ErrorInfo>) {
     Object.assign(this, attrs);
   }
 
@@ -29,7 +29,7 @@ class AppErrorInfo {
    * @param errors - All errors, including those not associated with the given field
    * @param field - The field to get the error message(s) for
    */
-  static fieldErrorMessage(errors: AppErrorInfo[], field: string) {
+  static fieldErrorMessage(errors: ErrorInfo[], field: string) {
     if (!errors.length) return null;
 
     const fieldErrors = errors.filter((error) => error.field === field);
@@ -48,4 +48,4 @@ class AppErrorInfo {
   }
 }
 
-export default AppErrorInfo;
+export default ErrorInfo;

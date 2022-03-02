@@ -140,24 +140,4 @@ describe("BaseBenefitsApplication", () => {
       );
     });
   });
-
-  describe("#leaveStartDate", () => {
-    it("returns earliest start_date", () => {
-      expect(claimWithContinuousLeave.leaveStartDate).toEqual("2021-03-01");
-      expect(claimWithIntermittentLeave.leaveStartDate).toEqual("2021-02-01");
-      expect(claimWithMultipleLeavePeriods.leaveStartDate).toEqual(
-        "2021-01-01"
-      );
-      expect(claimWithReducedLeave.leaveStartDate).toEqual("2021-01-01");
-    });
-  });
-
-  describe("#leaveEndDate", () => {
-    it("returns latest end_date", () => {
-      expect(claimWithContinuousLeave.leaveEndDate).toEqual("2021-09-01");
-      expect(claimWithIntermittentLeave.leaveEndDate).toEqual("2021-08-01");
-      expect(claimWithMultipleLeavePeriods.leaveEndDate).toEqual("2021-09-01");
-      expect(claimWithReducedLeave.leaveEndDate).toEqual("2021-08-01");
-    });
-  });
 });

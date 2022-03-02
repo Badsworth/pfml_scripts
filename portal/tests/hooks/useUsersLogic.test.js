@@ -1,13 +1,13 @@
 import * as MFAService from "../../src/services/mfa";
 import User, { RoleDescription, UserRole } from "../../src/models/User";
 import { act, renderHook } from "@testing-library/react-hooks";
-import AppErrorInfo from "../../src/models/AppErrorInfo";
+import ErrorInfo from "../../src/models/ErrorInfo";
 import { NetworkError } from "../../src/errors";
 import RolesApi from "../../src/api/RolesApi";
 import UsersApi from "../../src/api/UsersApi";
 import { mockRouter } from "next/router";
 import routes from "../../src/routes";
-import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
+import useErrorsLogic from "../../src/hooks/useErrorsLogic";
 import usePortalFlow from "../../src/hooks/usePortalFlow";
 import useUsersLogic from "../../src/hooks/useUsersLogic";
 
@@ -24,7 +24,7 @@ jest.mock("../../src/services/mfa", () => {
 jest.mock("next/router");
 
 describe("useUsersLogic", () => {
-  let appErrorsLogic,
+  let errorsLogic,
     goToSpy,
     isLoggedIn,
     portalFlow,
@@ -45,8 +45,8 @@ describe("useUsersLogic", () => {
   function setup() {
     renderHook(() => {
       portalFlow = usePortalFlow();
-      appErrorsLogic = useAppErrorsLogic({ portalFlow });
-      usersLogic = useUsersLogic({ appErrorsLogic, isLoggedIn, portalFlow });
+      errorsLogic = useErrorsLogic({ portalFlow });
+      usersLogic = useUsersLogic({ errorsLogic, isLoggedIn, portalFlow });
 
       goToSpy = jest.spyOn(portalFlow, "goTo");
     });
@@ -89,7 +89,7 @@ describe("useUsersLogic", () => {
     describe("when errors exist", () => {
       beforeEach(async () => {
         act(() => {
-          appErrorsLogic.setAppErrors([new AppErrorInfo()]);
+          errorsLogic.setErrors([new ErrorInfo()]);
         });
 
         await act(async () => {
@@ -98,7 +98,7 @@ describe("useUsersLogic", () => {
       });
 
       it("clears errors", () => {
-        expect(appErrorsLogic.appErrors).toHaveLength(0);
+        expect(errorsLogic.errors).toHaveLength(0);
       });
     });
 
@@ -112,7 +112,7 @@ describe("useUsersLogic", () => {
           await usersLogic.updateUser(user_id, patchData);
         });
 
-        expect(appErrorsLogic.appErrors[0].name).toEqual(NetworkError.name);
+        expect(errorsLogic.errors[0].name).toEqual(NetworkError.name);
       });
     });
 
@@ -226,12 +226,12 @@ describe("useUsersLogic", () => {
     it("doesn't clear errors if user has been loaded", async () => {
       await act(async () => {
         await usersLogic.loadUser();
-        appErrorsLogic.setAppErrors([new AppErrorInfo()]);
+        errorsLogic.setErrors([new ErrorInfo()]);
         await usersLogic.loadUser();
       });
 
       expect(usersApi.getCurrentUser).toHaveBeenCalledTimes(1);
-      expect(appErrorsLogic.appErrors).toHaveLength(1);
+      expect(errorsLogic.errors).toHaveLength(1);
     });
 
     it("throws an error if user is not logged in to Cognito", async () => {
@@ -247,7 +247,7 @@ describe("useUsersLogic", () => {
         await usersLogic.loadUser();
       });
 
-      expect(appErrorsLogic.appErrors[0].name).toBe("NetworkError");
+      expect(errorsLogic.errors[0].name).toBe("NetworkError");
     });
   });
 
@@ -429,7 +429,7 @@ describe("useUsersLogic", () => {
     describe("when errors exist", () => {
       beforeEach(async () => {
         act(() => {
-          appErrorsLogic.setAppErrors([new AppErrorInfo()]);
+          errorsLogic.setErrors([new ErrorInfo()]);
         });
 
         await act(async () => {
@@ -438,7 +438,7 @@ describe("useUsersLogic", () => {
       });
 
       it("clears errors", () => {
-        expect(appErrorsLogic.appErrors).toHaveLength(0);
+        expect(errorsLogic.errors).toHaveLength(0);
       });
     });
 
@@ -452,7 +452,7 @@ describe("useUsersLogic", () => {
           await usersLogic.convertUserToEmployer(user_id, postData);
         });
 
-        expect(appErrorsLogic.appErrors[0].name).toEqual(NetworkError.name);
+        expect(errorsLogic.errors[0].name).toEqual(NetworkError.name);
       });
     });
   });
@@ -485,7 +485,7 @@ describe("useUsersLogic", () => {
     describe("when errors exist", () => {
       beforeEach(async () => {
         act(() => {
-          appErrorsLogic.setAppErrors([new AppErrorInfo()]);
+          errorsLogic.setErrors([new ErrorInfo()]);
         });
 
         await act(async () => {
@@ -494,7 +494,7 @@ describe("useUsersLogic", () => {
       });
 
       it("clears errors", () => {
-        expect(appErrorsLogic.appErrors).toHaveLength(0);
+        expect(errorsLogic.errors).toHaveLength(0);
       });
     });
 
@@ -508,7 +508,7 @@ describe("useUsersLogic", () => {
           await usersLogic.convertUserToEmployer(user_id);
         });
 
-        expect(appErrorsLogic.appErrors[0].name).toEqual(NetworkError.name);
+        expect(errorsLogic.errors[0].name).toEqual(NetworkError.name);
       });
     });
   });

@@ -204,6 +204,7 @@ def build_audit_report_row(
         rejected_notes=audit_report_details.rejected_notes,
         previously_paid_payment_count=str(payment_audit_data.previously_paid_payment_count),
         previously_paid_payments=payment_audit_data.previously_paid_payments_string,
+        exceeds_26_weeks_total_leave_details=audit_report_details.exceeds_26_weeks_total_leave_details,
         payment_date_mismatch_details=audit_report_details.payment_date_mismatch_details,
     )
 

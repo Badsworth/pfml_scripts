@@ -11,6 +11,8 @@ from massgov.pfml.api.models.claims.common import (
 )
 from massgov.pfml.api.models.common import EmployerBenefit
 from massgov.pfml.api.validation.exceptions import IssueType, ValidationErrorDetail
+from massgov.pfml.db.models.absences import AbsenceReasonQualifierOne
+from massgov.pfml.db.models.employees import Claim, LeaveRequestDecision
 
 # there are 168 hours in a week
 MAX_HOURS_WORKED_PER_WEEK = 168
@@ -133,26 +135,134 @@ def get_employer_benefits_issues(
     return error_list
 
 
-def get_change_request_issues(change_request: ChangeRequest) -> List[ValidationErrorDetail]:
+def get_change_request_issues(
+    change_request: ChangeRequest, claim: Claim
+) -> List[ValidationErrorDetail]:
     error_list: List[ValidationErrorDetail] = []
 
-    # for any change request type other than withdrawal we need start/end dates
-    if change_request.change_request_type != ChangeRequestType.WITHDRAWAL:
-        if not change_request.start_date:
-            error_list.append(
-                ValidationErrorDetail(
-                    message="Start date is required for this request type",
-                    type=IssueType.required,
-                    field="start_date",
-                )
+    # Only should be requesting a modification on a submitted claim,
+    # so this should be set (saves problems with linter)
+    assert claim.absence_period_start_date
+
+    if change_request.change_request_type == ChangeRequestType.WITHDRAWAL:
+        error_list.extend(get_withdrawal_issues(change_request, claim))
+    if change_request.change_request_type == ChangeRequestType.MODIFICATION:
+        error_list.extend(get_modification_issues(change_request, claim))
+    if change_request.change_request_type == ChangeRequestType.MEDICAL_TO_BONDING:
+        error_list.extend(get_medical_to_bonding_issues(change_request, claim))
+
+    # user can request a modification on an approved claim only
+    leave_request_approved_id = LeaveRequestDecision.APPROVED.leave_request_decision_id
+    leave_request_decision_ids = (
+        (ap.leave_request_decision_id for ap in claim.absence_periods)
+        if claim.absence_periods
+        else []
+    )
+    if leave_request_approved_id not in leave_request_decision_ids:
+        error_list.append(
+            ValidationErrorDetail(
+                type=IssueType.must_be_approved_claim,
+                message="Claim must have at least one approved absence period to submit a change request",
+                field="fineos_absence_id",
             )
-        if not change_request.end_date:
+        )
+
+    start_date = (
+        claim.absence_period_start_date
+        if change_request.start_date is None
+        else change_request.start_date
+    )
+    if change_request.end_date:
+        # the end date cannot be before the original or modified start date
+        if start_date > change_request.end_date:
             error_list.append(
                 ValidationErrorDetail(
-                    message="End date is required for this request type",
-                    type=IssueType.required,
+                    message="Start date must be less than end date",
+                    type=IssueType.maximum,
                     field="end_date",
                 )
             )
 
+    return error_list
+
+
+def get_withdrawal_issues(
+    change_request: ChangeRequest, claim: Claim
+) -> List[ValidationErrorDetail]:
+    error_list: List[ValidationErrorDetail] = []
+    # for a withdrawal, start and end dates should be null
+    if change_request.start_date:
+        error_list.append(
+            ValidationErrorDetail(
+                message="Start date is invalid for this request type",
+                type=IssueType.withdrawal_dates_must_be_null,
+                field="start_date",
+            )
+        )
+    if change_request.end_date:
+        error_list.append(
+            ValidationErrorDetail(
+                message="End date is invalid for this request type",
+                type=IssueType.withdrawal_dates_must_be_null,
+                field="end_date",
+            )
+        )
+    return error_list
+
+
+def get_modification_issues(
+    change_request: ChangeRequest, claim: Claim
+) -> List[ValidationErrorDetail]:
+    error_list: List[ValidationErrorDetail] = []
+    # for a modification, start date should be null
+    if change_request.start_date:
+        error_list.append(
+            ValidationErrorDetail(
+                message="Start date is invalid for this request type",
+                type=IssueType.change_start_date_is_unsupported,
+                field="start_date",
+            )
+        )
+    if not change_request.end_date:
+        error_list.append(
+            ValidationErrorDetail(
+                message="End date is required for this request type",
+                type=IssueType.required,
+                field="end_date",
+            )
+        )
+    return error_list
+
+
+def get_medical_to_bonding_issues(
+    change_request: ChangeRequest, claim: Claim
+) -> List[ValidationErrorDetail]:
+    error_list: List[ValidationErrorDetail] = []
+    if not change_request.start_date:
+        error_list.append(
+            ValidationErrorDetail(
+                message="Start date is required for this request type",
+                type=IssueType.required,
+                field="start_date",
+            )
+        )
+    if not change_request.end_date:
+        error_list.append(
+            ValidationErrorDetail(
+                message="End date is required for this request type",
+                type=IssueType.required,
+                field="end_date",
+            )
+        )
+    absence_reason_ids = []
+    birth_disability_id = AbsenceReasonQualifierOne.BIRTH_DISABILITY.absence_reason_qualifier_one_id
+    if claim.absence_periods:
+        absence_reason_ids = [ap.absence_reason_qualifier_one_id for ap in claim.absence_periods]
+    if birth_disability_id not in absence_reason_ids:
+        error_list.append(
+            ValidationErrorDetail(
+                message="Claimant did not apply for bonding leave in initial application",
+                type=IssueType.not_medical_to_bonding_claim,
+            )
+        )
     return error_list

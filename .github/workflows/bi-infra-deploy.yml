@@ -10,7 +10,7 @@ on:
         required: true
         default: "test"
         description: |
-          🛑 DO NOT CHANGE THE DROPDOWN ABOVE FOR THE WORKFLOW. KEEP IT ON "main" BRANCH.     
+          🛑 DO NOT CHANGE THE DROPDOWN ABOVE FOR THE WORKFLOW. KEEP IT ON "main" BRANCH.
           --------------------------------------
           ⬇️ Environment to be deployed.
             (test, infra-test, stage,  uat, prod).
@@ -30,7 +30,7 @@ on:
 env:
   working-dir: ./infra
   terraform-bi-dir: ./infra/bi/environments
-  tf-version-default: 0.14.7
+  terraformVersion: 0.14.7
   deployment_env: ${{ github.event.inputs.deployment_env || 'test' }}
   version: ${{ github.event.inputs.version || 'main'}}
 
@@ -102,12 +102,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - uses: hashicorp/setup-terraform@v1
+      - uses: hashicorp/setup-terraform@v1.2.1
         with:
-          terraform_version: ${{ env.tf-version-default }} 
+          terraform_version: ${{ env.terraformVersion }}
 
       - run: terraform fmt -recursive -check ${{ env.working-dir }}
-     
+
   deploy-bi-infra:
     name: "deploy bi infra"
     runs-on: ubuntu-latest
@@ -126,19 +126,20 @@ jobs:
       - uses: actions/checkout@v2
         with:
           ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-      - uses: hashicorp/setup-terraform@v1
+
+      - uses: hashicorp/setup-terraform@v1.2.1
         with:
-          terraform_version: ${{ env.tf-version-default }}
+          terraform_version: ${{ env.terraformVersion }}
 
       - name: tf-init
         id: terraform_init
         run: terraform init
-        working-directory: ${{ env.terraform-bi-dir }}/${{ env.deployment_env }} 
+        working-directory: ${{ env.terraform-bi-dir }}/${{ env.deployment_env }}
 
       - name: tf-plan
         id: terraform_plan
         run: terraform plan -out=plan.tfplan
-        working-directory: ${{ env.terraform-bi-dir }}/${{ env.deployment_env  }} 
+        working-directory: ${{ env.terraform-bi-dir }}/${{ env.deployment_env  }}
 
       - name: apply from tf-plan
         id: terraform_apply
@@ -190,7 +191,7 @@ jobs:
         run: |
           RESPONSE=$(curl -fsLS -X POST ${{ env.TEAMS_URI }} \
           --header 'Content-Type: application/json' \
-          --data '{   
+          --data '{
             "@type": "MessageCard",
             "themeColor": "FF0000",
             "title": "API tests failed",

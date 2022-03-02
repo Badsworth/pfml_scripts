@@ -177,6 +177,11 @@ paths:
             type: string
           description: ID of User to update
           required: true
+        - name: X-FF-Sync-Cognito-Preferences
+          description: Synchronize the user's Cognito MFA preference to Cognito
+          in: header
+          schema:
+            type: string
       responses:
         "200":
           description: A successful request returns a 200 status code and a user object.
@@ -393,10 +398,13 @@ paths:
         - name: employer_id
           in: query
           schema:
-            type: string
-            format: uuid
-          description: ID of Employer to query claims for
+            type: array
+            items:
+                type: string
+                format: uuid
+          description: ID(s) of Employers to query claims for
           required: false
+          explode: false
         - name: employee_id
           in: query
           schema:
@@ -689,6 +697,38 @@ paths:
       requestBody:
         $ref: "#/components/requestBodies/EmployerClaimRequestBody"
 
+  /application-imports:
+    post:
+      tags:
+        - Application Import
+      summary: >
+        Creates a new application in the PFML database from a FINEOS application that was created through the
+        contact center.
+      operationId: massgov.pfml.api.applications.applications_import
+      responses:
+        "201":
+          $ref: "#/components/responses/ApplicationImportedResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          description: Application with requested absence_case_id was not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Application could not be completed in Claims Processing System.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ErrorResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/ApplicationResponse"
+      requestBody:
+        $ref: '#/components/requestBodies/ApplicationImportRequestBody'
+
   /applications:
     post:
       tags:
@@ -783,7 +823,7 @@ paths:
       summary: >
         Creates a new application in the PFML database from a FINEOS application that was created through the
         contact center.
-      operationId: massgov.pfml.api.applications.applications_import
+      operationId: massgov.pfml.api.applications.deprecated_applications_import
       responses:
         "201":
           $ref: "#/components/responses/ApplicationImportedResponse"
@@ -1427,6 +1467,7 @@ tags:
   - name: Employees
   - name: Employers
   - name: Claims
+  - name: Application Import
   - name: Applications
   - name: Financial Eligibility
   - name: ID Proofing
@@ -3055,8 +3096,10 @@ components:
           default: "descending"
           enum: ["ascending", "descending"]
         employer_id:
-          type: string
-          format: uuid
+          type: array
+          items:
+            type: string
+            format: uuid
           description: ID of Employer to query claims for
         employee_id:
           type: array

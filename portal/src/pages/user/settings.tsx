@@ -36,7 +36,7 @@ const MFAAmendmentForm = (props: {
     pick(props.user, ["mfa_delivery_preference"])
   );
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: props.appLogic.appErrors,
+    errors: props.appLogic.errors,
     formState,
     updateFields,
   });

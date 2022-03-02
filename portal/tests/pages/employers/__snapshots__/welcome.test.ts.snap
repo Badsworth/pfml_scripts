@@ -55,7 +55,7 @@ exports[`Employer welcome renders page 1`] = `
         View all applications
       </h2>
       <p>
-        When you log into your account you can now use the 
+        When you log in to your account you can now use the 
         <a
           href="/employers/dashboard"
         >

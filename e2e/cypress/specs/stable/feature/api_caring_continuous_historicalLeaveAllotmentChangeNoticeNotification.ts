@@ -38,13 +38,6 @@ describeIf(
                   .certificationPeriods((cert) => cert.prefill())
                   .acceptLeavePlan();
               })
-              .outstandingRequirements((outstandingRequirement) =>
-                outstandingRequirement.complete(
-                  "Received",
-                  "Complete Employer Confirmation",
-                  true
-                )
-              )
               .approve()
               .triggerNotice("Designation Notice");
           });

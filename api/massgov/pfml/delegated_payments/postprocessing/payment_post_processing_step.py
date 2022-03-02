@@ -10,6 +10,9 @@ from massgov.pfml.delegated_payments.postprocessing.dor_fineos_employee_name_mis
 from massgov.pfml.delegated_payments.postprocessing.dua_dia_reductions_processor import (
     DuaDiaReductionsProcessor,
 )
+from massgov.pfml.delegated_payments.postprocessing.fineos_total_leave_duration_processor import (
+    FineosTotalLeaveDurationProcessor,
+)
 from massgov.pfml.delegated_payments.postprocessing.payment_date_mismatch_processor import (
     PaymentDateMismatchProcessor,
 )
@@ -69,10 +72,13 @@ class PaymentPostProcessingStep(Step):
         dua_dia_processor = DuaDiaReductionsProcessor(self)
         name_mismatch_processor = DORFineosEmployeeNameMismatchProcessor(self)
         payment_date_mismatch_processor = PaymentDateMismatchProcessor(self)
+        leave_duration_processor = FineosTotalLeaveDurationProcessor(self)
+
         for payment_container in payment_containers:
             dua_dia_processor.process(payment_container.payment)
             name_mismatch_processor.process(payment_container.payment)
             payment_date_mismatch_processor.process(payment_container.payment)
+            leave_duration_processor.process(payment_container.payment)
 
     def _handle_state_transition(self, payment_containers: List[PaymentContainer]) -> None:
         for payment_container in payment_containers:

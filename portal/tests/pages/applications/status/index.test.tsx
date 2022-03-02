@@ -12,9 +12,9 @@ import Status, {
 import { cleanup, render, screen } from "@testing-library/react";
 import { createAbsencePeriod, renderPage } from "../../../test-utils";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
-import AppErrorInfo from "../../../../src/models/AppErrorInfo";
 import { AppLogic } from "../../../../src/hooks/useAppLogic";
 import ClaimDetail from "../../../../src/models/ClaimDetail";
+import ErrorInfo from "../../../../src/models/ErrorInfo";
 import LeaveReason from "../../../../src/models/LeaveReason";
 import { Payment } from "../../../../src/models/Payment";
 import React from "react";
@@ -88,7 +88,7 @@ const setupHelper =
   (
     claimDetailAttrs?: Partial<ClaimDetail>,
     documents: BenefitsApplicationDocument[] = [],
-    appErrors: AppErrorInfo[] = [],
+    errors: ErrorInfo[] = [],
     loadClaimDetailMock: jest.Mock = jest.fn(),
     payments: Partial<Payment> = defaultPayments,
     includeApprovalNotice = true,
@@ -99,7 +99,7 @@ const setupHelper =
       ? new ClaimDetail(claimDetailAttrs)
       : undefined;
     appLogicHook.claims.loadClaimDetail = loadClaimDetailMock;
-    appLogicHook.appErrors = appErrors;
+    appLogicHook.errors = errors;
     appLogicHook.payments.loadPayments = jest.fn();
     appLogicHook.payments.loadedPaymentsData = new Payment(payments);
     appLogicHook.payments.hasLoadedPayments = () => true;
@@ -148,12 +148,6 @@ const props = {
 };
 
 describe("Status", () => {
-  beforeEach(() => {
-    process.env.featureFlags = JSON.stringify({
-      claimantShowPaymentsPhaseTwo: true,
-    });
-  });
-
   describe("Payments tab display", () => {
     it("does not show StatusNavigationTabs if feature flag is enabled, claim has no payments, and is not approved", () => {
       renderPage(
@@ -177,33 +171,6 @@ describe("Status", () => {
             new Payment(), // payments, default
             false // don't include the approval notice
           ),
-        },
-        props
-      );
-
-      expect(
-        screen.queryByRole("link", { name: "Payments" })
-      ).not.toBeInTheDocument();
-    });
-
-    it("does not show StatusNavigationTabs if claimantShowPaymentsPhaseTwo feature flag is disabled", () => {
-      process.env.featureFlags = JSON.stringify({
-        claimantShowPaymentsPhaseTwo: false,
-      });
-      renderPage(
-        Status,
-        {
-          addCustomSetup: setupHelper({
-            ...defaultClaimDetail,
-            absence_periods: [
-              createAbsencePeriod({
-                period_type: "Reduced Schedule",
-                reason: LeaveReason.bonding,
-                request_decision: "Approved",
-                reason_qualifier_one: "Newborn",
-              }),
-            ],
-          }),
         },
         props
       );
@@ -301,7 +268,7 @@ describe("Status", () => {
 
   it("renders the page if the only errors are DocumentsLoadError", () => {
     const errors = [
-      new AppErrorInfo({
+      new ErrorInfo({
         meta: { application_id: "mock_application_id" },
         name: "DocumentsLoadError",
       }),
@@ -320,7 +287,7 @@ describe("Status", () => {
 
   it("renders the page with only a back button if non-DocumentsLoadErrors exists", () => {
     const errors = [
-      new AppErrorInfo({
+      new ErrorInfo({
         meta: { application_id: "mock_application_id" },
         name: "RequestTimeoutError",
       }),

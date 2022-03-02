@@ -3157,7 +3157,7 @@ class TestGetClaimsEndpoint:
             assert claim["employer"]["employer_fein"] == format_fein(employer.employer_fein)
 
         # POST /claims/search
-        post_body = {"employer_id": employer.employer_id}
+        post_body = {"employer_id": [employer.employer_id]}
         response = client.post(
             "/v1/claims/search",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -3165,11 +3165,126 @@ class TestGetClaimsEndpoint:
         )
 
         assert response.status_code == 200
+
+    def test_user_claim_access_via_employer_id(
+        self, client, user, auth_token, test_db_session, test_verification
+    ):
+        employer = EmployerFactory.create()
+        employerB = EmployerFactory.create()
+        employerC = EmployerFactory.create()
+
+        employee = EmployeeFactory.create()
+
+        ClaimFactory.create(
+            employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+        )
+
+        new_claim = ClaimFactory.create(
+            employer=employerB, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+        )
+        ApplicationFactory.create(user=user, claim=new_claim)
+
+        new_claim2 = ClaimFactory.create(
+            employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+        )
+        ApplicationFactory.create(user=user, claim=new_claim2)
+
+        ClaimFactory.create(
+            employer=employerC, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+        )
+
+        test_db_session.commit()
+
+        # GET /claims to make sure regular user cannot access claims they shouldn't
+        response1 = client.get(
+            f"/v1/claims?employer_id={employerC.employer_id}",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert response1.status_code == 200
+        response_body1 = response1.get_json()
+        assert len(response_body1["data"]) == 0
+
+        response2 = client.get(
+            f"/v1/claims?employer_id={employerB.employer_id}",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert response2.status_code == 200
+        response_body2 = response2.get_json()
+        assert len(response_body2["data"]) == 1
+
+        response2 = client.get(
+            f"/v1/claims?employer_id={employer.employer_id},{employerB.employer_id}",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert response2.status_code == 200
+        response_body2 = response2.get_json()
+        assert len(response_body2["data"]) == 2
+
+    def test_get_claims_for_many_employer_ids(
+        self, client, employer_auth_token, employer_user, test_db_session, test_verification
+    ):
+        employer = EmployerFactory.create()
+        employee = EmployeeFactory.create()
+
+        for _ in range(5):
+            ClaimFactory.create(
+                employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+            )
+
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+
+        other_employer = EmployerFactory.create()
+        other_link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=other_employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(other_employer)
+        test_db_session.add(other_link)
+
+        for _ in range(5):
+            ClaimFactory.create(
+                employer=other_employer,
+                employee=employee,
+                fineos_absence_status_id=1,
+                claim_type_id=1,
+            )
+
+        test_db_session.commit()
+
+        response = client.get(
+            f"/v1/claims?employer_id={employer.employer_id},{other_employer.employer_id}",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
         response_body = response.get_json()
 
-        assert len(response_body["data"]) == 5
+        assert len(response_body["data"]) == 10
         for claim in response_body["data"]:
-            assert claim["employer"]["employer_fein"] == format_fein(employer.employer_fein)
+            assert claim["employer"]["employer_fein"] == format_fein(
+                employer.employer_fein
+            ) or claim["employer"]["employer_fein"] == format_fein(other_employer.employer_fein)
+
+        # POST /claims/search
+        post_body = {"employer_id": [employer.employer_id, other_employer.employer_id]}
+        response1 = client.post(
+            "/v1/claims/search",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json=post_body,
+        )
+        assert response1.status_code == 200
+        response_body1 = response1.get_json()
+        assert len(response_body1["data"]) == 10
+        for claim in response_body1["data"]:
+            assert claim["employer"]["employer_fein"] == format_fein(
+                employer.employer_fein
+            ) or claim["employer"]["employer_fein"] == format_fein(other_employer.employer_fein)
 
     def test_get_claims_for_employee_id_as_employer(
         self, client, employer_auth_token, employer_user, test_db_session, test_verification
@@ -3271,7 +3386,7 @@ class TestGetClaimsEndpoint:
         assert len(response_body1["data"]) == 0
 
         # POST /claims/search
-        post_body = {"employer_id": employee.employee_id, "employee_id": [employer.employer_id]}
+        post_body = {"employer_id": [employee.employee_id], "employee_id": [employer.employer_id]}
         response1 = client.post(
             "/v1/claims/search",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -3292,7 +3407,7 @@ class TestGetClaimsEndpoint:
         assert response_body2["data"][0]["employee"]["employee_id"] == str(employee.employee_id)
 
         # POST /claims/search
-        post_body = {"employer_id": employer.employer_id, "employee_id": [employee.employee_id]}
+        post_body = {"employer_id": [employer.employer_id], "employee_id": [employee.employee_id]}
         response2 = client.post(
             "/v1/claims/search",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -3601,7 +3716,7 @@ class TestGetClaimsEndpoint:
         assert len(response_body["data"]) == 5
 
         # POST /claims/search
-        post_body = {"employer_id": employer.employer_id}
+        post_body = {"employer_id": [employer.employer_id]}
         response = client.post(
             "/v1/claims/search",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -5871,6 +5986,8 @@ class TestPostChangeRequest:
 
     @mock.patch("massgov.pfml.api.claims.get_claim_from_db")
     def test_validation_issues(self, mock_get_claim, auth_token, claim, client, request_body):
+        claim.absence_period_start_date = date(2021, 1, 1)
+        claim.fineos_absence_status_id = 1
         mock_get_claim.return_value = claim
         del request_body["end_date"]
         response = client.post(

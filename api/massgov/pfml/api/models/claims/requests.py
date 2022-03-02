@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional, Set
 
 from pydantic import UUID4, Extra, Field, PositiveInt
 
@@ -17,9 +17,9 @@ class ClaimRequest(PydanticBaseModel):
     page_offset: Optional[PositiveInt]
     order_by: Optional[str]
     order_direction: Optional[OrderDirection] = OrderDirection.desc
-    employer_id: Optional[UUID4]
+    employer_ids: Optional[Set[UUID4]] = Field(None, alias="employer_id")
     # Alias specified for backward compatibility with the UI param "employee_id"
-    employee_ids: Optional[List[UUID4]] = Field(None, alias="employee_id")
+    employee_ids: Optional[Set[UUID4]] = Field(None, alias="employee_id")
     claim_status: Optional[str]
     search: Optional[str]
     allow_hrd: Optional[bool]

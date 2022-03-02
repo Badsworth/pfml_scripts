@@ -98,44 +98,6 @@ abstract class BaseBenefitsApplication {
       " "
     );
   }
-
-  /**
-   * Returns earliest start date across all leave periods
-   */
-  get leaveStartDate() {
-    const periods = [
-      get(this, "leave_details.continuous_leave_periods"),
-      get(this, "leave_details.intermittent_leave_periods"),
-      get(this, "leave_details.reduced_schedule_leave_periods"),
-    ].flat();
-
-    const startDates: string[] = compact(periods)
-      .map((period) => period.start_date)
-      .sort();
-
-    if (!startDates.length) return null;
-
-    return startDates[0];
-  }
-
-  /**
-   * Returns latest end date across all leave periods
-   */
-  get leaveEndDate() {
-    const periods = [
-      get(this, "leave_details.continuous_leave_periods"),
-      get(this, "leave_details.intermittent_leave_periods"),
-      get(this, "leave_details.reduced_schedule_leave_periods"),
-    ].flat();
-
-    const endDates: string[] = compact(periods)
-      .map((period) => period.end_date)
-      .sort();
-
-    if (!endDates.length) return null;
-
-    return endDates[endDates.length - 1];
-  }
 }
 
 export default BaseBenefitsApplication;

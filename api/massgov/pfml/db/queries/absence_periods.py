@@ -68,6 +68,28 @@ def get_absence_period_by_claim_id_and_fineos_ids(
     )
 
 
+def get_employee_absence_periods(
+    db_session: Session,
+    employee_id: UUID,
+    fineos_absence_status_ids: Optional[List[int]] = None,
+    absence_period_type_id: Optional[int] = None,
+) -> List[AbsencePeriod]:
+    filters = [Claim.employee_id == employee_id]
+    if fineos_absence_status_ids is not None and len(fineos_absence_status_ids) > 0:
+        filters.append(Claim.fineos_absence_status_id.in_(fineos_absence_status_ids))
+
+    if absence_period_type_id is not None:
+        filters.append(AbsencePeriod.absence_period_type_id == absence_period_type_id)
+
+    return (
+        db_session.query(AbsencePeriod)
+        .join(Claim)
+        .filter(*filters)
+        .order_by(AbsencePeriod.absence_period_start_date)
+        .all()
+    )
+
+
 def get_employee_absence_periods_for_leave_request(
     db_session: Session, employee_id: UUID, fineos_leave_request_id: int
 ) -> List[AbsencePeriod]:

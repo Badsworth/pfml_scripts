@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import AppErrorInfo from "../../src/models/AppErrorInfo";
+import ErrorInfo from "../../src/models/ErrorInfo";
 import FieldsetAddress from "../../src/components/FieldsetAddress";
 import React from "react";
 import userEvent from "@testing-library/user-event";
@@ -15,7 +15,7 @@ const renderComponent = (customProps = {}) => {
 
   const { container } = render(
     <FieldsetAddress
-      appErrors={[]}
+      errors={[]}
       label={"What is your address?"}
       name={"address"}
       onChange={jest.fn()}
@@ -60,7 +60,7 @@ describe("FieldsetAddress", () => {
 
       return (
         <FieldsetAddress
-          appErrors={[]}
+          errors={[]}
           label={"What is your address?"}
           name={"address"}
           onChange={handleChange}
@@ -82,29 +82,29 @@ describe("FieldsetAddress", () => {
   });
 
   it("displays errors on the associated inputs when there are errors", () => {
-    const appErrors = [
-      new AppErrorInfo({
+    const errors = [
+      new ErrorInfo({
         field: "address.line_1",
         message: "Address is required",
       }),
-      new AppErrorInfo({
+      new ErrorInfo({
         field: "address.line_2",
         message: "Address 2 is required",
       }),
-      new AppErrorInfo({
+      new ErrorInfo({
         field: "address.city",
         message: "City is required",
       }),
-      new AppErrorInfo({
+      new ErrorInfo({
         field: "address.state",
         message: "State is required",
       }),
-      new AppErrorInfo({
+      new ErrorInfo({
         field: "address.zip",
         message: "ZIP is required",
       }),
     ];
-    renderComponent({ appErrors });
+    renderComponent({ errors });
 
     expect(
       screen.getByRole("textbox", { name: /Address is required/i })

@@ -1,8 +1,8 @@
 import AddButton from "./AddButton";
 import AmendablePreviousLeave from "./AmendablePreviousLeave";
-import AppErrorInfo from "../../models/AppErrorInfo";
 import Details from "../../components/core/Details";
 import EmployerClaim from "../../models/EmployerClaim";
+import ErrorInfo from "../../models/ErrorInfo";
 import Heading from "../../components/core/Heading";
 import PreviousLeave from "../../models/PreviousLeave";
 import React from "react";
@@ -14,7 +14,7 @@ import { useTranslation } from "../../locales/i18n";
 
 interface PreviousLeavesProps {
   addedPreviousLeaves: PreviousLeave[];
-  appErrors: AppErrorInfo[];
+  errors: ErrorInfo[];
   claim: EmployerClaim;
   onAdd: React.MouseEventHandler<HTMLButtonElement>;
   onChange: (
@@ -35,7 +35,7 @@ const PreviousLeaves = (props: PreviousLeavesProps) => {
   const { t } = useTranslation();
   const {
     addedPreviousLeaves,
-    appErrors,
+    errors,
     claim,
     onAdd,
     onChange,
@@ -152,7 +152,7 @@ const PreviousLeaves = (props: PreviousLeavesProps) => {
             <React.Fragment>
               {previousLeaves.map((previousLeave) => (
                 <AmendablePreviousLeave
-                  appErrors={appErrors}
+                  errors={errors}
                   isAddedByLeaveAdmin={false}
                   key={previousLeave.previous_leave_id}
                   onChange={onChange}
@@ -172,7 +172,7 @@ const PreviousLeaves = (props: PreviousLeavesProps) => {
           {shouldShowV2 &&
             addedPreviousLeaves.map((addedLeave) => (
               <AmendablePreviousLeave
-                appErrors={appErrors}
+                errors={errors}
                 isAddedByLeaveAdmin
                 key={addedLeave.previous_leave_id}
                 onChange={onChange}

@@ -67,7 +67,7 @@ export const Status = ({
     claimDetail?.application_id || ""
   );
   const hasDocumentsError = hasDocumentsLoadError(
-    appLogic.appErrors,
+    appLogic.errors,
     claimDetail?.application_id || ""
   );
 
@@ -106,7 +106,7 @@ export const Status = ({
   if (!isAbsenceCaseId) return <PageNotFound />;
 
   // only hide page content if there is an error that's not DocumentsLoadError.
-  const hasNonDocumentsLoadError: boolean = appLogic.appErrors.some(
+  const hasNonDocumentsLoadError: boolean = appLogic.errors.some(
     (error) => error.name !== "DocumentsLoadError"
   );
   if (hasNonDocumentsLoadError) {

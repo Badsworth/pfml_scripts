@@ -18,7 +18,7 @@ function setup(claimDetail: Partial<ClaimDetail> = {}) {
     ...claimDetail,
   });
   const goToNextPageSpy = jest.fn();
-  const setAppErrorsSpy = jest.fn();
+  const setErrorsSpy = jest.fn();
 
   const utils = renderPage(
     UploadDocsOptions,
@@ -27,7 +27,7 @@ function setup(claimDetail: Partial<ClaimDetail> = {}) {
         appLogic.claims.claimDetail = claim;
         appLogic.claims.loadClaimDetail = jest.fn();
         appLogic.portalFlow.goToNextPage = goToNextPageSpy;
-        appLogic.setAppErrors = setAppErrorsSpy;
+        appLogic.setErrors = setErrorsSpy;
       },
     },
     {
@@ -35,7 +35,7 @@ function setup(claimDetail: Partial<ClaimDetail> = {}) {
     }
   );
 
-  return { ...utils, setAppErrorsSpy, goToNextPageSpy };
+  return { ...utils, setErrorsSpy, goToNextPageSpy };
 }
 
 const absencePeriodScenarios = {
@@ -152,7 +152,7 @@ describe("UploadDocsOptions", () => {
   });
 
   it("shows a validation error when a user does not choose a doc type option", async () => {
-    const { goToNextPageSpy, setAppErrorsSpy } = setup();
+    const { goToNextPageSpy, setErrorsSpy } = setup();
 
     const submitButton = screen.getByRole("button", {
       name: "Save and continue",
@@ -161,7 +161,7 @@ describe("UploadDocsOptions", () => {
     userEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(setAppErrorsSpy).toHaveBeenCalledWith(
+      expect(setErrorsSpy).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({
             field: "upload_docs_options",

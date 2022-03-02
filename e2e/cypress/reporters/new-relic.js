@@ -115,14 +115,21 @@ module.exports = class NewRelicCypressReporter extends reporters.Spec {
 
   buildTestResultInstances(metadata, test) {
     const events = [];
-    events.push(this.buildTestResultInstance(metadata, test, null, 1));
     if (test?.prevAttempts && test.prevAttempts.length) {
-      test.prevAttempts.forEach((attempt, i) => {
+      test.prevAttempts.forEach((attempt) => {
         events.push(
-          this.buildTestResultInstance(metadata, test, attempt, i + 2)
+          this.buildTestResultInstance(
+            metadata,
+            test,
+            attempt,
+            events.length + 1
+          )
         );
       });
     }
+    events.push(
+      this.buildTestResultInstance(metadata, test, null, events.length + 1)
+    );
     return events;
   }
 

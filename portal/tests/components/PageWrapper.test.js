@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import AppErrorInfo from "../../src/models/AppErrorInfo";
+import ErrorInfo from "../../src/models/ErrorInfo";
 import Flag from "../../src/models/Flag";
 import PageWrapper from "../../src/components/PageWrapper";
 import React from "react";
@@ -328,8 +328,8 @@ describe("PageWrapper", () => {
       <PageWrapperWithAppLogic
         addAppLogicMocks={(_appLogic) => {
           appLogic = _appLogic;
-          appLogic.appErrors = [
-            new AppErrorInfo({
+          appLogic.errors = [
+            new ErrorInfo({
               message: "Error message",
             }),
           ];

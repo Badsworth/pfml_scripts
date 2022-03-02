@@ -29,7 +29,7 @@ export const ForgotPassword = (props: ForgotPasswordProps) => {
   });
 
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });

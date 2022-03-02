@@ -1,11 +1,14 @@
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
 
 import massgov.pfml.api.util.state_log_util as state_log_util
+from massgov.pfml.db.models.absences import AbsencePeriodType, AbsenceStatus
+from massgov.pfml.db.models.employees import State
 from massgov.pfml.db.models.factories import (
     AbsencePeriodFactory,
+    BenefitYearFactory,
     ClaimFactory,
     DiaReductionPaymentFactory,
     DuaReductionPaymentFactory,
@@ -13,7 +16,7 @@ from massgov.pfml.db.models.factories import (
     EmployerFactory,
 )
 from massgov.pfml.db.models.payments import PaymentAuditReportDetails, PaymentAuditReportType
-from massgov.pfml.db.models.state import Flow, State
+from massgov.pfml.db.models.state import Flow
 from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_step import (
     PaymentPostProcessingStep,
 )
@@ -93,6 +96,68 @@ def test_payment_date_mismatch_post_processing(payment_post_processing_step, loc
     assert (
         audit_report_details.details["message"]
         == "Payment for 2020-02-01 -> 2020-02-07 outside all leave dates. Had absence periods for 2020-01-05 -> 2020-01-30."
+    )
+
+
+def test_total_leave_duration_post_processing(payment_post_processing_step, local_test_db_session):
+    employee = EmployeeFactory.create()
+    employer = EmployerFactory.create()
+    claim = ClaimFactory.create()
+    absence_period_start_date = date(2021, 1, 5)
+    fineos_leave_request_id = 1234
+    absence_period_end_date = absence_period_start_date + timedelta(weeks=26)
+    BenefitYearFactory.create(
+        employee=employee, start_date=date(2021, 1, 3), end_date=date(2022, 1, 1),
+    )
+    claim = ClaimFactory.create(
+        fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
+        absence_period_start_date=absence_period_start_date,
+        absence_period_end_date=absence_period_end_date,
+        employee=employee,
+        employer=employer,
+    )
+    AbsencePeriodFactory.create(
+        claim=claim,
+        absence_period_start_date=absence_period_start_date,
+        absence_period_end_date=absence_period_end_date,
+        absence_period_type_id=AbsencePeriodType.CONTINUOUS.absence_period_type_id,
+        fineos_leave_request_id=fineos_leave_request_id,
+    )
+
+    payment_container = _create_payment_container(
+        employee,
+        Decimal("600.00"),
+        local_test_db_session,
+        start_date=absence_period_start_date,
+        periods=1,
+        length_of_period=7,
+        claim=claim,
+    )
+    payment_container.payment.fineos_leave_request_id = fineos_leave_request_id
+
+    payment_post_processing_step.run()
+
+    payment = payment_container.payment
+    # Check that it is staged for audit
+    payment_flow_log = state_log_util.get_latest_state_log_in_flow(
+        payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+    )
+    assert (
+        payment_flow_log.end_state_id
+        == State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id
+    )
+
+    audit_report_details = (
+        local_test_db_session.query(PaymentAuditReportDetails)
+        .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
+        .one()
+    )
+
+    assert audit_report_details.details["message"] == "\n".join(
+        [
+            "Benefit Year Start: 2021-01-03, Benefit Year End: 2022-01-01",
+            f"- Employer ID: {employer.fineos_employer_id}, Leave Duration: 183",
+        ]
     )
 
 

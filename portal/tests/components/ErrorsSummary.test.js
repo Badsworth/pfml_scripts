@@ -1,12 +1,12 @@
 import { render, screen } from "@testing-library/react";
-import AppErrorInfo from "../../src/models/AppErrorInfo";
+import ErrorInfo from "../../src/models/ErrorInfo";
 import ErrorsSummary from "../../src/components/ErrorsSummary";
 import React from "react";
 import { Trans } from "react-i18next";
 
 const renderComponent = (customProps) => {
   customProps = {
-    errors: [new AppErrorInfo({ message: "Mock error message" })],
+    errors: [new ErrorInfo({ message: "Mock error message" })],
     ...customProps,
   };
   return render(<ErrorsSummary {...customProps} />);
@@ -53,7 +53,7 @@ describe("ErrorsSummary", () => {
 
     it("renders a Trans component", () => {
       const errors = [
-        new AppErrorInfo({ message: <Trans i18nKey="errors.caughtError" /> }),
+        new ErrorInfo({ message: <Trans i18nKey="errors.caughtError" /> }),
       ];
 
       renderComponent({ errors });
@@ -69,8 +69,8 @@ describe("ErrorsSummary", () => {
   describe("when more than one error exists", () => {
     it("renders the plural heading and list of error messages", () => {
       const errors = [
-        new AppErrorInfo({ message: "Mock error message #1" }),
-        new AppErrorInfo({ message: "Mock error message #2" }),
+        new ErrorInfo({ message: "Mock error message #1" }),
+        new ErrorInfo({ message: "Mock error message #2" }),
       ];
 
       renderComponent({ errors });
@@ -81,9 +81,9 @@ describe("ErrorsSummary", () => {
 
     it("renders the singular heading if all errors are duplicates", () => {
       const errors = [
-        new AppErrorInfo({ message: "Mock error message #1" }),
-        new AppErrorInfo({ message: "Mock error message #1" }),
-        new AppErrorInfo({ message: "Mock error message #1" }),
+        new ErrorInfo({ message: "Mock error message #1" }),
+        new ErrorInfo({ message: "Mock error message #1" }),
+        new ErrorInfo({ message: "Mock error message #1" }),
       ];
 
       renderComponent({ errors });
@@ -93,9 +93,9 @@ describe("ErrorsSummary", () => {
 
     it("removes any duplicate error messages", () => {
       const errors = [
-        new AppErrorInfo({ message: "Mock error message #1" }),
-        new AppErrorInfo({ message: "Mock error message #1" }),
-        new AppErrorInfo({ message: "Mock error message #2" }),
+        new ErrorInfo({ message: "Mock error message #1" }),
+        new ErrorInfo({ message: "Mock error message #1" }),
+        new ErrorInfo({ message: "Mock error message #2" }),
       ];
       renderComponent({ errors });
 
@@ -109,8 +109,8 @@ describe("ErrorsSummary", () => {
 
     it("renders elements corresponding to text in Trans components", () => {
       const errors = [
-        new AppErrorInfo({ message: <Trans i18nKey="errors.caughtError" /> }),
-        new AppErrorInfo({
+        new ErrorInfo({ message: <Trans i18nKey="errors.caughtError" /> }),
+        new ErrorInfo({
           message: <Trans i18nKey="errors.caughtError_NetworkError" />,
         }),
       ];
@@ -136,8 +136,8 @@ describe("ErrorsSummary", () => {
     it("scrolls to the top of the window when there are errors", () => {
       renderComponent({
         errors: [
-          new AppErrorInfo({ message: "Mock error message #1" }),
-          new AppErrorInfo({ message: "Mock error message #2" }),
+          new ErrorInfo({ message: "Mock error message #1" }),
+          new ErrorInfo({ message: "Mock error message #2" }),
         ],
       });
 
@@ -156,14 +156,14 @@ describe("ErrorsSummary", () => {
       const { rerender } = render(
         <ErrorsSummary
           errors={[
-            new AppErrorInfo({ message: "Mock error message #1" }),
-            new AppErrorInfo({ message: "Mock error message #2" }),
+            new ErrorInfo({ message: "Mock error message #1" }),
+            new ErrorInfo({ message: "Mock error message #2" }),
           ]}
         />
       );
 
       rerender(
-        <ErrorsSummary errors={[new AppErrorInfo({ message: "New error" })]} />
+        <ErrorsSummary errors={[new ErrorInfo({ message: "New error" })]} />
       );
       expect(global.scrollTo).toHaveBeenCalledTimes(2);
       expect(global.scrollTo).toHaveBeenCalledWith(0, 0);
