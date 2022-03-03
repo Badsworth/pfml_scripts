@@ -383,7 +383,7 @@ module "weekend-pub-payments-process-fineos" {
         "name": "pub-payments-process-fineos",
         "command": [
           "pub-payments-process-fineos",
-          "--steps", "consume-fineos-claimant", "claimant-extract"
+          "--steps", "consume-fineos-claimant", "claimant-extract", "consume_fineos_1099_request","do_1099_data_extract"
         ]
       }
     ]
