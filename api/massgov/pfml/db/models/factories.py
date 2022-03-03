@@ -491,6 +491,8 @@ class PaymentFactory(BaseFactory):
     # The I value is unique for all payments and should be a string, not an int.
     fineos_pei_i_value = factory.Sequence(lambda n: "%d" % n)
 
+    fineos_leave_request_id = factory.Faker("random_int")
+
     claim = factory.SubFactory(ClaimFactory)
     claim_id = factory.LazyAttribute(lambda a: a.claim.claim_id)
 
