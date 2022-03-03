@@ -46,6 +46,17 @@ const getI18nKeysForIssue = (issue: Issue, i18nPrefix: string): string[] => {
     i18nKeys.push(`errors.validationFallback.invalid`);
   }
 
+  // Log in dev mode so it's easier to see the keys available for internationalizing an issue's message
+  if (process.env.NODE_ENV === "development") {
+    /* eslint-disable no-console */
+    console.groupCollapsed("i18n keys available for issue...");
+    console.table(i18nKeys);
+    console.log("The issue was:");
+    console.table(issue);
+    console.groupEnd();
+    /* eslint-enable no-console */
+  }
+
   // i18next will use the first key in the array that has an existing translation
   return i18nKeys;
 };

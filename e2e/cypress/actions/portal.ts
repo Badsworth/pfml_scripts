@@ -1134,7 +1134,7 @@ export function addOrganization(fein: string, withholding: number): void {
  * Assertion for error message when adding employer with zero contributions.
  */
 export function assertZeroWithholdings(): void {
-  cy.contains("Employer has no verification data", { timeout: 30000 });
+  cy.contains("not made any paid leave contributions", { timeout: 30000 });
 }
 export type ClaimantStatus =
   | "Approved"
