@@ -36,6 +36,19 @@ export class E2EQuery extends React.Component {
             return <Spinner />;
           }
           if (
+            error &&
+            error?.message !==
+              "No events found -- do you have the correct event type and time range?"
+          ) {
+            return (
+              <SectionMessage
+                title={"There was an error executing the query"}
+                description={error.message}
+                type={SectionMessage.TYPE.CRITICAL}
+              />
+            );
+          }
+          if (
             data === null ||
             error?.message ===
               "No events found -- do you have the correct event type and time range?"
@@ -44,15 +57,6 @@ export class E2EQuery extends React.Component {
               <SectionMessage
                 title={"No Data"}
                 type={SectionMessage.TYPE.INFO}
-              />
-            );
-          }
-          if (error) {
-            return (
-              <SectionMessage
-                title={"There was an error executing the query"}
-                description={error.message}
-                type={SectionMessage.TYPE.CRITICAL}
               />
             );
           }
