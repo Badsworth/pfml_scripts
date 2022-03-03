@@ -116,7 +116,6 @@ const DateTimeField = (props: FieldHookConfig<string>) => {
       dateFormat="YYYY-MM-DD"
       timeFormat="h:mmA z"
       displayTimeZone={Timezone}
-      initialViewDate={moment.tz("YYYY-MM-DD", Timezone)}
       renderInput={renderInput}
       value={field.value}
       inputProps={{
