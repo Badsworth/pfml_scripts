@@ -5,7 +5,6 @@
 #
 
 import enum
-import re
 import uuid
 from typing import Optional, Sequence, TextIO, cast
 
@@ -26,6 +25,10 @@ from massgov.pfml.db.models.payments import FineosWritebackTransactionStatus
 from massgov.pfml.db.models.state import Flow, State
 from massgov.pfml.delegated_payments import delegated_config, delegated_payments_util
 from massgov.pfml.delegated_payments.pub import process_files_in_path_step
+from massgov.pfml.delegated_payments.pub.pub_util import (
+    parse_eft_prenote_pub_individual_id,
+    parse_payment_pub_individual_id,
+)
 from massgov.pfml.delegated_payments.util.ach import reader
 from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
     create_payment_finished_state_log_with_writeback,
@@ -33,9 +36,6 @@ from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
 from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
-
-EFT_PRENOTE_ID_PATTERN = re.compile(r"^E([1-9][0-9]*)$")
-PAYMENT_ID_PATTERN = re.compile(r"^P([1-9][0-9]*)$")
 
 
 class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathStep):
@@ -80,18 +80,9 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         self.db_session.add(self.reference_file)
 
         stream = massgov.pfml.util.files.open_stream(path)
-        try:
-            self.process_stream(stream)
-        except Exception:
-            self.db_session.rollback()
-            logger.exception("fatal error when processing ach return", extra={"path": path})
-            delegated_payments_util.move_reference_file(
-                self.db_session, self.reference_file, self.received_path, self.error_path
-            )
-            # TODO: add to general error report
-            raise
 
-        self.db_session.commit()
+        self.process_stream(stream)
+
         delegated_payments_util.move_reference_file(
             self.db_session, self.reference_file, self.received_path, self.processed_path
         )
@@ -441,15 +432,3 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
                 details=details,
                 payment=payment,
             )
-
-
-def parse_eft_prenote_pub_individual_id(id_number: str) -> Optional[int]:
-    if match := EFT_PRENOTE_ID_PATTERN.match(id_number):
-        return int(match.group(1))
-    return None
-
-
-def parse_payment_pub_individual_id(id_number: str) -> Optional[int]:
-    if match := PAYMENT_ID_PATTERN.match(id_number):
-        return int(match.group(1))
-    return None

@@ -28,6 +28,10 @@ export function processRawNRQLDataAsTable(data) {
       }
       return buildObj;
     });
+  } else if (data?.results) {
+    if (data.results.length === 1) {
+      return data.results[0].events;
+    }
   }
 
   return ret;

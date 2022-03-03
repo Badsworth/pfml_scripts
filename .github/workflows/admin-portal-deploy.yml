@@ -290,7 +290,7 @@ jobs:
       - uses: hashicorp/setup-terraform@v1.2.1
         with:
           terraform_version: ${{ env.terraformVersion }}
-          terraform_wrapper: false
+          terraform_wrapper: true
 
       - name: Terraform Init
         id: terraform_init
@@ -299,17 +299,17 @@ jobs:
 
       - name: Terraform Output
         id: terraform
-        run: terraform output
+        run: terraform output -json
         working-directory: ${{ env.terraformBaseDir }}${{ needs.deploy-info.outputs.admin-portal-env }}
         env:
           TF_CLI_ARGS: ''
 
       - name: Invalidate old Cloudfront cache
         env:
-          TF_OUTPUT: ${{ steps.terraform.outputs.tf_actions_output }}
+          TF_OUTPUT: ${{ steps.terraform.outputs.stdout }}
         run: |
-          sudo apt-get install jq
           DISTRIBUTION_ID=$(echo $TF_OUTPUT | jq -r '.cloudfront_distribution_id.value')
+          echo $DISTRIBUTION_ID
           aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
 
   postdeploy-info:

@@ -30,7 +30,7 @@ from massgov.pfml.db.models.azure import (
     LkAzurePermission,
 )
 from massgov.pfml.db.models.employees import Role, User
-from massgov.pfml.util.users import has_role_in
+from massgov.pfml.util.users import get_user_log_attributes, has_role_in
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -152,11 +152,11 @@ def _process_cognito_token(db_session: Session, decoded_token: dict[str, Any]) -
         raise Unauthorized
 
     flask.g.current_user = user
+    user_attributes = get_user_log_attributes(user)
 
-    newrelic.agent.add_custom_parameter("current_user.user_id", user.user_id)
-    newrelic.agent.add_custom_parameter(
-        "current_user.auth_id", user.sub_id,
-    )
+    # Read attributes for logging, so that db calls are not made during logging.
+    flask.g.current_user_log_attributes = user_attributes
+    newrelic.agent.add_custom_parameters(user_attributes.items())
 
     if has_role_in(user, [Role.PFML_CRM]):
         mass_pfml_agent_id = flask.request.headers.get("Mass-PFML-Agent-ID", None)
@@ -164,11 +164,6 @@ def _process_cognito_token(db_session: Session, decoded_token: dict[str, Any]) -
             raise Unauthorized("Invalid required header: Mass-PFML-Agent-ID")
         newrelic.agent.add_custom_parameter("mass_pfml_agent_id", mass_pfml_agent_id)
 
-    # Read attributes for logging, so that db calls are not made during logging.
-    flask.g.current_user_user_id = str(user.user_id)
-    flask.g.current_user_auth_id = str(user.sub_id)
-
-    flask.g.current_user_role_ids = ",".join(str(role.role_id) for role in user.roles)
     logger.info("Cognito auth token decode succeeded", extra={"auth_id": auth_id, "user": user})
 
 

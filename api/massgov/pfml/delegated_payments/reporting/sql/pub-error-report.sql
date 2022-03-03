@@ -19,6 +19,10 @@ WITH PAYMENT_BATCH_TRANSACTIONS AS (
 							   UNION ALL
                                SELECT MAX(IMPORT_LOG_ID)
                                FROM IMPORT_LOG
+                               WHERE SOURCE = 'ProcessManualPubRejectionStep'
+                 UNION ALL
+                               SELECT MAX(IMPORT_LOG_ID)
+                               FROM IMPORT_LOG
                                WHERE SOURCE = 'ProcessCheckReturnFileStep'
                                UNION ALL
                                SELECT MAX(IMPORT_LOG_ID)

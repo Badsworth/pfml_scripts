@@ -87,18 +87,9 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         self.db_session.add(self.reference_file)
 
         stream = massgov.pfml.util.files.open_stream(path)
-        try:
-            self.process_stream(stream)
-        except Exception as err:
-            self.db_session.rollback()
-            logger.exception("%s: %s", type(err).__name__, str(err), extra={"path": path})
-            delegated_payments_util.move_reference_file(
-                self.db_session, self.reference_file, self.received_path, self.error_path
-            )
-            # TODO: add to general error report
-            raise
 
-        self.db_session.commit()
+        self.process_stream(stream)
+
         delegated_payments_util.move_reference_file(
             self.db_session, self.reference_file, self.received_path, self.processed_path
         )

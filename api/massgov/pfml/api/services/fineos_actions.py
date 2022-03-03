@@ -1535,6 +1535,25 @@ def send_tax_withholding_preference(
     fineos_client.send_tax_withholding_preference(absence_id, is_withholding_tax)
 
 
+def submit_change_request(
+    change_request: ChangeRequest, claim: Claim, db_session: massgov.pfml.db.Session
+) -> ChangeRequest:
+    fineos = massgov.pfml.fineos.create_client()
+
+    fineos_web_id = register_employee_with_claim(fineos, db_session, claim)
+
+    absence_id = claim.fineos_absence_id
+    if absence_id is None:
+        raise Exception("Can't get absence periods from FINEOS - No absence_id for claim")
+
+    fineos_change_request = convert_change_request_to_fineos_model(change_request, claim)
+    fineos.create_or_update_leave_period_change_request(
+        fineos_web_id, absence_id, fineos_change_request
+    )
+
+    return change_request
+
+
 # Throws a pydantic.error_wrappers.ValidationError if startDate or endDate are None
 def convert_change_request_to_fineos_model(
     change_request: ChangeRequest, claim: Claim
