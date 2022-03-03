@@ -280,6 +280,16 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
+    def create_or_update_leave_period_change_request(
+        self,
+        fineos_web_id: str,
+        absence_id: str,
+        change_request: models.customer_api.LeavePeriodChangeRequest,
+    ) -> models.customer_api.LeavePeriodChangeRequest:
+        """Create or update a leave period change request in FINEOS."""
+        pass
+
+    @abc.abstractmethod
     def create_or_update_leave_admin(
         self, leave_admin_create_or_update: models.CreateOrUpdateLeaveAdmin
     ) -> Tuple[Optional[str], Optional[str]]:

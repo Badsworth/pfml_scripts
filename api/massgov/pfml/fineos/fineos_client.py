@@ -1343,7 +1343,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         return employer_create_or_update.fineos_customer_nbr, fineos_employer_id_int
 
     def create_or_update_leave_period_change_request(
-        self, user_id: str, change_request: LeavePeriodChangeRequest
+        self, fineos_web_id: str, absence_id: str, change_request: LeavePeriodChangeRequest
     ) -> LeavePeriodChangeRequest:
         # call the FINEOS POST change_request endpoint when the upgrade is complete
         # TODO: https://lwd.atlassian.net/browse/PFMLPB-2055
@@ -1356,7 +1356,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         return LeavePeriodChangeRequest.parse_obj(mock_response_json)
 
     def get_leave_period_change_requests(
-        self, user_id: str, claim_id: str
+        self, fineos_web_id: str, absence_id: str
     ) -> List[LeavePeriodChangeRequest]:
         # call the FINEOS GET change_request endpoint when the upgrade is complete
         # TODO: https://lwd.atlassian.net/browse/PFMLPB-2055

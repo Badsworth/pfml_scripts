@@ -792,7 +792,7 @@ class TestCreateOrUpdateLeavePeriodChangeRequest:
 
     def test_success(self, fineos_client, change_request):
         response = fineos_client.create_or_update_leave_period_change_request(
-            "user_id", change_request
+            "web_id", "absence_id", change_request
         )
 
         reason = response.reason
@@ -807,7 +807,7 @@ class TestCreateOrUpdateLeavePeriodChangeRequest:
 
 class TestGetLeavePeriodChangeRequests:
     def test_success(self, fineos_client):
-        change_requests = fineos_client.get_leave_period_change_requests("user_id", "claim_id")
+        change_requests = fineos_client.get_leave_period_change_requests("web_id", "absence_id")
 
         assert len(change_requests) > 0
         request = change_requests[0]
