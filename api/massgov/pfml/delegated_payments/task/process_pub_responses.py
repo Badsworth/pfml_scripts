@@ -8,6 +8,10 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml.delegated_payments.delegated_fineos_pei_writeback import FineosPeiWritebackStep
 from massgov.pfml.delegated_payments.pickup_response_files_step import PickupResponseFilesStep
 from massgov.pfml.delegated_payments.pub.process_check_return_step import ProcessCheckReturnFileStep
+from massgov.pfml.delegated_payments.pub.process_files_in_path_step import ProcessFilesInPathStep
+from massgov.pfml.delegated_payments.pub.process_manual_pub_rejection_step import (
+    ProcessManualPubRejectionStep,
+)
 from massgov.pfml.delegated_payments.pub.process_nacha_return_step import ProcessNachaReturnFileStep
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_report_step import ReportStep
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports import (
@@ -26,6 +30,7 @@ ALL = "ALL"
 PICKUP_FILES = "pickup"
 PROCESS_NACHA_RESPONSES = "process-nacha"
 PROCESS_CHECK_RESPONSES = "process-checks"
+PROCESS_MANUAL_REJECTS = "process-manual-rejects"
 WRITEBACK = "writeback"
 REPORT = "report"
 ALLOWED_VALUES = [
@@ -33,6 +38,7 @@ ALLOWED_VALUES = [
     PICKUP_FILES,
     PROCESS_NACHA_RESPONSES,
     PROCESS_CHECK_RESPONSES,
+    PROCESS_MANUAL_REJECTS,
     WRITEBACK,
     REPORT,
 ]
@@ -42,6 +48,7 @@ class Configuration:
     pickup_files: bool
     process_nacha_responses: bool
     process_check_responses: bool
+    process_manual_rejects: bool
     send_fineos_writeback: bool
     make_reports: bool
 
@@ -64,12 +71,14 @@ class Configuration:
             self.pickup_files = True
             self.process_nacha_responses = True
             self.process_check_responses = True
+            self.process_manual_rejects = True
             self.send_fineos_writeback = True
             self.make_reports = True
         else:
             self.pickup_files = PICKUP_FILES in steps
             self.process_nacha_responses = PROCESS_NACHA_RESPONSES in steps
             self.process_check_responses = PROCESS_CHECK_RESPONSES in steps
+            self.process_manual_rejects = PROCESS_MANUAL_REJECTS in steps
             self.send_fineos_writeback = WRITEBACK in steps
             self.make_reports = REPORT in steps
 
@@ -106,29 +115,19 @@ def _process_pub_responses(
         process_nacha_return_files_step = ProcessNachaReturnFileStep(
             db_session=db_session, log_entry_db_session=log_entry_db_session,
         )
-        iteration_count = 0
-        while process_nacha_return_files_step.have_more_files_to_process():
-            process_nacha_return_files_step.run()
-            iteration_count += 1
-            if iteration_count > MAX_FILE_COUNT:
-                raise Exception(
-                    "Found more than 25 files in %s directory, this may indicate that the process was failing to move the files"
-                    % process_nacha_return_files_step.received_path
-                )
+        run_repeated_step(process_nacha_return_files_step)
 
     if config.process_check_responses:
         process_check_return_file_step = ProcessCheckReturnFileStep(
             db_session=db_session, log_entry_db_session=log_entry_db_session,
         )
-        iteration_count = 0
-        while process_check_return_file_step.have_more_files_to_process():
-            process_check_return_file_step.run()
-            iteration_count += 1
-            if iteration_count > MAX_FILE_COUNT:
-                raise Exception(
-                    "Found more than 25 files in %s directory, this may indicate that the process was failing to move the files"
-                    % process_check_return_file_step.received_path
-                )
+        run_repeated_step(process_check_return_file_step)
+
+    if config.process_manual_rejects:
+        process_manual_pub_reject_step = ProcessManualPubRejectionStep(
+            db_session=db_session, log_entry_db_session=log_entry_db_session,
+        )
+        run_repeated_step(process_manual_pub_reject_step)
 
     if config.send_fineos_writeback:
         FineosPeiWritebackStep(
@@ -164,6 +163,18 @@ def _check_for_files_not_recieved(db_session: db.Session) -> None:
         metric=ProcessCheckReturnFileStep.Metrics.PROCESSED_CHECKS_OUTSTANDING_FILE,
         business_days=3,
     )
+
+
+def run_repeated_step(step: ProcessFilesInPathStep) -> None:
+    iteration_count = 0
+    while step.have_more_files_to_process():
+        step.run()
+        iteration_count += 1
+        if iteration_count > MAX_FILE_COUNT:
+            raise Exception(
+                "Found more than 25 files in %s directory, this may indicate that the process was failing to move the files"
+                % step.received_path
+            )
 
 
 if __name__ == "__main__":

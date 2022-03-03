@@ -1086,6 +1086,10 @@ class FineosWritebackTransactionStatus(LookupTable):
         29, "Max Leave Duration Exceeded", ACTIVE_WRITEBACK_RECORD_STATUS
     )
 
+    INVALID_ROUTING_NUMBER = LkFineosWritebackTransactionStatus(
+        30, "Invalid Routing Number", PENDING_ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
 
 class AuditReportAction(str, Enum):
     REJECTED = "REJECTED"

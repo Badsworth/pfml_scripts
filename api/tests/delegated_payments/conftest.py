@@ -33,6 +33,9 @@ def set_exporter_env_vars(mock_s3_bucket, mock_fineos_s3_bucket, monkeypatch):
     )
     monkeypatch.setenv("PFML_PUB_CHECK_ARCHIVE_PATH", f"s3://{mock_s3_bucket}/pub/check")
     monkeypatch.setenv("PFML_PUB_ACH_ARCHIVE_PATH", f"s3://{mock_s3_bucket}/pub/ach")
+    monkeypatch.setenv(
+        "PFML_MANUAL_PUB_REJECT_ARCHIVE_PATH", f"s3://{mock_s3_bucket}/pub/manual-reject"
+    )
     monkeypatch.setenv("PUB_MOVEIT_OUTBOUND_PATH", f"s3://{mock_s3_bucket}/pub/outbound")
     monkeypatch.setenv("PUB_MOVEIT_INBOUND_PATH", f"s3://{mock_s3_bucket}/pub/inbound")
 

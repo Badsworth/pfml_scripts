@@ -34,6 +34,7 @@ from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
     create_payment_finished_state_log_with_writeback,
     stage_payment_fineos_writeback,
 )
+from massgov.pfml.util.strings import remove_unicode_replacement_char
 
 logger = logging.get_logger(__name__)
 
@@ -256,7 +257,7 @@ class PaymentRejectsStep(Step):
         # logic works as expected. This char represents an unknown unicode
         # character.
         if rejected_notes:
-            rejected_notes = rejected_notes.replace("\ufffd", " ")
+            rejected_notes = remove_unicode_replacement_char(rejected_notes)
 
         if payment_state_log is None:
             self.increment(self.Metrics.PAYMENT_STATE_LOG_MISSING_COUNT)

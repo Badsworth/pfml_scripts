@@ -107,6 +107,8 @@ class ScenarioName(Enum):
     PUB_ACH_MEDICAL_RETURN = "PUB_ACH_MEDICAL_RETURN"
     PUB_ACH_MEDICAL_NOTIFICATION = "PUB_ACH_MEDICAL_NOTIFICATION"
 
+    PUB_ACH_MANUAL_REJECT = "PUB_ACH_MANUAL_REJECT"
+
     PUB_CHECK_FAMILY_RETURN_VOID = "PUB_CHECK_FAMILY_RETURN_VOID"
     PUB_CHECK_FAMILY_RETURN_STALE = "PUB_CHECK_FAMILY_RETURN_STALE"
     PUB_CHECK_FAMILY_RETURN_STOP = "PUB_CHECK_FAMILY_RETURN_STOP"
@@ -225,6 +227,10 @@ class ScenarioDescriptor:
     is_tax_withholding_records_exists: bool = False
     is_duplicate_tax_withholding_records_exists: bool = False
     is_tax_withholding_record_without_primary_payment: bool = False
+
+    # Manual rejects
+    manual_pub_reject_response: bool = False
+    manual_pub_reject_notes: str = "Manual Failure Test"
 
 
 SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
@@ -371,8 +377,10 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
-        claim_type="Employee",
         pub_ach_response_change_notification=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_ACH_MANUAL_REJECT, manual_pub_reject_response=True,
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,

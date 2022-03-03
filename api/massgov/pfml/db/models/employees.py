@@ -1791,6 +1791,11 @@ class PubErrorType(LookupTable):
     CHECK_PAYMENT_ERROR = LkPubErrorType(7, "Check payment error")
     CHECK_PAYMENT_FAILED = LkPubErrorType(8, "Check payment failed")
 
+    MANUAL_PUB_REJECT_LINE_ERROR = LkPubErrorType(9, "Invalid manual PUB reject line")
+    MANUAL_PUB_REJECT_ERROR = LkPubErrorType(10, "Manual PUB reject error processing")
+    MANUAL_PUB_REJECT_EFT_PROCESSED = LkPubErrorType(11, "Manual PUB reject EFT processed")
+    MANUAL_PUB_REJECT_PAYMENT_PROCESSED = LkPubErrorType(12, "Manual PUB reject payment processed")
+
 
 class AddressType(LookupTable):
     model = LkAddressType
@@ -2051,6 +2056,8 @@ class ReferenceFileType(LookupTable):
 
     DUA_EMPLOYER_FILE = LkReferenceFileType(39, "DUA employer", 1)
     DUA_EMPLOYER_UNIT_FILE = LkReferenceFileType(40, "DUA employer unit", 1)
+
+    MANUAL_PUB_REJECT_FILE = LkReferenceFileType(41, "Manual PUB Reject File", 1)
 
 
 class Title(LookupTable):
