@@ -47,7 +47,6 @@ export default function Maintenance() {
 
   type options = {
     name?: string;
-    page_routes?: string[];
   };
 
   const confirmationDialogCancelCallback = () => {
@@ -60,14 +59,6 @@ export default function Maintenance() {
       await patchAdminFlagsByName({ name: "maintenance" }, { enabled: false });
       setShowConfirmationDialog(false);
     }
-  };
-
-  const checked_page_routes: { [key: string]: string } = {
-    "Entire Site": "/*",
-    Applications: "/applications/*",
-    Employers: "/employers/*",
-    "Create Account": "/*create-account",
-    Login: "/login",
   };
 
   // Functions to format table.
@@ -86,9 +77,9 @@ export default function Maintenance() {
       TimezoneAbbr
     );
   };
-  const getName = (m: FlagWithLog) => <>{(m?.options as options)?.name}</>;
-  const getEnabled = (m: FlagWithLog) => (m?.enabled ? "True" : "False");
-  const getDuration = (m: FlagWithLog) => (
+  const getName = (m: Flag) => <>{(m?.options as options)?.name}</>;
+  const getEnabled = (m: Flag) => (m?.enabled ? "True" : "False");
+  const getDuration = (m: Flag) => (
     <>
       {(m.start ? formatHistoryDateTime(m.start) : "No start provided") +
         " - " +
@@ -96,25 +87,6 @@ export default function Maintenance() {
     </>
   );
 
-  const getPageRoutes = (m: Flag) => {
-    const routes = (m?.options as options)?.page_routes ?? [];
-
-    return (
-      <ul className="maintenance-configure__page-routes">
-        {routes.map((route, index) => {
-          const label =
-            Object.keys(checked_page_routes).find(
-              (k) => checked_page_routes[k] === route,
-            ) || "Custom";
-          return (
-            <li key={index}>
-              {label}: <code>{route}</code>
-            </li>
-          );
-        })}
-      </ul>
-    );
-  };
   const getCreatedBy = (m: FlagWithLog) => (
     <>
       {m.first_name} {m.last_name}
@@ -133,14 +105,6 @@ export default function Maintenance() {
       return linkValues;
     }
     linkValues.name = (m?.options as options)?.name ?? "";
-    const page_routes =
-      ((m?.options as options)?.page_routes as string[]) ?? [];
-    linkValues.checked_page_routes = page_routes.filter((item) =>
-      Object.values(checked_page_routes).includes(item),
-    );
-    linkValues.custom_page_routes = page_routes.filter(
-      (item) => !Object.values(checked_page_routes).includes(item),
-    );
     if (!includeDateTimes) {
       return linkValues;
     }
@@ -269,12 +233,6 @@ export default function Maintenance() {
                         : "No end provided")}
                   </>
                 )}
-              </div>
-            </div>
-            <div className="maintenance-status__row">
-              <div className="maintenance-status__label">Page Routes</div>
-              <div className="maintenance-status__value">
-                {getPageRoutes(maintenance)}
               </div>
             </div>
           </div>
