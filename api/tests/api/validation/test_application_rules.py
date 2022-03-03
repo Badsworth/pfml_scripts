@@ -2297,6 +2297,73 @@ def test_previous_leave_end_date_must_be_after_2020():
     ] == issues
 
 
+def test_previous_leave_start_dates_for_caring_leave_with_prior_year_before_launch():
+    application = ApplicationFactory.build(
+        leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id,
+    )
+    leave_periods = [
+        ContinuousLeavePeriodFactory.build(
+            application_id=application.application_id,
+            start_date=date(2021, 8, 1),
+            end_date=date(2021, 8, 15),
+        )
+    ]
+    application.continuous_leave_periods = leave_periods
+    leaves = [
+        PreviousLeaveSameReasonFactory.build(
+            application_id=application.application_id,
+            leave_start_date=date(2021, 4, 1),
+            leave_end_date=date(2021, 4, 15),
+        )
+    ]
+    application.previous_leaves_same_reason = leaves
+
+    issues = get_conditional_issues(application)
+    assert [
+        ValidationErrorDetail(
+            type=IssueType.minimum,
+            message="previous_leaves_same_reason[0].leave_start_date cannot be earlier than 2021-07-01",
+            field="previous_leaves_same_reason[0].leave_start_date",
+        ),
+        ValidationErrorDetail(
+            type=IssueType.minimum,
+            message="previous_leaves_same_reason[0].leave_end_date cannot be earlier than 2021-07-01",
+            field="previous_leaves_same_reason[0].leave_end_date",
+        ),
+    ] == issues
+
+
+def test_previous_leave_start_dates_for_caring_leave_with_prior_year_after_launch():
+    application = ApplicationFactory.build(
+        leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id,
+    )
+    leave_periods = [
+        ContinuousLeavePeriodFactory.build(
+            application_id=application.application_id,
+            start_date=date(2022, 8, 1),
+            end_date=date(2022, 8, 15),
+        )
+    ]
+    application.continuous_leave_periods = leave_periods
+    leaves = [
+        PreviousLeaveSameReasonFactory.build(
+            application_id=application.application_id,
+            leave_start_date=date(2021, 7, 30),
+            leave_end_date=date(2021, 8, 15),
+        )
+    ]
+    application.previous_leaves_same_reason = leaves
+
+    issues = get_conditional_issues(application)
+    assert [
+        ValidationErrorDetail(
+            type=IssueType.minimum,
+            message="previous_leaves_same_reason[0].leave_start_date cannot be earlier than 2021-08-01",
+            field="previous_leaves_same_reason[0].leave_start_date",
+        ),
+    ] == issues
+
+
 def test_previous_leave_end_date_must_be_after_start_date():
     application = ApplicationFactory.build()
     leaves = [

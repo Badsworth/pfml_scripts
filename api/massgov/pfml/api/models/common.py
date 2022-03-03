@@ -336,6 +336,22 @@ def get_computed_start_dates(
     return computed_start_dates
 
 
+def get_earliest_start_date(application: db_application_models.Application) -> Optional[date]:
+    all_leave_periods = application.all_leave_periods
+    leave_period_start_dates = [
+        leave_period.start_date for leave_period in all_leave_periods if leave_period.start_date
+    ]
+    return min(leave_period_start_dates, default=None)
+
+
+def get_leave_reason(application: db_application_models.Application) -> Optional[str]:
+    return (
+        db_application_models.LeaveReason.get_description(application.leave_reason_id)
+        if application.leave_reason_id
+        else None
+    )
+
+
 # search stuff
 
 SearchTermsT = TypeVar("SearchTermsT", bound=PydanticBaseModel)

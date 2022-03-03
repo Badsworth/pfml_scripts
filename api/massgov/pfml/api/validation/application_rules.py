@@ -15,6 +15,11 @@ from massgov.pfml.api.constants.application import (
 )
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
 from massgov.pfml.api.models.applications.requests import ApplicationImportRequestBody
+from massgov.pfml.api.models.common import (
+    get_computed_start_dates,
+    get_earliest_start_date,
+    get_leave_reason,
+)
 from massgov.pfml.api.services.applications import (
     ContinuousLeavePeriod,
     IntermittentLeavePeriod,
@@ -457,7 +462,9 @@ def get_previous_leaves_other_reason_issues(
         )
     else:
         for index, leave in enumerate(application.previous_leaves_other_reason, 0):
-            issues += get_previous_leave_issues(leave, f"previous_leaves_other_reason[{index}]")
+            issues += get_previous_leave_issues(
+                leave, f"previous_leaves_other_reason[{index}]", application
+            )
             issues += check_required_fields(
                 f"previous_leaves_other_reason[{index}]",
                 leave,
@@ -485,12 +492,16 @@ def get_previous_leaves_same_reason_issues(application: Application) -> List[Val
         )
     else:
         for index, leave in enumerate(application.previous_leaves_same_reason, 0):
-            issues += get_previous_leave_issues(leave, f"previous_leaves_same_reason[{index}]")
+            issues += get_previous_leave_issues(
+                leave, f"previous_leaves_same_reason[{index}]", application
+            )
 
     return issues
 
 
-def get_previous_leave_issues(leave: PreviousLeave, leave_path: str) -> List[ValidationErrorDetail]:
+def get_previous_leave_issues(
+    leave: PreviousLeave, leave_path: str, application: Application
+) -> List[ValidationErrorDetail]:
     issues = []
 
     required_fields = [
@@ -511,12 +522,29 @@ def get_previous_leave_issues(leave: PreviousLeave, leave_path: str) -> List[Val
             )
         )
 
+    minimum_date = PFML_PROGRAM_LAUNCH_DATE
+
+    earliest_start_date = get_earliest_start_date(application)
+    leave_reason = get_leave_reason(application)
+    if earliest_start_date and leave_reason:
+        computed_start_dates = get_computed_start_dates(earliest_start_date, leave_reason)
+        if (
+            leave_path.startswith("previous_leaves_same_reason")
+            and computed_start_dates.same_reason
+        ):
+            minimum_date = computed_start_dates.same_reason
+        elif (
+            leave_path.startswith("previous_leaves_other_reason")
+            and computed_start_dates.other_reason
+        ):
+            minimum_date = computed_start_dates.other_reason
+
     start_date = leave.leave_start_date
     start_date_path = f"{leave_path}.leave_start_date"
     end_date = leave.leave_end_date
     end_date_path = f"{leave_path}.leave_end_date"
     issues += check_date_range(
-        start_date, start_date_path, end_date, end_date_path, minimum_date=PFML_PROGRAM_LAUNCH_DATE,
+        start_date, start_date_path, end_date, end_date_path, minimum_date=minimum_date,
     )
 
     return issues
