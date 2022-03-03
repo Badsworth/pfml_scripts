@@ -145,6 +145,7 @@ class Upload1099DocumentsStep(Step):
                     fineos, document_path, file_name, document_type, record, current_retry
                 )
         except Exception:
+            logger.exception("Upload 1099 exception.")
             self._retry_upload_document(
                 fineos, document_path, file_name, document_type, record, current_retry
             )
