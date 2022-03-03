@@ -803,18 +803,3 @@ class TestCreateOrUpdateLeavePeriodChangeRequest:
         period = response.changeRequestPeriods[0]
         assert period.startDate == datetime.date(2022, 2, 14)
         assert period.endDate == datetime.date(2022, 2, 15)
-
-
-class TestGetLeavePeriodChangeRequests:
-    def test_success(self, fineos_client):
-        change_requests = fineos_client.get_leave_period_change_requests("web_id", "absence_id")
-
-        assert len(change_requests) > 0
-        request = change_requests[0]
-
-        assert request.reason.name == "Employee Requested Removal"
-        assert request.additionalNotes == "Withdrawal"
-
-        period = request.changeRequestPeriods[0]
-        assert period.startDate == datetime.date(2022, 2, 14)
-        assert period.endDate == datetime.date(2022, 2, 15)

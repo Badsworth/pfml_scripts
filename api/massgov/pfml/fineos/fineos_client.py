@@ -1355,21 +1355,6 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
         return LeavePeriodChangeRequest.parse_obj(mock_response_json)
 
-    def get_leave_period_change_requests(
-        self, fineos_web_id: str, absence_id: str
-    ) -> List[LeavePeriodChangeRequest]:
-        # call the FINEOS GET change_request endpoint when the upgrade is complete
-        # TODO: https://lwd.atlassian.net/browse/PFMLPB-2055
-        mock_response_json = [
-            {
-                "additionalNotes": "Withdrawal",
-                "changeRequestPeriods": [{"endDate": "2022-02-15", "startDate": "2022-02-14"}],
-                "reason": {"fullId": 0, "name": "Employee Requested Removal"},
-            }
-        ]
-
-        return pydantic.parse_obj_as(List[LeavePeriodChangeRequest], mock_response_json)
-
     @staticmethod
     def _create_or_update_leave_admin_payload(
         leave_admin_create_or_update: models.CreateOrUpdateLeaveAdmin,
