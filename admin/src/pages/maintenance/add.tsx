@@ -116,7 +116,7 @@ const DateTimeField = (props: FieldHookConfig<string>) => {
       dateFormat="YYYY-MM-DD"
       timeFormat="h:mmA z"
       displayTimeZone={Timezone}
-      initialViewDate={new Date()}
+      initialViewDate={moment.tz("YYYY-MM-DD", Timezone)}
       renderInput={renderInput}
       value={field.value}
       inputProps={{
@@ -125,6 +125,7 @@ const DateTimeField = (props: FieldHookConfig<string>) => {
         placeholder: "Choose Date/Time",
         disabled: props.disabled,
         required: props.required,
+        readOnly: true,
       }}
       // This overwrites the onChange function from the Formik {..field}.
       onChange={(value) => {
