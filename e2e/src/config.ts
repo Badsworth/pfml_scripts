@@ -78,6 +78,7 @@ function getRawEnvironment() {
     HAS_ORGUNITS_SETUP: process.env.HAS_ORGUNITS_SETUP,
     HAS_LARGE_FILE_COMPRESSION: process.env.HAS_LARGE_FILE_COMPRESSION,
     HAS_EMPLOYER_REIMBURSEMENTS: process.env.HAS_EMPLOYER_REIMBURSEMENTS,
+    HAS_APRIL_UPGRADE: process.env.HAS_APRIL_UPGRADE,
     HAS_FEB_RELEASE: process.env.HAS_FEB_RELEASE,
     LST_FILE_RANGE: process.env.E2E_LST_FILE_RANGE, // valid values are "small", "large", "full_range"
     MFA_ENABLED: process.env.MFA_ENABLED,

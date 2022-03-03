@@ -253,7 +253,7 @@ export class ClaimPage {
     return this;
   }
 
-  deny(reason: string, assertStatus = true): this {
+  deny(reason: string, assertStatus = true, upgrade: boolean): this {
     cy.get("input[type='submit'][value='Adjudicate']").click();
     // Make sure the page is fully loaded by waiting for the leave plan to show up.
     cy.get("table[id*='selectedLeavePlans'] tr")
@@ -261,8 +261,11 @@ export class ClaimPage {
       .click();
     cy.get("input[type='submit'][value='Reject']").click();
     clickBottomWidgetButton("OK");
-
-    cy.get('a[title="Deny the Pending Leave Request"]').click();
+    if (upgrade) {
+      cy.get('a[title="Deny the pending/in review leave request"]').click();
+    } else {
+      cy.get('a[title="Deny the Pending Leave Request"]').click();
+    }
     cy.get('span[id="leaveRequestDenialDetailsWidget"]')
       .find("select")
       .select(reason);
@@ -2516,13 +2519,17 @@ export class ClaimantPage {
    */
   createNotification(
     claim: ValidClaim,
-    withholdingPreference?: boolean
+    withholdingPreference?: boolean,
+    verifyOccupation?: boolean
   ): Cypress.Chainable<string> {
     if (!claim.leave_details.reason) throw new Error(`Missing leave reason.`);
     const reason = claim.leave_details.reason as NonNullable<LeaveReason>;
     // Start the process
     return this.startCreateNotification((occupationDetails) => {
       // "Occupation Details" step.
+      if (verifyOccupation) {
+        occupationDetails.verifyOccupation();
+      }
       if (claim.hours_worked_per_week)
         occupationDetails.enterHoursWorkedPerWeek(claim.hours_worked_per_week);
       return occupationDetails.nextStep((notificationOptions) => {
@@ -2754,6 +2761,11 @@ class OccupationDetails extends CreateNotificationStep {
     cy.findByLabelText("Date job ended").type(
       `${dateToMMddyyyy(dateJobEnded)}{enter}`
     );
+  }
+
+  verifyOccupation(): this {
+    cy.get("[name$='_reverifyStatusLink']").click();
+    return this;
   }
 }
 

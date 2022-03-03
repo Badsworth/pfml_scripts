@@ -2,6 +2,7 @@ import { fineos, fineosPages, portal } from "../../../actions";
 import { Submission } from "../../../../src/types";
 import { addMonths, addDays, format } from "date-fns";
 import { extractLeavePeriod } from "../../../../src/util/claims";
+import { config } from "../../../actions/common";
 
 describe("Submit medical pre-birth application via the web portal", () => {
   const submission =
@@ -124,10 +125,19 @@ describe("Submit medical pre-birth application via the web portal", () => {
       cy.dependsOnPreviousPass([extension]);
       fineos.before();
       cy.unstash<Submission>("submission").then((submission) => {
-        fineosPages.ClaimPage.visit(submission.fineos_absence_id).deny(
-          "Claimant wages failed 30x rule",
-          false
-        );
+        if (config("HAS_APRIL_UPGRADE") === "true") {
+          fineosPages.ClaimPage.visit(submission.fineos_absence_id).deny(
+            "Covered family relationship not established",
+            true,
+            true
+          );
+        } else {
+          fineosPages.ClaimPage.visit(submission.fineos_absence_id).deny(
+            "Claimant wages failed 30x rule",
+            false,
+            false
+          );
+        }
       });
     }
   );

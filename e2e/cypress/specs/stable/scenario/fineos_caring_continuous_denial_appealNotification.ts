@@ -2,6 +2,7 @@ import { portal, fineos, email, fineosPages } from "../../../actions";
 import { getLeaveAdminCredentials } from "../../../config";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { Submission } from "../../../../src/types";
+import { config } from "../../../actions/common";
 
 describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
   const fineosSubmission = it("Should be able to create a claim", () => {
@@ -10,7 +11,11 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
       cy.stash("claim", claim);
       assertValidClaim(claim.claim);
       fineosPages.ClaimantPage.visit(claim.claim.tax_identifier)
-        .createNotification(claim.claim)
+        .createNotification(
+          claim.claim,
+          claim.is_withholding_tax,
+          config("HAS_APRIL_UPGRADE") === "true"
+        )
         .then((fineos_absence_id) => {
           cy.log(fineos_absence_id);
           cy.stash("submission", {
@@ -49,9 +54,19 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
     cy.dependsOnPreviousPass([fineosSubmission, employerDenial]);
     fineos.before();
     cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
-      fineosPages.ClaimPage.visit(fineos_absence_id).deny(
-        "Covered family relationship not established"
-      );
+      if (config("HAS_APRIL_UPGRADE") === "true") {
+        fineosPages.ClaimPage.visit(fineos_absence_id).deny(
+          "Covered family relationship not established",
+          true,
+          true
+        );
+      } else {
+        fineosPages.ClaimPage.visit(fineos_absence_id).deny(
+          "Covered family relationship not established",
+          true,
+          false
+        );
+      }
     });
   });
 
