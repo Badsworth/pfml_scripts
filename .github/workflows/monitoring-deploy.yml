@@ -22,7 +22,6 @@ on:
           ⬇️ Tag or branch to be deployed.
 
 env:
-  deploys_channel: "C01HEAJPE76" #mass-pfml-deploys-shared
   workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
   terraformVersion: 0.14.7
 
@@ -109,10 +108,8 @@ jobs:
           --data '{
             "@type": "MessageCard",
             "themeColor": "FF0000",
-            "ttle": "Monitoring tests failed",
-            "text": "Monitoring tests failed in main ${{ env.workflow_self_link }}",
-            "sections": [{
-                "activityImage":"https://th.bing.com/th/id/R.ee8882f44294e8a6f1732a54343ff17e?rik=FAYIPD4sACftKw&riu=http%3a%2f%2f3.bp.blogspot.com%2f-u6MZBWbGcZI%2fUT4mft01YTI%2fAAAAAAAADpU%2fJubGsyGdL00%2fs1600%2ffailure.png&ehk=ranH%2bkeeo59wsILuyxVyNTIR2oUECprijedE01jHq34%3d&risl=&pid=ImgRaw&r=0"
-              }]
+            "title": "Failed to deploy Monitoring",
+            "text": "${{ env.workflow_self_link }}",
+            "sections": [{}]
             }'
           )

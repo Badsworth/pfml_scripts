@@ -12,6 +12,7 @@ import {
 import { RunIndicator } from "./RunIndicator";
 import { E2EQuery } from "./E2EQuery";
 import { DAO } from "../DAO";
+import { Warning } from "../components/InfoMessages";
 import { format as dateFormat } from "date-fns";
 
 class RunIndicators extends React.Component {
@@ -41,12 +42,7 @@ class RunIndicators extends React.Component {
     }
     // EXPECTED TO BE DOWN, REMOVE AFTER Feb 21, 2022
     else if (ENV_OFFLINE[this.state.env]) {
-      return (
-        <span class="warning">
-          <Icon type={Icon.TYPE.INTERFACE__STATE__WARNING} />
-          {ENV_OFFLINE[this.state.env]}
-        </span>
-      );
+      return <Warning>{ENV_OFFLINE[this.state.env]}</Warning>;
     }
     return [
       <E2EQuery
@@ -58,7 +54,7 @@ class RunIndicators extends React.Component {
       >
         {({ data }) => {
           const link = navigation.getOpenStackedNerdletLocation({
-            id: "e2e-tests",
+            id: "panel-testgrid",
             urlState: { runIds: data.map((run) => run.runId) },
           });
           return [

@@ -46,10 +46,9 @@ export function RunIndicator({ run, simpleView = true }) {
 
   /**
    * Generate Nerdlet link for testgrid view.
-   * @TODO: Change to new testgrid for TestResults Table
    */
   const link = navigation.getOpenStackedNerdletLocation({
-    id: "e2e-tests",
+    id: "panel-testgrid",
     urlState: { runIds: [run.runId] },
   });
   return (

@@ -1,32 +1,5 @@
-@import "~@newrelic/nr1-community/dist/index.css";
-@import "../common/scss/main.scss";
-@import "../common/components/Navigation";
-@import "../common/components/EnvironmentsOverviewTable";
+@import "../common/scss/index.scss";
 
 .e2e-run-history {
   min-width: 330px;
-}
-
-span.info {
-  background: #bbecff;
-  padding: 8px;
-  border-radius: 8px;
-  color: #004058;
-  border: 1px #004058 solid;
-
-  .ic-Icon {
-    margin-right: 5px;
-  }
-}
-
-span.warning {
-  background: #d4e500;
-  padding: 10px;
-  border-radius: 8px;
-  color: #2c2f00;
-  border: 0;
-
-  .ic-Icon {
-    margin-right: 5px;
-  }
 }

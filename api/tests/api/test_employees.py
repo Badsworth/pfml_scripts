@@ -108,7 +108,10 @@ def test_employees_get_fineos_user_forbidden(client, employee, fineos_user_token
     assert response.status_code == 403
 
 
-def test_employees_search_nonsnow_forbidden(client, employee, consented_user_token):
+def test_employees_search_nonsnow_forbidden(client, consented_user_token):
+    employee = EmployeeFactory.create(
+        first_name="John", last_name="Smith", email_address="test@example.com"
+    )
     terms = {
         "first_name": employee.first_name,
         "last_name": employee.last_name,
@@ -125,9 +128,17 @@ def test_employees_search_nonsnow_forbidden(client, employee, consented_user_tok
     assert response.status_code == 403
 
 
-def test_employees_search_snow_allowed_with_default_values(client, employee, snow_user_headers):
-    EmployeeFactory.create(first_name=employee.first_name)
-    EmployeeFactory.create(last_name=employee.last_name)
+def test_employees_search_snow_allowed_with_default_values(client, snow_user_headers):
+    employee = EmployeeFactory.create(
+        first_name="John", last_name="Smith", email_address="test@example.com"
+    )
+
+    EmployeeFactory.create(
+        first_name=employee.first_name, last_name="Black", email_address="test@example.com"
+    )
+    EmployeeFactory.create(
+        first_name="Black", last_name=employee.last_name, email_address="test@example.com"
+    )
     terms = {
         "first_name": employee.first_name,
         "last_name": employee.last_name,
@@ -141,7 +152,11 @@ def test_employees_search_snow_allowed_with_default_values(client, employee, sno
     assert_employee_search_response_paging_data(data)
 
 
-def test_employees_search_snow_allowed(client, employee, snow_user_headers):
+def test_employees_search_snow_allowed(client, snow_user_headers):
+    employee = EmployeeFactory.create(
+        first_name="John", last_name="Smith", email_address="test@example.com"
+    )
+
     EmployeeFactory.create(first_name=employee.first_name)
     EmployeeFactory.create(last_name=employee.last_name)
     employee_2 = EmployeeFactory.create(
@@ -164,7 +179,11 @@ def test_employees_search_snow_allowed(client, employee, snow_user_headers):
     assert_employee_search_response_paging_data(data, paging)
 
 
-def test_employees_search_name_requirement(client, employee, snow_user_headers):
+def test_employees_search_name_requirement(client, snow_user_headers):
+    employee = EmployeeFactory.create(
+        first_name="John", last_name="Smith", email_address="test@example.com"
+    )
+
     terms_1 = {
         "first_name": employee.first_name,
     }
@@ -192,7 +211,7 @@ def test_employees_search_name_requirement(client, employee, snow_user_headers):
 
 
 def test_employees_search_nonexisting_employee(client, snow_user_headers):
-    EmployeeFactory.create(first_name="Jar", last_name="binks")
+    EmployeeFactory.create(first_name="Jar", last_name="binks", email_address="test@example.com")
     terms = {"first_name": "JarJar", "last_name": "Binks"}
     body = {"terms": terms}
     response = client.post("/v1/employees/search", json=body, headers=snow_user_headers,)
@@ -204,7 +223,7 @@ def test_employees_search_nonexisting_employee(client, snow_user_headers):
 
 
 def test_employees_search_wildcard_rejects_invalid(client, snow_user_headers):
-    employee_1 = EmployeeFactory(first_name="Bob")
+    employee_1 = EmployeeFactory(first_name="Bob", last_name="Black")
     EmployeeFactory(first_name="Bobby", last_name=employee_1.last_name)
 
     terms = {
@@ -225,7 +244,7 @@ def test_employees_search_wildcard_rejects_invalid(client, snow_user_headers):
 
 
 def test_employees_search_wildcard_name(client, snow_user_headers):
-    employee_1 = EmployeeFactory(first_name="Bob")
+    employee_1 = EmployeeFactory(first_name="Bob", last_name="Smith")
     employee_2 = EmployeeFactory(first_name="Bobby", last_name=employee_1.last_name)
     # different first name, same last name
     EmployeeFactory(first_name="Jane", last_name=employee_1.last_name)
@@ -275,7 +294,7 @@ def test_employees_search_with_fineos_customer_number(client, snow_user_headers)
 
 
 def test_employees_search_with_email_address(client, snow_user_headers):
-    employee_1 = EmployeeFactory(email_address="test@example.com")
+    employee_1 = EmployeeFactory(first_name="Will", email_address="test@example.com")
     EmployeeFactory(first_name=employee_1.first_name)
     terms = {
         "email_address": employee_1.email_address,

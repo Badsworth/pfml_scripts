@@ -14,7 +14,7 @@ resource "newrelic_synthetics_monitor" "portal_ping" {
   # Validate that this string is on the page
   # SIMPLE synthetics only evaluate the returned HTML and do not
   # execute javascript, so the pmflTerriyay feature flag has no effect
-  validation_string = var.environment_name == "prod" ? "Create a worker account" : "Hello world"
+  validation_string = var.environment_name == "prod" ? "apply for Paid Family and Medical Leave" : "Hello world"
 }
 
 resource "newrelic_synthetics_monitor" "portal_scripted_browser" {

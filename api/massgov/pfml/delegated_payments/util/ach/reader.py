@@ -123,7 +123,7 @@ class ACHWarning:
     def get_details_for_log(self) -> Dict[str, Any]:
         return {
             "type_code": self.raw_record.type_code.value,
-            "raw_data": self.raw_record.data,
+            "line_number": self.raw_record.line_number,
         }
 
 

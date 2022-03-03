@@ -19,11 +19,13 @@ from massgov.pfml.db.models.employees import (
     EmployeePubEftPair,
     ExperianAddressPair,
     LatestStateLog,
+    LkPaymentRelevantParty,
     LkPaymentTransactionType,
     Payment,
     PaymentDetails,
     PaymentMethod,
     PaymentReferenceFile,
+    PaymentRelevantParty,
     PaymentTransactionType,
     PrenoteState,
     PubEft,
@@ -139,6 +141,7 @@ class PaymentData:
     payment_detail_records: Optional[List[PaymentDetails]] = None
 
     payment_transaction_type: LkPaymentTransactionType
+    payment_relevant_party: LkPaymentRelevantParty
     is_standard_payment: bool
     is_employee_required: bool
 
@@ -199,6 +202,8 @@ class PaymentData:
         )
 
         self.payment_amount = self.get_payment_amount(pei_record)
+
+        self.payment_relevant_party = self.get_relevant_party()
 
         self.payment_transaction_type = self.get_payment_transaction_type()
 
@@ -362,44 +367,59 @@ class PaymentData:
         if self.payment_amount == Decimal("0"):
             return PaymentTransactionType.ZERO_DOLLAR
 
-        # Tax Withholdings
-        # SIT
-        if self.tin == STATE_TAX_WITHHOLDING_TIN:
-            return PaymentTransactionType.STATE_TAX_WITHHOLDING
-
-        # FIT
-        if self.tin == FEDERAL_TAX_WITHHOLDING_TIN:
-            return PaymentTransactionType.FEDERAL_TAX_WITHHOLDING
-
-        # Employer reimbursements reimbursements are a very specific set of records
-        if (
-            self.event_reason == AUTO_ALT_EVENT_REASON
-            and self.event_type == PAYMENT_OUT_TRANSACTION_TYPE
-            and self.payee_identifier == TAX_IDENTIFICATION_NUMBER
-        ):
-            return PaymentTransactionType.EMPLOYER_REIMBURSEMENT
-
         # Note that Overpayments can be positive or negative amounts
-        for overpayment_transaction_type in OVERPAYMENT_PAYMENT_TRANSACTION_TYPES:
-            if self.event_type == overpayment_transaction_type.payment_transaction_type_description:
-                return overpayment_transaction_type
+        overpayment_transaction_type = self.get_transaction_type_if_overpayment()
+        if overpayment_transaction_type:
+            return overpayment_transaction_type
 
-        # The bulk of the payments we process will be standard payments
+        party_to_type = {
+            PaymentRelevantParty.STATE_TAX.payment_relevant_party_id: PaymentTransactionType.STATE_TAX_WITHHOLDING,
+            PaymentRelevantParty.FEDERAL_TAX.payment_relevant_party_id: PaymentTransactionType.FEDERAL_TAX_WITHHOLDING,
+            PaymentRelevantParty.REIMBURSED_EMPLOYER.payment_relevant_party_id: PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+            PaymentRelevantParty.CLAIMANT.payment_relevant_party_id: PaymentTransactionType.STANDARD,
+        }
         if (
             self.event_type == PAYMENT_OUT_TRANSACTION_TYPE
             and self.payment_amount
             and self.payment_amount > Decimal("0")
+            and self.payment_relevant_party.payment_relevant_party_id in party_to_type
         ):
-            return PaymentTransactionType.STANDARD
+            return party_to_type[self.payment_relevant_party.payment_relevant_party_id]
 
-        # We should always have been able to figure out the payment type
-        # from the above checks, this shouldn't happen and should go
-        # to the error report as it's not clear what we should do with it
         self.validation_container.add_validation_issue(
             payments_util.ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE,
             f"Unknown payment scenario encountered. Payment Amount: {self.payment_amount}, Event Type: {self.event_type}, Event Reason: {self.event_reason}",
         )
         return PaymentTransactionType.UNKNOWN
+
+    def get_transaction_type_if_overpayment(self) -> Optional[LkPaymentTransactionType]:
+        for overpayment_transaction_type in OVERPAYMENT_PAYMENT_TRANSACTION_TYPES:
+            if self.event_type == overpayment_transaction_type.payment_transaction_type_description:
+                return overpayment_transaction_type
+        return None
+
+    def get_relevant_party(self) -> LkPaymentRelevantParty:
+        """
+        Determine the relevant party for the payment. Payment transaction type
+        on its own doesn't determine this; for example, a zero dollar payment
+        might be issued to a claimant or as part of federal tax withholding.
+        """
+
+        if self.tin == STATE_TAX_WITHHOLDING_TIN:
+            return PaymentRelevantParty.STATE_TAX
+
+        if self.tin == FEDERAL_TAX_WITHHOLDING_TIN:
+            return PaymentRelevantParty.FEDERAL_TAX
+
+        if (
+            self.event_reason == AUTO_ALT_EVENT_REASON
+            and self.event_type == PAYMENT_OUT_TRANSACTION_TYPE
+            and self.payee_identifier == TAX_IDENTIFICATION_NUMBER
+        ):
+            return PaymentRelevantParty.REIMBURSED_EMPLOYER
+
+        # All other scenarios should be claimants
+        return PaymentRelevantParty.CLAIMANT
 
     def process_claim_details(
         self,
@@ -567,6 +587,7 @@ class PaymentData:
             "period_start_date": self.payment_start_period,
             "period_end_date": self.payment_end_period,
             "payment_transaction_type": self.payment_transaction_type.payment_transaction_type_description,
+            "payment_relevant_party": self.payment_relevant_party.payment_relevant_party_description,
             "is_for_standard_payment": self.is_employee_required,
         }
 
@@ -840,6 +861,10 @@ class PaymentExtractStep(Step):
         payment.payment_date = datetime_str_to_date(payment_data.payment_date)
         payment.absence_case_creation_date = datetime_str_to_date(
             payment_data.absence_case_creation_date
+        )
+
+        payment.payment_relevant_party_id = (
+            payment_data.payment_relevant_party.payment_relevant_party_id
         )
 
         payment.payment_transaction_type_id = (
@@ -1203,6 +1228,7 @@ class PaymentExtractStep(Step):
             end_state = State.STATE_WITHHOLDING_READY_FOR_PROCESSING
             message = "State Withholding payment processed"
             self.increment(self.Metrics.STATE_WITHHOLDING_PAYMENT_COUNT)
+
         else:
             end_state = State.PAYMENT_READY_FOR_ADDRESS_VALIDATION
             message = "Success"

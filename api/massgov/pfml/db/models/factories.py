@@ -491,6 +491,8 @@ class PaymentFactory(BaseFactory):
     # The I value is unique for all payments and should be a string, not an int.
     fineos_pei_i_value = factory.Sequence(lambda n: "%d" % n)
 
+    fineos_leave_request_id = factory.Faker("random_int")
+
     claim = factory.SubFactory(ClaimFactory)
     claim_id = factory.LazyAttribute(lambda a: a.claim.claim_id)
 
@@ -1359,3 +1361,19 @@ class Pfml1099RequestFactory(BaseFactory):
     employee_id = Generators.UuidObj
     correction_ind = factory.Faker("boolean")
     pfml_1099_batch_id = Generators.UuidObj
+
+
+class ChangeRequestFactory(BaseFactory):
+    class Meta:
+        model = employee_models.ChangeRequest
+
+    change_request_id = Generators.UuidObj
+    change_request_type_id = 1
+    claim_id = factory.LazyAttribute(lambda w: w.claim.claim_id)
+    start_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 2, 1), date_end=date(2021, 2, 15)
+    )
+    end_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 2, 16), date_end=date(2021, 2, 28)
+    )
+    submitted_time = None

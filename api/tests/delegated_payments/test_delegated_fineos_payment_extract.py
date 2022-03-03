@@ -15,6 +15,7 @@ from massgov.pfml.db.models.employees import (
     Employee,
     Payment,
     PaymentMethod,
+    PaymentRelevantParty,
     PaymentTransactionType,
     PrenoteState,
     PubEft,
@@ -2372,6 +2373,183 @@ def test_get_payment_transaction_type(initialize_factories_session, set_exporter
             payment_data.payment_transaction_type.payment_transaction_type_id
             == PaymentTransactionType.UNKNOWN.payment_transaction_type_id
         )
+
+
+def test_get_payment_relevant_party(initialize_factories_session, set_exporter_env_vars):
+    # get_payment_relevant_party is called as part of the constructor
+    # and sets payment_relevant_party accordingly.
+
+    # note the defaults for FineosPaymentData make a standard payment
+    standard_data = FineosPaymentData()
+    _, payment_data = make_payment_data_from_fineos_data(standard_data)
+    assert not payment_data.validation_container.has_validation_issues()
+    assert (
+        payment_data.payment_relevant_party.payment_relevant_party_id
+        == PaymentRelevantParty.CLAIMANT.payment_relevant_party_id
+    )
+
+    # Employer Reimbursement
+    employer_reimbursement_data = FineosPaymentData(
+        event_reason=extractor.AUTO_ALT_EVENT_REASON,
+        event_type=extractor.PAYMENT_OUT_TRANSACTION_TYPE,
+        payee_identifier=extractor.TAX_IDENTIFICATION_NUMBER,
+    )
+    _, payment_data = make_payment_data_from_fineos_data(employer_reimbursement_data)
+    assert not payment_data.validation_container.has_validation_issues()
+    assert (
+        payment_data.payment_relevant_party.payment_relevant_party_id
+        == PaymentRelevantParty.REIMBURSED_EMPLOYER.payment_relevant_party_id
+    )
+
+    # State witholding
+    employer_reimbursement_data = FineosPaymentData(tin=extractor.STATE_TAX_WITHHOLDING_TIN,)
+    _, payment_data = make_payment_data_from_fineos_data(employer_reimbursement_data)
+    assert not payment_data.validation_container.has_validation_issues()
+    assert (
+        payment_data.payment_relevant_party.payment_relevant_party_id
+        == PaymentRelevantParty.STATE_TAX.payment_relevant_party_id
+    )
+
+    # Federal tax
+    employer_reimbursement_data = FineosPaymentData(tin=extractor.FEDERAL_TAX_WITHHOLDING_TIN,)
+    _, payment_data = make_payment_data_from_fineos_data(employer_reimbursement_data)
+    assert not payment_data.validation_container.has_validation_issues()
+    assert (
+        payment_data.payment_relevant_party.payment_relevant_party_id
+        == PaymentRelevantParty.FEDERAL_TAX.payment_relevant_party_id
+    )
+
+
+@pytest.mark.parametrize(
+    "party_id",
+    [
+        PaymentRelevantParty.CLAIMANT.payment_relevant_party_id,
+        PaymentRelevantParty.REIMBURSED_EMPLOYER.payment_relevant_party_id,
+        PaymentRelevantParty.FEDERAL_TAX.payment_relevant_party_id,
+        PaymentRelevantParty.STATE_TAX.payment_relevant_party_id,
+    ],
+)
+@pytest.mark.parametrize(
+    "payment_category",
+    [
+        "cancellation",
+        "zero_dollar",
+        "overpayment",
+        "malformed_payment_negative",
+        "malformed_payment_unknown_event_type",
+        "malformed_payment_missing_everything",
+        "standard",
+    ],
+)
+def test_payment_party_and_type_combinations(
+    party_id, payment_category, initialize_factories_session, set_exporter_env_vars
+):
+    # There are four possible PaymentRelevantParty values and five categories of payments:
+    # cancellations, overpayments, zero dollar payments, malformed payments, and standard payments.
+    # We test all 20 possible combinations here to verify the correct PaymentTransactionType is
+    # returned for each.
+
+    # For each relevant party:
+    # Cancellation payments should always return a cancellation transaction type
+    # Overpayments should always return an overpayment transaction type
+    # Zero dollar payments for all relevant parties should return a zero dollar transaction type
+    # Malformed payments of various kinds should return an unknown transaction type with validation issues
+    # The transaction type of standard payments is determined by the relevant party
+
+    # these helpers specify the kwargs we must pass to the FineosPaymentData generator
+    # to generate various kinds of claimants
+    party_kwargs = {
+        PaymentRelevantParty.CLAIMANT.payment_relevant_party_id: {},
+        PaymentRelevantParty.REIMBURSED_EMPLOYER.payment_relevant_party_id: {
+            "event_reason": extractor.AUTO_ALT_EVENT_REASON,
+            "event_type": extractor.PAYMENT_OUT_TRANSACTION_TYPE,
+            "payee_identifier": extractor.TAX_IDENTIFICATION_NUMBER,
+        },
+        PaymentRelevantParty.FEDERAL_TAX.payment_relevant_party_id: {
+            "tin": extractor.FEDERAL_TAX_WITHHOLDING_TIN,
+        },
+        PaymentRelevantParty.STATE_TAX.payment_relevant_party_id: {
+            "tin": extractor.STATE_TAX_WITHHOLDING_TIN,
+        },
+    }
+    # note that "overpayment" is not entered here because we programmatically generate
+    # many different kinds of overpayments below
+    payment_kwargs = {
+        "cancellation": {"event_type": "PaymentOut Cancellation", "payment_amount": "-100.00"},
+        "zero_dollar": {"payment_amount": "0.00"},
+        "malformed_payment_negative": {"payment_amount": "-100.00",},
+        "malformed_payment_unknown_event_type": {
+            "event_type": "Yet another overpayment event type"
+        },
+        "malformed_payment_missing_everything": {
+            "generate_defaults": False,
+            "c_value": "1000",
+            "i_value": "1",
+        },
+        "standard": {},
+    }
+
+    # we handle testing overpayments separately since there are multiple types of overpayments to generate
+    if payment_category == "overpayment":
+        for overpayment_payment_transaction_type in extractor.OVERPAYMENT_PAYMENT_TRANSACTION_TYPES:
+            # Event reason is always unknown for overpayments in the real data
+            overpayment_data_kwargs = {
+                "event_type": overpayment_payment_transaction_type.payment_transaction_type_description,
+                "event_reason": "Unknown",
+            }
+            payment_data_kwargs = party_kwargs[party_id] | overpayment_data_kwargs
+            fineos_payment_data = FineosPaymentData(**payment_data_kwargs)
+            _, payment_data = make_payment_data_from_fineos_data(fineos_payment_data)
+
+            assert not payment_data.validation_container.has_validation_issues()
+            assert (
+                payment_data.payment_transaction_type.payment_transaction_type_id
+                == overpayment_payment_transaction_type.payment_transaction_type_id
+            )
+
+    else:
+        payment_data_kwargs = party_kwargs[party_id] | payment_kwargs[payment_category]
+        fineos_payment_data = FineosPaymentData(**payment_data_kwargs)
+        _, payment_data = make_payment_data_from_fineos_data(fineos_payment_data)
+
+        # all cancellation payments have same type regardless of party
+        if payment_category == "cancellation":
+            assert (
+                payment_data.payment_transaction_type.payment_transaction_type_id
+                == PaymentTransactionType.CANCELLATION.payment_transaction_type_id
+            )
+        # all zero dollar payments have same type regardless of party
+        elif payment_category == "zero_dollar":
+            assert (
+                payment_data.payment_transaction_type.payment_transaction_type_id
+                == PaymentTransactionType.ZERO_DOLLAR.payment_transaction_type_id
+            )
+
+        # standard payments are determined by their relevant party
+        elif payment_category == "standard":
+            party_to_type = {
+                PaymentRelevantParty.STATE_TAX.payment_relevant_party_id: PaymentTransactionType.STATE_TAX_WITHHOLDING,
+                PaymentRelevantParty.FEDERAL_TAX.payment_relevant_party_id: PaymentTransactionType.FEDERAL_TAX_WITHHOLDING,
+                PaymentRelevantParty.REIMBURSED_EMPLOYER.payment_relevant_party_id: PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+                PaymentRelevantParty.CLAIMANT.payment_relevant_party_id: PaymentTransactionType.STANDARD,
+            }
+
+            assert (
+                payment_data.payment_transaction_type.payment_transaction_type_id
+                == party_to_type[party_id].payment_transaction_type_id
+            )
+
+        # all other payment categories for this test are various kinds of malformed payments
+        else:
+            assert payment_data.validation_container.has_validation_issues()
+            assert (
+                payments_util.ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE
+                in payment_data.validation_container.get_reasons()
+            )
+            assert (
+                payment_data.payment_transaction_type.payment_transaction_type_id
+                == PaymentTransactionType.UNKNOWN.payment_transaction_type_id
+            )
 
 
 @pytest.mark.parametrize(

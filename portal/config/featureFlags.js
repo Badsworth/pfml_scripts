@@ -52,12 +52,6 @@ const flagsConfig = {
     // When this flag is true, PDF files up to 10mb are sent to the API.
     sendLargePdfToApi: false,
 
-    // When this flag is true, the HRD employer will no longer have their
-    // dashboard blocked from seeing any applications, and will function like
-    // all other employers' dashboards.
-    // Will only be used for smoke testing purposes and removed afterwards.
-    employerUnlockDashboard: true,
-
     // When this flag is true, claims that would span multiple benefit years
     // are split into separate claims
     // See: https://lwd.atlassian.net/wiki/spaces/DD/pages/2194014380/Tech+Spec+-+Claims+spanning+two+benefit+years

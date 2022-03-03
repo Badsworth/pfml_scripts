@@ -10,6 +10,7 @@ import enum
 from typing import List, Optional, TextIO
 
 import massgov.pfml.util.logging
+from massgov.pfml.delegated_payments.pub.pub_util import IteratorKeepingLastItem
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -55,20 +56,6 @@ class CheckParseError(Exception):
     """A unrecoverable error in the CSV return file."""
 
 
-class IteratorKeepingLastItem:
-    """An iterator that keeps a copy of the last item that was yielded."""
-
-    def __init__(self, it):
-        self.it = it
-
-    def __next__(self):
-        self.last_item = next(self.it)
-        return self.last_item
-
-    def __iter__(self):
-        return self
-
-
 class CheckReader:
     """A reader for PUB CSV return files.
 
@@ -96,7 +83,7 @@ class CheckReader:
     def add_line_error(self, line_number: int, field_name: str, warning: str) -> None:
         """Add a line parse error to the internal list."""
         self.line_errors.append(
-            CheckParseLineError(line_number, self.stream_iterator.last_item, field_name, warning)
+            CheckParseLineError(line_number, self.stream_iterator.current_item, field_name, warning)
         )
 
     def parse_check_file(self) -> None:
@@ -118,7 +105,7 @@ class CheckReader:
         logging_extra = {**self.logging_extra, "check_return.reader.line_number": line_number}
         check_payment = CheckPayment(
             line_number=line_number,
-            raw_line=self.stream_iterator.last_item,
+            raw_line=self.stream_iterator.current_item,
             check_number=line["Check Number"],
             payee_name=line["Payee Name"],
         )

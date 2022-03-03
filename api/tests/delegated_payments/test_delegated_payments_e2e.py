@@ -52,6 +52,9 @@ from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
     generate_payment_reconciliation_extract_files,
 )
 from massgov.pfml.delegated_payments.mock.generate_check_response import PubCheckResponseGenerator
+from massgov.pfml.delegated_payments.mock.generate_manual_pub_reject_response import (
+    ManualPubRejectResponseGenerator,
+)
 from massgov.pfml.delegated_payments.mock.pub_ach_response_generator import PubACHResponseGenerator
 from massgov.pfml.delegated_payments.mock.scenario_data_generator import (
     ScenarioData,
@@ -391,6 +394,7 @@ def test_e2e_pub_payments(
             ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
             ScenarioName.PUB_ACH_MEDICAL_RETURN,
             ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+            ScenarioName.PUB_ACH_MANUAL_REJECT,
             ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
             ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
             ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
@@ -516,6 +520,7 @@ def test_e2e_pub_payments(
                 ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
                 ScenarioName.PUB_ACH_MEDICAL_RETURN,
                 ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                ScenarioName.PUB_ACH_MANUAL_REJECT,
                 ScenarioName.AUDIT_REJECTED,
                 ScenarioName.AUDIT_SKIPPED,
                 ScenarioName.AUDIT_REJECTED_WITH_NOTE,
@@ -578,6 +583,7 @@ def test_e2e_pub_payments(
                 ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
                 ScenarioName.PUB_ACH_MEDICAL_RETURN,
                 ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                ScenarioName.PUB_ACH_MANUAL_REJECT,
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                 ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
@@ -785,6 +791,7 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
                         ScenarioName.PUB_ACH_MEDICAL_RETURN,
                         ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                        ScenarioName.PUB_ACH_MANUAL_REJECT,
                         ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
                         ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE,
                         ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
@@ -829,6 +836,7 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
                         ScenarioName.PUB_ACH_FAMILY_RETURN,
                         ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                        ScenarioName.PUB_ACH_MANUAL_REJECT,
                         ScenarioName.PUB_ACH_MEDICAL_RETURN,
                         ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
                         ScenarioName.PUB_ACH_PRENOTE_RETURN,
@@ -925,6 +933,7 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
                         ScenarioName.PUB_ACH_MEDICAL_RETURN,
                         ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                        ScenarioName.PUB_ACH_MANUAL_REJECT,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
@@ -981,6 +990,7 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
                         ScenarioName.PUB_ACH_MEDICAL_RETURN,
                         ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                        ScenarioName.PUB_ACH_MANUAL_REJECT,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
@@ -1016,6 +1026,7 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
                         ScenarioName.PUB_ACH_MEDICAL_RETURN,
                         ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                        ScenarioName.PUB_ACH_MANUAL_REJECT,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
@@ -1050,6 +1061,7 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
                         ScenarioName.PUB_ACH_MEDICAL_RETURN,
                         ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                        ScenarioName.PUB_ACH_MANUAL_REJECT,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
@@ -1111,6 +1123,7 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
                         ScenarioName.PUB_ACH_MEDICAL_RETURN,
                         ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                        ScenarioName.PUB_ACH_MANUAL_REJECT,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
@@ -1146,6 +1159,7 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
                         ScenarioName.PUB_ACH_MEDICAL_RETURN,
                         ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                        ScenarioName.PUB_ACH_MANUAL_REJECT,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
@@ -1181,6 +1195,7 @@ def test_e2e_pub_payments(
                         ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
                         ScenarioName.PUB_ACH_MEDICAL_RETURN,
                         ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                        ScenarioName.PUB_ACH_MANUAL_REJECT,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
@@ -1332,6 +1347,7 @@ def test_e2e_pub_payments(
             ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
             ScenarioName.PUB_ACH_MEDICAL_RETURN,
             ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+            ScenarioName.PUB_ACH_MANUAL_REJECT,
             ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
             ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
             ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE,
@@ -1352,6 +1368,7 @@ def test_e2e_pub_payments(
             ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
             ScenarioName.PUB_ACH_MEDICAL_RETURN,
             ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+            ScenarioName.PUB_ACH_MANUAL_REJECT,
             ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
             ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
             ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE,
@@ -1716,6 +1733,7 @@ def test_e2e_pub_payments(
             scenario_names=[
                 ScenarioName.PUB_ACH_FAMILY_RETURN,
                 ScenarioName.PUB_ACH_MEDICAL_RETURN,
+                ScenarioName.PUB_ACH_MANUAL_REJECT,
             ],
             end_state=State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
             db_session=test_db_session,
@@ -1906,6 +1924,7 @@ def test_e2e_pub_payments(
                 ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
                 ScenarioName.PUB_ACH_FAMILY_RETURN,
                 ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
+                ScenarioName.PUB_ACH_MANUAL_REJECT,
                 ScenarioName.PUB_ACH_MEDICAL_RETURN,
                 ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
                 ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
@@ -1941,6 +1960,7 @@ def test_e2e_pub_payments(
             ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
             ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
         ]
+        stage_3_manual_pub_reject_scenarios = [ScenarioName.PUB_ACH_MANUAL_REJECT]
 
         stage_3_all_writeback_scenarios = (
             stage_3_errored_writeback_scenarios_ach
@@ -1948,6 +1968,7 @@ def test_e2e_pub_payments(
             + stage_3_errored_writeback_scenarios_check_stale
             + stage_3_errored_writeback_scenarios_check_stop
             + stage_3_successful_writeback_scenarios
+            + stage_3_manual_pub_reject_scenarios
         )
 
         assert_writeback_for_stage(
@@ -2120,6 +2141,17 @@ def test_e2e_pub_payments(
 
         assert_metrics(
             test_db_other_session,
+            "ProcessManualPubRejectionStep",
+            {
+                "warning_count": 0,
+                "record_count": len(stage_3_manual_pub_reject_scenarios),
+                "payment_record_count": len(stage_3_manual_pub_reject_scenarios),
+                "payment_rejected_successfully_count": len(stage_3_manual_pub_reject_scenarios),
+            },
+        )
+
+        assert_metrics(
+            test_db_other_session,
             "FineosPeiWritebackStep",
             {
                 "errored_writeback_record_during_file_creation_count": 0,
@@ -2140,6 +2172,9 @@ def test_e2e_pub_payments(
                 ),
                 "posted_writeback_transaction_status_count": len(
                     stage_3_successful_writeback_scenarios
+                ),
+                "invalid_routing_number_writeback_transaction_status_count": len(
+                    [ScenarioName.PUB_ACH_MANUAL_REJECT]
                 ),
             },
         )
@@ -2752,15 +2787,13 @@ def generate_pub_returns(test_dataset: TestDataSet):
     s3_config = payments_config.get_s3_config()
 
     pub_response_folder = os.path.join(s3_config.pub_moveit_inbound_path)
-    pub_ach_response_generator = PubACHResponseGenerator(
-        test_dataset.scenario_dataset, pub_response_folder
-    )
-    pub_ach_response_generator.run()
+    PubACHResponseGenerator(test_dataset.scenario_dataset, pub_response_folder).run()
 
-    pub_check_response_generator = PubCheckResponseGenerator(
-        test_dataset.scenario_dataset, pub_response_folder
-    )
-    pub_check_response_generator.run()
+    PubCheckResponseGenerator(test_dataset.scenario_dataset, pub_response_folder).run()
+
+    ManualPubRejectResponseGenerator(
+        test_dataset.scenario_dataset, s3_config.dfml_response_inbound_path
+    ).run()
 
 
 def process_fineos_extracts(

@@ -1,0 +1,6 @@
+{
+  "schemaType": "NERDLET",
+  "id": "panel-testgrid",
+  "displayName": "E2E Test Viewer",
+  "description": "Displays information about one or more E2E test runs."
+}

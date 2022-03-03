@@ -372,6 +372,7 @@ class TestApplicationsImport:
         assert response.status_code == 403
         assert response_body["message"] == "An application already exists for this claim."
         assert response_body["errors"][0]["type"] == "duplicate"
+        assert response_body["errors"][0]["field"] == "absence_case_id"
 
     def test_applications_import_mfa_not_verified(
         self,
@@ -421,6 +422,7 @@ class TestApplicationsImport:
             == "An application linked to a different account already exists for this claim."
         )
         assert response_body["errors"][0]["type"] == "exists"
+        assert response_body["errors"][0]["field"] == "absence_case_id"
 
     def test_applications_import_missing_required_fields(self, client, auth_token, claim):
         response = client.post(

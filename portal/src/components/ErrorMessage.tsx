@@ -18,7 +18,8 @@ const ErrorMessage = (props: ErrorMessageProps) => {
 
   if (
     typeof error.issues !== "undefined" &&
-    typeof error.i18nPrefix !== "undefined"
+    typeof error.i18nPrefix !== "undefined" &&
+    error.issues.length > 0
   ) {
     return (
       <IssuesMessageList issues={error.issues} i18nPrefix={error.i18nPrefix} />
@@ -39,10 +40,13 @@ const ErrorMessage = (props: ErrorMessageProps) => {
 const IssuesMessageList = (props: { issues: Issue[]; i18nPrefix: string }) => {
   const { i18nPrefix, issues } = props;
   const ParentComponent = issues.length > 1 ? "ul" : React.Fragment;
-  const MessageWrapperComponent = issues.length > 1 ? "li" : React.Fragment;
+  // Doing it this way to avoid issues with setting className prop directly when using Fragment
+  const parentProps = ParentComponent === "ul" ? { className: "usa-list" } : {};
+  const MessageWrapperComponent =
+    ParentComponent === "ul" ? "li" : React.Fragment;
 
   return (
-    <ParentComponent>
+    <ParentComponent {...parentProps}>
       {issues.map((issue: Issue, index: number) => (
         <MessageWrapperComponent key={index}>
           <IssueErrorMessage i18nPrefix={i18nPrefix} {...issue} />

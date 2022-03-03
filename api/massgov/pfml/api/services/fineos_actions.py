@@ -41,6 +41,8 @@ from massgov.pfml.db.models.applications import (
 )
 from massgov.pfml.db.models.employees import (
     Address,
+    ChangeRequest,
+    ChangeRequestType,
     Claim,
     Employee,
     Employer,
@@ -55,6 +57,9 @@ from massgov.pfml.fineos.models import CreateOrUpdateServiceAgreement
 from massgov.pfml.fineos.models.customer_api import (
     AbsenceDetails,
     Base64EncodedFileData,
+    ChangeRequestPeriod,
+    ChangeRequestReason,
+    LeavePeriodChangeRequest,
     ReflexiveQuestionType,
 )
 from massgov.pfml.fineos.models.customer_api.spec import AbsencePeriod as FineosAbsencePeriod
@@ -1528,3 +1533,95 @@ def send_tax_withholding_preference(
     absence_id = get_fineos_absence_id_from_application(application)
     absence_id = absence_id.rstrip()
     fineos_client.send_tax_withholding_preference(absence_id, is_withholding_tax)
+
+
+def submit_change_request(
+    change_request: ChangeRequest, claim: Claim, db_session: massgov.pfml.db.Session
+) -> ChangeRequest:
+    fineos = massgov.pfml.fineos.create_client()
+
+    fineos_web_id = register_employee_with_claim(fineos, db_session, claim)
+
+    absence_id = claim.fineos_absence_id
+    if absence_id is None:
+        raise Exception("Can't get absence periods from FINEOS - No absence_id for claim")
+
+    fineos_change_request = convert_change_request_to_fineos_model(change_request, claim)
+    fineos.create_or_update_leave_period_change_request(
+        fineos_web_id, absence_id, fineos_change_request
+    )
+
+    return change_request
+
+
+# Throws a pydantic.error_wrappers.ValidationError if startDate or endDate are None
+def convert_change_request_to_fineos_model(
+    change_request: ChangeRequest, claim: Claim
+) -> LeavePeriodChangeRequest:
+    change_request_type = change_request.type
+
+    is_withdrawal = change_request_type == ChangeRequestType.WITHDRAWAL.description
+    if is_withdrawal:
+        # A withdrawal removes all dates from a claim
+        return LeavePeriodChangeRequest(
+            reason=ChangeRequestReason(fullId=0, name="Employee Requested Removal"),
+            additionalNotes="Withdrawal",
+            changeRequestPeriods=[
+                ChangeRequestPeriod(
+                    startDate=claim.absence_period_start_date, endDate=claim.absence_period_end_date
+                )
+            ],
+        )
+
+    is_medical_to_bonding = change_request_type == ChangeRequestType.MEDICAL_TO_BONDING.description
+    if is_medical_to_bonding:
+        return LeavePeriodChangeRequest(
+            reason=ChangeRequestReason(fullId=0, name="Add time for different Absence Reason"),
+            additionalNotes="Medical to bonding transition",
+            changeRequestPeriods=[
+                ChangeRequestPeriod(
+                    startDate=change_request.start_date, endDate=change_request.end_date
+                )
+            ],
+        )
+
+    is_extension = (
+        change_request.end_date is not None
+        and claim.absence_period_end_date is not None
+        and change_request.end_date > claim.absence_period_end_date
+    )
+    if is_extension:
+        return LeavePeriodChangeRequest(
+            reason=ChangeRequestReason(fullId=0, name="Add time for identical Absence Reason"),
+            additionalNotes="Extension",
+            changeRequestPeriods=[
+                ChangeRequestPeriod(
+                    startDate=change_request.start_date, endDate=change_request.end_date
+                )
+            ],
+        )
+
+    is_cancellation = (
+        change_request.end_date is not None
+        and claim.absence_period_end_date is not None
+        and change_request.end_date < claim.absence_period_end_date
+    )
+    if is_cancellation:
+        assert change_request.end_date
+
+        # In FINEOS, a cancellation means you are removing time.
+        # So the date range represents the dates that will be removed from leave
+        return LeavePeriodChangeRequest(
+            reason=ChangeRequestReason(fullId=0, name="Employee Requested Removal"),
+            additionalNotes="Cancellation",
+            changeRequestPeriods=[
+                ChangeRequestPeriod(
+                    startDate=change_request.end_date + datetime.timedelta(days=1),
+                    endDate=claim.absence_period_end_date,
+                )
+            ],
+        )
+    else:
+        raise ValueError(
+            f"Unable to convert ChangeRequest to FINEOS model - Unknown type: {change_request_type}"
+        )

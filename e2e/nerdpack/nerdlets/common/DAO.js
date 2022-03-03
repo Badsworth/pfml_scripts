@@ -237,6 +237,10 @@ export class DAO {
   static ComponentVersions() {
     return new DAOComponentVersions(this.ACCOUNT_ID);
   }
+
+  static RunDetails() {
+    return new DAORunDetails(this.ACCOUNT_ID);
+  }
 }
 
 export class BaseDAOV2 {
@@ -255,6 +259,7 @@ export class BaseDAOV2 {
 
   formatChart() {
     this.FORMAT_TYPE = NrqlQuery.FORMAT_TYPE.CHART;
+    return this;
   }
 
   where(where) {
@@ -273,6 +278,24 @@ export class BaseDAOV2 {
   }
 
   query() {}
+
+  whereIn(key, array) {
+    return `${key} IN (${array.map((i) => `'${i}'`).join(", ")})`;
+  }
+
+  buildQueryParts() {
+    let queryParts = [];
+    if (this.queryParts.where) {
+      queryParts.push(`WHERE ${this.queryParts.where} `);
+    }
+    if (this.queryParts.since) {
+      queryParts.push(`SINCE ${this.queryParts.since} `);
+    }
+    if (this.queryParts.limit) {
+      queryParts.push(`LIMIT ${this.queryParts.limit} `);
+    }
+    return queryParts;
+  }
 
   rowProcessor(row) {
     return row;
@@ -341,7 +364,6 @@ export class DAOComponentVersions extends BaseDAOV2 {
     super(accountId);
     this.queryParts.since = "3 month ago";
     this.queryParts.limit = "max";
-    this.queryParts.env = null;
   }
 
   query() {
@@ -373,5 +395,60 @@ export class DAOComponentVersions extends BaseDAOV2 {
       };
       return obj;
     }, {});
+  }
+}
+
+export class DAORunDetails extends BaseDAOV2 {
+  static GROUP_TYPE = {
+    STABLE: "Commit Stable",
+    UNSTABLE: "Unstable",
+    MORNING: "Morning",
+    TARGETED: "Targeted",
+    INTEGRATION: "Integration",
+  };
+
+  static groupTypeLookup(value, file) {
+    const group = Object.keys(DAORunDetails.GROUP_TYPE).find(
+      (key) => DAORunDetails.GROUP_TYPE[key] === value
+    );
+    if (file) {
+      if (group === "TARGETED") {
+        const fileFolder = file.split("/")[0];
+        if (fileFolder === "stable") {
+          return "STABLE";
+        } else if (fileFolder === "unstable") {
+          return "UNSTABLE";
+        } else if (fileFolder === "morning") {
+          return "MORNING";
+        }
+      }
+    }
+    return group;
+  }
+
+  constructor(accountId) {
+    super(accountId);
+    this.queryParts.since = "1 month ago";
+    this.queryParts.limit = "max";
+  }
+
+  setTestGridWhere(runIds, groupNames) {
+    if (typeof groupNames === "string") {
+      groupNames = [groupNames];
+    }
+    this.queryParts.where = [
+      this.whereIn("runId", runIds),
+      this.whereIn("group", groupNames),
+    ].join(`\nAND `);
+    return this;
+  }
+
+  query() {
+    return [
+      `SELECT *
+       FROM TestResultInstance`,
+      `ORDER BY timestamp ASC`,
+      ...this.buildQueryParts(),
+    ].join(`\n`);
   }
 }

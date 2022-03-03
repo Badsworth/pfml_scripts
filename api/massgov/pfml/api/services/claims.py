@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict
+from typing import Dict, List
 from uuid import UUID
 
 import newrelic.agent
@@ -66,6 +66,19 @@ def get_claim_detail(claim: db_models.Claim, log_attributes: Dict) -> DetailedCl
 def _is_withdrawn_claim_error(error: exception.FINEOSForbidden) -> bool:
     withdrawn_msg = "User does not have permission to access the resource or the instance data"
     return withdrawn_msg in error.message
+
+
+# TODO: (PORTAL-1855) Add tests for this method
+def get_change_requests_from_db(claim_id: UUID) -> List[db_models.ChangeRequest]:
+
+    with app.db_session() as db_session:
+        change_requests = (
+            db_session.query(db_models.ChangeRequest)
+            .filter(db_models.ChangeRequest.claim_id == claim_id)
+            .all()
+        )
+
+    return change_requests
 
 
 def add_change_request_to_db(

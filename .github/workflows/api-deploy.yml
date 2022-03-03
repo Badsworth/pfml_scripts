@@ -595,7 +595,7 @@ jobs:
 
       - name: Terraform Output
         id: terraform_output
-        run: terraform output
+        run: terraform output -json
         working-directory: ${{ env.terraform-env-shared-dir }}/${{ needs.deploy-info.outputs.api-env }}
         env:
         # Clear out the CLI args for terraform output

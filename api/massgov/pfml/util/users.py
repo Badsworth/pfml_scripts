@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 import botocore
 
@@ -153,3 +153,18 @@ def has_role_in(user: User, accepted_roles: List[LkRole]) -> bool:
             return True
 
     return False
+
+
+def get_user_log_attributes(user: User) -> Dict[str, Union[bool, str, None]]:
+    attributes: Dict[str, Union[bool, str, None]] = {
+        "current_user.user_id": str(user.user_id),
+        "current_user.auth_id": str(user.sub_id),
+        "current_user.role_ids": ",".join(str(role.role_id) for role in user.roles),
+        "current_user.role_names": ",".join(str(role.role_description) for role in user.roles),
+    }
+
+    for role in user.roles:
+        attributes[f"current_user.has_role_id_{role.role_id}"] = True
+        attributes[f"current_user.has_role_{role.role_description}"] = True
+
+    return attributes

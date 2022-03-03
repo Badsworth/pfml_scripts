@@ -433,7 +433,7 @@ jobs:
           TF_OUTPUT: ${{ steps.terraform.outputs.stdout }}
         run: |
           DISTRIBUTION_ID=$(echo $TF_OUTPUT | jq -r '.cloudfront_distribution_id.value')
-          echo $DISTRIBUTION_ID 
+          echo $DISTRIBUTION_ID
           aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
 
   postdeploy-info:
