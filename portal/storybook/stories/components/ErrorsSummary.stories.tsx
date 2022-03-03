@@ -1,4 +1,4 @@
-import ErrorInfo from "src/models/ErrorInfo";
+import { InternalServerError, ValidationError } from "src/errors";
 import ErrorsSummary from "src/components/ErrorsSummary";
 import React from "react";
 
@@ -7,17 +7,38 @@ export default {
   component: ErrorsSummary,
 };
 
-export const Default = () => (
-  <ErrorsSummary
-    errors={[new ErrorInfo({ message: "Your first name is required" })]}
-  />
-);
+export const SingleValidationIssue = () => {
+  const error = new ValidationError(
+    [
+      {
+        field: "first_name",
+        type: "required",
+      },
+    ],
+    "applications"
+  );
 
-export const Multiple = () => (
-  <ErrorsSummary
-    errors={[
-      new ErrorInfo({ message: "Your first name is required" }),
-      new ErrorInfo({ message: "Your last name is required" }),
-    ]}
-  />
+  return <ErrorsSummary errors={[error]} />;
+};
+
+export const MultipleValidationIssues = () => {
+  const error = new ValidationError(
+    [
+      {
+        field: "first_name",
+        type: "required",
+      },
+      {
+        field: "last_name",
+        type: "required",
+      },
+    ],
+    "applications"
+  );
+
+  return <ErrorsSummary errors={[error]} />;
+};
+
+export const ServerError = () => (
+  <ErrorsSummary errors={[new InternalServerError()]} />
 );

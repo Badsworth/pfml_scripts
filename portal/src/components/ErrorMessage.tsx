@@ -1,11 +1,11 @@
-import { Issue, TranslatableError } from "../errors";
+import { ErrorWithIssues, Issue } from "../errors";
 import IssueErrorMessage from "./IssueErrorMessage";
 import React from "react";
 import { Trans } from "react-i18next";
 import useErrorI18nComponents from "../hooks/useErrorI18nComponents";
 
 interface ErrorMessageProps {
-  error: TranslatableError;
+  error: ErrorWithIssues;
 }
 
 /**

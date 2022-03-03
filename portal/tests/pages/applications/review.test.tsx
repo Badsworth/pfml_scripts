@@ -8,6 +8,7 @@ import {
   BenefitsApplicationDocument,
   DocumentType,
 } from "../../../src/models/Document";
+import { DocumentsLoadError, ValidationError } from "../../../src/errors";
 import EmployerBenefit, {
   EmployerBenefitType,
 } from "../../../src/models/EmployerBenefit";
@@ -28,7 +29,6 @@ import Review, {
 } from "../../../src/pages/applications/review";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
-import ErrorInfo from "../../../src/models/ErrorInfo";
 import { LeaveReasonType } from "../../../src/models/LeaveReason";
 import { createMockBenefitsApplicationDocument } from "../../../lib/mock-helpers/createMockDocument";
 import dayjs from "dayjs";
@@ -41,7 +41,7 @@ const setup = ({
   claim = new MockBenefitsApplicationBuilder().part1Complete().create(),
   documents,
 }: {
-  errors?: ErrorInfo[];
+  errors?: Error[];
   claim?: BenefitsApplication;
   documents?: BenefitsApplicationDocument[];
 } = {}) => {
@@ -183,7 +183,12 @@ describe("Review Page", () => {
   });
 
   it("renders a Alert when there are required field errors", () => {
-    const errors = [new ErrorInfo({ type: "required", field: "someField" })];
+    const errors = [
+      new ValidationError(
+        [{ type: "required", field: "someField" }],
+        "applications"
+      ),
+    ];
 
     setup({ errors });
 
@@ -194,12 +199,15 @@ describe("Review Page", () => {
 
   it("does not render a custom Alert when there are required errors not associated to a specific field", () => {
     const errors = [
-      new ErrorInfo({
-        type: "required",
-        rule: "require_employer_notified",
-        message:
-          "employer_notified must be True if employment_status is Employed",
-      }),
+      new ValidationError(
+        [
+          {
+            type: "required",
+            rule: "require_employer_notified",
+          },
+        ],
+        "applications"
+      ),
     ];
 
     setup({ errors });
@@ -213,14 +221,7 @@ describe("Review Page", () => {
     const claim = new MockBenefitsApplicationBuilder().complete().create();
 
     setup({
-      errors: [
-        new ErrorInfo({
-          name: "DocumentsLoadError",
-          meta: {
-            application_id: claim.application_id,
-          },
-        }),
-      ],
+      errors: [new DocumentsLoadError(claim.application_id)],
       claim,
     });
 

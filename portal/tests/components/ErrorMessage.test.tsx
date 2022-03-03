@@ -1,4 +1,4 @@
-import { NetworkError, TranslatableError, ValidationError } from "src/errors";
+import { NetworkError, ValidationError } from "src/errors";
 import { render, screen } from "@testing-library/react";
 import ErrorMessage from "src/components/ErrorMessage";
 import React from "react";
@@ -46,7 +46,7 @@ describe("ErrorMessage", () => {
   });
 
   it("renders generic message when the error has an empty issues property", () => {
-    const error: TranslatableError = {
+    const error = {
       name: "TestError",
       issues: [],
       i18nPrefix: "test",

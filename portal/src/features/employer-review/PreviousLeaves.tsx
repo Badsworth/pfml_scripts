@@ -2,7 +2,6 @@ import AddButton from "./AddButton";
 import AmendablePreviousLeave from "./AmendablePreviousLeave";
 import Details from "../../components/core/Details";
 import EmployerClaim from "../../models/EmployerClaim";
-import ErrorInfo from "../../models/ErrorInfo";
 import Heading from "../../components/core/Heading";
 import PreviousLeave from "../../models/PreviousLeave";
 import React from "react";
@@ -14,7 +13,7 @@ import { useTranslation } from "../../locales/i18n";
 
 interface PreviousLeavesProps {
   addedPreviousLeaves: PreviousLeave[];
-  errors: ErrorInfo[];
+  errors: Error[];
   claim: EmployerClaim;
   onAdd: React.MouseEventHandler<HTMLButtonElement>;
   onChange: (

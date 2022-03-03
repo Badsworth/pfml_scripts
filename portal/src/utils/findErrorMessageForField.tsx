@@ -1,6 +1,6 @@
+import { ErrorWithIssues } from "../errors";
 import IssueErrorMessage from "../components/IssueErrorMessage";
 import React from "react";
-import { TranslatableError } from "../errors";
 
 /**
  * Renders its internationalized message, if a relevant field-level error exists.
@@ -9,7 +9,7 @@ import { TranslatableError } from "../errors";
  * (like styling) when an error message isn't present.
  */
 function findErrorMessageForField(
-  errors: TranslatableError[],
+  errors: ErrorWithIssues[],
   fieldName: string
 ): JSX.Element | undefined {
   let errorMessage: JSX.Element | undefined;

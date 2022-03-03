@@ -1,7 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
-import ErrorInfo from "../../../src/models/ErrorInfo";
 import Feedback from "../../../src/features/employer-review/Feedback";
 import React from "react";
+import { ValidationError } from "../../../src/errors";
 import { renderHook } from "@testing-library/react-hooks";
 import useFunctionalInputProps from "../../../src/hooks/useFunctionalInputProps";
 
@@ -101,12 +101,15 @@ describe("Feedback", () => {
     renderHook(() => {
       getFunctionalInputProps = useFunctionalInputProps({
         errors: [
-          new ErrorInfo({
-            field: "comment",
-            type: "maxLength",
-            message:
-              "Please shorten your comment. We cannot accept comments that are longer than 9999 characters.",
-          }),
+          new ValidationError(
+            [
+              {
+                field: "comment",
+                type: "maxLength",
+              },
+            ],
+            "employers"
+          ),
         ],
         formState: {},
         updateFields,

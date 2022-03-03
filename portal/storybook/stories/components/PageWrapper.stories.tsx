@@ -1,4 +1,3 @@
-import ErrorInfo from "src/models/ErrorInfo";
 import Flag from "src/models/Flag";
 import PageWrapper from "src/components/PageWrapper";
 import { Props } from "types/common";
@@ -45,11 +44,7 @@ export const Default = (
 ) => {
   const errors =
     args.Errors === "Has errors"
-      ? [
-          new ErrorInfo({
-            message: "This is a Storybook error message example.",
-          }),
-        ]
+      ? [new Error("This is a Storybook error message example.")]
       : [];
 
   const user =

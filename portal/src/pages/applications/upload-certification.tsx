@@ -12,6 +12,7 @@ import withClaimDocuments, {
 import Alert from "../../components/core/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import DocumentRequirements from "../../components/DocumentRequirements";
+import { DocumentsUploadError } from "../../errors";
 import FileCardList from "../../components/FileCardList";
 import FileUploadDetails from "../../components/FileUploadDetails";
 import Heading from "../../components/core/Heading";
@@ -118,8 +119,8 @@ export const UploadCertification = (props: UploadCertificationProps) => {
     }
   };
   const fileErrors = errors.filter(
-    (errorInfo) => errorInfo.meta && errorInfo.meta.file_id
-  );
+    (error) => error instanceof DocumentsUploadError
+  ) as DocumentsUploadError[];
 
   return (
     <QuestionPage

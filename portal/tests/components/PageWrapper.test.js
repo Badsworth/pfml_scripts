@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
-import ErrorInfo from "../../src/models/ErrorInfo";
 import Flag from "../../src/models/Flag";
+import { InternalServerError } from "../../src/errors";
 import PageWrapper from "../../src/components/PageWrapper";
 import React from "react";
 import User from "../../src/models/User";
@@ -328,15 +328,11 @@ describe("PageWrapper", () => {
       <PageWrapperWithAppLogic
         addAppLogicMocks={(_appLogic) => {
           appLogic = _appLogic;
-          appLogic.errors = [
-            new ErrorInfo({
-              message: "Error message",
-            }),
-          ];
+          appLogic.errors = [new InternalServerError()];
         }}
       />
     );
 
-    expect(screen.getByText("Error message")).toBeInTheDocument();
+    expect(screen.getByText(/unexpected error/)).toBeInTheDocument();
   });
 });

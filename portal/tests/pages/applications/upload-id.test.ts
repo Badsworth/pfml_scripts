@@ -2,6 +2,7 @@ import {
   BenefitsApplicationDocument,
   DocumentType,
 } from "../../../src/models/Document";
+import { DocumentsLoadError, ValidationError } from "../../../src/errors";
 import {
   MockBenefitsApplicationBuilder,
   makeFile,
@@ -10,9 +11,7 @@ import {
 import { act, screen, waitFor } from "@testing-library/react";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { AppLogic } from "../../../src/hooks/useAppLogic";
-import ErrorInfo from "../../../src/models/ErrorInfo";
 import UploadId from "../../../src/pages/applications/upload-id";
-import { ValidationError } from "../../../src/errors";
 import { createMockBenefitsApplicationDocument } from "../../../lib/mock-helpers/createMockDocument";
 import { setupBenefitsApplications } from "../../test-utils/helpers";
 import userEvent from "@testing-library/user-event";
@@ -495,12 +494,7 @@ describe("UploadId", () => {
 
     it("renders alert when there is an error loading documents", () => {
       const cb = (appLogic: AppLogic) => {
-        appLogic.errors = [
-          new ErrorInfo({
-            meta: { application_id: "mock_application_id" },
-            name: "DocumentsLoadError",
-          }),
-        ];
+        appLogic.errors = [new DocumentsLoadError("mock_application_id")];
       };
       setup(undefined, undefined, cb);
       expect(

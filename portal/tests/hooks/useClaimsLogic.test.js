@@ -6,7 +6,6 @@ import {
   mockFetch,
 } from "../test-utils";
 import ClaimDetail from "../../src/models/ClaimDetail";
-import ErrorInfo from "../../src/models/ErrorInfo";
 import useAppLogic from "../../src/hooks/useAppLogic";
 
 jest.mock("../../src/services/tracker");
@@ -195,7 +194,7 @@ describe("useClaimsLogic", () => {
       const { appLogic } = setup();
 
       act(() => {
-        appLogic.current.setErrors([new ErrorInfo()]);
+        appLogic.current.setErrors([new Error()]);
       });
 
       await act(async () => {
@@ -298,7 +297,7 @@ describe("useClaimsLogic", () => {
       const { appLogic } = setup();
 
       act(() => {
-        appLogic.current.setErrors([new ErrorInfo()]);
+        appLogic.current.setErrors([new Error()]);
       });
 
       await act(async () => {

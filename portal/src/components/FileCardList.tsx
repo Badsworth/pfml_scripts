@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import ApiResourceCollection from "../models/ApiResourceCollection";
 import { BenefitsApplicationDocument } from "../models/Document";
-import ErrorInfo from "../models/ErrorInfo";
+import { DocumentsUploadError } from "../errors";
+import ErrorMessage from "./ErrorMessage";
 import FileCard from "./FileCard";
 import Spinner from "./core/Spinner";
 import TempFile from "../models/TempFile";
@@ -63,7 +64,7 @@ function renderDocumentFileCard(
 
 interface FileCardListProps {
   tempFiles: ApiResourceCollection<TempFile>;
-  fileErrors: ErrorInfo[];
+  fileErrors: DocumentsUploadError[];
   onChange: (files: File[]) => Promise<void>;
   onRemoveTempFile: (id: string) => void;
   fileHeadingPrefix: string;
@@ -95,10 +96,8 @@ const FileCardList = (props: FileCardListProps) => {
   );
 
   const fileCards = tempFiles.items.map((file, index) => {
-    const fileError = fileErrors.find(
-      (errorInfo) => errorInfo.meta?.file_id === file.id
-    );
-    const errorMsg = fileError ? fileError.message : null;
+    const fileError = fileErrors.find((error) => error.file_id === file.id);
+    const errorMsg = fileError ? <ErrorMessage error={fileError} /> : null;
     return renderFileCard(
       file,
       index + documentFileCount,

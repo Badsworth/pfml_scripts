@@ -318,7 +318,7 @@ exports[`Status displays a description for the Withdrawn request decision 1`] = 
 
 exports[`Status info alert displays if claimant has In Review claim status 1`] = `
 <div
-  aria-labelledby="alert-heading14"
+  aria-labelledby="alert-heading12"
   class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
   role="region"
   tabindex="-1"
@@ -328,7 +328,7 @@ exports[`Status info alert displays if claimant has In Review claim status 1`] =
   >
     <h2
       class="usa-alert__heading font-heading-xs text-bold"
-      id="alert-heading14"
+      id="alert-heading12"
     >
       You may also be eligible for paid family leave
     </h2>
@@ -359,7 +359,7 @@ exports[`Status info alert displays if claimant has In Review claim status 1`] =
 
 exports[`Status info alert displays if claimant has Projected claim status 1`] = `
 <div
-  aria-labelledby="alert-heading15"
+  aria-labelledby="alert-heading13"
   class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
   role="region"
   tabindex="-1"
@@ -369,7 +369,7 @@ exports[`Status info alert displays if claimant has Projected claim status 1`] =
   >
     <h2
       class="usa-alert__heading font-heading-xs text-bold"
-      id="alert-heading15"
+      id="alert-heading13"
     >
       You may also be eligible for paid family leave
     </h2>
@@ -400,7 +400,7 @@ exports[`Status info alert displays if claimant has Projected claim status 1`] =
 
 exports[`Status info alert displays if claimant has bonding-newborn but not pregnancy claims 1`] = `
 <div
-  aria-labelledby="alert-heading12"
+  aria-labelledby="alert-heading10"
   class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
   role="region"
   tabindex="-1"
@@ -410,7 +410,7 @@ exports[`Status info alert displays if claimant has bonding-newborn but not preg
   >
     <h2
       class="usa-alert__heading font-heading-xs text-bold"
-      id="alert-heading12"
+      id="alert-heading10"
     >
       If you are giving birth, you may also be eligible for paid medical leave
     </h2>
@@ -441,7 +441,7 @@ exports[`Status info alert displays if claimant has bonding-newborn but not preg
 
 exports[`Status info alert displays if claimant has pregnancy but not bonding claims 1`] = `
 <div
-  aria-labelledby="alert-heading13"
+  aria-labelledby="alert-heading11"
   class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
   role="region"
   tabindex="-1"
@@ -451,7 +451,7 @@ exports[`Status info alert displays if claimant has pregnancy but not bonding cl
   >
     <h2
       class="usa-alert__heading font-heading-xs text-bold"
-      id="alert-heading13"
+      id="alert-heading11"
     >
       You may also be eligible for paid family leave
     </h2>
@@ -1368,7 +1368,7 @@ exports[`Status renders the page with claim detail when there is absence_case_id
 
 exports[`Status success alert renders success alert when document type param is given 1`] = `
 <div
-  aria-labelledby="alert-heading9"
+  aria-labelledby="alert-heading7"
   class="usa-alert usa-alert--success"
   role="region"
   tabindex="-1"
@@ -1378,7 +1378,7 @@ exports[`Status success alert renders success alert when document type param is 
   >
     <h2
       class="usa-alert__heading font-heading-md text-bold"
-      id="alert-heading9"
+      id="alert-heading7"
     >
       You've successfully submitted your proof of birth documents
     </h2>

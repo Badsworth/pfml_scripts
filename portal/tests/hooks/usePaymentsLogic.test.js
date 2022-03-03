@@ -1,6 +1,5 @@
 import { act, renderHook } from "@testing-library/react-hooks";
 import { mockAuth, mockFetch } from "../test-utils";
-import ErrorInfo from "../../src/models/ErrorInfo";
 import { Payment } from "../../src/models/Payment";
 import { createMockPayment } from "lib/mock-helpers/createMockPayment";
 import useAppLogic from "../../src/hooks/useAppLogic";
@@ -66,7 +65,7 @@ describe("usePaymentsLogic", () => {
     const { appLogic } = setup();
 
     act(() => {
-      appLogic.current.setErrors([new ErrorInfo()]);
+      appLogic.current.setErrors([new Error()]);
     });
 
     await act(async () => {

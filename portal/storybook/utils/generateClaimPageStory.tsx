@@ -1,12 +1,11 @@
 import { chain, get, upperFirst } from "lodash";
 import BenefitsApplication from "src/models/BenefitsApplication";
-import ErrorInfo from "src/models/ErrorInfo";
 import React from "react";
 import User from "../../src/models/User";
+import { ValidationError } from "src/errors";
 import { createMockBenefitsApplication } from "lib/mock-helpers/createMockBenefitsApplication";
 import englishLocale from "src/locales/app/en-US";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
-import { useTranslation } from "src/locales/i18n";
 
 /**
  * Generates the config and story components for a claims page.
@@ -109,23 +108,19 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
     const claim = claims[args.claim || defaultClaim];
     // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
     const user = new User();
-    const { t } = useTranslation();
-    const errors =
+    const issues =
       // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'displayStr' implicitly has an 'any' typ... Remove this comment to see the full error message
       errorDisplayStrs.map((displayStr) => {
         const errorInfo = possibleErrors.find(
           // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'error' implicitly has an 'any'
           (error) => error.displayStr === displayStr
         );
-        const { field, i18nKey } = errorInfo;
-        return new ErrorInfo({
-          message: t(i18nKey),
-          name: "ValidationError",
-          field,
-        });
+        return errorInfo;
       });
 
-    const appLogic = useMockableAppLogic({ errors });
+    const appLogic = useMockableAppLogic({
+      errors: [new ValidationError(issues, "applications")],
+    });
 
     return (
       <Component
@@ -208,7 +203,6 @@ function getPossibleErrorsForField(field, translation) {
     return {
       displayStr: `${claimFieldKey}: ${type}`,
       field,
-      i18nKey: `errors.applications.${claimFieldKey}.${type}`,
       type,
     };
   });

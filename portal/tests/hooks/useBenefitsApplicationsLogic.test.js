@@ -15,7 +15,6 @@ import {
   updateClaimMock,
 } from "../../src/api/BenefitsApplicationsApi";
 import ApiResourceCollection from "../../src/models/ApiResourceCollection";
-import ErrorInfo from "../../src/models/ErrorInfo";
 import { MockBenefitsApplicationBuilder } from "../test-utils";
 import { mockRouter } from "next/router";
 import routes from "../../src/routes";
@@ -130,7 +129,7 @@ describe("useBenefitsApplicationsLogic", () => {
 
     it("clears prior errors", async () => {
       act(() => {
-        errorsLogic.setErrors([new ErrorInfo()]);
+        errorsLogic.setErrors([new Error()]);
       });
 
       await act(async () => {
@@ -214,7 +213,7 @@ describe("useBenefitsApplicationsLogic", () => {
 
     it("clears prior errors", async () => {
       act(() => {
-        errorsLogic.setErrors([new ErrorInfo()]);
+        errorsLogic.setErrors([new Error()]);
       });
 
       await act(async () => {
@@ -295,7 +294,7 @@ describe("useBenefitsApplicationsLogic", () => {
 
     it("clears prior errors", async () => {
       act(() => {
-        errorsLogic.setErrors([new ErrorInfo()]);
+        errorsLogic.setErrors([new Error()]);
       });
 
       await act(async () => {
@@ -378,7 +377,7 @@ describe("useBenefitsApplicationsLogic", () => {
 
     it("clears prior errors", async () => {
       act(() => {
-        errorsLogic.setErrors([new ErrorInfo()]);
+        errorsLogic.setErrors([new Error()]);
       });
 
       await act(async () => {
@@ -500,7 +499,7 @@ describe("useBenefitsApplicationsLogic", () => {
 
       it("clears prior errors", async () => {
         act(() => {
-          errorsLogic.setErrors([new ErrorInfo()]);
+          errorsLogic.setErrors([new Error()]);
         });
 
         await act(async () => {
@@ -586,7 +585,7 @@ describe("useBenefitsApplicationsLogic", () => {
         await act(async () => {
           await claimsLogic.create();
 
-          errorsLogic.setErrors([new ErrorInfo()]);
+          errorsLogic.setErrors([new Error()]);
         });
 
         await act(async () => {
@@ -663,9 +662,10 @@ describe("useBenefitsApplicationsLogic", () => {
           });
 
           const errors = errorsLogic.errors;
-          const errorFields = errors.map((error) => error.field);
+          const issues = errors[0].issues;
+          const errorFields = issues.map((error) => error.field);
 
-          expect(errors).toHaveLength(2);
+          expect(issues).toHaveLength(2);
           expect(errorFields).toContain("first_name");
           expect(errorFields).toContain("last_name");
         });
@@ -698,7 +698,9 @@ describe("useBenefitsApplicationsLogic", () => {
           const errors = errorsLogic.errors;
 
           expect(errors).toHaveLength(1);
-          expect(errors[0].rule).toBe("disallow_hybrid_intermittent_leave");
+          expect(errors[0].issues[0].rule).toBe(
+            "disallow_hybrid_intermittent_leave"
+          );
         });
 
         it("catches exceptions thrown from the API module", async () => {
@@ -757,7 +759,7 @@ describe("useBenefitsApplicationsLogic", () => {
 
       it("clears prior errors", async () => {
         act(() => {
-          errorsLogic.setErrors([new ErrorInfo()]);
+          errorsLogic.setErrors([new Error()]);
         });
 
         await act(async () => {
@@ -846,7 +848,7 @@ describe("useBenefitsApplicationsLogic", () => {
 
       it("clears prior errors", async () => {
         act(() => {
-          errorsLogic.setErrors([new ErrorInfo()]);
+          errorsLogic.setErrors([new Error()]);
         });
 
         await act(async () => {

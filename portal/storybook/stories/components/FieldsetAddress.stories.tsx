@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { cloneDeep, set } from "lodash";
 import Address from "src/models/Address";
-import ErrorInfo from "src/models/ErrorInfo";
 import FieldsetAddress from "src/components/FieldsetAddress";
 import { Props } from "types/common";
+import { ValidationError } from "src/errors";
 
 export default {
   title: "Components/Forms/FieldsetAddress",
@@ -47,22 +47,27 @@ export const WithErrors = () => {
 
   // Setup error states
   const errors = [
-    new ErrorInfo({
-      field: "address.line_1",
-      message: "Address is required",
-    }),
-    new ErrorInfo({
-      field: "address.city",
-      message: "City is required",
-    }),
-    new ErrorInfo({
-      field: "address.state",
-      message: "State is required",
-    }),
-    new ErrorInfo({
-      field: "address.zip",
-      message: "ZIP is required",
-    }),
+    new ValidationError(
+      [
+        {
+          field: "address.line_1",
+          type: "required",
+        },
+        {
+          field: "address.city",
+          type: "required",
+        },
+        {
+          field: "address.state",
+          type: "required",
+        },
+        {
+          field: "address.zip",
+          type: "required",
+        },
+      ],
+      "applications"
+    ),
   ];
 
   return (

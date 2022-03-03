@@ -18,10 +18,7 @@ export interface Issue {
   type?: string;
 }
 
-// Any error in this shape can be internationalized in our app.
-export interface TranslatableError {
-  name: string;
-  message: string;
+export interface ErrorWithIssues extends BasePortalError {
   issues?: Issue[];
   // TODO (PORTAL-1825): Refactor where we set i18nPrefix
   i18nPrefix?: string;
@@ -61,12 +58,14 @@ export function isCognitoError(error: unknown): error is CognitoError {
 export class CognitoAuthError extends BasePortalError {
   cognitoError: CognitoError;
   issues: Issue[];
+  i18nPrefix: string;
 
   constructor(cognitoError: CognitoError, issue: Issue | null = null) {
     super();
     this.name = "CognitoAuthError";
     this.cognitoError = cognitoError;
     this.issues = issue ? [issue] : [];
+    this.i18nPrefix = "auth";
   }
 }
 
@@ -184,6 +183,7 @@ export class DocumentsUploadError extends BasePortalError {
   file_id: string;
   // the validation issue returned by the API
   issues: Issue[];
+  i18nPrefix: string;
 
   constructor(
     application_id: string,
@@ -196,6 +196,7 @@ export class DocumentsUploadError extends BasePortalError {
     this.file_id = file_id;
     this.issues = issue ? [issue] : [];
     this.name = "DocumentsUploadError";
+    this.i18nPrefix = "documents";
   }
 }
 

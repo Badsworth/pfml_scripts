@@ -14,7 +14,6 @@ import {
   submitWithholdingMock,
 } from "../../src/api/EmployersApi";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
-import ErrorInfo from "../../src/models/ErrorInfo";
 import User from "../../src/models/User";
 import { uniqueId } from "lodash";
 import useEmployersLogic from "../../src/hooks/useEmployersLogic";
@@ -95,7 +94,7 @@ describe("useEmployersLogic", () => {
 
       it("clears prior errors", async () => {
         act(() => {
-          errorsLogic.setErrors([new ErrorInfo()]);
+          errorsLogic.setErrors([new Error()]);
         });
 
         await act(async () => {
@@ -175,7 +174,7 @@ describe("useEmployersLogic", () => {
 
     it("clears prior errors", async () => {
       act(() => {
-        errorsLogic.setErrors([new ErrorInfo()]);
+        errorsLogic.setErrors([new Error()]);
       });
 
       await act(async () => {
@@ -330,7 +329,7 @@ describe("useEmployersLogic", () => {
 
       it("clears prior errors", async () => {
         act(() => {
-          errorsLogic.setErrors([new ErrorInfo()]);
+          errorsLogic.setErrors([new Error()]);
         });
 
         await act(async () => {
@@ -377,7 +376,7 @@ describe("useEmployersLogic", () => {
   describe("downloadDocument", () => {
     it("clears prior errors", async () => {
       act(() => {
-        errorsLogic.setErrors([new ErrorInfo()]);
+        errorsLogic.setErrors([new Error()]);
       });
 
       const document = new Document({
@@ -486,7 +485,7 @@ describe("useEmployersLogic", () => {
 
       it("clears prior errors", async () => {
         act(() => {
-          errorsLogic.setErrors([new ErrorInfo()]);
+          errorsLogic.setErrors([new Error()]);
         });
 
         await act(async () => {
@@ -544,7 +543,7 @@ describe("useEmployersLogic", () => {
 
       it("clears prior errors", async () => {
         act(() => {
-          errorsLogic.setErrors([new ErrorInfo()]);
+          errorsLogic.setErrors([new Error()]);
         });
 
         await act(async () => {

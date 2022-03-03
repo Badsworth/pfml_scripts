@@ -6,6 +6,10 @@ import {
   BenefitsApplicationDocument,
   DocumentType,
 } from "../../../../src/models/Document";
+import {
+  DocumentsLoadError,
+  RequestTimeoutError,
+} from "../../../../src/errors";
 import Status, {
   LeaveDetails,
 } from "../../../../src/pages/applications/status/index";
@@ -14,7 +18,6 @@ import { createAbsencePeriod, renderPage } from "../../../test-utils";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { AppLogic } from "../../../../src/hooks/useAppLogic";
 import ClaimDetail from "../../../../src/models/ClaimDetail";
-import ErrorInfo from "../../../../src/models/ErrorInfo";
 import LeaveReason from "../../../../src/models/LeaveReason";
 import { Payment } from "../../../../src/models/Payment";
 import React from "react";
@@ -88,7 +91,7 @@ const setupHelper =
   (
     claimDetailAttrs?: Partial<ClaimDetail>,
     documents: BenefitsApplicationDocument[] = [],
-    errors: ErrorInfo[] = [],
+    errors: Error[] = [],
     loadClaimDetailMock: jest.Mock = jest.fn(),
     payments: Partial<Payment> = defaultPayments,
     includeApprovalNotice = true,
@@ -267,12 +270,7 @@ describe("Status", () => {
   });
 
   it("renders the page if the only errors are DocumentsLoadError", () => {
-    const errors = [
-      new ErrorInfo({
-        meta: { application_id: "mock_application_id" },
-        name: "DocumentsLoadError",
-      }),
-    ];
+    const errors = [new DocumentsLoadError("mock_application_id")];
 
     const { container } = renderPage(
       Status,
@@ -286,12 +284,7 @@ describe("Status", () => {
   });
 
   it("renders the page with only a back button if non-DocumentsLoadErrors exists", () => {
-    const errors = [
-      new ErrorInfo({
-        meta: { application_id: "mock_application_id" },
-        name: "RequestTimeoutError",
-      }),
-    ];
+    const errors = [new RequestTimeoutError("mock_application_id")];
     renderPage(
       Status,
       {
