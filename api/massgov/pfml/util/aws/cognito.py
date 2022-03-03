@@ -198,13 +198,13 @@ def enable_user_mfa(email: str, cognito_auth_token: str) -> None:
 
 def disable_user_mfa(email: str, cognito_auth_token: str) -> None:
     cognito_client = create_cognito_client()
-    cognito_user_pool_id = app.get_config().cognito_user_pool_id
 
     try:
         cognito_client.set_user_mfa_preference(
             SMSMfaSettings={"Enabled": False,}, AccessToken=cognito_auth_token
         )
     except Exception as error:
+        # todo: update these error cases
         if isinstance(error, ClientError) and "InvalidParameterException" in str(error.__class__):
             logger.error(
                 "Error updating MFA preference in Cognito - Invalid parameter in request",

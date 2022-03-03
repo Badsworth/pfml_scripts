@@ -25,7 +25,7 @@ class TestHandleMfaDisabled:
     def test_logging(self, mock_send_email, user):
         last_enabled_at = datetime(2022, 1, 2, 0, 0, 0, tzinfo=timezone.utc)
 
-        mfa_actions.handle_mfa_disabled(user, last_enabled_at, "user")
+        mfa_actions.handle_mfa_disabled(user, last_enabled_at, "user", False, "")
 
         self.mock_logger.info.assert_any_call(
             "MFA disabled for user",
@@ -43,7 +43,7 @@ class TestHandleMfaDisabled:
     @mock.patch("massgov.pfml.mfa.send_templated_email")
     @mock.patch("massgov.pfml.mfa.logger", mock_logger)
     def test_with_no_last_enabled_at(self, mock_send_email, user):
-        mfa_actions.handle_mfa_disabled(user, None, "user")
+        mfa_actions.handle_mfa_disabled(user, None, "user", False, "")
 
         self.mock_logger.error.assert_any_call(
             "MFA disabled, but no last_enabled_at timestamp was available"
@@ -57,7 +57,7 @@ class TestHandleMfaDisabled:
     def test_email(self, mock_send_email, user):
         last_enabled_at = datetime(2022, 1, 2, 0, 0, 0, tzinfo=timezone.utc)
 
-        mfa_actions.handle_mfa_disabled(user, last_enabled_at, "user")
+        mfa_actions.handle_mfa_disabled(user, last_enabled_at, "user", False, "")
 
         mock_send_email.assert_called_once_with(
             mock.ANY,
@@ -78,7 +78,7 @@ class TestHandleMfaDisabled:
         monkeypatch.setenv("DISABLE_SENDING_EMAILS", "1")
         last_enabled_at = datetime(2022, 1, 2, 0, 0, 0, tzinfo=timezone.utc)
 
-        mfa_actions.handle_mfa_disabled(user, last_enabled_at, "user")
+        mfa_actions.handle_mfa_disabled(user, last_enabled_at, "user", False, "")
 
         mock_send_email.assert_not_called()
         self.mock_logger.info.assert_any_call(
@@ -95,7 +95,7 @@ class TestHandleMfaDisabled:
         monkeypatch.setenv("DISABLE_SENDING_EMAILS", "0")
         last_enabled_at = datetime(2022, 1, 2, 0, 0, 0, tzinfo=timezone.utc)
 
-        mfa_actions.handle_mfa_disabled(user, last_enabled_at, "user")
+        mfa_actions.handle_mfa_disabled(user, last_enabled_at, "user", False, "")
 
         mock_send_email.assert_called()
 
@@ -106,6 +106,6 @@ class TestHandleMfaDisabled:
         monkeypatch.setenv("DISABLE_SENDING_EMAILS", "1")
         last_enabled_at = datetime(2022, 1, 2, 0, 0, 0, tzinfo=timezone.utc)
 
-        mfa_actions.handle_mfa_disabled(user, last_enabled_at, "user")
+        mfa_actions.handle_mfa_disabled(user, last_enabled_at, "user", False, "")
 
         mock_send_email.assert_called()

@@ -53,7 +53,7 @@ def handle_mfa_disabled(
                 "Skipping sending an MFA disabled notification email", extra=log_attributes,
             )
         else:
-            _send_mfa_disabled_email(user.email_address, user.mfa_phone_number_last_four())
+            send_mfa_disabled_email(user.email_address, user.mfa_phone_number_last_four())
     except Exception as error:
         logger.error("Error disabling user MFA", exc_info=error)
         raise error
@@ -80,7 +80,8 @@ def _collect_log_attributes(updated_by: str, last_enabled_at: Optional[datetime]
     return log_attributes
 
 
-def _send_mfa_disabled_email(recipient_email: str, phone_number_last_four: str) -> None:
+# todo: add tests now that this is used externally
+def send_mfa_disabled_email(recipient_email: str, phone_number_last_four: str) -> None:
     email_config = cognito_config.get_email_config()
     sender_email = email_config.pfml_email_address
     template = "MfaHasBeenDisabled"

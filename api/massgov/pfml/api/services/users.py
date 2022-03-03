@@ -8,6 +8,7 @@ from massgov.pfml.api.models.users.requests import UserUpdateRequest
 from massgov.pfml.db.models.employees import (
     LkMFADeliveryPreference,
     LkMFADeliveryPreferenceUpdatedBy,
+    MFADeliveryPreference,
     User,
 )
 from massgov.pfml.mfa import handle_mfa_disabled, handle_mfa_enabled
@@ -15,6 +16,7 @@ from massgov.pfml.mfa import handle_mfa_disabled, handle_mfa_enabled
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
+# todo: remove updated_by argument
 def update_user(
     db_session: db.Session,
     user: User,
@@ -103,3 +105,33 @@ def _update_mfa_preference_audit_trail(db_session: db.Session, user: User, updat
 
     mfa_delivery_preference_updated_by = "mfa_delivery_preference_updated_by"
     setattr(user, mfa_delivery_preference_updated_by, mfa_updated_by)
+
+
+def admin_disable_mfa(db_session: db.Session, user: User,) -> None:
+    existing_mfa_preference = user.mfa_preference_description()
+    if MFADeliveryPreference.OPT_OUT.mfa_delivery_preference_description == existing_mfa_preference:
+        return
+
+    setattr(user, "mfa_delivery_preference", MFADeliveryPreference.OPT_OUT)
+
+    # Keep a copy of the last updated timestamp before we update it. This is used later for logging
+    # feature metrics
+    last_updated_at = user.mfa_delivery_preference_updated_at
+    updated_by = "admin"
+
+    _update_mfa_preference_audit_trail(db_session, user, updated_by)
+
+    log_attributes = {
+        "mfa_preference": "Opt Out",
+        "updated_by": updated_by,
+    }
+    logger.info("MFA updated for user", extra=log_attributes)
+
+    """
+    if value == "Opt Out" and existing_mfa_preference is not None:
+        handle_mfa_disabled(
+            user, last_updated_at, updated_by, sync_cognito_preferences, cognito_auth_token
+        )
+    elif value == "SMS" and sync_cognito_preferences:
+        handle_mfa_enabled(user, cognito_auth_token)
+    """
