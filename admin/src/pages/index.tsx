@@ -45,8 +45,7 @@ export default function Maintenance() {
         end: "2022-01-23 18:00:00-04",
         name: "maintenance",
         options: {
-          name: "Two checked page routes, one custom",
-          page_routes: ["/*", "/applications/*", "/custom/*"],
+          name: "With start and end",
         },
         start: "2022-01-23 17:00:00-04",
       },
@@ -57,7 +56,6 @@ export default function Maintenance() {
     name: "maintenance",
     options: {
       name: "Current maintenance status",
-      page_routes: ["/*", "/applications/*", "/custom/*"],
     },
     start: "2022-01-23 17:00:00-04",
   });
@@ -90,15 +88,6 @@ export default function Maintenance() {
 
   type options = {
     name?: string;
-    page_routes?: string[];
-  };
-
-  const checked_page_routes: { [key: string]: string } = {
-    "Entire Site": "/*",
-    Applications: "/applications/*",
-    Employers: "/employers/*",
-    "Create Account": "/*create-account",
-    Login: "/login",
   };
 
   // Functions to format table.
@@ -127,26 +116,6 @@ export default function Maintenance() {
     </>
   );
 
-  const getPageRoutes = (m: Flag) => {
-    const routes = (m?.options as options)?.page_routes ?? [];
-
-    return (
-      <ul className="maintenance-configure__page-routes">
-        {routes.map((route, index) => {
-          const label =
-            Object.keys(checked_page_routes).find(
-              (k) => checked_page_routes[k] === route,
-            ) || "Custom";
-          return (
-            <li key={index}>
-              {label}: <code>{route}</code>
-            </li>
-          );
-        })}
-      </ul>
-    );
-  };
-
   const getCreatedAt = (m: Flag) =>
     moment.tz(m.updated_at, Timezone).format("YYYY-MM-DD HH:mm:ss z");
 
@@ -159,14 +128,6 @@ export default function Maintenance() {
       return linkValues;
     }
     linkValues.name = (m?.options as options)?.name ?? "";
-    const page_routes =
-      ((m?.options as options)?.page_routes as string[]) ?? [];
-    linkValues.checked_page_routes = page_routes.filter((item) =>
-      Object.values(checked_page_routes).includes(item),
-    );
-    linkValues.custom_page_routes = page_routes.filter(
-      (item) => !Object.values(checked_page_routes).includes(item),
-    );
     if (!includeDateTimes) {
       return linkValues;
     }
@@ -297,12 +258,6 @@ export default function Maintenance() {
                         : "No end provided")}
                   </>
                 )}
-              </div>
-            </div>
-            <div className="maintenance-status__row">
-              <div className="maintenance-status__label">Page Routes</div>
-              <div className="maintenance-status__value">
-                {getPageRoutes(maintenance)}
               </div>
             </div>
           </div>
