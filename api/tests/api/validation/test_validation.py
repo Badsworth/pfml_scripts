@@ -10,6 +10,7 @@ from massgov.pfml.api.validation import (
     add_error_handlers_to_app,
     convert_pydantic_error_to_validation_exception,
     get_custom_validator_map,
+    is_unexpected_validation_error,
     log_validation_error,
 )
 from massgov.pfml.api.validation.exceptions import (
@@ -67,16 +68,6 @@ def test_request_response_validation():
     assert (
         request_validation_error_response_no_body.get("errors")[0]["message"]
         == "Missing request body"
-    )
-
-    response_validation_error_response = client.post(
-        "/user-invalid-response", json=VALID_USER
-    ).get_json()
-    validate_invalid_response(
-        response_validation_error_response,
-        "/user-invalid-response",
-        "Response Validation Error",
-        field_prefix="data.",
     )
 
     success_response = client.post("/user", json=VALID_USER).get_json()
@@ -147,7 +138,7 @@ def test_log_validation_error_unexpected_exception_handling(caplog):
     exception = ValidationException(errors, "Request Validation Exception", {})
 
     for error in exception.errors:
-        log_validation_error(exception, error)
+        log_validation_error(exception, error, is_unexpected_validation_error)
 
     assert [(r.funcName, r.levelname, r.message) for r in caplog.records] == [
         (

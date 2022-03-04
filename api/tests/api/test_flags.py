@@ -43,7 +43,6 @@ def test_flags_get_empty(client):
 """
     with patch("massgov.pfml.util.files.open_stream", mock_open(read_data=mock_features_file)):
         response = client.get("/v1/flags")
-        print(response.get_json().get("data"))
         assert response.status_code == 200
         response_data = response.get_json().get("data")
         assert len(response_data) == 0

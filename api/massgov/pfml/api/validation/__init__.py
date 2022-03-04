@@ -21,7 +21,6 @@ from werkzeug.exceptions import (
 
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging as logging
-import massgov.pfml.util.newrelic.events as newrelic_util
 from massgov.pfml.api.validation.exceptions import (
     IssueType,
     ValidationErrorDetail,
@@ -31,11 +30,13 @@ from massgov.pfml.api.validation.validators import (
     CustomParameterValidator,
     CustomRequestBodyValidator,
     CustomResponseValidator,
+    log_validation_error,
 )
 from massgov.pfml.fineos.exception import FINEOSFatalUnavailable
 
-UNEXPECTED_ERROR_TYPES = {"enum", "type"}
 logger = logging.get_logger(__name__)
+
+UNEXPECTED_ERROR_TYPES = {"enum", "type"}
 
 
 def is_unexpected_validation_error(error: ValidationErrorDetail) -> bool:
@@ -44,32 +45,6 @@ def is_unexpected_validation_error(error: ValidationErrorDetail) -> bool:
         or error.type.startswith("type_error")
         or error.type.startswith("value_error")
     )
-
-
-def log_validation_error(
-    validation_exception: ValidationException, error: ValidationErrorDetail
-) -> None:
-    # Create a readable message for the individual error.
-    # Do not use the error's actual message since it may include PII.
-    message = "%s (field: %s, type: %s, rule: %s)" % (
-        validation_exception.message,
-        error.field,
-        error.type,
-        error.rule,
-    )
-
-    log_attributes = {
-        "error.class": "ValidationException",
-        "error.type": error.type,
-        "error.rule": error.rule,
-        "error.field": error.field,
-    }
-
-    if not is_unexpected_validation_error(error):
-        logger.info(message, extra=log_attributes)
-    else:
-        # Log explicit errors in the case of unexpected validation errors.
-        newrelic_util.log_and_capture_exception(message, extra=log_attributes)
 
 
 def db_operational_error_handler(operational_error: OperationalError) -> Response:
@@ -82,7 +57,7 @@ def db_operational_error_handler(operational_error: OperationalError) -> Respons
 
 def validation_request_handler(validation_exception: ValidationException) -> Response:
     for error in validation_exception.errors:
-        log_validation_error(validation_exception, error)
+        log_validation_error(validation_exception, error, is_unexpected_validation_error)
 
     return response_util.error_response(
         status_code=BadRequest,

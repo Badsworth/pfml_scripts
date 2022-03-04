@@ -85,7 +85,7 @@ services:
       - RMV_CHECK_MOCK_SUCCESS=1
       # Disable this variable and set the following three variables to use a real Service Now API instead of a mock:
       - ENABLE_MOCK_SERVICE_NOW_CLIENT=1
-
+      - ENABLE_RESPONSE_VALIDATION=1
       - ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS=0
       # - SERVICE_NOW_BASE_URL=...
       # - SERVICE_NOW_USERNAME=...

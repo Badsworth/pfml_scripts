@@ -1,8 +1,8 @@
 #
 # Custom validation implementations to support custom API response formats
 #
+from typing import Callable, Optional
 
-import flask
 import jsonschema
 from connexion.decorators.response import ResponseValidator
 from connexion.decorators.validation import (
@@ -13,7 +13,9 @@ from connexion.decorators.validation import (
 from connexion.json_schema import Draft4RequestValidator, Draft4ResponseValidator
 from connexion.utils import is_null
 
+import massgov.pfml.api.app as app
 import massgov.pfml.util.logging as logging
+import massgov.pfml.util.newrelic.events as newrelic_util
 from massgov.pfml.api.validation.exceptions import (
     IssueType,
     ValidationErrorDetail,
@@ -114,6 +116,33 @@ class CustomResponseBodyValidator(ResponseBodyValidator):
         validate_schema_util(self, data, "Response Validation Error")
 
 
+def log_validation_error(
+    validation_exception: ValidationException,
+    error: ValidationErrorDetail,
+    unexpected_error_check_func: Optional[Callable[[ValidationErrorDetail], bool]] = None,
+) -> None:
+    # Create a readable message for the individual error.
+    # Do not use the error's actual message since it may include PII.
+    message = "%s (field: %s, type: %s, rule: %s)" % (
+        validation_exception.message,
+        error.field,
+        error.type,
+        error.rule,
+    )
+
+    log_attributes = {
+        "error.class": "ValidationException",
+        "error.type": error.type,
+        "error.rule": error.rule,
+        "error.field": error.field,
+    }
+    if unexpected_error_check_func and not unexpected_error_check_func(error):
+        logger.info(message, extra=log_attributes)
+    else:
+        newrelic_util.log_and_capture_exception(message, extra=log_attributes)
+        # Log explicit errors in the case of unexpected validation errors.
+
+
 class CustomResponseValidator(ResponseValidator):
     def validate_helper(self, data, status_code, headers, url):
         content_type = headers.get("Content-Type", self.mimetype)
@@ -131,11 +160,14 @@ class CustomResponseValidator(ResponseValidator):
 
         response_body = self.operation.json_loads(data)
 
-        # Do not validate GET responses.
-        if flask.request.method == "GET":
-            return True
-
         if url.endswith("/status"):
             return True
 
-        self.validate_helper(response_body, status_code, headers, url)
+        try:
+            self.validate_helper(response_body, status_code, headers, url)
+        except ValidationException as validation_exception:
+            if app.get_app_config().enable_response_validation:
+                raise validation_exception
+            for error in validation_exception.errors:
+                log_validation_error(validation_exception, error)
+            return True
