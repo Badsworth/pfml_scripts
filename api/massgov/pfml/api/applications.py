@@ -210,12 +210,36 @@ def applications_import():
         applications_service.set_payment_preference_fields(
             fineos, fineos_web_id, application, db_session
         )
+        eform_cache: applications_service.EFORM_CACHE = {}
+        eform_summaries = fineos.customer_get_eform_summary(
+            fineos_web_id, application_import_request.absence_case_id
+        )
         applications_service.set_other_leaves(
             fineos,
             fineos_web_id,
             application,
             db_session,
             application_import_request.absence_case_id,
+            eform_summaries,
+            eform_cache,
+        )
+        applications_service.set_employer_benefits_from_fineos(
+            fineos,
+            fineos_web_id,
+            application,
+            db_session,
+            application_import_request.absence_case_id,
+            eform_summaries,
+            eform_cache,
+        )
+        applications_service.set_other_incomes_from_fineos(
+            fineos,
+            fineos_web_id,
+            application,
+            db_session,
+            application_import_request.absence_case_id,
+            eform_summaries,
+            eform_cache,
         )
         db_session.refresh(application)
         db_session.commit()
