@@ -2867,6 +2867,16 @@ components:
           nullable: true
         computed_start_dates:
           $ref: "#/components/schemas/ComputedStartDates"
+        split_from_application_id:
+          type: string
+          format: uuid
+          example: "2f0f58a0-fcad-465b-b474-ee6c961cd6e3"
+          nullable: true
+        split_into_application_id:
+          type: string
+          format: uuid
+          example: "2f0f58a0-fcad-465b-b474-ee6c961cd6e3"
+          nullable: true
 
     ComputedStartDates:
       type: object

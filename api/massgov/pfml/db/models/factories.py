@@ -612,6 +612,7 @@ class ApplicationFactory(BaseFactory):
         application_models.LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id
     )
     leave_reason_qualifier_id = None
+    split_from_application_id = None
 
     created_at = Generators.TransactionDateTime
     updated_at = factory.LazyAttribute(lambda a: a.created_at + timedelta(days=1))

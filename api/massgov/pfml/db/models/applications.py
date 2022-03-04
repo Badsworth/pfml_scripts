@@ -334,6 +334,13 @@ class Application(Base, TimestampMixin):
     has_concurrent_leave = Column(Boolean)
     is_withholding_tax = Column(Boolean, nullable=True)
 
+    split_from_application_id = Column(
+        PostgreSQLUUID,
+        ForeignKey("application.application_id"),
+        nullable=True,
+        index=True,
+    )
+
     user = relationship(User)
     caring_leave_metadata = relationship("CaringLeaveMetadata", back_populates="application")
     claim = relationship(Claim, backref=backref("application", uselist=False))
@@ -351,8 +358,12 @@ class Application(Base, TimestampMixin):
     residential_address = relationship(Address, foreign_keys=[residential_address_id])
     payment_preference = relationship("ApplicationPaymentPreference", back_populates="application")
     phone = relationship("Phone", back_populates="application", uselist=False)
-
     work_pattern = relationship("WorkPattern", back_populates="applications", uselist=False)
+    split_from_application = relationship(
+        "Application",
+        backref=backref("split_into_application", uselist=False),
+        remote_side=[application_id],
+    )
 
     # `uselist` default is True, but for mypy need to state it explicitly so it
     # detects the relationship as many-to-one
@@ -451,6 +462,10 @@ class Application(Base, TimestampMixin):
             )
         )
         return leave_periods
+
+    @hybrid_property
+    def split_into_application_id(self):
+        return self.split_into_application.application_id if self.split_into_application else None  # type: ignore
 
 
 class CaringLeaveMetadata(Base, TimestampMixin):

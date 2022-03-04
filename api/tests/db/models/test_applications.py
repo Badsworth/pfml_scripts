@@ -2,7 +2,11 @@ import datetime
 from decimal import Decimal
 
 from massgov.pfml.api.eligibility import eligibility_util
-from massgov.pfml.db.models.factories import BenefitsMetricsFactory, UnemploymentMetricFactory
+from massgov.pfml.db.models.factories import (
+    ApplicationFactory,
+    BenefitsMetricsFactory,
+    UnemploymentMetricFactory,
+)
 
 
 def test_state_metric_init(initialize_factories_session, test_db_session):
@@ -44,4 +48,31 @@ def test_state_metric_init(initialize_factories_session, test_db_session):
     assert (
         benefits_metrics_data.maximum_weekly_benefit_amount
         == expected_maximum_weekly_benefit_amount
+    )
+
+
+def test_split_with_application(initialize_factories_session, test_db_session):
+    first_application = ApplicationFactory.create()
+    assert first_application.split_from_application_id is None
+    assert first_application.split_from_application is None
+    assert first_application.split_into_application is None
+
+    second_application = ApplicationFactory.create(
+        split_from_application_id=first_application.application_id
+    )
+
+    test_db_session.commit()
+    test_db_session.refresh(first_application)
+
+    assert first_application.split_from_application_id is None
+    assert first_application.split_into_application_id == second_application.application_id
+
+    assert second_application.split_from_application_id == first_application.application_id
+    assert second_application.split_into_application_id is None
+
+    assert (
+        first_application.split_into_application.application_id == second_application.application_id
+    )
+    assert (
+        second_application.split_from_application.application_id == first_application.application_id
     )

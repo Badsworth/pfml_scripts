@@ -248,6 +248,45 @@ def test_applications_get_with_payment_preference(client, user, auth_token, test
     assert payment_preference["payment_method"] == PaymentMethod.ACH.payment_method_description
 
 
+def test_applications_get_split_from_application_id(client, user, auth_token, test_db_session):
+    # split_from_application_id is an optional field and defaults to None
+    application = ApplicationFactory.create(user=user)
+    test_db_session.commit()
+
+    response = client.get(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    assert response_body.get("split_from_application_id") is None
+
+    # when split_from_application_id is provided, it should also be returned
+    split_application = ApplicationFactory.create(
+        user=user, split_from_application_id=application.application_id
+    )
+    test_db_session.commit()
+    test_db_session.refresh(application)
+
+    response = client.get(
+        "/v1/applications/{}".format(split_application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    assert response.status_code == 200
+    response_body = response.get_json().get("data")
+    assert response_body.get("split_from_application_id") == str(application.application_id)
+
+    # the original request should now provide a split_into_application_id
+    response = client.get(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    assert response.status_code == 200
+    response_body = response.get_json().get("data")
+    assert response_body.get("split_into_application_id") == str(split_application.application_id)
+
+
 def test_applications_get_all_for_user(client, user, auth_token):
     applications = sorted(
         [ApplicationFactory.create(user=user), ApplicationFactory.create(user=user)],

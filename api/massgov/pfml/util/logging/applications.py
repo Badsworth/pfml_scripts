@@ -75,6 +75,7 @@ def get_application_log_attributes(application: Application) -> Dict[str, Option
         "updated_at",
         "completed_time",
         "submitted_time",
+        "split_from_application_id",
     ]
 
     timestamp_attributes_to_log = ["created_at", "updated_at", "completed_time", "submitted_time"]

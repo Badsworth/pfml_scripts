@@ -93,6 +93,8 @@ class ApplicationResponse(PydanticBaseModel):
     imported_from_fineos_at: Optional[datetime]
     updated_at: datetime
     computed_start_dates: Optional[ComputedStartDates]
+    split_from_application_id: Optional[UUID4]
+    split_into_application_id: Optional[UUID4]
 
     @classmethod
     def from_orm(cls, application: Application) -> "ApplicationResponse":
