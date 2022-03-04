@@ -1,0 +1,131 @@
+import {
+  Description,
+  Meta,
+  Story,
+  Preview,
+  Props,
+  Title as StoryTitle,
+} from "@storybook/addon-docs";
+import { ValidationError } from "src/errors";
+import ErrorsSummary from "src/components/ErrorsSummary";
+import InputText from "src/components/core/InputText";
+import IssueErrorMessage from "src/components/IssueErrorMessage";
+import Title from "src/components/core/Title";
+
+<Meta title="Components/Error messages" parameters={{ viewMode: "docs" }} />
+
+<StoryTitle />
+
+The Portal has several different components that are responsible for displaying messages to the user when errors occur.
+
+## Errors summary
+
+When an error occurs, the Portal displays an alert at the top of the page via the `ErrorsSummary` component.
+
+The contents of the alert varies depending on the type of error and number of errors. For instance, if there are multiple validation errors on a page, the heading shows the total number of errors, followed by a list the error messages:
+
+<Preview>
+  <Story name="ErrorsSummary - plural">
+    <ErrorsSummary
+      errors={[
+        new ValidationError(
+          [
+            {
+              field: "first_name",
+              type: "required",
+            },
+            {
+              field: "last_name",
+              type: "required",
+            },
+          ],
+          "applications"
+        ),
+      ]}
+    />
+  </Story>
+</Preview>
+
+If there's only one error, then the heading is singular:
+
+<Preview>
+  <Story name="ErrorsSummary - singular">
+    <ErrorsSummary
+      errors={[
+        new ValidationError(
+          [
+            {
+              field: "first_name",
+              type: "required",
+            },
+          ],
+          "applications"
+        ),
+      ]}
+    />
+  </Story>
+</Preview>
+
+## Field-level errors
+
+In addition to listing all errors at the top of the page, form fields will display the relevant error message inline.
+
+<Preview>
+  <Story name="IssueErrorMessage">
+    <InputText
+      errorMsg={
+        <IssueErrorMessage
+          i18nPrefix="applications"
+          field="first_name"
+          type="required"
+        />
+      }
+      label="First name"
+      name="first_name"
+      smallLabel
+    />
+  </Story>
+</Preview>
+
+## Constraints & Capabilities
+
+### Constraints
+
+- The alert summary's heading is not customizable. It's either singular or plural depending on the number of errors.
+- An individual error message's content in the alert summary is the same message displayed inline with the field. It's technically the same content string being referenced, just visually displayed differently.
+
+### Capabilities
+
+Error messages can include basic HTML formatting, like bold text and links:
+
+<Preview>
+  <Story name="Formatting">
+    <ErrorsSummary
+      errors={[
+        new ValidationError(
+          [
+            {
+              field:
+                "leave_details.intermittent_leave_periods[0].frequency_interval_basis",
+              type: "intermittent_interval_maximum",
+            },
+          ],
+          "applications"
+        ),
+      ]}
+    />
+    <Title>Page title</Title>
+    <InputText
+      errorMsg={
+        <IssueErrorMessage
+          i18nPrefix="applications"
+          field="leave_details.intermittent_leave_periods[0].frequency_interval_basis"
+          type="intermittent_interval_maximum"
+        />
+      }
+      label="Frequency"
+      name="leave_details.intermittent_leave_periods[0].frequency_interval_basis"
+      smallLabel
+    />
+  </Story>
+</Preview>

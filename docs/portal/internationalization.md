@@ -31,7 +31,9 @@ Our application takes advantage of some advanced patterns supported by the `i18n
   <Trans
     i18nKey="userAgreement"
     components={{
-      "consent-link": <a href="https://www.mass.gov/paidleave-informedconsent" />,
+      "consent-link": (
+        <a href="https://www.mass.gov/paidleave-informedconsent" />
+      ),
       "privacy-policy-link": <a href="https://www.mass.gov/privacypolicy" />,
     }}
   />
@@ -39,7 +41,7 @@ Our application takes advantage of some advanced patterns supported by the `i18n
 
   ```json
   {
-    "userAgreement": "To find out more about how the Commonwealth might use the information you share with DFML, please read the <consent-link>DFML Informed Consent Agreement</consent-link> and the <privacy-policy-link>Privacy Policy for Mass.gov</privacy-policy-link>.",
+    "userAgreement": "To find out more about how the Commonwealth might use the information you share with DFML, please read the <consent-link>DFML Informed Consent Agreement</consent-link> and the <privacy-policy-link>Privacy Policy for Mass.gov</privacy-policy-link>."
   }
   ```
 
@@ -65,7 +67,7 @@ Our application takes advantage of some advanced patterns supported by the `i18n
 
   ```json
   {
-    timeDuration: "{{minutes, hoursMinutesDuration}}",
+    "timeDuration": "{{minutes, hoursMinutesDuration}}"
   }
   ```
 
@@ -78,7 +80,7 @@ Internationalization content can get messy and lead to hard-to-find bugs during 
 - Keys are organized under top-level objects by how they're used:
   - `components` defines content used in specific components
   - `pages` defines content used in specific pages
-  - `errors` defines content used in error messages, which aren’t page or component specific
+  - `errors` defines content used in [error messages](./error-handling.md), which aren’t page or component specific
   - `shared` defines content shared between multiple components or pages
   - `chars` defines special characters (such as non-breaking spaces, which are difficult to distinguish in values)
 - Keys are limited to three levels deep, for example `pages.claimsDateOfBirth.title`. This makes the structure easier to navigate and the process of finding a specific element more consistent.
@@ -193,15 +195,10 @@ import { Trans } from "react-i18next";
   i18nKey="htmlKey"
   components={{
     "my-link": (
-      <a
-        target="_blank"
-        rel="noopener"
-        href={routes.external.myLink}
-      />
+      <a target="_blank" rel="noopener" href={routes.external.myLink} />
     ),
     ul: <ul className="usa-list" />,
     li: <li />,
   }}
-/>
-
+/>;
 ```
