@@ -55,6 +55,7 @@ function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
     claimantShowPaymentsPhaseTwo: true,
     claimantShowMFA: config("MFA_ENABLED") === "true",
     employerShowMultiLeave: true,
+    channelSwitching: config("HAS_CHANNEL_SWITCHING") === "true",
     employerShowMultiLeaveDashboard:
       config("HAS_UPDATED_ER_DASHBOARD") === "true",
   };
@@ -2219,9 +2220,16 @@ export function completeFlowMFA(number: string): void {
     });
 }
 
-export function enableMFA(): void {
+export function acceptMFA(): void {
   cy.contains(
     "Yes, I want to add a phone number for verifying logins."
+  ).click();
+  cy.contains("button", "Save and continue").click();
+}
+
+export function declineMFA(): void {
+  cy.contains(
+    "No, I do not want to add a phone number for verifying logins."
   ).click();
   cy.contains("button", "Save and continue").click();
 }
@@ -2235,10 +2243,19 @@ export function loginMFA(credentials: Credentials, number: string): void {
     cy.task("mfaVerification", { timeSent, number }).then((code) => {
       cy.findByLabelText("6-digit code").type(code);
       cy.contains("button", "Submit").click();
-      cy.url({ timeout: 30000 }).should("contain", "get-ready");
+      cy.url({ timeout: 30000 }).should("contain", "applications");
       assertLoggedIn();
     });
   });
+}
+
+export function enableMFA(number: string): void {
+  cy.contains("a", "Settings").click();
+  cy.findByText("Additional login verification is not enabled")
+    .parent()
+    .next()
+    .click();
+  completeFlowMFA(number);
 }
 
 export function disableMFA(): void {
@@ -2293,6 +2310,31 @@ export function assertPaymentCheckBackDate(date: Date) {
       )
     );
   });
+}
+
+export function resumeFineosApplication(ssn: string, absenceCaseId: string) {
+  cy.location("pathname", { timeout: 30000 }).should(
+    "include",
+    "/applications/get-ready/"
+  );
+  cy.contains("Did you start an application by phone?").click();
+  cy.get("a[href$='/applications/import-claim/']").click();
+  cy.get("input[name='tax_identifier']").clear().type(ssn);
+  cy.get("input[name='absence_case_id']").clear().type(absenceCaseId);
+  cy.contains("button[type='submit']", "Add application").click();
+}
+
+export function assertClaimImportError(errorMessage: string) {
+  cy.contains("h2", "An error occurred")
+    .next()
+    .should("have.text", errorMessage);
+}
+
+export function assertClaimImportSuccess(absenceCaseId: string) {
+  cy.contains(
+    "div.usa-alert",
+    `Application ${absenceCaseId} has been added to your account.`
+  );
 }
 
 /**

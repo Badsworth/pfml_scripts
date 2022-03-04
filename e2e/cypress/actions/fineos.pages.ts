@@ -5,6 +5,7 @@ import {
   ReducedScheduleLeavePeriods,
   ApplicationRequestBody,
   AbsencePeriodResponse,
+  Phone,
 } from "../../src/_api";
 import {
   FineosCloseTaskStep,
@@ -2491,6 +2492,61 @@ export class ClaimantPage {
       cy.findByLabelText(`Zip code`).type(`${address.zip}`);
       cy.findByTitle("OK").click({ force: true });
     });
+    return this;
+  }
+
+  setPhoneNumber(
+    phoneNumber: string,
+    verified = true,
+    phoneType: Exclude<Phone["phone_type"], null | undefined> = "Cell"
+  ): this {
+    const strippedPhoneNumber = phoneNumber.replace(/[^0-9]/g, "");
+    if (![10, 11].includes(strippedPhoneNumber.length)) {
+      throw new Error(`Invalid phone number: ${phoneNumber}`);
+    }
+
+    // Deletes existing contact, if it exists
+    cy.get("div#contactDetailsFrame")
+      .find("div.container.card span.header-title")
+      .each((el) => {
+        if (el.text() === phoneType) {
+          cy.wrap(
+            el.parent().parent().find("span.controls span[id$='deleteIcon']")
+          ).click({ force: true });
+          cy.get("input[id$='Delete_Contact_yes']").click({ force: true });
+        }
+      });
+
+    cy.get("a[id^='newContactDetailsCard'][id$='addPhoneContact']").click();
+
+    let internationalCode: string;
+    let areaCode: string;
+    let number: string;
+    if (strippedPhoneNumber.length === 11) {
+      internationalCode = strippedPhoneNumber[0];
+      areaCode = strippedPhoneNumber.slice(1, 4);
+      number = strippedPhoneNumber.slice(4);
+    } else {
+      internationalCode = "1";
+      areaCode = strippedPhoneNumber.slice(0, 3);
+      number = strippedPhoneNumber.slice(3);
+    }
+
+    cy.get("div#addPhonePopupWidget_PopupWidgetWrapper").within(() => {
+      cy.get("select[id$='contactMethod']").select(phoneType);
+
+      cy.get("input[id$='intCode']").clear().type(internationalCode);
+      cy.get("input[id$='areaCode']").clear().type(areaCode);
+      cy.get("input[id$='telephoneNumber']").clear().type(number);
+
+      cy.contains(
+        "span[id$='Label']",
+        verified ? "Verified" : "Unverified"
+      ).click();
+
+      cy.get("input[id$='okButtonBean']").click();
+    });
+
     return this;
   }
 
