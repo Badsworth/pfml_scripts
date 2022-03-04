@@ -1,6 +1,6 @@
 resource "aws_cloudwatch_metric_alarm" "sns_spending_limit" {
   for_each            = var.sns_spending_thresholds
-  alarm_name          = "sns-spending-limit-${each.key}"
+  alarm_name          = "massgov-pfml-sns-spending-limit-${each.key}"
   alarm_description   = "SNS spending ${each.key} threshold"
   comparison_operator = local.cloudwatch_comparison_operator
   evaluation_periods  = "1"
@@ -16,7 +16,7 @@ resource "aws_cloudwatch_metric_alarm" "sns_spending_limit" {
 
 resource "aws_cloudwatch_metric_alarm" "sns_sms_failure_rate" {
   for_each            = var.sns_sms_failure_rate
-  alarm_name          = "sns-sms-failure-rate-${each.key}"
+  alarm_name          = "massgov-pfml-sns-sms-failure-rate-${each.key}"
   alarm_description   = "SMS failure rate to phone numbers ${each.key} for 2 hours"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = "2"
@@ -33,7 +33,7 @@ resource "aws_cloudwatch_metric_alarm" "sns_sms_failure_rate" {
 
 resource "aws_cloudwatch_metric_alarm" "sns_sms_phone_carrier_unavailable" {
   for_each            = var.carrier_unavailable_period
-  alarm_name          = "sns-sms-phone-carrier-unavailable"
+  alarm_name          = "massgov-pfml-sns-sms-phone-carrier-unavailable"
   alarm_description   = "More than ${local.phone_carrier_unavailable_threshold} SMS messages failed because Phone carrier unreachable/unavailable over ${each.value} seconds."
   comparison_operator = local.cloudwatch_comparison_operator
   evaluation_periods  = "1"
@@ -48,7 +48,7 @@ resource "aws_cloudwatch_metric_alarm" "sns_sms_phone_carrier_unavailable" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "sns_sms_blocked_as_spam" {
-  alarm_name          = "sns-sms-blocked-as-spam"
+  alarm_name          = "massgov-pfml-sns-sms-blocked-as-spam"
   alarm_description   = "More than ${local.blocked_as_spam_threshold} SMS have been blocked as spam over 2 hours"
   comparison_operator = local.cloudwatch_comparison_operator
   evaluation_periods  = "1"

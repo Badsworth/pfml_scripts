@@ -10,6 +10,11 @@ data "aws_ssm_parameter" "newrelic-admin-api-key" {
   name = "/admin/pfml-api/newrelic-admin-api-key"
 }
 
+# All SNS topics require KMS encryption defined in pfml-aws/kms.tf
+data "aws_kms_key" "main_kms_key" {
+  key_id = "alias/massgov-pfml-main-kms-key"
+}
+
 module "constants" {
   source = "../../constants"
 }
@@ -30,6 +35,11 @@ locals {
   two_hours                           = local.one_hour * 2
   newrelic_comparison_operator        = "above"
   cloudwatch_comparison_operator      = "GreaterThanOrEqualToThreshold"
+  prefix                              = "massgov-pfml-"
+  channel_prefix                      = "Mass Gov PFML AWS Account SNS"
+  channel_suffix                      = "Priority Alerts"
+  low_priority_channel_name           = "${local.channel_prefix} Low ${local.channel_suffix}"
+  high_priority_channel_name          = "${local.channel_prefix} High ${local.channel_suffix}"
   aggregation_delay                   = 120
   aggregation_method                  = "event_flow"
   value_function                      = "single_value"
@@ -42,11 +52,4 @@ locals {
   blocked_as_spam_threshold           = 10
   sns_log_group_name                  = "sns/${data.aws_region.current.name}/${data.aws_caller_identity.current.account_id}/DirectPublishToPhoneNumber"
   sns_failure_log_group_name          = "sns/${data.aws_region.current.name}/${data.aws_caller_identity.current.account_id}/DirectPublishToPhoneNumber/Failure"
-}
-
-# Defined in pfml-aws/kms.tf
-# All SNS topics defined in terraform_sns_alarms directory will need to use this key
-# This key is not restricted by any environment
-data "aws_kms_key" "main_kms_key" {
-  key_id = "alias/massgov-pfml-main-kms-key"
 }
