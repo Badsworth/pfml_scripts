@@ -139,9 +139,7 @@ export const Default = (
     : [];
 
   const appLogic = useMockableAppLogic({
-    errors: [
-      new ValidationError(getErrorInfoCollection(errorTypes), "employers"),
-    ],
+    errors: [new ValidationError(getErrorInfoCollection(errorTypes))],
     employers: {
       claimDocumentsMap: new Map([
         [
@@ -256,6 +254,7 @@ function getErrorInfoCollection(errorTypes: string[] = []) {
     errors.push({
       type: "minimum",
       field: "hours_worked_per_week",
+      namespace: "employers",
     });
   }
 
@@ -263,6 +262,7 @@ function getErrorInfoCollection(errorTypes: string[] = []) {
     errors.push({
       type: "maximum",
       field: "hours_worked_per_week",
+      namespace: "employers",
     });
   }
 
@@ -270,6 +270,7 @@ function getErrorInfoCollection(errorTypes: string[] = []) {
     errors.push({
       type: "minimum",
       field: "employer_benefits[0].benefit_end_date",
+      namespace: "employers",
     });
   }
 
@@ -277,6 +278,7 @@ function getErrorInfoCollection(errorTypes: string[] = []) {
     errors.push({
       type: "invalid_previous_leave_start_date",
       field: "previous_leaves[0].leave_start_date",
+      namespace: "employers",
     });
   }
 
@@ -284,6 +286,7 @@ function getErrorInfoCollection(errorTypes: string[] = []) {
     errors.push({
       type: "minimum",
       field: "previous_leaves[0].leave_end_date",
+      namespace: "employers",
     });
   }
 

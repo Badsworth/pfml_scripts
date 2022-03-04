@@ -45,19 +45,18 @@ describe("ErrorsSummary", () => {
     render(
       <ErrorsSummary
         errors={[
-          new ValidationError(
-            [
-              {
-                field: "first_name",
-                type: "required",
-              },
-              {
-                field: "last_name",
-                type: "required",
-              },
-            ],
-            "applications"
-          ),
+          new ValidationError([
+            {
+              field: "first_name",
+              type: "required",
+              namespace: "applications",
+            },
+            {
+              field: "last_name",
+              type: "required",
+              namespace: "applications",
+            },
+          ]),
         ]}
       />
     );

@@ -17,7 +17,7 @@ export default class DocumentsApi extends BaseApi {
     return routes.api.applications;
   }
 
-  get i18nPrefix() {
+  get namespace() {
     return "documents";
   }
 
@@ -100,7 +100,7 @@ export default class DocumentsApi extends BaseApi {
     }
 
     if (!response.ok) {
-      handleNotOkResponse(response, [], this.i18nPrefix);
+      handleNotOkResponse(response, [], this.namespace);
     }
 
     return blob;

@@ -184,10 +184,9 @@ describe("Review Page", () => {
 
   it("renders a Alert when there are required field errors", () => {
     const errors = [
-      new ValidationError(
-        [{ type: "required", field: "someField" }],
-        "applications"
-      ),
+      new ValidationError([
+        { type: "required", field: "someField", namespace: "applications" },
+      ]),
     ];
 
     setup({ errors });
@@ -199,15 +198,13 @@ describe("Review Page", () => {
 
   it("does not render a custom Alert when there are required errors not associated to a specific field", () => {
     const errors = [
-      new ValidationError(
-        [
-          {
-            type: "required",
-            rule: "require_employer_notified",
-          },
-        ],
-        "applications"
-      ),
+      new ValidationError([
+        {
+          type: "required",
+          rule: "require_employer_notified",
+          namespace: "applications",
+        },
+      ]),
     ];
 
     setup({ errors });

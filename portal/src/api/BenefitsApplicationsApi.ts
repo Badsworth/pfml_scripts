@@ -11,7 +11,7 @@ export default class BenefitsApplicationsApi extends BaseApi {
     return routes.api.applications;
   }
 
-  get i18nPrefix() {
+  get namespace() {
     return "applications";
   }
 

@@ -169,7 +169,7 @@ const useBenefitsApplicationsLogic = ({
       // for situations like leave periods, where the API passes us back
       // a leave_period_id field for making subsequent updates.
       if (issues.length) {
-        throw new ValidationError(issues, applicationsApi.i18nPrefix);
+        throw new ValidationError(issues);
       }
 
       const params = { claim_id: claim.application_id };
@@ -258,7 +258,7 @@ const useBenefitsApplicationsLogic = ({
       setClaimWarnings(application_id, warnings);
 
       if (issues.length) {
-        throw new ValidationError(issues, applicationsApi.i18nPrefix);
+        throw new ValidationError(issues);
       }
 
       const context = { claim };
@@ -291,7 +291,7 @@ const useBenefitsApplicationsLogic = ({
 
       const issues = getRelevantIssues([], warnings, []);
       if (issues.length) {
-        throw new ValidationError(issues, applicationsApi.i18nPrefix);
+        throw new ValidationError(issues);
       }
 
       const context = { claim };

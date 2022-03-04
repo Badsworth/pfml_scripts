@@ -115,11 +115,11 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
           // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'error' implicitly has an 'any'
           (error) => error.displayStr === displayStr
         );
-        return errorInfo;
+        return { ...errorInfo, namespace: "applications" };
       });
 
     const appLogic = useMockableAppLogic({
-      errors: [new ValidationError(issues, "applications")],
+      errors: [new ValidationError(issues)],
     });
 
     return (

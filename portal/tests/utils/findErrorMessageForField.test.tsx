@@ -8,28 +8,24 @@ describe("findErrorMessageForField", () => {
   });
 
   it("returns undefined if there are no errors associated with the given field", () => {
-    const error = new ValidationError(
-      [
-        {
-          field: "last_name",
-          type: "required",
-        },
-      ],
-      "applications"
-    );
+    const error = new ValidationError([
+      {
+        field: "last_name",
+        type: "required",
+        namespace: "applications",
+      },
+    ]);
     expect(findErrorMessageForField([error], "first_name")).toBeUndefined();
   });
 
   it("returns an error message when an error is associated with the given field", () => {
-    const error = new ValidationError(
-      [
-        {
-          field: "first_name",
-          type: "required",
-        },
-      ],
-      "applications"
-    );
+    const error = new ValidationError([
+      {
+        field: "first_name",
+        type: "required",
+        namespace: "applications",
+      },
+    ]);
 
     const Message = findErrorMessageForField([error], "first_name");
     const { container } = render(Message as JSX.Element);
@@ -40,7 +36,6 @@ describe("findErrorMessageForField", () => {
   it("supports any error type with an issues property", () => {
     class TestError extends Error {
       issues: Issue[];
-      i18nPrefix: string;
 
       constructor() {
         super();
@@ -48,10 +43,9 @@ describe("findErrorMessageForField", () => {
           {
             field: "first_name",
             type: "required",
+            namespace: "applications",
           },
         ];
-
-        this.i18nPrefix = "applications";
       }
     }
 

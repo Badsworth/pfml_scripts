@@ -73,8 +73,7 @@ const useErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
     const updatedErrors = errors.map((error) => {
       if (error instanceof ValidationError) {
         return new ValidationError(
-          error.issues.filter((issue) => issue.type !== "required"),
-          error.i18nPrefix
+          error.issues.filter((issue) => issue.type !== "required")
         );
       }
 

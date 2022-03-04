@@ -84,6 +84,7 @@ describe("BenefitsApplicationsApi", () => {
             {
               "field": "first_name",
               "message": "First name is required",
+              "namespace": "applications",
               "type": "required",
             },
           ],
@@ -185,7 +186,7 @@ describe("BenefitsApplicationsApi", () => {
           await claimsApi.createClaim({});
         } catch (error) {
           expect(error).toBeInstanceOf(ValidationError);
-          expect(error.i18nPrefix).toBe("applications");
+          expect(error.issues[0].namespace).toBe("applications");
         }
       });
     });

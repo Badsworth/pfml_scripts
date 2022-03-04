@@ -15,16 +15,11 @@ function findErrorMessageForField(
   let errorMessage: JSX.Element | undefined;
 
   errors.some((error) => {
-    if (
-      typeof error.issues !== "undefined" &&
-      typeof error.i18nPrefix !== "undefined"
-    ) {
+    if (typeof error.issues !== "undefined") {
       const issue = error.issues.find((issue) => issue.field === fieldName);
 
       if (issue) {
-        errorMessage = (
-          <IssueErrorMessage i18nPrefix={error.i18nPrefix} {...issue} />
-        );
+        errorMessage = <IssueErrorMessage {...issue} />;
         return true;
       }
     }

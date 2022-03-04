@@ -75,15 +75,13 @@ export const UploadDocsOptions = (props: Props) => {
 
   const handleSave = async () => {
     if (!upload_docs_options) {
-      const error = new ValidationError(
-        [
-          {
-            field: "upload_docs_options",
-            type: "required",
-          },
-        ],
-        "applications"
-      );
+      const error = new ValidationError([
+        {
+          field: "upload_docs_options",
+          type: "required",
+          namespace: "applications",
+        },
+      ]);
 
       appLogic.setErrors([error]);
 

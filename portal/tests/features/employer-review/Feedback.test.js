@@ -101,15 +101,13 @@ describe("Feedback", () => {
     renderHook(() => {
       getFunctionalInputProps = useFunctionalInputProps({
         errors: [
-          new ValidationError(
-            [
-              {
-                field: "comment",
-                type: "maxLength",
-              },
-            ],
-            "employers"
-          ),
+          new ValidationError([
+            {
+              field: "comment",
+              type: "maxLength",
+              namespace: "employers",
+            },
+          ]),
         ],
         formState: {},
         updateFields,

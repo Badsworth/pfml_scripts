@@ -18,16 +18,18 @@ describe("getMissingRequiredFields", () => {
         type: "checksum",
         field: "application.payment_preferences.routing_number",
         message: "Routing number is invalid",
+        namespace: "applications",
       },
       {
         type: "conflicting",
         rule: "disallow_hybrid_intermittent_leave",
         message:
           "Intermittent leave cannot be taken alongside Continuous or Reduced Schedule leave",
+        namespace: "applications",
       },
     ];
     const missingFields = getMissingRequiredFields([
-      new ValidationError(issues, "applications"),
+      new ValidationError(issues),
     ]);
     expect(missingFields).toEqual([]);
   });
@@ -38,33 +40,39 @@ describe("getMissingRequiredFields", () => {
         type: "checksum",
         field: "application.payment_preferences.routing_number",
         message: "Routing number is invalid",
+        namespace: "applications",
       },
       {
         type: "required",
         field: "application.has_other_incomes",
+        namespace: "applications",
       },
       {
         type: "conflicting",
         rule: "disallow_hybrid_intermittent_leave",
         message:
           "Intermittent leave cannot be taken alongside Continuous or Reduced Schedule leave",
+        namespace: "applications",
       },
       {
         type: "required",
         field: "application.has_employer_benefits",
+        namespace: "applications",
       },
     ];
     const missingFields = getMissingRequiredFields([
-      new ValidationError(issues, "applications"),
+      new ValidationError(issues),
     ]);
     expect(missingFields).toEqual([
       {
         type: "required",
         field: "application.has_other_incomes",
+        namespace: "applications",
       },
       {
         type: "required",
         field: "application.has_employer_benefits",
+        namespace: "applications",
       },
     ]);
   });
@@ -75,38 +83,45 @@ describe("getMissingRequiredFields", () => {
         type: "checksum",
         field: "application.payment_preferences.routing_number",
         message: "Routing number is invalid",
+        namespace: "applications",
       },
       {
         type: "required",
         field: "application.has_other_incomes",
+        namespace: "applications",
       },
       {
         type: "conflicting",
         rule: "disallow_hybrid_intermittent_leave",
         message:
           "Intermittent leave cannot be taken alongside Continuous or Reduced Schedule leave",
+        namespace: "applications",
       },
       {
         type: "required",
         field: "application.has_employer_benefits",
+        namespace: "applications",
       },
       {
         type: "required",
         rule: "require_employer_notified",
         message: "you must notify your employer",
+        namespace: "applications",
       },
     ];
     const missingFields = getMissingRequiredFields([
-      new ValidationError(issues, "applications"),
+      new ValidationError(issues),
     ]);
     expect(missingFields).toEqual([
       {
         type: "required",
         field: "application.has_other_incomes",
+        namespace: "applications",
       },
       {
         type: "required",
         field: "application.has_employer_benefits",
+        namespace: "applications",
       },
     ]);
   });

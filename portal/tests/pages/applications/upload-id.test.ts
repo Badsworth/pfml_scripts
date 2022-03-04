@@ -169,17 +169,15 @@ describe("UploadId", () => {
 
       await waitFor(() => {
         expect(catchError).toHaveBeenCalledWith(
-          new ValidationError(
-            [
-              {
-                field: "file",
-                message:
-                  "We could not upload: file1. Choose a PDF or an image file (.jpg, .jpeg, .png).",
-                type: "required",
-              },
-            ],
-            "documents"
-          )
+          new ValidationError([
+            {
+              field: "file",
+              message:
+                "We could not upload: file1. Choose a PDF or an image file (.jpg, .jpeg, .png).",
+              type: "required",
+              namespace: "documents",
+            },
+          ])
         );
       });
     });

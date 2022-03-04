@@ -7,7 +7,7 @@ export default class HolidaysApi extends BaseApi {
     return routes.api.holidays;
   }
 
-  get i18nPrefix() {
+  get namespace() {
     return "holidays";
   }
 

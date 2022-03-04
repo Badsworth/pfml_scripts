@@ -113,17 +113,15 @@ describe("UploadCertification", () => {
       await waitFor(() => {
         expect(goToNextPage).not.toHaveBeenCalled();
         expect(catchError).toHaveBeenCalledWith(
-          new ValidationError(
-            [
-              {
-                field: "file",
-                message:
-                  "Client requires at least one file before sending request",
-                type: "required",
-              },
-            ],
-            "documents"
-          )
+          new ValidationError([
+            {
+              field: "file",
+              message:
+                "Client requires at least one file before sending request",
+              type: "required",
+              namespace: "documents",
+            },
+          ])
         );
       });
     });

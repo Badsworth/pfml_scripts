@@ -7,7 +7,7 @@ export default class ApplicationImportsApi extends BaseApi {
     return routes.api.applicationImports;
   }
 
-  get i18nPrefix() {
+  get namespace() {
     return "applicationImports";
   }
 

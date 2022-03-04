@@ -28,19 +28,18 @@ The contents of the alert varies depending on the type of error and number of er
   <Story name="ErrorsSummary - plural">
     <ErrorsSummary
       errors={[
-        new ValidationError(
-          [
-            {
-              field: "first_name",
-              type: "required",
-            },
-            {
-              field: "last_name",
-              type: "required",
-            },
-          ],
-          "applications"
-        ),
+        new ValidationError([
+          {
+            field: "first_name",
+            type: "required",
+            namespace: "applications",
+          },
+          {
+            field: "last_name",
+            type: "required",
+            namespace: "applications",
+          },
+        ]),
       ]}
     />
   </Story>
@@ -52,15 +51,13 @@ If there's only one error, then the heading is singular:
   <Story name="ErrorsSummary - singular">
     <ErrorsSummary
       errors={[
-        new ValidationError(
-          [
-            {
-              field: "first_name",
-              type: "required",
-            },
-          ],
-          "applications"
-        ),
+        new ValidationError([
+          {
+            field: "first_name",
+            type: "required",
+            namespace: "applications",
+          },
+        ]),
       ]}
     />
   </Story>
@@ -75,7 +72,7 @@ In addition to listing all errors at the top of the page, form fields will displ
     <InputText
       errorMsg={
         <IssueErrorMessage
-          i18nPrefix="applications"
+          namespace="applications"
           field="first_name"
           type="required"
         />
@@ -108,6 +105,7 @@ Error messages can include basic HTML formatting, like bold text and links:
               field:
                 "leave_details.intermittent_leave_periods[0].frequency_interval_basis",
               type: "intermittent_interval_maximum",
+              namespace: "applications",
             },
           ],
           "applications"
@@ -118,7 +116,7 @@ Error messages can include basic HTML formatting, like bold text and links:
     <InputText
       errorMsg={
         <IssueErrorMessage
-          i18nPrefix="applications"
+          namespace="applications"
           field="leave_details.intermittent_leave_periods[0].frequency_interval_basis"
           type="intermittent_interval_maximum"
         />

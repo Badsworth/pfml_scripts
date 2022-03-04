@@ -113,18 +113,15 @@ const useDocumentsLogic = ({ errorsLogic }: { errorsLogic: ErrorsLogic }) => {
 
     if (!filesWithUniqueId.length) {
       errorsLogic.catchError(
-        new ValidationError(
-          [
-            {
-              // field and type will be used for forming the internationalized error message
-              field: "file", // 'file' is the field name in the API
-              message:
-                "Client requires at least one file before sending request",
-              type: "required",
-            },
-          ],
-          "documents"
-        )
+        new ValidationError([
+          {
+            // field and type will be used for forming the internationalized error message
+            field: "file", // 'file' is the field name in the API
+            message: "Client requires at least one file before sending request",
+            type: "required",
+            namespace: "documents",
+          },
+        ])
       );
       return [];
     }

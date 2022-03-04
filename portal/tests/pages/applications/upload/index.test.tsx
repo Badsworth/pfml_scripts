@@ -165,6 +165,7 @@ describe("UploadDocsOptions", () => {
         {
           field: "upload_docs_options",
           type: "required",
+          namespace: "applications",
         },
       ]);
     });

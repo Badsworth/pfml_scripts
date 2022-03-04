@@ -47,27 +47,28 @@ export const WithErrors = () => {
 
   // Setup error states
   const errors = [
-    new ValidationError(
-      [
-        {
-          field: "address.line_1",
-          type: "required",
-        },
-        {
-          field: "address.city",
-          type: "required",
-        },
-        {
-          field: "address.state",
-          type: "required",
-        },
-        {
-          field: "address.zip",
-          type: "required",
-        },
-      ],
-      "applications"
-    ),
+    new ValidationError([
+      {
+        field: "address.line_1",
+        type: "required",
+        namespace: "applications",
+      },
+      {
+        field: "address.city",
+        type: "required",
+        namespace: "applications",
+      },
+      {
+        field: "address.state",
+        type: "required",
+        namespace: "applications",
+      },
+      {
+        field: "address.zip",
+        type: "required",
+        namespace: "applications",
+      },
+    ]),
   ];
 
   return (

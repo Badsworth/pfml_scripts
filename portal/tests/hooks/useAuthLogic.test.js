@@ -160,6 +160,7 @@ describe("useAuthLogic", () => {
       [
         {
           "field": "username",
+          "namespace": "auth",
           "type": "required",
         },
       ]
@@ -193,6 +194,7 @@ describe("useAuthLogic", () => {
     expect(errors[0].issues).toMatchInlineSnapshot(`
       [
         {
+          "namespace": "auth",
           "type": "userNotFound",
         },
       ]
@@ -219,6 +221,7 @@ describe("useAuthLogic", () => {
     expect(errors[0].issues).toMatchInlineSnapshot(`
       [
         {
+          "namespace": "auth",
           "type": "invalidParametersFallback",
         },
       ]
@@ -244,6 +247,7 @@ describe("useAuthLogic", () => {
     expect(errors[0].issues).toMatchInlineSnapshot(`
       [
         {
+          "namespace": "auth",
           "type": "attemptBlocked_forgotPassword",
         },
       ]
@@ -269,6 +273,7 @@ describe("useAuthLogic", () => {
     expect(errors[0].issues).toMatchInlineSnapshot(`
       [
         {
+          "namespace": "auth",
           "type": "attemptsLimitExceeded_forgotPassword",
         },
       ]
@@ -370,10 +375,12 @@ describe("useAuthLogic", () => {
         [
           {
             "field": "username",
+            "namespace": "auth",
             "type": "required",
           },
           {
             "field": "password",
+            "namespace": "auth",
             "type": "required",
           },
         ]
@@ -412,6 +419,7 @@ describe("useAuthLogic", () => {
       expect(errors[0].issues).toMatchInlineSnapshot(`
         [
           {
+            "namespace": "auth",
             "type": "incorrectEmailOrPassword",
           },
         ]
@@ -438,6 +446,7 @@ describe("useAuthLogic", () => {
       expect(errors[0].issues).toMatchInlineSnapshot(`
         [
           {
+            "namespace": "auth",
             "type": "invalidParametersFallback",
           },
         ]
@@ -463,6 +472,7 @@ describe("useAuthLogic", () => {
       expect(errors[0].issues).toMatchInlineSnapshot(`
         [
           {
+            "namespace": "auth",
             "type": "attemptBlocked_login",
           },
         ]
@@ -488,6 +498,7 @@ describe("useAuthLogic", () => {
       expect(errors[0].issues).toMatchInlineSnapshot(`
         [
           {
+            "namespace": "auth",
             "type": "incorrectEmailOrPassword",
           },
         ]
@@ -513,6 +524,7 @@ describe("useAuthLogic", () => {
       expect(errors[0].issues).toMatchInlineSnapshot(`
         [
           {
+            "namespace": "auth",
             "type": "attemptsLimitExceeded_login",
           },
         ]
@@ -543,6 +555,7 @@ describe("useAuthLogic", () => {
         [
           {
             "message": "This message wasn't expected by Portal code and is the error from Cognito.",
+            "namespace": "auth",
           },
         ]
       `);
@@ -573,6 +586,7 @@ describe("useAuthLogic", () => {
       expect(errors[0].issues).toMatchInlineSnapshot(`
         [
           {
+            "namespace": "auth",
             "type": "invalidParametersFallback",
           },
         ]
@@ -698,6 +712,7 @@ describe("useAuthLogic", () => {
           [
             {
               "field": "password",
+              "namespace": "auth",
               "type": "resetRequiredException",
             },
           ]
@@ -854,6 +869,7 @@ describe("useAuthLogic", () => {
         [
           {
             "field": "code",
+            "namespace": "mfa",
             "type": "required",
           },
         ]
@@ -877,6 +893,7 @@ describe("useAuthLogic", () => {
         [
           {
             "field": "code",
+            "namespace": "mfa",
             "type": "pattern",
           },
         ]
@@ -917,6 +934,7 @@ describe("useAuthLogic", () => {
         [
           {
             "field": "code",
+            "namespace": "auth",
             "type": "invalidMFACode",
           },
         ]
@@ -944,6 +962,7 @@ describe("useAuthLogic", () => {
         [
           {
             "field": "code",
+            "namespace": "auth",
             "type": "attemptsExceeded",
           },
         ]
@@ -1281,6 +1300,7 @@ describe("useAuthLogic", () => {
         [
           {
             "field": "username",
+            "namespace": "auth",
             "type": "required",
           },
         ]
@@ -1391,14 +1411,17 @@ describe("useAuthLogic", () => {
         [
           {
             "field": "code",
+            "namespace": "mfa",
             "type": "required",
           },
           {
             "field": "username",
+            "namespace": "auth",
             "type": "required",
           },
           {
             "field": "password",
+            "namespace": "auth",
             "type": "required",
           },
         ]
@@ -1444,6 +1467,7 @@ describe("useAuthLogic", () => {
         [
           {
             "field": "code",
+            "namespace": "auth",
             "type": "mismatchException",
           },
         ]
@@ -1471,6 +1495,7 @@ describe("useAuthLogic", () => {
         [
           {
             "field": "code",
+            "namespace": "auth",
             "type": "expired",
           },
         ]
@@ -1498,6 +1523,7 @@ describe("useAuthLogic", () => {
       expect(errors[0].issues).toMatchInlineSnapshot(`
         [
           {
+            "namespace": "auth",
             "type": "invalidParametersIncludingMaybePassword",
           },
         ]
@@ -1525,6 +1551,7 @@ describe("useAuthLogic", () => {
         [
           {
             "field": "password",
+            "namespace": "auth",
             "type": "invalid",
           },
         ]
@@ -1552,6 +1579,7 @@ describe("useAuthLogic", () => {
         [
           {
             "field": "password",
+            "namespace": "auth",
             "type": "insecure",
           },
         ]
@@ -1578,6 +1606,7 @@ describe("useAuthLogic", () => {
       expect(errors[0].issues).toMatchInlineSnapshot(`
         [
           {
+            "namespace": "auth",
             "type": "userNotConfirmed",
           },
         ]
@@ -1604,6 +1633,7 @@ describe("useAuthLogic", () => {
       expect(errors[0].issues).toMatchInlineSnapshot(`
         [
           {
+            "namespace": "auth",
             "type": "userNotFound",
           },
         ]
@@ -1693,10 +1723,12 @@ describe("useAuthLogic", () => {
         [
           {
             "field": "code",
+            "namespace": "mfa",
             "type": "required",
           },
           {
             "field": "username",
+            "namespace": "auth",
             "type": "required",
           },
         ]
@@ -1731,7 +1763,9 @@ describe("useAuthLogic", () => {
           result.current.verifyAccount(username, code);
         });
         expect(errors).toHaveLength(1);
-        expect(errors[0].issues).toEqual([{ field: "code", type: "pattern" }]);
+        expect(errors[0].issues).toEqual([
+          { field: "code", type: "pattern", namespace: "mfa" },
+        ]);
 
         expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
           issueField: "code",
@@ -1763,6 +1797,7 @@ describe("useAuthLogic", () => {
         [
           {
             "field": "code",
+            "namespace": "auth",
             "type": "mismatchException",
           },
         ]
@@ -1789,6 +1824,7 @@ describe("useAuthLogic", () => {
         [
           {
             "field": "code",
+            "namespace": "auth",
             "type": "expired",
           },
         ]

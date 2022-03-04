@@ -55,7 +55,7 @@ describe("ApplicationImportsApi", () => {
         await api.importClaim(requestBody);
       } catch (error) {
         expect(error).toBeInstanceOf(ValidationError);
-        expect((error as ValidationError).i18nPrefix).toBe(
+        expect((error as ValidationError).issues[0].namespace).toBe(
           "applicationImports"
         );
       }

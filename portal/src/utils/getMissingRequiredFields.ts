@@ -20,5 +20,7 @@ export default function getMissingRequiredFields(errors: ErrorWithIssues[]) {
 
   return issues
     .filter(isRequiredFieldError)
-    .map((error) => pick(error, ["name", "field", "meta", "rule", "type"]));
+    .map((error) =>
+      pick(error, ["name", "namespace", "field", "meta", "rule", "type"])
+    );
 }

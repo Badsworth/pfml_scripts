@@ -7,7 +7,7 @@ export default class PaymentsApi extends BaseApi {
     return routes.api.payments;
   }
 
-  get i18nPrefix() {
+  get namespace() {
     return "payments";
   }
 
