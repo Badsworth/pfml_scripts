@@ -653,9 +653,12 @@ def _process_claims_request(claim_request: ClaimRequest, method_name: str) -> fl
                 )  # escape user input search string
 
             if is_reviewable:
+                log_attributes.update({"filter.is_reviewable": is_reviewable})
                 query.add_is_reviewable_filter(is_reviewable)
 
             if request_decisions:
+                # Log values from query param since more familiar to new relic users
+                log_attributes.update({"filter.request_decision": claim_request.request_decision})
                 query.add_request_decision_filter(request_decisions)
 
             # Update the pagination parameters from the request
