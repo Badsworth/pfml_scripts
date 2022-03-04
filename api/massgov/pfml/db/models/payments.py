@@ -1331,6 +1331,7 @@ class Pfml1099(Base, TimestampMixin):
     correction_ind = Column(Boolean, nullable=False)
     s3_location = Column(Text, nullable=True)
     fineos_status = Column(Text, nullable=True, default="New")
+    irs_submission_date = Column(Date, nullable=True)
 
     employee = relationship(Employee)
 
