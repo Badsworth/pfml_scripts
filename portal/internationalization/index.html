@@ -1388,13 +1388,15 @@
 <div class="highlight"><pre><span></span><code>&lt;Trans
   i18nKey=&quot;userAgreement&quot;
   components={{
-    &quot;consent-link&quot;: &lt;a href=&quot;https://www.mass.gov/paidleave-informedconsent&quot; /&gt;,
+    &quot;consent-link&quot;: (
+      &lt;a href=&quot;https://www.mass.gov/paidleave-informedconsent&quot; /&gt;
+    ),
     &quot;privacy-policy-link&quot;: &lt;a href=&quot;https://www.mass.gov/privacypolicy&quot; /&gt;,
   }}
 /&gt;
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"></span>
-<span class="w">  </span><span class="nt">&quot;userAgreement&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;To find out more about how the Commonwealth might use the information you share with DFML, please read the &lt;consent-link&gt;DFML Informed Consent Agreement&lt;/consent-link&gt; and the &lt;privacy-policy-link&gt;Privacy Policy for Mass.gov&lt;/privacy-policy-link&gt;.&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;userAgreement&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;To find out more about how the Commonwealth might use the information you share with DFML, please read the &lt;consent-link&gt;DFML Informed Consent Agreement&lt;/consent-link&gt; and the &lt;privacy-policy-link&gt;Privacy Policy for Mass.gov&lt;/privacy-policy-link&gt;.&quot;</span><span class="w"></span>
 <span class="p">}</span><span class="w"></span>
 </code></pre></div>
 <p>Note that we are using the <a href="https://react.i18next.com/latest/trans-component#alternative-usage-v-11-6-0">alternative usage of Trans introduced in v11.6.0</a> where components are passed in as props rather than as children of <code>Trans</code>. This method allows the use of named tags in locale strings rather than needing to refer to child components by their index.</p>
@@ -1414,7 +1416,7 @@
   <span class="k">return</span> <span class="nx">value</span><span class="p">;</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"></span>
-<span class="w">  </span><span class="kc">t</span><span class="err">imeDura</span><span class="kc">t</span><span class="err">io</span><span class="kc">n</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{{minutes, hoursMinutesDuration}}&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;timeDuration&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{{minutes, hoursMinutesDuration}}&quot;</span><span class="w"></span>
 <span class="p">}</span><span class="w"></span>
 </code></pre></div>
 <h3 id="conventions">Conventions</h3>
@@ -1424,7 +1426,7 @@
 <li>Keys are organized under top-level objects by how they're used:</li>
 <li><code>components</code> defines content used in specific components</li>
 <li><code>pages</code> defines content used in specific pages</li>
-<li><code>errors</code> defines content used in error messages, which aren’t page or component specific</li>
+<li><code>errors</code> defines content used in <a href="../error-handling/">error messages</a>, which aren’t page or component specific</li>
 <li><code>shared</code> defines content shared between multiple components or pages</li>
 <li><code>chars</code> defines special characters (such as non-breaking spaces, which are difficult to distinguish in values)</li>
 <li>Keys are limited to three levels deep, for example <code>pages.claimsDateOfBirth.title</code>. This makes the structure easier to navigate and the process of finding a specific element more consistent.</li>
@@ -1514,16 +1516,12 @@ pages: {
   <span class="nx">i18nKey</span><span class="o">=</span><span class="s2">&quot;htmlKey&quot;</span>
   <span class="nx">components</span><span class="o">=</span><span class="p">{{</span>
     <span class="s2">&quot;my-link&quot;</span><span class="o">:</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">a</span>
-        <span class="nx">target</span><span class="o">=</span><span class="s2">&quot;_blank&quot;</span>
-        <span class="nx">rel</span><span class="o">=</span><span class="s2">&quot;noopener&quot;</span>
-        <span class="nx">href</span><span class="o">=</span><span class="p">{</span><span class="nx">routes</span><span class="p">.</span><span class="nx">external</span><span class="p">.</span><span class="nx">myLink</span><span class="p">}</span>
-      <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">a</span> <span class="nx">target</span><span class="o">=</span><span class="s2">&quot;_blank&quot;</span> <span class="nx">rel</span><span class="o">=</span><span class="s2">&quot;noopener&quot;</span> <span class="nx">href</span><span class="o">=</span><span class="p">{</span><span class="nx">routes</span><span class="p">.</span><span class="nx">external</span><span class="p">.</span><span class="nx">myLink</span><span class="p">}</span> <span class="o">/&gt;</span>
     <span class="p">),</span>
     <span class="nx">ul</span><span class="o">:</span> <span class="o">&lt;</span><span class="nx">ul</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;usa-list&quot;</span> <span class="o">/&gt;</span><span class="p">,</span>
     <span class="nx">li</span><span class="o">:</span> <span class="o">&lt;</span><span class="nx">li</span> <span class="o">/&gt;</span><span class="p">,</span>
   <span class="p">}}</span>
-<span class="err">/&gt;</span>
+<span class="err">/&gt;;</span>
 </code></pre></div>
 
               

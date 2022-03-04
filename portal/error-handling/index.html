@@ -877,6 +877,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#error-classes" class="md-nav__link">
+    Error classes
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#baseapi" class="md-nav__link">
     BaseAPI
   </a>
@@ -884,30 +891,57 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#logic-hook" class="md-nav__link">
-    Logic hook
+  <a href="#api-hooks" class="md-nav__link">
+    API hooks
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#app-errors-logic-hook" class="md-nav__link">
-    App Errors Logic hook
+  <a href="#errors-hook" class="md-nav__link">
+    Errors hook
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#errorssummary" class="md-nav__link">
-    &lt;ErrorsSummary&gt;
+  <a href="#error-messages-internationalization-i18n" class="md-nav__link">
+    Error messages &amp; internationalization (i18n)
+  </a>
+  
+    <nav class="md-nav" aria-label="Error messages &amp; internationalization (i18n)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#i18n-keys" class="md-nav__link">
+    I18n keys
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
+  <a href="#links-and-html-in-error-messages" class="md-nav__link">
+    Links and HTML in error messages
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ui-components" class="md-nav__link">
+    UI Components
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#inline-errors" class="md-nav__link">
     Inline errors
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1155,6 +1189,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#error-classes" class="md-nav__link">
+    Error classes
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#baseapi" class="md-nav__link">
     BaseAPI
   </a>
@@ -1162,30 +1203,57 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#logic-hook" class="md-nav__link">
-    Logic hook
+  <a href="#api-hooks" class="md-nav__link">
+    API hooks
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#app-errors-logic-hook" class="md-nav__link">
-    App Errors Logic hook
+  <a href="#errors-hook" class="md-nav__link">
+    Errors hook
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#errorssummary" class="md-nav__link">
-    &lt;ErrorsSummary&gt;
+  <a href="#error-messages-internationalization-i18n" class="md-nav__link">
+    Error messages &amp; internationalization (i18n)
+  </a>
+  
+    <nav class="md-nav" aria-label="Error messages &amp; internationalization (i18n)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#i18n-keys" class="md-nav__link">
+    I18n keys
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
+  <a href="#links-and-html-in-error-messages" class="md-nav__link">
+    Links and HTML in error messages
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ui-components" class="md-nav__link">
+    UI Components
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#inline-errors" class="md-nav__link">
     Inline errors
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1208,13 +1276,51 @@
 
 
 <h1 id="error-handling">Error handling</h1>
-<p>All API requests flow through a "logic hook", which sends the request through the <code>BaseAPI</code> module. The <code>BaseAPI</code> module is then responsible for processing the response.</p>
-<p>Below is a visual representing the flow of a request and how an API error response flows back through the app and is rendered to the user:</p>
-<p><img alt="Error handling diagram" src="../assets/error-handling.jpeg" /></p>
+<blockquote>
+<p><strong>TLDR</strong>:</p>
+<ul>
+<li><code>useErrorsLogic</code> is source of truth for errors state management.</li>
+<li>Portal i18n files are source of truth for error messages, not the API.</li>
+</ul>
+</blockquote>
+<p>Below represents the flow of a request and how an API error response flows back through the app and is rendered to the user:</p>
+<div class="highlight"><pre><span></span><code>flowchart TB
+  subgraph pages
+    _app
+    page[Question Page&lt;br/&gt; e.g. name.tsx]
+  end
+  subgraph components
+    PageWrapper
+    ErrorsSummary
+    ErrorMessage
+    IssueErrorMessage
+  end
+  subgraph hooks[ ]
+    appHook[(useAppLogic)]
+    errorsHook[(useErrorsLogic)]
+    apiHook[(API Hook &lt;br /&gt; e.g. useClaimsLogic)]
+  end
+  subgraph api
+    BaseApi
+  end
+
+  apiHook -- request --&gt; api
+  BaseApi -- throw Error --&gt; apiHook
+  apiHook -- catchError --&gt; errorsHook
+  errorsHook --&gt; appHook
+  appHook --&gt; pages
+  _app --&gt; PageWrapper
+
+  PageWrapper --&gt; ErrorsSummary -- for each error --&gt; ErrorMessage -- for each issue --&gt; IssueErrorMessage
+  page -- for each field --&gt; IssueErrorMessage
+</code></pre></div>
+<h2 id="error-classes">Error classes</h2>
+<p>Errors are represented by subclasses of the <a href="https://developer.mozilla.org/en-US/docs/web/javascript/reference/global_objects/error">global <code>Error</code> object</a>. See <a href="https://github.com/EOLWD/pfml/tree/main/portal/src/errors.ts"><code>errors.ts</code></a>.</p>
 <h2 id="baseapi">BaseAPI</h2>
-<p>The normal API error response includes an <code>errors</code> property in its body representing the request's issues. When <code>errors</code> are present, the <code>BaseAPI</code> throws a <code>ValidationError</code> that holds all API errors that were in the response body. The <code>BaseAPI</code> may also throw other error types, such as <code>NotFoundError</code> or <code>ForbiddenError</code>, depending on the response's status code.</p>
-<h2 id="logic-hook">Logic hook</h2>
-<p>The logic hooks, like <code>useBenefitsApplicationsLogic</code>, are responsible for catching any errors thrown by the API module and sending the error into <code>errorsLogic</code>. A typical pattern for this looks like:</p>
+<p>Unsuccessful API requests, due to system or validation errors, will receive an <code>errors</code> array in the response body. When <code>errors</code> are present, the <code>BaseAPI</code> module throws a <code>ValidationError</code>. This <code>ValidationError</code> includes an <code>issues</code> field which stores the API response's <code>errors</code>.</p>
+<p>If no <code>errors</code> were present on the API error response body, the <code>BaseAPI</code> module will throw an error based on the response status code, such as <code>NotFoundError</code>, <code>ForbiddenError</code>, etc.</p>
+<h2 id="api-hooks">API hooks</h2>
+<p>API hooks, like <code>useClaimsLogic</code>, are responsible for catching any errors thrown by the API request. A typical pattern for this looks like:</p>
 <div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="nx">updateClaim</span><span class="p">(</span><span class="nx">patchData</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">try</span> <span class="p">{</span>
     <span class="c1">// Send the API request</span>
@@ -1225,18 +1331,34 @@
   <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
-<h2 id="app-errors-logic-hook">App Errors Logic hook</h2>
-<p>The <code>useErrorsLogic</code> hook is where errors get sent to for processing and storing.</p>
-<p>When <code>errorsLogic.catchError</code> receives a <code>ValidationError</code> holding the API response's errors, it parses each API error and creates an <code>ErrorInfo</code> instance with a <code>message</code> generated from the API issue's <code>type</code>, <code>rule</code>, and <code>field</code> properties. See the <code>getMessageFromApiIssue</code> method for how i18n keys are generated.</p>
-<p>If you're unsure what i18n key will be generated for the issue, you can trigger the error in local development and view the console to see what key it says is missing:</p>
+<h2 id="errors-hook">Errors hook</h2>
+<p>The <code>useErrorsLogic</code> hook is the source of truth for errors state management.</p>
+<p>To handle an error and display its message in the UI, call the error logic hook's <code>catchError</code> method. Custom handlers can be added for specific error subclasses, if necessary.</p>
+<h2 id="error-messages-internationalization-i18n">Error messages &amp; internationalization (i18n)</h2>
+<p><strong>All error messages should be internationalized.</strong> This means every error message should have a key/value mapping in the <code>errors</code> object of our <a href="../internationalization/">internationalization</a> file(s), and we shouldn't rely on the default error message defined on the API's error response.</p>
+<h3 id="i18n-keys">I18n keys</h3>
+<p>The i18n keys for error messages are automatically generated, based on:</p>
+<ol>
+<li>Which API endpoint the error is thrown from</li>
+<li>The error instance type (e.g. <code>ValidationError</code>, <code>NotFoundError</code>, etc.)</li>
+<li>And if the error has an <code>issues</code> field, then the issue's <code>type</code>, <code>field</code> and <code>rule</code> properties.</li>
+</ol>
+<p>The logic for the last point above is somewhat difficult to describe in plain language, so it may be easier to reference the code itself: check out <a href="https://github.com/EOLWD/pfml/tree/main/portal/src/components/IssueErrorMessage.tsx"><code>getI18nKeysForIssue</code> in the <code>IssueErrorMessage</code> component</a>.</p>
+<p>If you're unsure what i18n keys will be generated for an issue, you can trigger the error in local development and view the console to see what keys it makes available:</p>
 <p><img alt="Missing i18n keys" src="../assets/missing-i18n-key-log.png" /></p>
-<p>If a matching i18n key isn't found for the API issue, the app falls back to the original error message sent from the API. We should always have an internationalized error message, and this fallback behavior should not be relied upon.</p>
-<h2 id="errorssummary"><code>&lt;ErrorsSummary&gt;</code></h2>
-<p>The <code>ErrorsSummary</code> component is rendered by our app container (<code>_app.js</code>) above the page component.</p>
-<p>When the <code>errorsLogic</code> module has errors present, the <code>ErrorsSummary</code> component renders each error's <code>message</code>.</p>
-<h2 id="inline-errors">Inline errors</h2>
-<p>Each page has access to <code>errorsLogic</code> via the <code>appLogic</code> prop. The errors can be read from <code>appLogic.errors</code>.</p>
-<p>If the errors are associated with a specific field on the page, you can render them inline by setting the field component's <code>errorMsg</code> prop. The easiest way to do this is by using the <code>useFunctionalInputProps</code> to set the common props for your fields, one of which is <code>errorMsg</code>.</p>
+<p>If an i18n key isn't found for the API issue, the app falls back to the original error message sent from the API. But again, we should always have an internationalized error message, and this fallback behavior should not be relied upon.</p>
+<h3 id="links-and-html-in-error-messages">Links and HTML in error messages</h3>
+<p>Error messages support a subset of HTML elements and links. To safelist a new HTML element or link, update the object in <code>useErrorI18nComponents</code>.</p>
+<h3 id="ui-components">UI Components</h3>
+<p>Various UI components are responsible for internationalizing and displaying errors to the user. Below is a quick summary. View additional details and examples in Storybook.</p>
+<ul>
+<li><code>&lt;ErrorsSummary&gt;</code> is part of our global page layout. When errors are present, it lists every error. Its heading is dynamic, based on the number of errors.</li>
+<li><code>&lt;IssueErrorMessage&gt;</code> - Given an entry in an error's <code>issues</code> array, this component renders a single internationalized message.</li>
+</ul>
+<h3 id="inline-errors">Inline errors</h3>
+<p>Each page has access to <code>errorsLogic</code> via the default <code>appLogic</code> prop.</p>
+<p>If an error includes an <code>issues</code> entry that is associated with a specific field on the page, you can render the issue's message inline by setting the field component's <code>errorMsg</code> prop.</p>
+<p>The easiest way to do this is by using the <code>useFunctionalInputProps</code> hook to set the common props for your fields, one of which is <code>errorMsg</code>.</p>
 <p>A common pattern for forms in our app looks like this:</p>
 <div class="highlight"><pre><span></span><code>const { formState, updateFields } = useFormState({
   first_name: claim.first_name,
@@ -1257,9 +1379,9 @@ return (
   &lt;/form&gt;
 );
 </code></pre></div>
-<p>Alternatively, if you're not using <code>useFunctionalInputProps</code>, you can use <code>ErrorInfo.fieldErrorMessage(fieldName)</code> to return the error message for a specific field:</p>
+<p>Alternatively, if you're not using <code>useFunctionalInputProps</code>, you can use the <code>findErrorMessageForField</code> utility to return the message for a specific field:</p>
 <div class="highlight"><pre><span></span><code>&lt;InputText
-  errorMsg={ErrorInfo.fieldErrorMessage(errors, &quot;first_name&quot;)}
+  errorMsg={findErrorMessageForField(errors, &quot;first_name&quot;)}
   name=&quot;first_name&quot;
   ...
 </code></pre></div>
