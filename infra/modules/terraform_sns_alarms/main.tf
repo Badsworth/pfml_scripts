@@ -43,3 +43,10 @@ locals {
   sns_log_group_name                  = "sns/${data.aws_region.current.name}/${data.aws_caller_identity.current.account_id}/DirectPublishToPhoneNumber"
   sns_failure_log_group_name          = "sns/${data.aws_region.current.name}/${data.aws_caller_identity.current.account_id}/DirectPublishToPhoneNumber/Failure"
 }
+
+# Defined in pfml-aws/kms.tf
+# All SNS topics defined in terraform_sns_alarms directory will need to use this key
+# This key is not restricted by any environment
+data "aws_kms_key" "main_kms_key" {
+  key_id = "alias/massgov-pfml-main-kms-key"
+}

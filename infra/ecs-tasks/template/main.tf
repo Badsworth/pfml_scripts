@@ -32,3 +32,8 @@ locals {
 module "constants" {
   source = "../../constants"
 }
+
+# Defined in pfml-aws/kms.tf
+data "aws_kms_key" "env_kms_key" {
+  key_id = "alias/massgov-pfml-${var.environment_name}-kms-key"
+}

@@ -57,3 +57,10 @@ provider "pagerduty" {
 module "constants" {
   source = "../constants"
 }
+
+# Defined in pfml-aws/kms.tf
+# All SNS topics defined in monitoring directory will need to use this key
+# This key is not restricted by any environment
+data "aws_kms_key" "main_kms_key" {
+  key_id = "alias/massgov-pfml-main-kms-key"
+}
