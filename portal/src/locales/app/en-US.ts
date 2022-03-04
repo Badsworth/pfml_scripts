@@ -26,7 +26,7 @@ const chars: { [key: string]: string } = {
 // since the format of these mirror the field path, which could possibly be more
 // than three levels deep (e.g `errors.claim.leave_details.start_date.required`).
 const errors = {
-  applicationImport: {
+  applicationImports: {
     absence_case_id: {
       duplicate: "You already have access.",
       exists:

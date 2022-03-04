@@ -1,4 +1,5 @@
 /* eslint sort-keys: ["error", "asc"] */
+import useApplicationImportsLogic from "./useApplicationImportsLogic";
 import useAuthLogic from "./useAuthLogic";
 import useBenefitsApplicationsLogic from "./useBenefitsApplicationsLogic";
 import useClaimsLogic from "./useClaimsLogic";
@@ -16,6 +17,11 @@ const useAppLogic = () => {
 
   // State representing currently visible errors and warnings
   const errorsLogic = useErrorsLogic({ portalFlow });
+
+  const applicationImports = useApplicationImportsLogic({
+    errorsLogic,
+    portalFlow,
+  });
   const auth = useAuthLogic({ errorsLogic, portalFlow });
 
   // State representing the Portal's user object.
@@ -57,6 +63,7 @@ const useAppLogic = () => {
   return {
     // `_errorsLogic` should not be used except for testing
     _errorsLogic: errorsLogic,
+    applicationImports,
     auth,
     benefitsApplications,
     catchError: errorsLogic.catchError,

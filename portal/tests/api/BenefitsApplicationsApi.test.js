@@ -226,52 +226,6 @@ describe("BenefitsApplicationsApi", () => {
     });
   });
 
-  describe("importClaim", () => {
-    it("sends POST request to /applications/import and resolves with BenefitsApplication", async () => {
-      const requestBody = {
-        absence_case_id: "mock-absence-id",
-        tax_identifier: "123-45-6789",
-      };
-      const mockResponse = new BenefitsApplication({
-        application_id: "mock-application_id",
-      });
-      global.fetch = mockFetch({
-        response: {
-          data: mockResponse,
-        },
-      });
-
-      const { claim: claimResponse } = await claimsApi.importClaim(requestBody);
-
-      expect(fetch).toHaveBeenCalledWith(
-        `${process.env.apiUrl}/applications/import`,
-        {
-          body: JSON.stringify(requestBody),
-          headers: baseRequestHeaders,
-          method: "POST",
-        }
-      );
-
-      expect(claimResponse).toBeInstanceOf(BenefitsApplication);
-      expect(claimResponse).toEqual(mockResponse);
-    });
-
-    it("throws error", async () => {
-      global.fetch = mockFetch({
-        response: { data: null, errors: [{ field: "tax_identifier" }] },
-        status: 400,
-        ok: false,
-      });
-
-      try {
-        await claimsApi.importClaim({});
-      } catch (error) {
-        expect(error).toBeInstanceOf(ValidationError);
-        expect(error.i18nPrefix).toBe("applicationImport");
-      }
-    });
-  });
-
   describe("updateClaim", () => {
     let claim;
 

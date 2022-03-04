@@ -5,6 +5,7 @@
  */
 const routes = {
   api: {
+    applicationImports: "/application-imports",
     applications: "/applications",
     claims: "/claims",
     employers: "/employers",

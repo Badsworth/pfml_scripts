@@ -9,7 +9,6 @@ import {
   getClaimMock,
   getClaimMockApplicationId,
   getClaimsMock,
-  importClaimMock,
   submitClaimMock,
   submitPaymentPreferenceMock,
   updateClaimMock,
@@ -57,87 +56,6 @@ describe("useBenefitsApplicationsLogic", () => {
       ApiResourceCollection
     );
     expect(claimsLogic.benefitsApplications.items).toHaveLength(0);
-  });
-
-  describe("associate", () => {
-    const mockAssociateFormState = {
-      absence_case_id: "mock-absence-id",
-      tax_identifier: "123-45-6789",
-    };
-
-    beforeEach(() => {
-      mockRouter.pathname = routes.applications.importClaim;
-      setup();
-    });
-
-    it("transforms the absence ID to uppercase before sending the request", async () => {
-      await act(async () => {
-        await claimsLogic.associate(mockAssociateFormState);
-      });
-
-      expect(importClaimMock).toHaveBeenCalledWith({
-        ...mockAssociateFormState,
-        absence_case_id: "MOCK-ABSENCE-ID",
-      });
-    });
-
-    it("updates state to force a new API request the next time loadPage is called, after an application has been associated successfully", async () => {
-      await act(async () => {
-        await claimsLogic.loadPage();
-      });
-
-      expect(claimsLogic.isLoadingClaims).toBe(false);
-      expect(getClaimsMock).toHaveBeenCalledTimes(1);
-
-      await act(async () => {
-        await claimsLogic.associate(mockAssociateFormState);
-      });
-
-      expect(claimsLogic.isLoadingClaims).toBeUndefined();
-
-      await act(async () => {
-        await claimsLogic.loadPage();
-      });
-
-      expect(getClaimsMock).toHaveBeenCalledTimes(2);
-    });
-
-    it("routes to applications index page when the request succeeds", async () => {
-      await act(async () => {
-        await claimsLogic.associate(mockAssociateFormState);
-      });
-
-      expect(mockRouter.push).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `${routes.applications.index}?applicationAssociated=mock-absence-id`
-        )
-      );
-    });
-
-    it("catches exceptions thrown from the API module", async () => {
-      jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
-      importClaimMock.mockImplementationOnce(() => {
-        throw new BadRequestError();
-      });
-
-      await act(async () => {
-        await claimsLogic.associate(mockAssociateFormState);
-      });
-
-      expect(errorsLogic.errors[0].name).toEqual("BadRequestError");
-    });
-
-    it("clears prior errors", async () => {
-      act(() => {
-        errorsLogic.setErrors([new Error()]);
-      });
-
-      await act(async () => {
-        await claimsLogic.associate(mockAssociateFormState);
-      });
-
-      expect(errorsLogic.errors).toHaveLength(0);
-    });
   });
 
   describe("hasLoadedBenefitsApplicationAndWarnings", () => {
