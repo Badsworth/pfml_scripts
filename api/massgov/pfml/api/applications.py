@@ -149,18 +149,7 @@ def applications_import():
     user = app.current_user()
     application.user = user
 
-    body = connexion.request.json
-    application_import_request = ApplicationImportRequestBody.parse_obj(body)
-
-    claim = get_claim_from_db(application_import_request.absence_case_id)
-
-    application_rules.validate_application_import_request_for_claim(
-        application_import_request, claim
-    )
-    assert application_import_request.absence_case_id is not None
-
     is_cognito_user_mfa_verified = cognito.is_mfa_phone_verified(application.user.email_address, app.get_app_config().cognito_user_pool_id)  # type: ignore
-
     if not is_cognito_user_mfa_verified:
         logger.info(
             "application import failure - mfa not verified",
@@ -180,6 +169,16 @@ def applications_import():
                 )
             ]
         )
+
+    body = connexion.request.json
+    application_import_request = ApplicationImportRequestBody.parse_obj(body)
+
+    claim = get_claim_from_db(application_import_request.absence_case_id)
+
+    application_rules.validate_application_import_request_for_claim(
+        application_import_request, claim
+    )
+    assert application_import_request.absence_case_id is not None
 
     with app.db_session() as db_session:
         error = applications_service.claim_is_valid_for_application_import(db_session, user, claim)
