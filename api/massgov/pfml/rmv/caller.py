@@ -120,10 +120,7 @@ class MockZeepCaller(LazyApiCaller[dict], ApiCaller[dict]):
 
                 response = empty_response
             else:
-                response = {
-                    **default_response,
-                    **response,
-                }
+                response = {**default_response, **response}
         else:
             response = default_response
 

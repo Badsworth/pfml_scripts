@@ -134,13 +134,9 @@ def documents(user: User, they: RuleList) -> None:
         lambda d: d.user_id == user.user_id and user.consented_to_data_sharing is True,
     )
 
-    they.can(
-        READ, Document, lambda d: d.user_id == user.user_id and can_download(user, d),
-    )
+    they.can(READ, Document, lambda d: d.user_id == user.user_id and can_download(user, d))
 
-    they.can(
-        READ, DocumentResponse, lambda d: d.user_id == user.user_id and can_download(user, d),
-    )
+    they.can(READ, DocumentResponse, lambda d: d.user_id == user.user_id and can_download(user, d))
 
 
 def notifications(user: User, they: RuleList) -> None:

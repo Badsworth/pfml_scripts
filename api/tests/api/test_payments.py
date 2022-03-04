@@ -96,7 +96,7 @@ def test_get_payments_200(
 
     querystring = urlencode({"absence_case_id": absence_id})
     response = client.get(
-        "/v1/payments?{}".format(querystring), headers={"Authorization": f"Bearer {auth_token}"},
+        "/v1/payments?{}".format(querystring), headers={"Authorization": f"Bearer {auth_token}"}
     )
 
     assert response.status_code == 200
@@ -183,7 +183,7 @@ def test_get_payments_200_pending_validation_scenario_no_prenote_sent_at(
 
     querystring = urlencode({"absence_case_id": absence_id})
     response = client.get(
-        "/v1/payments?{}".format(querystring), headers={"Authorization": f"Bearer {auth_token}"},
+        "/v1/payments?{}".format(querystring), headers={"Authorization": f"Bearer {auth_token}"}
     )
 
     assert response.status_code == 200
@@ -245,7 +245,7 @@ def test_get_payments_200_range_before_today(client, auth_token, user, test_db_s
 
     querystring = urlencode({"absence_case_id": absence_id})
     response = client.get(
-        "/v1/payments?{}".format(querystring), headers={"Authorization": f"Bearer {auth_token}"},
+        "/v1/payments?{}".format(querystring), headers={"Authorization": f"Bearer {auth_token}"}
     )
 
     assert response.status_code == 200
@@ -302,7 +302,7 @@ def test_get_payments_200_cancelled_payments(client, auth_token, user, test_db_s
 
     querystring = urlencode({"absence_case_id": absence_id})
     response = client.get(
-        "/v1/payments?{}".format(querystring), headers={"Authorization": f"Bearer {auth_token}"},
+        "/v1/payments?{}".format(querystring), headers={"Authorization": f"Bearer {auth_token}"}
     )
 
     assert response.status_code == 200
@@ -357,7 +357,7 @@ def test_get_payments_200_zero_dollar(client, auth_token, user, test_db_session)
 
     querystring = urlencode({"absence_case_id": absence_id})
     response = client.get(
-        "/v1/payments?{}".format(querystring), headers={"Authorization": f"Bearer {auth_token}"},
+        "/v1/payments?{}".format(querystring), headers={"Authorization": f"Bearer {auth_token}"}
     )
 
     assert response.status_code == 200
@@ -408,7 +408,7 @@ def test_get_payments_200_legacy_payments(client, auth_token, user, test_db_sess
 
     querystring = urlencode({"absence_case_id": absence_id})
     response = client.get(
-        "/v1/payments?{}".format(querystring), headers={"Authorization": f"Bearer {auth_token}"},
+        "/v1/payments?{}".format(querystring), headers={"Authorization": f"Bearer {auth_token}"}
     )
 
     assert response.status_code == 200
@@ -462,7 +462,7 @@ def test_get_payments_returns_200_when_no_payment_method(client, auth_token, use
 
     querystring = urlencode({"absence_case_id": absence_id})
     response = client.get(
-        "/v1/payments?{}".format(querystring), headers={"Authorization": f"Bearer {auth_token}"},
+        "/v1/payments?{}".format(querystring), headers={"Authorization": f"Bearer {auth_token}"}
     )
 
     assert response.status_code == 200
@@ -476,7 +476,7 @@ def test_get_payments_returns_200_when_no_payment_method(client, auth_token, use
     test_db_session.commit()
 
     response = client.get(
-        "/v1/payments?{}".format(querystring), headers={"Authorization": f"Bearer {auth_token}"},
+        "/v1/payments?{}".format(querystring), headers={"Authorization": f"Bearer {auth_token}"}
     )
 
     assert response.status_code == 200
@@ -521,7 +521,7 @@ def test_get_payments_returns_403_when_payments_not_associated_with_user_applica
 
     querystring = urlencode({"absence_case_id": absence_id})
     response = client.get(
-        "/v1/payments?{}".format(querystring), headers={"Authorization": f"Bearer {auth_token}"},
+        "/v1/payments?{}".format(querystring), headers={"Authorization": f"Bearer {auth_token}"}
     )
 
     assert response.status_code == 403
@@ -530,7 +530,7 @@ def test_get_payments_returns_403_when_payments_not_associated_with_user_applica
 def test_get_payments_401(client):
     absence_id = "NTN-12345-ABS-01"
     querystring = urlencode({"absence_case_id": absence_id})
-    response = client.get("/v1/payments?{}".format(querystring),)
+    response = client.get("/v1/payments?{}".format(querystring))
 
     # No auth token returns 401
     assert response.status_code == 401

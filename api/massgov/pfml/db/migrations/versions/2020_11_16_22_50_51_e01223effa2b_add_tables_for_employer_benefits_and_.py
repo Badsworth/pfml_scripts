@@ -45,12 +45,12 @@ def upgrade():
         sa.Column("benefit_type_id", sa.Integer(), nullable=True),
         sa.Column("benefit_amount_dollars", sa.Numeric(), nullable=True),
         sa.Column("benefit_amount_frequency_id", sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(["application_id"], ["application.application_id"],),
+        sa.ForeignKeyConstraint(["application_id"], ["application.application_id"]),
         sa.ForeignKeyConstraint(
-            ["benefit_amount_frequency_id"], ["lk_amount_frequency.amount_frequency_id"],
+            ["benefit_amount_frequency_id"], ["lk_amount_frequency.amount_frequency_id"]
         ),
         sa.ForeignKeyConstraint(
-            ["benefit_type_id"], ["lk_employer_benefit_type.employer_benefit_type_id"],
+            ["benefit_type_id"], ["lk_employer_benefit_type.employer_benefit_type_id"]
         ),
         sa.PrimaryKeyConstraint("employer_benefit_id"),
     )
@@ -69,11 +69,11 @@ def upgrade():
         sa.Column("income_type_id", sa.Integer(), nullable=True),
         sa.Column("income_amount_dollars", sa.Numeric(), nullable=True),
         sa.Column("income_amount_frequency_id", sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(["application_id"], ["application.application_id"],),
+        sa.ForeignKeyConstraint(["application_id"], ["application.application_id"]),
         sa.ForeignKeyConstraint(
-            ["income_amount_frequency_id"], ["lk_amount_frequency.amount_frequency_id"],
+            ["income_amount_frequency_id"], ["lk_amount_frequency.amount_frequency_id"]
         ),
-        sa.ForeignKeyConstraint(["income_type_id"], ["lk_other_income_type.other_income_type_id"],),
+        sa.ForeignKeyConstraint(["income_type_id"], ["lk_other_income_type.other_income_type_id"]),
         sa.PrimaryKeyConstraint("other_income_id"),
     )
     op.create_index(

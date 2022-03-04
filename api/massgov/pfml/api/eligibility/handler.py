@@ -163,7 +163,7 @@ def eligibility_post():
         if tax_record is None or employer is None or employee is None:
             logger.warning("Unable to find record. Tax record or employee or employer is None")
             return response_util.error_response(
-                status_code=NotFound, message="Non-eligible employee", errors=[], data={},
+                status_code=NotFound, message="Non-eligible employee", errors=[], data={}
             ).to_api_response()
 
         employee_id: UUID = employee.employee_id

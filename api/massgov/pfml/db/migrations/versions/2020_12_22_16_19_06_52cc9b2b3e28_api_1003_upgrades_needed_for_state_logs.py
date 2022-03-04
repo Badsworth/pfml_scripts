@@ -26,11 +26,11 @@ def upgrade():
         sa.Column("employee_id", postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column("reference_file_id", postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column("flow_id", sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"],),
-        sa.ForeignKeyConstraint(["flow_id"], ["lk_flow.flow_id"],),
-        sa.ForeignKeyConstraint(["payment_id"], ["payment.payment_id"],),
-        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"],),
-        sa.ForeignKeyConstraint(["state_log_id"], ["state_log.state_log_id"],),
+        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"]),
+        sa.ForeignKeyConstraint(["flow_id"], ["lk_flow.flow_id"]),
+        sa.ForeignKeyConstraint(["payment_id"], ["payment.payment_id"]),
+        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"]),
+        sa.ForeignKeyConstraint(["state_log_id"], ["state_log.state_log_id"]),
         sa.PrimaryKeyConstraint("latest_state_log_id"),
     )
     op.create_index(

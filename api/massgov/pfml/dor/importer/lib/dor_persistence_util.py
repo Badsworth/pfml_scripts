@@ -207,7 +207,7 @@ def update_employer(
 
 def tax_id_from_dict(employee_id: uuid.UUID, tax_id: str) -> TaxIdentifier:
     formatted_tax_id = TaxIdUnformattedStr.validate_type(tax_id)
-    tax_identifier = TaxIdentifier(tax_identifier_id=employee_id, tax_identifier=formatted_tax_id,)
+    tax_identifier = TaxIdentifier(tax_identifier_id=employee_id, tax_identifier=formatted_tax_id)
 
     return tax_identifier
 
@@ -244,7 +244,7 @@ def create_employee(
 
 
 def check_and_update_employee(
-    existing_employee: Employee, employee_info: ParsedEmployeeLine, import_log_entry_id: int,
+    existing_employee: Employee, employee_info: ParsedEmployeeLine, import_log_entry_id: int
 ) -> bool:
     do_update = (
         existing_employee.first_name != employee_info["employee_first_name"]
@@ -259,7 +259,7 @@ def check_and_update_employee(
 
 
 def update_employee(
-    existing_employee: Employee, employee_info: ParsedEmployeeLine, import_log_entry_id: int,
+    existing_employee: Employee, employee_info: ParsedEmployeeLine, import_log_entry_id: int
 ) -> Employee:
     existing_employee.first_name = employee_info["employee_first_name"]
     existing_employee.last_name = employee_info["employee_last_name"]
@@ -425,7 +425,7 @@ def get_wages_and_contributions_by_employee_ids(
 ) -> List[WagesAndContributions]:
     return list(
         db_session.query(WagesAndContributions).filter(
-            WagesAndContributions.employee_id.in_(employee_ids),
+            WagesAndContributions.employee_id.in_(employee_ids)
         )
     )
 

@@ -30,9 +30,7 @@ def local_iaww_extract_step(
     )
 
 
-def stage_data(
-    records, db_session, reference_file=None, import_log=None,
-):
+def stage_data(records, db_session, reference_file=None, import_log=None):
     if not reference_file:
         reference_file = ReferenceFileFactory.create(
             reference_file_type_id=ReferenceFileType.FINEOS_IAWW_EXTRACT.reference_file_type_id
@@ -59,9 +57,7 @@ def stage_data(
     db_session.commit()
 
 
-def test_run_step_happy_path(
-    local_iaww_extract_step, local_test_db_session,
-):
+def test_run_step_happy_path(local_iaww_extract_step, local_test_db_session):
     # create absence cases and get the leave request ID so we can generate FINEOS IAWW data
     absence_case_1 = AbsencePeriodFactory.create()
     leave_request_1 = absence_case_1.fineos_leave_request_id
@@ -87,9 +83,7 @@ def test_run_step_happy_path(
     assert absence_case_4.fineos_average_weekly_wage is None
 
 
-def test_run_overwrite_existing_iaww_data(
-    local_iaww_extract_step, local_test_db_session,
-):
+def test_run_overwrite_existing_iaww_data(local_iaww_extract_step, local_test_db_session):
     employer = EmployerFactory.create()
     claim = ClaimFactory.create(employer_id=employer.employer_id)
     # create absence cases and get the leave request ID so we can generate FINEOS IAWW data

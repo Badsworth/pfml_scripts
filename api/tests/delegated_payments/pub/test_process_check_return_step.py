@@ -47,9 +47,7 @@ def check_payment_factory(
 
 
 @pytest.fixture
-def step(
-    local_initialize_factories_session, local_test_db_session, local_test_db_other_session,
-):
+def step(local_initialize_factories_session, local_test_db_session, local_test_db_other_session):
     step = process_check_return_step.ProcessCheckReturnFileStep(
         local_test_db_session, local_test_db_other_session
     )
@@ -475,9 +473,7 @@ def test_process_check_return_step_full(
 
 
 def payment_by_check_sent_to_pub_factory(
-    pub_individual_id,
-    test_db_session,
-    end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
+    pub_individual_id, test_db_session, end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT
 ) -> Payment:
     employee = factories.EmployeeFactory.create()
     employer = factories.EmployerFactory.create()

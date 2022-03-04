@@ -158,11 +158,7 @@ def test_admin_token_service_unavailable(mock_build, client):
 
 @patch("massgov.pfml.api.admin.build_access_token")
 def test_admin_token_success(mock_build, client):
-    mock_build.return_value = {
-        "access_token": "test",
-        "refresh_token": "test",
-        "id_token": "test",
-    }
+    mock_build.return_value = {"access_token": "test", "refresh_token": "test", "id_token": "test"}
     post_body = {
         "auth_uri_res": FAKE_AUTH_URI_RESPONSE,
         "auth_code_res": {"code": "test", "session_state": "test", "state": "test"},
@@ -217,7 +213,7 @@ def test_admin_no_permissions(client, app, mock_azure, auth_claims_unit, azure_a
 
 
 def test_admin_users_cognito(client, app, mock_azure, auth_token):
-    response = client.get("/v1/admin/users", headers={"Authorization": f"Bearer {auth_token}"},)
+    response = client.get("/v1/admin/users", headers={"Authorization": f"Bearer {auth_token}"})
     assert response.status_code == 401
 
 
@@ -248,9 +244,7 @@ def test_admin_users_success(
         )
         assert response.status_code == 200
         assert g.azure_user.sub_id == "foo"
-        assert g.azure_user.permissions == [
-            AzurePermission.USER_READ.azure_permission_id,
-        ]
+        assert g.azure_user.permissions == [AzurePermission.USER_READ.azure_permission_id]
         response_json = response.get_json()
         data = response_json.get("data")
         paging = response_json.get("meta").get("paging")
@@ -296,9 +290,7 @@ def test_admin_users_email_address_filter(
         )
         assert response.status_code == 200
         assert g.azure_user.sub_id == "foo"
-        assert g.azure_user.permissions == [
-            AzurePermission.USER_READ.azure_permission_id,
-        ]
+        assert g.azure_user.permissions == [AzurePermission.USER_READ.azure_permission_id]
         response_json = response.get_json()
         data = response_json.get("data")
         paging = response_json.get("meta").get("paging")

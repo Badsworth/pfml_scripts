@@ -115,7 +115,7 @@ class EncodingDictWriter(csv.DictWriter):
 
 
 class CSVSourceWrapper:
-    """ Simple wrapper for reading dicts out of CSV files """
+    """Simple wrapper for reading dicts out of CSV files"""
 
     def __init__(self, file_path: str, transport_params: Optional[Dict[str, Any]] = None):
         self._file_path = file_path

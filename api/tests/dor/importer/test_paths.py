@@ -28,7 +28,7 @@ def test_get_files_for_import_grouped_by_date(tmp_path, mock_s3_bucket):
             "DORDFMLEMP_": str(tmp_path / "DORDFMLEMP_20200519133333"),
             "DORDFML_": str(tmp_path / "DORDFML_20200519133333"),
         },
-        "20201001133333": {"DORDFML_": str(tmp_path / "DORDFML_20201001133333"),},
+        "20201001133333": {"DORDFML_": str(tmp_path / "DORDFML_20201001133333")},
     }
 
 
@@ -56,7 +56,7 @@ def test_get_files_for_import_grouped_by_date_s3(mock_s3_bucket):
             "DORDFMLEMP_": f"{s3_prefix}/DORDFMLEMP_20200519133333",
             "DORDFML_": f"{s3_prefix}/DORDFML_20200519133333",
         },
-        "20201001133333": {"DORDFML_": f"{s3_prefix}/DORDFML_20201001133333",},
+        "20201001133333": {"DORDFML_": f"{s3_prefix}/DORDFML_20201001133333"},
     }
 
 

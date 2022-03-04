@@ -4,7 +4,7 @@ from pydantic import AnyHttpUrl, BaseModel, Field
 
 
 class Recipient(BaseModel):
-    """ Recipient model for outbound messages """
+    """Recipient model for outbound messages"""
 
     first_name: Optional[str] = Field("", description="First name of recipient")
     last_name: Optional[str] = Field("", description="Last name of recipient")
@@ -13,7 +13,7 @@ class Recipient(BaseModel):
 
 
 class Claimant(BaseModel):
-    """ Claimant model for outbound messages """
+    """Claimant model for outbound messages"""
 
     first_name: str = Field("", description="First name of claimant")
     last_name: str = Field("", description="Last name of claimant")
@@ -22,7 +22,7 @@ class Claimant(BaseModel):
 
 
 class OutboundMessage(BaseModel):
-    """ Outbound message model """
+    """Outbound message model"""
 
     u_absence_id: str = Field(..., description="Absence ID")
     u_organization_name: str = Field(..., description="Organization name")

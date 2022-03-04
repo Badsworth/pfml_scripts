@@ -29,7 +29,7 @@ def test_register_user_success(test_db_session, mock_cognito, mock_cognito_user_
     assert user.sub_id is not None
 
     # User added to user pool
-    cognito_users = mock_cognito.list_users(UserPoolId=mock_cognito_user_pool["id"],)
+    cognito_users = mock_cognito.list_users(UserPoolId=mock_cognito_user_pool["id"])
     assert cognito_users["Users"][0]["Username"] == email_address
 
 
@@ -84,10 +84,7 @@ def test_register_user_creates_missing_db_records(
     # Mock the admin_get_user method to return the user with their Sub attribute,
     # which moto does not do, but the real boto does
     def admin_get_user(Username: str = None, UserPoolId: str = None):
-        return {
-            "Username": Username,
-            "UserAttributes": [{"Name": "sub", "Value": sub_id}],
-        }
+        return {"Username": Username, "UserAttributes": [{"Name": "sub", "Value": sub_id}]}
 
     monkeypatch.setattr(mock_cognito, "admin_get_user", admin_get_user)
     monkeypatch.setattr(mock_cognito, "sign_up", sign_up)

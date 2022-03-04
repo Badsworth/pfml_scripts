@@ -26,7 +26,7 @@ from massgov.pfml.util.pydantic import PydanticBaseModel
 
 PHONE_MISMATCH_MESSAGE = "E.164 phone number does not match provided phone number"
 PHONE_MISMATCH_ERROR = ValidationErrorDetail(
-    message=PHONE_MISMATCH_MESSAGE, type=IssueType.invalid_phone_number, field="e164",
+    message=PHONE_MISMATCH_MESSAGE, type=IssueType.invalid_phone_number, field="e164"
 )
 
 
@@ -378,7 +378,7 @@ class SearchEnvelope(GenericModel, Generic[SearchTermsT]):
     paging: PagingData = Field(default_factory=PagingData)
 
 
-def search_request_log_info(request: SearchEnvelope[SearchTermsT],) -> Dict[str, Any]:
+def search_request_log_info(request: SearchEnvelope[SearchTermsT]) -> Dict[str, Any]:
     USER_PROVIDED_FIELDS = request.terms.__fields_set__
     log_info = {}
     for key, value in request.terms.dict().items():

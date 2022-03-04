@@ -19,10 +19,10 @@ def test_verification():
 @pytest.fixture()
 def setup_leave_admins(test_verification):
     leave_admin_one = UserLeaveAdministratorFactory.create(
-        employer=EmployerFactory.create(employer_fein="999999998"), verification=test_verification,
+        employer=EmployerFactory.create(employer_fein="999999998"), verification=test_verification
     )
     leave_admin_two = UserLeaveAdministratorFactory.create(
-        employer=EmployerFactory.create(employer_fein="999999997"), verification=test_verification,
+        employer=EmployerFactory.create(employer_fein="999999997"), verification=test_verification
     )
 
     return leave_admin_one, leave_admin_two
@@ -266,10 +266,7 @@ def test_fineos_la_org_units_missing_required_fields(
 
 
 def test_fineos_la_org_units_missing_employer(
-    test_db_session,
-    initialize_factories_session,
-    setup_leave_admins,
-    la_org_units_missing_employer,
+    test_db_session, initialize_factories_session, setup_leave_admins, la_org_units_missing_employer
 ):
     [
         employer_one_org_units,

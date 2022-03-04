@@ -79,8 +79,8 @@ def make_db_session() -> db.Session:
 @background_task("transmogrify-state-logs")
 def transmogrify_states():
     """Entry point for changing all state logs in a given state to another new state
-       Note this is deliberately named "transmogrify" instead of state to illicit a reaction
-       that this is not just a simple/routine script to be run (see above description)
+    Note this is deliberately named "transmogrify" instead of state to illicit a reaction
+    that this is not just a simple/routine script to be run (see above description)
     """
     config = Configuration(sys.argv[1:])
 

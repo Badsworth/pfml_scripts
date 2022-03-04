@@ -164,9 +164,7 @@ def stage_data(
     db_session.commit()
 
 
-def test_run_step_happy_path(
-    local_claimant_extract_step, local_test_db_session,
-):
+def test_run_step_happy_path(local_claimant_extract_step, local_test_db_session):
     organization_unit_name = "Appeals Court"
     claimant_data = FineosPaymentData(organization_unit_name=organization_unit_name)
     employee, _ = add_db_records_from_fineos_data(
@@ -259,9 +257,7 @@ def test_run_step_happy_path(
     assert import_log_report["valid_claim_count"] == 1
 
 
-def test_run_step_multiple_times(
-    local_claimant_extract_step, local_test_db_session,
-):
+def test_run_step_multiple_times(local_claimant_extract_step, local_test_db_session):
     # Test what happens if we run multiple times on the same data
     # After the first run, the step should no-op as the reference file
     # has already been processed.
@@ -309,9 +305,7 @@ def test_run_step_multiple_times(
     assert claim_after_first_run.updated_at == claim_after_many_runs.updated_at
 
 
-def test_run_step_existing_approved_eft_info(
-    local_claimant_extract_step, local_test_db_session,
-):
+def test_run_step_existing_approved_eft_info(local_claimant_extract_step, local_test_db_session):
     # Very similar to the happy path test, but EFT info has already been
     # previously approved and we do not need to start the prenoting process
 
@@ -355,9 +349,7 @@ def test_run_step_existing_approved_eft_info(
     assert claim_state_logs[0].claim.employee_id == updated_employee.employee_id
 
 
-def test_run_step_existing_rejected_eft_info(
-    local_claimant_extract_step, local_test_db_session,
-):
+def test_run_step_existing_rejected_eft_info(local_claimant_extract_step, local_test_db_session):
     # Very similar to the happy path test, but EFT info has already been
     # previously rejected and thus it goes into an error state instead
 
@@ -409,9 +401,7 @@ def test_run_step_existing_rejected_eft_info(
     ]
 
 
-def test_run_step_no_employee(
-    local_claimant_extract_step, local_test_db_session,
-):
+def test_run_step_no_employee(local_claimant_extract_step, local_test_db_session):
     claimant_data = FineosPaymentData()
     stage_data([claimant_data], local_test_db_session)
 
@@ -530,7 +520,7 @@ def make_claimant_data_with_incorrect_request_absence(fineos_data):
     raw_requested_absence["ABSENCEPERIOD_CLASSID"] = "Unknown"
     raw_requested_absence["ABSENCEPERIOD_INDEXID"] = "Unknown"
     requested_absence_som = payments_util.create_staging_table_instance(
-        raw_requested_absence, FineosExtractVbiRequestedAbsenceSom, reference_file, None,
+        raw_requested_absence, FineosExtractVbiRequestedAbsenceSom, reference_file, None
     )
     requested_absence_non_som = payments_util.create_staging_table_instance(
         fineos_data.get_requested_absence_record(),
@@ -835,7 +825,7 @@ def test_update_absence_period_with_mismatching_claim_id(claimant_extract_step, 
 
     # Create claimant data with just an absence case number
     formatted_claimant_data_1 = FineosPaymentData(
-        absence_case_number="NTN-001-ABS-01", absence_period_c_value=1448, absence_period_i_value=1,
+        absence_case_number="NTN-001-ABS-01", absence_period_c_value=1448, absence_period_i_value=1
     )
 
     claimant_data_1 = make_claimant_data_from_fineos_data(formatted_claimant_data_1)
@@ -856,7 +846,7 @@ def test_update_absence_period_with_mismatching_claim_id(claimant_extract_step, 
     assert absence_period_1 is not None
 
     formatted_claimant_data_2 = FineosPaymentData(
-        absence_case_number="NTN-001-ABS-02", absence_period_c_value=1448, absence_period_i_value=1,
+        absence_case_number="NTN-001-ABS-02", absence_period_c_value=1448, absence_period_i_value=1
     )
 
     claimant_data_2 = make_claimant_data_from_fineos_data(formatted_claimant_data_2)
@@ -1019,9 +1009,11 @@ def test_update_eft_info_happy_path(claimant_extract_step, test_db_session):
 
     claimant_extract_step.update_eft_info(claimant_data, employee)
 
-    updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
-        Employee.employee_id == employee.employee_id
-    ).one_or_none()
+    updated_employee: Optional[Employee] = (
+        test_db_session.query(Employee)
+        .filter(Employee.employee_id == employee.employee_id)
+        .one_or_none()
+    )
 
     pub_efts = updated_employee.pub_efts.all()
     assert len(pub_efts) == 1
@@ -1042,9 +1034,11 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
 
     claimant_extract_step.update_eft_info(claimant_data, employee)
 
-    updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
-        Employee.employee_id == employee.employee_id
-    ).one_or_none()
+    updated_employee: Optional[Employee] = (
+        test_db_session.query(Employee)
+        .filter(Employee.employee_id == employee.employee_id)
+        .one_or_none()
+    )
 
     assert set(
         [
@@ -1062,9 +1056,11 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
 
     claimant_extract_step.update_eft_info(claimant_data, employee)
 
-    updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
-        Employee.employee_id == employee.employee_id
-    ).one_or_none()
+    updated_employee: Optional[Employee] = (
+        test_db_session.query(Employee)
+        .filter(Employee.employee_id == employee.employee_id)
+        .one_or_none()
+    )
 
     assert set(
         [
@@ -1078,18 +1074,20 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
     # Account number incorrect length.
     long_num = "123456789012345678"
     fineos_data = FineosPaymentData(
-        routing_nbr="111111118", account_nbr=long_num, account_type="Checking",
+        routing_nbr="111111118", account_nbr=long_num, account_type="Checking"
     )
     claimant_data = make_claimant_data_from_fineos_data(fineos_data)
 
     claimant_extract_step.update_eft_info(claimant_data, employee)
 
-    updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
-        Employee.employee_id == employee.employee_id
-    ).one_or_none()
+    updated_employee: Optional[Employee] = (
+        test_db_session.query(Employee)
+        .filter(Employee.employee_id == employee.employee_id)
+        .one_or_none()
+    )
 
     assert set(
-        [ValidationIssue(ValidationReason.FIELD_TOO_LONG, f"ACCOUNTNO: {long_num}", "ACCOUNTNO"),]
+        [ValidationIssue(ValidationReason.FIELD_TOO_LONG, f"ACCOUNTNO: {long_num}", "ACCOUNTNO")]
     ) == set(claimant_data.validation_container.validation_issues)
     assert len(updated_employee.pub_efts.all()) == 0
 
@@ -1103,9 +1101,11 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
 
     claimant_extract_step.update_eft_info(claimant_data, employee)
 
-    updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
-        Employee.employee_id == employee.employee_id
-    ).one_or_none()
+    updated_employee: Optional[Employee] = (
+        test_db_session.query(Employee)
+        .filter(Employee.employee_id == employee.employee_id)
+        .one_or_none()
+    )
 
     assert set(
         [
@@ -1128,9 +1128,11 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
 
     claimant_extract_step.update_eft_info(claimant_data, employee)
 
-    updated_employee: Optional[Employee] = test_db_session.query(Employee).filter(
-        Employee.employee_id == employee.employee_id
-    ).one_or_none()
+    updated_employee: Optional[Employee] = (
+        test_db_session.query(Employee)
+        .filter(Employee.employee_id == employee.employee_id)
+        .one_or_none()
+    )
 
     assert set(
         [
@@ -1148,9 +1150,7 @@ def test_update_eft_info_validation_issues(claimant_extract_step, test_db_sessio
     assert len(updated_employee.pub_efts.all()) == 0
 
 
-def test_run_step_validation_issues(
-    claimant_extract_step, test_db_session, formatted_claim,
-):
+def test_run_step_validation_issues(claimant_extract_step, test_db_session, formatted_claim):
     # Create some validation issues
     fineos_data = FineosPaymentData(
         routing_nbr="",
@@ -1222,9 +1222,7 @@ def test_run_step_validation_issues(
     ]
 
 
-def test_run_step_minimal_viable_claim(
-    claimant_extract_step, test_db_session,
-):
+def test_run_step_minimal_viable_claim(claimant_extract_step, test_db_session):
     # Create a record with only an absence case number
     # This should still end up created in the DB, but with
     # significant validation issues
@@ -1322,9 +1320,7 @@ def test_run_step_minimal_viable_claim(
     ]
 
 
-def test_run_step_not_id_proofed(
-    claimant_extract_step, test_db_session,
-):
+def test_run_step_not_id_proofed(claimant_extract_step, test_db_session):
     fineos_data = FineosPaymentData(leave_request_evidence="Rejected")
 
     add_db_records_from_fineos_data(test_db_session, fineos_data)
@@ -1354,9 +1350,7 @@ def test_run_step_not_id_proofed(
     assert state_log.end_state_id == State.DELEGATED_CLAIM_EXTRACTED_FROM_FINEOS.state_id
 
 
-def test_run_step_no_default_payment_pref(
-    claimant_extract_step, test_db_session,
-):
+def test_run_step_no_default_payment_pref(claimant_extract_step, test_db_session):
     # Create records without a default payment preference
     # None of the payment preference related fields will be set
     fineos_data = FineosPaymentData(
@@ -1395,9 +1389,7 @@ def test_run_step_no_default_payment_pref(
     assert claim.employee_id == employee.employee_id
 
 
-def test_run_step_mix_of_payment_prefs(
-    claimant_extract_step, test_db_session,
-):
+def test_run_step_mix_of_payment_prefs(claimant_extract_step, test_db_session):
     # Create a record that isn't a default payment preference
     # then create another record with the same customer number & absence case number
     # but with default payment preference set to Y
@@ -1454,9 +1446,7 @@ def test_run_step_mix_of_payment_prefs(
     assert claim.employee_id == employee.employee_id
 
 
-def test_run_step_uses_correct_start_and_end_dates(
-    claimant_extract_step, test_db_session,
-):
+def test_run_step_uses_correct_start_and_end_dates(claimant_extract_step, test_db_session):
     not_default_fineos_data = FineosPaymentData(
         leave_request_start="2021-01-01 12:00:00", leave_request_end="2021-04-01 12:00:00"
     )
@@ -1500,9 +1490,7 @@ def test_run_step_uses_correct_start_and_end_dates(
     assert claim.absence_period_end_date == datetime.date(2021, 5, 1)
 
 
-def test_run_step_with_missing_start_and_end_dates(
-    claimant_extract_step, test_db_session,
-):
+def test_run_step_with_missing_start_and_end_dates(claimant_extract_step, test_db_session):
     not_default_fineos_data = FineosPaymentData(
         leave_request_start="2021-01-01 12:00:00", leave_request_end=""
     )

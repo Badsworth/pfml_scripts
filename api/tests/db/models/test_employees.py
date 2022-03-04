@@ -48,7 +48,7 @@ def claim_with_completed_managed_requirements(employer, employee):
 
 def test_user_leave_admin_has_fineos_registration():
     user_leave_admin = UserLeaveAdministrator(
-        user=UserFactory.build(), employer=EmployerFactory.build(),
+        user=UserFactory.build(), employer=EmployerFactory.build()
     )
     assert user_leave_admin.has_fineos_registration is False
 
@@ -114,7 +114,7 @@ def test_employer_with_verification_data(
 
 def test_user_leave_admin_verified():
     user_leave_admin = UserLeaveAdministrator(
-        user=UserFactory.build(), employer=EmployerFactory.build(),
+        user=UserFactory.build(), employer=EmployerFactory.build()
     )
     assert user_leave_admin.verified is False
 

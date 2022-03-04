@@ -69,8 +69,8 @@ def upgrade():
         sa.Column("federal_tax_withholdings", sa.Numeric(), nullable=False),
         sa.Column("overpayment_repayments", sa.Numeric(), nullable=False),
         sa.Column("correction_ind", sa.Boolean(), nullable=False),
-        sa.ForeignKeyConstraint(["pfml_1099_batch_id"], ["pfml_1099_batch.pfml_1099_batch_id"],),
-        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"],),
+        sa.ForeignKeyConstraint(["pfml_1099_batch_id"], ["pfml_1099_batch.pfml_1099_batch_id"]),
+        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"]),
         sa.PrimaryKeyConstraint("pfml_1099_id"),
     )
     op.create_index(
@@ -97,8 +97,8 @@ def upgrade():
         sa.Column("employee_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("payment_amount", sa.Numeric(), nullable=False),
         sa.Column("payment_date", sa.Date(), nullable=False),
-        sa.ForeignKeyConstraint(["pfml_1099_batch_id"], ["pfml_1099_batch.pfml_1099_batch_id"],),
-        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"],),
+        sa.ForeignKeyConstraint(["pfml_1099_batch_id"], ["pfml_1099_batch.pfml_1099_batch_id"]),
+        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"]),
         sa.PrimaryKeyConstraint("pfml_1099_mmars_payment_id"),
     )
     op.create_index(
@@ -134,10 +134,10 @@ def upgrade():
         sa.Column("employee_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("payment_amount", sa.Numeric(), nullable=False),
         sa.Column("payment_date", sa.Date(), nullable=False),
-        sa.ForeignKeyConstraint(["pfml_1099_batch_id"], ["pfml_1099_batch.pfml_1099_batch_id"],),
-        sa.ForeignKeyConstraint(["payment_id"], ["payment.payment_id"],),
-        sa.ForeignKeyConstraint(["claim_id"], ["claim.claim_id"],),
-        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"],),
+        sa.ForeignKeyConstraint(["pfml_1099_batch_id"], ["pfml_1099_batch.pfml_1099_batch_id"]),
+        sa.ForeignKeyConstraint(["payment_id"], ["payment.payment_id"]),
+        sa.ForeignKeyConstraint(["claim_id"], ["claim.claim_id"]),
+        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"]),
         sa.PrimaryKeyConstraint("pfml_1099_payment_id"),
     )
     op.create_index(
@@ -175,9 +175,9 @@ def upgrade():
         sa.Column("employee_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("refund_amount", sa.Numeric(), nullable=False),
         sa.Column("refund_date", sa.Date(), nullable=False),
-        sa.ForeignKeyConstraint(["pfml_1099_batch_id"], ["pfml_1099_batch.pfml_1099_batch_id"],),
-        sa.ForeignKeyConstraint(["payment_id"], ["payment.payment_id"],),
-        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"],),
+        sa.ForeignKeyConstraint(["pfml_1099_batch_id"], ["pfml_1099_batch.pfml_1099_batch_id"]),
+        sa.ForeignKeyConstraint(["payment_id"], ["payment.payment_id"]),
+        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"]),
         sa.PrimaryKeyConstraint("pfml_1099_refund_id"),
     )
     op.create_index(
@@ -213,10 +213,10 @@ def upgrade():
         sa.Column("employee_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("withholding_amount", sa.Numeric(), nullable=False),
         sa.Column("withholding_date", sa.Date(), nullable=False),
-        sa.ForeignKeyConstraint(["pfml_1099_batch_id"], ["pfml_1099_batch.pfml_1099_batch_id"],),
-        sa.ForeignKeyConstraint(["payment_id"], ["payment.payment_id"],),
-        sa.ForeignKeyConstraint(["claim_id"], ["claim.claim_id"],),
-        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"],),
+        sa.ForeignKeyConstraint(["pfml_1099_batch_id"], ["pfml_1099_batch.pfml_1099_batch_id"]),
+        sa.ForeignKeyConstraint(["payment_id"], ["payment.payment_id"]),
+        sa.ForeignKeyConstraint(["claim_id"], ["claim.claim_id"]),
+        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"]),
         sa.PrimaryKeyConstraint("pfml_1099_withholding_id"),
     )
     op.create_index(

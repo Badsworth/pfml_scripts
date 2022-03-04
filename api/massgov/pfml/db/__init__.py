@@ -236,7 +236,7 @@ _T = TypeVar("_T")
 
 # https://github.com/sqlalchemy/sqlalchemy/wiki/RangeQuery-and-WindowedRangeQuery
 def windowed_query(q: "Query[_T]", column: Any, window_size: int) -> Iterable[_T]:
-    """"Break a Query into chunks on a given column."""
+    """ "Break a Query into chunks on a given column."""
 
     is_single_entity = q.is_single_entity  # type: ignore
     q_modified = q.add_columns(column).order_by(column)

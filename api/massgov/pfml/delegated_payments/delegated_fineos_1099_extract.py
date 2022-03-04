@@ -55,7 +55,7 @@ class Data1099:
         self.data_1099_record = data_1099_record
         self.employee_id = employee_id
         self.packed_data = payments_util.validate_db_input(
-            "packeddata", data_1099_record, self.validation_container, True,
+            "packeddata", data_1099_record, self.validation_container, True
         )
         self.packed_xml = packed_xml
         if self.packed_data:
@@ -249,7 +249,7 @@ class Data1099ExtractStep(Step):
             logger.info("Checking to see if this request is duplicate ")
             existing_requests = (
                 self.db_session.query(Pfml1099Request)
-                .filter(Pfml1099Request.employee_id == vbi_1099_data.employee_id,)
+                .filter(Pfml1099Request.employee_id == vbi_1099_data.employee_id)
                 .all()
             )
             correction_ind = self.map_request_type(vbi_1099_data.request_type)

@@ -379,12 +379,12 @@ class Application(Base, TimestampMixin):
     employer_benefits = relationship("EmployerBenefit", back_populates="application", uselist=True)
     other_incomes = relationship("OtherIncome", back_populates="application", uselist=True)
     previous_leaves_other_reason = relationship(
-        "PreviousLeaveOtherReason", back_populates="application", uselist=True,
+        "PreviousLeaveOtherReason", back_populates="application", uselist=True
     )
     previous_leaves_same_reason = relationship(
-        "PreviousLeaveSameReason", back_populates="application", uselist=True,
+        "PreviousLeaveSameReason", back_populates="application", uselist=True
     )
-    concurrent_leave = relationship("ConcurrentLeave", back_populates="application", uselist=False,)
+    concurrent_leave = relationship("ConcurrentLeave", back_populates="application", uselist=False)
 
     @property
     def employee(self) -> Optional[Employee]:
@@ -611,7 +611,7 @@ class WorkPatternDay(Base, TimestampMixin):
     def sort_order(self):
         """Set sort order of Sunday to 0"""
         day_of_week_is_sunday = self.day_of_week_id == 7
-        return case([(day_of_week_is_sunday, 0),], else_=self.day_of_week_id)  # type: ignore
+        return case([(day_of_week_is_sunday, 0)], else_=self.day_of_week_id)  # type: ignore
 
 
 class WorkPatternType(LookupTable):
@@ -874,9 +874,7 @@ class UnemploymentMetric(Base, TimestampMixin):
     effective_date = Column(Date, primary_key=True, nullable=False)
     unemployment_minimum_earnings = Column(Numeric, nullable=False)
 
-    def __init__(
-        self, effective_date: datetime.date, unemployment_minimum_earnings: str,
-    ):
+    def __init__(self, effective_date: datetime.date, unemployment_minimum_earnings: str):
         """Constructor that takes metric values as strings.
 
         This ensures that the decimals are precise. For example compare Decimal(1431.66) to
@@ -943,7 +941,7 @@ def sync_state_metrics(db_session):
             maximum_weekly_benefit_amount="850.00",
         ),
         UnemploymentMetric(
-            effective_date=datetime.date(2020, 10, 1), unemployment_minimum_earnings="5100.00",
+            effective_date=datetime.date(2020, 10, 1), unemployment_minimum_earnings="5100.00"
         ),
         BenefitsMetrics(
             effective_date=datetime.date(2021, 1, 1),
@@ -951,11 +949,11 @@ def sync_state_metrics(db_session):
             maximum_weekly_benefit_amount="850.00",
         ),
         UnemploymentMetric(
-            effective_date=datetime.date(2021, 1, 1), unemployment_minimum_earnings="5400.00",
+            effective_date=datetime.date(2021, 1, 1), unemployment_minimum_earnings="5400.00"
         ),
-        BenefitsMetrics(effective_date=datetime.date(2022, 1, 2), average_weekly_wage="1694.24",),
+        BenefitsMetrics(effective_date=datetime.date(2022, 1, 2), average_weekly_wage="1694.24"),
         UnemploymentMetric(
-            effective_date=datetime.date(2022, 1, 2), unemployment_minimum_earnings="5700.00",
+            effective_date=datetime.date(2022, 1, 2), unemployment_minimum_earnings="5700.00"
         ),
     ]
 

@@ -33,7 +33,7 @@ def upgrade():
         "previous_leave", sa.Column("worked_per_week_minutes", sa.Integer(), nullable=True)
     )
 
-    previous_leave = table("previous_leave", column("type", sa.Text),)
+    previous_leave = table("previous_leave", column("type", sa.Text))
 
     # previous_leave must have a type 'same_reason' or 'other_reason'
     # any previous_leaves before this migration could be for either reason

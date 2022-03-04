@@ -147,7 +147,8 @@ def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdmi
 
         if user_leave_admin is None:
             logger.warning(
-                "The leave admin is None", extra=log_attributes,
+                "The leave admin is None",
+                extra=log_attributes,
             )
             raise NotAuthorizedForAccess(
                 description="User does not have leave administrator record for this employer",
@@ -156,7 +157,8 @@ def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdmi
 
         if user_leave_admin.fineos_web_id is None:
             logger.warning(
-                "The leave admin has no FINEOS ID", extra=log_attributes,
+                "The leave admin has no FINEOS ID",
+                extra=log_attributes,
             )
             raise VerificationRequired(
                 user_leave_admin, "User has no leave administrator FINEOS ID"
@@ -164,7 +166,8 @@ def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdmi
 
         if not user_leave_admin.verified:
             logger.warning(
-                "The leave admin is not verified", extra=log_attributes,
+                "The leave admin is not verified",
+                extra=log_attributes,
             )
             raise VerificationRequired(user_leave_admin, "User is not Verified")
 
@@ -200,7 +203,10 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
 
     if issues := claim_rules.get_employer_claim_review_issues(claim_review):
         return response_util.error_response(
-            status_code=BadRequest, message="Invalid claim review body", errors=issues, data={},
+            status_code=BadRequest,
+            message="Invalid claim review body",
+            errors=issues,
+            data={},
         ).to_api_response()
 
     try:
@@ -268,7 +274,9 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
             )
 
             updated_managed_requirements = update_employer_confirmation_requirements(
-                db_session, user_leave_admin.user_id, fineos_managed_requirements,
+                db_session,
+                user_leave_admin.user_id,
+                fineos_managed_requirements,
             )
 
             log_attributes = {
@@ -287,7 +295,8 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
 
     claim_response = {"claim_id": fineos_absence_id}
     return response_util.success_response(
-        message="Successfully updated claim", data=claim_response,
+        message="Successfully updated claim",
+        data=claim_response,
     ).to_api_response()
 
 
@@ -320,7 +329,9 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
                 fineos_managed_requirements,
                 absence_period_decisions,
             ) = get_claim_as_leave_admin(
-                user_leave_admin.fineos_web_id, fineos_absence_id, employer,
+                user_leave_admin.fineos_web_id,
+                fineos_absence_id,
+                employer,
             )
         except (ContainsV1AndV2Eforms) as error:
             return response_util.error_response(
@@ -352,7 +363,10 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
             )
 
             managed_requirements = sync_managed_requirements(
-                db_session, claim_from_db, fineos_managed_requirements, log_attributes,
+                db_session,
+                claim_from_db,
+                fineos_managed_requirements,
+                log_attributes,
             )
             fineos_claim_review_response.managed_requirements = [
                 ManagedRequirementResponse.from_orm(mr) for mr in managed_requirements
@@ -367,7 +381,9 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
                 log_managed_requirement(requirement, fineos_absence_id)
 
         log_attributes.update(
-            {"num_absence_periods": len(fineos_claim_review_response.absence_periods),}
+            {
+                "num_absence_periods": len(fineos_claim_review_response.absence_periods),
+            }
         )
 
         for period in fineos_claim_review_response.absence_periods:
@@ -376,7 +392,8 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
             )
 
         logger.info(
-            "employer_get_claim_review success", extra=log_attributes,
+            "employer_get_claim_review success",
+            extra=log_attributes,
         )
         return response_util.success_response(
             message="Successfully retrieved claim",
@@ -406,7 +423,8 @@ def employer_get_claim_documents(fineos_absence_id: str) -> flask.Response:
         log_attributes.update(get_claim_log_attributes(claim))
 
     logger.info(
-        "employer_get_claim_documents success", extra={**log_attributes},
+        "employer_get_claim_documents success",
+        extra={**log_attributes},
     )
     return response_util.success_response(
         message="Successfully retrieved documents", data=documents_list, status_code=200
@@ -426,12 +444,14 @@ def employer_document_download(fineos_absence_id: str, fineos_document_id: str) 
         user_leave_admin = get_current_user_leave_admin_record(fineos_absence_id)
     except NotAuthorizedForAccess as not_authorized:
         logger.error(
-            f"employer_document_download failed - {not_authorized.description}", extra=log_attr,
+            f"employer_document_download failed - {not_authorized.description}",
+            extra=log_attr,
         )
         return not_authorized.to_api_response()
     except VerificationRequired as not_verified:
         logger.error(
-            f"employer_document_download failed - {not_verified.description}", extra=log_attr,
+            f"employer_document_download failed - {not_verified.description}",
+            extra=log_attr,
         )
         return not_verified.to_api_response()
     log_attr.update(get_employer_log_attributes(user_leave_admin.user))
@@ -442,12 +462,14 @@ def employer_document_download(fineos_absence_id: str, fineos_document_id: str) 
         )
     except ObjectNotFound as not_found:
         logger.error(
-            f"employer_document_download failed - {not_found.description}", extra=log_attr,
+            f"employer_document_download failed - {not_found.description}",
+            extra=log_attr,
         )
         return not_found.to_api_response()
     except NotAuthorizedForAccess as not_authorized:
         logger.error(
-            f"employer_document_download failed - {not_authorized.description}", extra=log_attr,
+            f"employer_document_download failed - {not_authorized.description}",
+            extra=log_attr,
         )
         return not_authorized.to_api_response()
 
@@ -458,7 +480,8 @@ def employer_document_download(fineos_absence_id: str, fineos_document_id: str) 
         log_attr.update(get_claim_log_attributes(claim))
 
     logger.info(
-        "employer_document_download success", extra=log_attr,
+        "employer_document_download success",
+        extra=log_attr,
     )
     return flask.Response(
         file_bytes,
@@ -471,7 +494,9 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
     is_employer = can(READ, "EMPLOYER_API")
     if is_employer:
         error = response_util.error_response(
-            Forbidden, "Employers are not allowed to access claimant claim info", errors=[],
+            Forbidden,
+            "Employers are not allowed to access claimant claim info",
+            errors=[],
         )
         return error.to_api_response()
 
@@ -519,7 +544,9 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
     log_get_claim_metrics(detailed_claim)
 
     return response_util.success_response(
-        message="Successfully retrieved claim", data=detailed_claim.dict(), status_code=200,
+        message="Successfully retrieved claim",
+        data=detailed_claim.dict(),
+        status_code=200,
     ).to_api_response()
 
 
@@ -657,9 +684,9 @@ def _process_claims_request(claim_request: ClaimRequest, method_name: str) -> fl
         },
     )
 
-    response_model: Union[
-        Type[ClaimForPfmlCrmResponse], Type[ClaimResponse]
-    ] = ClaimForPfmlCrmResponse if is_pfml_crm_user else ClaimResponse
+    response_model: Union[Type[ClaimForPfmlCrmResponse], Type[ClaimResponse]] = (
+        ClaimForPfmlCrmResponse if is_pfml_crm_user else ClaimResponse
+    )
 
     return response_util.paginated_success_response(
         message="Successfully retrieved claims",
@@ -678,7 +705,9 @@ def parse_filterable_absence_statuses(absence_status_string: Union[str, None]) -
     return absence_statuses
 
 
-def map_request_decision_param_to_db_columns(request_decision_str: Optional[str],) -> Set[int]:
+def map_request_decision_param_to_db_columns(
+    request_decision_str: Optional[str],
+) -> Set[int]:
     request_decision_map = {
         "approved": set([LeaveRequestDecision.APPROVED.leave_request_decision_id]),
         "denied": set([LeaveRequestDecision.DENIED.leave_request_decision_id]),
@@ -778,7 +807,10 @@ def post_change_request(fineos_absence_id: str) -> flask.Response:
 
     if issues := claim_rules.get_change_request_issues(change_request, claim):
         return response_util.error_response(
-            status_code=BadRequest, message="Invalid change request body", errors=issues, data={},
+            status_code=BadRequest,
+            message="Invalid change request body",
+            errors=issues,
+            data={},
         ).to_api_response()
 
     # Post change request to FINEOS - https://lwd.atlassian.net/browse/PORTAL-1710
@@ -794,7 +826,9 @@ def post_change_request(fineos_absence_id: str) -> flask.Response:
     )
 
     return response_util.success_response(
-        message="Successfully posted change request", data=response_data.dict(), status_code=201,
+        message="Successfully posted change request",
+        data=response_data.dict(),
+        status_code=201,
     ).to_api_response()
 
 
@@ -807,7 +841,9 @@ def get_change_requests(fineos_absence_id: str) -> flask.Response:
             extra={"absence_case_id": fineos_absence_id},
         )
         error = response_util.error_response(
-            NotFound, "Claim does not exist for given absence ID", errors=[],
+            NotFound,
+            "Claim does not exist for given absence ID",
+            errors=[],
         )
         return error.to_api_response()
 

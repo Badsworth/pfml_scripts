@@ -94,7 +94,7 @@ class GetClaimsQuery:
         )
 
         employers_without_units_filter = and_(
-            Claim.employer_id.in_(employers_without_units), Claim.organization_unit_id.is_(None),
+            Claim.employer_id.in_(employers_without_units), Claim.organization_unit_id.is_(None)
         )
         employers_with_units_filter = and_(
             Claim.employer_id.in_(employers_with_units),

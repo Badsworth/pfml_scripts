@@ -46,10 +46,10 @@ def upgrade():
         sa.Column("added_to_audit_report_at", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.Column("import_log_id", sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(
-            ["audit_report_type_id"], ["lk_payment_audit_report_type.payment_audit_report_type_id"],
+            ["audit_report_type_id"], ["lk_payment_audit_report_type.payment_audit_report_type_id"]
         ),
-        sa.ForeignKeyConstraint(["import_log_id"], ["import_log.import_log_id"],),
-        sa.ForeignKeyConstraint(["payment_id"], ["payment.payment_id"],),
+        sa.ForeignKeyConstraint(["import_log_id"], ["import_log.import_log_id"]),
+        sa.ForeignKeyConstraint(["payment_id"], ["payment.payment_id"]),
         sa.PrimaryKeyConstraint("payment_audit_details_id"),
     )
     op.create_index(

@@ -905,7 +905,7 @@ class WorkPatternRotatingFactory(WorkPatternFixedFactory):
     work_pattern_days = factory.LazyAttribute(
         lambda w: [
             application_models.WorkPatternDay(
-                work_pattern_id=w.work_pattern_id, day_of_week_id=i % 7 + 1, minutes=8 * 60,
+                work_pattern_id=w.work_pattern_id, day_of_week_id=i % 7 + 1, minutes=8 * 60
             )
             for i in range(28)
         ]

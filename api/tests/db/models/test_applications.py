@@ -13,7 +13,7 @@ def test_state_metric_init(initialize_factories_session, test_db_session):
     )
 
     UnemploymentMetricFactory.create(
-        effective_date=datetime.date(2021, 7, 1), unemployment_minimum_earnings=5200,
+        effective_date=datetime.date(2021, 7, 1), unemployment_minimum_earnings=5200
     )
 
     effective_date = datetime.date(2021, 9, 30)
@@ -32,7 +32,7 @@ def test_state_metric_init(initialize_factories_session, test_db_session):
     )
 
     UnemploymentMetricFactory.create(
-        effective_date=datetime.date(2022, 1, 1), unemployment_minimum_earnings=5300,
+        effective_date=datetime.date(2022, 1, 1), unemployment_minimum_earnings=5300
     )
 
     effective_date = datetime.date(2022, 1, 1)

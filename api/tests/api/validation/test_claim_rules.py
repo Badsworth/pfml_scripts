@@ -147,7 +147,7 @@ class TestGetEmployerBenefitsIssues:
 
     def test_v1_form_max_benefits_restriction(self, employer_benefit, uses_second_eform_version):
         uses_second_eform_version = False
-        resp = get_employer_benefits_issues([employer_benefit] * 5, uses_second_eform_version,)
+        resp = get_employer_benefits_issues([employer_benefit] * 5, uses_second_eform_version)
         assert resp[0].type == IssueType.maximum
         assert resp[0].field == "employer_benefits"
         assert "cannot exceed limit" in resp[0].message
@@ -162,7 +162,7 @@ def setup_factories(initialize_factories_session):
 
 @pytest.fixture
 def modification_change_request():
-    return ChangeRequest(change_request_type=ChangeRequestType.MODIFICATION, end_date="2020-03-01",)
+    return ChangeRequest(change_request_type=ChangeRequestType.MODIFICATION, end_date="2020-03-01")
 
 
 @pytest.fixture

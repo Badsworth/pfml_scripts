@@ -33,7 +33,7 @@ class SftpS3TransferConfig:
 
 
 def copy_to_sftp_and_archive_s3_files(
-    config: SftpS3TransferConfig, db_session: db.Session,
+    config: SftpS3TransferConfig, db_session: db.Session
 ) -> List[ReferenceFile]:
     copied_reference_files: List[ReferenceFile] = []
 
@@ -47,7 +47,7 @@ def copy_to_sftp_and_archive_s3_files(
     logger.info("Copying files to SFTP server: %s", ", ".join(s3_filenames))
 
     sftp_client = file_util.get_sftp_client(
-        uri=config.sftp_uri, ssh_key_password=config.ssh_key_password, ssh_key=config.ssh_key,
+        uri=config.sftp_uri, ssh_key_password=config.ssh_key_password, ssh_key=config.ssh_key
     )
 
     # List files so we can avoid overwriting a file in the destination directory.
@@ -214,7 +214,7 @@ def copy_from_sftp_to_s3_and_archive_files(
     config: SftpS3TransferConfig, db_session: db.Session
 ) -> List[ReferenceFile]:
     sftp_client = file_util.get_sftp_client(
-        uri=config.sftp_uri, ssh_key_password=config.ssh_key_password, ssh_key=config.ssh_key,
+        uri=config.sftp_uri, ssh_key_password=config.ssh_key_password, ssh_key=config.ssh_key
     )
 
     source_filenames = sftp_client.listdir(config.source_dir)
@@ -259,7 +259,7 @@ def copy_from_sftp_to_s3_and_archive_files(
             # TODO - API-1311 - Extend this method to have a flag that determines whether
             #                   to error out entirely here or to continue
             logger.exception(
-                "Found more than one ReferenceFile with the same file_location:", source_filepath,
+                "Found more than one ReferenceFile with the same file_location:", source_filepath
             )
             continue
         except Exception as e:

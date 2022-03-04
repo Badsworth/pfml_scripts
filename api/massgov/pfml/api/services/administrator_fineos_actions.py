@@ -103,7 +103,7 @@ class EmployerInfoForReview(PydanticBaseModel):
 
 
 def _get_leave_details(absence_periods: Dict[str, Dict]) -> LeaveDetails:
-    """ Extracts absence data based on a PeriodDecisions dict and returns a LeaveDetails """
+    """Extracts absence data based on a PeriodDecisions dict and returns a LeaveDetails"""
     leave_details = {}
     leave_details["reason"] = absence_periods["decisions"][0]["period"]["leaveRequest"][
         "reasonName"
@@ -165,7 +165,7 @@ def _get_leave_details(absence_periods: Dict[str, Dict]) -> LeaveDetails:
 
 
 def _get_computed_start_dates(absence_periods: Dict[str, Dict]) -> ComputedStartDates:
-    """ Extracts absence data based on a PeriodDecisions dict and returns ComputedStartDates """
+    """Extracts absence data based on a PeriodDecisions dict and returns ComputedStartDates"""
     if len(absence_periods["decisions"]) == 0 or not absence_periods["decisions"][0]["period"]:
         return ComputedStartDates(other_reason=None, same_reason=None)
 
@@ -431,7 +431,7 @@ def _group_by_absence_period_reference(
 
 
 def _parse_absence_period_responses(
-    absence_period_decisions: List[Decision], log_attributes: Dict,
+    absence_period_decisions: List[Decision], log_attributes: Dict
 ) -> List[AbsencePeriodResponse]:
     absence_period_responses = []
 

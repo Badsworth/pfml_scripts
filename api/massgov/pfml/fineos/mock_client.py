@@ -241,7 +241,7 @@ def mock_customer_details():
                 "addressLine7": "",
                 "postCode": "01003",
                 "country": "USA",
-            },
+            }
         },
         "classExtensionInformation": [
             {"name": "MassachusettsID", "stringValue": "123456789"},
@@ -303,16 +303,16 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         if employer_fein == "999999998":
             organisationUnits = models.OCOrganisationUnit(
                 OrganisationUnit=[
-                    models.OCOrganisationUnitItem(OID="PE:00001:0000000001", Name="OrgUnitOne",),
-                    models.OCOrganisationUnitItem(OID="PE:00001:0000000002", Name="OrgUnitTwo",),
+                    models.OCOrganisationUnitItem(OID="PE:00001:0000000001", Name="OrgUnitOne"),
+                    models.OCOrganisationUnitItem(OID="PE:00001:0000000002", Name="OrgUnitTwo"),
                 ]
             )
 
         if employer_fein == "999999997":
             organisationUnits = models.OCOrganisationUnit(
                 OrganisationUnit=[
-                    models.OCOrganisationUnitItem(OID="PE:00002:0000000001", Name="OrgUnitThree",),
-                    models.OCOrganisationUnitItem(OID="PE:00002:0000000002", Name="OrgUnitFour",),
+                    models.OCOrganisationUnitItem(OID="PE:00002:0000000001", Name="OrgUnitThree"),
+                    models.OCOrganisationUnitItem(OID="PE:00002:0000000002", Name="OrgUnitFour"),
                 ]
             )
 
@@ -827,7 +827,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         )
 
     def get_week_based_work_pattern(
-        self, user_id: str, occupation_id: Union[str, int],
+        self, user_id: str, occupation_id: Union[str, int]
     ) -> models.customer_api.WeekBasedWorkPattern:
         _capture_call("get_week_based_work_pattern", user_id, occupation_id=occupation_id)
         return models.customer_api.WeekBasedWorkPattern(

@@ -101,10 +101,7 @@ class ACHReturn:
         }
 
     def get_details_for_error(self) -> Dict[str, Any]:
-        return {
-            "ach_id_number": self.id_number,
-            "reason_code": self.return_reason_code,
-        }
+        return {"ach_id_number": self.id_number, "reason_code": self.return_reason_code}
 
 
 @dataclasses.dataclass

@@ -10,7 +10,7 @@ from massgov.pfml.experian.physical_address.client.models.search import (
 
 def test_search_request():
     address_search = AddressSearchV1Request(
-        country_iso="USA", components=AddressSearchV1InputComponent(unspecified=["foo"]),
+        country_iso="USA", components=AddressSearchV1InputComponent(unspecified=["foo"])
     )
 
     assert (

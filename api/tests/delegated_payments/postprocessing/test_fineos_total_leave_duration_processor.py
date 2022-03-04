@@ -46,7 +46,7 @@ def use_employee(local_initialize_factories_session):
 def by(local_initialize_factories_session, use_employee):
     def create(start_date: date, end_date: date):
         return BenefitYearFactory.create(
-            employee=use_employee, start_date=start_date, end_date=end_date,
+            employee=use_employee, start_date=start_date, end_date=end_date
         )
 
     return create
@@ -89,7 +89,7 @@ def test_processor_leave_less_than_26_weeks(
         by_1, leave_duration, 2, fineos_absence_status=absence_status
     )[0]
     payment_factory = DelegatedPaymentFactory(
-        local_test_db_session, employee=by_1.employee, employer=employer,
+        local_test_db_session, employee=by_1.employee, employer=employer
     )
     payment = payment_factory.get_or_create_payment()
 
@@ -115,8 +115,8 @@ def test_processor_leave_greater_than_26_weeks(
     use_employee: Employee,
 ):
     """
-        Leave duration for a single employer exceeds the
-        the maximum 182 days (26 weeks).
+    Leave duration for a single employer exceeds the
+    the maximum 182 days (26 weeks).
     """
 
     leave_start_date = date(2021, 1, 5)
@@ -128,7 +128,7 @@ def test_processor_leave_greater_than_26_weeks(
     assert leave_duration_total == leave_duration
 
     payment_factory = DelegatedPaymentFactory(
-        local_test_db_session, employee=by_1.employee, employer=employer,
+        local_test_db_session, employee=by_1.employee, employer=employer
     )
     payment = payment_factory.get_or_create_payment()
 
@@ -155,9 +155,9 @@ def test_processor_leave_greater_than_26_weeks__multiple_employers_within_benefi
     local_initialize_factories_session,
 ):
     """
-        Leave duration for multiple employers exceed the
-        the maximum 182 days (26 weeks) for a single benefit year.
-        All absence periods within a single benefit year.
+    Leave duration for multiple employers exceed the
+    the maximum 182 days (26 weeks) for a single benefit year.
+    All absence periods within a single benefit year.
     """
 
     benefit_year_start_date = date(2021, 1, 3)
@@ -168,7 +168,7 @@ def test_processor_leave_greater_than_26_weeks__multiple_employers_within_benefi
 
     employee = EmployeeFactory.create()
     by = BenefitYearFactory.create(
-        employee=employee, start_date=benefit_year_start_date, end_date=benefit_year_end_date,
+        employee=employee, start_date=benefit_year_start_date, end_date=benefit_year_end_date
     )
 
     # Employer I
@@ -187,14 +187,10 @@ def test_processor_leave_greater_than_26_weeks__multiple_employers_within_benefi
 
     # Employer IV
     # does not exceeds maximum
-    _create_absence_data(
-        employee, [(start_date_A, 56)],
-    )
+    _create_absence_data(employee, [(start_date_A, 56)])
     # Employer V
     # does not exceeds maximum
-    _create_absence_data(
-        employee, [(start_date_A, 23)],
-    )
+    _create_absence_data(employee, [(start_date_A, 23)])
 
     payment_factory = DelegatedPaymentFactory(local_test_db_session, employee=employee)
     payment = payment_factory.get_or_create_payment()
@@ -237,9 +233,9 @@ def test_processor_leave_greater_than_26_weeks__multi_employers_multi_benefit_ye
     by_3: BenefitYear,
 ):
     """
-        Leave duration for multiple emlpoyers exceeds the
-        the maximum 182 days (26 weeks) across multiple benefit years.
-        Absence periods across multiple benefit years.
+    Leave duration for multiple emlpoyers exceeds the
+    the maximum 182 days (26 weeks) across multiple benefit years.
+    Absence periods across multiple benefit years.
     """
 
     # Benefit Year I

@@ -107,7 +107,7 @@ def test_total_leave_duration_post_processing(payment_post_processing_step, loca
     fineos_leave_request_id = 1234
     absence_period_end_date = absence_period_start_date + timedelta(weeks=26)
     BenefitYearFactory.create(
-        employee=employee, start_date=date(2021, 1, 3), end_date=date(2022, 1, 1),
+        employee=employee, start_date=date(2021, 1, 3), end_date=date(2022, 1, 1)
     )
     claim = ClaimFactory.create(
         fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
@@ -191,7 +191,7 @@ def test_name_mismatch_post_processing(payment_post_processing_step, local_test_
         .one_or_none()
     )
     assert audit_report_details.details["message"] == "\n".join(
-        ["DOR Name: Jane Smith", "FINEOS Name: Sam Jones",]
+        ["DOR Name: Jane Smith", "FINEOS Name: Sam Jones"]
     )
 
 

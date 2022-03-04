@@ -83,7 +83,7 @@ def get_users_post_required_fields_issues(
         if val is None:
             issues.append(
                 ValidationErrorDetail(
-                    type=IssueType.required, message=f"{field} is required", field=field,
+                    type=IssueType.required, message=f"{field} is required", field=field
                 )
             )
 
@@ -127,7 +127,7 @@ def get_users_post_employer_issues(employer: Optional[Employer]) -> List[Validat
     return issues
 
 
-def get_users_patch_issues(user_patch_request: UserUpdateRequest,) -> List[ValidationErrorDetail]:
+def get_users_patch_issues(user_patch_request: UserUpdateRequest) -> List[ValidationErrorDetail]:
     """Validate that the patch request has all required fields"""
     issues = []
 

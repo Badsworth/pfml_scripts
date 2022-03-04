@@ -25,7 +25,7 @@ def download_employer_file_from_moveit(
     reference_file_type_id = ReferenceFileType.DUA_EMPLOYER_FILE.reference_file_type_id
 
     copied_reference_files = download_files_from_moveit(
-        db_session, transfer_config, moveit_config, file_name, reference_file_type_id,
+        db_session, transfer_config, moveit_config, file_name, reference_file_type_id
     )
 
     if len(copied_reference_files) == 0:
@@ -94,7 +94,7 @@ def load_employer_file(
 
 
 def _load_employer_rows_from_file_path(
-    file_location: str, db_session: db.Session,
+    file_location: str, db_session: db.Session
 ) -> Tuple[int, int]:
 
     logger.info("Load Employer rows started", extra={"file_location": file_location})
@@ -107,8 +107,6 @@ def _load_employer_rows_from_file_path(
         DuaEmployer,
     )
 
-    logger.info(
-        "Load Employer rows finished", extra={"file_location": file_location, **result},
-    )
+    logger.info("Load Employer rows finished", extra={"file_location": file_location, **result})
 
     return result["total_row_count"], result["inserted_row_count"]

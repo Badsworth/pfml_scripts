@@ -117,7 +117,7 @@ def get_files_for_import(path: str) -> Tuple[Iterator[Any], Iterator[Any]]:
     return employer_files, employee_files
 
 
-def get_files_for_import_grouped_by_date(path: str,) -> Dict[str, Dict[str, str]]:
+def get_files_for_import_grouped_by_date(path: str) -> Dict[str, Dict[str, str]]:
     """Get the paths (s3 keys) of files in the received folder of the bucket"""
 
     files_by_date: Dict[str, Dict[str, str]] = {}

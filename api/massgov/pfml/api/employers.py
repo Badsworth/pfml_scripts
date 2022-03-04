@@ -59,7 +59,7 @@ def employer_add_fein() -> flask.Response:
                     type=IssueType.required,
                     message="employer_fein is required",
                 )
-            ],
+            ]
         )
 
     with app.db_session() as db_session:
@@ -78,7 +78,7 @@ def employer_add_fein() -> flask.Response:
 
         if employer is not None:
             link = UserLeaveAdministrator(
-                user_id=current_user.user_id, employer_id=employer.employer_id,
+                user_id=current_user.user_id, employer_id=employer.employer_id
             )
             db_session.add(link)
 

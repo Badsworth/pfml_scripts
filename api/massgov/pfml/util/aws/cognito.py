@@ -176,7 +176,7 @@ def disable_user_mfa(email: str) -> None:
 
     try:
         cognito_client.admin_set_user_mfa_preference(
-            SMSMfaSettings={"Enabled": False,}, Username=email, UserPoolId=cognito_user_pool_id
+            SMSMfaSettings={"Enabled": False}, Username=email, UserPoolId=cognito_user_pool_id
         )
     except Exception as error:
         if isinstance(error, ClientError) and "InvalidParameterException" in str(error.__class__):

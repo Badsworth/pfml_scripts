@@ -197,7 +197,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
             raise exception.FINEOSFatalClientSideError(method_name=method_name, cause=ex)
 
     def _request(
-        self, method: str, url: str, method_name: str, headers: Dict[str, str], **args: Any,
+        self, method: str, url: str, method_name: str, headers: Dict[str, str], **args: Any
     ) -> requests.Response:
         """Make a request and handle errors."""
         self.request_count += 1
@@ -268,7 +268,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
             if (
                 response.status_code
-                in (requests.codes.SERVICE_UNAVAILABLE, requests.codes.GATEWAY_TIMEOUT,)
+                in (requests.codes.SERVICE_UNAVAILABLE, requests.codes.GATEWAY_TIMEOUT)
                 or "ESOCKETTIMEDOUT" in response.text
             ):
                 # The service is unavailable for some reason. Log a warning. There should be a
@@ -285,18 +285,18 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 log_fn = logger.warning
             elif response.status_code == requests.codes.UNPROCESSABLE_ENTITY:
                 err = exception.FINEOSUnprocessableEntity(
-                    method_name, requests.codes.ok, response.status_code, message=response.text,
+                    method_name, requests.codes.ok, response.status_code, message=response.text
                 )
                 log_fn = logger.warning
                 log_validation_error(err, EXPECTED_UNPROCESSABLE_ENTITY_FAILURES)
             elif response.status_code == requests.codes.NOT_FOUND:
                 err = exception.FINEOSNotFound(
-                    method_name, requests.codes.ok, response.status_code, message=response.text,
+                    method_name, requests.codes.ok, response.status_code, message=response.text
                 )
                 log_fn = logger.warning
             elif response.status_code == requests.codes.FORBIDDEN:
                 err = exception.FINEOSForbidden(
-                    method_name, requests.codes.ok, response.status_code, message=response.text,
+                    method_name, requests.codes.ok, response.status_code, message=response.text
                 )
                 log_fn = logger.warning
             else:
@@ -451,7 +451,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
             raise
 
     @staticmethod
-    def _register_api_user_payload(employee_registration: models.EmployeeRegistration,) -> str:
+    def _register_api_user_payload(employee_registration: models.EmployeeRegistration) -> str:
         parameters = {
             "@xmlns:p": "http://www.fineos.com/wscomposer/EmployeeRegisterService",
             "config-name": "EmployeeRegisterService",
@@ -824,7 +824,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
     ) -> List[models.customer_api.ReadCustomerOccupation]:
 
         response = self._customer_api(
-            "GET", "customer/occupations", user_id, "get_customer_occupations_customer_api",
+            "GET", "customer/occupations", user_id, "get_customer_occupations_customer_api"
         )
 
         json = response.json()
@@ -837,7 +837,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         self, user_id: str, case_id: str
     ) -> List[models.customer_api.ReadCustomerOccupation]:
         response = self._customer_api(
-            "GET", f"customer/cases/{case_id}/occupations", user_id, "get_case_occupations",
+            "GET", f"customer/cases/{case_id}/occupations", user_id, "get_case_occupations"
         )
 
         json = response.json()
@@ -850,7 +850,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         self, user_id: str
     ) -> List[models.customer_api.PaymentPreferenceResponse]:
         response = self._customer_api(
-            "GET", "customer/paymentPreferences", user_id, "get_payment_preferences",
+            "GET", "customer/paymentPreferences", user_id, "get_payment_preferences"
         )
 
         json = response.json()
@@ -883,11 +883,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         worksite_id: Optional[str],
     ) -> None:
         xml_body = self._create_update_occupation_payload(
-            occupation_id,
-            employment_status,
-            hours_worked_per_week,
-            fineos_org_unit_id,
-            worksite_id,
+            occupation_id, employment_status, hours_worked_per_week, fineos_org_unit_id, worksite_id
         )
         self._wscomposer_request(
             "POST",
@@ -960,16 +956,16 @@ class FINEOSClient(client.AbstractFINEOSClient):
         content_type: str,
         description: str,
     ) -> models.customer_api.Document:
-        """ Upload a document to FINEOS using the Base64 endpoint, which accepts document content
-            through a Base64-encoded string.
+        """Upload a document to FINEOS using the Base64 endpoint, which accepts document content
+        through a Base64-encoded string.
 
-            FINEOS document uploads occur through an API Gateway --> Lambda function, so the max
-            request size is 6MB. However, since base64 encoding can bloat the file size by up to
-            33%, the effective file size is 4.5MB.
+        FINEOS document uploads occur through an API Gateway --> Lambda function, so the max
+        request size is 6MB. However, since base64 encoding can bloat the file size by up to
+        33%, the effective file size is 4.5MB.
 
-            The binary upload flag should be disabled on the FINEOS side when using this method;
-            if it's enabled, the effective file size reduces even further to 3.4-3.6MB.
-           """
+        The binary upload flag should be disabled on the FINEOS side when using this method;
+        if it's enabled, the effective file size reduces even further to 3.4-3.6MB.
+        """
         file_size = len(file_content)
         encoded_file_contents = base64.b64encode(file_content).decode("utf-8")
         file_name_root, file_extension = os.path.splitext(file_name)
@@ -1009,14 +1005,14 @@ class FINEOSClient(client.AbstractFINEOSClient):
         content_type: str,
         description: str,
     ) -> models.customer_api.Document:
-        """ Upload a document through the multipart/form-data API endpoint.
+        """Upload a document through the multipart/form-data API endpoint.
 
-            FINEOS document uploads occur through an API Gateway --> Lambda function.
-            The binary upload flag must be enabled on the FINEOS side in order for this
-            to function correctly; otherwise the documents will be blank when uploaded.
+        FINEOS document uploads occur through an API Gateway --> Lambda function.
+        The binary upload flag must be enabled on the FINEOS side in order for this
+        to function correctly; otherwise the documents will be blank when uploaded.
 
-            The max request size is 6MB (limited by AWS Lambda); however, in practice,
-            testing indicates that 4.5MB is the effective file size limit.
+        The max request size is 6MB (limited by AWS Lambda); however, in practice,
+        testing indicates that 4.5MB is the effective file size limit.
         """
         multipart_data = (
             ("documentContents", (file_name, file_content, content_type)),
@@ -1206,7 +1202,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         )
 
     def get_week_based_work_pattern(
-        self, user_id: str, occupation_id: Union[str, int],
+        self, user_id: str, occupation_id: Union[str, int]
     ) -> models.customer_api.WeekBasedWorkPattern:
 
         response = self._customer_api(

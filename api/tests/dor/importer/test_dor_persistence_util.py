@@ -40,13 +40,13 @@ def test_get_wages_and_contributions_by_employee_ids(test_db_session, initialize
     employee1 = EmployeeFactory.create()
     employee2 = EmployeeFactory.create()
     WagesAndContributionsFactory.create(
-        employee=employee1, employer=employer, filing_period=datetime.date(2020, 6, 30),
+        employee=employee1, employer=employer, filing_period=datetime.date(2020, 6, 30)
     )
     WagesAndContributionsFactory.create(
-        employee=employee1, employer=employer, filing_period=datetime.date(2020, 9, 30),
+        employee=employee1, employer=employer, filing_period=datetime.date(2020, 9, 30)
     )
     WagesAndContributionsFactory.create(
-        employee=employee2, employer=employer, filing_period=datetime.date(2020, 9, 30),
+        employee=employee2, employer=employer, filing_period=datetime.date(2020, 9, 30)
     )
     wages = util.get_wages_and_contributions_by_employee_ids(
         test_db_session, [employee1.employee_id, employee2.employee_id]

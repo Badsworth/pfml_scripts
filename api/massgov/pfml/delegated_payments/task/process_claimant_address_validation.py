@@ -15,10 +15,7 @@ logger = logging.get_logger(__name__)
 ALL = "ALL"
 VALIDATE_ADDRESSES = "validate-addresses"
 # REPORT = "report"
-ALLOWED_VALUES = [
-    ALL,
-    VALIDATE_ADDRESSES,
-]
+ALLOWED_VALUES = [ALL, VALIDATE_ADDRESSES]
 
 
 class Configuration:

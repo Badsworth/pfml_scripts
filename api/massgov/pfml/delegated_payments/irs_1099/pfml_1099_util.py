@@ -51,11 +51,7 @@ class Constants:
     STATE_WITHHOLDING_TYPE = "STATE"
 
 
-ACTIVE_STATES = [
-    Constants.CREATED_STATUS,
-    Constants.GENERATED_STATUS,
-    Constants.MERGED_STATUS,
-]
+ACTIVE_STATES = [Constants.CREATED_STATUS, Constants.GENERATED_STATUS, Constants.MERGED_STATUS]
 
 END_STATES = [
     Constants.COMPLETED_STATUS,
@@ -171,9 +167,9 @@ def get_payments(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
                                 (eft_payments.c.payment_id != is_none, eft_payments.c.ended_at),
                             ]
                         ).label("payment_date"),
-                        case(
-                            [(bank_errors.c.payment_id != is_none, bank_errors.c.ended_at),]
-                        ).label("cancel_date"),
+                        case([(bank_errors.c.payment_id != is_none, bank_errors.c.ended_at)]).label(
+                            "cancel_date"
+                        ),
                     )
                     .join(Claim, Payment.claim_id == Claim.claim_id)
                     .join(Employee, Claim.employee_id == Employee.employee_id)
@@ -211,7 +207,7 @@ def get_payments(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
                                     (
                                         bank_errors.c.payment_id != is_none,
                                         func.date_part("YEAR", bank_errors.c.ended_at),
-                                    ),
+                                    )
                                 ]
                             )
                             == year,
@@ -310,7 +306,7 @@ def get_payments(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
                         (eft_payments.c.payment_id != is_none, eft_payments.c.ended_at),
                     ]
                 ).label("payment_date"),
-                case([(bank_errors.c.payment_id != is_none, bank_errors.c.ended_at),]).label(
+                case([(bank_errors.c.payment_id != is_none, bank_errors.c.ended_at)]).label(
                     "cancel_date"
                 ),
             )
@@ -342,7 +338,7 @@ def get_payments(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
                             (
                                 bank_errors.c.payment_id != is_none,
                                 func.date_part("YEAR", bank_errors.c.ended_at),
-                            ),
+                            )
                         ]
                     )
                     == year,
@@ -486,7 +482,7 @@ def get_overpayments(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
                     FineosExtractVpei,
                     func.rank()
                     .over(
-                        order_by=[FineosExtractVpei.fineos_extract_import_log_id.desc(),],
+                        order_by=[FineosExtractVpei.fineos_extract_import_log_id.desc()],
                         partition_by=FineosExtractVpei.i,
                     )
                     .label("R"),
@@ -588,7 +584,7 @@ def get_overpayments(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
             FineosExtractVpei,
             func.rank()
             .over(
-                order_by=[FineosExtractVpei.fineos_extract_import_log_id.desc(),],
+                order_by=[FineosExtractVpei.fineos_extract_import_log_id.desc()],
                 partition_by=FineosExtractVpei.i,
             )
             .label("R"),
@@ -664,7 +660,7 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
                                         FineosExtractEmployeeFeed.effectivefrom == is_none,
                                         "1900-01-01",
                                     ),
-                                    (FineosExtractEmployeeFeed.effectivefrom == "", "1900-01-01",),
+                                    (FineosExtractEmployeeFeed.effectivefrom == "", "1900-01-01"),
                                 ],
                                 else_=FineosExtractEmployeeFeed.effectivefrom,
                             ),
@@ -733,7 +729,7 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
                         Pfml1099MMARSPayment.employee_id,
                         func.sum(Pfml1099MMARSPayment.payment_amount).label("GROSS_PAYMENTS"),
                     )
-                    .filter(Pfml1099MMARSPayment.pfml_1099_batch_id == batch.pfml_1099_batch_id,)
+                    .filter(Pfml1099MMARSPayment.pfml_1099_batch_id == batch.pfml_1099_batch_id)
                     .group_by(Pfml1099MMARSPayment.employee_id)
                     .subquery()
                 )
@@ -743,7 +739,7 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
                         Pfml1099Refund.employee_id,
                         func.sum(Pfml1099Refund.refund_amount).label("OVERPAYMENT_REPAYMENTS"),
                     )
-                    .filter(Pfml1099Refund.pfml_1099_batch_id == batch.pfml_1099_batch_id,)
+                    .filter(Pfml1099Refund.pfml_1099_batch_id == batch.pfml_1099_batch_id)
                     .group_by(Pfml1099Refund.employee_id)
                     .subquery()
                 )
@@ -776,7 +772,7 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
                             )
                         ).label("FEDERAL_TAX_WITHHOLDINGS"),
                     )
-                    .filter(Pfml1099Withholding.pfml_1099_batch_id == batch.pfml_1099_batch_id,)
+                    .filter(Pfml1099Withholding.pfml_1099_batch_id == batch.pfml_1099_batch_id)
                     .group_by(Pfml1099Withholding.employee_id)
                     .subquery()
                 )
@@ -806,7 +802,7 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
                         MmarsPaymentData.mmars_payment_data_id
                         == Pfml1099MMARSPayment.mmars_payment_id,
                     )
-                    .filter(Pfml1099MMARSPayment.pfml_1099_batch_id == batch.pfml_1099_batch_id,)
+                    .filter(Pfml1099MMARSPayment.pfml_1099_batch_id == batch.pfml_1099_batch_id)
                     .subquery()
                 )
 
@@ -849,7 +845,7 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
                         ),
                     )
                     .join(LkGeoState, Address.geo_state_id == LkGeoState.geo_state_id)
-                    .filter(Pfml1099Payment.pfml_1099_batch_id == batch.pfml_1099_batch_id,)
+                    .filter(Pfml1099Payment.pfml_1099_batch_id == batch.pfml_1099_batch_id)
                     .subquery()
                 )
 
@@ -1277,8 +1273,8 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
                 cast(
                     case(
                         [
-                            (FineosExtractEmployeeFeed.effectivefrom == is_none, "1900-01-01",),
-                            (FineosExtractEmployeeFeed.effectivefrom == "", "1900-01-01",),
+                            (FineosExtractEmployeeFeed.effectivefrom == is_none, "1900-01-01"),
+                            (FineosExtractEmployeeFeed.effectivefrom == "", "1900-01-01"),
                         ],
                         else_=FineosExtractEmployeeFeed.effectivefrom,
                     ),
@@ -1336,7 +1332,7 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
                 Pfml1099MMARSPayment.employee_id,
                 func.sum(Pfml1099MMARSPayment.payment_amount).label("GROSS_PAYMENTS"),
             )
-            .filter(Pfml1099MMARSPayment.pfml_1099_batch_id == batch.pfml_1099_batch_id,)
+            .filter(Pfml1099MMARSPayment.pfml_1099_batch_id == batch.pfml_1099_batch_id)
             .group_by(Pfml1099MMARSPayment.employee_id)
             .subquery()
         )
@@ -1346,7 +1342,7 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
                 Pfml1099Refund.employee_id,
                 func.sum(Pfml1099Refund.refund_amount).label("OVERPAYMENT_REPAYMENTS"),
             )
-            .filter(Pfml1099Refund.pfml_1099_batch_id == batch.pfml_1099_batch_id,)
+            .filter(Pfml1099Refund.pfml_1099_batch_id == batch.pfml_1099_batch_id)
             .group_by(Pfml1099Refund.employee_id)
             .subquery()
         )
@@ -1377,7 +1373,7 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
                     )
                 ).label("FEDERAL_TAX_WITHHOLDINGS"),
             )
-            .filter(Pfml1099Withholding.pfml_1099_batch_id == batch.pfml_1099_batch_id,)
+            .filter(Pfml1099Withholding.pfml_1099_batch_id == batch.pfml_1099_batch_id)
             .group_by(Pfml1099Withholding.employee_id)
             .subquery()
         )
@@ -1406,7 +1402,7 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
                 Pfml1099MMARSPayment,
                 MmarsPaymentData.mmars_payment_data_id == Pfml1099MMARSPayment.mmars_payment_id,
             )
-            .filter(Pfml1099MMARSPayment.pfml_1099_batch_id == batch.pfml_1099_batch_id,)
+            .filter(Pfml1099MMARSPayment.pfml_1099_batch_id == batch.pfml_1099_batch_id)
             .subquery()
         )
 
@@ -1449,7 +1445,7 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
                 ),
             )
             .join(LkGeoState, Address.geo_state_id == LkGeoState.geo_state_id)
-            .filter(Pfml1099Payment.pfml_1099_batch_id == batch.pfml_1099_batch_id,)
+            .filter(Pfml1099Payment.pfml_1099_batch_id == batch.pfml_1099_batch_id)
             .subquery()
         )
 
@@ -1690,9 +1686,7 @@ def get_1099_requests(db_session: db.Session) -> List[Pfml1099Request]:
         db_session.query(Pfml1099Request).filter(Pfml1099Request.pfml_1099_batch_id == is_none)
     ).all()
 
-    logger.info(
-        "Number of 1099 Requests: %s", len(requests),
-    )
+    logger.info("Number of 1099 Requests: %s", len(requests))
 
     return requests
 
@@ -1734,10 +1728,10 @@ def get_last_1099_batch_for_employee(
     year = get_tax_year()
 
     batch = (
-        db_session.query(Pfml1099Batch.pfml_1099_batch_id,)
+        db_session.query(Pfml1099Batch.pfml_1099_batch_id)
         .join(Pfml1099, Pfml1099Batch.pfml_1099_batch_id == Pfml1099.pfml_1099_batch_id)
         .filter(Pfml1099.employee_id == employee_id, Pfml1099Batch.tax_year == year)
-        .order_by(Pfml1099Batch.batch_run_date.desc(), Pfml1099Batch.created_at.desc(),)
+        .order_by(Pfml1099Batch.batch_run_date.desc(), Pfml1099Batch.created_at.desc())
         .first()
     )
 
@@ -1756,7 +1750,7 @@ def get_tax_year() -> int:
 
 def get_batch_counts(db_session: db.Session) -> Dict[int, int]:
     batches = (
-        db_session.query(Pfml1099Batch.tax_year, func.count(Pfml1099Batch.pfml_1099_batch_id),)
+        db_session.query(Pfml1099Batch.tax_year, func.count(Pfml1099Batch.pfml_1099_batch_id))
         .group_by(Pfml1099Batch.tax_year)
         .all()
     )
@@ -1766,7 +1760,7 @@ def get_batch_counts(db_session: db.Session) -> Dict[int, int]:
         year = record[0]
         count = record[1]
         logger.info(
-            "Batch year %i has %i entries.", year, count, extra={"tax_year": year, "count": count},
+            "Batch year %i has %i entries.", year, count, extra={"tax_year": year, "count": count}
         )
         batch_counts[year] = count
 
@@ -1776,7 +1770,7 @@ def get_batch_counts(db_session: db.Session) -> Dict[int, int]:
 def get_payment_counts(db_session: db.Session) -> Dict[str, int]:
     payments = (
         db_session.query(
-            Pfml1099Payment.pfml_1099_batch_id, func.count(Pfml1099Payment.pfml_1099_payment_id),
+            Pfml1099Payment.pfml_1099_batch_id, func.count(Pfml1099Payment.pfml_1099_payment_id)
         )
         .group_by(Pfml1099Payment.pfml_1099_batch_id)
         .all()
@@ -1787,7 +1781,7 @@ def get_payment_counts(db_session: db.Session) -> Dict[str, int]:
         batch = record[0]
         count = record[1]
         logger.info(
-            "Batch %i has %i payments.", batch, count, extra={"batch": batch, "count": count},
+            "Batch %i has %i payments.", batch, count, extra={"batch": batch, "count": count}
         )
         payment_counts[batch] = count
 
@@ -1809,7 +1803,7 @@ def get_mmars_payment_counts(db_session: db.Session) -> Dict[str, int]:
         batch = record[0]
         count = record[1]
         logger.info(
-            "Batch %i has %i MMARS payments.", batch, count, extra={"batch": batch, "count": count},
+            "Batch %i has %i MMARS payments.", batch, count, extra={"batch": batch, "count": count}
         )
         payment_counts[batch] = count
 
@@ -1826,9 +1820,7 @@ def get_1099_records_to_generate(db_session: db.Session, batchId: str) -> List[P
         .all()
     )
     if records is not None:
-        logger.info(
-            "Number of 1099 Records for batch [%s]: %s", batchId, len(records),
-        )
+        logger.info("Number of 1099 Records for batch [%s]: %s", batchId, len(records))
 
     return records
 
@@ -1843,9 +1835,7 @@ def get_1099_generated_count(db_session: db.Session, batchId: str) -> int:
         .all()
     )
     if records is not None:
-        logger.info(
-            "Number of 1099 Records generated prior [%s]: %s", batchId, len(records),
-        )
+        logger.info("Number of 1099 Records generated prior [%s]: %s", batchId, len(records))
 
     return len(records)
 

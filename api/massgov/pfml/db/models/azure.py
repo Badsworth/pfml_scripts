@@ -146,10 +146,7 @@ class AzurePermission(LookupTable):
 
 def sync_azure_permissions(db_session):
     """Insert every permission for non_prod and prod admin groups."""
-    group_ids = [
-        AzureGroup.NON_PROD_ADMIN.azure_group_id,
-        AzureGroup.PROD_ADMIN.azure_group_id,
-    ]
+    group_ids = [AzureGroup.NON_PROD_ADMIN.azure_group_id, AzureGroup.PROD_ADMIN.azure_group_id]
     permissions = AzurePermission.get_all()
     for group_id in group_ids:
         group_permission_ids = [
@@ -169,7 +166,7 @@ def sync_azure_permissions(db_session):
                 )
                 db_session.add(
                     AzureGroupPermission(
-                        azure_group_id=group_id, azure_permission_id=permission.azure_permission_id,
+                        azure_group_id=group_id, azure_permission_id=permission.azure_permission_id
                     )
                 )
     db_session.commit()

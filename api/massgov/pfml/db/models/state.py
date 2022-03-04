@@ -239,7 +239,7 @@ class State(LookupTable):
     )
 
     DELEGATED_PAYMENT_PROCESSED_ZERO_PAYMENT = LkState(
-        122, "Processed - $0 payment", Flow.DELEGATED_PAYMENT.flow_id,
+        122, "Processed - $0 payment", Flow.DELEGATED_PAYMENT.flow_id
     )
     DEPRECATED_DELEGATED_PAYMENT_ADD_ZERO_PAYMENT_TO_FINEOS_WRITEBACK = LkState(
         123, "DEPRECATED STATE - Add $0 payment to FINEOS Writeback", Flow.DELEGATED_PAYMENT.flow_id
@@ -249,7 +249,7 @@ class State(LookupTable):
     )
 
     DELEGATED_PAYMENT_PROCESSED_OVERPAYMENT = LkState(
-        125, "Processed - overpayment", Flow.DELEGATED_PAYMENT.flow_id,
+        125, "Processed - overpayment", Flow.DELEGATED_PAYMENT.flow_id
     )
     DEPRECATED_DELEGATED_PAYMENT_ADD_OVERPAYMENT_TO_FINEOS_WRITEBACK = LkState(
         126,
@@ -335,7 +335,7 @@ class State(LookupTable):
 
     # Delegated payment states for cancellations (similar to 122-127)
     DELEGATED_PAYMENT_PROCESSED_CANCELLATION = LkState(
-        145, "Processed - Cancellation", Flow.DELEGATED_PAYMENT.flow_id,
+        145, "Processed - Cancellation", Flow.DELEGATED_PAYMENT.flow_id
     )
     DEPRECATED_DELEGATED_PAYMENT_ADD_CANCELLATION_PAYMENT_TO_FINEOS_WRITEBACK = LkState(
         146,
@@ -350,7 +350,7 @@ class State(LookupTable):
 
     # Report states for employer reimbursement payment states
     DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT = LkState(
-        148, "Processed - Employer Reimbursement", Flow.DELEGATED_PAYMENT.flow_id,
+        148, "Processed - Employer Reimbursement", Flow.DELEGATED_PAYMENT.flow_id
     )
     DEPRECATED_DELEGATED_PAYMENT_ADD_EMPLOYER_REIMBURSEMENT_PAYMENT_TO_FINEOS_WRITEBACK = LkState(
         149,
@@ -391,7 +391,7 @@ class State(LookupTable):
         155, "Payment ready for address validation", Flow.DELEGATED_PAYMENT.flow_id
     )
     PAYMENT_FAILED_ADDRESS_VALIDATION = LkState(
-        156, "Payment failed address validation", Flow.DELEGATED_PAYMENT.flow_id,
+        156, "Payment failed address validation", Flow.DELEGATED_PAYMENT.flow_id
     )
 
     # 2nd writeback to FINEOS for successful checks
@@ -416,10 +416,10 @@ class State(LookupTable):
     ### Generic states used to send payment transaction statuses back to FINEOS
     ###  without preventing us from receiving them again in subsequent extracts
     DELEGATED_ADD_TO_FINEOS_WRITEBACK = LkState(
-        170, "Add to FINEOS writeback", Flow.DELEGATED_PEI_WRITEBACK.flow_id,
+        170, "Add to FINEOS writeback", Flow.DELEGATED_PEI_WRITEBACK.flow_id
     )
     DELEGATED_FINEOS_WRITEBACK_SENT = LkState(
-        171, "FINEOS writeback sent", Flow.DELEGATED_PEI_WRITEBACK.flow_id,
+        171, "FINEOS writeback sent", Flow.DELEGATED_PEI_WRITEBACK.flow_id
     )
 
     # Deprecated writeback states
@@ -557,7 +557,7 @@ class State(LookupTable):
     )
 
     PAYMENT_FAILED_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION = LkState(
-        200, "Payment failed max weekly benefit amount validation", Flow.DELEGATED_PAYMENT.flow_id,
+        200, "Payment failed max weekly benefit amount validation", Flow.DELEGATED_PAYMENT.flow_id
     )
 
     STATE_WITHHOLDING_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE = LkState(

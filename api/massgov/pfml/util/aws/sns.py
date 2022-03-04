@@ -19,7 +19,7 @@ def check_phone_number_opt_out(phone_number: str) -> bool:
     except Exception as error:
         if isinstance(error, ClientError) and "InvalidParameterException" in str(error.__class__):
             logger.error(
-                "Error checking SNS opt out list - Invalid parameter in request", exc_info=error,
+                "Error checking SNS opt out list - Invalid parameter in request", exc_info=error
             )
         else:
             logger.error("Error checking SNS opt out list", exc_info=error)
@@ -28,8 +28,8 @@ def check_phone_number_opt_out(phone_number: str) -> bool:
 
 def opt_in_phone_number(phone_number: str) -> None:
     """Opt a phone number back into receiving messages from SNS
-       We can only perform this operation for a given phone number once every 30 days.
-       Ref: https://docs.aws.amazon.com/sns/latest/api/API_OptInPhoneNumber.html
+    We can only perform this operation for a given phone number once every 30 days.
+    Ref: https://docs.aws.amazon.com/sns/latest/api/API_OptInPhoneNumber.html
     """
     client = create_sns_client()
     try:
@@ -37,13 +37,10 @@ def opt_in_phone_number(phone_number: str) -> None:
     except Exception as error:
         if isinstance(error, ClientError) and "InvalidParameterException" in str(error.__class__):
             logger.error(
-                "Error opting in phone number to SNS - Invalid parameter in request",
-                exc_info=error,
+                "Error opting in phone number to SNS - Invalid parameter in request", exc_info=error
             )
         if isinstance(error, ClientError) and "ThrottledException" in str(error.__class__):
-            logger.error(
-                "Error opting in phone number to SNS - Too many requests", exc_info=error,
-            )
+            logger.error("Error opting in phone number to SNS - Too many requests", exc_info=error)
         else:
             logger.error("Error opting in phone number to SNS", exc_info=error)
         raise error

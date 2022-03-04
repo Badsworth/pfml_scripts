@@ -95,9 +95,7 @@ def _update_ref_file(db_session: db.Session, ref_file: ReferenceFile) -> None:
     source_dir = s3_config.s3_dfml_outbound_directory_path
     destination_dir = s3_config.s3_dfml_archive_directory_path
 
-    payments_util.move_reference_file(
-        db_session, ref_file, source_dir, destination_dir,
-    )
+    payments_util.move_reference_file(db_session, ref_file, source_dir, destination_dir)
 
 
 def _update_state_log(db_session: db.Session, ref_file: ReferenceFile) -> None:

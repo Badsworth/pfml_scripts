@@ -402,7 +402,7 @@ class TestGetClaimReview:
 
     @freeze_time("2020-12-07")
     def test_employers_receive_200_from_get_claim_review(
-        self, client, employer_user, employer_auth_token, test_db_session, test_verification,
+        self, client, employer_user, employer_auth_token, test_db_session, test_verification
     ):
         employer = EmployerFactory.create(employer_fein="999999999", employer_dba="Acme Co")
         claim = ClaimFactory.create(employer_id=employer.employer_id)
@@ -418,7 +418,7 @@ class TestGetClaimReview:
 
         response = client.get(
             f"/v1/employers/claims/{claim.fineos_absence_id}/review",
-            headers={"Authorization": f"Bearer {employer_auth_token}",},
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
         )
         response_data = response.get_json()["data"]
 
@@ -441,7 +441,7 @@ class TestGetClaimReview:
 
     @freeze_time("2020-12-07")
     def test_second_eform_version_defaults_to_true(
-        self, client, employer_user, employer_auth_token, test_db_session, test_verification,
+        self, client, employer_user, employer_auth_token, test_db_session, test_verification
     ):
         employer = EmployerFactory.create(employer_fein="999999999", employer_dba="Acme Co")
         claim = ClaimFactory.create(employer_id=employer.employer_id)
@@ -457,7 +457,7 @@ class TestGetClaimReview:
 
         response = client.get(
             f"/v1/employers/claims/{claim.fineos_absence_id}/review",
-            headers={"Authorization": f"Bearer {employer_auth_token}",},
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
         )
         response_data = response.get_json()["data"]
 
@@ -502,11 +502,11 @@ class TestGetClaimReview:
                         "creationDate": date(2020, 1, 1),
                         "dateSuppressed": date(2020, 3, 1),
                     }
-                ),
+                )
             ]
 
         monkeypatch.setattr(
-            MockFINEOSClient, "get_managed_requirements", patched_managed_requirements,
+            MockFINEOSClient, "get_managed_requirements", patched_managed_requirements
         )
 
         response = client.get(
@@ -517,11 +517,11 @@ class TestGetClaimReview:
 
     @freeze_time("2020-12-07")
     def test_employers_with_int_hours_worked_per_week_receive_200_from_get_claim_review(
-        self, client, employer_user, employer_auth_token, test_db_session, test_verification,
+        self, client, employer_user, employer_auth_token, test_db_session, test_verification
     ):
         employer = EmployerFactory.create(employer_fein="999999999", employer_dba="Acme Co")
         ClaimFactory.create(
-            employer_id=employer.employer_id, fineos_absence_id="int_fake_hours_worked_per_week",
+            employer_id=employer.employer_id, fineos_absence_id="int_fake_hours_worked_per_week"
         )
 
         link = UserLeaveAdministrator(
@@ -952,7 +952,7 @@ class TestGetClaimReview:
         db_periods = (
             test_db_session.query(AbsencePeriod)
             .join(Claim)
-            .filter(Claim.claim_id == claim.claim_id,)
+            .filter(Claim.claim_id == claim.claim_id)
             .all()
         )
         assert len(db_periods) == 0
@@ -1000,7 +1000,7 @@ class TestGetClaimReview:
 
     @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence_period_decisions")
     def test_employer_get_claim_review_withdrawn_claim_no_absence_period_decisions(
-        self, mock_get_absence, client, employer_auth_token, claim,
+        self, mock_get_absence, client, employer_auth_token, claim
     ):
         mock_get_absence.return_value = PeriodDecisions()
         response = client.get(
@@ -1082,7 +1082,7 @@ class TestGetClaimReview:
 
     @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence_period_decisions")
     def test_employer_get_claim_returns_absence_periods_from_fineos(
-        self, mock_get_absence, client, employer_auth_token, mock_absence_details_create, claim,
+        self, mock_get_absence, client, employer_auth_token, mock_absence_details_create, claim
     ):
         mock_get_absence.return_value = mock_absence_details_create
         response = client.get(
@@ -1190,7 +1190,7 @@ class TestUpdateClaim:
         assert response.get_json().get("message") == "Invalid claim review body"
 
     def test_employer_update_claim_review_validates_previous_leaves_length(
-        self, client, employer_auth_token, update_claim_body, claim,
+        self, client, employer_auth_token, update_claim_body, claim
     ):
         previous_leaves = [
             {
@@ -1368,9 +1368,7 @@ class TestUpdateClaim:
             return ClaimFactory.create(employer_id=employer.employer_id)
 
         @pytest.fixture
-        def complete_valid_fineos_managed_requirement(
-            self, fineos_man_req,
-        ):
+        def complete_valid_fineos_managed_requirement(self, fineos_man_req):
             return fineos_man_req()
 
         @pytest.fixture
@@ -1496,7 +1494,7 @@ class TestUpdateClaim:
     ):
         employer = EmployerFactory.create()
         ClaimFactory.create(
-            employer_id=employer.employer_id, fineos_absence_id="NTN-CASE-WITHOUT-OUTSTANDING-INFO",
+            employer_id=employer.employer_id, fineos_absence_id="NTN-CASE-WITHOUT-OUTSTANDING-INFO"
         )
         link = UserLeaveAdministrator(
             user_id=employer_user.user_id,
@@ -1540,7 +1538,7 @@ class TestUpdateClaim:
 
         # confirmation is not sent if there is not Employer confirmation outstanding info
         ClaimFactory.create(
-            employer_id=employer.employer_id, fineos_absence_id="NTN-CASE-WITHOUT-OUTSTANDING-INFO",
+            employer_id=employer.employer_id, fineos_absence_id="NTN-CASE-WITHOUT-OUTSTANDING-INFO"
         )
 
         massgov.pfml.fineos.mock_client.start_capture()
@@ -1558,7 +1556,7 @@ class TestUpdateClaim:
                 "get_outstanding_information",
                 "fake-fineos-web-id",
                 {"case_id": "NTN-CASE-WITHOUT-OUTSTANDING-INFO"},
-            ),
+            )
         ]
 
         # confirmation is not sent if there are amendments
@@ -1988,7 +1986,7 @@ class TestGetClaimEndpoint:
 
     def test_get_claim_claim_does_not_exist(self, caplog, client, auth_token):
         response = client.get(
-            "/v1/claims/NTN-100-ABS-01", headers={"Authorization": f"Bearer {auth_token}"},
+            "/v1/claims/NTN-100-ABS-01", headers={"Authorization": f"Bearer {auth_token}"}
         )
 
         assert response.status_code == 404
@@ -2010,12 +2008,12 @@ class TestGetClaimEndpoint:
         assert "User does not have access to claim." in caplog.text
 
     def test_get_claim_as_employer_returns_403(
-        self, client, employer_auth_token, employer_user, test_db_session, test_verification,
+        self, client, employer_auth_token, employer_user, test_db_session, test_verification
     ):
         employer = EmployerFactory.create()
         employee = EmployeeFactory.create()
         claim = ClaimFactory.create(
-            employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+            employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1
         )
 
         link = UserLeaveAdministrator(
@@ -2318,7 +2316,7 @@ class TestGetClaimsEndpoint:
 
         generated_claims = [
             ClaimFactory.create(
-                employer=employerA, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+                employer=employerA, employee=employee, fineos_absence_status_id=1, claim_type_id=1
             )
             for _ in range(3)
         ]
@@ -2340,7 +2338,7 @@ class TestGetClaimsEndpoint:
 
         # GET /claims deprecated
         response = client.get(
-            "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"},
+            "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"}
         )
 
         assert response.status_code == 200
@@ -2352,9 +2350,7 @@ class TestGetClaimsEndpoint:
 
         # POST /claims/search
         response = client.post(
-            "/v1/claims/search",
-            headers={"Authorization": f"Bearer {employer_auth_token}"},
-            json={},
+            "/v1/claims/search", headers={"Authorization": f"Bearer {employer_auth_token}"}, json={}
         )
 
         assert response.status_code == 200
@@ -2372,7 +2368,7 @@ class TestGetClaimsEndpoint:
 
         generated_claims = [
             ClaimFactory.create(
-                employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+                employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1
             )
             for _ in range(3)
         ]
@@ -2413,7 +2409,7 @@ class TestGetClaimsEndpoint:
 
         for _ in range(30):
             ClaimFactory.create(
-                employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+                employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1
             )
 
         link = UserLeaveAdministrator(
@@ -2602,7 +2598,7 @@ class TestGetClaimsEndpoint:
 
         # GET /claims deprecated
         response = client.get(
-            "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"},
+            "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"}
         )
 
         assert response.status_code == 200
@@ -2764,7 +2760,7 @@ class TestGetClaimsEndpoint:
                         date_end=date(2021, 1, 15),
                     ),
                 )
-                claim = Claim(employer=employer, fineos_absence_status_id=6, claim_type_id=1,)
+                claim = Claim(employer=employer, fineos_absence_status_id=6, claim_type_id=1)
                 test_db_session.add(claim)
             self.claims_count = 20
             test_db_session.commit()
@@ -3112,7 +3108,7 @@ class TestGetClaimsEndpoint:
 
         for _ in range(5):
             ClaimFactory.create(
-                employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+                employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1
             )
 
         link = UserLeaveAdministrator(
@@ -3176,21 +3172,21 @@ class TestGetClaimsEndpoint:
         employee = EmployeeFactory.create()
 
         ClaimFactory.create(
-            employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+            employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1
         )
 
         new_claim = ClaimFactory.create(
-            employer=employerB, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+            employer=employerB, employee=employee, fineos_absence_status_id=1, claim_type_id=1
         )
         ApplicationFactory.create(user=user, claim=new_claim)
 
         new_claim2 = ClaimFactory.create(
-            employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+            employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1
         )
         ApplicationFactory.create(user=user, claim=new_claim2)
 
         ClaimFactory.create(
-            employer=employerC, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+            employer=employerC, employee=employee, fineos_absence_status_id=1, claim_type_id=1
         )
 
         test_db_session.commit()
@@ -3228,7 +3224,7 @@ class TestGetClaimsEndpoint:
 
         for _ in range(5):
             ClaimFactory.create(
-                employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+                employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1
             )
 
         link = UserLeaveAdministrator(
@@ -3293,12 +3289,10 @@ class TestGetClaimsEndpoint:
         employee = EmployeeFactory.create()
 
         ClaimFactory.create(
-            employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+            employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1
         )
         for _ in range(5):
-            ClaimFactory.create(
-                employer=employer, fineos_absence_status_id=1, claim_type_id=1,
-            )
+            ClaimFactory.create(employer=employer, fineos_absence_status_id=1, claim_type_id=1)
 
         link = UserLeaveAdministrator(
             user_id=employer_user.user_id,
@@ -3359,12 +3353,10 @@ class TestGetClaimsEndpoint:
         employee = EmployeeFactory.create()
 
         ClaimFactory.create(
-            employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+            employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1
         )
         for _ in range(5):
-            ClaimFactory.create(
-                employer=employer, fineos_absence_status_id=1, claim_type_id=1,
-            )
+            ClaimFactory.create(employer=employer, fineos_absence_status_id=1, claim_type_id=1)
 
         link = UserLeaveAdministrator(
             user_id=employer_user.user_id,
@@ -3426,12 +3418,12 @@ class TestGetClaimsEndpoint:
         employee2 = EmployeeFactory.create()
 
         ClaimFactory.create(
-            employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+            employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1
         )
 
         for _ in range(5):
             ClaimFactory.create(
-                employer=employer, employee=employee2, fineos_absence_status_id=1, claim_type_id=1,
+                employer=employer, employee=employee2, fineos_absence_status_id=1, claim_type_id=1
             )
 
         link = UserLeaveAdministrator(
@@ -3517,7 +3509,7 @@ class TestGetClaimsEndpoint:
 
         for _ in range(3):
             new_claim = ClaimFactory.create(
-                employer=employer, employee=employeeA, fineos_absence_status_id=1, claim_type_id=1,
+                employer=employer, employee=employeeA, fineos_absence_status_id=1, claim_type_id=1
             )
             generated_claims.append(new_claim)
             ApplicationFactory.create(user=user, claim=new_claim)
@@ -3578,7 +3570,7 @@ class TestGetClaimsEndpoint:
 
         for _ in range(3):
             new_claim = ClaimFactory.create(
-                employer=employer, employee=employeeA, fineos_absence_status_id=1, claim_type_id=1,
+                employer=employer, employee=employeeA, fineos_absence_status_id=1, claim_type_id=1
             )
             generated_claims.append(new_claim)
             ApplicationFactory.create(user=user, claim=new_claim)
@@ -3590,7 +3582,7 @@ class TestGetClaimsEndpoint:
         )
 
         # GET /claims deprecated
-        response = client.get("/v1/claims", headers={"Authorization": f"Bearer {auth_token}"},)
+        response = client.get("/v1/claims", headers={"Authorization": f"Bearer {auth_token}"})
 
         assert response.status_code == 200
         response_body = response.get_json()
@@ -3625,7 +3617,7 @@ class TestGetClaimsEndpoint:
 
         for _ in range(5):
             ClaimFactory.create(
-                employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+                employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1
             )
 
         link = UserLeaveAdministrator(
@@ -3656,14 +3648,12 @@ class TestGetClaimsEndpoint:
 
         test_db_session.commit()
         monkeypatch.setattr(
-            massgov.pfml.api.claims,
-            "CLAIMS_DASHBOARD_BLOCKED_FEINS",
-            set([employer.employer_fein]),
+            massgov.pfml.api.claims, "CLAIMS_DASHBOARD_BLOCKED_FEINS", set([employer.employer_fein])
         )
 
         # GET /claims deprecated
         response = client.get(
-            "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"},
+            "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"}
         )
 
         assert response.status_code == 200
@@ -3691,9 +3681,7 @@ class TestGetClaimsEndpoint:
         employer = EmployerFactory.create()
 
         for _ in range(5):
-            ClaimFactory.create(
-                employer=employer, fineos_absence_status_id=1, claim_type_id=1,
-            )
+            ClaimFactory.create(employer=employer, fineos_absence_status_id=1, claim_type_id=1)
 
         link = UserLeaveAdministrator(
             user_id=employer_user.user_id,
@@ -3739,7 +3727,7 @@ class TestGetClaimsEndpoint:
                 claim_type_id=1,
             )
 
-        response = client.get("/v1/claims", headers={"Authorization": f"Bearer {auth_token}"},)
+        response = client.get("/v1/claims", headers={"Authorization": f"Bearer {auth_token}"})
 
         assert response.status_code == 200
         response_body = response.get_json()
@@ -3850,7 +3838,7 @@ class TestGetClaimsEndpoint:
                     )
                     claims.append(claim)
             for _ in range(self.NUM_CLAIM_PER_STATUS):  # for fineos_absence_status = NULL
-                claim = ClaimFactory.create(employer=employer, employee=employee, claim_type_id=1,)
+                claim = ClaimFactory.create(employer=employer, employee=employee, claim_type_id=1)
                 claims.append(claim)
             return claims
 
@@ -3878,7 +3866,7 @@ class TestGetClaimsEndpoint:
             test_db_session.commit()
 
         def _perform_api_call(self, url, client, employer_auth_token):
-            return client.get(url, headers={"Authorization": f"Bearer {employer_auth_token}"},)
+            return client.get(url, headers={"Authorization": f"Bearer {employer_auth_token}"})
 
         def _perform_assertions(self, response, status_code, expected_claims):
             expected_claims_fineos_absence_id = [
@@ -4068,7 +4056,7 @@ class TestGetClaimsEndpoint:
             for _ in range(5):
                 end = start + timedelta(days=10)
                 period = AbsencePeriodFactory.create(
-                    claim=claim, absence_period_start_date=start, absence_period_end_date=end,
+                    claim=claim, absence_period_start_date=start, absence_period_end_date=end
                 )
                 periods.append(period)
                 start = start + timedelta(days=20)
@@ -4143,7 +4131,7 @@ class TestGetClaimsEndpoint:
             self, client, employer_auth_token, claim, claim_no_absence_period, absence_periods
         ):
             resp = client.get(
-                "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"},
+                "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"}
             )
             assert resp.status_code == 200
             response_body = resp.get_json()
@@ -4244,15 +4232,15 @@ class TestGetClaimsEndpoint:
 
         @pytest.fixture()
         def claim(self, employer, employee):
-            return ClaimFactory.create(employer=employer, employee=employee, claim_type_id=1,)
+            return ClaimFactory.create(employer=employer, employee=employee, claim_type_id=1)
 
         @pytest.fixture
         def claim_pending_no_action(self, employer, employee):
-            return ClaimFactory.create(employer=employer, employee=employee, claim_type_id=1,)
+            return ClaimFactory.create(employer=employer, employee=employee, claim_type_id=1)
 
         @pytest.fixture
         def claim_expired_requirements(self, employer, employee):
-            return ClaimFactory.create(employer=employer, employee=employee, claim_type_id=1,)
+            return ClaimFactory.create(employer=employer, employee=employee, claim_type_id=1)
 
         @pytest.fixture
         def third_claim(self, employer, employee):
@@ -4323,7 +4311,7 @@ class TestGetClaimsEndpoint:
             ]
 
         def test_claim_managed_requirements(
-            self, client, employer_auth_token, claim, old_managed_requirements,
+            self, client, employer_auth_token, claim, old_managed_requirements
         ):
             self._add_managed_requirements_to_claim(claim, ManagedRequirementStatus.OPEN, 2)
             self._add_managed_requirements_to_claim(claim, ManagedRequirementStatus.COMPLETE)
@@ -4630,7 +4618,7 @@ class TestGetClaimsEndpoint:
 
         def perform_search(self, search_string, client, token):
             return client.get(
-                f"/v1/claims?search={search_string}", headers={"Authorization": f"Bearer {token}"},
+                f"/v1/claims?search={search_string}", headers={"Authorization": f"Bearer {token}"}
             )
 
         def perform_search_with_headers(self, search_string, client, headers):
@@ -4654,7 +4642,7 @@ class TestGetClaimsEndpoint:
             response_body = response.get_json()
 
             claim = next(
-                (c for c in response_body["data"] if c["fineos_absence_id"] == XAbsenceCase), None,
+                (c for c in response_body["data"] if c["fineos_absence_id"] == XAbsenceCase), None
             )
             assert claim is not None
 
@@ -4666,7 +4654,7 @@ class TestGetClaimsEndpoint:
             employee2 = EmployeeFactory.create()
 
             ClaimFactory.create(
-                employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
+                employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1
             )
 
             for _ in range(5):
@@ -4756,7 +4744,7 @@ class TestGetClaimsEndpoint:
             response_body = response.get_json()
 
             claim = next(
-                (c for c in response_body["data"] if c["fineos_absence_id"] == XAbsenceCase), None,
+                (c for c in response_body["data"] if c["fineos_absence_id"] == XAbsenceCase), None
             )
             assert claim is not None
 
@@ -4893,7 +4881,7 @@ class TestGetClaimsEndpoint:
 
         def test_get_claims_search_not_used(self, client, employer_auth_token):
             response = client.get(
-                "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"},
+                "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"}
             )
             assert response.status_code == 200
             response_body = response.get_json()
@@ -4983,7 +4971,7 @@ class TestGetClaimsEndpoint:
 
         def perform_search(self, search_string, client, token):
             return client.get(
-                f"/v1/claims?search={search_string}", headers={"Authorization": f"Bearer {token}"},
+                f"/v1/claims?search={search_string}", headers={"Authorization": f"Bearer {token}"}
             )
 
         def test_get_claims_search_full_name(self, client, employer_auth_token, full_name_employee):
@@ -5296,7 +5284,7 @@ class TestGetClaimsEndpoint:
             # always withdrawn for other employee claims
             for i in range(5):
                 employee_claim = ClaimFactory.create(
-                    employer=employer, employee=employee, claim_type_id=1,
+                    employer=employer, employee=employee, claim_type_id=1
                 )
                 other_employee_claim = ClaimFactory.create(
                     employer=other_employer,
@@ -5488,7 +5476,7 @@ class TestEmployerWithOrgUnitsAccess:
     @pytest.fixture
     def claim_with_same_org_unit(self, leave_admin_org_unit):
         claim = ClaimFactory.create(
-            employer_id=leave_admin_org_unit.employer_id, organization_unit=leave_admin_org_unit,
+            employer_id=leave_admin_org_unit.employer_id, organization_unit=leave_admin_org_unit
         )
         return claim
 
@@ -5547,7 +5535,7 @@ class TestEmployerWithOrgUnitsAccess:
         assert response.status_code == 200
 
     def test_employers_cannot_view_claims_not_in_their_organization_units(
-        self, client, employer_auth_token, claim_with_same_org_unit, non_leave_admin_org_unit,
+        self, client, employer_auth_token, claim_with_same_org_unit, non_leave_admin_org_unit
     ):
         generated_claims = ClaimFactory.create_batch(
             size=3,
@@ -5560,7 +5548,7 @@ class TestEmployerWithOrgUnitsAccess:
 
         # GET /claims deprecated
         response = client.get(
-            "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"},
+            "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"}
         )
 
         response_body = response.get_json()
@@ -5602,7 +5590,7 @@ class TestEmployerWithOrgUnitsAccess:
         )
         # GET /claims deprecated
         response = client.get(
-            "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"},
+            "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"}
         )
 
         response_body = response.get_json()
@@ -5621,7 +5609,7 @@ class TestEmployerWithOrgUnitsAccess:
         assert len(claim_data) == 0
 
     def test_employers_can_view_claims_with_their_organization_units(
-        self, client, employer_auth_token, claim_with_same_org_unit,
+        self, client, employer_auth_token, claim_with_same_org_unit
     ):
         generated_claims = [claim_with_same_org_unit]
         generated_claims.extend(
@@ -5637,7 +5625,7 @@ class TestEmployerWithOrgUnitsAccess:
 
         # GET /claims deprecated
         response = client.get(
-            "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"},
+            "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"}
         )
 
         response_body = response.get_json()
@@ -5710,7 +5698,7 @@ class TestEmployerWithOrgUnitsAccess:
 
     @mock.patch("massgov.pfml.api.claims.download_document_as_leave_admin")
     def test_employers_can_download_documents_with_claims_organization_unit(
-        self, mock_download, document_data, client, employer_auth_token, claim_with_same_org_unit,
+        self, mock_download, document_data, client, employer_auth_token, claim_with_same_org_unit
     ):
         mock_download.return_value = document_data
         request_params = EmployerDocumentDownloadRequestParams(
@@ -5720,7 +5708,7 @@ class TestEmployerWithOrgUnitsAccess:
         assert response.status_code == 200
 
     def test_employers_cannot_update_claim_without_claims_organization_unit(
-        self, client, claim_with_different_org_unit, employer_auth_token, update_claim_body,
+        self, client, claim_with_different_org_unit, employer_auth_token, update_claim_body
     ):
         response = client.patch(
             f"/v1/employers/claims/{claim_with_different_org_unit.fineos_absence_id}/review",
@@ -5734,7 +5722,7 @@ class TestEmployerWithOrgUnitsAccess:
         )
 
     def test_employers_cannot_update_claim_with_invalid_organization_unit(
-        self, client, claim_with_invalid_org_unit, employer_auth_token, update_claim_body,
+        self, client, claim_with_invalid_org_unit, employer_auth_token, update_claim_body
     ):
         response = client.patch(
             f"/v1/employers/claims/{claim_with_invalid_org_unit.fineos_absence_id}/review",
@@ -5909,9 +5897,7 @@ class TestReviewByFilter:
             fineos_absence_id = claim.get("fineos_absence_id", None)
             assert fineos_absence_id in expected_claims_fineos_absence_id
 
-    def test_review_by_filter(
-        self, client, employer_auth_token, review_by_claims,
-    ):
+    def test_review_by_filter(self, client, employer_auth_token, review_by_claims):
         resp = client.get(
             "/v1/claims?claim_status=Open+requirement",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -5974,7 +5960,7 @@ class TestPostChangeRequest:
     @mock.patch("massgov.pfml.api.claims.claim_rules.get_change_request_issues", return_value=[])
     @mock.patch("massgov.pfml.api.claims.get_claim_from_db", return_value=None)
     def test_missing_claim(
-        self, mock_get_claim, mock_change_request_issues, auth_token, claim, client, request_body,
+        self, mock_get_claim, mock_change_request_issues, auth_token, claim, client, request_body
     ):
         response = client.post(
             "/v1/change-request?fineos_absence_id={}".format(claim.fineos_absence_id),
@@ -6002,7 +5988,7 @@ class TestPostChangeRequest:
 class TestGetChangeRequests:
     @mock.patch("massgov.pfml.api.services.claims.get_change_requests_from_db")
     def test_successful_get_request(
-        self, mock_get_change_requests_from_db, claim, change_request, client, auth_token, user,
+        self, mock_get_change_requests_from_db, claim, change_request, client, auth_token, user
     ):
         mock_get_change_requests_from_db.return_value = [change_request]
 
@@ -6018,7 +6004,7 @@ class TestGetChangeRequests:
 
     @mock.patch("massgov.pfml.api.services.claims.get_change_requests_from_db")
     def test_successful_get_request_no_change_requests(
-        self, mock_get_change_requests_from_db, claim, client, auth_token, user,
+        self, mock_get_change_requests_from_db, claim, client, auth_token, user
     ):
         mock_get_change_requests_from_db.return_value = []
 
@@ -6031,9 +6017,7 @@ class TestGetChangeRequests:
         response_body = response.get_json()
         assert len(response_body["data"]["change_requests"]) == 0
 
-    def test_no_existing_claim(
-        self, client, auth_token, user,
-    ):
+    def test_no_existing_claim(self, client, auth_token, user):
         response = client.get(
             "/v1/change-request?fineos_absence_id={}".format("fake_absence_id"),
             headers={"Authorization": f"Bearer {auth_token}"},
@@ -6043,9 +6027,7 @@ class TestGetChangeRequests:
         response_body = response.get_json()
         assert response_body["message"] == "Claim does not exist for given absence ID"
 
-    def test_unauthorized_user_unsuccessful(
-        self, claim, client, user,
-    ):
+    def test_unauthorized_user_unsuccessful(self, claim, client, user):
         response = client.get(
             "/v1/change-request?fineos_absence_id={}".format(claim.fineos_absence_id),
             headers={"Authorization": "Bearer fake_auth_token"},

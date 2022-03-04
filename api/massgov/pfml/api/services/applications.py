@@ -160,7 +160,7 @@ def process_fully_masked_field(
 def process_masked_address(
     field_key: str, body: Dict[str, Any], existing_address: Address
 ) -> List[ValidationErrorDetail]:
-    """ Handle masked addresses (mailing or residential) """
+    """Handle masked addresses (mailing or residential)"""
     address = body.get(field_key)
     errors = []
     if address:
@@ -201,7 +201,7 @@ def process_masked_address(
 def process_masked_phone_number(
     field_key: str, body: Dict[str, Any], existing_phone: Phone
 ) -> List[ValidationErrorDetail]:
-    """ Handle masked phone number """
+    """Handle masked phone number"""
     phone = body.get(field_key)
     errors = []
 
@@ -406,13 +406,13 @@ def update_from_request(
 
         if key == "previous_leaves_other_reason":
             set_previous_leaves(
-                db_session, body.previous_leaves_other_reason, application, "other_reason",
+                db_session, body.previous_leaves_other_reason, application, "other_reason"
             )
             continue
 
         if key == "previous_leaves_same_reason":
             set_previous_leaves(
-                db_session, body.previous_leaves_same_reason, application, "same_reason",
+                db_session, body.previous_leaves_same_reason, application, "same_reason"
             )
             continue
 
@@ -472,7 +472,7 @@ def add_or_update_caring_leave_metadata(
 
         if key == "relationship_to_caregiver" and value is not None:
             relationship_to_caregiver_model = db_lookups.by_value(
-                db_session, value.get_lookup_model(), value,
+                db_session, value.get_lookup_model(), value
             )
             if relationship_to_caregiver_model:
                 value = relationship_to_caregiver_model
@@ -891,7 +891,7 @@ def set_previous_leaves(
 
 
 def add_or_update_phone(
-    db_session: db.Session, phone: Optional[common_io.Phone], application: Application,
+    db_session: db.Session, phone: Optional[common_io.Phone], application: Application
 ) -> None:
     if not phone:
         return
@@ -1008,7 +1008,7 @@ def claim_is_valid_for_application_import(
 
 
 def set_application_fields_from_db_claim(
-    fineos: AbstractFINEOSClient, application: Application, claim: Claim, db_session: db.Session,
+    fineos: AbstractFINEOSClient, application: Application, claim: Claim, db_session: db.Session
 ) -> None:
     """
     Set Application core fields using Claim
@@ -1290,7 +1290,7 @@ def minutes_from_hours_minutes(hours: int, minutes: int) -> int:
 
 
 def set_employment_status_and_occupations(
-    fineos_client: AbstractFINEOSClient, fineos_web_id: str, application: Application,
+    fineos_client: AbstractFINEOSClient, fineos_web_id: str, application: Application
 ) -> None:
     occupations = fineos_client.get_customer_occupations_customer_api(
         fineos_web_id, application.tax_identifier.tax_identifier
@@ -1530,9 +1530,5 @@ def set_other_leaves(
 
         application.has_previous_leaves_other_reason = len(other_leaves) > 0
         application.has_previous_leaves_same_reason = len(same_leaves) > 0
-        set_previous_leaves(
-            db_session, other_leaves, application, "other_reason",
-        )
-        set_previous_leaves(
-            db_session, same_leaves, application, "same_reason",
-        )
+        set_previous_leaves(db_session, other_leaves, application, "other_reason")
+        set_previous_leaves(db_session, same_leaves, application, "same_reason")

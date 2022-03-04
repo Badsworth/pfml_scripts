@@ -23,9 +23,9 @@ def upgrade():
         sa.Column("dua_reduction_payment_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("reference_file_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.ForeignKeyConstraint(
-            ["dua_reduction_payment_id"], ["dua_reduction_payment.dua_reduction_payment_id"],
+            ["dua_reduction_payment_id"], ["dua_reduction_payment.dua_reduction_payment_id"]
         ),
-        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"],),
+        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"]),
         sa.PrimaryKeyConstraint("dua_reduction_payment_id", "reference_file_id"),
     )
     # ### end Alembic commands ###

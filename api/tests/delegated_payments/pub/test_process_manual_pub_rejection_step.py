@@ -290,7 +290,7 @@ def test_process_manual_pub_reject_records_payment_not_in_expected_state(
 
     # No state change
     assert_payment_state(
-        payment, Flow.DELEGATED_PAYMENT, State.DELEGATED_PAYMENT_COMPLETE, local_test_db_session,
+        payment, Flow.DELEGATED_PAYMENT, State.DELEGATED_PAYMENT_COMPLETE, local_test_db_session
     )
 
     assert_pub_error(

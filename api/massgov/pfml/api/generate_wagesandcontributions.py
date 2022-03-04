@@ -124,8 +124,8 @@ def get_or_create_wages_and_contributions(
 
 def generate(employer_fein: str, employee_ssn: str, db_session: db.Session) -> None:
     """
-        Generates a WagesAndContributions record for the provided employeer_fein and employee_ssn combo
-        If Employer, Employee, or TaxIdentifier records do not exist, generates a record using faker
+    Generates a WagesAndContributions record for the provided employeer_fein and employee_ssn combo
+    If Employer, Employee, or TaxIdentifier records do not exist, generates a record using faker
     """
     employer = get_or_create_employer(employer_fein, db_session)
     employer.fineos_employer_id = random.getrandbits(8)

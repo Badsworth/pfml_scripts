@@ -73,12 +73,10 @@ def log_validation_error(
 
 
 def db_operational_error_handler(operational_error: OperationalError) -> Response:
-    log_attr = {
-        "error.class": "sqlalchemy.exc.OperationalError",
-    }
+    log_attr = {"error.class": "sqlalchemy.exc.OperationalError"}
     logger.warning(operational_error.detail, extra=log_attr, exc_info=True)
     return response_util.error_response(
-        status_code=ServiceUnavailable, message="database service unavailable", errors=[],
+        status_code=ServiceUnavailable, message="database service unavailable", errors=[]
     ).to_api_response()
 
 

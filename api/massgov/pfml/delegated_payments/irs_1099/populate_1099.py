@@ -143,7 +143,5 @@ class Populate1099Step(Step):
             )
 
             self.db_session.add(pfml_1099_payment)
-            logger.debug(
-                "Created 1099.", extra={"pfml_1099_id": pfml_1099_payment.pfml_1099_id},
-            )
+            logger.debug("Created 1099.", extra={"pfml_1099_id": pfml_1099_payment.pfml_1099_id})
             self.increment(self.Metrics.IRS_1099_COUNT)

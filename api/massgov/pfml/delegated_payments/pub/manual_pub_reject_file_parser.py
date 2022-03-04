@@ -102,7 +102,7 @@ class ManualPubRejectFileParser:
             raise FileParseError("Expected field names not present in manual PUB reject CSV file")
 
     def parse_csv_line(self, line_number: int, line: Dict[str, str]) -> None:
-        """ Parse a single csv line """
+        """Parse a single csv line"""
 
         # Similar to the payment reject report we get back from the PI team
         # filter this odd character out to keep notes clean.

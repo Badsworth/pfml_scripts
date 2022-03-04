@@ -218,7 +218,7 @@ def create_dua_additional_income(fineos_customer_number: str) -> None:
 
 
 def create_dia_additional_income(fineos_customer_number: str) -> None:
-    DiaReductionPaymentFactory.create(fineos_customer_number=fineos_customer_number,)
+    DiaReductionPaymentFactory.create(fineos_customer_number=fineos_customer_number)
 
 
 def create_claim(
@@ -333,7 +333,7 @@ def construct_benefit_year(employee: Employee) -> BenefitYear:
     # on 2021-1-1, with the exact values given from the benefit
     # year dates calculator as 2020-12-27 to 2021-12-25
     return BenefitYearFactory.create(
-        employee=employee, start_date=date(2020, 12, 27), end_date=date(2021, 12, 25),
+        employee=employee, start_date=date(2020, 12, 27), end_date=date(2021, 12, 25)
     )
 
 

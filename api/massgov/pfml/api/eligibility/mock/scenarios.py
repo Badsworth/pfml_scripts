@@ -42,7 +42,7 @@ class EligibilityScenarioDescriptor:
 
 
 SCENARIO_DESCRIPTORS: List[EligibilityScenarioDescriptor] = [
-    EligibilityScenarioDescriptor(scenario_name=EligibilityScenarioName.NO_EXISTING_BENEFIT_YEAR,),
+    EligibilityScenarioDescriptor(scenario_name=EligibilityScenarioName.NO_EXISTING_BENEFIT_YEAR),
     EligibilityScenarioDescriptor(
         scenario_name=EligibilityScenarioName.NO_EXISTING_BENEFIT_YEAR_MULTIPLE_EMPLOYERS,
         last_x_quarters_wages_other_employer=["9000", "9000", "9000", "9000", "9000", "9000"],

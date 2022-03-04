@@ -160,7 +160,7 @@ def test_endpoint_no_employee_wage_data(
     response = client.post(
         "/v1/financial-eligibility",
         headers={"Authorization": f"Bearer {fineos_user_token}"},
-        json={**body, "employer_fein": "00-0000000", "employer_fein": "00-0000000",},
+        json={**body, "employer_fein": "00-0000000", "employer_fein": "00-0000000"},
     )
 
     assert response.status_code == 404
@@ -217,7 +217,7 @@ def test_self_employed_two_quarters(
     assert response.get_json().get("data").get("financially_eligible") is True
     assert response.get_json().get("data").get("description") == "Financially eligible"
     assert response.get_json().get("data").get("total_wages") == float(
-        round(wage_factories[0].employee_qtr_wages + wage_factories[1].employee_qtr_wages, 2,)
+        round(wage_factories[0].employee_qtr_wages + wage_factories[1].employee_qtr_wages, 2)
     )
 
 
@@ -232,9 +232,7 @@ def test_self_employed_one_quarter(
 ):
     employer2 = EmployerFactory.create(employer_fein="553897622")
     employers = [employer, employer2]
-    financial_data = [
-        employee_claim_row(QuarterDates.Q_2, [25_000, 25_000]),
-    ]
+    financial_data = [employee_claim_row(QuarterDates.Q_2, [25_000, 25_000])]
     wage_factories = generate_claimant_data(employee, employers, financial_data)
     response = client.post(
         "/v1/financial-eligibility",
@@ -253,7 +251,7 @@ def test_self_employed_one_quarter(
         == "Opt-in quarterly contributions not met"
     )
     assert response.get_json().get("data").get("total_wages") == float(
-        round(wage_factories[0].employee_qtr_wages + wage_factories[1].employee_qtr_wages, 2,)
+        round(wage_factories[0].employee_qtr_wages + wage_factories[1].employee_qtr_wages, 2)
     )
 
 
@@ -763,13 +761,7 @@ def test_claimaint_scenario_i(
 
 
 def test_benefit_year_search_no_results(
-    client,
-    test_db_session,
-    initialize_factories_session,
-    user,
-    employee,
-    tax_id,
-    fineos_user_token,
+    client, test_db_session, initialize_factories_session, user, employee, tax_id, fineos_user_token
 ):
     # Create an application and benefit year
     ApplicationFactory.create(user=user, tax_identifier=tax_id)
@@ -864,7 +856,7 @@ def test_benefit_year_search(
 
 
 def test_benefit_year_search_current_year_at_edge_start_and_end(
-    client, test_db_session, initialize_factories_session, tax_id, auth_token, user, employee,
+    client, test_db_session, initialize_factories_session, tax_id, auth_token, user, employee
 ):
     ApplicationFactory.create(user=user, tax_identifier=tax_id)
     by = BenefitYear(

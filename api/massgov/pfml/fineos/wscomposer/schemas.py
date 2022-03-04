@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 def fineos_wscomposer_schema(xsd_filename: str) -> XMLSchema:
     return XMLSchema(
-        source=os.path.join(os.path.dirname(__file__), xsd_filename), converter=FINEOSConverter,
+        source=os.path.join(os.path.dirname(__file__), xsd_filename), converter=FINEOSConverter
     )
 
 

@@ -81,7 +81,7 @@ def update_managed_requirement_from_fineos(
 
 
 def create_managed_requirement_from_fineos(
-    db_session: Session, claim_id: UUID, fineos_requirement: ManagedRequirementDetails,
+    db_session: Session, claim_id: UUID, fineos_requirement: ManagedRequirementDetails
 ) -> ManagedRequirement:
     status_id = ManagedRequirementStatus.get_id(fineos_requirement.status)
     category_id = ManagedRequirementCategory.get_id(fineos_requirement.category)

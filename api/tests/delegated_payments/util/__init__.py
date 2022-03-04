@@ -30,7 +30,7 @@ def one_claim_single_absence_period(
         absence_period_end_date=end_date,
     )
     absence_period = AbsencePeriodFactory.create(
-        claim=claim, absence_period_start_date=start_date, absence_period_end_date=end_date,
+        claim=claim, absence_period_start_date=start_date, absence_period_end_date=end_date
     )
     return LeaveData([claim], [absence_period], benefit_year)
 
@@ -53,7 +53,7 @@ def one_claim_multiple_absence_periods(
     )
     absence_periods = [
         AbsencePeriodFactory.create(
-            claim=claim, absence_period_start_date=start_date, absence_period_end_date=end_date,
+            claim=claim, absence_period_start_date=start_date, absence_period_end_date=end_date
         )
         for start_date, end_date in [
             (start_date + timedelta(weeks=i, days=1), start_date + timedelta(weeks=i + 1))
@@ -99,7 +99,7 @@ def one_claim_multiple_absence_periods_one_day_long(
     )
     absence_periods = [
         AbsencePeriodFactory.create(
-            claim=claim, absence_period_start_date=leave_date, absence_period_end_date=leave_date,
+            claim=claim, absence_period_start_date=leave_date, absence_period_end_date=leave_date
         )
         for leave_date in [start_date + timedelta(days=i) for i in range(5)]
     ]

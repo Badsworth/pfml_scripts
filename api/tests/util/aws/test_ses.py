@@ -138,7 +138,7 @@ class TestSendTemplatedEmail:
 
     @mock.patch("massgov.pfml.util.aws.ses.create_ses_client")
     def test_success(self, mock_client, mock_ses):
-        recipient = ses.EmailRecipient(to_addresses=["test@example.com"],)
+        recipient = ses.EmailRecipient(to_addresses=["test@example.com"])
         template_args = {"key": "value"}
         mock_client.return_value = mock_ses
 
@@ -161,7 +161,7 @@ class TestSendTemplatedEmail:
     @pytest.fixture
     def template_not_found_exception(self):
         return boto3.client("ses", "us-east-1").exceptions.TemplateDoesNotExistException(
-            error_response={"Error": {"Code": "TemplateDoesNotExistException", "Message": ":(",}},
+            error_response={"Error": {"Code": "TemplateDoesNotExistException", "Message": ":("}},
             operation_name="SendTemplatedEmail",
         )
 
@@ -170,7 +170,7 @@ class TestSendTemplatedEmail:
         self, mock_client, mock_ses, template_not_found_exception, caplog
     ):
         mock_client.return_value = mock_ses
-        recipient = ses.EmailRecipient(to_addresses=["test@example.com"],)
+        recipient = ses.EmailRecipient(to_addresses=["test@example.com"])
         template_args = {"key": "value"}
 
         mock_ses.send_templated_email.side_effect = template_not_found_exception

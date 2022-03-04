@@ -25,14 +25,14 @@ def test_client_no_resp():
 @pytest.fixture
 def test_recipient():
     return Recipient(
-        first_name="Carrie", last_name="Brown", email="test@mailinator.com", id=str(uuid.uuid4()),
+        first_name="Carrie", last_name="Brown", email="test@mailinator.com", id=str(uuid.uuid4())
     ).json()
 
 
 @pytest.fixture
 def test_claimant():
     return Claimant(
-        first_name="Carrie", last_name="Brown", dob="1970-01-01", id=str(uuid.uuid4()),
+        first_name="Carrie", last_name="Brown", dob="1970-01-01", id=str(uuid.uuid4())
     ).json()
 
 

@@ -31,9 +31,9 @@ def upgrade():
         sa.Column("check_posted_date", sa.Date(), nullable=True),
         sa.Column("payment_check_status_id", sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(
-            ["payment_check_status_id"], ["lk_payment_check_status.payment_check_status_id"],
+            ["payment_check_status_id"], ["lk_payment_check_status.payment_check_status_id"]
         ),
-        sa.ForeignKeyConstraint(["payment_id"], ["payment.payment_id"],),
+        sa.ForeignKeyConstraint(["payment_id"], ["payment.payment_id"]),
         sa.PrimaryKeyConstraint("payment_id"),
     )
     op.create_index(

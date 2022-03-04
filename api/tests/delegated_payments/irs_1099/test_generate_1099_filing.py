@@ -18,7 +18,7 @@ fake = faker.Faker()
 
 @pytest.fixture
 def generate_1099_step(
-    local_initialize_factories_session, local_test_db_session, local_test_db_other_session,
+    local_initialize_factories_session, local_test_db_session, local_test_db_other_session
 ):
     return Generate1099IRSfilingStep(
         db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
@@ -34,7 +34,7 @@ def create_pfml_1099():
 
 
 def test_create_irs_file(
-    generate_1099_step: Generate1099IRSfilingStep, tmp_path, monkeypatch, local_test_db_session,
+    generate_1099_step: Generate1099IRSfilingStep, tmp_path, monkeypatch, local_test_db_session
 ):
     # set environment variables
     archive_folder_path = str(tmp_path / "reports")

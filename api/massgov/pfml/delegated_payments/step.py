@@ -40,7 +40,7 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
         pass
 
     def get_import_type(self) -> str:
-        """ Override in subclass steps to set the type of the import log """
+        """Override in subclass steps to set the type of the import log"""
         return ""
 
     def run(self) -> None:
@@ -111,7 +111,7 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
         self.payments_in_reference_file.add(payment.payment_id)
 
         payment_reference_file = PaymentReferenceFile(
-            payment=payment, reference_file=reference_file,
+            payment=payment, reference_file=reference_file
         )
         self.db_session.add(payment_reference_file)
 
@@ -125,7 +125,7 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
         self.employees_in_reference_file.add(employee.employee_id)
 
         employee_reference_file = EmployeeReferenceFile(
-            employee=employee, reference_file=reference_file,
+            employee=employee, reference_file=reference_file
         )
         self.db_session.add(employee_reference_file)
 

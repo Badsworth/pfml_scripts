@@ -55,7 +55,7 @@ def p12_encoded_cert(cert: X509CertAndKey) -> crypto.PKCS12:
 
 
 def write_x509_cert_key_pair(
-    cert: X509CertAndKey, key_file: str = "private.key", cert_file: str = "selfsigned.crt",
+    cert: X509CertAndKey, key_file: str = "private.key", cert_file: str = "selfsigned.crt"
 ) -> None:
     # can look at generated file using openssl:
     # openssl x509 -inform pem -in selfsigned.crt -noout -text

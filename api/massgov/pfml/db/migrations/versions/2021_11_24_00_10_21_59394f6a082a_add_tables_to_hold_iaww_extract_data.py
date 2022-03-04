@@ -55,8 +55,8 @@ def upgrade():
         sa.Column("i_selectedleaveplan", sa.Text(), nullable=True),
         sa.Column("reference_file_id", postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column("fineos_extract_import_log_id", sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(["fineos_extract_import_log_id"], ["import_log.import_log_id"],),
-        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"],),
+        sa.ForeignKeyConstraint(["fineos_extract_import_log_id"], ["import_log.import_log_id"]),
+        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"]),
         sa.PrimaryKeyConstraint("paid_leave_instruction_id"),
     )
     op.create_index(
@@ -106,8 +106,8 @@ def upgrade():
         sa.Column("leaverequest_id", sa.Text(), nullable=True),
         sa.Column("reference_file_id", postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column("fineos_extract_import_log_id", sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(["fineos_extract_import_log_id"], ["import_log.import_log_id"],),
-        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"],),
+        sa.ForeignKeyConstraint(["fineos_extract_import_log_id"], ["import_log.import_log_id"]),
+        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"]),
         sa.PrimaryKeyConstraint("leave_plan_requested_absence_id"),
     )
     op.create_index(

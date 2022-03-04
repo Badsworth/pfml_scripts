@@ -69,9 +69,7 @@ def get_xml_type_invalid() -> str:
     return xml_1099_packed_data1
 
 
-def stage_data(
-    records, db_session, reference_file=None, import_log=None,
-):
+def stage_data(records, db_session, reference_file=None, import_log=None):
     if not reference_file:
         reference_file = ReferenceFileFactory.create(
             reference_file_type_id=ReferenceFileType.FINEOS_1099_DATA_EXTRACT.reference_file_type_id
@@ -101,7 +99,7 @@ def create_employee_record(custno, ssn) -> Employee:
     return employee
 
 
-def make_1099_data_from_fineos_vbi_data(db_session,):
+def make_1099_data_from_fineos_vbi_data(db_session):
     xml_data = get_xml_type_one()
     req_1099_data_1 = FineosPaymentData(packed_data_1099=xml_data)
     emp = create_employee_record(req_1099_data_1.customer_number, req_1099_data_1.ssn)
@@ -117,7 +115,7 @@ def make_1099_data_from_fineos_vbi_data(db_session,):
         )
 
 
-def make_invalid_1099_data_from_fineos_vbi_data(db_session,):
+def make_invalid_1099_data_from_fineos_vbi_data(db_session):
     xml_data = get_xml_type_invalid()
     req_1099_data_1 = FineosPaymentData(packed_data_1099=xml_data)
     emp = create_employee_record(req_1099_data_1.customer_number, req_1099_data_1.ssn)
@@ -133,9 +131,7 @@ def make_invalid_1099_data_from_fineos_vbi_data(db_session,):
         )
 
 
-def test_process_1099_records(
-    request_1099_extract_step, test_db_session,
-):
+def test_process_1099_records(request_1099_extract_step, test_db_session):
     xml_data = get_xml_type_one()
     req_1099_data_1 = FineosPaymentData(packed_data_1099=xml_data)
     emp = create_employee_record(req_1099_data_1.customer_number, req_1099_data_1.ssn)
@@ -149,9 +145,7 @@ def test_process_1099_records(
     assert pfml_request_1099[0].correction_ind is False
 
 
-def test_parse_packed_data_info(
-    initialize_factories_session, test_db_session,
-):
+def test_parse_packed_data_info(initialize_factories_session, test_db_session):
     data1099 = make_1099_data_from_fineos_vbi_data(test_db_session)
     res = data1099.parse_packed_data_info()
     assert res == "512512001"
@@ -165,9 +159,7 @@ def test_packed_data_validator_invalid_case(initialize_factories_session, test_d
     assert len(data1099.validation_container.validation_issues) > 0
 
 
-def test_process_1099_records_no_xml_data(
-    request_1099_extract_step, test_db_session,
-):
+def test_process_1099_records_no_xml_data(request_1099_extract_step, test_db_session):
     req_1099_data_1 = FineosPaymentData(packed_data_1099=None)
     create_employee_record(req_1099_data_1.customer_number, req_1099_data_1.ssn)
     stage_data([req_1099_data_1], test_db_session)
@@ -178,9 +170,7 @@ def test_process_1099_records_no_xml_data(
     assert len(pfml_request_1099) == 0
 
 
-def test_run_step_happy_path(
-    local_request_1099_extract_step, local_test_db_session,
-):
+def test_run_step_happy_path(local_request_1099_extract_step, local_test_db_session):
     # create data with reasons to request 1099 data
 
     xml_data_three = get_xml_type_three()

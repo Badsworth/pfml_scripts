@@ -82,9 +82,7 @@ def test_create_payment_finished_state_log_with_writeback(
     assert payment_flow_log.outcome["message"] == outcome_message
 
 
-def assert_writeback(
-    payment, transaction_status, outcome_message, db_session, import_log_id,
-):
+def assert_writeback(payment, transaction_status, outcome_message, db_session, import_log_id):
     writeback_detail = (
         db_session.query(FineosWritebackDetails)
         .filter(FineosWritebackDetails.payment_id == payment.payment_id)

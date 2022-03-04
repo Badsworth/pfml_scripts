@@ -27,9 +27,7 @@ def test_get_batch_id_as_none(upload_1099_document_step: Upload1099DocumentsStep
         return_value=None,
     )
 
-    with pytest.raises(
-        Exception, match="Batch cannot be empty at this point.",
-    ):
+    with pytest.raises(Exception, match="Batch cannot be empty at this point."):
         upload_1099_document_step._get_batch_id()
 
 

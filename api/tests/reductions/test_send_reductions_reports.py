@@ -10,17 +10,11 @@ from massgov.pfml.reductions.reports import dua_payments_reports
 def _setup_reductions_reporting(
     test_db_session, mock_s3_bucket, mock_ses, monkeypatch, initialize_factories_session
 ):
-    monkeypatch.setenv(
-        "S3_BUCKET", "s3://test_bucket",
-    )
+    monkeypatch.setenv("S3_BUCKET", "s3://test_bucket")
 
-    monkeypatch.setenv(
-        "S3_DFML_OUTBOUND_DIRECTORY_PATH", "reductions/dfml/outbound",
-    )
+    monkeypatch.setenv("S3_DFML_OUTBOUND_DIRECTORY_PATH", "reductions/dfml/outbound")
 
-    monkeypatch.setenv(
-        "S3_DFML_ARCHIVE_DIRECTORY_PATH", "reductions/dfml/archive",
-    )
+    monkeypatch.setenv("S3_DFML_ARCHIVE_DIRECTORY_PATH", "reductions/dfml/archive")
 
     s3 = boto3.client("s3")
     file_name = "test_file.csv"
@@ -40,12 +34,11 @@ def test_send_dua_reductions_report(
 ):
 
     monkeypatch.setenv(
-        "S3_DFML_OUTBOUND_DIRECTORY_PATH",
-        "s3://test_bucket/reductions/dfml/outbound/test_file.csv",
+        "S3_DFML_OUTBOUND_DIRECTORY_PATH", "s3://test_bucket/reductions/dfml/outbound/test_file.csv"
     )
 
     monkeypatch.setenv(
-        "S3_DFML_ARCHIVE_DIRECTORY_PATH", "s3://test_bucket/reductions/dfml/archive/test_file.csv",
+        "S3_DFML_ARCHIVE_DIRECTORY_PATH", "s3://test_bucket/reductions/dfml/archive/test_file.csv"
     )
 
     full_path = _setup_reductions_reporting(

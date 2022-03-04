@@ -68,9 +68,7 @@ class JsonFormatter(logging.Formatter):  # noqa: B1
             if user_attributes:
                 output.update(user_attributes)
             if azure_user_sub_id:
-                output.update(
-                    {"azure_user.sub_id": azure_user_sub_id,}
-                )
+                output.update({"azure_user.sub_id": azure_user_sub_id})
 
         # Inject New Relic tracing metadata for Logs in Context features.
         # This is not the suggested way to implement it, but the NewRelicContextFormatter

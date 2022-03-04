@@ -53,7 +53,7 @@ class FineosTotalLeaveDurationProcessor(AbstractStepProcessor):
         if len(found_leave_exceeding_threshold) == 0:
             self.increment(self.Metrics.PAYMENT_LEAVE_DURATION_PASS_COUNT)
             logger.info(
-                "Payment passed leave duration validation", get_traceable_payment_details(payment),
+                "Payment passed leave duration validation", get_traceable_payment_details(payment)
             )
             return
 
@@ -89,7 +89,7 @@ class FineosTotalLeaveDurationProcessor(AbstractStepProcessor):
         leave_calculator = LeaveCalculator(benefit_years)
 
         absence_periods = get_employee_absence_periods(
-            self.db_session, employee.employee_id, self.ABSENCE_STATUS_IDS,
+            self.db_session, employee.employee_id, self.ABSENCE_STATUS_IDS
         )
 
         # Only consider absence periods that are continuous

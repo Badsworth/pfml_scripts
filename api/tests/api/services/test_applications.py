@@ -442,7 +442,7 @@ def test_set_application_absence_and_leave_period_invalid_leave_reason(
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")
 def test_set_application_absence_and_leave_period_valid_but_unsupported_leave_reason(
-    mock_get_absence, fineos_client, fineos_web_id, absence_case_id, application, absence_details,
+    mock_get_absence, fineos_client, fineos_web_id, absence_case_id, application, absence_details
 ):
     valid_reason = AbsenceReason.MILITARY_CAREGIVER.absence_reason_description
     absence_details.absencePeriods[0].reason = valid_reason
@@ -548,7 +548,7 @@ def test_set_customer_detail_fields_with_blank_mass_id(
     customer_details.classExtensionInformation = [
         massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
             name="MassachusettsID", stringValue=""
-        ),
+        )
     ]
     mock_read_customer_details.return_value = customer_details
     set_customer_detail_fields(fineos_client, fineos_web_id, application, test_db_session)
@@ -695,7 +695,7 @@ def test_set_payment_preference_fields_with_blank_payment_method(
 ):
     mock_get_payment_preferences.return_value = [
         massgov.pfml.fineos.models.customer_api.PaymentPreferenceResponse(
-            paymentMethod="", paymentPreferenceId="1234", isDefault=True,
+            paymentMethod="", paymentPreferenceId="1234", isDefault=True
         )
     ]
     set_payment_preference_fields(fineos_client, fineos_web_id, application, test_db_session)
@@ -895,7 +895,7 @@ def test_set_other_leaves_with_only_concurrent_leave(
             EFormAttribute(
                 name="V2AccruedPLEmployer1",  # is_for_current_employer
                 enumValue=ModelEnum(domainName="PleaseSelectYesNo", instanceValue="Yes"),
-            ),
+            )
         ],
     )
     set_other_leaves(fineos_client, fineos_web_id, application, test_db_session, absence_case_id)

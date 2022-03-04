@@ -180,7 +180,7 @@ def validate_pei_writeback_state_for_payment(
 def validate_non_standard_payment_state(non_standard_payment: Payment, payment_state: LkState):
     assert len(non_standard_payment.state_logs) == 2
     assert set([state_log.end_state_id for state_log in non_standard_payment.state_logs]) == set(
-        [payment_state.state_id, State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id,]
+        [payment_state.state_id, State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id]
     )
 
 
@@ -205,7 +205,7 @@ def validate_withholding(
     )
     assert len(withholding_payment.state_logs) == 1
     assert set([state_log.end_state_id for state_log in withholding_payment.state_logs]) == set(
-        [payment_state.state_id,]
+        [payment_state.state_id]
     )
 
 
@@ -309,9 +309,7 @@ def stage_data(
 
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
-def test_run_step_happy_path(
-    local_payment_extract_step, local_test_db_session,
-):
+def test_run_step_happy_path(local_payment_extract_step, local_test_db_session):
     payment_data_eft = FineosPaymentData()
     payment_data_check = FineosPaymentData(payment_method="Check")
     add_db_records_from_fineos_data(local_test_db_session, payment_data_eft)
@@ -429,9 +427,7 @@ def test_run_step_happy_path(
     assert import_log_report["standard_valid_payment_count"] == 2
 
 
-def test_run_step_multiple_times(
-    local_payment_extract_step, local_test_db_session,
-):
+def test_run_step_multiple_times(local_payment_extract_step, local_test_db_session):
     # Test what happens if we run multiple times on the same data
     # After the first run, the step should no-op as the reference file
     # has already been processed.
@@ -472,7 +468,7 @@ def test_run_step_multiple_times(
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_data_prior_payment_exists_is_being_processed(
-    local_payment_extract_step, local_test_db_session,
+    local_payment_extract_step, local_test_db_session
 ):
     payment_data = FineosPaymentData()
     add_db_records_from_fineos_data(
@@ -529,9 +525,7 @@ def test_process_extract_data_prior_payment_exists_is_being_processed(
     assert pei_writeback_state is None
 
 
-def test_process_extract_data_one_bad_record(
-    local_payment_extract_step, local_test_db_session,
-):
+def test_process_extract_data_one_bad_record(local_payment_extract_step, local_test_db_session):
     # This payment will end up in an error state
     # because we don't have an TIN/employee/claim associated with them
     payment_data = FineosPaymentData()
@@ -586,7 +580,7 @@ def test_process_extract_data_one_bad_record(
 
 
 def test_process_extract_data_no_employer_on_claim(
-    local_payment_extract_step, local_test_db_session,
+    local_payment_extract_step, local_test_db_session
 ):
     # This payment will end up in an error state
     # because the employer is exempt for the payment
@@ -623,7 +617,7 @@ def test_process_extract_data_no_employer_on_claim(
                 {
                     "reason": "MissingInDB",
                     "details": f"Claim {payment.claim.fineos_absence_id} does not have an employer associated with it",
-                },
+                }
             ],
         },
     }
@@ -632,9 +626,7 @@ def test_process_extract_data_no_employer_on_claim(
     )
 
 
-def test_process_extract_data_employer_exempt(
-    local_payment_extract_step, local_test_db_session,
-):
+def test_process_extract_data_employer_exempt(local_payment_extract_step, local_test_db_session):
     # This payment will end up in an error state
     # because the employer is exempt for the payment
     payment_data = FineosPaymentData()
@@ -668,7 +660,7 @@ def test_process_extract_data_employer_exempt(
                 {
                     "reason": "EmployerExempt",
                     "details": f"Employer {employer.fineos_employer_id} is exempt for dates {employer.exemption_commence_date} - {employer.exemption_cease_date}",
-                },
+                }
             ],
         },
     }
@@ -678,7 +670,7 @@ def test_process_extract_data_employer_exempt(
 
 
 def test_process_extract_data_employer_exempt_non_standard_payment(
-    local_payment_extract_step, local_test_db_session,
+    local_payment_extract_step, local_test_db_session
 ):
     # Show that non-standard payments don't error
     # due to employer exempt
@@ -703,7 +695,7 @@ def test_process_extract_data_employer_exempt_non_standard_payment(
 
 
 def test_process_extract_data_rollback(
-    local_payment_extract_step, local_test_db_session, monkeypatch,
+    local_payment_extract_step, local_test_db_session, monkeypatch
 ):
     payment_data_eft = FineosPaymentData()
     payment_data_check = FineosPaymentData(payment_method="Check")
@@ -731,7 +723,7 @@ def test_process_extract_data_rollback(
 
 
 def test_process_extract_data_no_existing_address_eft(
-    local_payment_extract_step, local_test_db_session,
+    local_payment_extract_step, local_test_db_session
 ):
     payment_data_eft = FineosPaymentData()
     payment_data_check = FineosPaymentData(payment_method="Check")
@@ -831,9 +823,7 @@ def test_process_extract_data_no_existing_address_eft(
 
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
-def test_process_extract_data_existing_payment(
-    local_payment_extract_step, local_test_db_session,
-):
+def test_process_extract_data_existing_payment(local_payment_extract_step, local_test_db_session):
 
     payment_data = FineosPaymentData()
     add_db_records_from_fineos_data(
@@ -874,7 +864,7 @@ def test_process_extract_data_existing_payment(
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_data_minimal_viable_payment(
-    local_payment_extract_step, local_test_db_session,
+    local_payment_extract_step, local_test_db_session
 ):
     # This test creates a payment with absolutely no data besides the bare
     # minimum to be viable to create a payment, this is done in order
@@ -909,7 +899,7 @@ def test_process_extract_data_minimal_viable_payment(
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_data_minimal_viable_standard_payment(
-    local_payment_extract_step, local_test_db_session,
+    local_payment_extract_step, local_test_db_session
 ):
     # Same as the above test, but we setup enough to make a "standard" payment
 
@@ -943,7 +933,7 @@ def test_process_extract_data_minimal_viable_standard_payment(
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_data_leave_request_decision_validation(
-    local_payment_extract_step, local_test_db_session,
+    local_payment_extract_step, local_test_db_session
 ):
 
     medical_claim_type_record = FineosPaymentData(claim_type="Employee")
@@ -999,7 +989,7 @@ def test_process_extract_data_leave_request_decision_validation(
     assert in_review_payment
     assert len(in_review_payment.state_logs) == 2
     validate_pei_writeback_state_for_payment(
-        in_review_payment, local_test_db_session, is_leave_in_review=True,
+        in_review_payment, local_test_db_session, is_leave_in_review=True
     )
     state_log = state_log_util.get_latest_state_log_in_flow(
         in_review_payment, Flow.DELEGATED_PAYMENT, local_test_db_session
@@ -1064,9 +1054,7 @@ def test_process_extract_data_leave_request_decision_validation(
 
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
-def test_process_extract_not_id_proofed(
-    local_test_db_session, local_payment_extract_step,
-):
+def test_process_extract_not_id_proofed(local_test_db_session, local_payment_extract_step):
     datasets = []
     # This tests that a payment with a claim missing ID proofing with be rejected
 
@@ -1146,9 +1134,7 @@ def test_process_extract_no_fineos_name(local_test_db_session, local_payment_ext
     assert import_log_report["employee_fineos_name_missing"] == 1
 
 
-def test_process_extract_is_adhoc(
-    local_payment_extract_step, local_test_db_session,
-):
+def test_process_extract_is_adhoc(local_payment_extract_step, local_test_db_session):
     fineos_adhoc_data = FineosPaymentData(payment_type="Adhoc")
     add_db_records_from_fineos_data(local_test_db_session, fineos_adhoc_data)
     fineos_standard_data = FineosPaymentData(payment_type="Some other value")
@@ -1193,7 +1179,7 @@ def test_process_extract_is_adhoc(
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_multiple_payment_details(
-    local_test_db_session, local_payment_extract_step,
+    local_test_db_session, local_payment_extract_step
 ):
     # Create a standard payment, but give it a few payment periods
     # by creating several copies of the payment data, but the others have
@@ -1255,7 +1241,7 @@ def test_process_extract_multiple_payment_details(
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_additional_payment_types(
-    local_test_db_session, local_payment_extract_step,
+    local_test_db_session, local_payment_extract_step
 ):
     datasets = []
     # This tests that the behavior of non-standard payment types are handled properly
@@ -1412,7 +1398,7 @@ def test_process_extract_additional_payment_types(
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_additional_payment_types_can_be_missing_other_files(
-    local_test_db_session, local_payment_extract_step,
+    local_test_db_session, local_payment_extract_step
 ):
     # This tests that the behavior of non-standard payment types are handled properly
     # In every scenario, only the VPEI file and payment details file
@@ -1561,7 +1547,7 @@ def test_process_extract_additional_payment_types_can_be_missing_all_additional_
 
     # Create a cancellation
     cancellation_data = FineosPaymentData(
-        event_type="PaymentOut Cancellation", payment_amount="-123.45",
+        event_type="PaymentOut Cancellation", payment_amount="-123.45"
     )
     add_db_records_from_fineos_data(
         local_test_db_session, cancellation_data, add_claim=False, add_eft=False
@@ -1740,7 +1726,7 @@ def test_process_extract_additional_payment_types_still_require_employee(
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_tax_withholding_payment_types(
-    local_test_db_session, local_payment_extract_step,
+    local_test_db_session, local_payment_extract_step
 ):
     datasets = []
 
@@ -1814,7 +1800,7 @@ def test_process_extract_tax_withholding_payment_types(
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_invalid_tax_withholding_payment_types(
-    local_test_db_session, local_payment_extract_step,
+    local_test_db_session, local_payment_extract_step
 ):
     datasets = []
 
@@ -1862,7 +1848,7 @@ def test_process_extract_invalid_tax_withholding_payment_types(
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_data_minimal_viable_withholding_payment(
-    local_payment_extract_step, local_test_db_session,
+    local_payment_extract_step, local_test_db_session
 ):
     # Setup enough to make a tax withholding payment
     # This test creates a tax withholding with absolutely no data besides the bare
@@ -2402,7 +2388,7 @@ def test_get_payment_relevant_party(initialize_factories_session, set_exporter_e
     )
 
     # State witholding
-    employer_reimbursement_data = FineosPaymentData(tin=extractor.STATE_TAX_WITHHOLDING_TIN,)
+    employer_reimbursement_data = FineosPaymentData(tin=extractor.STATE_TAX_WITHHOLDING_TIN)
     _, payment_data = make_payment_data_from_fineos_data(employer_reimbursement_data)
     assert not payment_data.validation_container.has_validation_issues()
     assert (
@@ -2411,7 +2397,7 @@ def test_get_payment_relevant_party(initialize_factories_session, set_exporter_e
     )
 
     # Federal tax
-    employer_reimbursement_data = FineosPaymentData(tin=extractor.FEDERAL_TAX_WITHHOLDING_TIN,)
+    employer_reimbursement_data = FineosPaymentData(tin=extractor.FEDERAL_TAX_WITHHOLDING_TIN)
     _, payment_data = make_payment_data_from_fineos_data(employer_reimbursement_data)
     assert not payment_data.validation_container.has_validation_issues()
     assert (
@@ -2466,10 +2452,10 @@ def test_payment_party_and_type_combinations(
             "payee_identifier": extractor.TAX_IDENTIFICATION_NUMBER,
         },
         PaymentRelevantParty.FEDERAL_TAX.payment_relevant_party_id: {
-            "tin": extractor.FEDERAL_TAX_WITHHOLDING_TIN,
+            "tin": extractor.FEDERAL_TAX_WITHHOLDING_TIN
         },
         PaymentRelevantParty.STATE_TAX.payment_relevant_party_id: {
-            "tin": extractor.STATE_TAX_WITHHOLDING_TIN,
+            "tin": extractor.STATE_TAX_WITHHOLDING_TIN
         },
     }
     # note that "overpayment" is not entered here because we programmatically generate
@@ -2477,7 +2463,7 @@ def test_payment_party_and_type_combinations(
     payment_kwargs = {
         "cancellation": {"event_type": "PaymentOut Cancellation", "payment_amount": "-100.00"},
         "zero_dollar": {"payment_amount": "0.00"},
-        "malformed_payment_negative": {"payment_amount": "-100.00",},
+        "malformed_payment_negative": {"payment_amount": "-100.00"},
         "malformed_payment_unknown_event_type": {
             "event_type": "Yet another overpayment event type"
         },
@@ -2558,7 +2544,7 @@ def test_payment_party_and_type_combinations(
 )
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_update_eft_existing_eft_matches_and_not_approved(
-    local_payment_extract_step, local_test_db_session, prenote_state,
+    local_payment_extract_step, local_test_db_session, prenote_state
 ):
     # This is the happiest of paths, we've already got the EFT info for the
     # employee and it has already been prenoted.
@@ -2631,7 +2617,7 @@ def test_update_eft_existing_eft_matches_and_not_approved(
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_update_experian_address_pair_fineos_address_no_update(
-    local_payment_extract_step, local_test_db_session,
+    local_payment_extract_step, local_test_db_session
 ):
     # update_experian_address_pair_fineos_address() has 2 possible outcomes:
     #   1. There is no change to address

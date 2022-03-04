@@ -74,7 +74,7 @@ UPLOAD_SIZE_CONSTRAINT = 4500000  # bytes
 
 FILE_TOO_LARGE_MSG = "File is too large."
 FILE_SIZE_VALIDATION_ERROR = ValidationErrorDetail(
-    message=FILE_TOO_LARGE_MSG, type=IssueType.file_size, field="file",
+    message=FILE_TOO_LARGE_MSG, type=IssueType.file_size, field="file"
 )
 
 LEAVE_REASON_TO_DOCUMENT_TYPE_MAPPING = {
@@ -155,7 +155,7 @@ def applications_import():
     claim = get_claim_from_db(application_import_request.absence_case_id)
 
     application_rules.validate_application_import_request_for_claim(
-        application_import_request, claim,
+        application_import_request, claim
     )
     assert application_import_request.absence_case_id is not None
 
@@ -194,7 +194,7 @@ def applications_import():
             fineos, application, claim, db_session  # type: ignore
         )
         fineos_web_id = register_employee(
-            fineos, claim.employee_tax_identifier, application.employer_fein, db_session,  # type: ignore
+            fineos, claim.employee_tax_identifier, application.employer_fein, db_session  # type: ignore
         )
         applications_service.set_application_absence_and_leave_period(
             fineos, fineos_web_id, application, application_import_request.absence_case_id
@@ -272,7 +272,7 @@ def applications_update(application_id):
             "applications_update failure - application already submitted", extra=log_attributes
         )
         message = "Application {} could not be updated. Application already submitted on {}".format(
-            existing_application.application_id, existing_application.submitted_time.strftime("%x"),
+            existing_application.application_id, existing_application.submitted_time.strftime("%x")
         )
         return response_util.error_response(
             status_code=Forbidden,
@@ -400,9 +400,11 @@ def applications_submit(application_id):
             logger.info(
                 "applications_submit failure - application already submitted", extra=log_attributes
             )
-            message = "Application {} could not be submitted. Application already submitted on {}".format(
-                existing_application.application_id,
-                existing_application.submitted_time.strftime("%x"),
+            message = (
+                "Application {} could not be submitted. Application already submitted on {}".format(
+                    existing_application.application_id,
+                    existing_application.submitted_time.strftime("%x"),
+                )
             )
             return response_util.error_response(
                 status_code=Forbidden,
@@ -514,7 +516,7 @@ def applications_complete(application_id):
         log_attributes = get_application_log_attributes(existing_application)
 
     logger.info(
-        "applications_complete - application documents marked as received", extra=log_attributes,
+        "applications_complete - application documents marked as received", extra=log_attributes
     )
 
     logger.info("applications_complete success", extra=log_attributes)
@@ -775,9 +777,7 @@ def document_upload(application_id, body, file):
         try:
             if document_details.mark_evidence_received:
                 mark_single_document_as_received(existing_application, document, db_session)
-                logger.info(
-                    "document_upload - evidence marked as received", extra=log_attributes,
-                )
+                logger.info("document_upload - evidence marked as received", extra=log_attributes)
         except Exception:
             logger.warning(
                 "document_upload failure - failure marking evidence as received",
@@ -797,16 +797,12 @@ def document_upload(application_id, body, file):
 
         db_session.commit()
 
-        logger.info(
-            "document_upload success", extra=log_attributes,
-        )
+        logger.info("document_upload success", extra=log_attributes)
         document_response = DocumentResponse.from_orm(document)
         document_response.content_type = content_type
         # Return response
         return response_util.success_response(
-            message="Successfully uploaded document",
-            data=document_response.dict(),
-            status_code=200,
+            message="Successfully uploaded document", data=document_response.dict(), status_code=200
         ).to_api_response()
 
 
@@ -821,7 +817,7 @@ def documents_get(application_id):
         # Check if application has been submitted to fineos
         if not existing_application.claim:
             return response_util.success_response(
-                message="Successfully retrieved documents", data=[], status_code=200,
+                message="Successfully retrieved documents", data=[], status_code=200
             ).to_api_response()
 
         documents = get_documents(existing_application, db_session)
@@ -829,7 +825,7 @@ def documents_get(application_id):
         documents_list = [doc.dict() for doc in documents]
 
         return response_util.success_response(
-            message="Successfully retrieved documents", data=documents_list, status_code=200,
+            message="Successfully retrieved documents", data=documents_list, status_code=200
         ).to_api_response()
 
 
@@ -955,8 +951,10 @@ def payment_preference_submit(application_id: UUID) -> Response:
             "payment_preference_submit failure - payment preference already submitted",
             extra=log_attributes,
         )
-        message = "Application {} could not be updated. Payment preference already submitted".format(
-            existing_application.application_id
+        message = (
+            "Application {} could not be updated. Payment preference already submitted".format(
+                existing_application.application_id
+            )
         )
         return response_util.error_response(
             status_code=Forbidden,

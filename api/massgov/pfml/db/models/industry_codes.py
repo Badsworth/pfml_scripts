@@ -18,11 +18,7 @@ class LkIndustryCode(Base):
 
 class IndustryCode(LookupTable):
     model = LkIndustryCode
-    column_names = (
-        "industry_code_id",
-        "industry_code_description",
-        "industry_code_naics_code",
-    )
+    column_names = ("industry_code_id", "industry_code_description", "industry_code_naics_code")
 
     OILSEED_AND_GRAIN_FARMING = LkIndustryCode(1, "Oilseed and Grain Farming", 1111)
     VEGETABLE_AND_MELON_FARMING = LkIndustryCode(2, "Vegetable and Melon Farming", 1112)
@@ -522,10 +518,12 @@ class IndustryCode(LookupTable):
         "Residential Intellectual and Developmental Disability, Mental Health, and Substance Abuse Facilities",
         6232,
     )
-    CONTINUING_CARE_RETIREMENT_COMMUNITIES_AND_ASSISTED_LIVING_FACILITIES_FOR_THE_ELDERLY = LkIndustryCode(
-        212,
-        "Continuing Care Retirement Communities and Assisted Living Facilities for the Elderly",
-        6233,
+    CONTINUING_CARE_RETIREMENT_COMMUNITIES_AND_ASSISTED_LIVING_FACILITIES_FOR_THE_ELDERLY = (
+        LkIndustryCode(
+            212,
+            "Continuing Care Retirement Communities and Assisted Living Facilities for the Elderly",
+            6233,
+        )
     )
     OTHER_RESIDENTIAL_CARE_FACILITIES = LkIndustryCode(
         213, "Other Residential Care Facilities", 6239

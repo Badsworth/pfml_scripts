@@ -33,7 +33,7 @@ def run_cloud_watch_query(start_date, end_date, client, query):
     log_group = f"service/pfml-api-{ENVIRONMENT}"
 
     start_query_response = client.start_query(
-        logGroupName=log_group, startTime=start_date, endTime=end_date, queryString=query,
+        logGroupName=log_group, startTime=start_date, endTime=end_date, queryString=query
     )
     query_id = start_query_response["queryId"]
     response: Dict[Any, Any] = {}
@@ -63,7 +63,7 @@ def one_day_date_windows(start_date: datetime, end_date: datetime) -> List[tuple
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Evaluate impact of financial eligiblity changes",)
+    parser = argparse.ArgumentParser(description="Evaluate impact of financial eligiblity changes")
     parser.add_argument(
         "--start_date",
         type=valid_date_type,
@@ -86,7 +86,7 @@ def parse_args():
 
 
 def pull_data_from_cloudwatch(logs_start_date: datetime, logs_end_date: datetime) -> List[Dict]:
-    client = boto3.client("logs", region_name="us-east-1",)
+    client = boto3.client("logs", region_name="us-east-1")
     # this could be done in parralel
     date_ranges = one_day_date_windows(logs_start_date, logs_end_date)
     claim_data_query = "fields employee_id, employer_id, employer_average_weekly_wage, created, description, financially_eligible, @timestamp, request_id | filter message = 'Calculated financial eligibility' | limit 10000"
@@ -166,7 +166,7 @@ def generate_report(cli_args, db_session, output_csv):
             isouter=True,
         )
         .filter(
-            tuple_(Claim.employee_id, Claim.employer_id, Claim.absence_period_start_date,).in_(
+            tuple_(Claim.employee_id, Claim.employer_id, Claim.absence_period_start_date).in_(
                 list(log_eligibility_dict.keys())
             )
         )
@@ -175,7 +175,7 @@ def generate_report(cli_args, db_session, output_csv):
     logger.info(f"claims len: {len(all_claims)}")
     for claim in all_claims:
         old_claim_result = log_eligibility_dict.get(
-            (str(claim.employee_id), str(claim.employer_id), str(claim.absence_period_start_date),)
+            (str(claim.employee_id), str(claim.employer_id), str(claim.absence_period_start_date))
         )
 
         if not old_claim_result:
