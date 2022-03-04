@@ -156,6 +156,11 @@ describe("useClaimsLogic", () => {
         await appLogic.current.claims.loadPage();
         expect(global.fetch).toHaveBeenCalled();
 
+        // this should make an API request since page offset is different from paginationMeta
+        mockPaginatedFetch();
+        await appLogic.current.claims.loadPage({ page_offset: 2 });
+        expect(global.fetch).toHaveBeenCalled();
+
         // this should make an API request since the filters changed
         mockPaginatedFetch();
         await appLogic.current.claims.loadPage({
