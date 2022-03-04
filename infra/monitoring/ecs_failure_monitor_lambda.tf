@@ -20,7 +20,10 @@ data "aws_iam_policy_document" "ecs_monitor_lambda_assume_role" {
 data "aws_ssm_parameter" "slackbot_api_key" {
   name = "/admin/common/nava-slackbot-api-key"
 }
-
+# pull teams uri from ssm
+data "aws_ssm_parameter" "teams_uri" {
+  name = "/admin/common/teams-deploy-uri"
+}
 # IAM Role for lambda
 resource "aws_iam_role" "ecs_monitor_lambda_role" {
   name               = "mass-pfml-ecs-failure-monitor-lambda-role"
@@ -51,6 +54,7 @@ resource "aws_lambda_function" "ecs_failure_monitor" {
     variables = {
       SLACK_CHANNEL_ID = module.constants.slackbot_channels["mass-pfml-pd-warnings"]
       SLACK_API_KEY    = data.aws_ssm_parameter.slackbot_api_key.value
+      TEAMS_URI        = data.aws_ssm_parameter.teams_uri.value
     }
   }
 
