@@ -2439,6 +2439,7 @@ const pages: {
   },
   employersClaimsStatus: {
     applicationIdLabel: "Application ID",
+    lead: "No action is required of you. You can view this page at any time to download notices, see decisions, or access the leave details for this application. Your employee has the right to appeal decisions under Massachusetts regulations (<dfml-regulations-link>458 CMR 2.14</dfml-regulations-link>).",
     lead_decision:
       "A decision has been made for this application. No action is required of you, but you can download a copy of the decision notice for details. Your employee has the right to appeal this decision under Massachusetts regulations (<dfml-regulations-link>458 CMR 2.14</dfml-regulations-link>).",
     lead_pending:
