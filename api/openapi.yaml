@@ -1347,6 +1347,41 @@ paths:
                     current_benefit_year: false
       requestBody:
         $ref: '#/components/requestBodies/BenefitYearsSearchRequest'
+  
+  /holidays/search:
+    post:
+      security:
+        - {} # no authentication option
+      tags:
+        - Holidays
+      summary: Returns any holidays in a date range
+      operationId: massgov.pfml.api.holidays.holidays_search
+      requestBody:
+        $ref: '#/components/requestBodies/HolidaysSearchRequest'
+      responses:
+        "200":
+          description: Successfully returning holidays in range
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessfulResponse'
+                  - properties:
+                      data:
+                        $ref: '#/components/schemas/HolidaysSearchResponse'
+                example:
+                  meta:
+                    method: "POST"
+                    resource: "/holidays/search"
+                  status_code: 200
+                  message: "success"
+                  data:
+                  - name: "New Year's Day"
+                    date: '2022-01-01'
+                  - name: 'Christmas Day'
+                    date: '2021-12-25'
+        "400":
+          $ref: "#/components/responses/BadRequest"
 
   /admin/authorize:
     get:
@@ -1517,6 +1552,7 @@ tags:
   - name: Feature Flags
   - name: Admin
   - name: Benefit Years
+  - name: Holidays
 
 components:
   securitySchemes:
@@ -1670,6 +1706,26 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ChangeRequest"
+    HolidaysSearchRequest:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              terms:
+                type: object
+                properties:
+                  start_date:
+                    $ref: "#/components/schemas/Date"
+                    required: true
+                  end_date:
+                    $ref: "#/components/schemas/Date"
+                    required: true
+            required: ["terms"]
+          example:
+            terms:
+              start_date: "2021-12-25"
+              end_date: "2022-01-02"
 
   responses:
     AdminTokenResponse:
@@ -3193,6 +3249,17 @@ components:
       type: array
       items:
         $ref: "#/components/schemas/EmployeeResponse"
+
+    HolidaysSearchResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          name:
+            type: string
+            example: "New Year's Day"
+          date:
+            $ref: "#/components/schemas/Date"
 
     PaymentsResponse:
       type: object
