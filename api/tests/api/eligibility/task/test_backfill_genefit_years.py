@@ -51,14 +51,11 @@ def test_get_claimants_to_backfill(test_db_session, initialize_factories_session
     )
 
     claimants_to_backfill = backfill_benefit_years.get_claimants_to_backfill(test_db_session)
-    assert claimants_to_backfill == [
-        employee_two,
-        employee_three,
-    ]
+    assert claimants_to_backfill == [employee_two, employee_three]
 
 
 def test_backfill_benefit_year_successfully(
-    test_db_session, initialize_factories_session, test_db_other_session,
+    test_db_session, initialize_factories_session, test_db_other_session
 ):
     employee: employees.Employee = factories.EmployeeWithFineosNumberFactory.create()
     factories.ClaimFactory.create(

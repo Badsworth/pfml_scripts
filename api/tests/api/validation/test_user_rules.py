@@ -38,7 +38,7 @@ class TestGetUsersConvertEmployerIssues:
         )
 
     def test_existing_applications(self, user, test_db_session, initialize_factories_session):
-        ApplicationFactory.create(user=user,)
+        ApplicationFactory.create(user=user)
         issues = get_users_convert_employer_issues(user, test_db_session)
         assert (
             ValidationErrorDetail(
@@ -90,9 +90,7 @@ class TestGetUsersPostRequiredFieldsIssues:
 
         expect_ein_issue(
             get_users_post_required_fields_issues(
-                UserCreateRequest(
-                    role=RoleRequest(role_description=Role.EMPLOYER.role_description),
-                )
+                UserCreateRequest(role=RoleRequest(role_description=Role.EMPLOYER.role_description))
             )
         )
 

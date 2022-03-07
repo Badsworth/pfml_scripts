@@ -1,7 +1,6 @@
 import * as MFAService from "../../src/services/mfa";
 import User, { RoleDescription, UserRole } from "../../src/models/User";
 import { act, renderHook } from "@testing-library/react-hooks";
-import ErrorInfo from "../../src/models/ErrorInfo";
 import { NetworkError } from "../../src/errors";
 import RolesApi from "../../src/api/RolesApi";
 import UsersApi from "../../src/api/UsersApi";
@@ -89,7 +88,7 @@ describe("useUsersLogic", () => {
     describe("when errors exist", () => {
       beforeEach(async () => {
         act(() => {
-          errorsLogic.setErrors([new ErrorInfo()]);
+          errorsLogic.setErrors([new Error()]);
         });
 
         await act(async () => {
@@ -226,7 +225,7 @@ describe("useUsersLogic", () => {
     it("doesn't clear errors if user has been loaded", async () => {
       await act(async () => {
         await usersLogic.loadUser();
-        errorsLogic.setErrors([new ErrorInfo()]);
+        errorsLogic.setErrors([new Error()]);
         await usersLogic.loadUser();
       });
 
@@ -429,7 +428,7 @@ describe("useUsersLogic", () => {
     describe("when errors exist", () => {
       beforeEach(async () => {
         act(() => {
-          errorsLogic.setErrors([new ErrorInfo()]);
+          errorsLogic.setErrors([new Error()]);
         });
 
         await act(async () => {
@@ -485,7 +484,7 @@ describe("useUsersLogic", () => {
     describe("when errors exist", () => {
       beforeEach(async () => {
         act(() => {
-          errorsLogic.setErrors([new ErrorInfo()]);
+          errorsLogic.setErrors([new Error()]);
         });
 
         await act(async () => {

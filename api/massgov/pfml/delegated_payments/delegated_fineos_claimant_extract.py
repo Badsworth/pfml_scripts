@@ -52,7 +52,7 @@ ERRORED_FOLDER = "errored"
 
 @dataclass
 class AbsencePair:
-    """ Class containing the two raw VBI Requested Absence Records """
+    """Class containing the two raw VBI Requested Absence Records"""
 
     # The SOM version is always present as we iterate over the dataset
     requested_absence_som: FineosExtractVbiRequestedAbsenceSom
@@ -455,9 +455,7 @@ class ClaimantData:
             self.validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISSING_DATASET, error_msg
             )
-            logger.warning(
-                "Skipping: %s", error_msg, extra=self.get_traceable_details(),
-            )
+            logger.warning("Skipping: %s", error_msg, extra=self.get_traceable_details())
             self.increment(ClaimantExtractStep.Metrics.NO_EMPLOYEE_FEED_RECORDS_FOUND_COUNT)
 
             # Can't process subsequent records as they pull from employee_feed
@@ -526,7 +524,7 @@ class ClaimantData:
             )
 
             self.account_nbr = payments_util.validate_db_input(
-                "ACCOUNTNO", employee_feed, self.validation_container, eft_required, max_length=17,
+                "ACCOUNTNO", employee_feed, self.validation_container, eft_required, max_length=17
             )
 
             self.account_type = payments_util.validate_db_input(
@@ -876,9 +874,11 @@ class ClaimantExtractStep(Step):
         return None
 
     def create_or_update_claim(self, claimant_data: ClaimantData) -> Claim:
-        claim_pfml: Optional[Claim] = self.db_session.query(Claim).filter(
-            Claim.fineos_absence_id == claimant_data.absence_case_id
-        ).one_or_none()
+        claim_pfml: Optional[Claim] = (
+            self.db_session.query(Claim)
+            .filter(Claim.fineos_absence_id == claimant_data.absence_case_id)
+            .one_or_none()
+        )
 
         if claim_pfml is None:
             claim_pfml = Claim(claim_id=uuid.uuid4())
@@ -1076,7 +1076,7 @@ class ClaimantExtractStep(Step):
         if employee_pfml_entry is None:
             # We added validation issues above for the scenarios that cause this
             logger.warning(
-                f"Employee in employee file with customer nbr {claimant_data.fineos_customer_number} not found in PFML DB.",
+                f"Employee in employee file with customer nbr {claimant_data.fineos_customer_number} not found in PFML DB."
             )
             return None
 
@@ -1117,7 +1117,7 @@ class ClaimantExtractStep(Step):
 
         return employee_pfml_entry
 
-    def update_eft_info(self, claimant_data: ClaimantData, employee_pfml_entry: Employee,) -> None:
+    def update_eft_info(self, claimant_data: ClaimantData, employee_pfml_entry: Employee) -> None:
         """Updates EFT info and starts prenoting process if necessary"""
 
         if claimant_data.should_do_eft_operations:
@@ -1145,14 +1145,12 @@ class ClaimantExtractStep(Step):
                     existing_eft, employee_pfml_entry
                 )
                 self.increment(self.Metrics.EFT_FOUND_COUNT)
-                logger.info(
-                    "Found existing EFT info for claimant", extra=extra,
-                )
+                logger.info("Found existing EFT info for claimant", extra=extra)
                 if existing_eft.prenote_state_id == PrenoteState.REJECTED.prenote_state_id:
                     msg = "EFT prenote was rejected - cannot pay with this account info"
                     logger.info(msg, extra=extra)
                     claimant_data.validation_container.add_validation_issue(
-                        payments_util.ValidationReason.EFT_PRENOTE_REJECTED, msg,
+                        payments_util.ValidationReason.EFT_PRENOTE_REJECTED, msg
                     )
                     self.increment(self.Metrics.EFT_REJECTED_COUNT)
 
@@ -1163,9 +1161,7 @@ class ClaimantExtractStep(Step):
                 extra |= payments_util.get_traceable_pub_eft_details(
                     new_eft, employee_pfml_entry, state=State.DELEGATED_EFT_SEND_PRENOTE
                 )
-                logger.info(
-                    "Initiating DELEGATED_EFT prenote flow for employee", extra=extra,
-                )
+                logger.info("Initiating DELEGATED_EFT prenote flow for employee", extra=extra)
 
                 employee_pub_eft_pair = EmployeePubEftPair(
                     employee_id=employee_pfml_entry.employee_id, pub_eft_id=new_eft.pub_eft_id
@@ -1229,7 +1225,7 @@ class ClaimantExtractStep(Step):
         )
 
     def attach_organization_unit_to_claim(self, claimant_data: ClaimantData, claim: Claim) -> None:
-        """ Connects the claim to its FINEOS organization unit """
+        """Connects the claim to its FINEOS organization unit"""
         if not claim.employer_id or not claimant_data.organization_unit_name:
             return None
 

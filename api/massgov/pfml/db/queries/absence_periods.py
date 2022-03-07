@@ -44,9 +44,7 @@ def split_fineos_leave_request_id(id: str, log_attributes: Dict) -> int:
     period_ids = id.split("-")
     if len(period_ids) != 3 or not period_ids[2].isdigit():
         message = f"Invalid fineos leave request id format, leave request id: {id}"
-        logger.error(
-            message, extra={"fineos_leave_request_id": id, **log_attributes},
-        )
+        logger.error(message, extra={"fineos_leave_request_id": id, **log_attributes})
         validation_error = ValidationErrorDetail(
             message=message, type=IssueType.value_error, field="id/periodReference"
         )
@@ -151,16 +149,12 @@ def upsert_absence_period_from_fineos_period(
     fineos_period = convert_customer_api_period_to_group_client_period(fineos_period)
 
     if fineos_period.leaveRequest is None:
-        logger.error(
-            "Failed to extract leave request from fineos period.", extra=log_attributes,
-        )
+        logger.error("Failed to extract leave request from fineos period.", extra=log_attributes)
         return
     if fineos_period.periodReference:
         class_id, index_id = split_fineos_absence_period_id(fineos_period.periodReference)
     else:
-        logger.error(
-            "Failed to extract class and index id.", extra=log_attributes,
-        )
+        logger.error("Failed to extract class and index id.", extra=log_attributes)
         return
 
     db_absence_period = get_absence_period_by_claim_id_and_fineos_ids(
@@ -246,9 +240,7 @@ def sync_customer_api_absence_periods_to_db(
                 db_session, claim.claim_id, absence_period, log_attributes
             )
     except Exception as error:
-        logger.exception(
-            "Failed while populating AbsencePeriod Table", extra={**log_attributes},
-        )
+        logger.exception("Failed while populating AbsencePeriod Table", extra={**log_attributes})
         raise error
     # only commit if there were no errors
     db_session.commit()

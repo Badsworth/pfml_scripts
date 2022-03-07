@@ -70,12 +70,7 @@ class TestPaginator:
                 assert page.total_pages == expected["total_pages"]
                 i += 1
 
-            expected = {
-                "page_records": 0,
-                "page_size": 10,
-                "total_records": 30,
-                "total_pages": 3,
-            }
+            expected = {"page_records": 0, "page_size": 10, "total_records": 30, "total_pages": 3}
             page = pages.page_at(page_offset=0)
             assert page.offset == 0
             assert page.size == expected["page_size"]
@@ -118,7 +113,7 @@ class TestPaginator:
 
         filter_conditions = [
             {"clause": Application.user == user, "total_count": 10},
-            {"clause": Application.user == other_user, "total_count": 10,},
+            {"clause": Application.user == other_user, "total_count": 10},
             {"clause": None, "total_count": 20},
         ]
 

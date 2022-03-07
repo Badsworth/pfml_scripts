@@ -247,7 +247,7 @@ class FineosExtractConstants:
     VBI_1099DATA_SOM = FineosExtract(
         file_name="VBI_1099DATA_SOM.csv",
         table=FineosExtractVbi1099DataSom,
-        field_names=["FIRSTNAMES", "LASTNAME", "CUSTOMERNO", "PACKEDDATA", "DOCUMENTTYPE", "C",],
+        field_names=["FIRSTNAMES", "LASTNAME", "CUSTOMERNO", "PACKEDDATA", "DOCUMENTTYPE", "C"],
     )
     VPEI = FineosExtract(
         file_name="vpei.csv",
@@ -428,7 +428,7 @@ class FineosExtractConstants:
     VBI_LEAVE_PLAN_REQUESTED_ABSENCE = FineosExtract(
         file_name="VBI_LEAVEPLANREQUESTEDABSENCE.csv",
         table=FineosExtractVbiLeavePlanRequestedAbsence,
-        field_names=["SELECTEDPLAN_CLASSID", "SELECTEDPLAN_INDEXID", "LEAVEREQUEST_ID",],
+        field_names=["SELECTEDPLAN_CLASSID", "SELECTEDPLAN_INDEXID", "LEAVEREQUEST_ID"],
     )
 
     PAID_LEAVE_INSTRUCTION = FineosExtract(
@@ -474,9 +474,7 @@ IAWW_EXTRACT_FILES = [
 ]
 IAWW_EXTRACT_FILES_NAMES = [extract_file.file_name for extract_file in IAWW_EXTRACT_FILES]
 
-REQUEST_1099_EXTRACT_FILES = [
-    FineosExtractConstants.VBI_1099DATA_SOM,
-]
+REQUEST_1099_EXTRACT_FILES = [FineosExtractConstants.VBI_1099DATA_SOM]
 
 REQUEST_1099_EXTRACT_FILES_NAMES = [
     extract_file.file_name for extract_file in REQUEST_1099_EXTRACT_FILES
@@ -538,7 +536,7 @@ class ValidationContainer:
     validation_issues: List[ValidationIssue] = field(default_factory=list)
 
     def add_validation_issue(
-        self, reason: ValidationReason, details: Optional[str], field_name: Optional[str] = None,
+        self, reason: ValidationReason, details: Optional[str], field_name: Optional[str] = None
     ) -> None:
         self.validation_issues.append(ValidationIssue(reason, details, field_name))
 
@@ -634,7 +632,7 @@ def routing_number_validator(routing_number: str) -> Optional[ValidationReason]:
     return None
 
 
-def leave_request_id_validator(leave_request_id: str,) -> Optional[ValidationReason]:
+def leave_request_id_validator(leave_request_id: str) -> Optional[ValidationReason]:
     parsed_leave_request_id = str_to_int(leave_request_id)
     if parsed_leave_request_id is None:
         return ValidationReason.INVALID_TYPE
@@ -709,8 +707,8 @@ def get_date_group_folder_name(date_group: str, reference_file_type: LkReference
     ):  # TODO remove when lookup descriptions are non nullable
         return ""
 
-    reference_file_type_folder_postfix = reference_file_type.reference_file_type_description.lower().replace(
-        " ", "-"
+    reference_file_type_folder_postfix = (
+        reference_file_type.reference_file_type_description.lower().replace(" ", "-")
     )
 
     date_group_folder = f"{date_group}-{reference_file_type_folder_postfix}"
@@ -1086,7 +1084,7 @@ def get_mapped_claim_type(claim_type_str: str) -> LkClaimType:
 def move_reference_file(
     db_session: db.Session, ref_file: ReferenceFile, src_dir: str, dest_dir: str
 ) -> None:
-    """ Moves a ReferenceFile
+    """Moves a ReferenceFile
 
     Renames the actual S3 file (copies and deletes) and updates the reference_file.file_location
     """
@@ -1151,7 +1149,7 @@ def create_staging_table_instance(
     fineos_extract_import_log_id: Optional[int],
     ignore_properties: Optional[List[Any]] = None,
 ) -> base.Base:
-    """ We return an instance of cls, with matching properties from data and cls. If there are any
+    """We return an instance of cls, with matching properties from data and cls. If there are any
     properties from the data that don't have a match in staging model db_cls, we discard them and log it.
     Eg:
         class VbiRequestedAbsenceSom(Base):
@@ -1178,7 +1176,7 @@ def create_staging_table_instance(
     if len(unconfigured_columns) > 0:
         logger.warning(
             "Unconfigured columns in FINEOS extract after first record.",
-            extra={"db_cls.__name__": db_cls.__name__, "fields": ",".join(unconfigured_columns),},
+            extra={"db_cls.__name__": db_cls.__name__, "fields": ",".join(unconfigured_columns)},
         )
     [lower_data.pop(column) for column in unconfigured_columns]
 

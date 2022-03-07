@@ -6,10 +6,10 @@ import React, { useRef, useState } from "react";
 import AmendButton from "./AmendButton";
 import AmendmentForm from "../../components/AmendmentForm";
 import ConditionalContent from "../../components/ConditionalContent";
-import ErrorInfo from "../../models/ErrorInfo";
 import Heading from "../../components/core/Heading";
 import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import InputDate from "../../components/core/InputDate";
+import findErrorMessageForField from "../../utils/findErrorMessageForField";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
 import { get } from "lodash";
@@ -17,7 +17,7 @@ import useAutoFocusEffect from "../../hooks/useAutoFocusEffect";
 import { useTranslation } from "../../locales/i18n";
 
 interface AmendablePreviousLeaveProps {
-  errors: ErrorInfo[];
+  errors: Error[];
   isAddedByLeaveAdmin: boolean;
   onChange: (
     arg: PreviousLeave | { [key: string]: unknown },
@@ -52,7 +52,7 @@ const AmendablePreviousLeave = ({
     `previous_leaves[${amendment.previous_leave_id}].${field}`;
 
   const getErrorMessage = (field: string) =>
-    ErrorInfo.fieldErrorMessage(errors, getFieldPath(field));
+    findErrorMessageForField(errors, getFieldPath(field));
 
   const getFormattedValue = (field: string, value: string) => {
     if (field === "leave_start_date" || field === "leave_end_date") {

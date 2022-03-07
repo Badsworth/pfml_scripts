@@ -165,6 +165,7 @@ function getIssueForDisallowedFile(
       disallowedFileNames:
         disallowedFile instanceof File ? disallowedFile.name : "",
     }),
+    namespace: "documents",
   };
 }
 
@@ -197,8 +198,7 @@ const useFilesLogic = ({
     addFiles(allowedFiles.map((file) => new TempFile({ file })));
 
     if (issues.length > 0) {
-      const i18nPrefix = "files";
-      catchError(new ValidationError(issues, i18nPrefix));
+      catchError(new ValidationError(issues));
     }
   };
 

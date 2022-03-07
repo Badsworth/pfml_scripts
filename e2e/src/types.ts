@@ -21,6 +21,7 @@ export type FeatureFlags = {
   claimantShowMFA?: boolean;
   employerShowMultiLeave: boolean;
   claimantShowPaymentsPhaseTwo: boolean;
+  channelSwitching: boolean;
   employerShowMultiLeaveDashboard: boolean;
 };
 

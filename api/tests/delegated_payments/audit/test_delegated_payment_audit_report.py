@@ -496,7 +496,7 @@ class TestGetPaymentPreapprovalStatus:
             add_import_log=True,
         ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
 
-        approval_status = get_payment_preapproval_status(payment, list(), test_db_session,)
+        approval_status = get_payment_preapproval_status(payment, list(), test_db_session)
         assert not approval_status.is_preapproved()
         assert (
             approval_status.get_preapproval_issue_description()
@@ -843,20 +843,20 @@ def test_is_first_time_payment(
 
     claim = ClaimFactory.create()
     payment = DelegatedPaymentFactory(
-        test_db_session, claim=claim,
+        test_db_session, claim=claim
     ).get_or_create_payment_with_state(
         State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
     )
 
     assert payment_audit_report_step.previously_audit_sent_count(payment) == 0
 
-    DelegatedPaymentFactory(test_db_session, claim=claim,).get_or_create_payment_with_state(
+    DelegatedPaymentFactory(test_db_session, claim=claim).get_or_create_payment_with_state(
         State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
     )
 
     assert payment_audit_report_step.previously_audit_sent_count(payment) == 0
 
-    previous_rejected_payment_factory = DelegatedPaymentFactory(test_db_session, claim=claim,)
+    previous_rejected_payment_factory = DelegatedPaymentFactory(test_db_session, claim=claim)
     previous_rejected_payment_factory.get_or_create_payment_with_state(
         State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT
     )
@@ -866,7 +866,7 @@ def test_is_first_time_payment(
 
     assert payment_audit_report_step.previously_audit_sent_count(payment) == 1
 
-    previous_bank_error_payment_factory = DelegatedPaymentFactory(test_db_session, claim=claim,)
+    previous_bank_error_payment_factory = DelegatedPaymentFactory(test_db_session, claim=claim)
     previous_bank_error_payment_factory.get_or_create_payment_with_state(
         State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT
     )
@@ -1321,7 +1321,7 @@ def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Pay
 
 def validate_address_columns(row: PaymentAuditCSV, payment: Payment):
     def validate_address_columns_helper(
-        address_line_one, address_line_two, city, state, zip_code, is_address_verified,
+        address_line_one, address_line_two, city, state, zip_code, is_address_verified
     ):
         assert row[PAYMENT_AUDIT_CSV_HEADERS.address_line_1] == address_line_one
         assert row[PAYMENT_AUDIT_CSV_HEADERS.address_line_2] == address_line_two
@@ -1463,7 +1463,7 @@ def test_orphaned_withholding_payments(
 
     claim = ClaimFactory.create()
     payment = DelegatedPaymentFactory(
-        test_db_session, claim=claim,
+        test_db_session, claim=claim
     ).get_or_create_payment_with_state(
         State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
     )
@@ -1516,7 +1516,7 @@ def test_related_withholding_payments(
 
     claim = ClaimFactory.create()
     payment = DelegatedPaymentFactory(
-        test_db_session, claim=claim,
+        test_db_session, claim=claim
     ).get_or_create_payment_with_state(
         State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
     )

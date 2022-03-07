@@ -3,6 +3,7 @@ import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { Submission } from "../../../../src/types";
 import * as faker from "faker";
 import { add, format } from "date-fns";
+import { config } from "../../../actions/common";
 
 describe("Approve claim created in Fineos, then check Tax Withholding deductions (SIT/FIT)", () => {
   const fineosSubmission =
@@ -27,7 +28,11 @@ describe("Approve claim created in Fineos, then check Tax Withholding deductions
               "MM/dd/yyyy"
             ),
           })
-          .createNotification(claim.claim, claim.is_withholding_tax)
+          .createNotification(
+            claim.claim,
+            claim.is_withholding_tax,
+            config("HAS_APRIL_UPGRADE") === "true"
+          )
           .then((fineos_absence_id) => {
             cy.log(fineos_absence_id);
             cy.stash("submission", {

@@ -99,7 +99,7 @@ class TestUpdateUser:
 
     @mock.patch("massgov.pfml.api.services.users._update_mfa_preference_audit_trail")
     def test_audit_trail_not_updated_if_mfa_preference_isnt_updated(
-        self, mock_audit_trail, user, test_db_session,
+        self, mock_audit_trail, user, test_db_session
     ):
         update_request = UserUpdateRequest(mfa_delivery_preference="SMS")
         update_user(test_db_session, user, update_request)
@@ -111,9 +111,7 @@ class TestUpdateUser:
         assert mock_audit_trail.call_count == 1
 
     @mock.patch("massgov.pfml.api.services.users.logger", mock_logger)
-    def test_mfa_updated_logging(
-        self, user, test_db_session,
-    ):
+    def test_mfa_updated_logging(self, user, test_db_session):
         update_request = UserUpdateRequest(mfa_delivery_preference="SMS")
         update_user(test_db_session, user, update_request)
 
@@ -123,7 +121,7 @@ class TestUpdateUser:
 
     @mock.patch("massgov.pfml.api.services.users.handle_mfa_disabled")
     def test_handle_mfa_disabled_called_when_mfa_disabled(
-        self, mock_handle_mfa_disabled, user, test_db_session,
+        self, mock_handle_mfa_disabled, user, test_db_session
     ):
         # enable MFA
         update_request = UserUpdateRequest(mfa_delivery_preference="SMS")
@@ -137,7 +135,7 @@ class TestUpdateUser:
 
     @mock.patch("massgov.pfml.api.services.users.handle_mfa_disabled")
     def test_handle_mfa_disabled_not_called_on_first_opt_out(
-        self, mock_handle_mfa_disabled, user, test_db_session,
+        self, mock_handle_mfa_disabled, user, test_db_session
     ):
         update_request = UserUpdateRequest(mfa_delivery_preference="Opt Out")
         update_user(test_db_session, user, update_request)

@@ -65,7 +65,7 @@ def get_payments_from_db(
 ) -> Tuple[List[PaymentContainer], List[PaymentContainer]]:
     payments = (
         db_session.query(Payment)
-        .filter(Payment.claim_id == claim_id,)
+        .filter(Payment.claim_id == claim_id)
         .filter(
             Payment.payment_transaction_type_id.in_(
                 [
@@ -74,7 +74,7 @@ def get_payments_from_db(
                     PaymentTransactionType.ZERO_DOLLAR.payment_transaction_type_id,
                     PaymentTransactionType.CANCELLATION.payment_transaction_type_id,
                 ]
-            ),
+            )
         )
         .filter(Payment.exclude_from_payment_status != True)  # noqa: E712
         .filter(
@@ -266,10 +266,7 @@ def to_response_dict(payment_data: List[PaymentContainer], absence_case_id: Opti
             ).dict()
         )
 
-    return {
-        "payments": payments,
-        "absence_case_id": absence_case_id,
-    }
+    return {"payments": payments, "absence_case_id": absence_case_id}
 
 
 def log_payment_status(claim: Claim, payment_containers: List[PaymentContainer]) -> None:

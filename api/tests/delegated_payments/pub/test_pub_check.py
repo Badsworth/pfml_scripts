@@ -234,9 +234,7 @@ def test_get_eligible_check_payments_error(test_db_session, initialize_factories
         test_db_session, PaymentMethod.ACH, State.DELEGATED_PAYMENT_ADD_TO_PUB_TRANSACTION_CHECK
     )
 
-    with pytest.raises(
-        Exception, match=r"Non-Check payment method detected in state log: .+",
-    ):
+    with pytest.raises(Exception, match=r"Non-Check payment method detected in state log: .+"):
         pub_check._get_eligible_check_payments(test_db_session)
 
 

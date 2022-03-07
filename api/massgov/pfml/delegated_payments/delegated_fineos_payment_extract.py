@@ -839,10 +839,8 @@ class PaymentExtractStep(Step):
         # We always create a new payment record. This may be completely new
         # or a payment might have been created before. We'll check that later.
 
-        logger.info(
-            "Creating payment record in DB", extra=payment_data.get_traceable_details(),
-        )
-        payment = Payment(payment_id=uuid.uuid4(), vpei_id=payment_data.pei_record.vpei_id,)
+        logger.info("Creating payment record in DB", extra=payment_data.get_traceable_details())
+        payment = Payment(payment_id=uuid.uuid4(), vpei_id=payment_data.pei_record.vpei_id)
 
         # set the payment method
         if payment_data.raw_payment_method:
@@ -978,9 +976,7 @@ class PaymentExtractStep(Step):
         if existing_eft:
             extra |= payments_util.get_traceable_pub_eft_details(existing_eft, employee)
             self.increment(self.Metrics.EFT_FOUND_COUNT)
-            logger.info(
-                "Found existing EFT info for claimant associated with payment", extra=extra,
-            )
+            logger.info("Found existing EFT info for claimant associated with payment", extra=extra)
 
             if PrenoteState.APPROVED.prenote_state_id == existing_eft.prenote_state_id:
                 self.increment(self.Metrics.APPROVED_PRENOTE_COUNT)
@@ -1121,7 +1117,7 @@ class PaymentExtractStep(Step):
 
         # Link the payment object to the payment_reference_file
         payment_reference_file = PaymentReferenceFile(
-            payment=payment, reference_file=reference_file,
+            payment=payment, reference_file=reference_file
         )
         self.db_session.add(payment_reference_file)
 
@@ -1495,16 +1491,14 @@ class PaymentExtractStep(Step):
             # Create and finish the state log. If there were any issues, this'll set the
             # record to an error state which'll send out a report to address it, otherwise
             # it will move onto the next step in processing
-            self._setup_state_log(
-                payment, payment_data,
-            )
+            self._setup_state_log(payment, payment_data)
 
         except Exception:
             # An exception during processing would indicate
             # either a bug or a scenario that we believe invalidates
             # an entire file and warrants investigating
             logger.exception(
-                "An error occurred while processing payment for CI: %s, %s", c_value, i_value,
+                "An error occurred while processing payment for CI: %s, %s", c_value, i_value
             )
             raise
 

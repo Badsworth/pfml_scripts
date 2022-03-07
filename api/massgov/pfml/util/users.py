@@ -25,7 +25,7 @@ def create_user(
     employer_for_leave_admin: Optional[Employer],
 ) -> User:
     """Create API records for a new user (claimant or leave admin)"""
-    user = User(sub_id=auth_id, email_address=email_address,)
+    user = User(sub_id=auth_id, email_address=email_address)
 
     try:
         db_session.add(user)
@@ -49,7 +49,7 @@ def create_user(
 def add_leave_admin_and_role(db_session: db.Session, user: User, employer: Employer) -> User:
     """A helper function to create the first user leave admin and role"""
     user_role = UserRole(user=user, role_id=Role.EMPLOYER.role_id)
-    user_leave_admin = UserLeaveAdministrator(user=user, employer=employer, fineos_web_id=None,)
+    user_leave_admin = UserLeaveAdministrator(user=user, employer=employer, fineos_web_id=None)
     db_session.add(user_role)
     db_session.add(user_leave_admin)
     return user
@@ -73,9 +73,7 @@ def remove_leave_admins_and_role(db_session: db.Session, user: User) -> User:
         .filter(UserRole.user_id == user.user_id and UserRole.role_id == Role.EMPLOYER.role_id)
         .delete()
     )
-    logger.info(
-        "deleted from link_user_role", extra=dict(count=row_count, user_id=user.user_id),
-    )
+    logger.info("deleted from link_user_role", extra=dict(count=row_count, user_id=user.user_id))
     return user
 
 

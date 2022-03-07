@@ -274,9 +274,11 @@ class PaymentRejectsStep(Step):
             )
 
         # check if the payment has any withholding payments.
-        withholding_records: List[LinkSplitPayment] = self.db_session.query(
-            LinkSplitPayment
-        ).filter(LinkSplitPayment.payment_id == payment.payment_id).all()
+        withholding_records: List[LinkSplitPayment] = (
+            self.db_session.query(LinkSplitPayment)
+            .filter(LinkSplitPayment.payment_id == payment.payment_id)
+            .all()
+        )
 
         if payment.payment_transaction_type_id in [
             PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,
@@ -679,7 +681,7 @@ class PaymentRejectsStep(Step):
 
         # parse the rejects file
         payment_rejects_rows: List[PaymentAuditCSV] = self.parse_payment_rejects_file(
-            payment_rejects_file_path,
+            payment_rejects_file_path
         )
         parsed_rows_count = len(payment_rejects_rows)
         self.set_metrics({self.Metrics.PARSED_ROWS_COUNT: parsed_rows_count})

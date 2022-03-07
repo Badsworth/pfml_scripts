@@ -170,11 +170,11 @@ class PaymentsDateConfig(PydanticBaseSettings):
     )
     # PFML API will not process FINEOS IAWW data older than this date
     fineos_iaww_extract_max_history_date: str = Field(
-        NOT_SET, description="The earliest file we will copy from FINEOS for the IAWW extract",
+        NOT_SET, description="The earliest file we will copy from FINEOS for the IAWW extract"
     )
 
     fineos_1099_data_extract_max_history_date: str = Field(
-        NOT_SET, description="The earliest file we will copy from FINEOS for the 1099 extract",
+        NOT_SET, description="The earliest file we will copy from FINEOS for the 1099 extract"
     )
 
 

@@ -36,7 +36,7 @@ def employees_get(employee_id):
         )
 
     return response_util.success_response(
-        message="Successfully retrieved employee", data=response_type.from_orm(employee).dict(),
+        message="Successfully retrieved employee", data=response_type.from_orm(employee).dict()
     ).to_api_response()
 
 
@@ -105,12 +105,12 @@ def employees_search() -> flask.Response:
 
     logger.info(
         "Employees_search success",
-        extra={**page_data_log_attributes, **search_request_log_attributes,},
+        extra={**page_data_log_attributes, **search_request_log_attributes},
     )
 
-    response_model: Union[
-        Type[EmployeeForPfmlCrmResponse], Type[EmployeeResponse]
-    ] = EmployeeForPfmlCrmResponse if is_pfml_crm_user else EmployeeResponse
+    response_model: Union[Type[EmployeeForPfmlCrmResponse], Type[EmployeeResponse]] = (
+        EmployeeForPfmlCrmResponse if is_pfml_crm_user else EmployeeResponse
+    )
 
     return response_util.paginated_success_response(
         message="Successfully retrieved Employees",

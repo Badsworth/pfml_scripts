@@ -55,17 +55,14 @@ def uuid_gen() -> uuid.UUID:
 
 
 def utc_timestamp_gen():
-    """ Generate a tz-aware timestamp pinned to UTC """
+    """Generate a tz-aware timestamp pinned to UTC"""
     return utcnow()
 
 
 # This is annotated as a @declarative_mixin when we upgrade to SQLAlchemy 1.4
 class TimestampMixin:
     created_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        server_default=sqlnow(),
+        TIMESTAMP(timezone=True), nullable=False, default=utc_timestamp_gen, server_default=sqlnow()
     )
 
     updated_at = Column(

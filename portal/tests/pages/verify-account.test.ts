@@ -1,6 +1,6 @@
 import { act, screen, waitFor } from "@testing-library/react";
 import { AppLogic } from "../../src/hooks/useAppLogic";
-import ErrorInfo from "../../src/models/ErrorInfo";
+import { InternalServerError } from "../../src/errors";
 import VerifyAccount from "../../src/pages/verify-account";
 import { renderPage } from "../test-utils";
 import userEvent from "@testing-library/user-event";
@@ -149,7 +149,7 @@ describe("VerifyAccount", () => {
   it("when there are errors, does not show success message when code is resent", async () => {
     options = {
       addCustomSetup: (appLogic: AppLogic) => {
-        appLogic.errors = [new ErrorInfo({})];
+        appLogic.errors = [new InternalServerError({})];
         appLogic.auth.resendVerifyAccountCode = () =>
           new Promise((resolve) => {
             resolveResendVerifyAccountCodeMock = resolve;

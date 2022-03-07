@@ -105,9 +105,7 @@ def main():
 
     employee_file.close()
 
-    logger.info(
-        "DONE: output file %s", employee_path,
-    )
+    logger.info("DONE: output file %s", employee_path)
 
 
 def generate_employee_file(employee_count, employees_file, db_session):
@@ -137,9 +135,9 @@ def generate_employee_file(employee_count, employees_file, db_session):
 
 def generate_single_employee(employee_generate_id: int, employee_row: Employee) -> dict:
     """
-      Generate a single employee.
+    Generate a single employee.
 
-      This is intended to always generate the same fake values for a given employee_generate_id.
+    This is intended to always generate the same fake values for a given employee_generate_id.
     """
     fake.seed_instance(employee_generate_id)
     random.seed(employee_generate_id)

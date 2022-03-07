@@ -78,13 +78,9 @@ class Configuration:
     def __init__(self, input_args: List[str]):
         parser = argparse.ArgumentParser(description="Process DOR Pending Filing Response file")
 
-        parser.add_argument(
-            "--responsefile", help="Path to DORDUADFML file to process.",
-        )
+        parser.add_argument("--responsefile", help="Path to DORDUADFML file to process.")
 
-        parser.add_argument(
-            "--exemptionfile", help="Path to exemption file to process.",
-        )
+        parser.add_argument("--exemptionfile", help="Path to exemption file to process.")
 
         args = parser.parse_args(input_args)
         self.file_path = args.responsefile
@@ -141,9 +137,7 @@ def handler() -> None:
         folder_path = os.environ["FOLDER_PATH"]
         csv_folder_path = os.environ["CSV_FOLDER_PATH"]
 
-        logger.info(
-            "Starting import run", extra={"folder_path": folder_path},
-        )
+        logger.info("Starting import run", extra={"folder_path": folder_path})
 
         import_files = get_pending_filing_files_to_process(folder_path)
         exemption_file = get_exemption_file_to_process(csv_folder_path)
@@ -211,9 +205,7 @@ def process_pending_filing_employer_files(
 
             # process each batch
             for employer_file in import_files:
-                logger.info(
-                    "Processing import file", extra={"employer_file": employer_file,},
-                )
+                logger.info("Processing import file", extra={"employer_file": employer_file})
 
                 import_report = process_pending_filing_employer_import(
                     db_session, employer_file, exemption_file_path, decrypter, s3
@@ -289,7 +281,7 @@ def process_pending_filing_employer_import(
 ) -> ImportReport:
     logger.info("Starting to process files")
     report = ImportReport(
-        start=datetime.now().isoformat(), status="in progress", employer_file=employer_file_path,
+        start=datetime.now().isoformat(), status="in progress", employer_file=employer_file_path
     )
 
     exemption_data = CSVSourceWrapper(employer_exemption_file_path)
@@ -319,7 +311,7 @@ def process_pending_filing_employer_import(
             )
 
             import_employees_and_wage_data(
-                db_session, employees, dict(), report, report_log_entry.import_log_id,
+                db_session, employees, dict(), report, report_log_entry.import_log_id
             )
 
         # finalize report
@@ -638,9 +630,7 @@ def import_employees(
     import_log_entry_id: int,
 ) -> None:
     """Create or update employees data in the db"""
-    logger.info(
-        "Start import of employees import - lines: %i", len(employee_info_list),
-    )
+    logger.info("Start import of employees import - lines: %i", len(employee_info_list))
 
     # 1 - Stage employee info for creation
     logger.info("Staging employee info for creation")
@@ -726,7 +716,7 @@ def import_employees(
 
         new_employee_id = ssn_to_new_employee_id[ssn]
         new_employee = dor_persistence_util.dict_to_employee(
-            employee_info, import_log_entry_id, new_employee_id, ssn_to_new_tax_id[ssn],
+            employee_info, import_log_entry_id, new_employee_id, ssn_to_new_tax_id[ssn]
         )
         employee_models_to_create.append(new_employee)
         # Enqueue newly created employee for push to FINEOS

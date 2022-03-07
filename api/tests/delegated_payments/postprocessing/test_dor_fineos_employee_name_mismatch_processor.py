@@ -111,7 +111,7 @@ def test_processor_mixed(
     message = audit_report.details["message"]
 
     assert message == "\n".join(
-        ["DOR Name: Sam Garcia-Valdez", "FINEOS Name: Javier Valdez-Garcia",]
+        ["DOR Name: Sam Garcia-Valdez", "FINEOS Name: Javier Valdez-Garcia"]
     )
 
     payment_2 = create_payment_with_name("Javier", "Jones", "Joe", "Valdez-Garcia")
@@ -119,7 +119,7 @@ def test_processor_mixed(
     audit_report = _get_audit_report_details(payment_2, local_test_db_session)
     message = audit_report.details["message"]
 
-    assert message == "\n".join(["DOR Name: Javier Jones", "FINEOS Name: Joe Valdez-Garcia",])
+    assert message == "\n".join(["DOR Name: Javier Jones", "FINEOS Name: Joe Valdez-Garcia"])
 
     # Name too short, auto-fails
     payment_3 = create_payment_with_name("J", "Valdez-Garcia", "Javier", "Valdez-Garcia")
@@ -127,7 +127,7 @@ def test_processor_mixed(
     audit_report = _get_audit_report_details(payment_3, local_test_db_session)
     message = audit_report.details["message"]
 
-    assert message == "\n".join(["DOR Name: J Valdez-Garcia", "FINEOS Name: Javier Valdez-Garcia",])
+    assert message == "\n".join(["DOR Name: J Valdez-Garcia", "FINEOS Name: Javier Valdez-Garcia"])
 
 
 def _get_audit_report_details(payment, local_test_db_session):

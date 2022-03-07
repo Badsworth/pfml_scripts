@@ -1,38 +1,35 @@
-import { NetworkError, TranslatableError, ValidationError } from "src/errors";
+import { NetworkError, ValidationError } from "src/errors";
 import { render, screen } from "@testing-library/react";
 import ErrorMessage from "src/components/ErrorMessage";
 import React from "react";
 
 describe("ErrorMessage", () => {
   it("renders listing of each issues entry when present on the error", () => {
-    const error = new ValidationError(
-      [
-        {
-          field: "first_name",
-          type: "required",
-        },
-        {
-          field: "last_name",
-          type: "required",
-        },
-      ],
-      "applications"
-    );
+    const error = new ValidationError([
+      {
+        field: "first_name",
+        type: "required",
+        namespace: "applications",
+      },
+      {
+        field: "last_name",
+        type: "required",
+        namespace: "applications",
+      },
+    ]);
     render(<ErrorMessage error={error} />);
 
     expect(screen.getByRole("list")).toMatchSnapshot();
   });
 
   it("does not render a list when there's only one issues entry", () => {
-    const error = new ValidationError(
-      [
-        {
-          field: "first_name",
-          type: "required",
-        },
-      ],
-      "applications"
-    );
+    const error = new ValidationError([
+      {
+        field: "first_name",
+        type: "required",
+        namespace: "applications",
+      },
+    ]);
     render(<ErrorMessage error={error} />);
 
     expect(screen.queryByRole("list")).not.toBeInTheDocument();
@@ -46,10 +43,9 @@ describe("ErrorMessage", () => {
   });
 
   it("renders generic message when the error has an empty issues property", () => {
-    const error: TranslatableError = {
+    const error = {
       name: "TestError",
       issues: [],
-      i18nPrefix: "test",
       message: "This is a test error",
     };
 

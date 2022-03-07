@@ -90,7 +90,7 @@ class ProcessFilesInPathStep(Step, metaclass=abc.ABCMeta):
         date_folder = delegated_payments_util.get_date_folder()
 
         self.received_path = os.path.join(
-            self.base_path, delegated_payments_util.Constants.S3_INBOUND_RECEIVED_DIR,
+            self.base_path, delegated_payments_util.Constants.S3_INBOUND_RECEIVED_DIR
         )
         self.processed_path = os.path.join(
             self.base_path, delegated_payments_util.Constants.S3_INBOUND_PROCESSED_DIR, date_folder

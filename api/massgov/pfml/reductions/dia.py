@@ -359,7 +359,7 @@ def _load_new_rows_from_file(file: io.StringIO, db_session: db.Session) -> Tuple
 
 
 def _load_dia_payment_from_reference_file(
-    ref_file: ReferenceFile, archive_directory: str, db_session: db.Session,
+    ref_file: ReferenceFile, archive_directory: str, db_session: db.Session
 ) -> Tuple[int, int]:
     new_row_count = 0
     total_row_count = 0

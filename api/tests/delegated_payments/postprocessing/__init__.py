@@ -182,7 +182,7 @@ def _create_absence_data(
 
 
 def _create_absence_periods_data(
-    benefit_year: BenefitYear, total_leave_duration: int, absences: Optional[int] = 1, **kwargs,
+    benefit_year: BenefitYear, total_leave_duration: int, absences: Optional[int] = 1, **kwargs
 ):
     start_date = benefit_year.start_date
     absence_data: List[AbsenceConfig] = []

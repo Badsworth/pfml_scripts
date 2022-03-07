@@ -325,7 +325,7 @@ class HealthCareProvider(Base, TimestampMixin):
 class OrganizationUnit(Base, TimestampMixin):
     __tablename__ = "organization_unit"
     __table_args__ = (
-        UniqueConstraint("name", "employer_id", name="uix_organization_unit_name_employer_id",),
+        UniqueConstraint("name", "employer_id", name="uix_organization_unit_name_employer_id"),
     )
     organization_unit_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     fineos_id = Column(Text, nullable=True, unique=True)
@@ -610,7 +610,7 @@ class Employee(Base, TimestampMixin):
     __tablename__ = "employee"
     employee_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     tax_identifier_id = Column(
-        PostgreSQLUUID, ForeignKey("tax_identifier.tax_identifier_id"), index=True, unique=True,
+        PostgreSQLUUID, ForeignKey("tax_identifier.tax_identifier_id"), index=True, unique=True
     )
     title_id = Column(Integer, ForeignKey("lk_title.title_id"))
     first_name = Column(Text, nullable=False, index=True)
@@ -716,7 +716,7 @@ class Employee(Base, TimestampMixin):
                 DuaEmployeeDemographics,
                 DuaReportingUnit.dua_id == DuaEmployeeDemographics.employer_reporting_unit_number,
             )
-            .filter(DuaEmployeeDemographics.fineos_customer_number == self.fineos_customer_number,)
+            .filter(DuaEmployeeDemographics.fineos_customer_number == self.fineos_customer_number)
             .filter(
                 OrganizationUnit.fineos_id is not None,
                 DuaReportingUnit.organization_unit_id is not None,
@@ -814,7 +814,7 @@ class Claim(Base, TimestampMixin):
         relationship("ManagedRequirement", back_populates="claim"),
     )
     absence_periods = cast(
-        Optional[List["AbsencePeriod"]], relationship("AbsencePeriod", back_populates="claim"),
+        Optional[List["AbsencePeriod"]], relationship("AbsencePeriod", back_populates="claim")
     )
     organization_unit = relationship(OrganizationUnit)
     change_request = relationship("ChangeRequest", back_populates="claim")
@@ -967,6 +967,15 @@ class BenefitYear(Base, TimestampMixin):
     base_period_end_date = Column(Date)
 
     total_wages = Column(Numeric(asdecimal=True))
+
+    @typed_hybrid_property
+    def current_benefit_year(self):
+        today = date.today()
+        return today >= self.start_date and today <= self.end_date
+
+    @current_benefit_year.expression
+    def current_benefit_year(cls):  # noqa: B902
+        return func.now().between(cls.start_date, cls.end_date)
 
     contributions = cast(
         List["BenefitYearContribution"],
@@ -1191,9 +1200,7 @@ class EmployerAddress(Base, TimestampMixin):
 class HealthCareProviderAddress(Base, TimestampMixin):
     __tablename__ = "link_health_care_provider_address"
     health_care_provider_id = Column(
-        PostgreSQLUUID,
-        ForeignKey("health_care_provider.health_care_provider_id"),
-        primary_key=True,
+        PostgreSQLUUID, ForeignKey("health_care_provider.health_care_provider_id"), primary_key=True
     )
     address_id = Column(PostgreSQLUUID, ForeignKey("address.address_id"), primary_key=True)
 
@@ -1326,7 +1333,7 @@ class UserLeaveAdministratorOrgUnit(Base, TimestampMixin):
         primary_key=True,
     )
     organization_unit_id = Column(
-        PostgreSQLUUID, ForeignKey("organization_unit.organization_unit_id"), primary_key=True,
+        PostgreSQLUUID, ForeignKey("organization_unit.organization_unit_id"), primary_key=True
     )
 
     organization_unit = relationship(OrganizationUnit)
@@ -1570,9 +1577,7 @@ class PaymentReferenceFile(Base, TimestampMixin):
         PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), primary_key=True
     )
     ctr_document_identifier_id = Column(
-        PostgreSQLUUID,
-        ForeignKey("ctr_document_identifier.ctr_document_identifier_id"),
-        index=True,
+        PostgreSQLUUID, ForeignKey("ctr_document_identifier.ctr_document_identifier_id"), index=True
     )
 
     payment = relationship("Payment", back_populates="reference_files")
@@ -1589,9 +1594,7 @@ class EmployeeReferenceFile(Base, TimestampMixin):
         PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), primary_key=True
     )
     ctr_document_identifier_id = Column(
-        PostgreSQLUUID,
-        ForeignKey("ctr_document_identifier.ctr_document_identifier_id"),
-        index=True,
+        PostgreSQLUUID, ForeignKey("ctr_document_identifier.ctr_document_identifier_id"), index=True
     )
 
     employee = relationship("Employee", back_populates="reference_files")
@@ -1651,7 +1654,7 @@ class StateLog(Base, TimestampMixin):
     associated_type = Column(Text, index=True)
 
     import_log_id = Column(
-        Integer, ForeignKey("import_log.import_log_id"), index=True, nullable=True,
+        Integer, ForeignKey("import_log.import_log_id"), index=True, nullable=True
     )
     end_state = cast("Optional[LkState]", relationship(LkState, foreign_keys=[end_state_id]))
     payment = relationship("Payment", back_populates="state_logs")

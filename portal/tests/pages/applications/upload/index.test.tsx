@@ -161,14 +161,13 @@ describe("UploadDocsOptions", () => {
     userEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(setErrorsSpy).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({
-            field: "upload_docs_options",
-            type: "required",
-          }),
-        ])
-      );
+      expect(setErrorsSpy.mock.calls[0][0][0].issues).toEqual([
+        {
+          field: "upload_docs_options",
+          type: "required",
+          namespace: "applications",
+        },
+      ]);
     });
 
     expect(goToNextPageSpy).not.toHaveBeenCalled();

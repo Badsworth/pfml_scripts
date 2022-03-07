@@ -27,7 +27,7 @@ class LeaveDurationResult:
 
 class LeaveCalculator:
     """
-        Calculate leave data per benefit year for an employee
+    Calculate leave data per benefit year for an employee
     """
 
     benefit_year_absences: Dict[BenefitYearID, Set[AbsencePeriodID]]
@@ -80,9 +80,7 @@ class LeaveCalculator:
             or not absence_period.absence_period_end_date
         ):
             self.log_extra["absence_period_id"] = absence_period.absence_period_id
-            logger.warning(
-                "Skipping absence period with missing data", self.log_extra,
-            )
+            logger.warning("Skipping absence period with missing data", self.log_extra)
             return
 
         if not datetime_util.is_date_contained(
@@ -126,8 +124,8 @@ class LeaveCalculator:
             self.employers[employer_id] = absence_period.claim.employer
 
     def benefit_years_exceeding_threshold(self, threshold: int) -> List[LeaveDurationResult]:
-        """ For each benefit year, check if the total leave durations for any employer
-            exceeds the maximum total leave duration threshold.
+        """For each benefit year, check if the total leave durations for any employer
+        exceeds the maximum total leave duration threshold.
         """
 
         benefit_years_exceeding_threshold: List[LeaveDurationResult] = []

@@ -13,9 +13,7 @@ class ServiceNowError(RuntimeError):
     response_status: Optional[int]
     url: str
 
-    def __init__(
-        self, url: str, response_status: Optional[int] = None, message: str = "",
-    ):
+    def __init__(self, url: str, response_status: Optional[int] = None, message: str = ""):
         self.response_status = response_status
         self.url = url
         self.message = message
@@ -35,14 +33,12 @@ class ServiceNowFatalError(RuntimeError):
     url: str
     cause: Exception
 
-    def __init__(
-        self, url: str, cause: Exception,
-    ):
+    def __init__(self, url: str, cause: Exception):
         self.url = url
         self.cause = cause
 
     def __str__(self) -> str:
-        return "(%s) %s: %s" % (self.url, type(self.cause).__name__, self.cause,)
+        return "(%s) %s: %s" % (self.url, type(self.cause).__name__, self.cause)
 
 
 class ServiceNowUnavailable(ServiceNowError):

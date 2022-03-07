@@ -193,10 +193,10 @@ DESCRIPTORS = (
         ],
     ),
     AuditScenarioDescriptor(
-        scenario_name=AuditScenarioName.ADDRESS_PAIR_DOES_NOT_EXIST, has_address_pair=False,
+        scenario_name=AuditScenarioName.ADDRESS_PAIR_DOES_NOT_EXIST, has_address_pair=False
     ),
     AuditScenarioDescriptor(
-        scenario_name=AuditScenarioName.ADDRESS_IS_NOT_VERIFIED, is_address_verified=False,
+        scenario_name=AuditScenarioName.ADDRESS_IS_NOT_VERIFIED, is_address_verified=False
     ),
     AuditScenarioDescriptor(
         scenario_name=AuditScenarioName.AUDIT_REPORT_DETAIL_INFORMATIONAL,
@@ -249,7 +249,7 @@ def create_payment_with_end_state(
     )
 
     state_log_util.create_finished_state_log(
-        payment, end_state, state_log_util.build_outcome("test"), db_session,
+        payment, end_state, state_log_util.build_outcome("test"), db_session
     )
 
     return payment
@@ -284,7 +284,7 @@ def _create_previous_payments(
             i_value = _new_ci_value()
 
         create_payment_with_end_state(
-            c_value, i_value, claim, address_pair, payment_method, state, db_session,
+            c_value, i_value, claim, address_pair, payment_method, state, db_session
         )
 
         previous_state = state
@@ -303,11 +303,11 @@ def generate_scenario_data(
     i_value = _new_ci_value()
 
     mailing_address = AddressFactory.create(
-        address_line_one="20 South Ave", city="Burlington", geo_state_id=1, zip_code="01803",
+        address_line_one="20 South Ave", city="Burlington", geo_state_id=1, zip_code="01803"
     )
 
     verified_address = AddressFactory.create(
-        address_line_one="20 South Avenue", city="Burlington", geo_state_id=1, zip_code="01803",
+        address_line_one="20 South Avenue", city="Burlington", geo_state_id=1, zip_code="01803"
     )
 
     employer = EmployerFactory.create()

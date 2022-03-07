@@ -53,7 +53,10 @@ const useClaimsLogic = ({
     if (isLoadingClaims) return;
 
     // Or have we already loaded this page with the same order and filter params?
-    if (isEqual(activeParams, queryParams)) {
+    if (
+      isEqual(activeParams, queryParams) &&
+      paginationMeta.page_offset === Number(queryParams.page_offset)
+    ) {
       return;
     }
 

@@ -147,7 +147,7 @@ def absence_period():
 
 @pytest.fixture
 def change_request(claim):
-    return ChangeRequestFactory.create(claim_id=claim.claim_id, change_request_type_id=2,)
+    return ChangeRequestFactory.create(claim_id=claim.claim_id, change_request_type_id=2)
 
 
 @pytest.fixture
@@ -157,10 +157,7 @@ def set_auth_public_keys(monkeypatch, auth_key):
 
 @pytest.fixture(scope="session")
 def auth_claims_unit():
-    claims = {
-        "exp": datetime.now() + timedelta(days=1),
-        "sub": "foo",
-    }
+    claims = {"exp": datetime.now() + timedelta(days=1), "sub": "foo"}
 
     return claims
 
@@ -244,22 +241,14 @@ def consented_user_claims(consented_user):
 
 @pytest.fixture
 def fineos_user_claims(fineos_user):
-    claims = {
-        "a": "b",
-        "exp": datetime.now() + timedelta(days=1),
-        "sub": str(fineos_user.sub_id),
-    }
+    claims = {"a": "b", "exp": datetime.now() + timedelta(days=1), "sub": str(fineos_user.sub_id)}
 
     return claims
 
 
 @pytest.fixture
 def snow_user_claims(snow_user):
-    claims = {
-        "a": "b",
-        "exp": datetime.now() + timedelta(days=1),
-        "sub": str(snow_user.sub_id),
-    }
+    claims = {"a": "b", "exp": datetime.now() + timedelta(days=1), "sub": str(snow_user.sub_id)}
 
     return claims
 
@@ -276,7 +265,7 @@ def azure_auth_keys():
                 "kty": "RSA",
                 "n": "iWBm-DQbycUqrPBSD5yk73zxyIr66hBUCyPCShW-btQ-nyBk1E-h4AvtqHpl4Y1aghQDTnn2gLHiRtV_XJtCpK1PEJ3SCqw6wGOEw5bbG7Q88KDvTMUF5k6gzRMHMBTD7lMNPIY-oCuh_Rwvg19hGBD2O6rA2sMHyTB-O2ZwL6M",
                 "use": "sig",
-            },
+            }
         ]
     }
 
@@ -620,7 +609,7 @@ def mock_sftp_client():
 def setup_mock_sftp_client(monkeypatch, mock_sftp_client):
     # Mock SFTP client so we can inspect the method calls we make later in the test.
     monkeypatch.setattr(
-        file_util, "get_sftp_client", lambda uri, ssh_key_password, ssh_key: mock_sftp_client,
+        file_util, "get_sftp_client", lambda uri, ssh_key_password, ssh_key: mock_sftp_client
     )
 
 

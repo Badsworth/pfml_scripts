@@ -115,7 +115,7 @@ def _get_benefit_year_contribution_from_claim(
     if not claim.employer_id:
         logger.warning(
             "Cannot find employer_id on claim.",
-            extra={"claim_id": claim.claim_id, "employee_id": claim.employee_id,},
+            extra={"claim_id": claim.claim_id, "employee_id": claim.employee_id},
         )
 
         return None
@@ -143,7 +143,7 @@ def _get_benefit_year_contribution_from_claim(
 
 
 def find_employer_benefit_year_contribution(
-    benefit_year: BenefitYear, employer_id: UUID4,
+    benefit_year: BenefitYear, employer_id: UUID4
 ) -> Optional[BenefitYearContribution]:
     contributions = benefit_year.contributions if benefit_year.contributions else []
     for contribution in contributions:
@@ -154,7 +154,7 @@ def find_employer_benefit_year_contribution(
 
 
 def find_employer_benefit_year_IAWW_contribution(
-    benefit_year: BenefitYear, employer_id: UUID4,
+    benefit_year: BenefitYear, employer_id: UUID4
 ) -> Optional[Decimal]:
     contribution = find_employer_benefit_year_contribution(benefit_year, employer_id)
     if not contribution:
@@ -179,13 +179,13 @@ def _create_benefit_year(
     if found_benefit_year:
         logger.warning(
             "Cannot create a Benefit Year over period with existing Benefit Year.",
-            extra={"leave_start_date": leave_start_date, "employee_id": employee_id,},
+            extra={"leave_start_date": leave_start_date, "employee_id": employee_id},
         )
         return None
 
     date_range = get_benefit_year_dates(leave_start_date)
     benefit_year = BenefitYear(
-        **date_range.dict(), employee_id=employee_id, total_wages=total_wages,
+        **date_range.dict(), employee_id=employee_id, total_wages=total_wages
     )
     if base_period_dates:
         benefit_year.base_period_start_date = base_period_dates[0]
@@ -292,7 +292,7 @@ def get_benefit_year_by_employee_id(
 
 
 def get_all_benefit_years_by_employee_id(
-    db_session: db.Session, employee_id: UUID4,
+    db_session: db.Session, employee_id: UUID4
 ) -> List[BenefitYear]:
     return db_session.query(BenefitYear).filter(BenefitYear.employee_id == employee_id).all()
 

@@ -38,7 +38,7 @@ class PreapprovalStatus:
     audit_report_detail_records: List[PaymentAuditReportDetails]
 
     def __init__(
-        self, payment: Payment, audit_report_detail_records: List[PaymentAuditReportDetails],
+        self, payment: Payment, audit_report_detail_records: List[PaymentAuditReportDetails]
     ) -> None:
         self.payment = payment
         self.last_payment = None
@@ -109,7 +109,7 @@ class PreapprovalStatus:
             return ";".join(issue_descriptions)
         except Exception:
             logger.exception(
-                "An error was encountered creating the preapproval issue description.", extra=extra,
+                "An error was encountered creating the preapproval issue description.", extra=extra
             )
             return PreapprovalIssue.UNKNOWN
 
@@ -150,18 +150,18 @@ def get_payment_preapproval_status(
         .count()
     )
 
-    all_previous_payments: List[Payment] = db_session.query(Payment).filter(
-        Payment.fineos_leave_request_id == payment.fineos_leave_request_id
-    ).filter(
-        Payment.payment_transaction_type_id
-        == PaymentTransactionType.STANDARD.payment_transaction_type_id
-    ).filter(
-        Payment.exclude_from_payment_status != True  # noqa: E712
-    ).order_by(
-        Payment.fineos_pei_i_value, desc(Payment.fineos_extract_import_log_id)
-    ).distinct(
-        Payment.fineos_pei_i_value
-    ).all()
+    all_previous_payments: List[Payment] = (
+        db_session.query(Payment)
+        .filter(Payment.fineos_leave_request_id == payment.fineos_leave_request_id)
+        .filter(
+            Payment.payment_transaction_type_id
+            == PaymentTransactionType.STANDARD.payment_transaction_type_id
+        )
+        .filter(Payment.exclude_from_payment_status != True)  # noqa: E712
+        .order_by(Payment.fineos_pei_i_value, desc(Payment.fineos_extract_import_log_id))
+        .distinct(Payment.fineos_pei_i_value)
+        .all()
+    )
 
     # Ignoring the mypy error since fineos_extract_import_log_id is technically Optional[int]
     # but since these records all come from the db, the import log will be present

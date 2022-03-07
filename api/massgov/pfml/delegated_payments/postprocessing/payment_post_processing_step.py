@@ -103,7 +103,7 @@ class PaymentPostProcessingStep(Step):
             state_log_util.create_finished_state_log(
                 end_state=State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
                 outcome=state_log_util.build_outcome(
-                    "Completed post processing", validation_container=None,
+                    "Completed post processing", validation_container=None
                 ),
                 associated_model=payment_container.payment,
                 db_session=self.db_session,

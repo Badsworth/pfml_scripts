@@ -3,11 +3,11 @@ import { TFunction, useTranslation } from "react-i18next";
 import { AbsencePeriod } from "../../../models/AbsencePeriod";
 import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
-import ErrorInfo from "../../../models/ErrorInfo";
 import InputChoiceGroup from "../../../components/core/InputChoiceGroup";
 import LeaveReason from "../../../models/LeaveReason";
 import QuestionPage from "../../../components/QuestionPage";
 import Spinner from "../../../components/core/Spinner";
+import { ValidationError } from "../../../errors";
 import tracker from "../../../services/tracker";
 import useFormState from "../../../hooks/useFormState";
 import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
@@ -75,17 +75,19 @@ export const UploadDocsOptions = (props: Props) => {
 
   const handleSave = async () => {
     if (!upload_docs_options) {
-      const errorInfo = new ErrorInfo({
-        field: "upload_docs_options",
-        message: t("errors.applications.upload_docs_options.required"),
-        type: "required",
-      });
+      const error = new ValidationError([
+        {
+          field: "upload_docs_options",
+          type: "required",
+          namespace: "applications",
+        },
+      ]);
 
-      appLogic.setErrors([errorInfo]);
+      appLogic.setErrors([error]);
 
       tracker.trackEvent("ValidationError", {
-        issueField: errorInfo.field || "",
-        issueType: errorInfo.type || "",
+        issueField: error.issues[0].field ?? "",
+        issueType: error.issues[0].type ?? "",
       });
 
       return;

@@ -98,7 +98,7 @@ class PaymentContainer:
         return self._get_sort_key() < other._get_sort_key()
 
     def get_traceable_details(
-        self, add_validation_issues: bool = False, state: Optional[LkState] = None,
+        self, add_validation_issues: bool = False, state: Optional[LkState] = None
     ) -> Dict[str, Optional[Any]]:
         # For logging purposes, this returns useful, traceable details
 

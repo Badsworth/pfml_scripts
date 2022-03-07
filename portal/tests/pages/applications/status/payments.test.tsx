@@ -8,8 +8,8 @@ import { AbsencePeriod } from "../../../../src/models/AbsencePeriod";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { AppLogic } from "../../../../src/hooks/useAppLogic";
 import ClaimDetail from "../../../../src/models/ClaimDetail";
-import ErrorInfo from "../../../../src/models/ErrorInfo";
 import LeaveReason from "../../../../src/models/LeaveReason";
+import { NotFoundError } from "../../../../src/errors";
 import { Payment } from "../../../../src/models/Payment";
 import { Payments } from "../../../../src/pages/applications/status/payments";
 import { createMockBenefitsApplicationDocument } from "../../../../lib/mock-helpers/createMockDocument";
@@ -348,15 +348,7 @@ describe("Payments", () => {
             claimDetail: undefined,
             isLoadingClaimDetail: false,
           },
-          errors: [
-            new ErrorInfo({
-              meta: { application_id: "foo" },
-              key: "ErrorInfo1",
-              message:
-                "Sorry, we were unable to retrieve what you were looking for. Check that the link you are visiting is correct. If this continues to happen, please log out and try again.",
-              name: "NotFoundError",
-            }),
-          ],
+          errors: [new NotFoundError()],
           documents: {
             loadAll: { loadAllClaimDocuments: jest.fn() },
           },

@@ -34,7 +34,7 @@ def upgrade():
         sa.Column("leave_end_date", sa.Date(), nullable=True),
         sa.Column("is_for_current_employer", sa.Boolean(), nullable=True),
         sa.Column("leave_reason_id", sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(["application_id"], ["application.application_id"],),
+        sa.ForeignKeyConstraint(["application_id"], ["application.application_id"]),
         sa.ForeignKeyConstraint(
             ["leave_reason_id"],
             ["lk_previous_leave_qualifying_reason.previous_leave_qualifying_reason_id"],

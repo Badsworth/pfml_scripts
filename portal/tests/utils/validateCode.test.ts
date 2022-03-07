@@ -11,6 +11,7 @@ describe("validateCode", () => {
     expect(validated).toEqual({
       field: "code",
       type: "required",
+      namespace: "mfa",
     });
   });
 
@@ -26,6 +27,7 @@ describe("validateCode", () => {
       expect(validated).toEqual({
         field: "code",
         type: "pattern",
+        namespace: "mfa",
       });
     }
   });

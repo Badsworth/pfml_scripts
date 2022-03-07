@@ -354,9 +354,7 @@ def test_get_benefit_year__should_return_valid_benefit_year__with_previous_claim
     assert benefit_year.end_date == expected_benefit_year_end
 
 
-@pytest.mark.parametrize(
-    "leave_start_date", [date(2017, 12, 29), date(2023, 12, 31)],
-)
+@pytest.mark.parametrize("leave_start_date", [date(2017, 12, 29), date(2023, 12, 31)])
 def test_get_benefit_year__should_return_none_when_absence_date_outside_of_data__with_previous_claims_and_persisted_benefit_years(
     test_db_session: db.Session,
     include_dummy_claims,
@@ -410,9 +408,7 @@ def test_get_benefit_year__should_raise_exception_when_employee_not_found__with_
 # (2) -- 2019-12-29 (Sun) 2020-12-26 (Sat)
 # (3) -- 2021-01-03 (Sun) 2022-01-01 (Sat)
 # (4) -- 2022-01-02 (Sun) 2022-12-31 (Sat)
-@pytest.mark.parametrize(
-    "leave_start_date", [date(2017, 12, 29), date(2023, 12, 31)],
-)
+@pytest.mark.parametrize("leave_start_date", [date(2017, 12, 29), date(2023, 12, 31)])
 def test_create_benefit_year_by_ssn__should_create_and_return_valid_benefit_year__with_previous_claims_and_persisted_benefit_years(
     test_db_session: db.Session,
     include_dummy_claims,
@@ -495,7 +491,7 @@ def test_create_benefit_year_by_ssn__should_raise_exception_when_employee_not_fo
 
     with pytest.raises(NotFound, match="Cannot find employee with provided tax identifer."):
         create_benefit_year_by_ssn(
-            test_db_session, "123123", leave_start_date, total_wages, employer_contributions,
+            test_db_session, "123123", leave_start_date, total_wages, employer_contributions
         )
 
     benefit_years_after = test_db_session.query(BenefitYear).all()
@@ -576,7 +572,7 @@ def test_create_benefit_year_by_employee_id__should_not_fail_committing_to_db_wh
     assert len(benefit_years_before) == 4
 
     create_benefit_year_by_employee_id(
-        test_db_session, uuid4(), leave_start_date, total_wages, employer_contributions,
+        test_db_session, uuid4(), leave_start_date, total_wages, employer_contributions
     )
 
     benefit_years_after = test_db_session.query(BenefitYear).all()
@@ -623,7 +619,7 @@ def test_create_benefit_year_by_employee_id__should_not_fail_committing_to_db_wh
 
 
 def test_get_benefit_year_should_update_benefit_year_if_new_claim_is_before_start_date(
-    test_db_session: db.Session, include_employee: Employee, include_employers: List[Employer],
+    test_db_session: db.Session, include_employee: Employee, include_employers: List[Employer]
 ):
     # Benefit Year does not exist, but should based on an existing (future) claim
     start_date = date(2022, 2, 1)
@@ -911,7 +907,7 @@ def test_create_employer_contribution_for_benefit_year_should_return_none_if_inv
     employer_id = employer.employer_id if use_employer_id else uuid4()
 
     contribution = create_employer_contribution_for_benefit_year(
-        test_db_session, benefit_year_id, employee_id, employer_id, employer_iaww,
+        test_db_session, benefit_year_id, employee_id, employer_id, employer_iaww
     )
     by = test_db_session.query(BenefitYear).one()
 

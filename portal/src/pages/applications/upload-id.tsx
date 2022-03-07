@@ -13,6 +13,7 @@ import Accordion from "../../components/core/Accordion";
 import AccordionItem from "../../components/core/AccordionItem";
 import Alert from "../../components/core/Alert";
 import DocumentRequirements from "../../components/DocumentRequirements";
+import { DocumentsUploadError } from "../../errors";
 import FileCardList from "../../components/FileCardList";
 import FileUploadDetails from "../../components/FileUploadDetails";
 import Heading from "../../components/core/Heading";
@@ -96,8 +97,8 @@ export const UploadId = (props: UploadIdProps) => {
   };
 
   const fileErrors = errors.filter(
-    (errorInfo) => errorInfo.meta && errorInfo.meta.file_id
-  );
+    (error) => error instanceof DocumentsUploadError
+  ) as DocumentsUploadError[];
 
   return (
     <QuestionPage

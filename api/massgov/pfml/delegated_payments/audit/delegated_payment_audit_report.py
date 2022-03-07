@@ -213,18 +213,14 @@ class PaymentAuditReportStep(Step):
         other_claim_payments = _get_other_claim_payments_for_payment(
             payment, same_payment_period=True
         )
-        previous_states = [
-            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
-        ]
+        previous_states = [State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT]
         return _get_state_log_count_in_state(other_claim_payments, previous_states, self.db_session)
 
     def previously_skipped_payment_count(self, payment: Payment) -> int:
         other_claim_payments = _get_other_claim_payments_for_payment(
             payment, same_payment_period=True
         )
-        previous_states = [
-            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
-        ]
+        previous_states = [State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE]
         return _get_state_log_count_in_state(other_claim_payments, previous_states, self.db_session)
 
     def previously_paid_payments(
@@ -294,7 +290,7 @@ class PaymentAuditReportStep(Step):
         payment_amount: decimal.Decimal = decimal.Decimal(0)
 
         if payment.payment_transaction_type_id in [
-            PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id,
+            PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
         ]:
             payment_amount = payment.amount
             return payment_amount
@@ -314,7 +310,7 @@ class PaymentAuditReportStep(Step):
         payment_amount: decimal.Decimal = decimal.Decimal(0)
 
         if payment.payment_transaction_type_id in [
-            PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,
+            PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
         ]:
             payment_amount = payment.amount
             return payment_amount
@@ -411,8 +407,7 @@ class PaymentAuditReportStep(Step):
             payment_audit_data_set.append(payment_audit_data)
 
         logger.info(
-            "Done building payment audit data for sampled payments: %i",
-            len(payment_audit_data_set),
+            "Done building payment audit data for sampled payments: %i", len(payment_audit_data_set)
         )
 
         return payment_audit_data_set
@@ -476,7 +471,7 @@ def _get_state_log_count_in_state(
 
     audit_report_sent_state_other_payments = (
         db_session.query(StateLog)
-        .filter(StateLog.end_state_id.in_(state_ids), StateLog.payment_id.in_(payment_ids),)
+        .filter(StateLog.end_state_id.in_(state_ids), StateLog.payment_id.in_(payment_ids))
         .all()
     )
     return len(audit_report_sent_state_other_payments)

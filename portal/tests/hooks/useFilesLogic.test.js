@@ -76,6 +76,7 @@ describe("useFilesLogic", () => {
         [
           {
             "message": "We could not upload: file1. Files must be smaller than 4.5 MB.",
+            "namespace": "documents",
           },
         ]
       `);
@@ -124,6 +125,7 @@ describe("useFilesLogic", () => {
         [
           {
             "message": "We could not upload: file1. Files must be smaller than 10 MB.",
+            "namespace": "documents",
           },
         ]
       `);
@@ -144,6 +146,7 @@ describe("useFilesLogic", () => {
         [
           {
             "message": "We could not upload: file1. Choose a PDF or an image file (.jpg, .jpeg, .png).",
+            "namespace": "documents",
           },
         ]
       `);
@@ -173,6 +176,7 @@ describe("useFilesLogic", () => {
         [
           {
             "message": "We could not upload: file1. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than 4.5 MB.",
+            "namespace": "documents",
           },
         ]
       `);

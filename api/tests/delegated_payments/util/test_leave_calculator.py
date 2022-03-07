@@ -69,21 +69,21 @@ def employer_3(test_db_session, initialize_factories_session):
 @pytest.fixture
 def benefit_year_1(test_db_session, initialize_factories_session, use_employee):
     return BenefitYearFactory.create(
-        employee=use_employee, start_date=date(2020, 1, 5), end_date=date(2021, 1, 2),
+        employee=use_employee, start_date=date(2020, 1, 5), end_date=date(2021, 1, 2)
     )
 
 
 @pytest.fixture
 def benefit_year_2(test_db_session, initialize_factories_session, use_employee):
     return BenefitYearFactory.create(
-        employee=use_employee, start_date=date(2021, 1, 3), end_date=date(2022, 1, 1),
+        employee=use_employee, start_date=date(2021, 1, 3), end_date=date(2022, 1, 1)
     )
 
 
 @pytest.fixture
 def benefit_year_3(test_db_session, initialize_factories_session, use_employee):
     return BenefitYearFactory.create(
-        employee=use_employee, start_date=date(2022, 1, 2), end_date=date(2022, 12, 31),
+        employee=use_employee, start_date=date(2022, 1, 2), end_date=date(2022, 12, 31)
     )
 
 
@@ -94,13 +94,13 @@ def test_set_benefit_year_absence_period__absence_period_missing_data__mixed(
     benefit_year_end_date = date(2021, 1, 2)
 
     benefit_year = BenefitYearFactory.create(
-        start_date=benefit_year_start_date, end_date=benefit_year_end_date,
+        start_date=benefit_year_start_date, end_date=benefit_year_end_date
     )
     leave_calc = LeaveCalculator(benefit_years=[benefit_year])
 
     # Missing claim, absence_period_start_date, absence_period_end_date
     absence_period = AbsencePeriodFactory.create(
-        absence_period_start_date=None, absence_period_end_date=None,
+        absence_period_start_date=None, absence_period_end_date=None
     )
     leave_calc.set_benefit_year_absence_period(benefit_year, absence_period)
     assert leave_calc.benefit_year_absences == {}
@@ -202,7 +202,7 @@ def test_set_benefit_year_absence_periods__one_claim_single_absence_period(
 
 
 def test_set_benefit_year_absence_periods__one_claim_multiple_absence_periods(
-    use_employee: Employee, benefit_year_1: BenefitYear, employer_1: Employer,
+    use_employee: Employee, benefit_year_1: BenefitYear, employer_1: Employer
 ):
     benefit_year_id = benefit_year_1.benefit_year_id
     employer_id = employer_1.employer_id
@@ -311,32 +311,27 @@ def test_set_benefit_year_absence_periods__mixed(
     ]
     leave_calc = LeaveCalculator([benefit_year_2])
     leave_calc.set_benefit_year_absence_periods(absence_periods_2)
-    assert leave_calc.consolidated_leave[benefit_year_2_id] == {
-        employer_1_id: 6,
-        employer_2_id: 5,
-    }
+    assert leave_calc.consolidated_leave[benefit_year_2_id] == {employer_1_id: 6, employer_2_id: 5}
 
     ### Benefit year 3
     BENEFIT_YEAR_3_SCENARIOS = [
         # Employer 3
-        one_claim_multiple_absence_periods(use_employee, benefit_year_3, employer_3),
+        one_claim_multiple_absence_periods(use_employee, benefit_year_3, employer_3)
     ]
     absence_periods_3 = [
         item for sublist in BENEFIT_YEAR_3_SCENARIOS for item in sublist.absence_periods
     ]
     leave_calc = LeaveCalculator([benefit_year_3])
     leave_calc.set_benefit_year_absence_periods(absence_periods_3)
-    assert leave_calc.consolidated_leave[benefit_year_3_id] == {
-        employer_3_id: 35,
-    }
+    assert leave_calc.consolidated_leave[benefit_year_3_id] == {employer_3_id: 35}
 
     # All scenarios combined
     leave_calc = LeaveCalculator([benefit_year_1, benefit_year_2, benefit_year_3])
     leave_calc.set_benefit_year_absence_periods(
-        absence_periods_1 + absence_periods_2 + absence_periods_3,
+        absence_periods_1 + absence_periods_2 + absence_periods_3
     )
     assert leave_calc.consolidated_leave == {
-        benefit_year_1_id: {employer_1_id: 175, employer_2_id: 35, employer_3_id: 31,},
+        benefit_year_1_id: {employer_1_id: 175, employer_2_id: 35, employer_3_id: 31},
         benefit_year_2_id: {employer_1_id: 6, employer_2_id: 5},
         benefit_year_3_id: {employer_3_id: 35},
     }

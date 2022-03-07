@@ -14,17 +14,14 @@ export interface Issue {
   // Technical message intended for debugging purposes, but
   // can be used as a last resort if no other message is available.
   message?: string;
+  // Typically the API resource:
+  namespace: string;
   rule?: string;
   type?: string;
 }
 
-// Any error in this shape can be internationalized in our app.
-export interface TranslatableError {
-  name: string;
-  message: string;
+export interface ErrorWithIssues extends BasePortalError {
   issues?: Issue[];
-  // TODO (PORTAL-1825): Refactor where we set i18nPrefix
-  i18nPrefix?: string;
 }
 
 export class BasePortalError extends Error {
@@ -237,18 +234,15 @@ export class UnauthorizedError extends ApiRequestError {
 
 /**
  * A request wasn't completed due to one or more validation issues
- * @example new ValidationError([{ field: "tax_identifier", type: "pattern", message: "Field didn't match \d{9}" }], "applications")
+ * @example new ValidationError([{ field: "tax_identifier", type: "pattern", message: "Field didn't match \d{9}", namespace: "applications" }])
  */
 export class ValidationError extends BasePortalError {
   // List of validation issues returned by the API
   issues: Issue[];
-  // Used in the i18n message keys, prefixed to the field name (e.g. `prefix.field_name`)
-  i18nPrefix: string;
 
-  constructor(issues: Issue[], i18nPrefix: string) {
+  constructor(issues: Issue[]) {
     super();
     this.issues = issues;
-    this.i18nPrefix = i18nPrefix;
     this.name = "ValidationError";
   }
 }

@@ -23,19 +23,19 @@ class Merge1099Step(Step):
 
         if pfml_1099_util.is_merge_1099_pdf_enabled():
             logger.info("Merge 1099 Pdf flag is enabled")
-            batch = self.get_record()
-            self.merge_document(str(batch.pfml_1099_batch_id), self.pdfApiEndpoint)
+            batch_id = self.get_1099_batch_id()
+            self.merge_document(batch_id, self.pdfApiEndpoint)
         else:
             logger.info("Merge 1099 Pdf flag is not enabled")
 
-    def get_record(self):
+    def get_1099_batch_id(self):
         batch = pfml_1099_util.get_current_1099_batch(self.db_session)
 
         if batch is None:
             logger.error("No current batch exists. This should never happen.")
             raise Exception("Batch cannot be empty at this point.")
 
-        return batch
+        return str(batch.pfml_1099_batch_id)
 
     def merge_document(self, batchId: str, url: str) -> None:
         mergeDto = {"batchId": batchId, "numOfRecords": 250}

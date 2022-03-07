@@ -16,7 +16,7 @@ def validate_error_response(
     meta_method=NOT_NONE,
     meta_resource=NOT_NONE,
 ):
-    """ Validate that an error object is properly constructed with fields filled out (ie. created by response_util.error_response) """
+    """Validate that an error object is properly constructed with fields filled out (ie. created by response_util.error_response)"""
     assert response.status_code == status_code
 
     response_json = response.get_json()

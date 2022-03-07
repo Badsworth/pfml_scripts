@@ -29,7 +29,7 @@ class Crypt(ABC):
 class GpgCrypt(Crypt):
     def __init__(self, gpg_key, gpg_passphrase, recipient=None, homedir=None, on_data=None):
         """Set a different gnuhome so the key is not picked up by default in
-           shared machine environments (i.e. on AWS)."""
+        shared machine environments (i.e. on AWS)."""
         # if encrypting the same gpg directory used to generate a key needs to be passed in
         gpghome = homedir or tempfile.mkdtemp()
         gpg = gnupg.GPG(gnupghome=gpghome)
@@ -73,7 +73,7 @@ class GpgCrypt(Crypt):
 
     def remove_keys(self):
         """Delete keys from the system to avoid any possibility of being viewed by
-           other applications in a shared machine environment."""
+        other applications in a shared machine environment."""
         logger.info("Deleting GPG keys from system...")
         res = self.gpg.delete_keys(
             fingerprints=self.gpg_key_fingerprints, secret=True, passphrase=self.passphrase

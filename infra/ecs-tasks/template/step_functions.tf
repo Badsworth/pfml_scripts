@@ -71,7 +71,7 @@ locals {
       security_group        = data.aws_security_group.tasks.id
       subnet_1              = var.app_subnet_ids[0]
       subnet_2              = var.app_subnet_ids[1]
-      sns_failure_topic_arn = data.aws_sns_topic.task_failure.arn
+      sns_failure_topic_arn = aws_sns_topic.task_failure.arn
 
       task_failure_notification_enabled = true
   })
@@ -96,11 +96,6 @@ resource "aws_sfn_state_machine" "dor_fineos_etl" {
 # This is defined in ecs-tasks/template/security_groups.tf and referenced by name here.
 data "aws_security_group" "tasks" {
   name = "${local.app_name}-${var.environment_name}-tasks"
-}
-
-# This is defined in ecs-tasks/template/sns.tf and referenced by name here.
-data "aws_sns_topic" "task_failure" {
-  name = "mass-pfml-${var.environment_name}-task-failure"
 }
 
 # These are defined in ecs-tasks/template/iam.tf and referenced by name here.
@@ -191,7 +186,7 @@ data "aws_iam_policy_document" "iam_policy_step_functions" {
       "sns:Publish",
     ]
     resources = [
-      data.aws_sns_topic.task_failure.arn
+      aws_sns_topic.task_failure.arn
     ]
   }
 }

@@ -287,7 +287,7 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
     ) -> None:
         """Handle a check payment that remains in an outstanding status."""
         logger.info(
-            "check still outstanding, no state change", extra=extra_for_log(check_payment, payment),
+            "check still outstanding, no state change", extra=extra_for_log(check_payment, payment)
         )
         self.increment(self.Metrics.PAYMENT_STILL_OUTSTANDING)
 
@@ -340,7 +340,7 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         )
 
         logger.info(
-            "payment failed by check", extra=extra_for_log(check_payment, payment, end_state),
+            "payment failed by check", extra=extra_for_log(check_payment, payment, end_state)
         )
         self.increment(self.Metrics.PAYMENT_FAILED_BY_CHECK)
         self.add_pub_error(

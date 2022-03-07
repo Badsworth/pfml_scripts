@@ -14,6 +14,7 @@ import {
 } from "../../../../src/util/claims";
 import { waitForAjaxComplete } from "../../../actions/fineos";
 import { LeaveReason } from "../../../../src/generation/Claim";
+import { config } from "../../../actions/common";
 
 const getLeaveType = (leaveReason: NonNullable<LeaveReason>): LeaveType => {
   const mapping: {
@@ -136,9 +137,12 @@ describe("Submit a claim through Fineos intake process, verify the Absence Case"
           .startCreateNotification((occupationDetails) => {
             // @TODO CPS-906-P (CPS-1650)/Check that you can't submit 0 as amount of hours worked per week
             // Comment out everything after this to end the test.
-            occupationDetails.enterHoursWorkedPerWeek(0);
-            occupationDetails.clickNext();
-            fineos.assertErrorMessage("Hours worked per week must be entered");
+            // occupationDetails.enterHoursWorkedPerWeek(0);
+            // occupationDetails.clickNext();
+            if (config("HAS_APRIL_UPGRADE") === "true") {
+              occupationDetails.verifyOccupation();
+            }
+            // fineos.assertErrorMessage("Hours worked per week must be entered");
             // @TODO end of testing CPS-906-P (CPS-1650)
             // Adjust as needed
             if (claim.claim.hours_worked_per_week)

@@ -10,6 +10,7 @@ from massgov.pfml.api.validation import (
     add_error_handlers_to_app,
     convert_pydantic_error_to_validation_exception,
     get_custom_validator_map,
+    is_unexpected_validation_error,
     log_validation_error,
 )
 from massgov.pfml.api.validation.exceptions import (
@@ -28,7 +29,7 @@ MISSING_DATA_USER = {"first_name": "Foo"}
 
 def post_user():
     """handler for test api (see 'test.yml' file in this directory)"""
-    return success_response(message="Success", data=VALID_USER,).to_api_response()
+    return success_response(message="Success", data=VALID_USER).to_api_response()
 
 
 def get_user():
@@ -69,17 +70,7 @@ def test_request_response_validation():
         == "Missing request body"
     )
 
-    response_validation_error_response = client.post(
-        "/user-invalid-response", json=VALID_USER,
-    ).get_json()
-    validate_invalid_response(
-        response_validation_error_response,
-        "/user-invalid-response",
-        "Response Validation Error",
-        field_prefix="data.",
-    )
-
-    success_response = client.post("/user", json=VALID_USER,).get_json()
+    success_response = client.post("/user", json=VALID_USER).get_json()
 
     request_validation_error_response_get_warnings = client.get(
         "/user", json=MISSING_DATA_USER
@@ -139,7 +130,7 @@ def test_log_validation_error_unexpected_exception_handling(caplog):
     )
 
     expected_exception = ValidationErrorDetail(
-        rule="anything", type="format", field="anything", message="something that might be PII 2",
+        rule="anything", type="format", field="anything", message="something that might be PII 2"
     )
 
     errors = [unexpected_exception, expected_exception, unexpected_exception, expected_exception]
@@ -147,7 +138,7 @@ def test_log_validation_error_unexpected_exception_handling(caplog):
     exception = ValidationException(errors, "Request Validation Exception", {})
 
     for error in exception.errors:
-        log_validation_error(exception, error)
+        log_validation_error(exception, error, is_unexpected_validation_error)
 
     assert [(r.funcName, r.levelname, r.message) for r in caplog.records] == [
         (

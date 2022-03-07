@@ -6,7 +6,6 @@ import {
   mockFetch,
 } from "../test-utils";
 import ClaimDetail from "../../src/models/ClaimDetail";
-import ErrorInfo from "../../src/models/ErrorInfo";
 import useAppLogic from "../../src/hooks/useAppLogic";
 
 jest.mock("../../src/services/tracker");
@@ -157,6 +156,11 @@ describe("useClaimsLogic", () => {
         await appLogic.current.claims.loadPage();
         expect(global.fetch).toHaveBeenCalled();
 
+        // this should make an API request since page offset is different from paginationMeta
+        mockPaginatedFetch();
+        await appLogic.current.claims.loadPage({ page_offset: 2 });
+        expect(global.fetch).toHaveBeenCalled();
+
         // this should make an API request since the filters changed
         mockPaginatedFetch();
         await appLogic.current.claims.loadPage({
@@ -195,7 +199,7 @@ describe("useClaimsLogic", () => {
       const { appLogic } = setup();
 
       act(() => {
-        appLogic.current.setErrors([new ErrorInfo()]);
+        appLogic.current.setErrors([new Error()]);
       });
 
       await act(async () => {
@@ -298,7 +302,7 @@ describe("useClaimsLogic", () => {
       const { appLogic } = setup();
 
       act(() => {
-        appLogic.current.setErrors([new ErrorInfo()]);
+        appLogic.current.setErrors([new Error()]);
       });
 
       await act(async () => {

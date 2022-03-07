@@ -5,9 +5,11 @@
  */
 const routes = {
   api: {
+    applicationImports: "/application-imports",
     applications: "/applications",
     claims: "/claims",
     employers: "/employers",
+    holidays: "/holidays",
     payments: "/payments",
     roles: "/roles",
     users: "/users",

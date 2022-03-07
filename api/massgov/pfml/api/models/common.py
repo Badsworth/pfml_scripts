@@ -26,7 +26,7 @@ from massgov.pfml.util.pydantic import PydanticBaseModel
 
 PHONE_MISMATCH_MESSAGE = "E.164 phone number does not match provided phone number"
 PHONE_MISMATCH_ERROR = ValidationErrorDetail(
-    message=PHONE_MISMATCH_MESSAGE, type=IssueType.invalid_phone_number, field="e164",
+    message=PHONE_MISMATCH_MESSAGE, type=IssueType.invalid_phone_number, field="e164"
 )
 
 
@@ -336,6 +336,22 @@ def get_computed_start_dates(
     return computed_start_dates
 
 
+def get_earliest_start_date(application: db_application_models.Application) -> Optional[date]:
+    all_leave_periods = application.all_leave_periods
+    leave_period_start_dates = [
+        leave_period.start_date for leave_period in all_leave_periods if leave_period.start_date
+    ]
+    return min(leave_period_start_dates, default=None)
+
+
+def get_leave_reason(application: db_application_models.Application) -> Optional[str]:
+    return (
+        db_application_models.LeaveReason.get_description(application.leave_reason_id)
+        if application.leave_reason_id
+        else None
+    )
+
+
 # search stuff
 
 SearchTermsT = TypeVar("SearchTermsT", bound=PydanticBaseModel)
@@ -362,7 +378,7 @@ class SearchEnvelope(GenericModel, Generic[SearchTermsT]):
     paging: PagingData = Field(default_factory=PagingData)
 
 
-def search_request_log_info(request: SearchEnvelope[SearchTermsT],) -> Dict[str, Any]:
+def search_request_log_info(request: SearchEnvelope[SearchTermsT]) -> Dict[str, Any]:
     USER_PROVIDED_FIELDS = request.terms.__fields_set__
     log_info = {}
     for key, value in request.terms.dict().items():

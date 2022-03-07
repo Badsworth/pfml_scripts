@@ -95,4 +95,9 @@ module "api" {
 
   enable_application_import        = "0"
   enable_document_multipart_upload = "1"
+
+  azure_ad_authority_domain = "login.microsoftonline.com"
+  azure_ad_client_id        = "c87412f7-a62f-48dd-8971-c753c063574b"
+  azure_ad_parent_group     = "TSS-SG-PFML_ADMIN_PORTAL_PROD"
+  azure_ad_tenant_id        = "3e861d16-48b7-4a0e-9806-8c04d81b7b2a"
 }

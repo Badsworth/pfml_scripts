@@ -19,7 +19,6 @@ import EmployeeNotice from "../../../features/employer-review/EmployeeNotice";
 import EmployerBenefit from "../../../models/EmployerBenefit";
 import EmployerBenefits from "../../../features/employer-review/EmployerBenefits";
 import EmployerDecision from "../../../features/employer-review/EmployerDecision";
-import ErrorInfo from "../../../models/ErrorInfo";
 import Feedback from "../../../features/employer-review/Feedback";
 import FraudReport from "../../../features/employer-review/FraudReport";
 import Heading from "../../../components/core/Heading";
@@ -30,6 +29,7 @@ import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import WeeklyHoursWorkedRow from "../../../features/employer-review/WeeklyHoursWorkedRow";
 import { findDocumentsByLeaveReason } from "../../../models/Document";
+import findErrorMessageForField from "../../../utils/findErrorMessageForField";
 import formatDate from "../../../utils/formatDate";
 import { getSoonestReviewableFollowUpDate } from "../../../models/ManagedRequirement";
 import isBlank from "../../../utils/isBlank";
@@ -447,7 +447,7 @@ export const Review = (props: WithEmployerClaimProps) => {
 
         {isCaringLeave && (
           <CaringLeaveQuestion
-            errorMsg={ErrorInfo.fieldErrorMessage(
+            errorMsg={findErrorMessageForField(
               errors,
               "relationship_inaccurate_reason"
             )}

@@ -6,7 +6,10 @@ import { groupBy } from "lodash";
 import { useTranslation } from "react-i18next";
 
 export default {
-  title: "Misc/Errors",
+  title: "Misc/Error content",
+  parameters: {
+    viewMode: "docs",
+  },
 };
 
 export const Default = () => {

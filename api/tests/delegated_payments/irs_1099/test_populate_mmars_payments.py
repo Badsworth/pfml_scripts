@@ -33,7 +33,7 @@ def test_populate_mmars_payments(populate_mmars_payments_step, local_test_db_ses
     assert after_payment_counts[batch.pfml_1099_batch_id] == 9
 
 
-def _mmars_payment_factory(pub_individual_id, test_db_session,) -> MmarsPaymentData:
+def _mmars_payment_factory(pub_individual_id, test_db_session) -> MmarsPaymentData:
     employee = factories.EmployeeFactory.create(
         ctr_vendor_customer_code="VC00012011" + str(pub_individual_id)
     )

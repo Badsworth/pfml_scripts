@@ -55,7 +55,7 @@ def test_users_post_claimant(
     valid_claimant_creation_request_body,
 ):
     email_address = valid_claimant_creation_request_body.get("email_address")
-    response = client.post("/v1/users", json=valid_claimant_creation_request_body,)
+    response = client.post("/v1/users", json=valid_claimant_creation_request_body)
     response_body = response.get_json()
 
     # Response includes the user data
@@ -68,7 +68,7 @@ def test_users_post_claimant(
     assert user.is_worker_user is True
 
     # User added to user pool
-    cognito_users = mock_cognito.list_users(UserPoolId=mock_cognito_user_pool["id"],)
+    cognito_users = mock_cognito.list_users(UserPoolId=mock_cognito_user_pool["id"])
     assert cognito_users["Users"][0]["Username"] == email_address
 
 
@@ -84,7 +84,7 @@ def test_users_post_employer(
     employer_fein = valid_employer_creation_request_body.get("user_leave_administrator").get(
         "employer_fein"
     )
-    response = client.post("/v1/users", json=valid_employer_creation_request_body,)
+    response = client.post("/v1/users", json=valid_employer_creation_request_body)
     response_body = response.get_json()
     response_user = response_body.get("data")
 
@@ -107,7 +107,7 @@ def test_users_post_employer(
     assert user.user_leave_administrators[0].employer_id == employer_for_new_user.employer_id
 
     # User added to user pool
-    cognito_users = mock_cognito.list_users(UserPoolId=mock_cognito_user_pool["id"],)
+    cognito_users = mock_cognito.list_users(UserPoolId=mock_cognito_user_pool["id"])
     assert cognito_users["Users"][0]["Username"] == email_address
 
 
@@ -120,7 +120,7 @@ def test_users_post_openapi_validation(
     body["role"]["role_description"] = "Dog"
     body["user_leave_administrator"]["employer_fein"] = "123123123"  # missing dash
 
-    response = client.post("/v1/users", json=body,)
+    response = client.post("/v1/users", json=body)
     errors = response.get_json().get("errors")
     assert (
         len([err for err in errors if err["type"] == "format" and err["field"] == "email_address"])
@@ -148,7 +148,7 @@ def test_users_post_custom_validations(
     body["email_address"] = None
     body["password"] = None
 
-    response = client.post("/v1/users", json=body,)
+    response = client.post("/v1/users", json=body)
     errors = response.get_json().get("errors")
 
     assert {
@@ -156,7 +156,7 @@ def test_users_post_custom_validations(
         "message": "email_address is required",
         "type": "required",
     } in errors
-    assert {"field": "password", "message": "password is required", "type": "required",} in errors
+    assert {"field": "password", "message": "password is required", "type": "required"} in errors
 
     assert len(errors) == 2
     assert response.status_code == 400
@@ -168,7 +168,7 @@ def test_users_post_email_validation(
     body = valid_claimant_creation_request_body
     body["email_address"] = "invalid@email"
 
-    response = client.post("/v1/users", json=body,)
+    response = client.post("/v1/users", json=body)
     errors = response.get_json().get("errors")
     assert (
         len([err for err in errors if err["type"] == "format" and err["field"] == "email_address"])
@@ -204,7 +204,7 @@ def test_users_post_cognito_user_error(
 
     monkeypatch.setattr(mock_cognito, "sign_up", sign_up)
 
-    response = client.post("/v1/users", json=body,)
+    response = client.post("/v1/users", json=body)
     errors = response.get_json().get("errors")
     user = (
         test_db_session.query(User)
@@ -236,7 +236,7 @@ def test_users_post_cognito_user_exists_error(
 
     monkeypatch.setattr(mock_cognito, "sign_up", sign_up)
 
-    response = client.post("/v1/users", json=valid_claimant_creation_request_body,)
+    response = client.post("/v1/users", json=valid_claimant_creation_request_body)
     errors = response.get_json().get("errors")
 
     assert {
@@ -247,19 +247,17 @@ def test_users_post_cognito_user_exists_error(
     assert response.status_code == 400
 
 
-def test_users_post_employer_required(
-    client, mock_cognito, test_db_session,
-):
+def test_users_post_employer_required(client, mock_cognito, test_db_session):
     # EIN with no Employer record in the DB
     ein = "12-3456789"
     body = {
         "email_address": fake.email(domain="example.com"),
         "password": fake.password(length=12),
         "role": {"role_description": "Employer"},
-        "user_leave_administrator": {"employer_fein": ein,},
+        "user_leave_administrator": {"employer_fein": ein},
     }
 
-    response = client.post("/v1/users", json=body,)
+    response = client.post("/v1/users", json=body)
     errors = response.get_json().get("errors")
 
     assert {
@@ -288,9 +286,7 @@ def test_users_get(client, employer_user, employer_auth_token, test_db_session):
 
     assert response.status_code == 200
     assert response_body.get("data")["user_id"] == str(employer_user.user_id)
-    assert response_body.get("data")["roles"] == [
-        {"role_description": "Employer", "role_id": 3},
-    ]
+    assert response_body.get("data")["roles"] == [{"role_description": "Employer", "role_id": 3}]
     assert response_body.get("data")["user_leave_administrators"] == [
         {
             "employer_dba": employer.employer_dba,
@@ -347,9 +343,7 @@ def test_users_get_current(client, employer_user, employer_auth_token, test_db_s
 
     assert response.status_code == 200
     assert response_body.get("data")["user_id"] == str(employer_user.user_id)
-    assert response_body.get("data")["roles"] == [
-        {"role_description": "Employer", "role_id": 3},
-    ]
+    assert response_body.get("data")["roles"] == [{"role_description": "Employer", "role_id": 3}]
     assert response_body.get("data")["user_leave_administrators"] == [
         {
             "employer_dba": employer.employer_dba,
@@ -453,7 +447,7 @@ def test_users_convert_employer(client, user, employer_for_new_user, auth_token,
         }
     ]
     assert response_body.get("data")["roles"] == [
-        {"role_description": "Employer", "role_id": Role.EMPLOYER.role_id,}
+        {"role_description": "Employer", "role_id": Role.EMPLOYER.role_id}
     ]
 
     assert len(user.roles) == 1

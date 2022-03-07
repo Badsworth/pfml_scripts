@@ -9,13 +9,11 @@ import {
   getClaimMock,
   getClaimMockApplicationId,
   getClaimsMock,
-  importClaimMock,
   submitClaimMock,
   submitPaymentPreferenceMock,
   updateClaimMock,
 } from "../../src/api/BenefitsApplicationsApi";
 import ApiResourceCollection from "../../src/models/ApiResourceCollection";
-import ErrorInfo from "../../src/models/ErrorInfo";
 import { MockBenefitsApplicationBuilder } from "../test-utils";
 import { mockRouter } from "next/router";
 import routes from "../../src/routes";
@@ -58,87 +56,6 @@ describe("useBenefitsApplicationsLogic", () => {
       ApiResourceCollection
     );
     expect(claimsLogic.benefitsApplications.items).toHaveLength(0);
-  });
-
-  describe("associate", () => {
-    const mockAssociateFormState = {
-      absence_case_id: "mock-absence-id",
-      tax_identifier: "123-45-6789",
-    };
-
-    beforeEach(() => {
-      mockRouter.pathname = routes.applications.importClaim;
-      setup();
-    });
-
-    it("transforms the absence ID to uppercase before sending the request", async () => {
-      await act(async () => {
-        await claimsLogic.associate(mockAssociateFormState);
-      });
-
-      expect(importClaimMock).toHaveBeenCalledWith({
-        ...mockAssociateFormState,
-        absence_case_id: "MOCK-ABSENCE-ID",
-      });
-    });
-
-    it("updates state to force a new API request the next time loadPage is called, after an application has been associated successfully", async () => {
-      await act(async () => {
-        await claimsLogic.loadPage();
-      });
-
-      expect(claimsLogic.isLoadingClaims).toBe(false);
-      expect(getClaimsMock).toHaveBeenCalledTimes(1);
-
-      await act(async () => {
-        await claimsLogic.associate(mockAssociateFormState);
-      });
-
-      expect(claimsLogic.isLoadingClaims).toBeUndefined();
-
-      await act(async () => {
-        await claimsLogic.loadPage();
-      });
-
-      expect(getClaimsMock).toHaveBeenCalledTimes(2);
-    });
-
-    it("routes to applications index page when the request succeeds", async () => {
-      await act(async () => {
-        await claimsLogic.associate(mockAssociateFormState);
-      });
-
-      expect(mockRouter.push).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `${routes.applications.index}?applicationAssociated=mock-absence-id`
-        )
-      );
-    });
-
-    it("catches exceptions thrown from the API module", async () => {
-      jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
-      importClaimMock.mockImplementationOnce(() => {
-        throw new BadRequestError();
-      });
-
-      await act(async () => {
-        await claimsLogic.associate(mockAssociateFormState);
-      });
-
-      expect(errorsLogic.errors[0].name).toEqual("BadRequestError");
-    });
-
-    it("clears prior errors", async () => {
-      act(() => {
-        errorsLogic.setErrors([new ErrorInfo()]);
-      });
-
-      await act(async () => {
-        await claimsLogic.associate(mockAssociateFormState);
-      });
-
-      expect(errorsLogic.errors).toHaveLength(0);
-    });
   });
 
   describe("hasLoadedBenefitsApplicationAndWarnings", () => {
@@ -214,7 +131,7 @@ describe("useBenefitsApplicationsLogic", () => {
 
     it("clears prior errors", async () => {
       act(() => {
-        errorsLogic.setErrors([new ErrorInfo()]);
+        errorsLogic.setErrors([new Error()]);
       });
 
       await act(async () => {
@@ -295,7 +212,7 @@ describe("useBenefitsApplicationsLogic", () => {
 
     it("clears prior errors", async () => {
       act(() => {
-        errorsLogic.setErrors([new ErrorInfo()]);
+        errorsLogic.setErrors([new Error()]);
       });
 
       await act(async () => {
@@ -378,7 +295,7 @@ describe("useBenefitsApplicationsLogic", () => {
 
     it("clears prior errors", async () => {
       act(() => {
-        errorsLogic.setErrors([new ErrorInfo()]);
+        errorsLogic.setErrors([new Error()]);
       });
 
       await act(async () => {
@@ -500,7 +417,7 @@ describe("useBenefitsApplicationsLogic", () => {
 
       it("clears prior errors", async () => {
         act(() => {
-          errorsLogic.setErrors([new ErrorInfo()]);
+          errorsLogic.setErrors([new Error()]);
         });
 
         await act(async () => {
@@ -586,7 +503,7 @@ describe("useBenefitsApplicationsLogic", () => {
         await act(async () => {
           await claimsLogic.create();
 
-          errorsLogic.setErrors([new ErrorInfo()]);
+          errorsLogic.setErrors([new Error()]);
         });
 
         await act(async () => {
@@ -663,9 +580,10 @@ describe("useBenefitsApplicationsLogic", () => {
           });
 
           const errors = errorsLogic.errors;
-          const errorFields = errors.map((error) => error.field);
+          const issues = errors[0].issues;
+          const errorFields = issues.map((error) => error.field);
 
-          expect(errors).toHaveLength(2);
+          expect(issues).toHaveLength(2);
           expect(errorFields).toContain("first_name");
           expect(errorFields).toContain("last_name");
         });
@@ -698,7 +616,9 @@ describe("useBenefitsApplicationsLogic", () => {
           const errors = errorsLogic.errors;
 
           expect(errors).toHaveLength(1);
-          expect(errors[0].rule).toBe("disallow_hybrid_intermittent_leave");
+          expect(errors[0].issues[0].rule).toBe(
+            "disallow_hybrid_intermittent_leave"
+          );
         });
 
         it("catches exceptions thrown from the API module", async () => {
@@ -757,7 +677,7 @@ describe("useBenefitsApplicationsLogic", () => {
 
       it("clears prior errors", async () => {
         act(() => {
-          errorsLogic.setErrors([new ErrorInfo()]);
+          errorsLogic.setErrors([new Error()]);
         });
 
         await act(async () => {
@@ -846,7 +766,7 @@ describe("useBenefitsApplicationsLogic", () => {
 
       it("clears prior errors", async () => {
         act(() => {
-          errorsLogic.setErrors([new ErrorInfo()]);
+          errorsLogic.setErrors([new Error()]);
         });
 
         await act(async () => {

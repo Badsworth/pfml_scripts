@@ -27,7 +27,7 @@ def upgrade():
         sa.Column("family_member_date_of_birth", sa.Date(), nullable=True),
         sa.Column("application_id", postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column("relationship_to_caregiver_id", sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(["application_id"], ["application.application_id"],),
+        sa.ForeignKeyConstraint(["application_id"], ["application.application_id"]),
         sa.ForeignKeyConstraint(
             ["relationship_to_caregiver_id"],
             ["lk_relationship_to_caregiver.relationship_to_caregiver_id"],

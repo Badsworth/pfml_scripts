@@ -25,9 +25,11 @@
     "HAS_LARGE_FILE_COMPRESSION": "true",
     "HAS_EMPLOYER_REIMBURSEMENTS": "true",
     "HAS_FEB_RELEASE": "true",
+    "HAS_APRIL_UPGRADE": "false",
     "MFA_ENABLED": "true",
     "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-test-business-intelligence-tool",
     "TWILIO_NUMBERS": "9592241488,6072089599",
+    "HAS_CHANNEL_SWITCHING": "true",
     "HAS_UPDATED_ER_DASHBOARD": "true"
   },
   "stage": {
@@ -50,9 +52,11 @@
     "HAS_LARGE_FILE_COMPRESSION": "true",
     "HAS_EMPLOYER_REIMBURSEMENTS": "true",
     "HAS_FEB_RELEASE": "false",
+    "HAS_APRIL_UPGRADE": "false",
     "MFA_ENABLED": "true",
     "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-stage-business-intelligence-tool",
     "TWILIO_NUMBERS": "5076072506,5074188158",
+    "HAS_CHANNEL_SWITCHING": "false",
     "HAS_UPDATED_ER_DASHBOARD": "false"
   },
   "training": {
@@ -74,9 +78,11 @@
     "HAS_FINEOS_JANUARY_RELEASE": "true",
     "HAS_LARGE_FILE_COMPRESSION": "true",
     "HAS_FEB_RELEASE": "true",
+    "HAS_APRIL_UPGRADE": "false",
     "MFA_ENABLED": "true",
     "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-training-business-intelligence-tool",
     "TWILIO_NUMBERS": "7853699328,8106349678",
+    "HAS_CHANNEL_SWITCHING": "false",
     "HAS_UPDATED_ER_DASHBOARD": "false"
   },
   "trn2": {
@@ -95,9 +101,11 @@
     "HAS_FINEOS_JANUARY_RELEASE": "false",
     "HAS_LARGE_FILE_COMPRESSION": "true",
     "HAS_FEB_RELEASE": "false",
+    "HAS_APRIL_UPGRADE": "false",
     "MFA_ENABLED": "true",
     "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-trn2-business-intelligence-tool",
     "TWILIO_NUMBERS": "7752564493,8063045739",
+    "HAS_CHANNEL_SWITCHING": "false",
     "HAS_UPDATED_ER_DASHBOARD": "false"
   },
   "long": {
@@ -112,13 +120,16 @@
     "EMPLOYERS_FILE": "./employers/e2e-2022-01-03.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-long-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-long-dor-fineos-etl",
-    "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false",
-    "HAS_FINEOS_JANUARY_RELEASE": "false",
+    "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
+    "HAS_FINEOS_JANUARY_RELEASE": "true",
     "HAS_LARGE_FILE_COMPRESSION": "true",
-    "HAS_FEB_RELEASE": "false",
+    "HAS_EMPLOYER_REIMBURSEMENTS": "true",
+    "HAS_FEB_RELEASE": "true",
+    "HAS_APRIL_UPGRADE": "true",
     "MFA_ENABLED": "true",
     "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-long-business-intelligence-tool",
     "TWILIO_NUMBERS": "7853699162,8045342087",
+    "HAS_CHANNEL_SWITCHING": "false",
     "HAS_UPDATED_ER_DASHBOARD": "false"
   },
   "performance": {
@@ -143,9 +154,11 @@
     "HAS_LARGE_FILE_COMPRESSION": "true",
     "HAS_EMPLOYER_REIMBURSEMENTS": "true",
     "HAS_FEB_RELEASE": "true",
+    "HAS_APRIL_UPGRADE": "false",
     "MFA_ENABLED": "true",
     "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-performance-business-intelligence-tool",
     "TWILIO_NUMBERS": "8045342047,8106349684",
+    "HAS_CHANNEL_SWITCHING": "false",
     "HAS_UPDATED_ER_DASHBOARD": "false"
   },
   "uat": {
@@ -169,9 +182,11 @@
     "HAS_LARGE_FILE_COMPRESSION": "true",
     "HAS_EMPLOYER_REIMBURSEMENTS": "true",
     "HAS_FEB_RELEASE": "true",
+    "HAS_APRIL_UPGRADE": "false",
     "MFA_ENABLED": "true",
     "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-uat-business-intelligence-tool",
     "TWILIO_NUMBERS": "7853699139,7754062155",
+    "HAS_CHANNEL_SWITCHING": "false",
     "HAS_UPDATED_ER_DASHBOARD": "false"
   },
   "cps-preview": {
@@ -194,9 +209,11 @@
     "HAS_LARGE_FILE_COMPRESSION": "false",
     "HAS_EMPLOYER_REIMBURSEMENTS": "true",
     "HAS_FEB_RELEASE": "true",
+    "HAS_APRIL_UPGRADE": "false",
     "MFA_ENABLED": "true",
     "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-cps-preview-business-intelligence-tool",
     "TWILIO_NUMBERS": "7652759074,8063045703",
+    "HAS_CHANNEL_SWITCHING": "false",
     "HAS_UPDATED_ER_DASHBOARD": "false"
   },
   "breakfix": {
@@ -221,9 +238,11 @@
     "HAS_LARGE_FILE_COMPRESSION": "false",
     "HAS_EMPLOYER_REIMBURSEMENTS": "true",
     "HAS_FEB_RELEASE": "true",
+    "HAS_APRIL_UPGRADE": "false",
     "MFA_ENABLED": "true",
     "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-breakfix-business-intelligence-tool",
     "TWILIO_NUMBERS": "8063045688,7752564489",
+    "HAS_CHANNEL_SWITCHING": "false",
     "HAS_UPDATED_ER_DASHBOARD": "false"
   },
   "local": {

@@ -72,9 +72,7 @@ class Page:
 
 
 class Paginator:
-    def __init__(
-        self, query_set: Query, page_size: int = DEFAULT_PAGE_SIZE, page_offset: int = 1,
-    ):
+    def __init__(self, query_set: Query, page_size: int = DEFAULT_PAGE_SIZE, page_offset: int = 1):
         self.query_set = query_set
 
         if page_size <= 0:

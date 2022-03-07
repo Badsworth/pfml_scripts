@@ -90,7 +90,7 @@ def test_process_pending_filing_employers(monkeypatch, test_input_path, test_out
 @moto.mock_sts()
 @moto.mock_s3()
 def test_main_success_s3_location(
-    local_test_db_session, monkeypatch, logging_fix, reset_aws_env_vars,
+    local_test_db_session, monkeypatch, logging_fix, reset_aws_env_vars
 ):
     monkeypatch.setattr(pending_filing_submission, "make_db_session", lambda: local_test_db_session)
 

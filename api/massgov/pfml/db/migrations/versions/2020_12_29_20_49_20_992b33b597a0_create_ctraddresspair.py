@@ -22,8 +22,8 @@ def upgrade():
         "link_ctr_address_pair",
         sa.Column("fineos_address_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("ctr_address_id", postgresql.UUID(as_uuid=True), nullable=True),
-        sa.ForeignKeyConstraint(["ctr_address_id"], ["address.address_id"],),
-        sa.ForeignKeyConstraint(["fineos_address_id"], ["address.address_id"],),
+        sa.ForeignKeyConstraint(["ctr_address_id"], ["address.address_id"]),
+        sa.ForeignKeyConstraint(["fineos_address_id"], ["address.address_id"]),
         sa.PrimaryKeyConstraint("fineos_address_id"),
         sa.UniqueConstraint("fineos_address_id"),
     )

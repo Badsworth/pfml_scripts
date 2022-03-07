@@ -2,6 +2,7 @@ import {
   BenefitsApplicationDocument,
   DocumentType,
 } from "../../../../src/models/Document";
+import { DocumentsLoadError, ValidationError } from "../../../../src/errors";
 import UploadDocument, {
   DocumentUploadProps,
   getStaticPaths,
@@ -11,7 +12,6 @@ import { act, screen, waitFor } from "@testing-library/react";
 import { makeFile, renderPage } from "../../../test-utils";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { AppLogic } from "../../../../src/hooks/useAppLogic";
-import ErrorInfo from "../../../../src/models/ErrorInfo";
 import LeaveReason from "../../../../src/models/LeaveReason";
 import { createMockBenefitsApplicationDocument } from "../../../../lib/mock-helpers/createMockDocument";
 import userEvent from "@testing-library/user-event";
@@ -119,9 +119,16 @@ describe(UploadDocument, () => {
       await act(async () => await userEvent.click(submitButton));
 
       await waitFor(() => {
-        expect(appLogic?.errors[0].message).toEqual(
-          "Upload at least one file to continue."
-        );
+        expect(appLogic?.errors[0]).toBeInstanceOf(ValidationError);
+
+        if (appLogic?.errors[0] instanceof ValidationError) {
+          expect(appLogic?.errors[0].issues).toEqual([
+            expect.objectContaining({
+              field: "file",
+              type: "required",
+            }),
+          ]);
+        }
       });
       expect(goToNextPageSpy).not.toHaveBeenCalled();
     });
@@ -262,12 +269,7 @@ describe(UploadDocument, () => {
 
   it("renders alert when there is an error loading documents ", async () => {
     setup("state-id", (appLogic) => {
-      appLogic.errors = [
-        new ErrorInfo({
-          meta: { application_id: "mock-claim-id" },
-          name: "DocumentsLoadError",
-        }),
-      ];
+      appLogic.errors = [new DocumentsLoadError("mock-claim-id")];
     });
 
     const alert = await screen.findByRole("alert");

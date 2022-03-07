@@ -612,6 +612,7 @@ class ApplicationFactory(BaseFactory):
         application_models.LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id
     )
     leave_reason_qualifier_id = None
+    split_from_application_id = None
 
     created_at = Generators.TransactionDateTime
     updated_at = factory.LazyAttribute(lambda a: a.created_at + timedelta(days=1))
@@ -905,7 +906,7 @@ class WorkPatternRotatingFactory(WorkPatternFixedFactory):
     work_pattern_days = factory.LazyAttribute(
         lambda w: [
             application_models.WorkPatternDay(
-                work_pattern_id=w.work_pattern_id, day_of_week_id=i % 7 + 1, minutes=8 * 60,
+                work_pattern_id=w.work_pattern_id, day_of_week_id=i % 7 + 1, minutes=8 * 60
             )
             for i in range(28)
         ]

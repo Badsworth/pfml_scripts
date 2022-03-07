@@ -152,7 +152,6 @@ export const MRAP30: ScenarioSpecification = {
   },
 };
 
-// Only used in ignored `bond_continuous_approval_payment_90K.ts` spec
 export const BCAP90: ScenarioSpecification = {
   employee: {
     wages: 90000,

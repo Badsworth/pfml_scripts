@@ -136,9 +136,7 @@ def _process_azure_token(db_session: Session, decoded_token: dict[str, Any]) -> 
     flask.g.azure_user = azure_user
     newrelic.agent.add_custom_parameter("azure_user.sub_id", auth_id)
     flask.g.azure_user_sub_id = str(auth_id)
-    logger.info(
-        "Azure auth token decode succeeded", extra={"auth_id": auth_id, "user": azure_user},
-    )
+    logger.info("Azure auth token decode succeeded", extra={"auth_id": auth_id, "user": azure_user})
 
 
 def _process_cognito_token(db_session: Session, decoded_token: dict[str, Any]) -> None:
@@ -146,9 +144,7 @@ def _process_cognito_token(db_session: Session, decoded_token: dict[str, Any]) -
     try:
         user = db_session.query(User).filter(User.sub_id == auth_id).one()
     except (NoResultFound, MultipleResultsFound) as e:
-        logger.exception(
-            "user query failed: %s", type(e), extra={"auth_id": auth_id, "error": e,},
-        )
+        logger.exception("user query failed: %s", type(e), extra={"auth_id": auth_id, "error": e})
         raise Unauthorized
 
     flask.g.current_user = user

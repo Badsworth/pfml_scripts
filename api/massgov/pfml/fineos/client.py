@@ -239,7 +239,7 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def get_week_based_work_pattern(
-        self, user_id: str, occupation_id: Union[str, int],
+        self, user_id: str, occupation_id: Union[str, int]
     ) -> models.customer_api.WeekBasedWorkPattern:
         pass
 

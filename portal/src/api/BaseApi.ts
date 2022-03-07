@@ -52,10 +52,13 @@ export default abstract class BaseApi {
    */
   abstract get basePath(): string;
   /**
-   * Prefix used in ValidationError message strings. Can be overridden at the request-level
-   * by setting the `i18nPrefix` option argument when calling request()
+   * Namespace representing the API resource. This can typically mirror the
+   * root of the API endpoint (i.e "applications", "users", etc). The namespace
+   * is added as a field to any validation errors in an API response, which can
+   * be used for rendering error messages specific to the API resource context,
+   * or used for debugging in our logs.
    */
-  abstract get i18nPrefix(): string;
+  abstract get namespace(): string;
 
   /**
    * Send an authenticated API request.
@@ -68,14 +71,12 @@ export default abstract class BaseApi {
     body?: ApiRequestBody,
     options: {
       additionalHeaders?: { [header: string]: string };
-      i18nPrefix?: string;
       excludeAuthHeader?: boolean;
       multipartForm?: boolean;
     } = {}
   ) {
     const {
       additionalHeaders = {},
-      i18nPrefix = this.i18nPrefix,
       excludeAuthHeader = false,
       multipartForm = false,
     } = options;
@@ -97,17 +98,11 @@ export default abstract class BaseApi {
       headers["Content-Type"] = "application/json";
     }
 
-    const response = await this.sendRequest<TResponseData>(
-      url,
-      {
-        body: method === "GET" || !body ? null : createRequestBody(body),
-        headers,
-        method,
-      },
-      {
-        i18nPrefix,
-      }
-    );
+    const response = await this.sendRequest<TResponseData>(url, {
+      body: method === "GET" || !body ? null : createRequestBody(body),
+      headers,
+      method,
+    });
 
     return response;
   }
@@ -115,10 +110,9 @@ export default abstract class BaseApi {
   /**
    * Send a request and handle the response
    */
-  async sendRequest<TResponseData>(
+  private async sendRequest<TResponseData>(
     url: string,
-    fetchOptions: RequestInit,
-    options: { i18nPrefix: string }
+    fetchOptions: RequestInit
   ) {
     let response: Response;
     let responseBody: ApiResponseBody<TResponseData>;
@@ -134,14 +128,16 @@ export default abstract class BaseApi {
 
     const { data, errors, meta, warnings } = responseBody;
     if (!response.ok) {
-      handleNotOkResponse(response, errors, options.i18nPrefix, data);
+      handleNotOkResponse(response, errors, this.namespace, data);
     }
 
     return {
       data,
       meta,
       // Guaranteeing warnings is always an array makes our code simpler
-      warnings: Array.isArray(warnings) ? formatIssues(warnings) : [],
+      warnings: Array.isArray(warnings)
+        ? formatIssues(warnings, this.namespace)
+        : [],
     };
   }
 }
@@ -206,19 +202,21 @@ export async function getAuthorizationHeader() {
 }
 
 /**
- * Convert API error/warnings field paths into a field path format we use on the Portal
+ * Convert API error/warnings into a shape the Portal can convert into user-friendly
+ * error messages, and associate with its form fields, when relevant.
  */
-function formatIssues(issues: Issue[]) {
+function formatIssues(issues: Issue[], namespace: string) {
   return issues.map((issue) => {
-    if (!issue.field) return issue;
+    const formattedIssue = { ...issue, namespace };
+    if (!formattedIssue.field) return formattedIssue;
 
     // Convert dot-notation for array indexes into square bracket notation,
     // which is how we format our array fields.
     // For example foo.12 => foo[12]
-    const field = issue.field.replace(/\.(\d+)(\.)?/g, "[$1]$2");
+    const field = formattedIssue.field.replace(/\.(\d+)(\.)?/g, "[$1]$2");
 
     return {
-      ...issue,
+      ...formattedIssue,
       field,
     };
   });
@@ -236,16 +234,15 @@ export function fetchErrorToNetworkError(error: unknown) {
 
 /**
  * Throw an error when the API returns a non-2xx response status code
- * @param url
  * @param response
  * @param errors - Issues returned by the API
- * @param i18nPrefix - Prefix used in ValidationError message strings
- * @param data
+ * @param namespace - Added to errors for additional context
+ * @param data - Data from response body
  */
 export function handleNotOkResponse(
   response: Response,
   errors: Issue[] = [],
-  i18nPrefix: string,
+  namespace: string,
   data?: unknown
 ) {
   if (isEmpty(errors)) {
@@ -255,7 +252,7 @@ export function handleNotOkResponse(
     // For Leave Admin permission issues, response data is needed to determine page routing
     throwError(response, data);
   } else {
-    throw new ValidationError(formatIssues(errors), i18nPrefix);
+    throw new ValidationError(formatIssues(errors, namespace));
   }
 }
 

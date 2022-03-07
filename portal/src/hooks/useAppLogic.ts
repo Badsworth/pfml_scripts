@@ -1,4 +1,5 @@
 /* eslint sort-keys: ["error", "asc"] */
+import useApplicationImportsLogic from "./useApplicationImportsLogic";
 import useAuthLogic from "./useAuthLogic";
 import useBenefitsApplicationsLogic from "./useBenefitsApplicationsLogic";
 import useClaimsLogic from "./useClaimsLogic";
@@ -6,6 +7,7 @@ import useDocumentsLogic from "./useDocumentsLogic";
 import useEmployersLogic from "./useEmployersLogic";
 import useErrorsLogic from "./useErrorsLogic";
 import useFeatureFlagsLogic from "./useFeatureFlagsLogic";
+import useHolidaysLogic from "./useHolidaysLogic";
 import usePaymentsLogic from "./usePaymentsLogic";
 import usePortalFlow from "./usePortalFlow";
 import useUsersLogic from "./useUsersLogic";
@@ -16,6 +18,11 @@ const useAppLogic = () => {
 
   // State representing currently visible errors and warnings
   const errorsLogic = useErrorsLogic({ portalFlow });
+
+  const applicationImports = useApplicationImportsLogic({
+    errorsLogic,
+    portalFlow,
+  });
   const auth = useAuthLogic({ errorsLogic, portalFlow });
 
   // State representing the Portal's user object.
@@ -48,6 +55,10 @@ const useAppLogic = () => {
     setUser: users.setUser,
   });
 
+  const holidays = useHolidaysLogic({
+    errorsLogic,
+  });
+
   const payments = usePaymentsLogic({
     errorsLogic,
   });
@@ -57,6 +68,7 @@ const useAppLogic = () => {
   return {
     // `_errorsLogic` should not be used except for testing
     _errorsLogic: errorsLogic,
+    applicationImports,
     auth,
     benefitsApplications,
     catchError: errorsLogic.catchError,
@@ -68,6 +80,7 @@ const useAppLogic = () => {
     employers,
     errors: errorsLogic.errors,
     featureFlags,
+    holidays,
     payments,
     portalFlow,
     setErrors: errorsLogic.setErrors,
