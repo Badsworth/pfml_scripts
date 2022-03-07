@@ -994,6 +994,8 @@ const pages: {
   },
   applications: {
     addApplication: "$t(shared.addApplication)",
+    can_submit_application_across_benefit_year:
+      "You can submit an application for leave that crosses into a new benefit year. We will review the request as two separate applications. $t(pages.applications.claimsApprovalProcess)",
     claimsApprovalProcess:
       "Learn more about the <approval-process-link>application review and approval process</approval-process-link>.",
     createApplicationHeading: "Create a new application",
@@ -1004,6 +1006,8 @@ const pages: {
     uploadSuccessHeading: "You successfully submitted your documents",
     uploadSuccessMessage:
       "Our Contact Center staff will review your documents for {{absence_id}}.",
+    your_benefit_year:
+      "Your current <benefit-year-guide-link>benefit year</benefit-year-guide-link> is {{startDate}} to {{endDate}}. Most Massachusetts employees are eligible for up to 26 weeks of combined family and medical leave per benefit year.",
   },
   authCreateAccount: {
     alertBody:

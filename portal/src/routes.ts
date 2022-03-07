@@ -7,6 +7,7 @@ const routes = {
   api: {
     applicationImports: "/application-imports",
     applications: "/applications",
+    benefitYears: "/benefit-years",
     claims: "/claims",
     employers: "/employers",
     holidays: "/holidays",
@@ -131,6 +132,8 @@ const routes = {
         "https://www.mass.gov/family-leave-caring",
       benefitsGuide_aboutMedicalLeave:
         "https://www.mass.gov/leave-types-medical",
+      benefitsGuide_benefitYears:
+        "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-overview-and-benefits#getting-paid-and-taxes-on-benefits-",
       benefitsGuide_benefitsAmountDetails:
         "https://www.mass.gov/how-much-will-i-get-paid",
       benefitsGuide_seriousHealthCondition:

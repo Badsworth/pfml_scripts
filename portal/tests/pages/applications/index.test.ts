@@ -3,6 +3,8 @@ import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { AppLogic } from "../../../src/hooks/useAppLogic";
 import BenefitsApplication from "src/models/BenefitsApplication";
 import Index from "../../../src/pages/applications/index";
+import dayjs from "dayjs";
+import formatDate from "src/utils/formatDate";
 import routes from "../../../src/routes";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -41,6 +43,58 @@ describe("Applications", () => {
       },
     });
     expect(goToSpy).toHaveBeenCalledWith("/applications/get-ready", {});
+  });
+
+  it("displays benefit year notice when FF is enabled and current benefit year exists", () => {
+    process.env.featureFlags = JSON.stringify({
+      splitClaimsAcrossBY: true,
+    });
+
+    const startDate = new Date();
+    const endDate = dayjs(startDate).add(1, "year");
+
+    renderPage(Index, {
+      pathname: routes.applications.index,
+      addCustomSetup: (appLogicHook) => {
+        setUpHelper(appLogicHook);
+        appLogicHook.benefitYears.loadBenefitYears = jest.fn();
+        appLogicHook.benefitYears.getCurrentBenefitYear = jest
+          .fn()
+          .mockReturnValue({
+            benefit_year_start_date: startDate.toUTCString(),
+            benefit_year_end_date: endDate.toDate().toUTCString(),
+            employee_id: "2a340cf8-6d2a-4f82-a075-73588d003f8f",
+            current_benefit_year: true,
+          });
+      },
+    });
+
+    const byText = new RegExp(
+      `is ${formatDate(startDate.toISOString()).short()} to ${formatDate(
+        endDate.toISOString()
+      ).short()}. Most Massachusetts employees are eligible for up to 26 weeks of combined family and medical leave per benefit year.`
+    );
+    expect(screen.getByText(/Your current/i)).toBeInTheDocument();
+    expect(screen.getByText(byText)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "benefit year" })).toHaveAttribute(
+      "href",
+      "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-overview-and-benefits#getting-paid-and-taxes-on-benefits-"
+    );
+
+    expect(
+      screen.getByRole("link", {
+        name: "application review and approval process",
+      })
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByRole("link", {
+        name: "application review and approval process",
+      })
+    ).toHaveAttribute(
+      "href",
+      "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-application-approval-timeline"
+    );
   });
 
   it("displays prompt for channel switching when feature flag is enabled", () => {
