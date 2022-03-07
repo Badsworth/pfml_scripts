@@ -13,7 +13,6 @@ from connexion.decorators.validation import (
 from connexion.json_schema import Draft4RequestValidator, Draft4ResponseValidator
 from connexion.utils import is_null
 
-import massgov.pfml.api.app as app
 import massgov.pfml.util.logging as logging
 import massgov.pfml.util.newrelic.events as newrelic_util
 from massgov.pfml.api.validation.exceptions import (
@@ -144,6 +143,12 @@ def log_validation_error(
 
 
 class CustomResponseValidator(ResponseValidator):
+    response_validation = False
+
+    @classmethod
+    def enable_response_validation(cls):
+        cls.response_validation = True
+
     def validate_helper(self, data, status_code, headers, url):
         content_type = headers.get("Content-Type", self.mimetype)
         content_type = content_type.rsplit(";", 1)[0]  # remove things like utf8 metadata
@@ -166,7 +171,7 @@ class CustomResponseValidator(ResponseValidator):
         try:
             self.validate_helper(response_body, status_code, headers, url)
         except ValidationException as validation_exception:
-            if app.get_app_config().enable_response_validation:
+            if CustomResponseValidator.response_validation:
                 raise validation_exception
             for error in validation_exception.errors:
                 log_validation_error(validation_exception, error)
