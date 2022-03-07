@@ -16,7 +16,7 @@
   "prod": { "baseUrl": "https://paidleave-api.mass.gov/api/v1" },
   "stage": { "baseUrl": "https://paidleave-api-stage.mass.gov/api/v1" },
   "test": { "baseUrl": "https://paidleave-api-test.mass.gov/api/v1" },
-  "training": { "baseUrl": "https://paidleave-api-training.mass.gov/api/v1" },
+  "trn": { "baseUrl": "https://paidleave-api-training.mass.gov/api/v1" },
   "trn2": { "baseUrl": "https://paidleave-api-trn2.dfml.eol.mass.gov/api/v1" },
   "uat": { "baseUrl": "https://paidleave-api-uat.mass.gov/api/v1" }
 }
