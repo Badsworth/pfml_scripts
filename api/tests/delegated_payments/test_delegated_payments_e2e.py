@@ -286,7 +286,14 @@ def test_e2e_pub_payments(
         assert len(claims) == len(test_dataset.scenario_dataset)
 
         # Payments
-        payments = test_db_session.query(Payment).all()
+        payments = (
+            # Only retrieve payments that were generated from processing extracts
+            # This ends up being 6 there are 4 steps that occur before as well as an import log for past payments
+            # 1:PastPayments,2:StateCleanupStep,3:CLAIMANT_EXTRACT_CONFIG,4:PAYMENT_EXTRACT_CONFIG,5:ClaimantExtractStep,6:PaymentExtractStep
+            test_db_session.query(Payment)
+            .filter(Payment.fineos_extract_import_log_id == 6)
+            .all()
+        )
         missing_payment = list(
             filter(
                 lambda sd: not sd.scenario_descriptor.create_payment, test_dataset.scenario_dataset
@@ -358,6 +365,7 @@ def test_e2e_pub_payments(
             ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
             ScenarioName.HAPPY_PATH_MAX_LEAVE_DURATION_EXCEEDED,
             ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
+            ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED,
         ]
 
         stage_1_non_standard_payments = [
@@ -602,6 +610,7 @@ def test_e2e_pub_payments(
                 ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
                 ScenarioName.TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT,
                 ScenarioName.IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION,
+                ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED,
             ]
         )
 
@@ -652,6 +661,16 @@ def test_e2e_pub_payments(
                     p, ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH
                 )
                 else "",
+                PAYMENT_AUDIT_CSV_HEADERS.is_preapproved: "Y"
+                if test_dataset.is_payment_scenario(p, ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED)
+                else "",
+                PAYMENT_AUDIT_CSV_HEADERS.preapproval_issues: "Orphaned Tax Withholding"
+                if test_dataset.is_payment_scenario(
+                    p, ScenarioName.TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT
+                )
+                else ""
+                if test_dataset.is_payment_scenario(p, ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED)
+                else "There were less than three previous payments",
             }
             for p in audit_report_sent_payments
         ]
@@ -946,6 +965,7 @@ def test_e2e_pub_payments(
                         ScenarioName.TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
                         ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
                         ScenarioName.IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION,
+                        ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED,
                     ]
                 ),
                 "tax_identifier_missing_in_db_count": len(
@@ -1002,6 +1022,7 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
                         ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
                         ScenarioName.IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION,
+                        ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED,
                     ]
                 ),
                 "validated_address_count": len(
@@ -1039,6 +1060,7 @@ def test_e2e_pub_payments(
                         ScenarioName.TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
                         ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
                         ScenarioName.IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION,
+                        ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED,
                     ]
                 ),
                 "verified_experian_match": len(
@@ -1073,6 +1095,7 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
                         ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
                         ScenarioName.IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION,
+                        ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED,
                     ]
                 ),
             },
@@ -1140,6 +1163,7 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
                         ScenarioName.TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT,
                         ScenarioName.IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION,
+                        ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED,
                     ]
                 ),
                 "payment_sampled_for_audit_count": len(
@@ -1176,6 +1200,7 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
                         ScenarioName.TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT,
                         ScenarioName.IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION,
+                        ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED,
                     ]
                 ),
                 "sampled_payment_count": len(
@@ -1212,6 +1237,7 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
                         ScenarioName.TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT,
                         ScenarioName.IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION,
+                        ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED,
                     ]
                 ),
             },
@@ -1394,6 +1420,7 @@ def test_e2e_pub_payments(
             ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
             ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
             ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
+            ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED,
         ]
 
         assert_payment_state_for_scenarios(
@@ -1949,6 +1976,7 @@ def test_e2e_pub_payments(
             ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
             ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
             ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
+            ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED,
         ]
         stage_3_manual_pub_reject_scenarios = [ScenarioName.PUB_ACH_MANUAL_REJECT]
 
@@ -2111,6 +2139,7 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
                         ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
                         ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
+                        ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED,
                     ]
                 ),
                 "payment_complete_by_paid_check": len(
@@ -2118,6 +2147,7 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
                         ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
                         ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
+                        ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED,
                     ]
                 ),
                 "payment_failed_by_check": 0,

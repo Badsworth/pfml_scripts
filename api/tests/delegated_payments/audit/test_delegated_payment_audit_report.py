@@ -1263,6 +1263,13 @@ def validate_payment_audit_csv_row_by_payment_audit_data(
         assert row[PAYMENT_AUDIT_CSV_HEADERS.rejected_notes]
         assert row[PAYMENT_AUDIT_CSV_HEADERS.rejected_notes] != ""
 
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.is_preapproved] == (
+        "Y" if scenario_descriptor.preapproval_issues == "" else ""
+    )
+    assert (
+        row[PAYMENT_AUDIT_CSV_HEADERS.preapproval_issues] == scenario_descriptor.preapproval_issues
+    )
+
 
 def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Payment):
     assert row[PAYMENT_AUDIT_CSV_HEADERS.pfml_payment_id] == str(payment.payment_id)

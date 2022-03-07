@@ -36,9 +36,11 @@ from massgov.pfml.db.models.factories import (
     EmployeeFactory,
     EmployeePubEftPairFactory,
     EmployerFactory,
+    ExperianAddressPairFactory,
     PubEftFactory,
 )
 from massgov.pfml.db.models.geo import GeoState
+from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 from massgov.pfml.delegated_payments.mock.mock_util import generate_routing_nbr_from_ssn
 from massgov.pfml.delegated_payments.mock.scenarios import (
     ScenarioDescriptor,
@@ -129,17 +131,19 @@ class ScenarioDataConfig:
 # == Common Utils ==
 
 
-def get_mock_address_client() -> soap_api.Client:
-    def parse_address(mock_address: Dict) -> Address:
-        state = GeoState.description_to_db_instance.get(mock_address["state"], GeoState.MA)
+def parse_address(mock_address: Dict) -> Address:
+    state = GeoState.description_to_db_instance.get(mock_address["state"], GeoState.MA)
 
-        return AddressFactory.build(
-            address_line_one=mock_address["line_1"],
-            address_line_two=mock_address["line_2"],
-            city=mock_address["city"],
-            geo_state=state,
-            zip_code=mock_address["zip"],
-        )
+    return AddressFactory.build(
+        address_line_one=mock_address["line_1"],
+        address_line_two=mock_address["line_2"],
+        city=mock_address["city"],
+        geo_state=state,
+        zip_code=mock_address["zip"],
+    )
+
+
+def get_mock_address_client() -> soap_api.Client:
 
     mock_caller = MockVerificationZeepCaller(sm.VerifyLevel.STREET_PARTIAL)
 
@@ -314,6 +318,43 @@ def generate_scenario_data_in_db(
 
     claim = construct_claim(scenario_descriptor, employee, employer, absence_case_id, db_session)
     construct_absence_period(scenario_descriptor, claim, leave_request_id)
+    scenario_descriptor.payment_method
+    if scenario_descriptor.has_past_payments:
+        experian_address_pair = ExperianAddressPairFactory.create(
+            fineos_address=parse_address(MATCH_ADDRESS)
+        )
+        delegated_payment = DelegatedPaymentFactory(
+            db_session,
+            claim=claim,
+            fineos_leave_request_id=leave_request_id,
+            employee=employee,
+            add_import_log=True,
+            payment_method=scenario_descriptor.payment_method,
+            pub_eft=pub_eft if add_eft else None,
+            experian_address_pair=experian_address_pair,
+        )
+        import_log = delegated_payment.get_or_create_import_log()
+        delegated_payment.get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        DelegatedPaymentFactory(
+            db_session,
+            claim=claim,
+            fineos_leave_request_id=leave_request_id,
+            employee=employee,
+            import_log=import_log,
+            payment_method=scenario_descriptor.payment_method,
+            pub_eft=pub_eft if add_eft else None,
+            experian_address_pair=experian_address_pair,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        DelegatedPaymentFactory(
+            db_session,
+            claim=claim,
+            fineos_leave_request_id=leave_request_id,
+            employee=employee,
+            import_log=import_log,
+            payment_method=scenario_descriptor.payment_method,
+            pub_eft=pub_eft if add_eft else None,
+            experian_address_pair=experian_address_pair,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
 
     return ScenarioData(
         scenario_descriptor=scenario_descriptor,

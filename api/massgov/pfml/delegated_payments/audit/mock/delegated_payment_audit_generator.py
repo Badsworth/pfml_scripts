@@ -41,6 +41,7 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
     write_audit_report_rows,
 )
 from massgov.pfml.delegated_payments.delegated_payments_util import Constants
+from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 
 logger = logging.get_logger(__name__)
 
@@ -82,6 +83,8 @@ class AuditScenarioName(Enum):
 
     AUDIT_REPORT_DETAIL_INFORMATIONAL = "AUDIT_REPORT_DETAIL_INFORMATIONAL"
 
+    PREAPPROVED_PAYMENT = "PREAPPROVED_PAYMENT"
+
 
 @dataclass
 class AuditScenarioDescriptor:
@@ -100,6 +103,10 @@ class AuditScenarioDescriptor:
     # audit_report_detail_rejected: bool = False
 
     audit_report_detail_informational: bool = False
+
+    # This is the default value as the current scenario setup typically
+    # only involves creating a single payment
+    preapproval_issues: str = "There were less than three previous payments"
 
 
 @dataclass
@@ -201,6 +208,10 @@ DESCRIPTORS = (
     AuditScenarioDescriptor(
         scenario_name=AuditScenarioName.AUDIT_REPORT_DETAIL_INFORMATIONAL,
         audit_report_detail_informational=True,
+        preapproval_issues="There were less than three previous payments;DUA Additional Income",
+    ),
+    AuditScenarioDescriptor(
+        scenario_name=AuditScenarioName.PREAPPROVED_PAYMENT, preapproval_issues=""
     ),
 )
 
@@ -389,6 +400,42 @@ def generate_scenario_data(
         State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
         db_session,
     )
+    payment.employee = employee
+
+    if not scenario_descriptor.preapproval_issues:
+        DelegatedPaymentFactory(
+            db_session,
+            claim=claim,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            fineos_employee_first_name=payment.fineos_employee_first_name,
+            fineos_employee_last_name=payment.fineos_employee_last_name,
+            add_import_log=True,
+            payment_method=scenario_descriptor.payment_method,
+            pub_eft=payment.pub_eft,
+            experian_address_pair=payment.experian_address_pair,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        DelegatedPaymentFactory(
+            db_session,
+            claim=claim,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            fineos_employee_first_name=payment.fineos_employee_first_name,
+            fineos_employee_last_name=payment.fineos_employee_last_name,
+            add_import_log=True,
+            payment_method=scenario_descriptor.payment_method,
+            pub_eft=payment.pub_eft,
+            experian_address_pair=payment.experian_address_pair,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        DelegatedPaymentFactory(
+            db_session,
+            claim=claim,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            fineos_employee_first_name=payment.fineos_employee_first_name,
+            fineos_employee_last_name=payment.fineos_employee_last_name,
+            add_import_log=True,
+            payment_method=scenario_descriptor.payment_method,
+            pub_eft=payment.pub_eft,
+            experian_address_pair=payment.experian_address_pair,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
 
     # create the payment data
     previous_error_count = len(scenario_descriptor.previous_error_states)
