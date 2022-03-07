@@ -7,7 +7,7 @@
 # API Resources
 # ----------------------------------------------------------------------------------------------------------------------
 
-# Root resource under /api
+# Root resource under /
 resource "aws_api_gateway_resource" "files" {
   rest_api_id = aws_api_gateway_rest_api.pfml.id
   parent_id   = aws_api_gateway_rest_api.pfml.root_resource_id
