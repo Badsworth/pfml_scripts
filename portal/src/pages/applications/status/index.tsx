@@ -22,6 +22,7 @@ import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
 import ButtonLink from "../../../components/ButtonLink";
 import Heading from "../../../components/core/Heading";
+import HolidayAlert from "../../../components/status/HolidayAlert";
 import LeaveReason from "../../../models/LeaveReason";
 import LegalNoticeList from "../../../components/LegalNoticeList";
 import PageNotFound from "../../../components/PageNotFound";
@@ -58,6 +59,7 @@ export const Status = ({
       hasLoadedClaimDocuments,
       loadAll: loadAllClaimDocuments,
     },
+    holidays,
     payments: { loadPayments, loadedPaymentsData },
   } = appLogic;
   const { absence_case_id, absence_id, uploaded_document_type } = query;
@@ -232,6 +234,7 @@ export const Status = ({
 
   return (
     <React.Fragment>
+      <HolidayAlert holidaysLogic={holidays} />
       {uploaded_document_type && (
         <Alert
           heading={t("pages.claimsStatus.uploadSuccessHeading", {

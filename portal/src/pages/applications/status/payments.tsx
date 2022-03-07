@@ -13,6 +13,7 @@ import ApiResourceCollection from "src/models/ApiResourceCollection";
 import BackButton from "../../../components/BackButton";
 import ClaimDetail from "src/models/ClaimDetail";
 import Heading from "../../../components/core/Heading";
+import HolidayAlert from "../../../components/status/HolidayAlert";
 import LeaveReason from "../../../models/LeaveReason";
 import PageNotFound from "../../../components/PageNotFound";
 import { Payment } from "src/models/Payment";
@@ -52,6 +53,7 @@ export const Payments = ({
       loadAll: loadAllClaimDocuments,
       hasLoadedClaimDocuments,
     },
+    holidays,
     payments: { loadPayments, loadedPaymentsData, hasLoadedPayments },
     portalFlow,
   } = appLogic;
@@ -162,6 +164,7 @@ export const Payments = ({
 
   return (
     <React.Fragment>
+      <HolidayAlert holidaysLogic={holidays} />
       {!!infoAlertContext &&
         (hasPendingStatus ||
           hasApprovedStatus ||

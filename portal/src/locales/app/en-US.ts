@@ -3193,6 +3193,10 @@ const components: {
     settingsLinkText: "Settings",
     skipToContent: "Skip to main content",
   },
+  holidayAlert: {
+    alertText:
+      "Due to the upcoming holiday, payments may be delayed by one business day.",
+  },
   inputPassword: {
     toggleLabel: "Show password",
   },
