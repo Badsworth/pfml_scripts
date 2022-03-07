@@ -186,9 +186,6 @@ def send_to_fineos(
     if application.employer_fein is None:
         raise ValueError("application.employer_fein is None")
 
-    customer = build_customer_model(application, current_user)
-    absence_case = build_absence_case(application)
-    contact_details = build_contact_details(application)
     tax_identifier = application.tax_identifier.tax_identifier
 
     # Create the FINEOS client.
@@ -200,6 +197,11 @@ def send_to_fineos(
     fineos_web_id = register_employee(
         fineos, tax_identifier, application.employer_fein, db_session, fineos_employer_id
     )
+
+    customer = build_customer_model(application, current_user)
+    absence_case = build_absence_case(application)
+    existing_contact_details = fineos.read_customer_contact_details(fineos_web_id)
+    contact_details = build_contact_details(application, existing_contact_details)
 
     fineos.update_customer_details(fineos_web_id, customer)
 
@@ -276,7 +278,12 @@ def send_to_fineos(
     updated_contact_details = fineos.update_customer_contact_details(fineos_web_id, contact_details)
     phone_numbers = updated_contact_details.phoneNumbers
     if phone_numbers is not None and len(phone_numbers) > 0:
-        application.phone.fineos_phone_id = phone_numbers[0].id
+        # If a phone number was added during this application submission, it will be marked as preferred
+        preferred_phone = next(
+            (phone_num for phone_num in phone_numbers if phone_num.preferred),
+            phone_numbers[0],
+        )
+        application.phone.fineos_phone_id = preferred_phone.id
 
     # Reflexive questions for bonding and caring leave
     # "The reflexive questions allows to update additional information of an absence case leave request."
@@ -444,6 +451,7 @@ def build_customer_model(application, current_user):
 
 def build_contact_details(
     application: Application,
+    existing_details: massgov.pfml.fineos.models.customer_api.ContactDetails,
 ) -> massgov.pfml.fineos.models.customer_api.ContactDetails:
     """Convert an application's email and phone number to FINEOS API ContactDetails model."""
 
@@ -469,15 +477,29 @@ def build_contact_details(
                 area_code = str(telephone_no)[:3]
                 telephone_no = str(telephone_no)[-7:]
 
-            contact_details.phoneNumbers = [
+        exists_in_fineos = False
+        if existing_details.phoneNumbers:
+            for phone_num in existing_details.phoneNumbers:
+                # ignore int_code (or fall back to "1" when setting it, above)
+                if area_code == phone_num.areaCode and telephone_no == phone_num.telephoneNo:
+                    exists_in_fineos = True
+        else:
+            existing_details.phoneNumbers = []
+
+        # if application phone number does not exist in FINEOS, add it and set to preferred
+        if not exists_in_fineos:
+            existing_details.phoneNumbers.append(
                 massgov.pfml.fineos.models.customer_api.PhoneNumber(
+                    preferred=True,
                     areaCode=area_code,
                     id=application.phone.fineos_phone_id,
                     intCode=int_code,
                     telephoneNo=telephone_no,
                     phoneNumberType=phone_number_type,
                 )
-            ]
+            )
+
+    contact_details.phoneNumbers = existing_details.phoneNumbers
 
     return contact_details
 
