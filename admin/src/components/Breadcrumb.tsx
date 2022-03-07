@@ -1,5 +1,7 @@
 import Link, { LinkProps } from "next/link";
 
+import { ChevronLeftIcon } from "@heroicons/react/solid";
+
 export type Props = {
   text: string;
   href: LinkProps["href"];
@@ -8,7 +10,7 @@ export type Props = {
 export default function Breadcrumb({ text, href }: Props) {
   return (
     <div className="breadcrumb">
-      <i className="breadcrumb__icon"></i>
+      <ChevronLeftIcon className="breadcrumb__icon" />
       <Link href={href}>
         <a className="breadcrumb__link">{text}</a>
       </Link>
