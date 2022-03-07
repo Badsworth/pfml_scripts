@@ -18,6 +18,14 @@ class ArtilleryClaimSubmitter extends PortalSubmitter {
     console.log(AuthenticationManager, apiBaseUrl);
     super(authenticator, apiBaseUrl);
   }
+
+  async lstSearch(
+    searchTerm: string,
+    logger?: winston.Logger
+  ){
+    logger?.debug(searchTerm)
+  }
+
   /**
    * Splits the usual claim submission process to mimic real-life load.
    * Don't use outside LST.

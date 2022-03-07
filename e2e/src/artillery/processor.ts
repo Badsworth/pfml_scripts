@@ -178,6 +178,18 @@ export const adjudicateStored = wrap(
   }
 );
 
+/**
+ * Exported handler for submitting (only), followed by pushing the data to SQS.
+ */
+export const searchClaimants = wrap(
+  async (context: ArtilleryContext, ee: EventEmitter, logger: Logger) => {
+    timeRequest(context, ee, async () => {
+      const submission = await interactor.searchClaimant("first", ee, logger);
+      return { submission };
+    });
+  }
+);
+
 class NoClaimsRemainingError extends Error {
   code: number;
   constructor() {

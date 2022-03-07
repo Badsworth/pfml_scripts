@@ -121,6 +121,30 @@ export default class ArtilleryPFMLInteractor {
     });
   }
 
+
+  searchClaimant(
+    type: string,
+    ee: EventEmitter,
+    logger: winston.Logger
+  ){
+    return timed(ee, logger, "generateClaim", async () => {
+      const pool = await this.employees();
+      if (!(type in ['first', 'last'])) {
+        throw new Error("Invalid or missing type");
+      }
+      const employee = pool.shuffle().slice(0,1).getFirst()
+      logger.debug("Search For Name", employee.first_name);
+
+      const submitter = getArtillerySubmitter();
+      const submission = await submitter.lstSearch(
+        employee.first_name,
+        logger
+      );
+      return submission;
+    });
+  }
+
+
   private setScenarios(): LSTScenarios[] {
     const range = config("LST_FILE_RANGE");
     switch (range) {

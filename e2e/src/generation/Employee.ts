@@ -291,6 +291,9 @@ export default class EmployeePool implements Iterable<Employee> {
     return this.employees.find(this._createFinder(spec));
   }
 
+  getFirst(){
+    return this.employees[0];
+  }
   /**
    * Pick a single employee from the pool.
    *
