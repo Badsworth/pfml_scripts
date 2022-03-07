@@ -5,15 +5,27 @@ variable "sns_monthly_spend_limit" {
 }
 
 variable "low_priority_nr_integration_key" {
-  description = "Low Priority NR Integration Key"
+  description = "Low Priority NewRelic Integration Key"
   type        = string
   default     = "low_priority_nr_integration_key"
 }
 
 variable "high_priority_nr_integration_key" {
-  description = "High Priority NR Integration Key"
+  description = "High Priority NewRelic Integration Key"
   type        = string
   default     = "high_priority_nr_integration_key"
+}
+
+variable "low_priority_pager_duty_integration_key" {
+  description = "Low Priority PagerDuty Integration Key"
+  type        = string
+  default     = "low_priority_pager_duty_integration_key"
+}
+
+variable "high_priority_pager_duty_integration_key" {
+  description = "High Priority PagerDuty Integration Key"
+  type        = string
+  default     = "high_priority_pager_duty_integration_key"
 }
 
 variable "region" {

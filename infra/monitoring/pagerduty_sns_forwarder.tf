@@ -32,38 +32,3 @@ resource "aws_sns_topic_subscription" "high-priority" {
   endpoint               = "https://events.pagerduty.com/integration/${pagerduty_service_integration.cloudwatch_high_priority_notification.integration_key}/enqueue"
   endpoint_auto_confirms = true
 }
-
-resource "aws_sns_topic_subscription" "sms_monthly_spend_limit" {
-  topic_arn              = module.sns_alarms.sms_monthly_spend_limit_topic_arn
-  protocol               = "https"
-  endpoint               = "https://events.pagerduty.com/integration/${pagerduty_service_integration.cloudwatch_high_priority_notification.integration_key}/enqueue"
-  endpoint_auto_confirms = true
-}
-
-resource "aws_sns_topic_subscription" "sms_messages_success_rate" {
-  topic_arn              = module.sns_alarms.sms_messages_success_rate_topic_arn
-  protocol               = "https"
-  endpoint               = "https://events.pagerduty.com/integration/${pagerduty_service_integration.cloudwatch_high_priority_notification.integration_key}/enqueue"
-  endpoint_auto_confirms = true
-}
-
-resource "aws_sns_topic_subscription" "sms_phone_carrier_unavailable" {
-  topic_arn              = module.sns_alarms.sms_phone_carrier_unavailable_topic_arn
-  protocol               = "https"
-  endpoint               = "https://events.pagerduty.com/integration/${pagerduty_service_integration.cloudwatch_high_priority_notification.integration_key}/enqueue"
-  endpoint_auto_confirms = true
-}
-
-resource "aws_sns_topic_subscription" "sms_blocked_as_spam" {
-  topic_arn              = module.sns_alarms.sms_blocked_as_spam_topic_arn
-  protocol               = "https"
-  endpoint               = "https://events.pagerduty.com/integration/${pagerduty_service_integration.cloudwatch_low_priority_notification.integration_key}/enqueue"
-  endpoint_auto_confirms = true
-}
-
-resource "aws_sns_topic_subscription" "sns_sms_rate_exceeded" {
-  topic_arn              = module.sns_alarms.sns_sms_rate_exceeded_topic_arn
-  protocol               = "https"
-  endpoint               = "https://events.pagerduty.com/integration/${pagerduty_service_integration.cloudwatch_high_priority_notification.integration_key}/enqueue"
-  endpoint_auto_confirms = true
-}
