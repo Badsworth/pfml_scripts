@@ -51,7 +51,7 @@
     "HAS_FINEOS_JANUARY_RELEASE": "true",
     "HAS_LARGE_FILE_COMPRESSION": "true",
     "HAS_EMPLOYER_REIMBURSEMENTS": "true",
-    "HAS_FEB_RELEASE": "false",
+    "HAS_FEB_RELEASE": "true",
     "HAS_APRIL_UPGRADE": "false",
     "MFA_ENABLED": "true",
     "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-stage-business-intelligence-tool",
