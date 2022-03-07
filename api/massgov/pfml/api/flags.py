@@ -19,7 +19,8 @@ def flag_get(name):
                 description="Could not find {} with name {}".format(LkFeatureFlag.__name__, name)
             )
         response = response_util.success_response(
-            data=FlagResponse.from_orm(flag).dict(), message="Successfully retrieved flag",
+            data=FlagResponse.from_orm(flag).dict(),
+            message="Successfully retrieved flag",
         ).to_api_response()
         response.headers["Cache-Control"] = "max-age=300"
         return response

@@ -176,7 +176,8 @@ def admin_flags_patch(name):
         db_session.commit()
 
     return response_util.success_response(
-        message="Successfully updated feature flag", data=FlagRequest.from_orm(flag).dict(),
+        message="Successfully updated feature flag",
+        data=FlagRequest.from_orm(flag).dict(),
     ).to_api_response()
 
 
