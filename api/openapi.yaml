@@ -2175,10 +2175,10 @@ components:
         terms:
           $ref: "#/components/schemas/EmployeeSearchRequestTermsMetadata"
         order:
-          $ref: "#/components/schemas/EmployeeSearchRequestOrderMetadata"
+          $ref: "#/components/schemas/SearchRequestOrderMetadata"
           nullable: true
         paging:
-          $ref: "#/components/schemas/EmployeeSearchRequestPagingMetadata"
+          $ref: "#/components/schemas/SearchRequestPagingMetadata"
           nullable: true
       required: ["terms"]
 
@@ -4290,7 +4290,7 @@ components:
             - Other
             - Spouse
 
-    BenefitYearsSearchRequest:
+    BenefitYearsSearchTermsMetadata:
       type: object
       properties:
         employee_id:
@@ -4300,6 +4300,19 @@ components:
         current:
           type: boolean
           example: false
+    
+    BenefitYearsSearchRequest:
+      type: object
+      properties:
+        terms:
+          $ref: "#/components/schemas/BenefitYearsSearchTermsMetadata"
+          nullable: true
+        order:
+          $ref: "#/components/schemas/SearchRequestOrderMetadata"
+          nullable: true
+        paging:
+          $ref: "#/components/schemas/SearchRequestPagingMetadata"
+          nullable: true
 
     EmployeeSearchRequestTermsMetadata:
       type: object
@@ -4345,7 +4358,7 @@ components:
           example: "111111"
           nullable: true
 
-    EmployeeSearchRequestOrderMetadata:
+    SearchRequestOrderMetadata:
       type: object
       properties:
         by:
@@ -4362,7 +4375,7 @@ components:
             - descending
           nullable: true
 
-    EmployeeSearchRequestPagingMetadata:
+    SearchRequestPagingMetadata:
       type: object
       properties:
         offset:

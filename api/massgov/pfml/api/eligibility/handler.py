@@ -4,7 +4,7 @@ from typing import Optional
 from uuid import UUID
 
 import connexion
-from sqlalchemy import desc
+from sqlalchemy import asc, desc
 from werkzeug.exceptions import NotFound
 
 import massgov.pfml.api.app as app
@@ -13,6 +13,12 @@ import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import CREATE, ensure
 from massgov.pfml.api.models.applications.common import EligibilityEmploymentStatus
+from massgov.pfml.api.models.common import OrderDirection, SearchEnvelope, search_request_log_info
+from massgov.pfml.api.util.paginate.paginator import (
+    PaginationAPIContext,
+    make_paging_meta_data_from_paginator,
+    page_for_api_context,
+)
 from massgov.pfml.db.models.applications import Application
 from massgov.pfml.db.models.employees import BenefitYear, Employee, Employer, TaxIdentifier
 from massgov.pfml.util.pydantic import PydanticBaseModel
@@ -20,8 +26,11 @@ from massgov.pfml.util.pydantic import PydanticBaseModel
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
-class BenefitYearsSearchRequest(PydanticBaseModel):
+class BenefitYearsSearchTerms(PydanticBaseModel):
     employee_id: Optional[str]
+
+
+BenefitYearSearchRequest = SearchEnvelope[BenefitYearsSearchTerms]
 
 
 class BenefitYearsSearchResponse(PydanticBaseModel):
@@ -32,13 +41,11 @@ class BenefitYearsSearchResponse(PydanticBaseModel):
 
     @classmethod
     def from_orm(cls, benefit_year: BenefitYear) -> "BenefitYearsSearchResponse":
-        today = date.today()
-        current_benefit_year = today >= benefit_year.start_date and today <= benefit_year.end_date
         return BenefitYearsSearchResponse(
             benefit_year_end_date=benefit_year.end_date,
             benefit_year_start_date=benefit_year.start_date,
             employee_id=benefit_year.employee_id.__str__(),
-            current_benefit_year=current_benefit_year,
+            current_benefit_year=benefit_year.current_benefit_year,
         )
 
 
@@ -69,29 +76,35 @@ def benefit_years_search():
         # Filter to only applications where the employee has been set (via tax_id).
         # See: https://github.com/EOLWD/pfml/blob/0ac0c389695edf9338c23142eef141a2d4399b91/api/massgov/pfml/db/models/applications.py#L390
         valid_applications = [va for va in applications if va.employee]
-        if len(valid_applications) == 0:
-            logger.info("Benefit years search did not return any applications for the user")
-            return response_util.success_response(message="success", data=[]).to_api_response()
-        else:
+        request = BenefitYearSearchRequest.parse_obj(connexion.request.json)
+        with PaginationAPIContext(BenefitYear, request=request) as pagination_context:
             employee_ids = []
             for valid_application in valid_applications:
                 # This check is here for mypy, but this array is already filtered to only
                 # include applications where the employee can be found
                 if valid_application.employee:
                     employee_ids.append(valid_application.employee.employee_id)
-            benefit_years = (
-                db_session.query(BenefitYear)
-                .filter(BenefitYear.employee_id.in_(employee_ids))
-                .order_by(BenefitYear.employee_id, desc(BenefitYear.start_date))
-                .all()
+            query = db_session.query(BenefitYear).filter(BenefitYear.employee_id.in_(employee_ids))
+            is_asc = pagination_context.order_direction == OrderDirection.asc.value
+            sort_fn = asc if is_asc else desc
+            query = query.order_by(sort_fn(pagination_context.order_key))
+            page = page_for_api_context(pagination_context, query)
+
+            search_request_log_attributes = search_request_log_info(request)
+            page_data_log_attributes = make_paging_meta_data_from_paginator(
+                pagination_context, page
+            ).to_dict()
+            logger.info(
+                "beneft_years_search success",
+                extra={**page_data_log_attributes, **search_request_log_attributes},
             )
-            benefit_year_responses = []
-            for benefit_year in benefit_years:
-                benefit_year_responses.append(
-                    BenefitYearsSearchResponse.from_orm(benefit_year).dict()
-                )
-            return response_util.success_response(
-                message="success", data=benefit_year_responses
+
+            return response_util.paginated_success_response(
+                message="success",
+                model=BenefitYearsSearchResponse,
+                page=page,
+                context=pagination_context,
+                status_code=200,
             ).to_api_response()
 
 

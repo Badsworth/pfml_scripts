@@ -5,7 +5,6 @@ from collections import namedtuple
 from datetime import date
 from decimal import Decimal
 from enum import Enum
-from uuid import UUID
 
 import pytest
 from freezegun import freeze_time
@@ -778,9 +777,9 @@ def test_benefit_year_search_no_results(
     response = client.post(
         "/v1/benefit-years/search",
         headers={"Authorization": f"Bearer {fineos_user_token}"},
-        json={},
+        json={"terms": {}},
     )
-    assert response.get_json().get("data") == []
+    assert_benefit_year_search_response(response, [])
 
 
 @freeze_time("2020-09-13")
@@ -798,10 +797,6 @@ def test_benefit_year_search(
     # Create two applications for the same user but associated with different employees
     ApplicationFactory.create(user=user, tax_identifier=tax_id)
     ApplicationFactory.create(user=user, tax_identifier=tax_id_2)
-    # The ordering is employee_id, start_date so set the employee_id
-    # so that the test cannot fail because of an ordering difference
-    employee.employee_id = UUID("5b197b67-e9eb-4444-ab55-be33e133ab66")
-    employee_2.employee_id = UUID("95beed3d-ebff-4965-817e-418508fe74ad")
     # Create three benefit years, two associated with one employee
     # and one associated with the other
     by_1 = BenefitYear(
@@ -828,16 +823,11 @@ def test_benefit_year_search(
     test_db_session.commit()
 
     response = client.post(
-        "/v1/benefit-years/search", headers={"Authorization": f"Bearer {auth_token}"}, json={}
+        "/v1/benefit-years/search",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"terms": {}},
     )
-    benefit_years = response.get_json().get("data")
     expected_response = [
-        {
-            "benefit_year_end_date": date(2020, 12, 26).strftime("%Y-%m-%d"),
-            "benefit_year_start_date": date(2019, 12, 29).strftime("%Y-%m-%d"),
-            "employee_id": employee.employee_id.__str__(),
-            "current_benefit_year": True,
-        },
         {
             "benefit_year_end_date": date(2019, 12, 28).strftime("%Y-%m-%d"),
             "benefit_year_start_date": date(2018, 12, 30).strftime("%Y-%m-%d"),
@@ -847,12 +837,17 @@ def test_benefit_year_search(
         {
             "benefit_year_end_date": date(2020, 12, 26).strftime("%Y-%m-%d"),
             "benefit_year_start_date": date(2019, 12, 29).strftime("%Y-%m-%d"),
+            "employee_id": employee.employee_id.__str__(),
+            "current_benefit_year": True,
+        },
+        {
+            "benefit_year_end_date": date(2020, 12, 26).strftime("%Y-%m-%d"),
+            "benefit_year_start_date": date(2019, 12, 29).strftime("%Y-%m-%d"),
             "employee_id": employee_2.employee_id.__str__(),
             "current_benefit_year": True,
         },
     ]
-    assert len(benefit_years) == 3
-    assert benefit_years == expected_response
+    assert_benefit_year_search_response(response, expected_response)
 
 
 def test_benefit_year_search_current_year_at_edge_start_and_end(
@@ -879,16 +874,24 @@ def test_benefit_year_search_current_year_at_edge_start_and_end(
 
     with freeze_time("2020-12-26"):
         response = client.post(
-            "/v1/benefit-years/search", headers={"Authorization": f"Bearer {auth_token}"}, json={}
+            "/v1/benefit-years/search",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json={"terms": {}},
         )
-        benefit_years = response.get_json().get("data")
-        assert len(benefit_years) == 1
-        assert benefit_years == expected_benefit_years
+        assert_benefit_year_search_response(response, expected_benefit_years)
 
     with freeze_time("2019-12-29"):
         response = client.post(
-            "/v1/benefit-years/search", headers={"Authorization": f"Bearer {auth_token}"}, json={}
+            "/v1/benefit-years/search",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json={"terms": {}},
         )
-        benefit_years = response.get_json().get("data")
-        assert len(benefit_years) == 1
-        assert benefit_years == expected_benefit_years
+        assert_benefit_year_search_response(response, expected_benefit_years)
+
+
+def assert_benefit_year_search_response(response, expected_benefit_years):
+    assert response.status_code == 200
+    assert response.get_json()["meta"]["paging"] is not None
+    data = response.get_json()["data"]
+
+    assert data == expected_benefit_years

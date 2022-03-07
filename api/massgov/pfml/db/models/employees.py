@@ -968,6 +968,15 @@ class BenefitYear(Base, TimestampMixin):
 
     total_wages = Column(Numeric(asdecimal=True))
 
+    @typed_hybrid_property
+    def current_benefit_year(self):
+        today = date.today()
+        return today >= self.start_date and today <= self.end_date
+
+    @current_benefit_year.expression
+    def current_benefit_year(cls):  # noqa: B902
+        return func.now().between(cls.start_date, cls.end_date)
+
     contributions = cast(
         List["BenefitYearContribution"],
         relationship("BenefitYearContribution", cascade="all, delete-orphan"),
