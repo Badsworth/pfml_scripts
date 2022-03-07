@@ -22,3 +22,8 @@ resource "aws_sns_topic" "sns_sms_rate_exceeded" {
   name              = "${local.prefix}sns-sms-rate-exceeded"
   kms_master_key_id = data.aws_kms_key.main_kms_key.id
 }
+
+resource "aws_sns_topic" "sns_mfa_delivery_time_exceeded" {
+  name              = "${local.prefix}sns-mfa-delivery-time-exceeded"
+  kms_master_key_id = data.aws_kms_key.main_kms_key.id
+}

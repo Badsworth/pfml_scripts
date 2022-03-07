@@ -26,6 +26,9 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PaymentAuditCSV,
     PaymentAuditDetails,
 )
+from massgov.pfml.delegated_payments.audit.delegated_payment_preapproval_util import (
+    get_payment_preapproval_status,
+)
 from massgov.pfml.delegated_payments.pub.pub_check import _format_check_memo
 from massgov.pfml.delegated_payments.reporting.delegated_abstract_reporting import (
     FileConfig,
@@ -140,6 +143,9 @@ def build_audit_report_row(
         )
 
     audit_report_details = get_payment_audit_report_details(payment, audit_report_time, db_session)
+    preapproval_status = get_payment_preapproval_status(
+        payment, audit_report_details.audit_report_details_list, db_session
+    )
 
     payment_audit_row = PaymentAuditCSV(
         pfml_payment_id=str(payment.payment_id),
@@ -206,6 +212,8 @@ def build_audit_report_row(
         previously_paid_payments=payment_audit_data.previously_paid_payments_string,
         exceeds_26_weeks_total_leave_details=audit_report_details.exceeds_26_weeks_total_leave_details,
         payment_date_mismatch_details=audit_report_details.payment_date_mismatch_details,
+        is_preapproved=bool_to_str[preapproval_status.is_preapproved()],
+        preapproval_issues=preapproval_status.get_preapproval_issue_description(),
     )
 
     return payment_audit_row
@@ -321,5 +329,6 @@ def get_payment_audit_report_details(
         rejected_by_program_integrity=rejected,
         skipped_by_program_integrity=(not rejected and skipped),
         rejected_notes=rejected_notes,
+        audit_report_details_list=staged_audit_report_details_list,
         **audit_report_details,
     )

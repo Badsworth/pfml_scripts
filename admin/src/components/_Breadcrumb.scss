@@ -1,28 +1,17 @@
 .breadcrumb {
+  align-items: center;
+  display: flex;
   padding-bottom: 1em;
-  padding-left: 0.43em;
 }
-
 
 .breadcrumb__icon {
-  border-left: solid 0.29em transparent;
   color: $Color-RevolutionGray;
-  font-size: 0.714em;
-  padding-right: 0.571em;
-  text-transform: uppercase;
+  width: 1.4em;
 }
-
-
-.breadcrumb__icon::before {
-  @include IconFontProps;
-  content: $IconArrow1;
-}
-
 
 .breadcrumb__link {
   color: $Color-GraniteGray-700;
   cursor: pointer;
   font-size: 0.857em;
-  padding: 0.571em 0 1em;
   text-transform: uppercase;
 }

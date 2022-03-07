@@ -1,7 +1,7 @@
-from dataclasses import dataclass
-from typing import Optional
+from dataclasses import dataclass, field
+from typing import List, Optional
 
-from massgov.pfml.db.models.payments import PaymentAuditReportType
+from massgov.pfml.db.models.payments import PaymentAuditReportDetails, PaymentAuditReportType
 from massgov.pfml.delegated_payments.reporting.delegated_abstract_reporting import AbstractRecord
 
 
@@ -61,6 +61,8 @@ class PaymentAuditCSV(AbstractRecord):
     previously_paid_payments: Optional[str] = None
     exceeds_26_weeks_total_leave_details: Optional[str] = None
     payment_date_mismatch_details: Optional[str] = None
+    is_preapproved: Optional[str] = None
+    preapproval_issues: Optional[str] = None
 
 
 @dataclass
@@ -75,6 +77,7 @@ class PaymentAuditDetails:
     rejected_notes: Optional[str] = None
     exceeds_26_weeks_total_leave_details: Optional[str] = None
     payment_date_mismatch_details: Optional[str] = None
+    audit_report_details_list: List[PaymentAuditReportDetails] = field(default_factory=list)
 
 
 PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
@@ -130,4 +133,6 @@ PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
     previously_paid_payments="List of Previously Paid Payments",
     exceeds_26_weeks_total_leave_details=">26 weeks",
     payment_date_mismatch_details=PaymentAuditReportType.PAYMENT_DATE_MISMATCH.payment_audit_report_type_description,
+    is_preapproved="Is Pre-approved",
+    preapproval_issues="Pre-approval Issues",
 )

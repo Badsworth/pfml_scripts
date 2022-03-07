@@ -46,7 +46,7 @@ def post_user_invalid_response():
 def test_request_response_validation():
     spec_file_path = TEST_FOLDER / "test.yml"
 
-    validator_map = get_custom_validator_map()
+    validator_map = get_custom_validator_map(False)
 
     flask_app = connexion.FlaskApp("Test API")
     flask_app.add_api(

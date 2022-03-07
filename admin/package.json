@@ -27,6 +27,7 @@
     "lint": "tsc --pretty --noEmit && next lint && stylelint styles/*.scss src/components/*.scss"
   },
   "dependencies": {
+    "@heroicons/react": "^1.0.6",
     "@types/react-test-renderer": "^17.0.1",
     "classnames": "^2.3.1",
     "formik": "^2.2.9",

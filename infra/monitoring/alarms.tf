@@ -34,10 +34,12 @@ module "email_bounce" {
 }
 
 module "sns_alarms" {
-  source                           = "../modules/terraform_sns_alarms"
-  sns_monthly_spend_limit          = module.constants.aws_sns_sms_monthly_spend_limit
-  low_priority_nr_integration_key  = pagerduty_service_integration.newrelic_low_priority_notification.integration_key
-  high_priority_nr_integration_key = pagerduty_service_integration.newrelic_high_priority_notification.integration_key
+  source                                   = "../modules/terraform_sns_alarms"
+  sns_monthly_spend_limit                  = module.constants.aws_sns_sms_monthly_spend_limit
+  low_priority_nr_integration_key          = pagerduty_service_integration.newrelic_low_priority_notification.integration_key
+  high_priority_nr_integration_key         = pagerduty_service_integration.newrelic_high_priority_notification.integration_key
+  low_priority_pager_duty_integration_key  = pagerduty_service_integration.cloudwatch_low_priority_notification.integration_key
+  high_priority_pager_duty_integration_key = pagerduty_service_integration.cloudwatch_high_priority_notification.integration_key
 }
 
 module "sns_vpc_changes" {

@@ -3,7 +3,6 @@
 
   @media screen and (min-width: 1024px) {
     background: $Color-BerkshiresGreen-200;
-
     display: flex;
     flex-direction: column;
     grid-column: 1 / 1;
@@ -23,7 +22,8 @@
   padding: 0;
 }
 
-.menu__link {
+.menu__link,
+.settings__link {
   border-left: solid 0.29em transparent;
   color: $Color-RevolutionGray;
   display: block;
@@ -33,45 +33,24 @@
   transition: all 0.2s ease 0s;
 }
 
-.menu__link::before {
-  @include IconFontProps;
-  display: block;
-  font-size: 1.14em;
-  left: 0.85em;
-  position: absolute;
-  top: 1em;
-}
-
 .menu__link:hover,
 .menu__link:focus,
-.menu__link--active {
+.menu__link--active,
+.settings__link:hover,
+.settings__link:focus,
+.settings__link--active {
   background: $Color-BerkshiresGreen-100;
   border-color: $Color-BerkshiresGreen-600;
   text-decoration: none;
 }
 
-.menu__link--dashboard::before {
-  content: $IconHome;
-}
-
-.menu__link--users::before {
-  content: $IconUsers;
-}
-
-.menu__link--maintenance::before {
-  content: $IconAlert1;
-}
-
-.menu__link--features::before {
-  content: $IconFlag;
-}
-
-.menu__link--settings::before {
-  content: $IconSettings;
-}
-
-.menu__link--help::before {
-  content: $IconHelp;
+.menu__link-icon,
+.settings__link-icon {
+  display: block;
+  left: 0.85em;
+  position: absolute;
+  top: 1em;
+  width: 1.4em;
 }
 
 .settings {
@@ -86,6 +65,7 @@
   padding: 0;
 }
 
+/* Environment Flag */
 .environment {
   font-size: 0.86em;
   line-height: 1.5;

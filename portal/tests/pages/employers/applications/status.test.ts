@@ -237,4 +237,17 @@ describe("Status", () => {
     ).toBeInTheDocument();
     expect(screen.getByTestId("absence periods")).toBeInTheDocument();
   });
+
+  it("renders updated lead content when the feature flag is enabled", () => {
+    process.env.featureFlags = JSON.stringify({
+      employerShowMultiLeaveDashboard: true,
+    });
+
+    setup();
+    expect(
+      screen.getByText(
+        /No action is required of you. You can view this page at any time to download notices, see decisions, or access the leave details for this application. Your employee has the right to appeal decisions under Massachusetts regulations/
+      )
+    ).toBeInTheDocument();
+  });
 });

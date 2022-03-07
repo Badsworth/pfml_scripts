@@ -151,12 +151,14 @@ def add_error_handlers_to_app(connexion_app):
     connexion_app.add_error_handler(500, internal_server_error_handler)
 
 
-def get_custom_validator_map():
+def get_custom_validator_map(enable_response_validation):
     validator_map = {
         "body": CustomRequestBodyValidator,
         "response": CustomResponseValidator,
         "parameter": CustomParameterValidator,
     }
+    if enable_response_validation:
+        CustomResponseValidator.enable_response_validation()
     return validator_map
 
 

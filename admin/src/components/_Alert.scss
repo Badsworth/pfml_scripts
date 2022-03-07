@@ -8,7 +8,7 @@
   display: flex;
   line-height: 1.43;
   margin-bottom: 1.1em;
-  padding: 0 0.95em 0 1.1em;
+  padding: 0 0.75em 0 1.1em;
 }
 
 .alert--warn {
@@ -32,44 +32,27 @@
 }
 
 .alert__icon {
-  align-items: center;
-  display: none;
-  flex: none;
-  font-size: 1.2em;
-  justify-content: center;
+  display: block;
   line-height: 1;
   margin: 0.8em 0.85em 0 0;
+  width: 1.4em;
 }
 
-.alert--warn .alert__icon,
-.alert--success .alert__icon,
-.alert--info .alert__icon,
-.alert--error .alert__icon {
-  display: flex;
-}
-
-.alert__icon::before {
-  @include IconFontProps;
-}
-
-.alert--warn .alert__icon::before {
+.alert__icon--warn {
   color: $Color-DucklingYellow-500;
-  content: $IconAlert2;
 }
 
-.alert--success .alert__icon::before {
+.alert__icon--success {
   color: $Color-BerkshiresGreen-500;
-  content: $IconCircleCheck;
+  width: 1.29em;
 }
 
-.alert--info .alert__icon::before {
+.alert__icon--info {
   color: $Color-BayBlue-500;
-  content: $IconInfo;
 }
 
-.alert--error .alert__icon::before {
+.alert__icon--error {
   color: $Color-ErrorRed;
-  content: $IconAlert1;
 }
 
 .alert__text {
@@ -85,12 +68,28 @@
   flex: none;
   font-size: 0.85em;
   line-height: 1;
-  margin: 0.85em 0 0 1.1em;
+  margin: 0.5em 0 0 1.1em;
   padding: 0.5em;
 }
 
-.alert__dismiss::before {
-  @include IconFontProps;
-  color: $Color-GraniteGray-300;
-  content: $IconX2;
+.alert__dismiss-icon {
+  color: $Color-GraniteGray-500;
+  display: block;
+  width: 1.7em;
+}
+
+.alert__dismiss-icon--warn {
+  color: $Color-DucklingYellow-800;
+}
+
+.alert__dismiss-icon--success {
+  color: $Color-BerkshiresGreen-800;
+}
+
+.alert__dismiss-icon--info {
+  color: $Color-BayBlue-800;
+}
+
+.alert__dismiss-icon--error {
+  color: $Color-IndependenceCranberry-800;
 }

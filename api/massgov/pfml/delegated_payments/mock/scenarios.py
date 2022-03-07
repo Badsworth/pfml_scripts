@@ -47,6 +47,7 @@ class ScenarioName(Enum):
     HAPPY_PATH_DIA_ADDITIONAL_INCOME = "HAPPY_PATH_DIA_ADDITIONAL_INCOME"
     HAPPY_PATH_MAX_LEAVE_DURATION_EXCEEDED = "HAPPY_PATH_MAX_LEAVE_DURATION_EXCEEDED"
     HAPPY_PATH_PAYMENT_DATE_MISMATCH = "HAPPY_PATH_PAYMENT_DATE_MISMATCH"
+    HAPPY_PATH_PAYMENT_PREAPPROVED = "HAPPY_PATH_PAYMENT_PREAPPROVED"
 
     # Non-Standard Payments
     ZERO_DOLLAR_PAYMENT = "ZERO_DOLLAR_PAYMENT"
@@ -227,6 +228,9 @@ class ScenarioDescriptor:
     is_tax_withholding_records_exists: bool = False
     is_duplicate_tax_withholding_records_exists: bool = False
     is_tax_withholding_record_without_primary_payment: bool = False
+
+    # Preapproval
+    has_past_payments: bool = False
 
     # Manual rejects
     manual_pub_reject_response: bool = False
@@ -483,6 +487,11 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         scenario_name=ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH,
         payment_date_mismatch=True,
         is_adhoc_payment=False,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED,
+        has_past_payments=True,
+        payment_method=PaymentMethod.CHECK,
     ),
 ]
 
