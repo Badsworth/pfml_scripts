@@ -1,7 +1,9 @@
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
-import { useRouter } from "next/router";
-import useDebounce from "../hooks/useDebounce";
+
+import { SearchIcon } from "@heroicons/react/solid";
 import isClient from "../utils/isClient";
+import useDebounce from "../hooks/useDebounce";
+import { useRouter } from "next/router";
 
 export type Props = {
   search: (searchTerm: string) => Promise<unknown>;
@@ -61,7 +63,7 @@ const Search = ({ search, setResults, debounceDelay }: Props) => {
           data-testid="search-input"
           value={searchTerm}
         />
-        <i className="pfml-icon--search search__icon"></i>
+        <SearchIcon className="search__icon" />
       </div>
     </form>
   );

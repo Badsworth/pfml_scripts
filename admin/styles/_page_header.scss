@@ -19,15 +19,14 @@
   text-decoration: none;
 }
 
-.page__logo-link::before {
-  @include IconFontProps;
-  content: $IconPfmlLogo;
-  display: block;
-}
-
 .page__logo-link:hover,
 .page__logo-link:focus {
   text-decoration: none;
+}
+
+.pfml-logo-header {
+  display: block;
+  width: 2.65em;
 }
 
 .user-options__avatar {
@@ -56,10 +55,6 @@
   text-decoration: none;
 }
 
-.user-options--open::after {
-  transform: rotate(90deg);
-}
-
 .user-options__trigger {
   align-items: center;
   display: flex;
@@ -67,17 +62,19 @@
   position: relative;
 }
 
-.user-options__trigger::after {
-  @include IconFontProps;
+.user-options__trigger-icon {
   color: #fff;
-  content: $IconArrow4;
   display: block;
-  font-size: 0.77em;
   position: absolute;
-  right: 2px;
-  top: 9px;
+  right: 0;
+  top: 5px;
   transform: rotate(-90deg);
   transition: transform 0.2s ease 0s;
+  width: 1.5em;
+}
+
+.user-options--open .user-options__trigger-icon {
+  transform: rotate(90deg);
 }
 
 .user-options__trigger:hover,

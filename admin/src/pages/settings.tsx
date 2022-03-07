@@ -1,12 +1,14 @@
-import Alert from "../components/Alert";
-import Button from "../components/Button";
-import { Helmet } from "react-helmet-async";
-import { isEqual } from "lodash";
 import React, { useEffect, useState } from "react";
 //import { ApiResponse, PermissionsResponse, AzureGroupsResponse, getPermissions, patchPermissions, getAzureGroups } from "../api";
 // @todo: Remove when API is functional
 import { getAzureGroups, getAzurePermissions } from "./../settingsData";
+
+import Alert from "../components/Alert";
+import Button from "../components/Button";
+import CheckBox from "../components/CheckBox";
+import { Helmet } from "react-helmet-async";
 import { StaticPropsPermissions } from "../menus";
+import { isEqual } from "lodash";
 
 export type AzureGroup = {
   azure_group_id: number;
@@ -291,8 +293,7 @@ export default function Settings() {
                   key={index + 1}
                   className="table__col settings-table__col settings-table__col--center"
                 >
-                  <input
-                    type="checkbox"
+                  <CheckBox
                     className="settings-checkbox"
                     checked={groupHasPermission(
                       group.azure_group_id,
