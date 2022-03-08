@@ -1096,6 +1096,13 @@ class PaymentDetails(Base, TimestampMixin):
     payment_details_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     payment_id = Column(PostgreSQLUUID, ForeignKey(Payment.payment_id), nullable=False, index=True)
 
+    payment_details_c_value = Column(Text, index=True)
+    payment_details_i_value = Column(Text, index=True)
+
+    vpei_payment_details_id = Column(
+        PostgreSQLUUID, ForeignKey("fineos_extract_vpei_payment_details.vpei_payment_details_id")
+    )
+
     period_start_date = Column(Date)
     period_end_date = Column(Date)
     amount = Column(Numeric(asdecimal=True), nullable=False)
