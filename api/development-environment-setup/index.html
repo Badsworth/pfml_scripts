@@ -467,6 +467,26 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#ide-configuration" class="md-nav__link">
+    IDE Configuration
+  </a>
+  
+    <nav class="md-nav" aria-label="IDE Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vscode" class="md-nav__link">
+    VSCode
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#environment-configuration" class="md-nav__link">
     Environment Configuration
   </a>
@@ -1215,6 +1235,26 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#ide-configuration" class="md-nav__link">
+    IDE Configuration
+  </a>
+  
+    <nav class="md-nav" aria-label="IDE Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vscode" class="md-nav__link">
+    VSCode
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#environment-configuration" class="md-nav__link">
     Environment Configuration
   </a>
@@ -1383,18 +1423,99 @@ For example:
 <h3 id="native-developer-setup">Native Developer Setup</h3>
 <p>To setup a development environment outside of Docker, you'll need to install a few things.</p>
 <ol>
-<li>Install at least Python 3.9.
+<li>Install Python 3.9.7
    <a href="https://github.com/pyenv/pyenv#installation">pyenv</a> is one popular option for installing Python,
    or <a href="https://asdf-vm.com/">asdf</a>.</li>
 <li>After installing and activating the right version of Python, install
    <a href="https://python-poetry.org/docs/#installation">poetry</a>.</li>
+<li>Run <code>poetry config virtualenvs.in-project true</code> so that the project dependencies are installed inside the project at <code>pfml/api/.venv</code>.</li>
 <li>Set <code>RUN_CMD_OPT</code> to <code>NATIVE</code> in your development environment.</li>
+<li>If you are using an M1 mac, you will need to install postgres as well: <code>brew install postgresql</code> (The psycopg2-binary is built from source on M1 macs which requires the postgres executable to be present)</li>
 <li>Run <code>make deps</code> to install Python dependencies and development tooling.</li>
 </ol>
 <p>You should now be able to run developer tooling natively, like linting.</p>
 <p>To run the application you'll need some environment variables set. You can largely copy-paste the env vars
 in <code>docker-compose.yml</code> to your native environment. <code>DB_HOST</code> should be changed to <code>localhost</code>. You can then start up
 just the PostgreSQL database via Docker with <code>make start-db</code> and then the API server with <code>make run-native</code>.</p>
+<h2 id="ide-configuration">IDE Configuration</h2>
+<p>If the IDE of your choice does not appear below, refer to the VS Code instructions for hints on what needs to get configured.</p>
+<h3 id="vscode">VSCode</h3>
+<p>Make sure that you have completed the native development setup first.  These instructions also assume that root workspace is <code>pfml</code> and not <code>pfml/api</code>.</p>
+<ol>
+<li>Set the python interpreter to the python binary installed in the virtual environment</li>
+<li>Create <code>pfml/api/.env</code> file. <strong>The variables here are sourced from docker-compose.yml.  The primary difference is that the DB_HOST=localhost.</strong></li>
+<li>Update the workspace settings at to <code>pfml/.vscode/settings.json</code>.  Make sure to update the mypy.configFile to the correct path</li>
+</ol>
+<div class="highlight"><pre><span></span><code># pfml/api/.env
+ENVIRONMENT=local
+DB_HOST=localhost
+DB_NAME=pfml
+DB_ADMIN_USERNAME=pfml
+DB_ADMIN_PASSWORD=secret123
+DB_USERNAME=pfml_api
+DB_PASSWORD=secret123
+DB_NESSUS_PASSWORD=nessussecret123
+CORS_ORIGINS=http://localhost:3000,http://localhost:3001
+COGNITO_USER_POOL_KEYS_URL=file://./jwks.json
+COGNITO_USER_POOL_ID=us-east-1_HpL4XslLg
+COGNITO_USER_POOL_CLIENT_ID=10rjcp71r8bnk4459c67bn18t8
+DASHBOARD_PASSWORD=secret123
+LOGGING_LEVEL=massgov.pfml.fineos.fineos_client=DEBUG,massgov.pfml.servicenow.client=DEBUG
+ENABLE_EMPLOYEE_ENDPOINTS=1
+FOLDER_PATH=dor_mock
+FINEOS_FOLDER_PATH=fineos_mock
+RMV_API_BEHAVIOR=fully_mocked
+RMV_CHECK_MOCK_SUCCESS=1
+ENABLE_MOCK_SERVICE_NOW_CLIENT=1
+ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS=0
+PORTAL_BASE_URL=https://paidleave.mass.gov
+ENABLE_APPLICATION_FRAUD_CHECK=0
+ENABLE_DOCUMENT_MULTIPART_UPLOAD=0
+AGENCY_REDUCTIONS_EMAIL_ADDRESS=EOL-DL-DFML-Agency-Reductions@mass.gov
+DFML_PROJECT_MANAGER_EMAIL_ADDRESS=
+DISABLE_SENDING_EMAILS=1
+PFML_EMAIL_ADDRESS=PFML_DoNotReply@eol.mass.gov
+BOUNCE_FORWARDING_EMAIL_ADDRESS=PFML_DoNotReply@eol.mass.gov
+PDF_API_HOST=https://mass-pfml-pdf-api
+ENABLE_GENERATE_1099_PDF=1
+GENERATE_1099_MAX_FILES=1000
+ENABLE_MERGE_1099_PDF=1
+ENABLE_UPLOAD_1099_PDF=1
+ENABLE_APPLICATION_IMPORT=1
+UPLOAD_MAX_FILES_TO_FINEOS=10
+TEST_FILE_GENERATION_1099=0
+IRS_1099_CORRECTION_IND=0
+IRS_1099_TAX_YEAR=2021
+MOVEIT_SFTP_URI=sftp://foo@mass-pfml-sftp:22
+SFTP_URI=sftp://foo@mass-pfml-sftp:22
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="err">//</span><span class="w"> </span><span class="err">p</span><span class="kc">f</span><span class="err">ml/.vscode/se</span><span class="kc">tt</span><span class="err">i</span><span class="kc">n</span><span class="err">gs.jso</span><span class="kc">n</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;python.testing.unittestEnabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;python.testing.pytestEnabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;python.linting.mypyEnabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;python.linting.pycodestyleEnabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;python.linting.enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;python.testing.pytestArgs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">    </span><span class="s2">&quot;api/tests&quot;</span><span class="w"></span>
+<span class="w">  </span><span class="p">],</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;python.envFile&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;${workspaceFolder}/api/.env&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;python.formatting.provider&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;black&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;mypy.configFile&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/Users/{path to pfml project}/pfml/api/pyproject.toml&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;python.linting.flake8Args&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">    </span><span class="s2">&quot;--config=${workspaceFolder}/api/setup.cfg&quot;</span><span class="w"></span>
+<span class="w">  </span><span class="p">],</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;python.linting.mypyArgs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">    </span><span class="s2">&quot;--exclude=\&quot;api/tests/&quot;</span><span class="w"></span>
+<span class="w">  </span><span class="p">],</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;python.analysis.extraPaths&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;${workspaceFolder}/api&quot;</span><span class="p">],</span><span class="w"> </span><span class="err">//</span><span class="w"> </span><span class="err">Se</span><span class="kc">tt</span><span class="err">i</span><span class="kc">n</span><span class="err">g</span><span class="w"> </span><span class="err">is</span><span class="w"> </span><span class="err">o</span><span class="kc">nl</span><span class="err">y</span><span class="w"> </span><span class="err">required</span><span class="w"> </span><span class="err">i</span><span class="kc">f</span><span class="w"> </span><span class="err">your</span><span class="w"> </span><span class="err">workspace</span><span class="w"> </span><span class="err">is</span><span class="w"> </span><span class="kc">t</span><span class="err">he</span><span class="w"> </span><span class="err">e</span><span class="kc">nt</span><span class="err">ire</span><span class="w"> </span><span class="err">PFML</span><span class="w"> </span><span class="err">repo</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;[python]&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;editor.codeActionsOnSave&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="nt">&quot;source.organizeImports&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">  </span><span class="p">},</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
 <h2 id="environment-configuration">Environment Configuration</h2>
 <p>Environment variables for the local app are in the <code>docker-compose.yml</code> file.</p>
 <div class="highlight"><pre><span></span><code><span class="nt">services</span><span class="p">:</span><span class="w"></span>
