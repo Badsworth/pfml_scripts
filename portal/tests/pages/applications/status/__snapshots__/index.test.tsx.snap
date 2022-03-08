@@ -382,23 +382,6 @@ exports[`Status manage your application is displayed if any of the claim statuse
 
 exports[`Status renders the page if the only errors are DocumentsLoadError 1`] = `
 <div>
-  <div
-    class="usa-alert usa-alert--warning margin-bottom-3"
-    role="region"
-    tabindex="-1"
-  >
-    <div
-      class="usa-alert__body"
-    >
-      <div
-        class="usa-alert__text"
-      >
-        <p>
-          Due to the upcoming holiday, payments may be delayed by one business day.
-        </p>
-      </div>
-    </div>
-  </div>
   <a
     class="usa-button margin-bottom-5 usa-button--unstyled"
     href="/applications"
@@ -673,23 +656,6 @@ exports[`Status renders the page if the only errors are DocumentsLoadError 1`] =
 
 exports[`Status renders the page with claim detail 1`] = `
 <div>
-  <div
-    class="usa-alert usa-alert--warning margin-bottom-3"
-    role="region"
-    tabindex="-1"
-  >
-    <div
-      class="usa-alert__body"
-    >
-      <div
-        class="usa-alert__text"
-      >
-        <p>
-          Due to the upcoming holiday, payments may be delayed by one business day.
-        </p>
-      </div>
-    </div>
-  </div>
   <a
     class="usa-button margin-bottom-5 usa-button--unstyled"
     href="/applications"
@@ -964,23 +930,6 @@ exports[`Status renders the page with claim detail 1`] = `
 
 exports[`Status renders the page with claim detail when there is absence_case_id in query 1`] = `
 <div>
-  <div
-    class="usa-alert usa-alert--warning margin-bottom-3"
-    role="region"
-    tabindex="-1"
-  >
-    <div
-      class="usa-alert__body"
-    >
-      <div
-        class="usa-alert__text"
-      >
-        <p>
-          Due to the upcoming holiday, payments may be delayed by one business day.
-        </p>
-      </div>
-    </div>
-  </div>
   <a
     class="usa-button margin-bottom-5 usa-button--unstyled"
     href="/applications"

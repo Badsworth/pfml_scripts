@@ -222,7 +222,29 @@ describe("Payments", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("doesn't show the holiday alert when there are holidays, but the claimantShowPaymentsPhaseThree feature flag is off", () => {
+    process.env.featureFlags = JSON.stringify({
+      showHolidayAlert: true,
+      claimantShowPaymentsPhaseThree: false,
+    });
+    renderPage(Payments, { addCustomSetup: setupHelper({}) }, props);
+    expect(screen.queryByText(defaultHolidayAlertText)).not.toBeInTheDocument();
+  });
+
+  it("doesn't show the holiday alert when there are holidays, but the holiday alert feature flag is off", () => {
+    process.env.featureFlags = JSON.stringify({
+      showHolidayAlert: false,
+      claimantShowPaymentsPhaseThree: true,
+    });
+    renderPage(Payments, { addCustomSetup: setupHelper({}) }, props);
+    expect(screen.queryByText(defaultHolidayAlertText)).not.toBeInTheDocument();
+  });
+
   it("doesn't show the holiday alert when there are no holidays", () => {
+    process.env.featureFlags = JSON.stringify({
+      showHolidayAlert: true,
+      claimantShowPaymentsPhaseThree: true,
+    });
     renderPage(
       Payments,
       { addCustomSetup: setupHelper({ holidays: [] }) },
@@ -232,6 +254,10 @@ describe("Payments", () => {
   });
 
   it("shows the holiday alert when there are holidays", () => {
+    process.env.featureFlags = JSON.stringify({
+      showHolidayAlert: true,
+      claimantShowPaymentsPhaseThree: true,
+    });
     renderPage(Payments, { addCustomSetup: setupHelper({}) }, props);
     expect(screen.queryByText(defaultHolidayAlertText)).toBeInTheDocument();
   });

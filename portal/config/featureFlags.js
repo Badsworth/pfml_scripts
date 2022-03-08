@@ -52,6 +52,11 @@ const flagsConfig = {
     // When this flag is true, PDF files up to 10mb are sent to the API.
     sendLargePdfToApi: false,
 
+    // TODO (PORTAL-1893) This flag should be enabled when the /holidays endpoint is ready for production.
+    // The /holidays endpoint is still under development, but the holiday alert component is done.
+    // When this flag is enabled the holiday alert will be displayed on the payments pages.
+    showHolidayAlert: false,
+
     // When this flag is true, claims that would span multiple benefit years
     // are split into separate claims
     // See: https://lwd.atlassian.net/wiki/spaces/DD/pages/2194014380/Tech+Spec+-+Claims+spanning+two+benefit+years

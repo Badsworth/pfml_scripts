@@ -28,6 +28,7 @@ import dayjsBusinessTime from "dayjs-business-time";
 import formatDate from "src/utils/formatDate";
 import formatDateRange from "../../../utils/formatDateRange";
 import isBlank from "../../../utils/isBlank";
+import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
 
@@ -164,7 +165,10 @@ export const Payments = ({
 
   return (
     <React.Fragment>
-      <HolidayAlert holidaysLogic={holidays} />
+      {isFeatureEnabled("showHolidayAlert") &&
+        isFeatureEnabled("claimantShowPaymentsPhaseThree") && (
+          <HolidayAlert holidaysLogic={holidays} />
+        )}
       {!!infoAlertContext &&
         (hasPendingStatus ||
           hasApprovedStatus ||
