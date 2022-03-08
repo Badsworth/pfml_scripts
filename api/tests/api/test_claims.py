@@ -2350,7 +2350,9 @@ class TestGetClaimsEndpoint:
 
         # POST /claims/search
         response = client.post(
-            "/v1/claims/search", headers={"Authorization": f"Bearer {employer_auth_token}"}, json={}
+            "/v1/claims/search",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json={"terms": {}},
         )
 
         assert response.status_code == 200
@@ -2390,7 +2392,7 @@ class TestGetClaimsEndpoint:
             assert_claim_pfml_crm_response_equal_to_claim_query(response_claim, generated_claim)
 
         # POST /claims/search
-        response = client.post("/v1/claims/search", headers=snow_user_headers, json={})
+        response = client.post("/v1/claims/search", headers=snow_user_headers, json={"terms": {}})
         assert response.status_code == 200
         response_body = response.get_json()
         claim_data = response_body.get("data")
@@ -2536,8 +2538,18 @@ class TestGetClaimsEndpoint:
                     )
 
             # POST /claims/search
+            paging = {
+                k.partition("_")[2]: v
+                for k, v in scenario["paging"].items()
+                if k.startswith("page")
+            }
+            order = {
+                k.partition("_")[2]: v
+                for k, v in scenario["paging"].items()
+                if k.startswith("order")
+            }
 
-            post_body = {**scenario["request"]}
+            post_body = {"terms": {}, "paging": paging, "order": order}
             response = client.post(
                 "/v1/claims/search",
                 headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -2612,7 +2624,9 @@ class TestGetClaimsEndpoint:
 
         # POST /claims/search
         response = client.post(
-            "/v1/claims/search", headers={"Authorization": f"Bearer {employer_auth_token}"}, json={}
+            "/v1/claims/search",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json={"terms": {}},
         )
 
         assert response.status_code == 200
@@ -3153,7 +3167,8 @@ class TestGetClaimsEndpoint:
             assert claim["employer"]["employer_fein"] == format_fein(employer.employer_fein)
 
         # POST /claims/search
-        post_body = {"employer_id": [employer.employer_id]}
+        terms = {"employer_id": [employer.employer_id]}
+        post_body = {"terms": terms}
         response = client.post(
             "/v1/claims/search",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -3268,7 +3283,8 @@ class TestGetClaimsEndpoint:
             ) or claim["employer"]["employer_fein"] == format_fein(other_employer.employer_fein)
 
         # POST /claims/search
-        post_body = {"employer_id": [employer.employer_id, other_employer.employer_id]}
+        terms = {"employer_id": [employer.employer_id, other_employer.employer_id]}
+        post_body = {"terms": terms}
         response1 = client.post(
             "/v1/claims/search",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -3315,7 +3331,8 @@ class TestGetClaimsEndpoint:
         assert response_body1["data"][0]["employee"]["employee_id"] == str(employee.employee_id)
 
         # POST /claims/search
-        post_body = {"employee_id": [employee.employee_id]}
+        terms = {"employee_id": [employee.employee_id]}
+        post_body = {"terms": terms}
         response1 = client.post(
             "/v1/claims/search",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -3336,7 +3353,8 @@ class TestGetClaimsEndpoint:
         assert len(response_body2["data"]) == 0
 
         # POST /claims/search
-        post_body = {"employee_id": [employer.employer_id]}
+        terms = {"employee_id": [employer.employer_id]}
+        post_body = {"terms": terms}
         response2 = client.post(
             "/v1/claims/search",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -3378,7 +3396,8 @@ class TestGetClaimsEndpoint:
         assert len(response_body1["data"]) == 0
 
         # POST /claims/search
-        post_body = {"employer_id": [employee.employee_id], "employee_id": [employer.employer_id]}
+        terms = {"employer_id": [employee.employee_id], "employee_id": [employer.employer_id]}
+        post_body = {"terms": terms}
         response1 = client.post(
             "/v1/claims/search",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -3399,7 +3418,8 @@ class TestGetClaimsEndpoint:
         assert response_body2["data"][0]["employee"]["employee_id"] == str(employee.employee_id)
 
         # POST /claims/search
-        post_body = {"employer_id": [employer.employer_id], "employee_id": [employee.employee_id]}
+        terms = {"employer_id": [employer.employer_id], "employee_id": [employee.employee_id]}
+        post_body = {"terms": terms}
         response2 = client.post(
             "/v1/claims/search",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -3447,7 +3467,8 @@ class TestGetClaimsEndpoint:
         assert response_body1["data"][0]["employee"]["employee_id"] == str(employee.employee_id)
 
         # POST /claims/search
-        post_body = {"employee_id": [employee.employee_id, employer.employer_id]}
+        terms = {"employee_id": [employee.employee_id, employer.employer_id]}
+        post_body = {"terms": terms}
         response1 = client.post(
             "/v1/claims/search",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -3471,7 +3492,8 @@ class TestGetClaimsEndpoint:
             assert found_employee["employee"]["employee_id"] in eids_to_find
 
         # POST /claims/search
-        post_body = {"employee_id": [employee.employee_id, employee2.employee_id]}
+        terms = {"employee_id": [employee.employee_id, employee2.employee_id]}
+        post_body = {"terms": terms}
         response2 = client.post(
             "/v1/claims/search",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -3492,7 +3514,8 @@ class TestGetClaimsEndpoint:
         assert response3.status_code == 400
 
         # POST /claims/search
-        post_body = {"employee_id": f"{employee.employee_id},"}
+        terms = {"employee_id": f"{employee.employee_id},"}
+        post_body = {"terms": terms}
         response3 = client.post(
             "/v1/claims/search",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -3531,7 +3554,8 @@ class TestGetClaimsEndpoint:
         assert len(claim_data1) == 0
 
         # POST /claims/search
-        post_body = {"employee_id": [employeeB.employee_id]}
+        terms = {"employee_id": [employeeB.employee_id]}
+        post_body = {"terms": terms}
         response1 = client.post(
             "/v1/claims/search", headers={"Authorization": f"Bearer {auth_token}"}, json=post_body
         )
@@ -3552,7 +3576,8 @@ class TestGetClaimsEndpoint:
             assert found_claim["employee"]["employee_id"] == str(employeeA.employee_id)
 
         # POST /claims/search
-        post_body = {"employee_id": [employeeA.employee_id]}
+        terms = {"employee_id": [employeeA.employee_id]}
+        post_body = {"terms": terms}
         response2 = client.post(
             "/v1/claims/search", headers={"Authorization": f"Bearer {auth_token}"}, json=post_body
         )
@@ -3593,7 +3618,9 @@ class TestGetClaimsEndpoint:
 
         # POST /claims/search
         response = client.post(
-            "/v1/claims/search", headers={"Authorization": f"Bearer {auth_token}"}, json={}
+            "/v1/claims/search",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json={"terms": {}},
         )
 
         assert response.status_code == 200
@@ -3665,7 +3692,9 @@ class TestGetClaimsEndpoint:
 
         # POST /claims/search
         response = client.post(
-            "/v1/claims/search", headers={"Authorization": f"Bearer {employer_auth_token}"}, json={}
+            "/v1/claims/search",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json={"terms": {}},
         )
 
         assert response.status_code == 200
@@ -3704,7 +3733,8 @@ class TestGetClaimsEndpoint:
         assert len(response_body["data"]) == 5
 
         # POST /claims/search
-        post_body = {"employer_id": [employer.employer_id]}
+        terms = {"employer_id": [employer.employer_id]}
+        post_body = {"terms": terms}
         response = client.post(
             "/v1/claims/search",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -3903,7 +3933,8 @@ class TestGetClaimsEndpoint:
             self._perform_assertions(resp, status_code=200, expected_claims=expected_claims)
 
             # POST /claims/search
-            post_body = {"claim_status": "Approved"}
+            terms = {"claim_status": "Approved"}
+            post_body = {"terms": terms}
             response = client.post(
                 "/v1/claims/search",
                 headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -3920,7 +3951,8 @@ class TestGetClaimsEndpoint:
             self._perform_assertions(resp, status_code=200, expected_claims=[review_by_claim])
 
             # POST /claims/search
-            post_body = {"is_reviewable": "yes"}
+            terms = {"is_reviewable": "yes"}
+            post_body = {"terms": terms}
             response = client.post(
                 "/v1/claims/search",
                 headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -3952,7 +3984,8 @@ class TestGetClaimsEndpoint:
             )
 
             # POST /claims/search
-            post_body = {"is_reviewable": "no"}
+            terms = {"is_reviewable": "no"}
+            post_body = {"terms": terms}
             response = client.post(
                 "/v1/claims/search",
                 headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -3980,7 +4013,8 @@ class TestGetClaimsEndpoint:
             assert "'invalid' is not one of" in response_body["detail"]
 
             # POST /claims/search
-            post_body = {"is_reviewable": "invalid"}
+            terms = {"is_reviewable": "invalid"}
+            post_body = {"terms": terms}
             response = client.post(
                 "/v1/claims/search",
                 headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -4006,7 +4040,8 @@ class TestGetClaimsEndpoint:
             self._perform_assertions(resp, status_code=200, expected_claims=expected_claims)
 
             # POST /claims/search
-            post_body = {"claim_status": "Approved,Closed"}
+            terms = {"claim_status": "Approved,Closed"}
+            post_body = {"terms": terms}
             response = client.post(
                 "/v1/claims/search",
                 headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -4023,7 +4058,8 @@ class TestGetClaimsEndpoint:
             self._perform_assertions(resp, status_code=400, expected_claims=[])
 
             # POST /claims/search
-            post_body = {"claim_status": "Unknown"}
+            terms = {"claim_status": "Unknown"}
+            post_body = {"terms": terms}
             response = client.post(
                 "/v1/claims/search",
                 headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -4328,7 +4364,7 @@ class TestGetClaimsEndpoint:
             resp = client.post(
                 "/v1/claims/search",
                 headers={"Authorization": f"Bearer {employer_auth_token}"},
-                json={},
+                json={"terms": {}},
             )
             assert resp.status_code == 200
             response_body = resp.get_json()
@@ -4354,7 +4390,8 @@ class TestGetClaimsEndpoint:
             claim_data = response_body.get("data")
             assert len(claim_data) == 1
 
-            post_body = {"claim_status": ActionRequiredStatusFilter.OPEN_REQUIREMENT}
+            terms = {"claim_status": ActionRequiredStatusFilter.OPEN_REQUIREMENT}
+            post_body = {"terms": terms}
             resp = client.post(
                 "/v1/claims/search",
                 headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -4394,7 +4431,8 @@ class TestGetClaimsEndpoint:
                     == 0
                 )
 
-            post_body = {"claim_status": ActionRequiredStatusFilter.PENDING_NO_ACTION}
+            terms = {"claim_status": ActionRequiredStatusFilter.PENDING_NO_ACTION}
+            post_body = {"terms": terms}
             resp = client.post(
                 "/v1/claims/search",
                 headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -4434,9 +4472,10 @@ class TestGetClaimsEndpoint:
             claim_data = response_body.get("data")
             assert len(claim_data) == 4
 
-            post_body = {
+            terms = {
                 "claim_status": f"{ActionRequiredStatusFilter.PENDING_NO_ACTION},{ActionRequiredStatusFilter.OPEN_REQUIREMENT}"
             }
+            post_body = {"terms": terms}
             resp = client.post(
                 "/v1/claims/search",
                 headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -5206,7 +5245,7 @@ class TestGetClaimsEndpoint:
             return client.post(
                 "/v1/claims/search",
                 headers={"Authorization": f"Bearer {employer_auth_token}"},
-                json=request,
+                json={"terms": request},
             )
 
         def _assert_400_error_response(self, response):
@@ -5562,7 +5601,9 @@ class TestEmployerWithOrgUnitsAccess:
 
         # POST /claims/search
         response = client.post(
-            "/v1/claims/search", headers={"Authorization": f"Bearer {employer_auth_token}"}, json={}
+            "/v1/claims/search",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json={"terms": {}},
         )
 
         response_body = response.get_json()
@@ -5600,7 +5641,9 @@ class TestEmployerWithOrgUnitsAccess:
 
         # POST /claims/search
         response = client.post(
-            "/v1/claims/search", headers={"Authorization": f"Bearer {employer_auth_token}"}, json={}
+            "/v1/claims/search",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json={"terms": {}},
         )
 
         response_body = response.get_json()
@@ -5635,7 +5678,9 @@ class TestEmployerWithOrgUnitsAccess:
 
         # POST /claims/search
         response = client.post(
-            "/v1/claims/search", headers={"Authorization": f"Bearer {employer_auth_token}"}, json={}
+            "/v1/claims/search",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json={"terms": {}},
         )
 
         response_body = response.get_json()
@@ -5906,7 +5951,8 @@ class TestReviewByFilter:
             resp, status_code=200, expected_claims=review_by_claims
         )
 
-        post_body = {"claim_status": "Open requirement"}
+        terms = {"claim_status": "Open requirement"}
+        post_body = {"terms": terms}
         response = client.post(
             "/v1/claims/search",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
