@@ -3,7 +3,6 @@ import { Submission } from "../../../../src/types";
 import { extractLeavePeriod } from "../../../../src/util/claims";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { format, addDays } from "date-fns";
-import { config } from "../../../actions/common";
 
 describe("Claim date change", () => {
   after(() => {
@@ -105,14 +104,6 @@ describe("Claim date change", () => {
           portal.selectClaimFromEmployerDashboard(fineos_absence_id);
           cy.url().should("not.include", "dashboard");
           cy.contains(`${claim.first_name} ${claim.last_name}`);
-          // Check by url if we can review the claim
-          if (config("HAS_UPDATED_ER_DASHBOARD") === "false") {
-            cy.contains(
-              "Are you the right person to respond to this application?"
-            );
-            cy.contains("Yes").click();
-            cy.contains("Agree and submit").click();
-          }
           if (!claim.leave_details.reason)
             throw TypeError("Claim missing leave reason");
           portal.leaveAdminAssertClaimStatus([
