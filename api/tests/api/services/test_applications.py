@@ -668,10 +668,10 @@ def test_set_payment_preference_fields_without_a_default_preference(
 ):
     mock_get_payment_preferences.return_value = [
         massgov.pfml.fineos.models.customer_api.PaymentPreferenceResponse(
-            paymentMethod="Check",
-            paymentPreferenceId="1234",
+            paymentMethod="Elec Funds Transfer",
+            paymentPreferenceId="96166",
             accountDetails=massgov.pfml.fineos.models.customer_api.AccountDetails(
-                accountNo="1234565555",
+                accountNo="0987654321",
                 accountName="Constance Griffin",
                 routingNumber="011222333",
                 accountType="Checking",
@@ -690,11 +690,46 @@ def test_set_payment_preference_fields_without_a_default_preference(
     ]
     set_payment_preference_fields(fineos_client, fineos_web_id, application, test_db_session)
     # takes first payment pref, if none is set to default
+    assert application.payment_preference.account_number == "0987654321"
     assert application.has_submitted_payment_preference is True
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_payment_preferences")
+def test_set_payment_preference_fields_with_check_as_default_preference(
+    mock_get_payment_preferences, fineos_client, fineos_web_id, application, test_db_session
+):
+    mock_get_payment_preferences.return_value = [
+        massgov.pfml.fineos.models.customer_api.PaymentPreferenceResponse(
+            paymentMethod="Check",
+            paymentPreferenceId="96166",
+            isDefault=True,
+            chequeDetails=massgov.pfml.fineos.models.customer_api.ChequeDetails(
+                nameToPrintOnCheck=""
+            ),
+            customerAddress=massgov.pfml.fineos.models.customer_api.CustomerAddress(
+                address=massgov.pfml.fineos.models.customer_api.Address(
+                    addressLine1="1234 SE Elm",
+                    addressLine2="",
+                    addressLine3="",
+                    addressLine4="Amherst",
+                    addressLine5="",
+                    addressLine6="MA",
+                    addressLine7="",
+                    postCode="01002",
+                    country="USA",
+                    classExtensionInformation=[],
+                )
+            ),
+        ),
+    ]
+    set_payment_preference_fields(fineos_client, fineos_web_id, application, test_db_session)
     assert (
         application.payment_preference.payment_method.payment_method_id
         == PaymentMethod.CHECK.payment_method_id
     )
+    assert application.has_submitted_payment_preference is True
+    assert application.has_mailing_address is True
+    assert application.mailing_address.address_line_one == "1234 SE Elm"
 
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_payment_preferences")

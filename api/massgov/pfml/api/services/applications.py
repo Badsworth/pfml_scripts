@@ -71,6 +71,7 @@ from massgov.pfml.db.models.employees import (
     LkAddressType,
     LkGender,
     MFADeliveryPreference,
+    PaymentMethod,
     User,
 )
 from massgov.pfml.db.models.geo import GeoState
@@ -1373,13 +1374,14 @@ def set_payment_preference_fields(
         application.has_submitted_payment_preference = False
         return
 
-    has_submitted_payment_preference = False
     # Take the one with isDefault=True, otherwise take first one
     preference = next(
         (pref for pref in preferences if pref.isDefault and pref.paymentMethod != ""),
         preferences[0],
     )
 
+    payment_preference = None
+    has_submitted_payment_preference = False
     if preference.accountDetails is not None:
         payment_preference = PaymentPreference(
             account_number=preference.accountDetails.accountNo,
@@ -1387,6 +1389,11 @@ def set_payment_preference_fields(
             bank_account_type=preference.accountDetails.accountType,
             payment_method=preference.paymentMethod,
         )
+    elif preference.paymentMethod == PaymentMethod.CHECK.payment_method_description:
+        payment_preference = PaymentPreference(
+            payment_method=preference.paymentMethod,
+        )
+    if payment_preference is not None:
         add_or_update_payment_preference(db_session, payment_preference, application)
         has_submitted_payment_preference = True
     application.has_submitted_payment_preference = has_submitted_payment_preference
