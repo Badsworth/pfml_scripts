@@ -147,7 +147,10 @@ def absence_period():
 
 @pytest.fixture
 def change_request(claim):
-    return ChangeRequestFactory.create(claim_id=claim.claim_id, change_request_type_id=2)
+    return ChangeRequestFactory.create(
+        claim_id=claim.claim_id,
+        change_request_type_id=employee_models.ChangeRequestType.MODIFICATION.change_request_type_id,
+    )
 
 
 @pytest.fixture

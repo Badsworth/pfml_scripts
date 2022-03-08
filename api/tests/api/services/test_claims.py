@@ -1,16 +1,18 @@
 import json
+import uuid
 from datetime import date, datetime, timezone
 from unittest import mock
 
 import pytest
 
+import massgov.pfml.db.models.employees as db_models
 from massgov.pfml.api.models.claims.common import ChangeRequest, ChangeRequestType
 from massgov.pfml.api.services.claims import (
     ClaimWithdrawnError,
     add_change_request_to_db,
+    get_change_requests_from_db,
     get_claim_detail,
 )
-from massgov.pfml.db.models.employees import ChangeRequest as change_request_db_model
 from massgov.pfml.db.models.factories import ManagedRequirementFactory
 from massgov.pfml.db.queries.absence_periods import (
     convert_fineos_absence_period_to_claim_response_absence_period,
@@ -181,8 +183,23 @@ class TestAddChangeRequestToDB:
             )
             test_db_session.commit()
             db_entry = (
-                test_db_session.query(change_request_db_model)
-                .filter(change_request_db_model.claim_id == claim.claim_id)
+                test_db_session.query(db_models.ChangeRequest)
+                .filter(db_models.ChangeRequest.claim_id == claim.claim_id)
                 .one_or_none()
             )
             assert db_entry is not None
+
+
+class TestGetChangeRequestsFromDB:
+    def test_successful(self, test_db_session, app, claim, change_request):
+        change_requests = get_change_requests_from_db(claim.claim_id, test_db_session)
+        assert change_requests[0].claim_id == claim.claim_id
+        assert change_requests[0].change_request_type_id == 1
+        assert (
+            change_requests[0].change_request_type_instance.change_request_type_description
+            == "Modification"
+        )
+
+    def test_no_change_requests(self, test_db_session, app):
+        change_requests = get_change_requests_from_db(uuid.uuid4(), test_db_session)
+        assert len(change_requests) == 0

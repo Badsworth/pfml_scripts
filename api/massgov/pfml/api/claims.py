@@ -850,7 +850,8 @@ def get_change_requests(fineos_absence_id: str) -> flask.Response:
         )
         return error.to_api_response()
 
-    change_requests = get_change_requests_from_db(claim.claim_id)
+    with app.db_session() as db_session:
+        change_requests = get_change_requests_from_db(claim.claim_id, db_session)
 
     # TODO: (PORTAL-1864) Convert the change_request_type to return the enum value rather than the id
     change_requests_dict = []

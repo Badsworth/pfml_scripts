@@ -3,6 +3,7 @@ from typing import Dict, List
 from uuid import UUID
 
 import newrelic.agent
+from sqlalchemy.orm.session import Session
 
 import massgov
 import massgov.pfml.api.app as app
@@ -68,15 +69,15 @@ def _is_withdrawn_claim_error(error: exception.FINEOSForbidden) -> bool:
     return withdrawn_msg in error.message
 
 
-# TODO: (PORTAL-1855) Add tests for this method
-def get_change_requests_from_db(claim_id: UUID) -> List[db_models.ChangeRequest]:
+def get_change_requests_from_db(
+    claim_id: UUID, db_session: Session
+) -> List[db_models.ChangeRequest]:
 
-    with app.db_session() as db_session:
-        change_requests = (
-            db_session.query(db_models.ChangeRequest)
-            .filter(db_models.ChangeRequest.claim_id == claim_id)
-            .all()
-        )
+    change_requests = (
+        db_session.query(db_models.ChangeRequest)
+        .filter(db_models.ChangeRequest.claim_id == claim_id)
+        .all()
+    )
 
     return change_requests
 
