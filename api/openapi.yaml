@@ -1533,7 +1533,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FlagWithLogsResponse"
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/FlagWithLog"
         "503":
           $ref: "#/components/responses/ServiceUnavailableError"
 
@@ -2016,6 +2020,7 @@ components:
           readOnly: true
         options:
           type: object
+          nullable: true
           example:
             page_routes:
              - "/applications/*"
@@ -2023,7 +2028,6 @@ components:
         enabled:
           type: boolean
           example: false
-      additionalProperties: false
 
     FlagWithLog:
       allOf:
@@ -2044,18 +2048,6 @@ components:
               format: date-time
               example: "2020-06-26T01:02:03.967736+00:00"
               readOnly: true
-          additionalProperties: false
-
-    FlagWithLogsResponse:
-      type: array
-      items:
-        $ref: "#/components/schemas/FlagWithLog"
-
-
-    FlagsResponse:
-      type: array
-      items:
-        $ref: "#/components/schemas/Flag"
 
     UserResponse:
       type: object
