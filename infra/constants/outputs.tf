@@ -338,7 +338,6 @@ output "import_buckets" {
     "aws-glue-scripts-498823821309-us-east-1",
     "aws-glue-temporary-498823821309-us-east-1",
     "massgov-pfml-demo-business-intelligence-tool",
-    "cf-templates-rvbkfcj4nho2-us-east-2",
     "cf-templates-rvbkfcj4nho2-us-east-1",
     "config-bucket-498823821309",
     "test-eotss-aws-cloudopsteam-config-tags",
