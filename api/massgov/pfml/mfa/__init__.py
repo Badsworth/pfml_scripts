@@ -30,7 +30,6 @@ def handle_mfa_enabled(user: User, cognito_auth_token: str) -> None:
 def handle_mfa_disabled(
     user: User,
     last_enabled_at: Optional[datetime],
-    updated_by: str,
     sync_cognito_preferences: bool,
     cognito_auth_token: str,
 ) -> None:
@@ -41,7 +40,7 @@ def handle_mfa_disabled(
     assert user.email_address
     assert user.mfa_phone_number_last_four()
 
-    log_attributes = _collect_log_attributes(updated_by, last_enabled_at)
+    log_attributes = _collect_log_attributes(last_enabled_at)
     logger.info("MFA disabled for user", extra=log_attributes)
 
     try:
@@ -59,8 +58,8 @@ def handle_mfa_disabled(
         raise error
 
 
-def _collect_log_attributes(updated_by: str, last_enabled_at: Optional[datetime]) -> Dict[str, Any]:
-    log_attributes: Dict[str, Any] = {"updated_by": updated_by}
+def _collect_log_attributes(last_enabled_at: Optional[datetime]) -> Dict[str, Any]:
+    log_attributes: Dict[str, Any] = {"updated_by": "user"}
 
     # TODO: investigate why this is happening: https://lwd.atlassian.net/browse/PORTAL-1678
     if last_enabled_at is None:

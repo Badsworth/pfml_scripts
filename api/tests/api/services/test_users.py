@@ -122,7 +122,8 @@ class TestUpdateUser:
         update_user(test_db_session, user, update_request, False, auth_token)
 
         self.mock_logger.info.assert_any_call(
-            "MFA updated for user", extra={"mfa_preference": "SMS", "updated_by": "user"}
+            "MFA updated for user",
+            extra={"mfa_preference": "SMS", "sync_cognito_preferences": False},
         )
 
     @mock.patch("massgov.pfml.api.services.users.handle_mfa_disabled")
@@ -137,7 +138,7 @@ class TestUpdateUser:
         update_request = UserUpdateRequest(mfa_delivery_preference="Opt Out")
         update_user(test_db_session, user, update_request, False, auth_token)
 
-        mock_handle_mfa_disabled.assert_called_once_with(user, mock.ANY, "user")
+        mock_handle_mfa_disabled.assert_called_once_with(user, mock.ANY, False, mock.ANY)
 
     @mock.patch("massgov.pfml.api.services.users.handle_mfa_disabled")
     def test_handle_mfa_disabled_not_called_on_first_opt_out(
