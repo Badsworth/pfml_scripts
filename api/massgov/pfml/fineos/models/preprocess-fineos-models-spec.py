@@ -7,9 +7,9 @@ with open(sys.argv[1], "r") as f:
 
 schemas = parsed["components"]["schemas"]
 
-for _schema_name, schema_desc in schemas.items():
+for schema_name, schema_desc in schemas.items():
     if "properties" in schema_desc:
-        for _prop_name, prop_desc in schema_desc["properties"].items():
+        for prop_name, prop_desc in schema_desc["properties"].items():
             if "format" in prop_desc:
                 if prop_desc["format"] == "string":
                     prop_desc.pop("format", None)
@@ -34,6 +34,10 @@ for _schema_name, schema_desc in schemas.items():
                 if prop_desc["type"] == "string" and (prop_desc.get("maximum", None) is not None):
                     max_length = prop_desc.pop("maximum")
                     prop_desc["maxLength"] = max_length
+
+            # All the values we get back _from FINEOS_ are greater than 10
+            if schema_name in {"PhoneNumber", "EmailAddress"} and prop_name == "id":
+                prop_desc.pop("maximum")
     else:
         # Some entries have an "allOf" property with a reference as well as properties, e.g. `AUTaxCodeDetails`
         continue
