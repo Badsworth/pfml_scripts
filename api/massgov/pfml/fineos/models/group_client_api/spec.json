@@ -2526,6 +2526,32 @@
         ],
         "type": "object"
       },
+      "ContactDetails": {
+        "properties": {
+          "emailAddresses": {
+            "description": "Return list of email addresses, specifying the type: Email or Work Email.",
+            "items": {
+              "$ref": "#/components/schemas/EmailAddress"
+            },
+            "maxItems": 100,
+            "minItems": 0,
+            "type": "array"
+          },
+          "phoneNumbers": {
+            "description": "An array with Customer Phone number details elements.",
+            "items": {
+              "$ref": "#/components/schemas/PhoneNumber"
+            },
+            "type": "array"
+          },
+          "preferredContactMethod": {
+            "description": "Return the Id of the preferred contact method (it corresponds to one of the phones or emails specified in the previous lists and it means the first person to be contacted when it is needed).",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "ContactMethodResponse": {
         "description": "Contact context identifying the preference",
         "properties": {
@@ -3609,7 +3635,7 @@
         "type": "object"
       },
       "CustomerAddress": {
-        "description": "The person's address.",
+        "description": "The reason why the payment preference has this status",
         "properties": {
           "address": {
             "$ref": "#/components/schemas/Address"
@@ -4645,7 +4671,6 @@
         "type": "object"
       },
       "EFormAttribute": {
-        "description": "An array of EForm attributes.",
         "properties": {
           "booleanValue": {
             "description": "Boolean value of an EForm attribute, which must be populated if the type attribute is set to boolean.",
@@ -6180,7 +6205,7 @@
         "type": "object"
       },
       "EmailAddress": {
-        "description": "Return list of email addresses",
+        "description": "Return list of email addresses, specifying the type: Email or Work Email.",
         "properties": {
           "classExtensionInformation": {
             "description": "An array of the extensionAttribute objects which contain email Address extension information.",
@@ -6195,6 +6220,10 @@
             "minLength": 0,
             "type": "string"
           },
+          "emailAddressType": {
+            "description": "Identifies the type of mail which is returned (Enum Domain=51)",
+            "type": "string"
+          },
           "id": {
             "description": "The id of the contact method (e.g. phone / mobile / emailAddress) ",
             "format": "int64",
@@ -6203,11 +6232,12 @@
             "type": "integer"
           },
           "preferred": {
+            "description": "Specify if it is the first person to try to contact when it is required.",
             "type": "boolean"
           }
         },
         "required": [
-          "id"
+          "emailAddressType"
         ],
         "type": "object"
       },
@@ -7408,7 +7438,6 @@
         "type": "object"
       },
       "ExtensionAttribute": {
-        "description": "An array of the extensionAttribute objects which contain extension information.",
         "properties": {
           "booleanValue": {
             "description": "Value of the class extension attribute of a boolean type.",
@@ -10582,30 +10611,6 @@
         ],
         "type": "object"
       },
-      "ParticipantContactDetails": {
-        "properties": {
-          "emailAddresses": {
-            "description": "Return list of email addresses",
-            "items": {
-              "$ref": "#/components/schemas/EmailAddress"
-            },
-            "type": "array"
-          },
-          "phoneNumbers": {
-            "description": "Return list of phone numbers",
-            "items": {
-              "$ref": "#/components/schemas/PhoneNumber"
-            },
-            "type": "array"
-          },
-          "preferredContactMethod": {
-            "description": "Return the preferred contact method i.e. either the id of the preferred phone number or id of the preferred email address",
-            "format": "int64",
-            "type": "integer"
-          }
-        },
-        "type": "object"
-      },
       "PartyTypeRequest": {
         "description": "The party type (<I>domainId</I> = 102)",
         "properties": {
@@ -11483,7 +11488,7 @@
         "type": "object"
       },
       "PhoneNumber": {
-        "description": "Return list of phone numbers",
+        "description": "An array with Customer Phone number details elements.",
         "properties": {
           "areaCode": {
             "description": "area code value",
@@ -11518,6 +11523,7 @@
             "type": "string"
           },
           "preferred": {
+            "description": "Specify if it is the first person to try to contact when it is required.",
             "type": "boolean"
           },
           "telephoneNo": {
@@ -11528,7 +11534,6 @@
           }
         },
         "required": [
-          "id",
           "phoneNumberType"
         ],
         "type": "object"
@@ -14054,7 +14059,7 @@
       "name": "FINEOS License"
     },
     "title": "FINEOS Group Client API",
-    "version": "21.3"
+    "version": "21.3.3"
   },
   "openapi": "3.0.1",
   "paths": {
@@ -18058,7 +18063,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ParticipantContactDetails"
+                  "$ref": "#/components/schemas/ContactDetails"
                 }
               }
             },

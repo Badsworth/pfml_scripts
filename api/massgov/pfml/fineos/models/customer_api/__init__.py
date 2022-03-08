@@ -11,8 +11,6 @@ from .overrides import (  # noqa: F401
     LeavePeriodChangeRequest,
     NotificationAbsenceCaseSummary,
     NotificationCaseSummary,
-    ParticipantContactDetails,
-    PhoneNumber,
 )
 from .spec import (  # noqa: F401
     Absence,
@@ -281,6 +279,7 @@ from .spec import (  # noqa: F401
     PeriodDecisions,
     PeriodPeriodTypeResponse,
     PersonDetails,
+    PhoneNumber,
     Policy,
     PregnancyDetails,
     PregnancyRelatedResponse,

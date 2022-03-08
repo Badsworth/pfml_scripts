@@ -3313,7 +3313,7 @@
       "ContactDetails": {
         "properties": {
           "emailAddresses": {
-            "description": "Email Address of the customer.",
+            "description": "Return list of email addresses, specifying the type: Email or Work Email.",
             "items": {
               "$ref": "#/components/schemas/EmailAddress"
             },
@@ -3322,11 +3322,16 @@
             "type": "array"
           },
           "phoneNumbers": {
-            "description": "An array of objects which contain customer phone number details.",
+            "description": "An array with Customer Phone number details elements.",
             "items": {
               "$ref": "#/components/schemas/PhoneNumber"
             },
             "type": "array"
+          },
+          "preferredContactMethod": {
+            "description": "Return the Id of the preferred contact method (it corresponds to one of the phones or emails specified in the previous lists and it means the first person to be contacted when it is needed).",
+            "format": "int64",
+            "type": "integer"
           }
         },
         "type": "object"
@@ -5319,7 +5324,6 @@
         "type": "object"
       },
       "EFormAttribute": {
-        "description": "Get Answers if any exist.",
         "properties": {
           "booleanValue": {
             "description": "Boolean value of an EForm attribute, which must be populated if the type attribute is set to boolean.",
@@ -6166,7 +6170,7 @@
         "type": "object"
       },
       "EmailAddress": {
-        "description": "Email Address of the customer.",
+        "description": "Return list of email addresses, specifying the type: Email or Work Email.",
         "properties": {
           "classExtensionInformation": {
             "description": "An array of the extensionAttribute objects which contain email Address extension information.",
@@ -6181,6 +6185,10 @@
             "minLength": 0,
             "type": "string"
           },
+          "emailAddressType": {
+            "description": "Identifies the type of mail which is returned (Enum Domain=51)",
+            "type": "string"
+          },
           "id": {
             "description": "The id of the contact method (e.g. phone / mobile / emailAddress) ",
             "format": "int64",
@@ -6189,11 +6197,12 @@
             "type": "integer"
           },
           "preferred": {
+            "description": "Specify if it is the first person to try to contact when it is required.",
             "type": "boolean"
           }
         },
         "required": [
-          "id"
+          "emailAddressType"
         ],
         "type": "object"
       },
@@ -7082,7 +7091,6 @@
         "type": "object"
       },
       "ExtensionAttribute": {
-        "description": "An array of the extensionAttribute objects which contain extension information.",
         "properties": {
           "booleanValue": {
             "description": "Value of the class extension attribute of a boolean type.",
@@ -10651,30 +10659,6 @@
         ],
         "type": "object"
       },
-      "ParticipantContactDetails": {
-        "properties": {
-          "emailAddresses": {
-            "description": "Return list of email addresses",
-            "items": {
-              "$ref": "#/components/schemas/EmailAddress"
-            },
-            "type": "array"
-          },
-          "phoneNumbers": {
-            "description": "Return list of phone numbers",
-            "items": {
-              "$ref": "#/components/schemas/PhoneNumber"
-            },
-            "type": "array"
-          },
-          "preferredContactMethod": {
-            "description": "Return the preferred contact method i.e. either the id of the preferred phone number or id of the preferred email address",
-            "format": "int64",
-            "type": "integer"
-          }
-        },
-        "type": "object"
-      },
       "Payment": {
         "properties": {
           "accountTransferInfo": {
@@ -11172,7 +11156,6 @@
         "type": "object"
       },
       "PaymentPreferenceResponse": {
-        "description": "Gets the payment preference details  of main payee on benefit.",
         "properties": {
           "accountDetails": {
             "$ref": "#/components/schemas/AccountDetails"
@@ -11424,7 +11407,7 @@
         "type": "object"
       },
       "PhoneNumber": {
-        "description": "An array of objects which contain customer phone number details.",
+        "description": "An array with Customer Phone number details elements.",
         "properties": {
           "areaCode": {
             "description": "area code value",
@@ -11459,6 +11442,7 @@
             "type": "string"
           },
           "preferred": {
+            "description": "Specify if it is the first person to try to contact when it is required.",
             "type": "boolean"
           },
           "telephoneNo": {
@@ -11469,7 +11453,6 @@
           }
         },
         "required": [
-          "id",
           "phoneNumberType"
         ],
         "type": "object"
@@ -12222,7 +12205,7 @@
             },
             "type": "array"
           },
-          "relationShips": {
+          "relationships": {
             "description": "List of Relationship",
             "items": {
               "$ref": "#/components/schemas/Relationship"
@@ -15309,7 +15292,7 @@
       "name": "FINEOS License"
     },
     "title": "FINEOS Customer API",
-    "version": "21.3"
+    "version": "21.3.3"
   },
   "openapi": "3.0.1",
   "paths": {
@@ -17865,7 +17848,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -17978,7 +17961,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -18083,7 +18066,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -18174,7 +18157,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -18287,7 +18270,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -18380,7 +18363,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -18480,7 +18463,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -18590,7 +18573,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -18707,7 +18690,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -18805,7 +18788,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -18896,7 +18879,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -18987,7 +18970,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -19086,7 +19069,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -19187,7 +19170,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -19284,7 +19267,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -19385,7 +19368,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -19477,7 +19460,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -19579,7 +19562,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -19681,7 +19664,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -20649,7 +20632,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -20742,7 +20725,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -20822,7 +20805,8 @@
     },
     "/customer/cases/{caseId}/participants/{participantId}/readParticipantContactDetails": {
       "get": {
-        "description": "Returns details for a particular case Participant (date of birth, gender, correspondence address etc.)",
+        "deprecated": true,
+        "description": "Returns the contact details of a participant involved in a Claim Case, including 2 lists: Phone Contacts and Email Contacts.<br><br>The participant Id parameter can be obtained from the service:<UL><LI><B> /customer/cases/{caseId}/participants</B></LI></UL>The list of phone contacts includes the following information:<UL><LI><B> Id </B></LI><LI><B> Preferred Contact method (True/False) </B></LI><LI><B> Phone Number Type</B></LI><LI><B> Int. Code </B></LI><LI><B> Area Code</B></LI><LI><B> Telephone Number </B></LI></UL>The list of email contacts includes the following information:<br><UL><LI><B> Id </B></LI><LI><B> Preferred Contact Method (True/False) </B></LI><LI><B> Email Type </B></LI><LI><B> Email Address </B></LI></UL><P><br>",
         "operationId": "readParticipantContactDetails",
         "parameters": [
           {
@@ -20835,7 +20819,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -20852,7 +20836,7 @@
             }
           },
           {
-            "description": "participant Id",
+            "description": "Participant Id. A participant role stands for the function that a party has on the case, such as claimant, doctor, or employer.",
             "in": "path",
             "name": "participantId",
             "required": true,
@@ -20868,7 +20852,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/ParticipantContactDetails"
+                    "$ref": "#/components/schemas/ContactDetails"
                   },
                   "type": "array"
                 }
@@ -20917,7 +20901,7 @@
             "description": "Internal Server Error"
           }
         },
-        "summary": "Returns details for a particular case Participant.",
+        "summary": "Returns contact details of a participant involved in a Claim Case.",
         "tags": [
           "Customer"
         ]
@@ -20938,7 +20922,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -21059,7 +21043,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -21139,7 +21123,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -21260,7 +21244,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -21352,7 +21336,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -21436,7 +21420,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -21536,7 +21520,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -21638,7 +21622,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -21736,7 +21720,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -21836,7 +21820,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -21934,7 +21918,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -22032,7 +22016,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -22138,7 +22122,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -22236,7 +22220,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -22329,7 +22313,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -22419,7 +22403,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -22517,7 +22501,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -22626,7 +22610,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -22735,7 +22719,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -22836,7 +22820,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -22946,7 +22930,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -23067,7 +23051,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -23168,7 +23152,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -23271,7 +23255,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -23392,7 +23376,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -23490,7 +23474,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -23588,7 +23572,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -23696,7 +23680,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -23797,7 +23781,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -23887,7 +23871,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -23980,7 +23964,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -24094,7 +24078,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -24205,7 +24189,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -24316,7 +24300,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -24419,7 +24403,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -24508,7 +24492,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -24611,7 +24595,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -24735,7 +24719,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -24845,7 +24829,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -24977,7 +24961,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -25077,7 +25061,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -25186,7 +25170,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -25289,7 +25273,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -25402,7 +25386,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -25524,7 +25508,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -25608,7 +25592,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -25705,7 +25689,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -25805,7 +25789,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -25898,7 +25882,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -25999,7 +25983,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -26255,7 +26239,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -26342,7 +26326,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -26431,7 +26415,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -26532,7 +26516,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -26616,7 +26600,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -26716,7 +26700,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -26804,7 +26788,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -26918,7 +26902,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -27440,7 +27424,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -27563,7 +27547,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -27634,7 +27618,8 @@
     },
     "/customer/readCustomerContactDetails": {
       "get": {
-        "description": "Returns the Customer's contact details for the user. This includes email address and phone numbers.",
+        "deprecated": true,
+        "description": "Returns the Customer's contact details associated to the User Id specified in the header, including 2 lists: phone contacts and email contacts.<br>The list of phone contacts includes the following information:<UL><LI><B> Id </B></LI><LI><B> Preferred Contact method (True/False) </B></LI><LI><B> Phone Number Type</B></LI><LI><B> Int. Code </B></LI><LI><B> Area Code</B></LI><LI><B> Telephone Number </B></LI></UL>The list of email contacts includes the following information:<br><UL><LI><B> Id </B></LI><LI><B> Preferred Contact Method (True/False) </B></LI><LI><B> Email Type </B></LI><LI><B> Email Address </B></LI></UL><P><br>.",
         "operationId": "readCustomerContactDetails",
         "parameters": [
           {
@@ -27647,7 +27632,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -27707,6 +27692,7 @@
             "description": "Internal Server Error"
           }
         },
+        "summary": "Returns contact details of a customer.",
         "tags": [
           "Customer"
         ]
@@ -27727,7 +27713,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -28492,7 +28478,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -28571,6 +28557,7 @@
     },
     "/customer/updateCustomerContactDetails": {
       "post": {
+        "deprecated": true,
         "description": "Updates the Customer's contact details including email address and phone numbers, returns updated contact details as response.",
         "operationId": "updateCustomerContactDetails",
         "parameters": [
@@ -28584,7 +28571,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -28676,7 +28663,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -28760,7 +28747,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -28865,7 +28852,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
@@ -28956,7 +28943,7 @@
             }
           },
           {
-            "description": "customer number of the represented customer user accessing the resource",
+            "description": "Customer Id of the represented customer user accessing the resource. A representative user is a portal user who may manage a party and claim information on behalf of another portal user. A represented party is the portal user party that the representative represents in the portal. For example, a parent (representative) can access and manage claim details on their child's (represented party) behalf.",
             "in": "header",
             "name": "representedCustomerId",
             "schema": {
