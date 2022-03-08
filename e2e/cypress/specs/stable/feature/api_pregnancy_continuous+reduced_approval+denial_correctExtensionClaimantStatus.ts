@@ -58,8 +58,12 @@ describe("Submit medical pre-birth application via the web portal", () => {
               .shouldHaveStatus("Evidence", "Satisfied")
               .shouldHaveStatus("Availability", "Time Available")
               .shouldHaveStatus("Restriction", "Passed")
-              .shouldHaveStatus("PlanDecision", "Accepted")
-              .approve();
+              .shouldHaveStatus("PlanDecision", "Accepted");
+            if (config("HAS_APRIL_UPGRADE") === "true") {
+              claimPage.approve("Approved", true);
+            } else {
+              claimPage.approve("Approved", false);
+            }
           });
         });
       });

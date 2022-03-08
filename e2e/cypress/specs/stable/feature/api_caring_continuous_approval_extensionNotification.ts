@@ -4,6 +4,7 @@ import { Submission } from "../../../../src/types";
 import { extractLeavePeriod } from "../../../../src/util/claims";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { format, addDays, parse } from "date-fns";
+import { config } from "../../../actions/common";
 
 describe("Post-approval (notifications/notices)", () => {
   const credentials: Credentials = {
@@ -43,7 +44,11 @@ describe("Post-approval (notifications/notices)", () => {
           );
           adjudication.acceptLeavePlan();
         });
-        claimPage.approve();
+        if (config("HAS_APRIL_UPGRADE") === "true") {
+          claimPage.approve("Approved", true);
+        } else {
+          claimPage.approve("Approved", false);
+        }
       });
     });
   });
@@ -101,7 +106,11 @@ describe("Post-approval (notifications/notices)", () => {
               true
             );
           });
-          claimPage.approve();
+          if (config("HAS_APRIL_UPGRADE") === "true") {
+            claimPage.approve("Approved", true);
+          } else {
+            claimPage.approve("Approved", false);
+          }
         });
       });
     }

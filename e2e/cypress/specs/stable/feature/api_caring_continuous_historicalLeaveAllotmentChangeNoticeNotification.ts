@@ -27,19 +27,24 @@ describeIf(
             fineosPages.ClaimPage.visit(
               response.fineos_absence_id
             ).addHistoricalAbsenceCase();
-            fineosPages.ClaimPage.visit(response.fineos_absence_id)
-              .adjudicate((adjudication) => {
-                adjudication
-                  .evidence((evidence) => {
-                    claim.documents.forEach((doc) =>
-                      evidence.receive(doc.document_type)
-                    );
-                  })
-                  .certificationPeriods((cert) => cert.prefill())
-                  .acceptLeavePlan();
-              })
-              .approve()
-              .triggerNotice("Designation Notice");
+            const claimPage = fineosPages.ClaimPage.visit(
+              response.fineos_absence_id
+            ).adjudicate((adjudication) => {
+              adjudication
+                .evidence((evidence) => {
+                  claim.documents.forEach((doc) =>
+                    evidence.receive(doc.document_type)
+                  );
+                })
+                .certificationPeriods((cert) => cert.prefill())
+                .acceptLeavePlan();
+            });
+            if (config("HAS_APRIL_UPGRADE") === "true") {
+              claimPage.approve("Approved", true);
+            } else {
+              claimPage.approve("Approved", false);
+            }
+            claimPage.triggerNotice("Designation Notice");
           });
         });
       });

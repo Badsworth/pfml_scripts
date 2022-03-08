@@ -112,6 +112,13 @@ export class ClaimPage {
     cy.findByText("Absence Case", { selector: "a" }).click();
     return this;
   }
+  // FINEOS April upgrade will adjust the in review process to which we don't have to click on the Adjudication
+  // buton on the Absence Hub tab.
+  adjudicateUpgrade(cb: (page: AdjudicationPage) => unknown): this {
+    cb(new AdjudicationPage());
+    cy.get("#footerButtonsBar input[value='OK']").click();
+    return this;
+  }
 
   adjudicate(cb: (page: AdjudicationPage) => unknown): this {
     cy.get('input[type="submit"][value="Adjudicate"]').click();
@@ -243,12 +250,21 @@ export class ClaimPage {
     return this;
   }
 
-  approve(status: "Approved" | "Completed" = "Approved"): this {
+  approve(
+    status: "Approved" | "Completed" = "Approved",
+    upgrade: boolean
+  ): this {
     // This button turns out to be unclickable without force, because selecting
     // it seems to scroll it out of view. Force works around that.
-    cy.get('a[title="Approve the Pending Leaving Request"]').click({
-      force: true,
-    });
+    if (upgrade) {
+      cy.get('a[title="Approve the pending/in review leave request"]').click({
+        force: true,
+      });
+    } else {
+      cy.get('a[title="Approve the Pending Leaving Request"]').click({
+        force: true,
+      });
+    }
     waitForAjaxComplete();
     assertClaimStatus(status);
     return this;
@@ -392,12 +408,27 @@ export class ClaimPage {
     return this;
   }
 
-  reviewClaim(): this {
+  reviewClaim(upgrade: boolean): this {
     onTab("Leave Details");
     cy.contains("td", "Approved").click();
-    cy.get('input[title="Review a Leave Request"').click();
-    waitForAjaxComplete();
-    onTab("Absence Hub");
+    if (upgrade) {
+      // Note in the new workflow for putting a claim into Review we are going directly to the Adjudication
+      // instead of click on the Absence Hub. Then clicking the Adjudication button on the Absence Hub tab.
+      cy.findByText("Review").click();
+      cy.get('input[type="radio"][id*="secondOption"]').click();
+      cy.get(".ant-modal-footer").within(() => {
+        cy.findByText("OK", {
+          selector: "span",
+        }).click({
+          force: true,
+        });
+      });
+      waitForAjaxComplete();
+    } else {
+      cy.get('input[title="Review a Leave Request"').click();
+      waitForAjaxComplete();
+      onTab("Absence Hub");
+    }
     return this;
   }
 
@@ -2451,7 +2482,8 @@ export class ClaimantPage {
    * @param changes Object with one or more of propreties to edit.
    */
   editPersonalIdentification(
-    changes: Partial<PersonalIdentificationDetails>
+    changes: Partial<PersonalIdentificationDetails>,
+    upgrade: boolean
   ): this {
     cy.get(`#personalIdentificationCardWidget`)
       .findByTitle("Edit")
@@ -2463,10 +2495,18 @@ export class ClaimantPage {
         );
 
       if (changes.date_of_birth)
-        cy.findByLabelText(`Date of birth`)
-          .focus()
-          .type(`{selectAll}{backspace}${changes.date_of_birth}`)
-          .blur();
+        if (upgrade) {
+          // FINEOS upgrade keeps failing when using blur on the birth date in last few runs.
+          // Removing for the upgrade till we stablize these Cypress tests better.
+          cy.findByLabelText(`Date of birth`)
+            .focus()
+            .type(`{selectAll}{backspace}${changes.date_of_birth}`);
+        } else {
+          cy.findByLabelText(`Date of birth`)
+            .focus()
+            .type(`{selectAll}{backspace}${changes.date_of_birth}`)
+            .blur();
+        }
 
       if (changes.gender) cy.findByLabelText(`Gender`).select(changes.gender);
 
@@ -2483,7 +2523,9 @@ export class ClaimantPage {
     cy.findByText(`+ Add address`).click({ force: true });
     waitForAjaxComplete();
     cy.get(`#addressPopupWidget_PopupWidgetWrapper`).within(() => {
-      cy.findByLabelText(`Address line 1`).type(`${address.line_1}`);
+      cy.findByLabelText(`Address line 1`).type(`${address.line_1}`, {
+        force: true,
+      });
       if (address.line_2) {
         cy.findByLabelText(`Address line 2`).type(`${address.line_2}`);
       }

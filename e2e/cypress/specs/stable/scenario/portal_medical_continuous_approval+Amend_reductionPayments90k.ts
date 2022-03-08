@@ -104,7 +104,9 @@ describe("Claimant uses portal to report other leaves and benefits, receives cor
               claim.employer_benefits = [employerReportedBenefit];
               claim.concurrent_leave = employerReportedConcurrentLeave;
               assertValidClaim(claim);
-              fineosPages.ClaimPage.visit(submission.fineos_absence_id)
+              const claimPage = fineosPages.ClaimPage.visit(
+                submission.fineos_absence_id
+              )
                 .tasks((tasks) => {
                   // Check all of the appropriate tasks have been generated
                   tasks.assertTaskExists("Employee Reported Other Leave");
@@ -146,17 +148,21 @@ describe("Claimant uses portal to report other leaves and benefits, receives cor
                       paidBenefits.assertSitFitOptIn(true);
                     })
                     .acceptLeavePlan();
-                })
-                .approve()
-                .paidLeave((leaveCase) => {
-                  const { other_incomes, employer_benefits } = claim;
-                  assertIsTypedArray(other_incomes, isValidOtherIncome);
-                  assertIsTypedArray(employer_benefits, isValidEmployerBenefit);
-                  leaveCase.applyReductions({
-                    other_incomes,
-                    employer_benefits,
-                  });
                 });
+              if (config("HAS_APRIL_UPGRADE") === "true") {
+                claimPage.approve("Approved", true);
+              } else {
+                claimPage.approve("Approved", false);
+              }
+              claimPage.paidLeave((leaveCase) => {
+                const { other_incomes, employer_benefits } = claim;
+                assertIsTypedArray(other_incomes, isValidOtherIncome);
+                assertIsTypedArray(employer_benefits, isValidEmployerBenefit);
+                leaveCase.applyReductions({
+                  other_incomes,
+                  employer_benefits,
+                });
+              });
             }
           );
         });

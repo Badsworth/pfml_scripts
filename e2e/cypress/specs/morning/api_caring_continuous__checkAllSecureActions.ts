@@ -2,6 +2,7 @@ import { fineos, fineosPages } from "../../actions";
 import { Submission } from "../../../src/types";
 import { waitForAjaxComplete } from "../../actions/fineos";
 import { assertValidClaim } from "../../../src/util/typeUtils";
+import { config } from "../../actions/common";
 
 describe("Create a new caring leave claim in FINEOS and check multiple secure actions", () => {
   const adjClaim = it("Create an absence case through the API", () => {
@@ -56,16 +57,19 @@ describe("Create a new caring leave claim in FINEOS and check multiple secure ac
         const claimPage = fineosPages.ClaimPage.visit(
           submission.fineos_absence_id
         );
-        claimPage
-          .adjudicate((adjudicate) => {
-            adjudicate.evidence((evidence) => {
-              evidence.receive("Care for a family member form");
-              evidence.receive("Identification Proof");
-            });
-            adjudicate.certificationPeriods((cert) => cert.prefill());
-            adjudicate.acceptLeavePlan();
-          })
-          .approve();
+        claimPage.adjudicate((adjudicate) => {
+          adjudicate.evidence((evidence) => {
+            evidence.receive("Care for a family member form");
+            evidence.receive("Identification Proof");
+          });
+          adjudicate.certificationPeriods((cert) => cert.prefill());
+          adjudicate.acceptLeavePlan();
+        });
+        if (config("HAS_APRIL_UPGRADE") === "true") {
+          claimPage.approve("Approved", true);
+        } else {
+          claimPage.approve("Approved", false);
+        }
       });
     });
 

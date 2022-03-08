@@ -5,6 +5,7 @@ import {
   isValidEmployerBenefit,
   isValidOtherIncome,
 } from "../../../src/util/typeUtils";
+import { config } from "../../actions/common";
 
 describe("Claim reduction", () => {
   const claimSubmission = it("Given a fully approved claim", () => {
@@ -26,20 +27,25 @@ describe("Claim reduction", () => {
       fineos.before();
       cy.unstash<DehydratedClaim>("claim").then(({ documents }) => {
         cy.unstash<Submission>("submission").then((submission) => {
-          fineosPages.ClaimPage.visit(submission.fineos_absence_id)
-            .adjudicate((adjudication) => {
-              adjudication
-                .evidence((evidence) => {
-                  documents.forEach(({ document_type }) => {
-                    evidence.receive(document_type);
-                  });
-                })
-                .certificationPeriods((certification) => {
-                  certification.prefill();
-                })
-                .acceptLeavePlan();
-            })
-            .approve();
+          const claimPage = fineosPages.ClaimPage.visit(
+            submission.fineos_absence_id
+          ).adjudicate((adjudication) => {
+            adjudication
+              .evidence((evidence) => {
+                documents.forEach(({ document_type }) => {
+                  evidence.receive(document_type);
+                });
+              })
+              .certificationPeriods((certification) => {
+                certification.prefill();
+              })
+              .acceptLeavePlan();
+          });
+          if (config("HAS_APRIL_UPGRADE") === "true") {
+            claimPage.approve("Approved", true);
+          } else {
+            claimPage.approve("Approved", false);
+          }
         });
       });
     });

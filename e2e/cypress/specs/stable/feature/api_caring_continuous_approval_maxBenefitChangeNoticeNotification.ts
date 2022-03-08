@@ -28,21 +28,26 @@ describeIf(
           };
           cy.stash("submission", submission);
 
-          fineosPages.ClaimPage.visit(submission.fineos_absence_id)
-            .adjudicate((adjudication) => {
-              adjudication
-                .evidence((evidence) => {
-                  for (const document of claim.documents) {
-                    evidence.receive(document.document_type);
-                  }
-                })
-                .certificationPeriods((certificationPeriods) =>
-                  certificationPeriods.prefill()
-                )
-                .acceptLeavePlan();
-            })
-            .approve()
-            .triggerNotice("Designation Notice");
+          const claimPage = fineosPages.ClaimPage.visit(
+            submission.fineos_absence_id
+          ).adjudicate((adjudication) => {
+            adjudication
+              .evidence((evidence) => {
+                for (const document of claim.documents) {
+                  evidence.receive(document.document_type);
+                }
+              })
+              .certificationPeriods((certificationPeriods) =>
+                certificationPeriods.prefill()
+              )
+              .acceptLeavePlan();
+          });
+          if (config("HAS_APRIL_UPGRADE") === "true") {
+            claimPage.approve("Completed", true);
+          } else {
+            claimPage.approve("Completed", false);
+          }
+          claimPage.triggerNotice("Designation Notice");
         });
       });
     });
