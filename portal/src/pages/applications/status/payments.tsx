@@ -154,9 +154,15 @@ export const Payments = ({
     }
   };
 
-  const getPaymentStatus = (status: string, payment_method: string) => {
+  const getPaymentStatus = (
+    status: string,
+    payment_method: string,
+    getDelayReason
+  ) => {
     if (status === "Sent to bank" && payment_method === "Check") {
       return "Check";
+    } else if (getDelayReason) {
+      return getDelayReason;
     } else {
       return status;
     }
@@ -266,6 +272,7 @@ export const Payments = ({
                       expected_send_date_start,
                       expected_send_date_end,
                       status,
+                      getDelayReason,
                     }) => (
                       <tr key={payment_id}>
                         <td
@@ -281,7 +288,11 @@ export const Payments = ({
                           <Trans
                             i18nKey="pages.payments.tablePaymentStatus"
                             tOptions={{
-                              context: getPaymentStatus(status, payment_method),
+                              context: getPaymentStatus(
+                                status,
+                                payment_method,
+                                getDelayReason
+                              ),
                               paymentMethod: getPaymentMethod(payment_method),
                               payPeriod: formatDateRange(
                                 expected_send_date_start,

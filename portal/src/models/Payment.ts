@@ -95,10 +95,6 @@ export class PaymentDetail {
 
     return null;
   }
-
-  hasDelayReason() {
-    return !!this.getDelayReason();
-  }
 }
 
 export class Payment {
