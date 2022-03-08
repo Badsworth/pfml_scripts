@@ -141,7 +141,7 @@ data "aws_iam_policy_document" "main_kms_key_policy" {
     }
   }
   statement {
-    sid = "Allow_SNS_CW_EventBridge_Services"
+    sid = "AllowServicePrincipals"
     actions = [
       "kms:Decrypt",
       "kms:GenerateDataKey*"
@@ -154,6 +154,24 @@ data "aws_iam_policy_document" "main_kms_key_policy" {
         "sns.amazonaws.com",
         "cloudwatch.amazonaws.com",
         "events.amazonaws.com"
+      ]
+    }
+  }
+  statement {
+    sid = "AllowCloudtrailLogsToBeEncryptedAtRestUsingKMS"
+    actions = [
+      "kms:GenerateDataKey*",
+      "kms:DescribeKey",
+      "kms:Decrypt",
+      "kms:ReEncryptFrom"
+    ]
+    effect    = "Allow"
+    resources = ["*"]
+    principals {
+      type = "Service"
+      identifiers = [
+        "s3.amazonaws.com",
+        "cloudtrail.amazonaws.com"
       ]
     }
   }
