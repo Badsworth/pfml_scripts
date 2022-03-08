@@ -13,7 +13,7 @@
     "build:prod": "NEXT_PUBLIC_BUILD_ENV=prod npm run build",
     "build:stage": "NEXT_PUBLIC_BUILD_ENV=stage npm run build",
     "build:test": "NEXT_PUBLIC_BUILD_ENV=test npm run build",
-    "build:training": "NEXT_PUBLIC_BUILD_ENV=training npm run build",
+    "build:trn": "NEXT_PUBLIC_BUILD_ENV=trn npm run build",
     "build:trn2": "NEXT_PUBLIC_BUILD_ENV=trn2 npm run build",
     "build:uat": "NEXT_PUBLIC_BUILD_ENV=uat npm run build",
     "start": "next start",
