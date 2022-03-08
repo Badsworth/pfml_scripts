@@ -1,6 +1,6 @@
 import json
 import uuid
-from datetime import date, datetime, timezone
+from datetime import date
 from unittest import mock
 
 import pytest
@@ -172,8 +172,7 @@ class TestAddChangeRequestToDB:
             f"/v1/change-request?fineos_absence_id={claim.fineos_absence_id}"
         ):
             app.app.preprocess_request()
-            submitted_time = datetime.now(timezone.utc)
-            db_model = add_change_request_to_db(change_request, claim.claim_id, submitted_time)
+            db_model = add_change_request_to_db(change_request, claim.claim_id)
             assert db_model.claim_id == claim.claim_id
             assert db_model.start_date is None
             assert db_model.end_date is None
@@ -192,8 +191,8 @@ class TestAddChangeRequestToDB:
 
 class TestGetChangeRequestsFromDB:
     def test_successful(self, test_db_session, app, claim, change_request):
-        change_requests = get_change_requests_from_db(claim.claim_id, test_db_session)
-        assert change_requests[0].claim_id == claim.claim_id
+        change_requests = get_change_requests_from_db(change_request.claim_id, test_db_session)
+        assert change_requests[0].claim_id == change_request.claim_id
         assert change_requests[0].change_request_type_id == 1
         assert (
             change_requests[0].change_request_type_instance.change_request_type_description

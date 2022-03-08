@@ -1370,6 +1370,7 @@ class ChangeRequestFactory(BaseFactory):
 
     change_request_id = Generators.UuidObj
     change_request_type_id = 1
+    claim = factory.SubFactory(ClaimFactory)
     claim_id = factory.LazyAttribute(lambda w: w.claim.claim_id)
     start_date = factory.Faker(
         "date_between_dates", date_start=date(2021, 2, 1), date_end=date(2021, 2, 15)

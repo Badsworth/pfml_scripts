@@ -6000,8 +6000,6 @@ class TestPostChangeRequest:
         assert response_body.get("fineos_absence_id") == claim.fineos_absence_id
         assert response_body.get("start_date") == request_body["start_date"]
         assert response_body.get("end_date") == request_body["end_date"]
-        assert response_body.get("end_date") == request_body["end_date"]
-        assert response_body.get("submitted_time") == str(submitted_time.isoformat())
 
     @mock.patch("massgov.pfml.api.claims.claim_rules.get_change_request_issues", return_value=[])
     @mock.patch("massgov.pfml.api.claims.get_claim_from_db", return_value=None)
@@ -6016,23 +6014,9 @@ class TestPostChangeRequest:
         assert response.status_code == 404
         assert response.get_json()["message"] == "Claim does not exist for given absence ID"
 
-    @mock.patch("massgov.pfml.api.claims.get_claim_from_db")
-    def test_validation_issues(self, mock_get_claim, auth_token, claim, client, request_body):
-        claim.absence_period_start_date = date(2021, 1, 1)
-        claim.fineos_absence_status_id = 1
-        mock_get_claim.return_value = claim
-        del request_body["end_date"]
-        response = client.post(
-            "/v1/change-request?fineos_absence_id={}".format(claim.fineos_absence_id),
-            headers={"Authorization": f"Bearer {auth_token}"},
-            json=request_body,
-        )
-        assert response.status_code == 400
-        assert response.get_json()["message"] == "Invalid change request body"
-
 
 class TestGetChangeRequests:
-    @mock.patch("massgov.pfml.api.services.claims.get_change_requests_from_db")
+    @mock.patch("massgov.pfml.api.claims.get_change_requests_from_db")
     def test_successful_get_request(
         self, mock_get_change_requests_from_db, claim, change_request, client, auth_token, user
     ):
@@ -6048,7 +6032,7 @@ class TestGetChangeRequests:
         assert len(response_body["data"]["change_requests"]) == 1
         assert response_body["message"] == "Successfully retrieved change requests"
 
-    @mock.patch("massgov.pfml.api.services.claims.get_change_requests_from_db")
+    @mock.patch("massgov.pfml.api.claims.get_change_requests_from_db")
     def test_successful_get_request_no_change_requests(
         self, mock_get_change_requests_from_db, claim, client, auth_token, user
     ):
@@ -6080,3 +6064,49 @@ class TestGetChangeRequests:
         )
 
         assert response.status_code == 401
+
+
+class TestSubmitChangeRequest:
+    @mock.patch("massgov.pfml.api.claims.get_or_404")
+    @mock.patch("massgov.pfml.api.claims.claim_rules.get_change_request_issues", return_value=[])
+    def test_successful_call(
+        self, mock_get_issues, mock_get_or_404, auth_token, change_request, client
+    ):
+        mock_get_or_404.return_value = change_request
+        response = client.post(
+            "/v1/change-request/5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32/submit",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert change_request.submitted_time is not None
+        assert response.status_code == 200
+
+    @mock.patch("massgov.pfml.api.claims.get_or_404")
+    @mock.patch("massgov.pfml.api.claims.claim_rules.get_change_request_issues")
+    def test_validation_issues(
+        self, mock_get_issues, mock_get_or_404, auth_token, change_request, client
+    ):
+        mock_get_or_404.return_value = change_request
+        mock_get_issues.return_value = [
+            ValidationErrorDetail(
+                message="start_date required",
+                type="required",
+                field="start_date",
+            )
+        ]
+        response = client.post(
+            "/v1/change-request/5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32/submit",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert response.status_code == 400
+        assert response.get_json()["message"] == "Invalid change request"
+
+    def test_missing_claim(self, auth_token, claim, client):
+        response = client.post(
+            "/v1/change-request/5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32/submit",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert response.status_code == 404
+        assert (
+            response.get_json()["message"]
+            == "Could not find ChangeRequest with ID 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32"
+        )

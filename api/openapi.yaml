@@ -511,7 +511,7 @@ paths:
 
   /change-request:
     post:
-      summary: Submit a change request to FINEOS
+      summary: Create a change request record
       operationId: massgov.pfml.api.claims.post_change_request
       tags:
         - ChangeRequest
@@ -578,7 +578,40 @@ paths:
                             nullable: false
                           change_requests:
                               $ref: "#/components/schemas/ChangeRequestsResponse"
-
+                              
+  /change-request/{change_request_id}/submit:
+    post:
+      summary: Submit a completed change request to FINEOS
+      operationId: massgov.pfml.api.claims.submit_change_request
+      tags:
+        - ChangeRequest
+      parameters:
+        - name: change_request_id
+          in: path
+          schema:
+            type: string
+            format: uuid
+          description: ID of Change Request to submit
+          required: true
+      responses:
+        "200":
+          description: A successful request returns a 200
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessfulResponse'
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/ChangeRequestResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "400":
+          description: An unsuccessful request returns a 400 status code if one or more errors occurred.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /payments:
     get:
       summary: Retrieve payments with status for a specified absence ID

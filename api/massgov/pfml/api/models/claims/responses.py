@@ -15,7 +15,7 @@ from massgov.pfml.api.models.common import ComputedStartDates, ConcurrentLeave
 from massgov.pfml.api.models.employees.responses import EmployeeBasicResponse
 from massgov.pfml.api.models.employers.responses import EmployerResponse
 from massgov.pfml.db.models.absences import AbsencePeriodType
-from massgov.pfml.db.models.employees import AbsencePeriod, Claim, ManagedRequirement
+from massgov.pfml.db.models.employees import AbsencePeriod, ChangeRequest, Claim, ManagedRequirement
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import (
     FEINFormattedStr,
@@ -205,4 +205,14 @@ class ChangeRequestResponse(PydanticBaseModel):
     change_request_type: ChangeRequestType
     start_date: Optional[date]
     end_date: Optional[date]
-    submitted_time: datetime
+    submitted_time: Optional[datetime]
+
+    @classmethod
+    def from_orm(cls, change_request: ChangeRequest) -> "ChangeRequestResponse":
+        return cls(
+            fineos_absence_id=change_request.claim.fineos_absence_id,
+            change_request_type=change_request.change_request_type_instance.change_request_type_description,
+            start_date=change_request.start_date,
+            end_date=change_request.end_date,
+            submitted_time=change_request.submitted_time,
+        )
