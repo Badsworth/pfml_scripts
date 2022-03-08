@@ -3,6 +3,11 @@ import {
   DocumentType,
   findDocumentsByTypes,
 } from "../../../models/Document";
+import {
+  Payment,
+  WritebackTransactionStatus,
+  isAfterDelayProcessingTime,
+} from "../../../models/Payment";
 import React, { useEffect } from "react";
 import withUser, { WithUserProps } from "../../../hoc/withUser";
 import { AbsencePeriod } from "../../../models/AbsencePeriod";
@@ -16,7 +21,6 @@ import Heading from "../../../components/core/Heading";
 import HolidayAlert from "../../../components/status/HolidayAlert";
 import LeaveReason from "../../../models/LeaveReason";
 import PageNotFound from "../../../components/PageNotFound";
-import { Payment } from "src/models/Payment";
 import Spinner from "../../../components/core/Spinner";
 import StatusNavigationTabs from "../../../components/status/StatusNavigationTabs";
 import Table from "../../../components/core/Table";
@@ -155,12 +159,29 @@ export const Payments = ({
     }
   };
 
-  const getPaymentStatus = (status: string, payment_method: string) => {
+  const getPaymentStatusContext = (
+    status: string,
+    payment_method: string,
+    writeback_transaction_status: WritebackTransactionStatus,
+    transaction_date: string | null
+  ) => {
     if (status === "Sent to bank" && payment_method === "Check") {
       return "Check";
-    } else {
-      return status;
+    } else if (
+      isFeatureEnabled("claimantShowPaymentsPhaseThree") &&
+      status === "Delayed"
+    ) {
+      if (isBlank(transaction_date)) return "Pending";
+
+      const shouldShowWritebackSpecificText = isAfterDelayProcessingTime(
+        writeback_transaction_status,
+        transaction_date
+      );
+      return shouldShowWritebackSpecificText
+        ? `${status}_${writeback_transaction_status}`
+        : "Pending";
     }
+    return status;
   };
 
   return (
@@ -270,40 +291,61 @@ export const Payments = ({
                       expected_send_date_start,
                       expected_send_date_end,
                       status,
-                    }) => (
-                      <tr key={payment_id}>
-                        <td
-                          data-label={tableColumns[0]}
-                          className="tablet:width-card-lg"
-                        >
-                          {formatDateRange(period_start_date, period_end_date)}
-                        </td>
-                        <td data-label={tableColumns[1]}>
-                          {getPaymentAmount(status, amount)}
-                        </td>
-                        <td data-label={tableColumns[2]}>
-                          <Trans
-                            i18nKey="pages.payments.tablePaymentStatus"
-                            tOptions={{
-                              context: getPaymentStatus(status, payment_method),
-                              paymentMethod: getPaymentMethod(payment_method),
-                              payPeriod: formatDateRange(
-                                expected_send_date_start,
-                                expected_send_date_end,
-                                "and"
-                              ),
-                              sentDate:
-                                dayjs(sent_to_bank_date).format("MMMM D, YYYY"),
-                            }}
-                            components={{
-                              "delays-accordion-link": (
-                                <a href={"#delays_accordion"} />
-                              ),
-                            }}
-                          />
-                        </td>
-                      </tr>
-                    )
+                      writeback_transaction_status,
+                      transaction_date,
+                    }) => {
+                      return (
+                        <tr key={payment_id}>
+                          <td
+                            data-label={tableColumns[0]}
+                            className="tablet:width-card-lg"
+                          >
+                            {formatDateRange(
+                              period_start_date,
+                              period_end_date
+                            )}
+                          </td>
+                          <td data-label={tableColumns[1]}>
+                            {getPaymentAmount(status, amount)}
+                          </td>
+                          <td data-label={tableColumns[2]}>
+                            <Trans
+                              i18nKey="pages.payments.tablePaymentStatus"
+                              tOptions={{
+                                context: getPaymentStatusContext(
+                                  status,
+                                  payment_method,
+                                  writeback_transaction_status,
+                                  transaction_date
+                                ),
+                                paymentMethod: getPaymentMethod(payment_method),
+                                payPeriod: formatDateRange(
+                                  expected_send_date_start,
+                                  expected_send_date_end,
+                                  "and"
+                                ),
+                                sentDate:
+                                  dayjs(sent_to_bank_date).format(
+                                    "MMMM D, YYYY"
+                                  ),
+                              }}
+                              components={{
+                                "contact-center-phone-link": (
+                                  <a
+                                    href={`tel:${t(
+                                      "shared.contactCenterPhoneNumber"
+                                    )}`}
+                                  />
+                                ),
+                                "delays-accordion-link": (
+                                  <a href={"#delays_accordion"} />
+                                ),
+                              }}
+                            />
+                          </td>
+                        </tr>
+                      );
+                    }
                   )}
                 {hasWaitingWeek && (
                   <tr>

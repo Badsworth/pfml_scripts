@@ -4,6 +4,7 @@
 
 import dayjs from "dayjs";
 import dayjsBusinessTime from "dayjs-business-time";
+
 dayjs.extend(dayjsBusinessTime);
 
 export type PaymentStatus =
@@ -42,25 +43,35 @@ export type WritebackTransactionStatus =
   | "PUB Check Undeliverable"
   | "PUB Check Stale";
 
-const delayedByRejection = (payment: PaymentDetail) => {
-  return (
-    payment.status === "Delayed" &&
-    (payment.writeback_transaction_status === "EFT Account Information Error" ||
-      payment.writeback_transaction_status === "Bank Processing Error")
-  );
+type DisplayDelayTime = {
+  [key in WritebackTransactionStatus]: number;
 };
 
-const delayedByAddressValidation = (payment: PaymentDetail) => {
-  const todaysDate = dayjs();
-  const transactionDate = dayjs(payment.transaction_date);
-  const twoBusinessDaysAfterTransaction = transactionDate.addBusinessDays(2);
+export const DISPLAY_DELAY_TIME: Partial<DisplayDelayTime> = {
+  "Address Validation Error": 2,
+};
 
-  return (
-    payment.status === "Delayed" &&
-    payment.writeback_transaction_status === "Address Validation Error" &&
-    // This date logic should probably be isSameOrAfter? There's a followup ticket for this.
-    todaysDate.isSame(twoBusinessDaysAfterTransaction, "day")
-  );
+/* 
+  isAfterDelayProcessingTime calculates if the current date is after the delay resolve time.
+  We want to show the delay message after the contact center is given the time to resolve it
+  (expected times per delay reason in DISPLAY_DELAY_TIME); 
+  this current logic is exclusive of the current date returns true of the delay time + transaction date is after the current date
+*/
+
+export const isAfterDelayProcessingTime = (
+  writeback_transaction_status: WritebackTransactionStatus,
+  transaction_date: string
+): boolean => {
+  const todaysDate = dayjs();
+  const delayRenderDays = DISPLAY_DELAY_TIME[writeback_transaction_status];
+  const transactionDate = dayjs(transaction_date);
+
+  return delayRenderDays !== undefined
+    ? todaysDate.isAfter(
+        transactionDate.addBusinessDays(delayRenderDays),
+        "day"
+      )
+    : true;
 };
 
 /**
@@ -87,17 +98,6 @@ export class PaymentDetail {
     }
 
     Object.assign(this, attrs);
-  }
-
-  getDelayReason(): "delayedByRejection" | "delayedByAddressValidation" | null {
-    if (delayedByRejection(this)) return "delayedByRejection";
-    if (delayedByAddressValidation(this)) return "delayedByAddressValidation";
-
-    return null;
-  }
-
-  hasDelayReason() {
-    return !!this.getDelayReason();
   }
 }
 

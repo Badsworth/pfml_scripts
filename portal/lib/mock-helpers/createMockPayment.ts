@@ -65,8 +65,6 @@ export const createMockPayment = (
       writeback_transaction_status: "Paid",
       transaction_date: "2021-11-16",
       transaction_date_could_change: false,
-      hasDelayReason: () => false,
-      getDelayReason: () => null,
       ...customDetails,
     };
   }
@@ -106,8 +104,6 @@ export const createMockPayment = (
     writeback_transaction_status: "Paid",
     transaction_date: "2021-11-16",
     transaction_date_could_change: false,
-    hasDelayReason: () => false,
-    getDelayReason: () => null,
     ...customDetails,
   };
 };

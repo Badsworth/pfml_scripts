@@ -16,8 +16,10 @@ import { Payments } from "../../../../src/pages/applications/status/payments";
 import { createMockBenefitsApplicationDocument } from "../../../../lib/mock-helpers/createMockDocument";
 import { createMockPayment } from "lib/mock-helpers/createMockPayment";
 import dayjs from "dayjs";
+import dayjsBusinessTime from "dayjs-business-time";
 import routes from "../../../../src/routes";
 import { screen } from "@testing-library/react";
+dayjs.extend(dayjsBusinessTime);
 
 const createApprovalNotice = (approvalDate: string) => {
   return new ApiResourceCollection<BenefitsApplicationDocument>(
@@ -585,6 +587,98 @@ describe("Payments", () => {
       expect(screen.getByTestId("your-payments-intro")).toMatchSnapshot();
       const table = screen.queryByRole("table");
       expect(table).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Phase Three: Status render implementation", () => {
+    beforeEach(() => {
+      process.env.featureFlags = JSON.stringify({
+        claimantShowPaymentsPhaseThree: true,
+      });
+    });
+
+    const staticTransactionDate = dayjs().format("YYYY-MM-DD");
+    const transactionDate = {
+      "after two business days": dayjs(staticTransactionDate)
+        .addBusinessDays(2)
+        .format("YYYY-MM-DD"),
+      "after five business days": dayjs(staticTransactionDate)
+        .addBusinessDays(5)
+        .format("YYYY-MM-DD"),
+      "same day": staticTransactionDate,
+    };
+
+    const transactionDateScenarios = Object.keys(transactionDate) as Array<
+      keyof typeof transactionDate
+    >;
+
+    it.each(transactionDateScenarios)(
+      "conditional render for delay %s ",
+      (state) => {
+        renderPage(
+          Payments,
+          {
+            addCustomSetup: setupHelper({
+              payments: {
+                absence_case_id: "NTN-12345-ABS-01",
+                payments: [
+                  createMockPayment(
+                    {
+                      status: "Delayed",
+                      sent_to_bank_date: null,
+                      writeback_transaction_status: "Bank Processing Error",
+                      transaction_date: transactionDate[state],
+                    },
+                    true
+                  ),
+                ],
+              },
+            }),
+          },
+          props
+        );
+
+        const rejectedDelayReasonText =
+          "This payment has been rejected by your bank.";
+        expect(
+          screen.queryByText(rejectedDelayReasonText, { exact: false })
+        ).toBeInTheDocument();
+      }
+    );
+
+    it("will not display updated delay text if claimantShowPaymentsPhaseThree feature flag is false", () => {
+      process.env.featureFlags = JSON.stringify({
+        claimantShowPaymentsPhaseThree: false,
+      });
+      renderPage(
+        Payments,
+        {
+          addCustomSetup: setupHelper({
+            payments: {
+              absence_case_id: "NTN-12345-ABS-01",
+              payments: [
+                createMockPayment(
+                  {
+                    status: "Delayed",
+                    sent_to_bank_date: null,
+                    writeback_transaction_status: "Bank Processing Error",
+                    transaction_date:
+                      transactionDate["after five business days"],
+                  },
+                  true
+                ),
+              ],
+            },
+          }),
+        },
+        props
+      );
+
+      const rejectedDelayReasonText =
+        "This payment has been rejected by your bank.";
+      expect(
+        screen.queryByText(rejectedDelayReasonText, { exact: false })
+      ).not.toBeInTheDocument();
     });
   });
 });
