@@ -6,10 +6,10 @@ import {
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
-import ErrorInfo from "../../models/ErrorInfo";
 import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
+import { ValidationError } from "../../errors";
 import { get } from "lodash";
 import tracker from "../../services/tracker";
 import useFormState from "../../hooks/useFormState";
@@ -50,19 +50,21 @@ export const UploadDocsOptions = (props: WithBenefitsApplicationProps) => {
       ? contentContext[leaveReason][reasonQualifier]
       : get(contentContext, leaveReason, "");
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!upload_docs_options) {
-      const errorInfo = new ErrorInfo({
-        field: "upload_docs_options",
-        message: t("errors.applications.upload_docs_options.required"),
-        type: "required",
-      });
+      const error = new ValidationError([
+        {
+          field: "upload_docs_options",
+          type: "required",
+          namespace: "applications",
+        },
+      ]);
 
-      await appLogic.setErrors([errorInfo]);
+      appLogic.setErrors([error]);
 
       tracker.trackEvent("ValidationError", {
-        issueField: errorInfo.field || "",
-        issueType: errorInfo.type || "",
+        issueField: error.issues[0].field ?? "",
+        issueType: error.issues[0].type ?? "",
       });
 
       return Promise.resolve();
@@ -72,7 +74,8 @@ export const UploadDocsOptions = (props: WithBenefitsApplicationProps) => {
       upload_docs_options === UploadType.certification
         ? undefined
         : upload_docs_options === UploadType.mass_id;
-    return appLogic.portalFlow.goToNextPage(
+
+    appLogic.portalFlow.goToNextPage(
       { claim },
       {
         claim_id: claim.application_id,
@@ -84,6 +87,8 @@ export const UploadDocsOptions = (props: WithBenefitsApplicationProps) => {
       },
       upload_docs_options
     );
+
+    return Promise.resolve();
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({

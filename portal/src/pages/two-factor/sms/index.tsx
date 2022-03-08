@@ -32,8 +32,9 @@ export const IndexSMS = (props: IndexSMSProps) => {
     const validation_issue = {
       field: "enterMFASetupFlow",
       type: "required",
+      namespace: "mfa",
     };
-    appLogic.catchError(new ValidationError([validation_issue], "mfa"));
+    appLogic.catchError(new ValidationError([validation_issue]));
   };
 
   const handleSubmit = async (event: React.FormEvent) => {

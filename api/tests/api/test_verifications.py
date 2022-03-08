@@ -58,7 +58,7 @@ def test_error_if_user_not_connected_to_employer(
 def test_error_if_withholding_data_not_in_db(
     mock_fineos_call, caplog, client, employer_auth_token, test_db_session, employer_user, employer
 ):
-    link = UserLeaveAdministrator(user_id=employer_user.user_id, employer_id=employer.employer_id,)
+    link = UserLeaveAdministrator(user_id=employer_user.user_id, employer_id=employer.employer_id)
     test_db_session.add(link)
     test_db_session.commit()
 
@@ -87,7 +87,7 @@ def test_error_if_withholding_amount_is_outside_threshold(
     employer_user,
 ):
     link = UserLeaveAdministrator(
-        user_id=employer_user.user_id, employer_id=employer_quarterly_contribution.employer_id,
+        user_id=employer_user.user_id, employer_id=employer_quarterly_contribution.employer_id
     )
     test_db_session.add(link)
     test_db_session.commit()
@@ -122,7 +122,7 @@ def test_verification_successful_for_valid_data(
     mock_fineos_call.return_value = ["", ""]
     caplog.set_level(logging.INFO)  # noqa: B1
     link = UserLeaveAdministrator(
-        user_id=employer_user.user_id, employer_id=employer_quarterly_contribution.employer_id,
+        user_id=employer_user.user_id, employer_id=employer_quarterly_contribution.employer_id
     )
 
     # Must be at least 1 day ago for employer.has_verification_data to be True
@@ -166,9 +166,7 @@ def test_verification_successful_for_valid_data(
     assert response.status_code == 201
     response_body = response.get_json()
     assert response_body.get("data")["user_id"] == str(employer_user.user_id)
-    assert response_body.get("data")["roles"] == [
-        {"role_description": "Employer", "role_id": 3},
-    ]
+    assert response_body.get("data")["roles"] == [{"role_description": "Employer", "role_id": 3}]
 
     employer = employer_quarterly_contribution.employer
     assert response_body.get("data")["user_leave_administrators"] == [
@@ -198,7 +196,7 @@ def test_verification_successful_for_data_within_threshold(
     mock_fineos_call.return_value = ["", ""]
     caplog.set_level(logging.INFO)  # noqa: B1
     link = UserLeaveAdministrator(
-        user_id=employer_user.user_id, employer_id=employer_quarterly_contribution.employer_id,
+        user_id=employer_user.user_id, employer_id=employer_quarterly_contribution.employer_id
     )
 
     # Must be at least 1 day ago for employer.has_verification_data to be True
@@ -242,9 +240,7 @@ def test_verification_successful_for_data_within_threshold(
     assert response.status_code == 201
     response_body = response.get_json()
     assert response_body.get("data")["user_id"] == str(employer_user.user_id)
-    assert response_body.get("data")["roles"] == [
-        {"role_description": "Employer", "role_id": 3},
-    ]
+    assert response_body.get("data")["roles"] == [{"role_description": "Employer", "role_id": 3}]
 
     employer = employer_quarterly_contribution.employer
     assert response_body.get("data")["user_leave_administrators"] == [
@@ -272,7 +268,7 @@ def test_error_if_users_been_verified(
     verification,
 ):
     link = UserLeaveAdministrator(
-        user_id=employer_user.user_id, employer_id=employer.employer_id, verification=verification,
+        user_id=employer_user.user_id, employer_id=employer.employer_id, verification=verification
     )
 
     test_db_session.add(link)
@@ -304,7 +300,7 @@ def test_rollback_when_fineos_call_failed(
     mock_fineos_call.return_value = ["400", "Unepexted error on fineos side"]
     caplog.set_level(logging.INFO)  # noqa: B1
     link = UserLeaveAdministrator(
-        user_id=employer_user.user_id, employer_id=employer_quarterly_contribution.employer_id,
+        user_id=employer_user.user_id, employer_id=employer_quarterly_contribution.employer_id
     )
     # Must be at least 1 day ago for employer.has_verification_data to be True
     employer_quarterly_contribution.filing_period = (datetime.now() - timedelta(1)).strftime(
@@ -362,7 +358,7 @@ def test_rollback_when_fineos_call_failed_unexpected_raise_error(
 
     caplog.set_level(logging.INFO)  # noqa: B1
     link = UserLeaveAdministrator(
-        user_id=employer_user.user_id, employer_id=employer_quarterly_contribution.employer_id,
+        user_id=employer_user.user_id, employer_id=employer_quarterly_contribution.employer_id
     )
 
     # Must be at least 1 day ago for employer.has_verification_data to be True

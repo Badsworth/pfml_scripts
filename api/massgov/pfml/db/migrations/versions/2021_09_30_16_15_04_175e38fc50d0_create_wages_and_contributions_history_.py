@@ -45,9 +45,9 @@ def upgrade():
         sa.Column("employer_fam_contribution", sa.Numeric(), nullable=False),
         sa.Column("import_log_id", sa.Integer, nullable=True),
         sa.Column("wage_and_contribution_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.ForeignKeyConstraint(["import_log_id"], ["import_log.import_log_id"],),
+        sa.ForeignKeyConstraint(["import_log_id"], ["import_log.import_log_id"]),
         sa.ForeignKeyConstraint(
-            ["wage_and_contribution_id"], ["wages_and_contributions.wage_and_contribution_id"],
+            ["wage_and_contribution_id"], ["wages_and_contributions.wage_and_contribution_id"]
         ),
         sa.PrimaryKeyConstraint("wages_and_contributions_history_id"),
     )

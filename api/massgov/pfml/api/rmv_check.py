@@ -37,5 +37,5 @@ def rmv_check_post():
             final_response = make_response_from_rmv_check(complete_rmv_check)
 
     return response_util.success_response(
-        message="Completed RMV check", data=final_response.dict(),
+        message="Completed RMV check", data=final_response.dict()
     ).to_api_response()

@@ -217,6 +217,6 @@ class PickupResponseFilesStep(Step):
                 # look into and rename/move the file to the correct place and make
                 # sure the processes that copy the files to us get updated accordingly.
                 logger.error(
-                    "Found unexpected file %s in directory %s", file_name, source_directory,
+                    "Found unexpected file %s in directory %s", file_name, source_directory
                 )
                 self.increment(self.Metrics.UNKNOWN_FILES_COUNT)

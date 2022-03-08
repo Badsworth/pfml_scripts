@@ -1,3 +1,5 @@
+import * as heroIcons from "@heroicons/react/solid";
+
 import React, { useState } from "react";
 
 export type Props = {
@@ -22,10 +24,34 @@ const Alert = ({
     onClose(event);
   };
 
+  const DismissIcon = heroIcons["XIcon"];
+  let Icon;
+  switch (type) {
+    case "warn":
+      Icon = heroIcons["ExclamationIcon"];
+      break;
+
+    case "success":
+      Icon = heroIcons["CheckCircleIcon"];
+      break;
+
+    case "info":
+      Icon = heroIcons["InformationCircleIcon"];
+      break;
+
+    case "error":
+      Icon = heroIcons["ExclamationCircleIcon"];
+      break;
+
+    default:
+      Icon = null;
+      break;
+  }
+
   if (showAlert) {
     return (
       <div className={`alert alert--${type}`} data-testid="alert-container">
-        <div className="alert__icon"></div>
+        {Icon && <Icon className={`alert__icon alert__icon--${type}`} />}
         <div className="alert__text" data-testid="alert-text">
           {children}
         </div>
@@ -35,7 +61,11 @@ const Alert = ({
             onClick={closeAlert}
             type="button"
             data-testid="alert-close-button"
-          ></button>
+          >
+            <DismissIcon
+              className={`alert__dismiss-icon alert__dismiss-icon--${type}`}
+            />
+          </button>
         )}
       </div>
     );

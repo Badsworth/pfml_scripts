@@ -186,9 +186,6 @@ def send_to_fineos(
     if application.employer_fein is None:
         raise ValueError("application.employer_fein is None")
 
-    customer = build_customer_model(application, current_user)
-    absence_case = build_absence_case(application)
-    contact_details = build_contact_details(application)
     tax_identifier = application.tax_identifier.tax_identifier
 
     # Create the FINEOS client.
@@ -201,13 +198,16 @@ def send_to_fineos(
         fineos, tax_identifier, application.employer_fein, db_session, fineos_employer_id
     )
 
+    customer = build_customer_model(application, current_user)
+    absence_case = build_absence_case(application)
+    existing_contact_details = fineos.read_customer_contact_details(fineos_web_id)
+    contact_details = build_contact_details(application, existing_contact_details)
+
     fineos.update_customer_details(fineos_web_id, customer)
 
     occupation = get_customer_occupation(fineos, fineos_web_id, customer.idNumber)
     if occupation is None:
-        logger.error(
-            "Did not find customer occupation.", extra={"fineos_web_id": fineos_web_id,},
-        )
+        logger.error("Did not find customer occupation.", extra={"fineos_web_id": fineos_web_id})
         raise ValueError("customer occupation is None")
 
     upsert_week_based_work_pattern(
@@ -278,7 +278,12 @@ def send_to_fineos(
     updated_contact_details = fineos.update_customer_contact_details(fineos_web_id, contact_details)
     phone_numbers = updated_contact_details.phoneNumbers
     if phone_numbers is not None and len(phone_numbers) > 0:
-        application.phone.fineos_phone_id = phone_numbers[0].id
+        # If a phone number was added during this application submission, it will be marked as preferred
+        preferred_phone = next(
+            (phone_num for phone_num in phone_numbers if phone_num.preferred),
+            phone_numbers[0],
+        )
+        application.phone.fineos_phone_id = preferred_phone.id
 
     # Reflexive questions for bonding and caring leave
     # "The reflexive questions allows to update additional information of an absence case leave request."
@@ -360,7 +365,7 @@ def mark_documents_as_received(
     for document in documents:
         if document.fineos_id is None:
             logger.warning(
-                "Document does not have a fineos_id", extra={**document_log_attrs(document)},
+                "Document does not have a fineos_id", extra={**document_log_attrs(document)}
             )
             raise ValueError("Document does not have a fineos_id")
 
@@ -375,7 +380,7 @@ def mark_documents_as_received(
                 extra={**document_log_attrs(document)},
                 exc_info=ex,
             )
-            newrelic.agent.notice_error(attributes={**document_log_attrs(document)},)
+            newrelic.agent.notice_error(attributes={**document_log_attrs(document)})
     if exception_count > 0:
         raise MarkDocumentsReceivedError("Unable to mark some documents as received")
 
@@ -416,10 +421,7 @@ def build_customer_model(application, current_user):
     confirmed = massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
         name="Confirmed", booleanValue=True
     )
-    class_ext_info = [
-        mass_id,
-        confirmed,
-    ]
+    class_ext_info = [mass_id, confirmed]
     if current_user is not None:
         consented_to_data_sharing = massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
             name="ConsenttoShareData", booleanValue=current_user.consented_to_data_sharing
@@ -449,6 +451,7 @@ def build_customer_model(application, current_user):
 
 def build_contact_details(
     application: Application,
+    existing_details: massgov.pfml.fineos.models.customer_api.ContactDetails,
 ) -> massgov.pfml.fineos.models.customer_api.ContactDetails:
     """Convert an application's email and phone number to FINEOS API ContactDetails model."""
 
@@ -474,15 +477,29 @@ def build_contact_details(
                 area_code = str(telephone_no)[:3]
                 telephone_no = str(telephone_no)[-7:]
 
-            contact_details.phoneNumbers = [
+        exists_in_fineos = False
+        if existing_details.phoneNumbers:
+            for phone_num in existing_details.phoneNumbers:
+                # ignore int_code (or fall back to "1" when setting it, above)
+                if area_code == phone_num.areaCode and telephone_no == phone_num.telephoneNo:
+                    exists_in_fineos = True
+        else:
+            existing_details.phoneNumbers = []
+
+        # if application phone number does not exist in FINEOS, add it and set to preferred
+        if not exists_in_fineos:
+            existing_details.phoneNumbers.append(
                 massgov.pfml.fineos.models.customer_api.PhoneNumber(
+                    preferred=True,
                     areaCode=area_code,
                     id=application.phone.fineos_phone_id,
                     intCode=int_code,
                     telephoneNo=telephone_no,
                     phoneNumberType=phone_number_type,
                 )
-            ]
+            )
+
+    contact_details.phoneNumbers = existing_details.phoneNumbers
 
     return contact_details
 
@@ -825,10 +842,10 @@ def build_bonding_date_reflexive_question(
         date_value = application.child_placement_date
 
     reflexive_details = massgov.pfml.fineos.models.customer_api.Attribute(
-        fieldName=field_name, dateValue=date_value,
+        fieldName=field_name, dateValue=date_value
     )
     reflexive_question = massgov.pfml.fineos.models.customer_api.AdditionalInformation(
-        reflexiveQuestionLevel="reason", reflexiveQuestionDetails=[reflexive_details],
+        reflexiveQuestionLevel="reason", reflexiveQuestionDetails=[reflexive_details]
     )
     return reflexive_question
 
@@ -894,7 +911,7 @@ def get_customer_occupation(
     except Exception as error:
         logger.warning(
             "get_customer_occuption failure",
-            extra={"customer_id": customer_id, "status": getattr(error, "response_status", None),},
+            extra={"customer_id": customer_id, "status": getattr(error, "response_status", None)},
             exc_info=True,
         )
         raise error
@@ -944,9 +961,7 @@ def upsert_week_based_work_pattern(
             extra=log_attributes,
         )
     else:
-        logger.info(
-            "upserting work_pattern for empty claim", extra=log_attributes,
-        )
+        logger.info("upserting work_pattern for empty claim", extra=log_attributes)
 
     # if we already have the pattern, just update
     if existing_work_pattern == "Week Based":
@@ -960,9 +975,7 @@ def upsert_week_based_work_pattern(
                 extra=log_attributes,
             )
         else:
-            logger.info(
-                "updated work_pattern successfully", extra=log_attributes,
-            )
+            logger.info("updated work_pattern successfully", extra=log_attributes)
     # otherwise if unknown, add it
     else:
         add_week_based_work_pattern(
@@ -1091,13 +1104,7 @@ def upload_document(
         upload_fn = fineos.upload_document
 
     fineos_document = upload_fn(
-        fineos_web_id,
-        absence_id,
-        document_type,
-        file_content,
-        file_name,
-        content_type,
-        description,
+        fineos_web_id, absence_id, document_type, file_content, file_name, content_type, description
     )
     return fineos_document
 
@@ -1421,11 +1428,7 @@ def resolve_leave_plans(family_exemption: bool, medical_exemption: bool) -> Set[
         if medical_exemption:
             leave_plans = {"MA PFML - Family", "MA PFML - Military Care"}
         else:
-            leave_plans = {
-                "MA PFML - Employee",
-                "MA PFML - Family",
-                "MA PFML - Military Care",
-            }
+            leave_plans = {"MA PFML - Employee", "MA PFML - Family", "MA PFML - Military Care"}
 
     return leave_plans
 
@@ -1490,16 +1493,16 @@ def create_other_leaves_and_other_incomes_eforms(
         # Convert from DB models to API models because the API enum models are easier to serialize to strings
         other_incomes = map(lambda income: OtherIncome.from_orm(income), application.other_incomes)
         employer_benefits = map(
-            lambda benefit: EmployerBenefit.from_orm(benefit), application.employer_benefits,
+            lambda benefit: EmployerBenefit.from_orm(benefit), application.employer_benefits
         )
 
-        eform = OtherIncomesEFormBuilder.build(employer_benefits, other_incomes,)
+        eform = OtherIncomesEFormBuilder.build(employer_benefits, other_incomes)
         create_eform(application, db_session, eform)
         logger.info("Created Other Incomes eform", extra=log_attributes)
 
 
 def get_absence_periods(
-    claim: Claim, db_session: massgov.pfml.db.Session,
+    claim: Claim, db_session: massgov.pfml.db.Session
 ) -> List[FineosAbsencePeriod]:
     absence_id = claim.fineos_absence_id
     if absence_id is None:

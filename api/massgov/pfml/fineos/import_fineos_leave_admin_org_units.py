@@ -195,16 +195,16 @@ def process_fineos_updates(
     cps = fineos.create_client()
     for employer_fein, leave_admins in employers.items():
         try:
-            employer: Employer = db_session.query(Employer).filter(
-                Employer.employer_fein == employer_fein
-            ).one()
+            employer: Employer = (
+                db_session.query(Employer).filter(Employer.employer_fein == employer_fein).one()
+            )
         except NoResultFound:
-            logger.error("No query results for employer.", extra={"employer_fein": employer_fein,})
+            logger.error("No query results for employer.", extra={"employer_fein": employer_fein})
             report.missing_employer_count += 1
             continue
         except MultipleResultsFound:
             logger.error(
-                "Multiple query results for employer.", extra={"employer_fein": employer_fein,}
+                "Multiple query results for employer.", extra={"employer_fein": employer_fein}
             )
             report.duplicate_employer_count += 1
             continue
@@ -347,7 +347,7 @@ def process_fineos_updates(
                 except Exception:
                     logger.error(
                         "Unable to add Leave Admin Organization Unit.",
-                        extra={"leave_admin_id": leave_admin_id, "org_unit_id": org_unit_id,},
+                        extra={"leave_admin_id": leave_admin_id, "org_unit_id": org_unit_id},
                     )
                     report.errored_leave_admin_org_units_count += 1
                     continue

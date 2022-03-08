@@ -61,10 +61,7 @@ def test_get_claimants_to_scrape(test_db_session, initialize_factories_session):
     )
 
     # we should only see the unique employees with claims
-    assert get_claimants_to_scrape(test_db_session) == [
-        employee_two,
-        employee_three,
-    ]
+    assert get_claimants_to_scrape(test_db_session) == [employee_two, employee_three]
 
 
 def test_update_gender_data_successfully(test_db_session, initialize_factories_session):

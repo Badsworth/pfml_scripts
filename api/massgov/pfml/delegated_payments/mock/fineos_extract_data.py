@@ -209,7 +209,7 @@ class FineosPaymentData(MockData):
 
         # Payment method values (used for payment and employee files)
         self.address_1 = self.get_value(
-            "address_1", f"{fake.building_number()} {fake.street_name()} {fake.street_suffix()}",
+            "address_1", f"{fake.building_number()} {fake.street_name()} {fake.street_suffix()}"
         )
         self.payment_address_1 = self.get_value("payment_address_1", self.address_1)
         self.address_2 = self.get_value("address_2", "")
@@ -370,9 +370,7 @@ class FineosIAWWData(MockData):
     Parameters can be overriden by specifying them as kwargs
     """
 
-    def __init__(
-        self, **kwargs,
-    ):
+    def __init__(self, **kwargs):
         super().__init__(true, **kwargs)
         self.kwargs = kwargs
 

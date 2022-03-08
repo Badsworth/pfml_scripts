@@ -7,7 +7,7 @@ export default class RolesApi extends BaseApi {
     return routes.api.roles;
   }
 
-  get i18nPrefix() {
+  get namespace() {
     return "roles";
   }
 

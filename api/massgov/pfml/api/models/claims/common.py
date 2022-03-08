@@ -53,7 +53,7 @@ class YesNoUnknown(str, Enum):
 
 
 class EmployerClaimReview(PydanticBaseModel):
-    """ Defines the Employer info request / response format """
+    """Defines the Employer info request / response format"""
 
     uses_second_eform_version: bool = False
     comment: Optional[str]
@@ -76,7 +76,7 @@ class ChangeRequestType(str, LookupEnum):
 
 
 class ChangeRequest(PydanticBaseModel):
-    """ Defines the ChangeRequest format """
+    """Defines the ChangeRequest format"""
 
     change_request_type: ChangeRequestType
     start_date: Optional[date]

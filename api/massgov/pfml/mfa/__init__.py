@@ -21,9 +21,7 @@ def handle_mfa_disabled(user: User, last_enabled_at: Optional[datetime], updated
     logger.info("MFA disabled for user", extra=log_attributes)
 
     if app.get_config().environment == "local" and app.get_config().disable_sending_emails:
-        logger.info(
-            "Skipping sending an MFA disabled notification email", extra=log_attributes,
-        )
+        logger.info("Skipping sending an MFA disabled notification email", extra=log_attributes)
         return
 
     try:
@@ -58,9 +56,7 @@ def _send_mfa_disabled_email(recipient_email: str, phone_number_last_four: str) 
     email_config = cognito_config.get_email_config()
     sender_email = email_config.pfml_email_address
     template = "MfaHasBeenDisabled"
-    template_data = {
-        "phone_number_last_four": phone_number_last_four,
-    }
+    template_data = {"phone_number_last_four": phone_number_last_four}
 
     recipient = EmailRecipient(to_addresses=[recipient_email])
     send_templated_email(

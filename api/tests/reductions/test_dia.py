@@ -41,9 +41,7 @@ from massgov.pfml.util.batch.log import LogEntry
 fake = faker.Faker()
 
 
-DIA_PAYMENT_LIST_ENCODERS: csv_util.Encoders = {
-    date: lambda d: d.strftime("%Y%m%d"),
-}
+DIA_PAYMENT_LIST_ENCODERS: csv_util.Encoders = {date: lambda d: d.strftime("%Y%m%d")}
 
 
 def _random_csv_filename() -> str:
@@ -309,7 +307,7 @@ def test_copy_to_sftp_and_archive_s3_files(
 
 
 def test_create_list_of_claimants(
-    initialize_factories_session, monkeypatch, mock_s3_bucket, test_db_session,
+    initialize_factories_session, monkeypatch, mock_s3_bucket, test_db_session
 ):
     s3_bucket_uri = "s3://" + mock_s3_bucket
     dest_dir = "reductions/dia/outbound"
@@ -361,7 +359,7 @@ def test_create_list_of_claimants(
 
 
 def test_create_list_of_claimants_skips_claims_with_missing_data(
-    initialize_factories_session, monkeypatch, mock_s3_bucket, test_db_session,
+    initialize_factories_session, monkeypatch, mock_s3_bucket, test_db_session
 ):
     s3_bucket_uri = "s3://" + mock_s3_bucket
     dest_dir = "reductions/dia/outbound"

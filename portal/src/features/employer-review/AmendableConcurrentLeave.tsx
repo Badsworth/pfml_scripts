@@ -3,15 +3,15 @@ import AmendButton from "./AmendButton";
 import AmendmentForm from "../../components/AmendmentForm";
 import ConcurrentLeave from "../../models/ConcurrentLeave";
 import ConditionalContent from "../../components/ConditionalContent";
-import ErrorInfo from "../../models/ErrorInfo";
 import Heading from "../../components/core/Heading";
 import InputDate from "../../components/core/InputDate";
+import findErrorMessageForField from "../../utils/findErrorMessageForField";
 import formatDateRange from "../../utils/formatDateRange";
 import useAutoFocusEffect from "../../hooks/useAutoFocusEffect";
 import { useTranslation } from "../../locales/i18n";
 
 interface AmendableConcurrentLeaveProps {
-  errors: ErrorInfo[];
+  errors: Error[];
   concurrentLeave: ConcurrentLeave;
   isAddedByLeaveAdmin: boolean;
   onChange: (
@@ -62,11 +62,11 @@ const AmendableConcurrentLeave = ({
     onChange({ [field]: formattedValue }, formStateField);
   };
 
-  const startDateErrMsg = ErrorInfo.fieldErrorMessage(
+  const startDateErrMsg = findErrorMessageForField(
     errors,
     `concurrent_leave.leave_start_date`
   );
-  const leaveDateErrMsg = ErrorInfo.fieldErrorMessage(
+  const leaveDateErrMsg = findErrorMessageForField(
     errors,
     `concurrent_leave.leave_end_date`
   );

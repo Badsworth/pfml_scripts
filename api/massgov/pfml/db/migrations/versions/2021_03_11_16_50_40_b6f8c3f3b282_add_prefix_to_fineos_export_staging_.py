@@ -91,7 +91,7 @@ def upgrade():
             server_default=sa.text("now()"),
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"],),
+        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"]),
         sa.PrimaryKeyConstraint("employee_feed_id"),
     )
     op.create_index(
@@ -164,7 +164,7 @@ def upgrade():
             server_default=sa.text("now()"),
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"],),
+        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"]),
         sa.PrimaryKeyConstraint("vbi_requested_absence_som_id"),
     )
     op.create_index(
@@ -271,7 +271,7 @@ def upgrade():
             server_default=sa.text("now()"),
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"],),
+        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"]),
         sa.PrimaryKeyConstraint("vpei_id"),
     )
     op.create_index(
@@ -352,7 +352,7 @@ def upgrade():
             server_default=sa.text("now()"),
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"],),
+        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"]),
         sa.PrimaryKeyConstraint("vpei_claim_details_id"),
     )
     op.create_index(
@@ -398,7 +398,7 @@ def upgrade():
             server_default=sa.text("now()"),
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"],),
+        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"]),
         sa.PrimaryKeyConstraint("vpei_payment_details_id"),
     )
     op.create_index(

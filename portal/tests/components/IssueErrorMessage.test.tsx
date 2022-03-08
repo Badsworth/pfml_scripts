@@ -40,7 +40,7 @@ describe("ErrorMessage", () => {
     const { container } = render(
       <IssueErrorMessage
         type="intermittent_interval_maximum"
-        i18nPrefix="fooModel"
+        namespace="fooModel"
       />
     );
 
@@ -86,7 +86,7 @@ describe("ErrorMessage", () => {
     "renders message based on field+type, rule, and type (in that order)",
     (issue, expectedMessage) => {
       const { container } = render(
-        <IssueErrorMessage {...issue} i18nPrefix="fooModel" />
+        <IssueErrorMessage {...issue} namespace="fooModel" />
       );
 
       expect(container.innerHTML).toContain(expectedMessage);
@@ -95,7 +95,7 @@ describe("ErrorMessage", () => {
 
   it("falls back to generic field-level message when the field is defined", () => {
     const { container } = render(
-      <IssueErrorMessage field="name" i18nPrefix="fooModel" />
+      <IssueErrorMessage field="name" namespace="fooModel" />
     );
 
     expect(container.innerHTML).toContain("Field (name) has invalid value.");
@@ -103,7 +103,7 @@ describe("ErrorMessage", () => {
 
   it("falls back to issue's message when a field isn't defined", () => {
     const { container } = render(
-      <IssueErrorMessage message="Foo is invalid." i18nPrefix="fooModel" />
+      <IssueErrorMessage message="Foo is invalid." namespace="fooModel" />
     );
 
     expect(container.innerHTML).toContain("Foo is invalid.");

@@ -154,17 +154,14 @@ def test_add_pub_error(
     )
 
     # error if log entry has not been set (i.e. process has not been run)
-    with pytest.raises(
-        Exception, match="object has no log entry set",
-    ):
+    with pytest.raises(Exception, match="object has no log entry set"):
         step.add_pub_error(PubErrorType.ACH_RETURN, "test", 2, "", 6)
 
     step.log_entry = LogEntry(test_db_session, "Test")
 
     # error if reference file has not been set (i.e. process has not been run)
     with pytest.raises(
-        AttributeError,
-        match="'ProcessNachaReturnFileStep' object has no attribute 'reference_file",
+        AttributeError, match="'ProcessNachaReturnFileStep' object has no attribute 'reference_file"
     ):
         step.add_pub_error(PubErrorType.ACH_RETURN, "test", 2, "", 6)
 

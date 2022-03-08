@@ -51,14 +51,14 @@ def is_expected_failure(err_message: str, expected_failures: Optional[Set[str]])
 def log_validation_error(
     err: exception.FINEOSUnprocessableEntity, expected_failures: Optional[Set[str]] = None
 ) -> None:
-    """ Parse 422 responses from FINEOS and log individual validation errors.
-        422 responses are expected to be in this format:
+    """Parse 422 responses from FINEOS and log individual validation errors.
+    422 responses are expected to be in this format:
 
-        [
-           { "validationMessage": "error 1" },
-           { "validationMessage": "error 2" },
-           ...
-        ]
+    [
+       { "validationMessage": "error 1" },
+       { "validationMessage": "error 2" },
+       ...
+    ]
     """
 
     # Try to parse the error as a JSON array.

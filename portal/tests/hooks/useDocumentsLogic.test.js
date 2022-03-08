@@ -1,4 +1,8 @@
-import { BadRequestError, ValidationError } from "../../src/errors";
+import {
+  BadRequestError,
+  DocumentsLoadError,
+  ValidationError,
+} from "../../src/errors";
 import { act, renderHook } from "@testing-library/react-hooks";
 import {
   attachDocumentMock,
@@ -6,7 +10,6 @@ import {
   getDocumentsMock,
 } from "../../src/api/DocumentsApi";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
-import ErrorInfo from "../../src/models/ErrorInfo";
 import { makeFile } from "../test-utils";
 import { uniqueId } from "lodash";
 import useDocumentsLogic from "../../src/hooks/useDocumentsLogic";
@@ -262,14 +265,7 @@ describe("useDocumentsLogic", () => {
           false
         );
       });
-      expect(errorsLogic.errors[0]).toEqual(
-        expect.objectContaining({
-          field: "file",
-          message: "Upload at least one file to continue.",
-          name: "ValidationError",
-          type: "required",
-        })
-      );
+      expect(errorsLogic.errors[0]).toBeInstanceOf(ValidationError);
     });
 
     it("updates the app errors, and includes the claim + file ids", async () => {
@@ -313,22 +309,24 @@ describe("useDocumentsLogic", () => {
       const errorInfos = errorsLogic.errors;
 
       expect(errorInfos).toHaveLength(2);
-      expect(errorInfos[0].name).toBe("DocumentsUploadError");
-      expect(errorInfos[0].meta).toMatchInlineSnapshot(`
-        {
-          "application_id": "mock-application-id-1",
-          "file_id": "2",
-        }
-      `);
-      expect(errorInfos[0].message).toMatchInlineSnapshot(
-        `"We encountered an error when uploading your file. Try uploading your file again. If this continues to happen, call the Contact Center at (833) 344‑7365."`
+      expect(errorInfos[0]).toEqual(
+        expect.objectContaining({
+          name: "DocumentsUploadError",
+          file_id: "2",
+        })
+      );
+      expect(errorInfos[1]).toEqual(
+        expect.objectContaining({
+          name: "DocumentsUploadError",
+          file_id: "3",
+        })
       );
     });
   });
 
   it("clears prior errors", async () => {
     act(() => {
-      errorsLogic.setErrors([new ErrorInfo()]);
+      errorsLogic.setErrors([new Error()]);
     });
 
     attachDocumentMock.mockResolvedValueOnce({
@@ -474,16 +472,14 @@ describe("useDocumentsLogic", () => {
           await documentsLogic.loadAll(application_id);
         });
 
-        expect(errorsLogic.errors[0].name).toEqual("DocumentsLoadError");
-        expect(errorsLogic.errors[0].meta).toEqual({
-          application_id,
-        });
+        expect(errorsLogic.errors[0]).toBeInstanceOf(DocumentsLoadError);
+        expect(errorsLogic.errors[0].application_id).toBe(application_id);
       });
     });
 
     it("clears prior errors", async () => {
       act(() => {
-        errorsLogic.setErrors([new ErrorInfo()]);
+        errorsLogic.setErrors([new Error()]);
       });
 
       await act(async () => {
@@ -608,7 +604,7 @@ describe("useDocumentsLogic", () => {
   describe("download", () => {
     it("clears prior errors", async () => {
       act(() => {
-        errorsLogic.setErrors([new ErrorInfo()]);
+        errorsLogic.setErrors([new Error()]);
       });
 
       const document = {

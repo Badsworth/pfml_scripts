@@ -13,6 +13,7 @@ import {
 import React, { useRef } from "react";
 
 import Breadcrumb from "../../components/Breadcrumb";
+import { CalendarIcon } from "@heroicons/react/outline";
 import Datetime from "react-datetime";
 import { Helmet } from "react-helmet-async";
 import { StaticPropsPermissions } from "../../menus";
@@ -96,12 +97,12 @@ const DateTimeField = (props: FieldHookConfig<string>) => {
     return (
       <>
         <input {...options} ref={calInput} />
-        <i
+        <CalendarIcon
           className="maintenance-configure__calendar-icon"
           aria-hidden="true"
           tabIndex={-1}
           onClick={calIconClick}
-        ></i>
+        />
         {meta.error ? (
           <div className="maintenance-configure__error">{meta.error}</div>
         ) : null}

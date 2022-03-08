@@ -66,6 +66,14 @@ export const Status = (props: WithEmployerClaimProps) => {
     return null;
   }
 
+  let leadContext;
+  if (!showStatusPageUpdates) {
+    leadContext = findKeyByValue(AbsenceCaseStatus, claim.status)
+      ? "decision"
+      : // Pending claims refer to applications that are partially submitted (Part 1 only), awaiting employer response, or awaiting adjudication
+        "pending";
+  }
+
   return (
     <React.Fragment>
       <BackButton />
@@ -83,10 +91,7 @@ export const Status = (props: WithEmployerClaimProps) => {
         <Trans
           i18nKey="pages.employersClaimsStatus.lead"
           tOptions={{
-            context: findKeyByValue(AbsenceCaseStatus, claim.status)
-              ? "decision"
-              : // Pending claims refer to applications that are partially submitted (Part 1 only), awaiting employer response, or awaiting adjudication
-                "pending",
+            context: leadContext,
           }}
           components={{
             "dfml-regulations-link": (

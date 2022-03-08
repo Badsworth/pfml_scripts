@@ -227,6 +227,44 @@ module "export_leave_admins_created_scheduler" {
 }
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Runs daily at 7am EST (8am EDT) (12pm UTC)
+# Run execute-sql daily to export a report to S3 of applications that have completed part 3 but aren't ID proofed
+module "export_psd_report_scheduler" {
+  source     = "../../modules/ecs_task_scheduler"
+  is_enabled = true
+
+  task_name                            = "export-psd-report"
+  schedule_expression_standard         = "cron(0 13 * * ? *)"
+  schedule_expression_daylight_savings = "cron(0 12 * * ? *)"
+  environment_name                     = var.environment_name
+
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
+
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["execute-sql"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["execute-sql"].family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_role              = aws_iam_role.task_execute_sql_task_role.arn
+
+  input = <<DOC
+  {
+  "containerOverrides": [
+          {
+            "name": "execute-sql",
+            "command": [
+              "execute-sql",
+              "--s3_output=dfml-reports/applications_passed_part_3",
+              "--s3_bucket=massgov-pfml-${var.environment_name}-reports",
+              "select claim_id, fineos_absence_id, updated_at FROM claim where claim_id in (select claim_id from application where completed_time is not null and completed_time > CURRENT_DATE - 1) and (is_id_proofed = false or is_id_proofed is null)"
+            ]
+          }
+        ]
+  }
+  DOC
+}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Run cps-errors daily at 9am EST (10am EDT) (2pm UTC)
 # This needs to run after fineos-bucket-tool
 module "cps_errors_crawler_scheduler" {
@@ -383,7 +421,7 @@ module "weekend-pub-payments-process-fineos" {
         "name": "pub-payments-process-fineos",
         "command": [
           "pub-payments-process-fineos",
-          "--steps", "consume-fineos-claimant", "claimant-extract"
+          "--steps", "consume-fineos-claimant", "claimant-extract", "consume_fineos_1099_request","do_1099_data_extract"
         ]
       }
     ]

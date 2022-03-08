@@ -40,7 +40,7 @@ def deprecated_other_income_eform():
                 },
                 {
                     "name": "WRT2",
-                    "enumValue": {"domainName": "WageReplacementType", "instanceValue": "Unknown",},
+                    "enumValue": {"domainName": "WageReplacementType", "instanceValue": "Unknown"},
                 },
                 {"name": "StartDate", "dateValue": "2020-10-01"},
                 {"name": "Spacer", "stringValue": ""},
@@ -66,7 +66,7 @@ def deprecated_other_income_eform():
                 },
                 {
                     "name": "WRT4",
-                    "enumValue": {"domainName": "WageReplacementType", "instanceValue": "Unknown",},
+                    "enumValue": {"domainName": "WageReplacementType", "instanceValue": "Unknown"},
                 },
                 {
                     "name": "ProgramType2",
@@ -202,7 +202,7 @@ def other_leave_eform():
                 },
                 {
                     "name": "V2QualifyingReason1",
-                    "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy",},
+                    "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy"},
                 },
                 {"name": "V2OtherLeavesPastLeaveEndDate2", "dateValue": "2020-12-15"},
                 {"name": "V2OtherLeavesPastLeaveEndDate1", "dateValue": "2020-09-22"},
@@ -252,7 +252,7 @@ def other_leave_eform_employer_unknown():
                 {"name": "V2SecondaryQualifyingReason", "stringValue": "Military caregiver"},
                 {
                     "name": "V2QualifyingReason1",
-                    "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy",},
+                    "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy"},
                 },
                 {"name": "V2OtherLeavesPastLeaveEndDate1", "dateValue": "2020-09-22"},
                 {

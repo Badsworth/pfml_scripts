@@ -4,6 +4,4 @@ def get_secret(client, key):
 
 
 def put_secret(client, key, value, overwrite=True, type="SecureString", data_type="text"):
-    client.put_parameter(
-        Name=key, Value=value, Type=type, Overwrite=overwrite, DataType=data_type,
-    )
+    client.put_parameter(Name=key, Value=value, Type=type, Overwrite=overwrite, DataType=data_type)

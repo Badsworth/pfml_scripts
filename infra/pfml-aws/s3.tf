@@ -244,7 +244,7 @@ resource "aws_s3_bucket_policy" "sns_sms_usage_reports" {
         "Resource" : "arn:aws:s3:::massgov-pfml-sns-sms-usage-reports/*",
         "Condition" : {
           "StringEquals" : {
-            "aws:SourceAccount" : "${data.aws_caller_identity.current.account_id}"
+            "aws:SourceAccount" : data.aws_caller_identity.current.account_id
           }
         }
       },
@@ -258,7 +258,7 @@ resource "aws_s3_bucket_policy" "sns_sms_usage_reports" {
         "Resource" : "arn:aws:s3:::massgov-pfml-sns-sms-usage-reports",
         "Condition" : {
           "StringEquals" : {
-            "aws:SourceAccount" : "${data.aws_caller_identity.current.account_id}"
+            "aws:SourceAccount" : data.aws_caller_identity.current.account_id
           }
         }
       },
@@ -343,4 +343,34 @@ resource "aws_s3_bucket_public_access_block" "portal_cloudfront_access_logging_b
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
+# ----------------------------------------------------------------------------------------------------------------------
+# Manage manually created buckets
+
+resource "aws_s3_bucket" "import_buckets" {
+  for_each = toset(module.constants.import_buckets)
+  bucket   = each.key
+  tags = merge(module.constants.common_tags, {
+    environment = "prod"
+    public      = "no"
+    Name        = each.key
+  })
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "import_buckets" {
+  for_each                = toset(module.constants.import_buckets)
+  bucket                  = aws_s3_bucket.import_buckets[each.key].id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
 # ----------------------------------------------------------------------------------------------------------------------

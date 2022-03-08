@@ -23,9 +23,7 @@ class TestMfaLockoutResolver:
     mfa_lockout_resolver = create_lockout_resolver(dry_run=False)
 
     @patch("massgov.pfml.mfa.mfa_lockout_resolver.get_user_by_email")
-    @patch(
-        "massgov.pfml.mfa.mfa_lockout_resolver.check_phone_number_opt_out", return_value=True,
-    )
+    @patch("massgov.pfml.mfa.mfa_lockout_resolver.check_phone_number_opt_out", return_value=True)
     @patch("massgov.pfml.mfa.mfa_lockout_resolver.opt_in_phone_number")
     @patch("massgov.pfml.mfa.mfa_lockout_resolver.update_user")
     @patch("massgov.pfml.mfa.mfa_lockout_resolver.disable_user_mfa")
@@ -102,9 +100,7 @@ class TestMfaLockoutResolver:
         assert self.mfa_lockout_resolver.log_attr["user_id"] == user_with_mfa.user_id
 
     @patch("massgov.pfml.mfa.mfa_lockout_resolver.logger", mock_logger)
-    @patch(
-        "massgov.pfml.mfa.mfa_lockout_resolver.get_user_by_email", return_value=None,
-    )
+    @patch("massgov.pfml.mfa.mfa_lockout_resolver.get_user_by_email", return_value=None)
     def test_get_user_not_found(self, mock_get_user_by_email):
         with pytest.raises(Exception) as e:
             self.mfa_lockout_resolver._get_user()
@@ -115,7 +111,7 @@ class TestMfaLockoutResolver:
                 "Getting user from PFML API", extra=self.mfa_lockout_resolver.log_attr
             )
             self.mock_logger.error.assert_any_call(
-                "Error finding user in PFML database", e, extra=self.mfa_lockout_resolver.log_attr,
+                "Error finding user in PFML database", e, extra=self.mfa_lockout_resolver.log_attr
             )
 
     @patch("massgov.pfml.mfa.mfa_lockout_resolver.logger", mock_logger)
@@ -139,13 +135,11 @@ class TestMfaLockoutResolver:
                 "Disabling user MFA in Cognito", extra=self.mfa_lockout_resolver.log_attr
             )
             self.mock_logger.error.assert_any_call(
-                "Error disabling user MFA in Cognito", e, extra=self.mfa_lockout_resolver.log_attr,
+                "Error disabling user MFA in Cognito", e, extra=self.mfa_lockout_resolver.log_attr
             )
 
     @patch("massgov.pfml.mfa.mfa_lockout_resolver.logger", mock_logger)
-    @patch(
-        "massgov.pfml.mfa.mfa_lockout_resolver.check_phone_number_opt_out", return_value=True,
-    )
+    @patch("massgov.pfml.mfa.mfa_lockout_resolver.check_phone_number_opt_out", return_value=True)
     @patch("massgov.pfml.mfa.mfa_lockout_resolver.opt_in_phone_number")
     def test_sns_opt_out_phone_opted_out(self, mock_phone_opt_out, mock_opt_in, user_with_mfa):
         self.mfa_lockout_resolver._set_sns_opt_in(user_with_mfa)
@@ -157,9 +151,7 @@ class TestMfaLockoutResolver:
         )
 
     @patch("massgov.pfml.mfa.mfa_lockout_resolver.logger", mock_logger)
-    @patch(
-        "massgov.pfml.mfa.mfa_lockout_resolver.check_phone_number_opt_out", return_value=False,
-    )
+    @patch("massgov.pfml.mfa.mfa_lockout_resolver.check_phone_number_opt_out", return_value=False)
     @patch("massgov.pfml.mfa.mfa_lockout_resolver.opt_in_phone_number")
     def test_sns_opt_out_phone_opted_in(self, mock_opt_in, mock_phone_opt_out, user_with_mfa):
         self.mfa_lockout_resolver._set_sns_opt_in(user_with_mfa)
@@ -182,13 +174,11 @@ class TestMfaLockoutResolver:
                 "Setting user opt-in in SNS", extra=self.mfa_lockout_resolver.log_attr
             )
             self.mock_logger.error.assert_any_call(
-                "Error pulling opt-in status from SNS", e, extra=self.mfa_lockout_resolver.log_attr,
+                "Error pulling opt-in status from SNS", e, extra=self.mfa_lockout_resolver.log_attr
             )
 
     @patch("massgov.pfml.mfa.mfa_lockout_resolver.logger", mock_logger)
-    @patch(
-        "massgov.pfml.mfa.mfa_lockout_resolver.check_phone_number_opt_out", return_value=True,
-    )
+    @patch("massgov.pfml.mfa.mfa_lockout_resolver.check_phone_number_opt_out", return_value=True)
     @patch("massgov.pfml.mfa.mfa_lockout_resolver.opt_in_phone_number")
     def test_sns_opt_out_opt_in_error(self, mock_opt_in, mock_phone_opt_out, user_with_mfa):
         mock_phone_opt_out.side_effect = Exception("ran into an error")
@@ -226,5 +216,5 @@ class TestMfaLockoutResolver:
                 "Setting user opt-in in SNS", extra=self.mfa_lockout_resolver.log_attr
             )
             self.mock_logger.error.assert_any_call(
-                "Error disabling user MFA in PFML db", e, extra=self.mfa_lockout_resolver.log_attr,
+                "Error disabling user MFA in PFML db", e, extra=self.mfa_lockout_resolver.log_attr
             )

@@ -58,9 +58,7 @@ class PeiWritebackItem:
 
 WRITEBACK_FILE_SUFFIX = "-pei_writeback.csv"
 
-PEI_WRITEBACK_CSV_ENCODERS: csv_util.Encoders = {
-    date: lambda d: d.strftime("%Y-%m-%d %H:%M:%S"),
-}
+PEI_WRITEBACK_CSV_ENCODERS: csv_util.Encoders = {date: lambda d: d.strftime("%Y-%m-%d %H:%M:%S")}
 
 REQUIRED_FIELDS_FOR_EXTRACTED_PAYMENT = [
     "fineos_pei_c_value",
@@ -240,7 +238,7 @@ class FineosPeiWritebackStep(Step):
         return pei_writeback_items
 
     def upload_writeback_csv_and_save_reference_files(
-        self, pei_writeback_items: List[PeiWritebackItem],
+        self, pei_writeback_items: List[PeiWritebackItem]
     ) -> None:
         """
         Upload PEI writeback CSV to FINEOS S3 bucket and PFML S3 bucket configured in payments_util

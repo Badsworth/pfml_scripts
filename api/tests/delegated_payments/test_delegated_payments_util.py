@@ -62,13 +62,8 @@ PAYMENT_EXTRACT_FILENAMES = [
     "VBI_REQUESTEDABSENCE.csv",
 ]
 
-CLAIMANT_EXTRACT_FILENAMES = [
-    "Employee_feed.csv",
-    "VBI_REQUESTEDABSENCE_SOM.csv",
-]
-REQUEST_1099_DATA_EXTRACT_FILENAMES = [
-    "VBI_1099DATA_SOM.csv",
-]
+CLAIMANT_EXTRACT_FILENAMES = ["Employee_feed.csv", "VBI_REQUESTEDABSENCE_SOM.csv"]
+REQUEST_1099_DATA_EXTRACT_FILENAMES = ["VBI_1099DATA_SOM.csv"]
 
 
 @pytest.fixture
@@ -77,17 +72,13 @@ def set_source_path(tmp_path, mock_fineos_s3_bucket):
     test_file = tmp_path / file_name
     test_file.write_text("test, data, rowOne\ntest, data, rowTwo")
 
-    upload_file_to_s3(
-        test_file, mock_fineos_s3_bucket, f"DT2/dataexports/{file_name}",
-    )
+    upload_file_to_s3(test_file, mock_fineos_s3_bucket, f"DT2/dataexports/{file_name}")
 
     file_name = "2020-12-21-11-30-00-expected_file_two.csv"
     test_file = tmp_path / file_name
     test_file.write_text("test, data, rowOne\ntest, data, rowTwo")
 
-    upload_file_to_s3(
-        test_file, mock_fineos_s3_bucket, f"DT2/dataexports/{file_name}",
-    )
+    upload_file_to_s3(test_file, mock_fineos_s3_bucket, f"DT2/dataexports/{file_name}")
 
 
 def create_test_reference_file(test_db_session, mock_s3_bucket):
@@ -280,7 +271,7 @@ def test_copy_fineos_data_to_archival_bucket(
     make_s3_file(mock_fineos_s3_bucket, "DT2/vpeiclaimdetails.csv", "vpeiclaimdetails.csv")
     make_s3_file(mock_fineos_s3_bucket, "IDT/dataexports/vpeiclaimdetails.csv", "small.csv")
     copied_file_mapping_by_date = payments_util.copy_fineos_data_to_archival_bucket(
-        test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_PAYMENT_EXTRACT,
+        test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
     )
 
     received_s3_prefix = f"s3://{mock_s3_bucket}/cps/inbound/received/"
@@ -344,7 +335,7 @@ def test_copy_fineos_data_to_archival_bucket_skip_old_payment(
 
     # Actually run the command
     copied_file_mapping_by_date = payments_util.copy_fineos_data_to_archival_bucket(
-        test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_PAYMENT_EXTRACT,
+        test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
     )
 
     # Verify there is a skipped file
@@ -419,7 +410,7 @@ def test_copy_fineos_data_to_archival_bucket_skip_old_claimant_Extract(
 
     # Actually run the command
     copied_file_mapping_by_date = payments_util.copy_fineos_data_to_archival_bucket(
-        test_db_session, CLAIMANT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_CLAIMANT_EXTRACT,
+        test_db_session, CLAIMANT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
     )
 
     received_s3_prefix = f"s3://{mock_s3_bucket}/cps/inbound/received/"
@@ -459,7 +450,7 @@ def test_copy_fineos_data_to_archival_bucket_skip_top_level(
 
     # Actually run the command
     copied_file_mapping_by_date = payments_util.copy_fineos_data_to_archival_bucket(
-        test_db_session, CLAIMANT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_CLAIMANT_EXTRACT,
+        test_db_session, CLAIMANT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
     )
 
     # Files should be empty
@@ -486,7 +477,7 @@ def test_copy_fineos_data_to_archival_bucket_duplicate_suffix_error(
         match=f"Error while copying fineos extracts - duplicate files found for vpei.csv: s3://test_bucket/cps/inbound/received/{date_prefix}-ANOTHER-vpei.csv and s3://fineos_bucket/DT2/dataexports/{date_prefix}-vpei.csv",
     ):
         payments_util.copy_fineos_data_to_archival_bucket(
-            test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_PAYMENT_EXTRACT,
+            test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
         )
 
 
@@ -506,7 +497,7 @@ def test_copy_fineos_data_to_archival_bucket_missing_file_error(
         match=f"Error while copying fineos extracts - The following expected files were not found {date_prefix}-vpeiclaimdetails.csv,{date_prefix}-vpeipaymentdetails.csv",
     ):
         payments_util.copy_fineos_data_to_archival_bucket(
-            test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_PAYMENT_EXTRACT,
+            test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
         )
 
 
@@ -520,9 +511,7 @@ def test_group_s3_files_by_date(mock_s3_bucket, set_exporter_env_vars):
     ]:
         # Add the 3 expected files
         make_s3_file(mock_s3_bucket, f"{prefix}vpei.csv", "vpei.csv")
-        make_s3_file(
-            mock_s3_bucket, f"{prefix}vpeipaymentdetails.csv", "vpeipaymentdetails.csv",
-        )
+        make_s3_file(mock_s3_bucket, f"{prefix}vpeipaymentdetails.csv", "vpeipaymentdetails.csv")
         make_s3_file(mock_s3_bucket, f"{prefix}vpeiclaimdetails.csv", "vpeiclaimdetails.csv")
         # Add some other random files to the same folder
         make_s3_file(mock_s3_bucket, f"{prefix}somethingelse.csv", "small.csv")
@@ -958,7 +947,7 @@ def test_get_fineos_max_history_date_bad_string(monkeypatch):
 
 
 def test_create_staging_table_instance(test_db_session, initialize_factories_session, caplog):
-    """ We test if an extra column is provided to given staging data model, an instance of data
+    """We test if an extra column is provided to given staging data model, an instance of data
     model is created, excluding the extra columns. The extra columns that aren't in
     ignore_properties are logged as a warning.
     """
@@ -974,7 +963,7 @@ def test_create_staging_table_instance(test_db_session, initialize_factories_ses
     }
 
     vpei_instance = payments_util.create_staging_table_instance(
-        vpei_data, FineosExtractVpei, ref_file, None, ignore_properties=["addressline9",]
+        vpei_data, FineosExtractVpei, ref_file, None, ignore_properties=["addressline9"]
     )
     test_db_session.add(vpei_instance)
     test_db_session.commit()
@@ -1436,10 +1425,7 @@ def test_get_earliest_matching_payment__no_previous_payments(
 
 
 def test_get_unconfigured_fineos_columns():
-    expected_columns = {
-        "addressline6": "test",
-        "addressline7": "test",
-    }
+    expected_columns = {"addressline6": "test", "addressline7": "test"}
 
     unconfigured_columns = payments_util.get_unconfigured_fineos_columns(
         expected_columns, FineosExtractVpei

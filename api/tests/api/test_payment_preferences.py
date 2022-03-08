@@ -24,7 +24,7 @@ def test_submit_payment_preference_ach_success(client, user, auth_token, test_db
             "bank_account_type": "Checking",
             "routing_number": "011401533",
             "account_number": "123456789",
-        },
+        }
     }
     fineos_mock.start_capture()
     response = submit_payment_pref_helper(
@@ -66,9 +66,7 @@ def test_submit_payment_preference_ach_success(client, user, auth_token, test_db
 
 def test_submit_payment_preference_check_success(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
-    update_request_body = {
-        "payment_preference": {"payment_method": "Check",},
-    }
+    update_request_body = {"payment_preference": {"payment_method": "Check"}}
     fineos_mock.start_capture()
     response = submit_payment_pref_helper(
         client=client,
@@ -117,7 +115,7 @@ def test_submit_payment_preference_ach_mailing_addr_override(
             "bank_account_type": "Checking",
             "routing_number": "011401533",
             "account_number": "123456789",
-        },
+        }
     }
     fineos_mock.start_capture()
     response = submit_payment_pref_helper(
@@ -154,7 +152,7 @@ def test_submit_payment_preference_already_submitted(client, user, auth_token, t
             "bank_account_type": "Checking",
             "routing_number": "011401533",
             "account_number": "123456789",
-        },
+        }
     }
     response = submit_payment_pref_helper(
         client=client,
@@ -184,9 +182,7 @@ def test_submit_payment_preference_already_submitted(client, user, auth_token, t
 
 def test_submit_null_payment_preference_error(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
-    update_request_body = {
-        "payment_preference": None,
-    }
+    update_request_body = {"payment_preference": None}
     response = submit_payment_pref_helper(
         client=client,
         user=user,
@@ -202,9 +198,7 @@ def test_submit_payment_preference_no_payment_method_error(
     client, user, auth_token, test_db_session
 ):
     application = ApplicationFactory.create(user=user)
-    update_request_body = {
-        "payment_preference": {},
-    }
+    update_request_body = {"payment_preference": {}}
     response = submit_payment_pref_helper(
         client=client,
         user=user,
@@ -220,7 +214,7 @@ def test_submit_payment_preference_no_payment_method_error(
 def test_submit_payments_pref_masked_inputs_ignored(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
     application.payment_preference = ApplicationPaymentPreference(
-        routing_number="011401533", account_number="123456789",
+        routing_number="011401533", account_number="123456789"
     )
     test_db_session.commit()
     update_request_body = {
@@ -229,7 +223,7 @@ def test_submit_payments_pref_masked_inputs_ignored(client, user, auth_token, te
             "bank_account_type": "Checking",
             "routing_number": "*********",
             "account_number": "*****6789",
-        },
+        }
     }
     response = submit_payment_pref_helper(
         client=client,
@@ -247,7 +241,7 @@ def test_submit_payments_pref_masked_inputs_ignored(client, user, auth_token, te
 def test_submit_payments_pref_masked_mismatch_fields(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
     application.payment_preference = ApplicationPaymentPreference(
-        routing_number=None, account_number="123456789",
+        routing_number=None, account_number="123456789"
     )
     test_db_session.commit()
     update_request_body = {
@@ -256,7 +250,7 @@ def test_submit_payments_pref_masked_mismatch_fields(client, user, auth_token, t
             "bank_account_type": "Checking",
             "routing_number": "*********",
             "account_number": "*****0000",
-        },
+        }
     }
     response = submit_payment_pref_helper(
         client=client,
@@ -285,7 +279,7 @@ def test_submit_payments_pref_masked_mismatch_fields(client, user, auth_token, t
 def test_submit_payments_pref_invalid_values(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
     application.payment_preference = ApplicationPaymentPreference(
-        routing_number=None, account_number="123456789",
+        routing_number=None, account_number="123456789"
     )
     test_db_session.commit()
     update_request_body = {
@@ -294,7 +288,7 @@ def test_submit_payments_pref_invalid_values(client, user, auth_token, test_db_s
             "bank_account_type": "Checking",
             # routing_number should conform to the pattern (e.g 801234567),
             "routing_number": "80123456789",
-        },
+        }
     }
     response = submit_payment_pref_helper(
         client=client,
@@ -313,6 +307,6 @@ def test_submit_payments_pref_invalid_values(client, user, auth_token, test_db_s
                 "message": "'80123456789' does not match '^((0[0-9])|(1[0-2])|(2[1-9])|(3[0-2])|(6[1-9])|(7[0-2])|80)([0-9]{7})$|(\\\\*{9})$'",
                 "rule": "^((0[0-9])|(1[0-2])|(2[1-9])|(3[0-2])|(6[1-9])|(7[0-2])|80)([0-9]{7})$|(\\*{9})$",
                 "type": "pattern",
-            },
+            }
         ],
     )

@@ -749,7 +749,7 @@ def test_get_fineos_correlation_id_with_int():
 
 def test_customer_api_documents_403(httpserver, fineos_client):
     httpserver.expect_request(
-        "/customerapi/customer/cases/123456789/documents", method="GET",
+        "/customerapi/customer/cases/123456789/documents", method="GET"
     ).respond_with_data("", status=403, content_type="application/json")
 
     documents = fineos_client.get_documents("FINEOS_WEB_ID", "123456789")
@@ -767,7 +767,7 @@ def test_customer_api_document_upload_multipart_success(httpserver, fineos_clien
     document_response = mock_document(case_id, document_type, filename, description)
 
     httpserver.expect_request(
-        f"/customerapi/customer/cases/{case_id}/documents/upload/{document_type}", method="POST",
+        f"/customerapi/customer/cases/{case_id}/documents/upload/{document_type}", method="POST"
     ).respond_with_data(json.dumps(document_response), status=200, content_type="application/json")
 
     document = fineos_client.upload_document_multipart(
@@ -801,20 +801,5 @@ class TestCreateOrUpdateLeavePeriodChangeRequest:
         assert response.additionalNotes == "Withdrawal"
 
         period = response.changeRequestPeriods[0]
-        assert period.startDate == datetime.date(2022, 2, 14)
-        assert period.endDate == datetime.date(2022, 2, 15)
-
-
-class TestGetLeavePeriodChangeRequests:
-    def test_success(self, fineos_client):
-        change_requests = fineos_client.get_leave_period_change_requests("web_id", "absence_id")
-
-        assert len(change_requests) > 0
-        request = change_requests[0]
-
-        assert request.reason.name == "Employee Requested Removal"
-        assert request.additionalNotes == "Withdrawal"
-
-        period = request.changeRequestPeriods[0]
         assert period.startDate == datetime.date(2022, 2, 14)
         assert period.endDate == datetime.date(2022, 2, 15)

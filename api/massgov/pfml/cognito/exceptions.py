@@ -8,7 +8,7 @@ class CognitoSubNotFound(Exception):
 
 
 class CognitoLookupFailure(Exception):
-    """ Error that represents an inability to complete the lookup successfully """
+    """Error that represents an inability to complete the lookup successfully"""
 
     pass
 

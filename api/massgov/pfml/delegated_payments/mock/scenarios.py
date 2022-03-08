@@ -47,6 +47,7 @@ class ScenarioName(Enum):
     HAPPY_PATH_DIA_ADDITIONAL_INCOME = "HAPPY_PATH_DIA_ADDITIONAL_INCOME"
     HAPPY_PATH_MAX_LEAVE_DURATION_EXCEEDED = "HAPPY_PATH_MAX_LEAVE_DURATION_EXCEEDED"
     HAPPY_PATH_PAYMENT_DATE_MISMATCH = "HAPPY_PATH_PAYMENT_DATE_MISMATCH"
+    HAPPY_PATH_PAYMENT_PREAPPROVED = "HAPPY_PATH_PAYMENT_PREAPPROVED"
 
     # Non-Standard Payments
     ZERO_DOLLAR_PAYMENT = "ZERO_DOLLAR_PAYMENT"
@@ -228,6 +229,9 @@ class ScenarioDescriptor:
     is_duplicate_tax_withholding_records_exists: bool = False
     is_tax_withholding_record_without_primary_payment: bool = False
 
+    # Preapproval
+    has_past_payments: bool = False
+
     # Manual rejects
     manual_pub_reject_response: bool = False
     manual_pub_reject_notes: str = "Manual Failure Test"
@@ -235,7 +239,7 @@ class ScenarioDescriptor:
 
 SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     ScenarioDescriptor(
-        scenario_name=ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED, claim_type="Employee",
+        scenario_name=ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED, claim_type="Employee"
     ),
     ScenarioDescriptor(scenario_name=ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED),
     ScenarioDescriptor(
@@ -274,7 +278,7 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         prenoted=False,
     ),
     ScenarioDescriptor(
-        scenario_name=ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED, create_payment=False,
+        scenario_name=ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED, create_payment=False
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.CLAIM_NOT_ID_PROOFED,
@@ -301,7 +305,7 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         employee_in_payment_extract_missing_in_db=True,
     ),
     ScenarioDescriptor(
-        scenario_name=ScenarioName.UNKNOWN_LEAVE_REQUEST_DECISION, leave_request_decision="Pending",
+        scenario_name=ScenarioName.UNKNOWN_LEAVE_REQUEST_DECISION, leave_request_decision="Pending"
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.IN_REVIEW_LEAVE_REQUEST_DECISION,
@@ -313,7 +317,7 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         is_adhoc_payment=True,
     ),
     ScenarioDescriptor(
-        scenario_name=ScenarioName.REJECTED_LEAVE_REQUEST_DECISION, leave_request_decision="Denied",
+        scenario_name=ScenarioName.REJECTED_LEAVE_REQUEST_DECISION, leave_request_decision="Denied"
     ),
     ScenarioDescriptor(scenario_name=ScenarioName.AUDIT_REJECTED, is_audit_rejected=True),
     ScenarioDescriptor(
@@ -380,7 +384,7 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         pub_ach_response_change_notification=True,
     ),
     ScenarioDescriptor(
-        scenario_name=ScenarioName.PUB_ACH_MANUAL_REJECT, manual_pub_reject_response=True,
+        scenario_name=ScenarioName.PUB_ACH_MANUAL_REJECT, manual_pub_reject_response=True
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
@@ -427,7 +431,7 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         pub_check_return_invalid_check_number=True,
     ),
     ScenarioDescriptor(
-        scenario_name=ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE, claim_missing_employee=True,
+        scenario_name=ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE, claim_missing_employee=True
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
@@ -470,10 +474,10 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         dor_fineos_name_mismatch=True,
     ),
     ScenarioDescriptor(
-        scenario_name=ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME, dua_additional_income=True,
+        scenario_name=ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME, dua_additional_income=True
     ),
     ScenarioDescriptor(
-        scenario_name=ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME, dia_additional_income=True,
+        scenario_name=ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME, dia_additional_income=True
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.HAPPY_PATH_MAX_LEAVE_DURATION_EXCEEDED,
@@ -483,6 +487,11 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         scenario_name=ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH,
         payment_date_mismatch=True,
         is_adhoc_payment=False,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED,
+        has_past_payments=True,
+        payment_method=PaymentMethod.CHECK,
     ),
 ]
 

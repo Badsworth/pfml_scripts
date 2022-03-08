@@ -22,10 +22,10 @@ def test_payment_parser_happy_path():
 
     assert manual_pub_rejects == [
         ManualPubReject(
-            line_number=2, raw_line="P123456,Notes1\n", record_id="P123456", notes="Notes1",
+            line_number=2, raw_line="P123456,Notes1\n", record_id="P123456", notes="Notes1"
         ),
         ManualPubReject(
-            line_number=3, raw_line="2345678,Notes@#@#\n", record_id="2345678", notes="Notes@#@#",
+            line_number=3, raw_line="2345678,Notes@#@#\n", record_id="2345678", notes="Notes@#@#"
         ),
         ManualPubReject(line_number=4, raw_line="1,\n", record_id="1", notes=""),
     ]

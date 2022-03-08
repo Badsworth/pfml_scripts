@@ -74,38 +74,12 @@ const useBenefitsApplicationsLogic = ({
   };
 
   /**
-   * Associate a claim created through the contact center with this user.
-   * `import` is a reserved variable name in JS, so...using `associate` here.
+   * Reset the state to force applications to be refetched the
+   * next time loadPage is called.
    */
-  const associate = async (formState: {
-    absence_case_id: string | null;
-    tax_identifier: string | null;
-  }) => {
-    errorsLogic.clearErrors();
-
-    try {
-      // Transform user input to conform to expected formatting for API
-      const postData = { ...formState };
-      postData.absence_case_id = postData.absence_case_id
-        ? postData.absence_case_id.toUpperCase().trim()
-        : null;
-
-      const { claim } = await applicationsApi.importClaim(postData);
-
-      // Reset the applications pagination state to force applications to be refetched,
-      // so that this newly associated application is listed
-      setIsLoadingClaims(undefined);
-      setPaginationMeta({});
-
-      portalFlow.goToNextPage(
-        {},
-        {
-          applicationAssociated: claim.fineos_absence_id,
-        }
-      );
-    } catch (error) {
-      errorsLogic.catchError(error);
-    }
+  const invalidateApplicationsCache = () => {
+    setIsLoadingClaims(undefined);
+    setPaginationMeta({});
   };
 
   /**
@@ -195,7 +169,7 @@ const useBenefitsApplicationsLogic = ({
       // for situations like leave periods, where the API passes us back
       // a leave_period_id field for making subsequent updates.
       if (issues.length) {
-        throw new ValidationError(issues, applicationsApi.i18nPrefix);
+        throw new ValidationError(issues);
       }
 
       const params = { claim_id: claim.application_id };
@@ -232,10 +206,8 @@ const useBenefitsApplicationsLogic = ({
     try {
       const { claim } = await applicationsApi.createClaim();
 
-      // Reset the applications pagination state to force applications to be refetched,
-      // so that this newly created claim is listed
-      setIsLoadingClaims(undefined);
-      setPaginationMeta({});
+      // Reset so that this newly created claim is listed
+      invalidateApplicationsCache();
 
       const context = { claim };
       const params = { claim_id: claim.application_id };
@@ -286,7 +258,7 @@ const useBenefitsApplicationsLogic = ({
       setClaimWarnings(application_id, warnings);
 
       if (issues.length) {
-        throw new ValidationError(issues, applicationsApi.i18nPrefix);
+        throw new ValidationError(issues);
       }
 
       const context = { claim };
@@ -319,7 +291,7 @@ const useBenefitsApplicationsLogic = ({
 
       const issues = getRelevantIssues([], warnings, []);
       if (issues.length) {
-        throw new ValidationError(issues, applicationsApi.i18nPrefix);
+        throw new ValidationError(issues);
       }
 
       const context = { claim };
@@ -334,11 +306,11 @@ const useBenefitsApplicationsLogic = ({
   };
 
   return {
-    associate,
     benefitsApplications,
     complete,
     create,
     hasLoadedBenefitsApplicationAndWarnings,
+    invalidateApplicationsCache,
     isLoadingClaims,
     load,
     loadPage,

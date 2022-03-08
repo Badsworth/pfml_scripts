@@ -1,5 +1,6 @@
 resource "aws_sns_topic" "sns_resource_changes" {
-  name = "lwd-dfml-itsupport-aws-resource-changes"
+  name              = "lwd-dfml-itsupport-aws-resource-changes"
+  kms_master_key_id = data.aws_kms_key.main_kms_key.id
 }
 
 resource "aws_sns_topic_subscription" "sns_resource_changes" {

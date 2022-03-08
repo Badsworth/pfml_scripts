@@ -29,7 +29,7 @@ class TestPhoneNumberOptOut:
         mock_create_sns.return_value = mock_sns
 
         invalid_param = boto3.client("sns", "us-east-1").exceptions.InvalidParameterException(
-            error_response={"Error": {"Code": "InvalidParameter",}}, operation_name=""
+            error_response={"Error": {"Code": "InvalidParameter"}}, operation_name=""
         )
 
         mock_check_phone = mock_sns.check_if_phone_number_is_opted_out
@@ -55,7 +55,7 @@ class TestOptInPhoneNumber:
         mock_create_sns.return_value = mock_sns
 
         invalid_param = boto3.client("sns", "us-east-1").exceptions.InvalidParameterException(
-            error_response={"Error": {"Code": "InvalidParameter",}}, operation_name=""
+            error_response={"Error": {"Code": "InvalidParameter"}}, operation_name=""
         )
 
         mock_opt_in = mock_sns.opt_in_phone_number
@@ -71,7 +71,7 @@ class TestOptInPhoneNumber:
         mock_create_sns.return_value = mock_sns
 
         throttled = boto3.client("sns", "us-east-1").exceptions.ThrottledException(
-            error_response={"Error": {"Code": "Throttled",}}, operation_name=""
+            error_response={"Error": {"Code": "Throttled"}}, operation_name=""
         )
 
         mock_opt_in = mock_sns.opt_in_phone_number

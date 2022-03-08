@@ -65,6 +65,7 @@ export default {
     "Leave type": leaveTypes[0],
     "Approval time": APPROVAL_TIME.AFTER_FOURTEEN_DAYS,
     "Payment method": PAYMENT_METHOD.CHECK,
+    "Show holiday alert": false,
   },
   argTypes: {
     Payments: {
@@ -101,6 +102,11 @@ export default {
         options: leaveTypes,
       },
     },
+    "Show holiday alert": {
+      control: {
+        type: "boolean",
+      },
+    },
   },
 };
 
@@ -111,6 +117,7 @@ export const DefaultStory = (
     "Leave type": AbsencePeriodTypes;
     "Approval time": keyof typeof APPROVAL_TIME;
     "Payment method": keyof typeof PAYMENT_METHOD;
+    "Show holiday alert": boolean;
   }
 ) => {
   // Configure payments array
@@ -235,6 +242,12 @@ export const DefaultStory = (
       ),
       hasLoadedClaimDocuments: () => true,
       loadAll: () => new Promise(() => {}),
+    },
+    holidays: {
+      loadHolidays: () => new Promise(() => {}),
+      holidays: args["Show holiday alert"]
+        ? [{ name: "Memorial Day", date: "2022-05-30" }]
+        : [],
     },
     payments: {
       loadPayments: () => new Promise(() => {}),

@@ -83,8 +83,10 @@ class IAWWExtractStep(Step):
             logger.debug(f"Processing paid leave instruction record C={c_value}, I={i_value}")
 
             if c_leaveplan_value and i_leaveplan_value:
-                leave_plan_requested_absence_record = self.leave_plan_requested_absence_records_map.get(
-                    (c_leaveplan_value, i_leaveplan_value)
+                leave_plan_requested_absence_record = (
+                    self.leave_plan_requested_absence_records_map.get(
+                        (c_leaveplan_value, i_leaveplan_value)
+                    )
                 )
 
             if leave_plan_requested_absence_record:
@@ -175,7 +177,7 @@ class IAWWExtractStep(Step):
             FineosExtractVbiLeavePlanRequestedAbsence
         ).filter(
             FineosExtractVbiLeavePlanRequestedAbsence.reference_file_id
-            == reference_file.reference_file_id,
+            == reference_file.reference_file_id
         )
 
         for record in raw_leave_plan_requested_absence_records:
@@ -236,7 +238,7 @@ class IAWWExtractStep(Step):
         for raw_paid_leave_instruction_record in raw_paid_leave_instruction_records:
             self.increment(self.Metrics.PAID_LEAVE_INSTRUCTION_RECORD_COUNT)
             self.process_paid_leave_instruction_record(
-                raw_paid_leave_instruction_record, reference_file,
+                raw_paid_leave_instruction_record, reference_file
             )
 
         reference_file.processed_import_log_id = self.get_import_log_id()

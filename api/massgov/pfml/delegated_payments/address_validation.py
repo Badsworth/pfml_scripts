@@ -281,7 +281,7 @@ def _experian_soap_response_for_address(
 
 
 def _outcome_for_search_result(
-    result: Optional[sm.SearchResponse], msg: str, address: Address,
+    result: Optional[sm.SearchResponse], msg: str, address: Address
 ) -> Dict[str, Any]:
 
     verify_level = (

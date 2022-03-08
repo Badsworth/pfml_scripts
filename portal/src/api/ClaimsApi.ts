@@ -32,7 +32,7 @@ export default class ClaimsApi extends BaseApi {
     return routes.api.claims;
   }
 
-  get i18nPrefix() {
+  get namespace() {
     return "claims";
   }
 

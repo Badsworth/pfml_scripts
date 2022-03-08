@@ -346,7 +346,8 @@ def get_writeback_details(
 # This needs to be defined after the above methods
 # so that it can reference those methods directly
 WRITEBACK_SCENARIOS: Dict[
-    Optional[LkFineosWritebackTransactionStatus], Callable[[PaymentContainer], PaymentScenarioData],
+    Optional[LkFineosWritebackTransactionStatus],
+    Callable[[PaymentContainer], PaymentScenarioData],
 ] = {
     # This is a mapping from writeback status
     # to methods defined above which handle

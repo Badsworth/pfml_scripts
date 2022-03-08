@@ -151,22 +151,6 @@ def get_change_request_issues(
     if change_request.change_request_type == ChangeRequestType.MEDICAL_TO_BONDING:
         error_list.extend(get_medical_to_bonding_issues(change_request, claim))
 
-    # user can request a modification on an approved claim only
-    leave_request_approved_id = LeaveRequestDecision.APPROVED.leave_request_decision_id
-    leave_request_decision_ids = (
-        (ap.leave_request_decision_id for ap in claim.absence_periods)
-        if claim.absence_periods
-        else []
-    )
-    if leave_request_approved_id not in leave_request_decision_ids:
-        error_list.append(
-            ValidationErrorDetail(
-                type=IssueType.must_be_approved_claim,
-                message="Claim must have at least one approved absence period to submit a change request",
-                field="fineos_absence_id",
-            )
-        )
-
     start_date = (
         claim.absence_period_start_date
         if change_request.start_date is None
@@ -207,6 +191,20 @@ def get_withdrawal_issues(
                 field="end_date",
             )
         )
+    approved_id = LeaveRequestDecision.APPROVED.leave_request_decision_id
+    pending_id = LeaveRequestDecision.PENDING.leave_request_decision_id
+    absence_periods = claim.absence_periods if claim.absence_periods else []
+    approved_or_pending_absence_periods = [
+        ap for ap in absence_periods if ap.leave_request_decision_id in [approved_id, pending_id]
+    ]
+    if len(approved_or_pending_absence_periods) == 0:
+        error_list.append(
+            ValidationErrorDetail(
+                message="Claim must have at least one approved or pending absence period to submit a withdrawal",
+                type=IssueType.must_be_approved_or_pending_claim,
+                field="fineos_absence_id",
+            )
+        )
     return error_list
 
 
@@ -231,6 +229,7 @@ def get_modification_issues(
                 field="end_date",
             )
         )
+    error_list.extend(has_approved_absence_period(claim))
     return error_list
 
 
@@ -254,6 +253,7 @@ def get_medical_to_bonding_issues(
                 field="end_date",
             )
         )
+    error_list.extend(has_approved_absence_period(claim))
     absence_reason_ids = []
     birth_disability_id = AbsenceReasonQualifierOne.BIRTH_DISABILITY.absence_reason_qualifier_one_id
     if claim.absence_periods:
@@ -263,6 +263,25 @@ def get_medical_to_bonding_issues(
             ValidationErrorDetail(
                 message="Claimant did not apply for bonding leave in initial application",
                 type=IssueType.not_medical_to_bonding_claim,
+            )
+        )
+    return error_list
+
+
+def has_approved_absence_period(claim: Claim) -> List[ValidationErrorDetail]:
+    error_list: List[ValidationErrorDetail] = []
+    # user can request a modification only on a claim with an approved period
+    leave_request_approved_id = LeaveRequestDecision.APPROVED.leave_request_decision_id
+    absence_periods = claim.absence_periods if claim.absence_periods else []
+    approved_absence_periods = [
+        ap for ap in absence_periods if ap.leave_request_decision_id == leave_request_approved_id
+    ]
+    if len(approved_absence_periods) == 0:
+        error_list.append(
+            ValidationErrorDetail(
+                type=IssueType.must_be_approved_claim,
+                message="Claim must have at least one approved absence period to submit a change request",
+                field="fineos_absence_id",
             )
         )
     return error_list

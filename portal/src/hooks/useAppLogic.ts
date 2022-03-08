@@ -1,11 +1,14 @@
 /* eslint sort-keys: ["error", "asc"] */
+import useApplicationImportsLogic from "./useApplicationImportsLogic";
 import useAuthLogic from "./useAuthLogic";
+import useBenefitYearsLogic from "./useBenefitYearsLogic";
 import useBenefitsApplicationsLogic from "./useBenefitsApplicationsLogic";
 import useClaimsLogic from "./useClaimsLogic";
 import useDocumentsLogic from "./useDocumentsLogic";
 import useEmployersLogic from "./useEmployersLogic";
 import useErrorsLogic from "./useErrorsLogic";
 import useFeatureFlagsLogic from "./useFeatureFlagsLogic";
+import useHolidaysLogic from "./useHolidaysLogic";
 import usePaymentsLogic from "./usePaymentsLogic";
 import usePortalFlow from "./usePortalFlow";
 import useUsersLogic from "./useUsersLogic";
@@ -16,6 +19,11 @@ const useAppLogic = () => {
 
   // State representing currently visible errors and warnings
   const errorsLogic = useErrorsLogic({ portalFlow });
+
+  const applicationImports = useApplicationImportsLogic({
+    errorsLogic,
+    portalFlow,
+  });
   const auth = useAuthLogic({ errorsLogic, portalFlow });
 
   // State representing the Portal's user object.
@@ -26,6 +34,8 @@ const useAppLogic = () => {
     isLoggedIn: !!auth.isLoggedIn,
     portalFlow,
   });
+
+  const benefitYears = useBenefitYearsLogic({ errorsLogic });
 
   const benefitsApplications = useBenefitsApplicationsLogic({
     errorsLogic,
@@ -48,16 +58,22 @@ const useAppLogic = () => {
     setUser: users.setUser,
   });
 
+  const featureFlags = useFeatureFlagsLogic();
+
+  const holidays = useHolidaysLogic({
+    errorsLogic,
+  });
+
   const payments = usePaymentsLogic({
     errorsLogic,
   });
 
-  const featureFlags = useFeatureFlagsLogic();
-
   return {
     // `_errorsLogic` should not be used except for testing
     _errorsLogic: errorsLogic,
+    applicationImports,
     auth,
+    benefitYears,
     benefitsApplications,
     catchError: errorsLogic.catchError,
     claims,
@@ -68,6 +84,7 @@ const useAppLogic = () => {
     employers,
     errors: errorsLogic.errors,
     featureFlags,
+    holidays,
     payments,
     portalFlow,
     setErrors: errorsLogic.setErrors,

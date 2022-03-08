@@ -86,7 +86,7 @@ def run_tool(sftp_client: SFTPClient, raw_args: Any) -> Tuple[bool, Any]:
 def _unsupported_feature_error(
     from_path: str, to_path: str, msg: str = "Unsupported feature"
 ) -> None:
-    logger.error("Unsupported rename feature:", extra={"from_path": from_path, "to_path": to_path,})
+    logger.error("Unsupported rename feature:", extra={"from_path": from_path, "to_path": to_path})
     raise RuntimeError(msg)
 
 
@@ -125,8 +125,7 @@ def sftp_cp(sftp_client: SFTPClient, from_path: str, to_path: str) -> None:
     else:
         if not file_util.is_s3_path(to_path):
             logger.info(
-                "Renaming files on SFTP server",
-                extra={"from_path": from_path, "to_path": to_path,},
+                "Renaming files on SFTP server", extra={"from_path": from_path, "to_path": to_path}
             )
             _handle, tempfile_path = tempfile.mkstemp()
             sftp_client.get(from_path, tempfile_path)
@@ -158,7 +157,7 @@ def sftp_copy_dir(sftp_client: SFTPClient, from_dir: str, to_dir: str) -> None:
     else:
         if not file_util.is_s3_path(to_dir):
             logger.info(
-                "Renaming files on SFTP server", extra={"from_path": from_dir, "to_path": to_dir,},
+                "Renaming files on SFTP server", extra={"from_path": from_dir, "to_path": to_dir}
             )
 
             with tempfile.TemporaryDirectory() as directory:

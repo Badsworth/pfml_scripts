@@ -121,15 +121,6 @@ export const LeaveReason = (props: WithBenefitsApplicationProps) => {
             "contact-center-phone-link": (
               <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
             ),
-            "mass-benefits-guide-serious-health-condition": (
-              <a
-                target="_blank"
-                rel="noopener"
-                href={
-                  routes.external.massgov.benefitsGuide_seriousHealthCondition
-                }
-              />
-            ),
             p: <p />,
             ul: <ul className="usa-list" />,
             li: <li />,

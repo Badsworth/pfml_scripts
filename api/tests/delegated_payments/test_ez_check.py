@@ -144,7 +144,7 @@ def test_ez_check_field_validation_issues(field_class, description, length, valu
             "MA",
         ),
         # EzCheckCountryAbbreviationField
-        (ez_check.EzCheckCountryAbbreviationField, "Simple country abbreviation", 2, "US", "US",),
+        (ez_check.EzCheckCountryAbbreviationField, "Simple country abbreviation", 2, "US", "US"),
         # EzCheckZipCodeField
         (ez_check.EzCheckZipCodeField, "Five digit zip code integer", 10, 21091, "21091"),
         (ez_check.EzCheckZipCodeField, "Five digit zip code string", 10, "02109", "02109"),
@@ -296,7 +296,7 @@ def test_ez_check_header_success():
     assert str(header) == s.getvalue()
 
 
-@pytest.mark.parametrize("args, exception_type", (({}, TypeError), ({"header": None}, TypeError),))
+@pytest.mark.parametrize("args, exception_type", (({}, TypeError), ({"header": None}, TypeError)))
 def test_ez_check_file_initialization_failure(args, exception_type):
     with pytest.raises(exception_type):
         ez_check.EzCheckFile(**args)

@@ -6,7 +6,14 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql.schema import Index
 
 import massgov.pfml.util.logging
-from massgov.pfml.db.models.employees import Claim, Employee, ImportLog, Payment, ReferenceFile
+from massgov.pfml.db.models.employees import (
+    Claim,
+    Employee,
+    ImportLog,
+    Payment,
+    PaymentDetails,
+    ReferenceFile,
+)
 
 from ..lookup import LookupTable
 from .base import Base, TimestampMixin, deprecated_column, uuid_gen
@@ -152,6 +159,45 @@ class FineosExtractVpeiPaymentDetails(Base, TimestampMixin):
         peclassid,
         peindexid,
         unique=False,
+    )
+
+    reference_file = relationship(ReferenceFile)
+
+
+class FineosExtractVpeiPaymentLine(Base, TimestampMixin):
+    __tablename__ = "fineos_extract_vpei_payment_line"
+
+    vpei_payment_line_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
+    c = Column(Text)
+    i = Column(Text)
+    lastupdatedate = Column(Text)
+    c_osuser_updatedby = Column(Text)
+    i_osuser_updatedby = Column(Text)
+    amount_monamt = Column(Text)
+    amount_moncur = Column(Text)
+    integrtype = Column(Text)
+    linetype = Column(Text)
+    reference = Column(Text)
+    reservecatego = Column(Text)
+    reservetype = Column(Text)
+    sequencenumbe = Column(Text)
+    subtotals = Column(Text)
+    taxableincome = Column(Text)
+    usetocalcrule = Column(Text)
+    c_pymnteif_paymentlines = Column(Text)
+    i_pymnteif_paymentlines = Column(Text)
+    paymentdetailclassid = Column(Text)
+    paymentdetailindexid = Column(Text)
+    purchasedetailclassid = Column(Text)
+    purchasedetailindexid = Column(Text)
+    dateinterface = Column(Text)
+
+    reference_file_id = Column(
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
+    )
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
     )
 
     reference_file = relationship(ReferenceFile)
@@ -910,6 +956,30 @@ class MmarsPaymentRefunds(Base, TimestampMixin):
     payment = relationship(Payment)
 
 
+class PaymentLine(Base, TimestampMixin):
+    __tablename__ = "payment_line"
+    payment_line_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
+    vpei_payment_line_id = Column(
+        PostgreSQLUUID,
+        ForeignKey("fineos_extract_vpei_payment_line.vpei_payment_line_id"),
+        nullable=False,
+    )
+    payment_id = Column(PostgreSQLUUID, ForeignKey("payment.payment_id"), index=True)
+    payment_details_id = Column(
+        PostgreSQLUUID, ForeignKey("payment_details.payment_details_id"), index=True, nullable=True
+    )
+
+    payment_line_c_value = Column(Text, index=True, nullable=False)
+    payment_line_i_value = Column(Text, index=True, nullable=False)
+
+    amount = Column(Numeric(asdecimal=True), nullable=False)
+    line_type = Column(Text, nullable=False)
+
+    payment = relationship(Payment)
+    payment_details = relationship(PaymentDetails)
+
+
 class FineosWritebackDetails(Base, TimestampMixin):
     __tablename__ = "fineos_writeback_details"
     fineos_writeback_details_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
@@ -923,7 +993,7 @@ class FineosWritebackDetails(Base, TimestampMixin):
         nullable=False,
     )
     import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
-    writeback_sent_at = Column(TIMESTAMP(timezone=True), nullable=True,)
+    writeback_sent_at = Column(TIMESTAMP(timezone=True), nullable=True)
 
     payment = relationship(Payment, back_populates="fineos_writeback_details")
     transaction_status = relationship("LkFineosWritebackTransactionStatus")
@@ -933,7 +1003,7 @@ class FineosWritebackDetails(Base, TimestampMixin):
 # Because of how the app is loaded, we need
 # to define this here, after both classes are registered
 Payment.fineos_writeback_details = relationship(  # type: ignore
-    FineosWritebackDetails, back_populates="payment", order_by="FineosWritebackDetails.created_at",
+    FineosWritebackDetails, back_populates="payment", order_by="FineosWritebackDetails.created_at"
 )
 
 
@@ -1127,13 +1197,13 @@ class PaymentAuditReportType(LookupTable):
     )
 
     DEPRECATED_MAX_WEEKLY_BENEFITS = LkPaymentAuditReportType(
-        1, "Deprecated - Max Weekly Benefits", AuditReportAction.REJECTED, None,
+        1, "Deprecated - Max Weekly Benefits", AuditReportAction.REJECTED, None
     )
     DEPRECATED_DUA_DIA_REDUCTION = LkPaymentAuditReportType(
-        2, "Deprecated - DUA DIA Reduction (Deprecated)", AuditReportAction.INFORMATIONAL, None,
+        2, "Deprecated - DUA DIA Reduction (Deprecated)", AuditReportAction.INFORMATIONAL, None
     )
     DEPRECATED_LEAVE_PLAN_IN_REVIEW = LkPaymentAuditReportType(
-        3, "Deprecated - Leave Plan In Review", AuditReportAction.SKIPPED, None,
+        3, "Deprecated - Leave Plan In Review", AuditReportAction.SKIPPED, None
     )
     DOR_FINEOS_NAME_MISMATCH = LkPaymentAuditReportType(
         4,
@@ -1142,19 +1212,13 @@ class PaymentAuditReportType(LookupTable):
         "dor_fineos_name_mismatch_details",
     )
     DUA_ADDITIONAL_INCOME = LkPaymentAuditReportType(
-        5,
-        "DUA Additional Income",
-        AuditReportAction.INFORMATIONAL,
-        "dua_additional_income_details",
+        5, "DUA Additional Income", AuditReportAction.INFORMATIONAL, "dua_additional_income_details"
     )
     DIA_ADDITIONAL_INCOME = LkPaymentAuditReportType(
-        6,
-        "DIA Additional Income",
-        AuditReportAction.INFORMATIONAL,
-        "dia_additional_income_details",
+        6, "DIA Additional Income", AuditReportAction.INFORMATIONAL, "dia_additional_income_details"
     )
     PAYMENT_DATE_MISMATCH = LkPaymentAuditReportType(
-        7, "Payment Date Mismatch", AuditReportAction.REJECTED, "payment_date_mismatch_details",
+        7, "Payment Date Mismatch", AuditReportAction.REJECTED, "payment_date_mismatch_details"
     )
     EXCEEDS_26_WEEKS_TOTAL_LEAVE = LkPaymentAuditReportType(
         8,
@@ -1176,7 +1240,7 @@ class PaymentAuditReportDetails(Base, TimestampMixin):
         nullable=False,
     )
     details = Column(JSON, nullable=False)
-    added_to_audit_report_at = Column(TIMESTAMP(timezone=True), nullable=True,)
+    added_to_audit_report_at = Column(TIMESTAMP(timezone=True), nullable=True)
     import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
 
     payment = relationship(Payment)
@@ -1189,19 +1253,14 @@ class LkWithholdingType(Base):
     withholding_type_id = Column(Integer, primary_key=True, autoincrement=True)
     withholding_type_description = Column(Text, nullable=False)
 
-    def __init__(
-        self, withholding_type_id, withholding_type_description,
-    ):
+    def __init__(self, withholding_type_id, withholding_type_description):
         self.withholding_type_id = withholding_type_id
         self.withholding_type_description = withholding_type_description
 
 
 class WithholdingType(LookupTable):
     model = LkWithholdingType
-    column_names = (
-        "withholding_type_id",
-        "withholding_type_description",
-    )
+    column_names = ("withholding_type_id", "withholding_type_description")
 
     FEDERAL = LkWithholdingType(1, "Federal Tax")
     STATE = LkWithholdingType(2, "State Tax")
@@ -1342,6 +1401,7 @@ class Pfml1099(Base, TimestampMixin):
     correction_ind = Column(Boolean, nullable=False)
     s3_location = Column(Text, nullable=True)
     fineos_status = Column(Text, nullable=True, default="New")
+    irs_submission_date = Column(Date, nullable=True)
 
     employee = relationship(Employee)
 

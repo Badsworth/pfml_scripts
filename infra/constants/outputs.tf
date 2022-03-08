@@ -207,7 +207,7 @@ output "slackbot_channels" {
 }
 
 output "bucket_replication_environment" {
-  value = "test"
+  value = "prod"
 }
 
 # Env Var mappings for ECS Tasks
@@ -248,6 +248,54 @@ output "admin_portal_waf_whitelist" {
   ]
 }
 
+# High risk country codes to block on WAFs
+output "high_risk_country_codes" {
+  value = [
+    "AF", # Afghanistan
+    "DZ", # Algeria
+    "BY", # Belarus
+    "BI", # Burundi
+    "CM", # Cameroon
+    "CF", # Central African Republic
+    "TD", # Chad
+    "CN", # China
+    "CO", # Colombia
+    "CD", # Democratic Republic of the Congo
+    "CU", # Cuba
+    "EG", # Egypt
+    "SV", # El Savador
+    "ER", # Eritrea
+    "HT", # Haiti
+    "HN", # Honduras
+    "HK", # Hong Kong
+    "IR", # Iran
+    "IQ", # Iraq
+    "IL", # Israel
+    "KE", # Kenya
+    "KP", # Korea (the Democratic People's Republic of)
+    "LB", # Lebanon
+    "LY", # Libya
+    "ML", # Mali
+    "MR", # Mauritania
+    "MX", # Mexico
+    "MM", # Myanmar 
+    "NE", # Niger
+    "NG", # Nigeria
+    "PK", # Pakistan
+    "PH", # Philippines
+    "RU", # Russia
+    "SA", # Saudi Arabia
+    "SO", # Somalia
+    "SS", # South Sudan
+    "SY", # Syria
+    "TH", # Thailand
+    "UA", # Ukraine
+    "VE", # Venezuela
+    "YE", # Yemen
+    "ZW", # Zimbabwe 
+  ]
+}
+
 #
 # Environments where multi-factor authentication / 2FA should be enabled
 #
@@ -279,4 +327,22 @@ output "newrelic_account_id" {
 output "newrelic_trusted_account_key" {
   description = "EOLWD's New Relic parent account number"
   value       = "1606654"
+}
+
+#
+# Import manually created s3 buckets for management in s3.tf
+#
+output "import_buckets" {
+  value = [
+    "aws-glue-assets-498823821309-us-east-1",
+    "aws-glue-scripts-498823821309-us-east-1",
+    "aws-glue-temporary-498823821309-us-east-1",
+    "massgov-pfml-demo-business-intelligence-tool",
+    "cf-templates-rvbkfcj4nho2-us-east-2",
+    "cf-templates-rvbkfcj4nho2-us-east-1",
+    "config-bucket-498823821309",
+    "test-eotss-aws-cloudopsteam-config-tags",
+    "smx-pfml-test-db-testing",
+    "massgov-pfml-test-experian-soap"
+  ]
 }

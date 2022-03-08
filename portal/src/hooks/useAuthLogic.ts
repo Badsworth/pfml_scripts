@@ -113,7 +113,7 @@ const useAuthLogic = ({
     );
 
     if (validationIssues) {
-      errorsLogic.catchError(new ValidationError(validationIssues, "auth"));
+      errorsLogic.catchError(new ValidationError(validationIssues));
       return false;
     }
 
@@ -153,7 +153,7 @@ const useAuthLogic = ({
     );
 
     if (validationIssues) {
-      errorsLogic.catchError(new ValidationError(validationIssues, "auth"));
+      errorsLogic.catchError(new ValidationError(validationIssues));
       return;
     }
 
@@ -205,7 +205,7 @@ const useAuthLogic = ({
     const trimmedCode = code ? code.trim() : "";
     const validationIssues = combineValidationIssues(validateCode(trimmedCode));
     if (validationIssues) {
-      errorsLogic.catchError(new ValidationError(validationIssues, "mfa"));
+      errorsLogic.catchError(new ValidationError(validationIssues));
       return;
     }
 
@@ -223,12 +223,17 @@ const useAuthLogic = ({
           new CognitoAuthError(error, {
             field: "code",
             type: "attemptsExceeded",
+            namespace: "auth",
           })
         );
         return;
       }
       errorsLogic.catchError(
-        new CognitoAuthError(error, { field: "code", type: "invalidMFACode" })
+        new CognitoAuthError(error, {
+          field: "code",
+          type: "invalidMFACode",
+          namespace: "auth",
+        })
       );
       return;
     }
@@ -390,7 +395,7 @@ const useAuthLogic = ({
     );
 
     if (validationIssues) {
-      errorsLogic.catchError(new ValidationError(validationIssues, "auth"));
+      errorsLogic.catchError(new ValidationError(validationIssues));
       return;
     }
 
@@ -427,7 +432,7 @@ const useAuthLogic = ({
     );
 
     if (validationIssues) {
-      errorsLogic.catchError(new ValidationError(validationIssues, "auth"));
+      errorsLogic.catchError(new ValidationError(validationIssues));
       return;
     }
 
@@ -523,7 +528,7 @@ const useAuthLogic = ({
     );
 
     if (validationIssues) {
-      errorsLogic.catchError(new ValidationError(validationIssues, "auth"));
+      errorsLogic.catchError(new ValidationError(validationIssues));
       return;
     }
 
@@ -561,6 +566,7 @@ function validateUsername(username?: string) {
     return {
       field: "username",
       type: "required",
+      namespace: "auth",
     };
   }
 }
@@ -570,6 +576,7 @@ function validatePassword(password?: string) {
     return {
       field: "password",
       type: "required",
+      namespace: "auth",
     };
   }
 }
@@ -592,7 +599,7 @@ function getForgotPasswordError(error: CognitoError) {
   if (error.code === "NotAuthorizedException") {
     issue = getNotAuthorizedExceptionIssue(error, "forgotPassword");
   } else if (errorCodeToIssueMap[error.code]) {
-    issue = errorCodeToIssueMap[error.code];
+    issue = { ...errorCodeToIssueMap[error.code], namespace: "auth" };
   }
 
   return new CognitoAuthError(error, issue);
@@ -606,7 +613,10 @@ function getForgotPasswordError(error: CognitoError) {
  */
 function getLoginError(error: CognitoError) {
   let issue;
-  const invalidParameterIssue = { type: "invalidParametersFallback" };
+  const invalidParameterIssue = {
+    type: "invalidParametersFallback",
+    namespace: "auth",
+  };
 
   if (error.code === "NotAuthorizedException") {
     issue = getNotAuthorizedExceptionIssue(error, "login");
@@ -618,7 +628,11 @@ function getLoginError(error: CognitoError) {
     issue = invalidParameterIssue;
   } else if (error.code === "PasswordResetRequiredException") {
     // This error triggers when an admin initiates a password reset
-    issue = { field: "password", type: "resetRequiredException" };
+    issue = {
+      field: "password",
+      type: "resetRequiredException",
+      namespace: "auth",
+    };
   }
 
   return new CognitoAuthError(error, issue);
@@ -643,7 +657,7 @@ function getResetPasswordError(error: CognitoError) {
   };
 
   if (errorCodeToIssueMap[error.code]) {
-    issue = errorCodeToIssueMap[error.code];
+    issue = { ...errorCodeToIssueMap[error.code], namespace: "auth" };
   } else if (error.code === "InvalidPasswordException") {
     issue = getInvalidPasswordExceptionIssue(error);
   }
@@ -665,7 +679,7 @@ function getVerifyAccountError(error: CognitoError) {
   };
 
   if (errorCodeToIssueMap[error.code]) {
-    issue = errorCodeToIssueMap[error.code];
+    issue = { ...errorCodeToIssueMap[error.code], namespace: "auth" };
   }
 
   return new CognitoAuthError(error, issue);
@@ -705,10 +719,10 @@ function getInvalidPasswordExceptionIssue(error: CognitoError): Issue {
   if (error.message.match(/password cannot be used for security reasons/)) {
     // For this case, a password may already conform to the password format
     // requirements, so showing the password format error would be confusing
-    return { field: "password", type: "insecure" };
+    return { field: "password", type: "insecure", namespace: "auth" };
   }
 
-  return { field: "password", type: "invalid" };
+  return { field: "password", type: "invalid", namespace: "auth" };
 }
 
 /**
@@ -741,16 +755,16 @@ function getNotAuthorizedExceptionIssue(
     error.message.match(/Request not allowed due to security reasons/) ||
     error.message.match(/Unable to login because of security reasons/)
   ) {
-    return { type: `attemptBlocked_${context}` };
+    return { type: `attemptBlocked_${context}`, namespace: "auth" };
   }
   if (error.message.match(/Password attempts exceeded/)) {
-    return { type: "attemptsLimitExceeded_login" };
+    return { type: "attemptsLimitExceeded_login", namespace: "auth" };
   }
   if (error.message.match(/Incorrect username or password/)) {
-    return { type: "incorrectEmailOrPassword" };
+    return { type: "incorrectEmailOrPassword", namespace: "auth" };
   }
 
-  return { message: error.message };
+  return { message: error.message, namespace: "auth" };
 }
 
 export default useAuthLogic;

@@ -28,7 +28,7 @@ class EmployerLoadConfig(massgov.pfml.util.pydantic.PydanticBaseSettings):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Load Employers to FINEOS",)
+    parser = argparse.ArgumentParser(description="Load Employers to FINEOS")
     parser.add_argument(
         "--process-id",
         help="Identifier for the update process task. Need when multiple tasks are running simultaneously.",

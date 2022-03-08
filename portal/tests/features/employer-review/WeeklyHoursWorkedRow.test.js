@@ -1,5 +1,4 @@
 import { render, screen } from "@testing-library/react";
-import ErrorInfo from "../../../src/models/ErrorInfo";
 import React from "react";
 import WeeklyHoursWorkedRow from "../../../src/features/employer-review/WeeklyHoursWorkedRow";
 import userEvent from "@testing-library/user-event";
@@ -97,9 +96,7 @@ describe("WeeklyHoursWorkedRow", () => {
 
   describe("if there is a form error", () => {
     it("automatically opens the amendment form", () => {
-      const errors = [
-        new ErrorInfo({ name: "My error", message: "My message" }),
-      ];
+      const errors = [new Error("Test")];
 
       render(<WeeklyHoursWorkedRow {...defaultProps} errors={errors} />);
 
@@ -111,9 +108,7 @@ describe("WeeklyHoursWorkedRow", () => {
     });
 
     it("allows closing the opened amendment form", () => {
-      const errors = [
-        new ErrorInfo({ name: "My error", message: "My message" }),
-      ];
+      const errors = [new Error("Test")];
       render(<WeeklyHoursWorkedRow {...defaultProps} errors={errors} />);
 
       clickCancelAmendButton();

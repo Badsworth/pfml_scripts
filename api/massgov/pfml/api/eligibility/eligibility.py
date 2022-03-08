@@ -132,11 +132,11 @@ def retrieve_financial_eligibility(
     application_submitted_date: date,
     employment_status: EligibilityEmploymentStatus,
 ) -> EligibilityResponse:
-    """ Checks to see if a Benefit Year exists for the given employee's leave start date,
-        If one exists, use persisted values for the employee's total wages and employer IAWW
-        to serve financial eligibilty request.
-        Otherwise, Compute financial eligibilty to serve the request and store on a new
-        Benefit Year values for the employee's total wages and employer IAWW.
+    """Checks to see if a Benefit Year exists for the given employee's leave start date,
+    If one exists, use persisted values for the employee's total wages and employer IAWW
+    to serve financial eligibilty request.
+    Otherwise, Compute financial eligibilty to serve the request and store on a new
+    Benefit Year values for the employee's total wages and employer IAWW.
     """
     meta: EligibilityLogExtra = {
         "employee_id": employee_id,

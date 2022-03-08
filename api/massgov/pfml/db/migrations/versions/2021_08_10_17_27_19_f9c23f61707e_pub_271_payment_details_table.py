@@ -37,7 +37,7 @@ def upgrade():
         sa.Column("period_start_date", sa.Date(), nullable=True),
         sa.Column("period_end_date", sa.Date(), nullable=True),
         sa.Column("amount", sa.Numeric(), nullable=False),
-        sa.ForeignKeyConstraint(["payment_id"], ["payment.payment_id"],),
+        sa.ForeignKeyConstraint(["payment_id"], ["payment.payment_id"]),
         sa.PrimaryKeyConstraint("payment_details_id", "payment_id"),
     )
     # ### end Alembic commands ###

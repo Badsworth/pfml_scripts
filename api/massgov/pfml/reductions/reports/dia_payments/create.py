@@ -33,9 +33,7 @@ DFML_REPORT_FILENAME_PREFIX = "DIA_DFML_"
 DFML_REPORT_FILENAME_TIME_FORMAT = "%Y%m%d%H%M"
 DFML_REPORT_TIME_FORMAT = "%m/%d/%Y"
 
-DFML_REPORT_CSV_ENCODERS: csv_util.Encoders = {
-    date: lambda d: d.strftime("%m/%d/%Y"),
-}
+DFML_REPORT_CSV_ENCODERS: csv_util.Encoders = {date: lambda d: d.strftime("%m/%d/%Y")}
 
 
 def _get_data_for_report(db_session: db.Session) -> List[DFMLReportRowData]:
@@ -65,10 +63,10 @@ def _get_dfml_report_file_name() -> str:
 
 
 def _write_dfml_report_rows(
-    output_file: IO[str], reduction_payments_info: List[Union[DFMLReportRow, Dict[str, str]]],
+    output_file: IO[str], reduction_payments_info: List[Union[DFMLReportRow, Dict[str, str]]]
 ) -> None:
     writer = pydantic_csv_util.DataWriter(
-        output_file, row_type=DFMLReportRow, encoders=DFML_REPORT_CSV_ENCODERS,
+        output_file, row_type=DFMLReportRow, encoders=DFML_REPORT_CSV_ENCODERS
     )
     writer.writeheader()
     writer.writerows(reduction_payments_info)
@@ -78,7 +76,7 @@ def create_report_new_dia_payments_to_dfml(db_session: db.Session, log_entry: Lo
     config = get_s3_config()
 
     s3_file_path = os.path.join(
-        config.s3_dfml_outbound_directory_path, _get_dfml_report_file_name() + ".csv",
+        config.s3_dfml_outbound_directory_path, _get_dfml_report_file_name() + ".csv"
     )
     s3_dest = os.path.join(config.s3_bucket_uri, s3_file_path)
 

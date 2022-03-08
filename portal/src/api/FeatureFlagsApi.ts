@@ -6,7 +6,7 @@ export default class FeatureFlagApi extends BaseApi {
     return "";
   }
 
-  get i18nPrefix() {
+  get namespace() {
     return "flags";
   }
 

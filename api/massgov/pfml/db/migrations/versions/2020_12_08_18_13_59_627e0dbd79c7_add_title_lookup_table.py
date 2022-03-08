@@ -39,8 +39,8 @@ def upgrade():
         sa.Column("manager_id", sa.Text(), nullable=True),
         sa.Column("worksite_id", sa.Text(), nullable=True),
         sa.Column("occupation_qualifier", sa.Text(), nullable=True),
-        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"],),
-        sa.ForeignKeyConstraint(["employer_id"], ["employer.employer_id"],),
+        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"]),
+        sa.ForeignKeyConstraint(["employer_id"], ["employer.employer_id"]),
         sa.PrimaryKeyConstraint("employee_occupation_id"),
     )
     op.create_index(

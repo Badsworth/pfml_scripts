@@ -119,7 +119,7 @@ class FineosExtractStep(Step):
         self.active_extract_data_date_str = None
 
     def get_import_type(self) -> str:
-        """ Use the reference file type description for an import log type distinction """
+        """Use the reference file type description for an import log type distinction"""
         return self.extract_config.reference_file_type.reference_file_type_description
 
     def run_step(self) -> None:

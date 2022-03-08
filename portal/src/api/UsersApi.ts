@@ -23,7 +23,7 @@ export default class UsersApi extends BaseApi {
     return headers;
   }
 
-  get i18nPrefix() {
+  get namespace() {
     return "users";
   }
 

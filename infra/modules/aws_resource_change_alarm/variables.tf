@@ -15,7 +15,7 @@ variable "metric_name" {
   type        = string
 }
 
-### metric filter varilables
+### metric filter variables
 
 variable "pattern" {
   description = "pattern of the metric filter"

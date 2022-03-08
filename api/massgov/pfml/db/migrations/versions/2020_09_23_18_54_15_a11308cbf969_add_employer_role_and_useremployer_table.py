@@ -22,8 +22,8 @@ def upgrade():
         "link_user_leave_administrator",
         sa.Column("user_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("employer_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.ForeignKeyConstraint(["employer_id"], ["employer.employer_id"],),
-        sa.ForeignKeyConstraint(["user_id"], ["user.user_id"],),
+        sa.ForeignKeyConstraint(["employer_id"], ["employer.employer_id"]),
+        sa.ForeignKeyConstraint(["user_id"], ["user.user_id"]),
         sa.PrimaryKeyConstraint("user_id", "employer_id"),
     )
     # ### end Alembic commands ###

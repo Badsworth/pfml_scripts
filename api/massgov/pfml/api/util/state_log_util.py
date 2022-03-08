@@ -383,7 +383,7 @@ def get_latest_state_log_in_flow(
 
 
 def get_latest_state_log_in_end_state(
-    associated_model: AssociatedModel, end_state: LkState, db_session: db.Session,
+    associated_model: AssociatedModel, end_state: LkState, db_session: db.Session
 ) -> Optional[StateLog]:
     # Get params needed for latest state log query
     query_param_helper = build_query_param_helper(associated_model)
@@ -398,9 +398,9 @@ def get_latest_state_log_in_end_state(
     # WHERE state_log.end_state_id={end_state.state_id} AND
     #       latest_state_log.employee_id={associated_model.employee_id}
     # JOIN latest_state_log ON (state_log.state_log_id = latest_state_log.state_log_id)
-    latest_state_log: Optional[StateLog] = db_session.query(StateLog).join(LatestStateLog).filter(
-        *filter_params
-    ).one_or_none()
+    latest_state_log: Optional[StateLog] = (
+        db_session.query(StateLog).join(LatestStateLog).filter(*filter_params).one_or_none()
+    )
     logger.debug(
         "Latest state log query result - associated class: %s, associated model id: %s, end state: %s (%s), id: %s",
         AssociatedClass.get_associated_type(associated_model).value,
@@ -604,8 +604,7 @@ def build_outcome(
 def process_state(
     prior_state: LkState, associated_model: AssociatedModel, db_session: db.Session
 ) -> Generator[None, None, None]:
-    """Log an exception if an error occurs while processing a state
-    """
+    """Log an exception if an error occurs while processing a state"""
 
     try:
         yield

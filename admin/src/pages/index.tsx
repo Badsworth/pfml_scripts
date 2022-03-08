@@ -59,6 +59,9 @@ export default function Maintenance() {
       await patchAdminFlagsByName({ name: "maintenance" }, { enabled: false });
       setShowConfirmationDialog(false);
     }
+
+  type options = {
+    name?: string;
   };
 
   // Functions to format table.

@@ -57,7 +57,7 @@ def admin_token():
             message="Invalid code while attempting to acquire a token",
             errors=[
                 ValidationErrorDetail(
-                    field="auth_uri_res", message="Value error", type=IssueType.invalid,
+                    field="auth_uri_res", message="Value error", type=IssueType.invalid
                 )
             ],
         ).to_api_response()
@@ -72,13 +72,13 @@ def admin_token():
             message="Unknown error while attempting to acquire a token",
             errors=[
                 ValidationErrorDetail(
-                    field="auth_uri_res", message=tokens["error"], type=IssueType.invalid,
+                    field="auth_uri_res", message=tokens["error"], type=IssueType.invalid
                 )
             ],
         ).to_api_response()
 
     return response_util.success_response(
-        data=AdminTokenResponse.parse_obj(tokens).__dict__, message="Successfully logged in!",
+        data=AdminTokenResponse.parse_obj(tokens).__dict__, message="Successfully logged in!"
     ).to_api_response()
 
 
@@ -90,7 +90,7 @@ def admin_login():
         raise NotFound
     ensure(READ, azure_user)
     return response_util.success_response(
-        data=azure_user_response(azure_user), message="Successfully logged in!",
+        data=azure_user_response(azure_user), message="Successfully logged in!"
     ).to_api_response()
 
 
@@ -99,7 +99,7 @@ def admin_logout():
     if logout_uri is None:
         raise ServiceUnavailable(description=SERVICE_UNAVAILABLE_MESSAGE)
     return response_util.success_response(
-        data={"logout_uri": logout_uri}, message="Retrieved logout url!",
+        data={"logout_uri": logout_uri}, message="Retrieved logout url!"
     ).to_api_response()
 
 
@@ -176,7 +176,8 @@ def admin_flags_patch(name):
         db_session.commit()
 
     return response_util.success_response(
-        message="Successfully updated feature flag", data=FlagRequest.from_orm(flag).dict(),
+        message="Successfully updated feature flag",
+        data=FlagRequest.from_orm(flag).dict(),
     ).to_api_response()
 
 

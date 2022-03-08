@@ -23,7 +23,7 @@ else:
     StrEnumType = types.TypeDecorator
 
 # (PostgreSQLUUID) https://github.com/dropbox/sqlalchemy-stubs/issues/94
-PostgreSQLUUID = cast("types.TypeEngine[uuid.UUID]", UUID(as_uuid=True),)
+PostgreSQLUUID = cast("types.TypeEngine[uuid.UUID]", UUID(as_uuid=True))
 
 
 class StrEnum(StrEnumType):

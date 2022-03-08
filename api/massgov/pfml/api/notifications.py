@@ -91,10 +91,7 @@ def notifications_post():
             )
 
             if employer:
-                log_attributes = {
-                    **log_attributes,
-                    "employer_id": str(employer.employer_id),
-                }
+                log_attributes = {**log_attributes, "employer_id": str(employer.employer_id)}
                 newrelic.agent.add_custom_parameter("employer_id", employer.employer_id)
         except MultipleResultsFound:
             return _err400_multiple_employer_feins_found(notification_request, log_attributes)

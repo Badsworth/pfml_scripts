@@ -5,37 +5,32 @@ import {
   CognitoAuthError,
   DocumentsLoadError,
   DocumentsUploadError,
-  Issue,
+  InternalServerError,
   LeaveAdminForbiddenError,
   NetworkError,
   ValidationError,
 } from "../errors";
-import React, { useState } from "react";
-import ErrorInfo from "../models/ErrorInfo";
 import { PortalFlow } from "./usePortalFlow";
-import { Trans } from "react-i18next";
 import { get } from "lodash";
 import routes from "../routes";
 import tracker from "../services/tracker";
-import { useTranslation } from "../locales/i18n";
+import { useState } from "react";
 
 /**
  * React hook for creating and managing the state of app errors
  */
 const useErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
-  const { i18n, t } = useTranslation();
-
   /**
    * State representing both application errors and
    * validation errors
    */
-  const [errors, setErrors] = useState<ErrorInfo[]>([]);
-  const addError = (error: ErrorInfo) => {
+  const [errors, setErrors] = useState<Error[]>([]);
+  const addError = (error: Error) => {
     setErrors((prevErrors) => [...prevErrors, error]);
   };
 
   /**
-   * Converts a JavaScript error into an ErrorInfo object and adds it to the app error collection
+   * Store and track the JS error. UI components then manage how the error gets displayed.
    */
   const catchError = (error: unknown) => {
     if (error instanceof AuthSessionMissingError) {
@@ -53,9 +48,12 @@ const useErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
       handleLeaveAdminForbiddenError(error);
     } else if (error instanceof ClaimWithdrawnError) {
       handleClaimWithdrawnError(error);
-    } else {
+    } else if (error instanceof Error) {
       console.error(error);
       handleError(error);
+    } else {
+      console.error(error);
+      handleError(new InternalServerError());
     }
   };
 
@@ -72,173 +70,17 @@ const useErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
    * that they need to go back and complete all required fields
    */
   const clearRequiredFieldErrors = () => {
-    const remainingErrors = errors.filter((error) => error.type !== "required");
-
-    setErrors(remainingErrors);
-  };
-
-  /**
-   * Convert an API error/warning into a user friendly message
-   * @param i18nPrefix - prefix used in the i18n key
-   * @param [tOptions] - additional key/value pairs used in the i18n message interpolation
-   * @example getMessageFromIssue(issue, "applications");
-   */
-  const getMessageFromIssue = (
-    issue: Issue,
-    i18nPrefix: string,
-    tOptions?: { [key: string]: unknown }
-  ) => {
-    const { field, message, rule, type } = issue;
-    let issueMessageKey;
-
-    if (field) {
-      // Remove array indexes from the field since the array index is not relevant for the error message
-      // i.e. convert foo[0].bar[1].cat to foo.bar.cat
-      issueMessageKey = `errors.${i18nPrefix}.${field}.${type}`
-        .replace(/\[(\d+)\]/g, "")
-        // Also convert foo.0.bar.1.cat to foo.bar.cat in case
-        .replace(/\.(\d+)/g, "");
-    } else if (rule) {
-      issueMessageKey = `errors.${i18nPrefix}.rules.${rule}`;
-    } else if (type) {
-      issueMessageKey = `errors.${i18nPrefix}.${type}`;
-    }
-
-    const htmlErrorMessage = maybeGetHtmlErrorMessage(
-      type,
-      issueMessageKey,
-      tOptions
-    );
-    if (htmlErrorMessage) return htmlErrorMessage;
-
-    // 1. Display a field or rule-level message if present:
-    //    a. Field-level: "errors.applications.ssn.required" => "Please enter your SSN."
-    //    b. Rule-level: "errors.applications.rules.min_leave_periods" => "At least one leave period is required."
-    if (issueMessageKey && i18n.exists(issueMessageKey)) {
-      return t(issueMessageKey, { field });
-    }
-
-    // 3. Display generic message if present: "errors.validationFallback.pattern" => "Field (ssn) is invalid format."
-    if (type) {
-      const fallbackKey = `errors.validationFallback.${type}`;
-      const fallbackMessage = t(fallbackKey, { field });
-      if (fallbackMessage !== fallbackKey) {
-        return fallbackMessage;
+    const updatedErrors = errors.map((error) => {
+      if (error instanceof ValidationError) {
+        return new ValidationError(
+          error.issues.filter((issue) => issue.type !== "required")
+        );
       }
-    }
 
-    // 4. Display API message if present
-    // 5. Otherwise fallback to a generic validation failure message
-    return message || t("errors.validationFallback.invalid", { field });
-  };
+      return error;
+    });
 
-  /**
-   * Create the custom HTML error message, if the given error type requires HTML formatting/links
-   * @param [tOptions] - additional key/value pairs used in the i18n message interpolation
-   */
-  const maybeGetHtmlErrorMessage = (
-    type?: string,
-    issueMessageKey?: string,
-    tOptions?: { [key: string]: unknown }
-  ) => {
-    if (!type || !issueMessageKey || !i18n.exists(issueMessageKey)) return;
-
-    // TODO (CP-1532): Remove once links in error messages are fully supported
-    if (type === "fineos_case_creation_issues") {
-      return (
-        <Trans
-          i18nKey={issueMessageKey}
-          components={{
-            "mass-gov-form-link": (
-              <a
-                target="_blank"
-                rel="noreferrer noopener"
-                href={routes.external.massgov.caseCreationErrorGuide}
-              />
-            ),
-          }}
-        />
-      );
-    }
-
-    if (type === "contains_v1_and_v2_eforms") {
-      return (
-        <Trans
-          i18nKey={issueMessageKey}
-          components={{
-            "contact-center-phone-link": (
-              <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-            ),
-            /* The h3 header has content defined in en-US.js. */
-            /* eslint-disable jsx-a11y/heading-has-content */
-            h3: <h3 />,
-            ul: <ul />,
-            li: <li />,
-          }}
-        />
-      );
-    }
-
-    // TODO (CP-1532): Remove once links in error messages are fully supported
-    if (type === "intermittent_interval_maximum") {
-      return (
-        <Trans
-          i18nKey={issueMessageKey}
-          components={{
-            "intermittent-leave-guide": (
-              <a
-                target="_blank"
-                rel="noreferrer noopener"
-                href={routes.external.massgov.intermittentLeaveGuide}
-              />
-            ),
-          }}
-        />
-      );
-    }
-
-    // TODO (CP-1532): Remove once links in error messages are fully supported
-    if (type === "unauthorized_leave_admin") {
-      return (
-        <Trans
-          i18nKey={issueMessageKey}
-          components={{
-            "add-org-link": <a href={routes.employers.addOrganization} />,
-          }}
-        />
-      );
-    }
-
-    if (type === "employer_verification_data_required") {
-      return (
-        <Trans
-          i18nKey={issueMessageKey}
-          components={{
-            "file-a-return-link": (
-              <a
-                target="_blank"
-                rel="noreferrer noopener"
-                href={routes.external.massgov.zeroBalanceEmployer}
-              />
-            ),
-          }}
-        />
-      );
-    }
-
-    if (type === "fineos_claim_withdrawn") {
-      return (
-        <Trans
-          i18nKey={issueMessageKey}
-          tOptions={tOptions}
-          components={{
-            "contact-center-phone-link": (
-              <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-            ),
-          }}
-        />
-      );
-    }
+    setErrors(updatedErrors);
   };
 
   /**
@@ -256,15 +98,8 @@ const useErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
   /**
    * Add and track the Error
    */
-  const handleError = (error: unknown) => {
-    const errorName = error instanceof Error ? error.name : "";
-
-    const errorInfo = new ErrorInfo({
-      name: errorName,
-      message: t("errors.caughtError", { context: errorName }),
-    });
-
-    addError(errorInfo);
+  const handleError = (error: Error) => {
+    addError(error);
 
     // Error may include the response data (potentially PII)
     // we should avoid tracking the entire error in New Relic
@@ -292,19 +127,7 @@ const useErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
     const issue =
       error instanceof DocumentsUploadError ? error.issues[0] : undefined;
 
-    const errorInfo = new ErrorInfo({
-      name: error.name,
-      message: issue
-        ? getMessageFromIssue(issue, "documents")
-        : t("errors.caughtError", { context: error.name }),
-      meta: {
-        application_id: error.application_id,
-        file_id:
-          error instanceof DocumentsUploadError ? error.file_id : undefined,
-      },
-    });
-
-    addError(errorInfo);
+    addError(error);
 
     tracker.trackEvent(error.name, {
       issueField: get(issue, "field", ""),
@@ -318,14 +141,8 @@ const useErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
    */
   const handleClaimWithdrawnError = (error: ClaimWithdrawnError) => {
     const issue = error.issues[0];
-    const errorInfo = new ErrorInfo({
-      name: error.name,
-      message: getMessageFromIssue(issue, "claimStatus", {
-        absenceId: error.fineos_absence_id,
-      }),
-    });
 
-    addError(errorInfo);
+    addError(error);
 
     tracker.trackEvent(error.name, {
       issueField: get(issue, "field", ""),
@@ -338,17 +155,7 @@ const useErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
    * Add and track issues in a ValidationError
    */
   const handleValidationError = (error: ValidationError) => {
-    error.issues.forEach((issue) => {
-      const errorInfo = new ErrorInfo({
-        field: issue.field,
-        message: getMessageFromIssue(issue, error.i18nPrefix),
-        name: error.name,
-        rule: issue.rule,
-        type: issue.type,
-      });
-
-      addError(errorInfo);
-    });
+    addError(error);
 
     // ValidationError can be expected, so to avoid adding noise to the
     // "Errors" section in New Relic, we track these as custom events instead
@@ -367,18 +174,7 @@ const useErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
    * Add and track issues in a CognitoAuthError
    */
   const handleCognitoAuthError = (error: CognitoAuthError) => {
-    const issue = error.issues[0];
-
-    const errorInfo = new ErrorInfo({
-      field: issue?.field,
-      name: error.name,
-      message:
-        typeof issue === "undefined"
-          ? t("errors.network")
-          : getMessageFromIssue(issue, "auth"),
-    });
-
-    addError(errorInfo);
+    addError(error);
 
     tracker.trackEvent("AuthError", {
       errorCode: error.cognitoError.code,

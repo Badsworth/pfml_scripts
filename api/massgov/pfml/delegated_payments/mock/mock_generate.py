@@ -41,7 +41,7 @@ def main():
 
     # payment extract
     fineos_extract_data.generate_payment_extract_files(
-        scenario_dataset, fineos_data_export_path, get_now_us_eastern(), round=1,
+        scenario_dataset, fineos_data_export_path, get_now_us_eastern(), round=1
     )
 
 

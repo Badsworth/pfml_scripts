@@ -398,7 +398,7 @@ def test_fineos_updates_missing_org_customer_no(
 
 
 def test_fineos_updates_incorrect_org_customer_no(
-    test_db_session, initialize_factories_session, emp_updates_path_incorrect_org_no,
+    test_db_session, initialize_factories_session, emp_updates_path_incorrect_org_no
 ):
     employee = EmployeeFactory(employee_id="4376896b-596c-4c86-a653-1915cf997a84")
     employer = EmployerFactory(
@@ -438,7 +438,7 @@ def test_fineos_updates_incorrect_org_customer_no(
 
 
 def test_fineos_updates_no_ssn_present(
-    test_db_session, initialize_factories_session, emp_updates_path_no_ssn_present,
+    test_db_session, initialize_factories_session, emp_updates_path_no_ssn_present
 ):
     report = fineos_updates.process_fineos_updates(test_db_session, emp_updates_path_no_ssn_present)
 
@@ -451,7 +451,7 @@ def test_fineos_updates_no_ssn_present(
 
 
 def test_fineos_updates_name_fields_have_no_value(
-    test_db_session, initialize_factories_session, emp_updates_path_name_fields_have_no_value,
+    test_db_session, initialize_factories_session, emp_updates_path_name_fields_have_no_value
 ):
     EmployerFactory(
         employer_id="4376896b-596c-4c86-a653-1915cf997a85",
@@ -483,7 +483,7 @@ def test_fineos_updates_name_fields_have_no_value(
 
 
 def test_fineos_updates_name_fields_not_present(
-    test_db_session, initialize_factories_session, emp_updates_path_name_fields_not_present,
+    test_db_session, initialize_factories_session, emp_updates_path_name_fields_not_present
 ):
     EmployerFactory(
         employer_id="4376896b-596c-4c86-a653-1915cf997a85",

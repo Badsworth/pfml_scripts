@@ -43,11 +43,11 @@ def upgrade():
             server_default=sa.text("now()"),
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(["import_log_id"], ["import_log.import_log_id"],),
-        sa.ForeignKeyConstraint(["payment_id"], ["payment.payment_id"],),
-        sa.ForeignKeyConstraint(["pub_eft_id"], ["pub_eft.pub_eft_id"],),
-        sa.ForeignKeyConstraint(["pub_error_type_id"], ["lk_pub_error_type.pub_error_type_id"],),
-        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"],),
+        sa.ForeignKeyConstraint(["import_log_id"], ["import_log.import_log_id"]),
+        sa.ForeignKeyConstraint(["payment_id"], ["payment.payment_id"]),
+        sa.ForeignKeyConstraint(["pub_eft_id"], ["pub_eft.pub_eft_id"]),
+        sa.ForeignKeyConstraint(["pub_error_type_id"], ["lk_pub_error_type.pub_error_type_id"]),
+        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"]),
         sa.PrimaryKeyConstraint("pub_error_id", "reference_file_id"),
     )
     op.create_index(

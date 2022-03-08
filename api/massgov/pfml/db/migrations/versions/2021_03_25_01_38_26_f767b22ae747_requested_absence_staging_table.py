@@ -82,8 +82,8 @@ def upgrade():
             nullable=False,
         ),
         sa.Column("fineos_extract_import_log_id", sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(["fineos_extract_import_log_id"], ["import_log.import_log_id"],),
-        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"],),
+        sa.ForeignKeyConstraint(["fineos_extract_import_log_id"], ["import_log.import_log_id"]),
+        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"]),
         sa.PrimaryKeyConstraint("vbi_requested_absence_id"),
     )
     op.create_index(

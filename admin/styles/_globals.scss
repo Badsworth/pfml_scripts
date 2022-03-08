@@ -79,41 +79,6 @@ input[type='text'] {
   }
 }
 
-input[type='checkbox'] {
-  appearance: none;
-  background: #fff;
-  border: solid 1px $Color-GraniteGray-200;
-  border-radius: $Border-Radius;
-  color: $Color-GraniteGray-200;
-  height: 16px;
-  margin: 0 0.57em 0 0;
-  padding: 0;
-  position: relative;
-  vertical-align: bottom;
-  width: 16px;
-
-  &:checked {
-    background: $Color-BayBlue-50;
-    border-color: $Color-BayBlue-500;
-    color: $Color-BayBlue-500;
-  }
-
-  &:checked::after {
-    @include IconFontProps;
-    content: $IconCheck;
-    font-size: 0.6em;
-    left: 2px;
-    position: absolute;
-    top: 3px;
-  }
-
-  &[disabled]:checked {
-    background: $Color-GraniteGray-50;
-    border-color: $Color-GraniteGray-300;
-    color: $Color-GraniteGray-300;
-  }
-}
-
 input[type='radio'] {
   appearance: none;
   border: solid 1px $Color-GraniteGray-200;

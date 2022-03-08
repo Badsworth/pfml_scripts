@@ -45,8 +45,8 @@ class ServiceNowClient(abstract_client.AbstractServiceNowClient):
     def send_message(
         self, message: models.OutboundMessage, table: str = "u_cps_notifications"
     ) -> Optional[dict]:
-        """ Make a request to a "Table API" that has been configured to trigger outbound email delivery using templates
-            See docs at: https://docs.servicenow.com/bundle/orlando-application-development/page/integrate/inbound-rest/concept/c_TableAPI.html#c_TableAPI
+        """Make a request to a "Table API" that has been configured to trigger outbound email delivery using templates
+        See docs at: https://docs.servicenow.com/bundle/orlando-application-development/page/integrate/inbound-rest/concept/c_TableAPI.html#c_TableAPI
         """
         has_flask_context = flask.has_request_context()
         url = f"{self._base_url}/api/now/table/{table}"
@@ -62,9 +62,7 @@ class ServiceNowClient(abstract_client.AbstractServiceNowClient):
 
             err = err_type(url, response.status_code, response.text)
 
-            logger.debug(
-                "POST %s detail", url, extra={"request.data": message.json()},
-            )
+            logger.debug("POST %s detail", url, extra={"request.data": message.json()})
             logger.warning(
                 "POST %s => %s (%ims)",
                 url,
@@ -127,7 +125,7 @@ class ServiceNowClient(abstract_client.AbstractServiceNowClient):
             },
         )
 
-        if isinstance(ex, (requests.exceptions.Timeout, requests.exceptions.ConnectionError,),):
+        if isinstance(ex, (requests.exceptions.Timeout, requests.exceptions.ConnectionError)):
             logger.warning("%s => %r", url, ex)
             raise ServiceNowUnavailable(url)
         logger.exception("%s => %r", url, ex)

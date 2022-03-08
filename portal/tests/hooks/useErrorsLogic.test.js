@@ -1,121 +1,18 @@
 import {
   AuthSessionMissingError,
-  ClaimWithdrawnError,
-  DocumentsLoadError,
   DocumentsUploadError,
   ForbiddenError,
+  InternalServerError,
   LeaveAdminForbiddenError,
   NetworkError,
   ValidationError,
 } from "../../src/errors";
 import { act, renderHook } from "@testing-library/react-hooks";
-import ErrorInfo from "../../src/models/ErrorInfo";
-import { render } from "@testing-library/react";
 import tracker from "../../src/services/tracker";
 import useErrorsLogic from "../../src/hooks/useErrorsLogic";
 import usePortalFlow from "../../src/hooks/usePortalFlow";
 
 jest.mock("../../src/services/tracker");
-
-const errorMessages = [
-  [
-    new Error("Default error message"),
-    "Sorry, an unexpected error in our system was encountered. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365.",
-    null,
-  ],
-  [
-    new ForbiddenError(),
-    "Sorry, an authorization error was encountered. Please log out and then log in to try again.",
-    null,
-  ],
-  [
-    new NetworkError(),
-    "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365",
-    null,
-  ],
-  [
-    new DocumentsLoadError("mock-application-id"),
-    "An error was encountered while checking your application for documents. If this continues to happen, call the Paid Family Leave Contact Center at (833) 344‑7365.",
-    "mock-application-id",
-  ],
-  [
-    new DocumentsUploadError("mock-application-id"),
-    "We encountered an error when uploading your file. Try uploading your file again. If this continues to happen, call the Contact Center at (833) 344‑7365.",
-    "mock-application-id",
-  ],
-];
-
-const errorTracking = [
-  [new ForbiddenError("Failed with forbidden error"), "ApiRequestError"],
-  [new NetworkError(), "NetworkError"],
-  [new AuthSessionMissingError("No current user"), "AuthSessionMissingError"],
-];
-
-const validationErrorIssues = [
-  [
-    [
-      {
-        field: "tax_identifier",
-        type: "pattern",
-        message: "This field should have a custom error message",
-        rule: "/d{9}",
-      },
-    ],
-    "Your Social Security Number or ITIN must be 9 digits.",
-    "applications",
-  ],
-  [
-    [
-      {
-        rule: "min_leave_periods",
-        type: "multiFieldIssue",
-      },
-    ],
-    "You must choose at least one kind of leave (continuous, reduced schedule, or intermittent).",
-    "applications",
-  ],
-  [
-    [
-      {
-        type: "fineos_client",
-      },
-    ],
-    "We encountered an error when uploading your file. Try uploading your file again. If this continues to happen, call the Contact Center at (833) 344‑7365.",
-    "documents",
-  ],
-  [
-    [
-      {
-        field: "shop_name",
-        type: "pattern",
-        message: "This validation should have a generic error message",
-        rule: "/d{9}",
-      },
-    ],
-    "Field (shop_name) didn’t match expected format.",
-    "applications",
-  ],
-  [
-    [
-      {
-        field: "unknown_field",
-        message: "does not match: [0-9]{7}",
-      },
-    ],
-    "does not match: [0-9]{7}",
-    "applications",
-  ],
-  [
-    [
-      {
-        field: "validation_without_a_message",
-        type: "noMessage",
-      },
-    ],
-    "Field (validation_without_a_message) has invalid value.",
-    "applications",
-  ],
-];
 
 const setup = () => {
   return renderHook(() => {
@@ -131,40 +28,24 @@ describe("useErrorsLogic", () => {
     expect(result.current.errors).toHaveLength(0);
   });
 
-  it.each(errorMessages)(
-    "Returns expected internationalized message when %p error is thrown",
-    (error, message, applicationId) => {
-      jest.spyOn(console, "error").mockImplementation(jest.fn());
-      const { result } = setup();
-      act(() => {
-        result.current.catchError(error);
-      });
-      expect(result.current.errors).toHaveLength(1);
-      expect(result.current.errors[0].message).toBe(message);
-      if (applicationId) {
-        expect(result.current.errors[0].meta).toEqual({
-          application_id: applicationId,
-        });
-      }
-    }
-  );
-
-  it.each(errorTracking)("Tracks %p error in New Relic", (error, errorName) => {
+  it.each([
+    new ForbiddenError(),
+    new NetworkError(),
+    new InternalServerError(),
+    new DocumentsUploadError("mock-application-id"),
+  ])("catches and tracks %p error", (error) => {
     jest.spyOn(console, "error").mockImplementation(jest.fn());
     const { result } = setup();
-
     act(() => {
       result.current.catchError(error);
     });
+    expect(result.current.errors).toHaveLength(1);
 
-    expect(tracker.trackEvent).toHaveBeenCalledWith(errorName, {
-      errorMessage: error.message,
-      errorName: error.name,
-    });
-    expect(tracker.noticeError).not.toHaveBeenCalled();
+    expect(result.current.errors[0].name).toBe(error.name);
+    expect(tracker.trackEvent).toHaveBeenCalledTimes(1);
   });
 
-  it("sets app error with error info and tracks the error", () => {
+  it("catches and tracks generic Error instance", () => {
     jest.spyOn(console, "error").mockImplementation(jest.fn());
     const { result } = setup();
     act(() => {
@@ -190,68 +71,6 @@ describe("useErrorsLogic", () => {
     expect(goToSpy).toHaveBeenCalledWith("/login", {
       next: "/foo?bar=true",
     });
-  });
-
-  it("When ValidationError is thrown, it sets field, rule, and type properties of ErrorInfo", () => {
-    const issues = [
-      {
-        field: "tax_identifier",
-        type: "pattern",
-        message: "This field should have a custom error message",
-        rule: "/d{9}",
-      },
-    ];
-    const { result } = setup();
-
-    act(() => {
-      result.current.catchError(new ValidationError(issues, "applications"));
-    });
-
-    const errorInfo = result.current.errors[0];
-
-    expect(errorInfo).toEqual(
-      expect.objectContaining({
-        field: "tax_identifier",
-        type: "pattern",
-        rule: "/d{9}",
-      })
-    );
-  });
-
-  it.each(validationErrorIssues)(
-    "When ValidationError is thrown, it sets ErrorInfo.message based on the content of issue",
-    (issues, message, i18nPrefix) => {
-      const { result } = setup();
-
-      act(() => {
-        result.current.catchError(new ValidationError(issues, i18nPrefix));
-      });
-
-      expect(result.current.errors[0].message).toBe(message);
-    }
-  );
-
-  it("sets errors in same order as issues", () => {
-    const issues = [
-      {
-        field: "first_name",
-        message: "first_name is required",
-        type: "required",
-      },
-      {
-        rule: "min_leave_periods",
-      },
-    ];
-    const { result } = setup();
-
-    act(() => {
-      result.current.catchError(new ValidationError(issues, "applications"));
-    });
-
-    expect(result.current.errors).toHaveLength(2);
-    expect(result.current.errors[0].field).toBe(issues[0].field);
-    expect(result.current.errors[0].name).toBe("ValidationError");
-    expect(result.current.errors[1].rule).toBe(issues[1].rule);
   });
 
   it("For ValidationErrors, tracks each issue in New Relic", () => {
@@ -414,117 +233,10 @@ describe("useErrorsLogic", () => {
     expect(console.error).toHaveBeenCalledTimes(2);
   });
 
-  it.each([
-    {
-      message: "User is not authorized for access",
-      type: "unauthorized_leave_admin",
-    },
-    {
-      message: "Claim contains both V1 and V2 eforms.",
-      type: "contains_v1_and_v2_eforms",
-    },
-    {
-      field: "ein",
-      type: "employer_verification_data_required",
-    },
-  ])(
-    "returns HTML message when Employer validation error type is $type",
-    ({ type, ...issue }) => {
-      const i18nPrefix = "employers";
-      const { result } = setup();
-
-      act(() => {
-        result.current.catchError(
-          new ValidationError([{ type, ...issue }], i18nPrefix)
-        );
-      });
-
-      const Message = result.current.errors[0].message;
-
-      expect(render(Message).container).toMatchSnapshot();
-    }
-  );
-
-  it("returns HTML message when Application validation error type is fineos_case_creation_issues", () => {
-    const i18nPrefix = "applications";
-    const { result } = setup();
-
-    act(() => {
-      result.current.catchError(
-        new ValidationError(
-          [
-            {
-              message: "register_employee did not find a match",
-              type: "fineos_case_creation_issues",
-            },
-          ],
-          i18nPrefix
-        )
-      );
-    });
-
-    const Message = result.current.errors[0].message;
-
-    expect(render(Message).container).toMatchSnapshot();
-  });
-
-  it("returns HTML message when Employer ClaimWithdrawnError is thrown", () => {
-    const { result } = setup();
-
-    act(() => {
-      result.current.catchError(
-        new ClaimWithdrawnError("mock-absence-id", {
-          type: "fineos_claim_withdrawn",
-        })
-      );
-    });
-
-    const Message = result.current.errors[0].message;
-
-    expect(result.current.errors).toHaveLength(1);
-    expect(render(Message).container).toMatchSnapshot();
-  });
-
-  it("only returns HTML message when an i18n content string exists", () => {
-    const { result } = setup();
-
-    const errorWithHTMLMessage = new ValidationError(
-      [{ type: "contains_v1_and_v2_eforms" }],
-      "employers"
-    );
-    const errorWithNoMatchingI18nMessage = new ValidationError(
-      [
-        {
-          message:
-            "New error Portal doesn't yet support, but with a similar type.",
-          type: "contains_v1_and_v2_eforms",
-        },
-      ],
-      "foo" // this results in an i18n prefix that doesn't exist
-    );
-
-    act(() => {
-      result.current.catchError(errorWithHTMLMessage);
-    });
-
-    // Safeguard that our test is actually testing against a `type` that sometimes
-    // results in an HTML message.
-    expect(result.current.errors[0].message).toBeInstanceOf(Object);
-
-    act(() => {
-      result.current.clearErrors();
-      result.current.catchError(errorWithNoMatchingI18nMessage);
-    });
-
-    expect(result.current.errors[0].message).toBe(
-      "New error Portal doesn't yet support, but with a similar type."
-    );
-  });
-
   it("when clearErrors is called, prior errors are removed", () => {
     const { result } = setup();
     act(() => {
-      result.current.setErrors([new ErrorInfo()]);
+      result.current.setErrors([new Error()]);
     });
 
     act(() => {
@@ -539,8 +251,19 @@ describe("useErrorsLogic", () => {
 
     act(() => {
       result.current.setErrors([
-        new ErrorInfo(),
-        new ErrorInfo({ type: "required" }),
+        new ValidationError(
+          [
+            {
+              field: "first_name",
+              type: "required",
+            },
+            {
+              field: "tax_identifier",
+              type: "pattern",
+            },
+          ],
+          "applications"
+        ),
       ]);
     });
 
@@ -548,9 +271,8 @@ describe("useErrorsLogic", () => {
       result.current.clearRequiredFieldErrors();
     });
 
-    expect(result.current.errors).toHaveLength(1);
-    expect(
-      result.current.errors.some((error) => error.type === "required")
-    ).toBe(false);
+    const { issues } = result.current.errors[0];
+    expect(issues).toHaveLength(1);
+    expect(issues.some((issue) => issue.type === "required")).toBe(false);
   });
 });

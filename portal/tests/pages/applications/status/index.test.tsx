@@ -6,6 +6,10 @@ import {
   BenefitsApplicationDocument,
   DocumentType,
 } from "../../../../src/models/Document";
+import {
+  DocumentsLoadError,
+  RequestTimeoutError,
+} from "../../../../src/errors";
 import Status, {
   LeaveDetails,
 } from "../../../../src/pages/applications/status/index";
@@ -14,7 +18,7 @@ import { createAbsencePeriod, renderPage } from "../../../test-utils";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { AppLogic } from "../../../../src/hooks/useAppLogic";
 import ClaimDetail from "../../../../src/models/ClaimDetail";
-import ErrorInfo from "../../../../src/models/ErrorInfo";
+import { Holiday } from "../../../../src/models/Holiday";
 import LeaveReason from "../../../../src/models/LeaveReason";
 import { Payment } from "../../../../src/models/Payment";
 import React from "react";
@@ -88,11 +92,12 @@ const setupHelper =
   (
     claimDetailAttrs?: Partial<ClaimDetail>,
     documents: BenefitsApplicationDocument[] = [],
-    errors: ErrorInfo[] = [],
+    errors: Error[] = [],
     loadClaimDetailMock: jest.Mock = jest.fn(),
     payments: Partial<Payment> = defaultPayments,
     includeApprovalNotice = true,
-    hasLoadedClaimDocumentsValue = true
+    hasLoadedClaimDocumentsValue = true,
+    holidays: Holiday[] = defaultHolidays
   ) =>
   (appLogicHook: AppLogic) => {
     appLogicHook.claims.claimDetail = claimDetailAttrs
@@ -100,6 +105,10 @@ const setupHelper =
       : undefined;
     appLogicHook.claims.loadClaimDetail = loadClaimDetailMock;
     appLogicHook.errors = errors;
+    appLogicHook.holidays.holidays = holidays;
+    appLogicHook.holidays.loadHolidays = jest.fn();
+    appLogicHook.holidays.hasLoadedHolidays = true;
+    appLogicHook.holidays.isLoadingHolidays = false;
     appLogicHook.payments.loadPayments = jest.fn();
     appLogicHook.payments.loadedPaymentsData = new Payment(payments);
     appLogicHook.payments.hasLoadedPayments = () => true;
@@ -143,6 +152,9 @@ const defaultPayments = {
   ],
 };
 
+const defaultHolidays = [{ name: "Memorial Day", date: "2022-05-30" }];
+const defaultHolidayAlertText =
+  "Due to the upcoming holiday, payments may be delayed by one business day.";
 const props = {
   query: { absence_id: defaultClaimDetail.fineos_absence_id },
 };
@@ -267,12 +279,7 @@ describe("Status", () => {
   });
 
   it("renders the page if the only errors are DocumentsLoadError", () => {
-    const errors = [
-      new ErrorInfo({
-        meta: { application_id: "mock_application_id" },
-        name: "DocumentsLoadError",
-      }),
-    ];
+    const errors = [new DocumentsLoadError("mock_application_id")];
 
     const { container } = renderPage(
       Status,
@@ -286,12 +293,7 @@ describe("Status", () => {
   });
 
   it("renders the page with only a back button if non-DocumentsLoadErrors exists", () => {
-    const errors = [
-      new ErrorInfo({
-        meta: { application_id: "mock_application_id" },
-        name: "RequestTimeoutError",
-      }),
-    ];
+    const errors = [new RequestTimeoutError("mock_application_id")];
     renderPage(
       Status,
       {
@@ -377,7 +379,6 @@ describe("Status", () => {
         }
       );
 
-      expect(screen.getByRole("region")).toMatchSnapshot();
       expect(
         screen.getByRole("heading", {
           name: "You've successfully submitted your proof of birth documents",
@@ -452,7 +453,11 @@ describe("Status", () => {
         props
       );
 
-      expect(screen.getByRole("region")).toMatchSnapshot();
+      const bondingAlertText =
+        "If you are giving birth, you may also be eligible for paid medical leave";
+      expect(
+        screen.getByText(bondingAlertText, { exact: false })
+      ).toBeInTheDocument();
     });
 
     it("displays if claimant has pregnancy but not bonding claims", () => {
@@ -473,7 +478,11 @@ describe("Status", () => {
         props
       );
 
-      expect(screen.getByRole("region")).toMatchSnapshot();
+      const pregnancyAlertText =
+        "You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends.";
+      expect(
+        screen.getByText(pregnancyAlertText, { exact: false })
+      ).toBeInTheDocument();
     });
 
     it("displays if claimant has In Review claim status", () => {
@@ -494,7 +503,11 @@ describe("Status", () => {
         props
       );
 
-      expect(screen.getByRole("region")).toMatchSnapshot();
+      const pregnancyAlertText =
+        "You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends.";
+      expect(
+        screen.getByText(pregnancyAlertText, { exact: false })
+      ).toBeInTheDocument();
     });
 
     it("displays if claimant has Projected claim status", () => {
@@ -515,7 +528,11 @@ describe("Status", () => {
         props
       );
 
-      expect(screen.getByRole("region")).toMatchSnapshot();
+      const pregnancyAlertText =
+        "You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends.";
+      expect(
+        screen.getByText(pregnancyAlertText, { exact: false })
+      ).toBeInTheDocument();
     });
 
     it("does not display if claimant has bonding AND pregnancy claims", () => {
@@ -541,7 +558,16 @@ describe("Status", () => {
         props
       );
 
-      expect(screen.queryByRole("region")).not.toBeInTheDocument();
+      const bondingAlertText =
+        "If you are giving birth, you may also be eligible for paid medical leave";
+      const pregnancyAlertText =
+        "You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends.";
+      expect(
+        screen.queryByText(bondingAlertText, { exact: false })
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(pregnancyAlertText, { exact: false })
+      ).not.toBeInTheDocument();
     });
 
     it("does not display if claimant has Denied claims", () => {
@@ -569,7 +595,16 @@ describe("Status", () => {
         props
       );
 
-      expect(screen.queryByRole("region")).not.toBeInTheDocument();
+      const bondingAlertText =
+        "If you are giving birth, you may also be eligible for paid medical leave";
+      const pregnancyAlertText =
+        "You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends.";
+      expect(
+        screen.queryByText(bondingAlertText, { exact: false })
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(pregnancyAlertText, { exact: false })
+      ).not.toBeInTheDocument();
     });
 
     it("does not display if claimant has Withdrawn claims", () => {
@@ -598,7 +633,60 @@ describe("Status", () => {
         props
       );
 
-      expect(screen.queryByRole("region")).not.toBeInTheDocument();
+      const bondingAlertText =
+        "If you are giving birth, you may also be eligible for paid medical leave";
+      const pregnancyAlertText =
+        "You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends.";
+      expect(
+        screen.queryByText(bondingAlertText, { exact: false })
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(pregnancyAlertText, { exact: false })
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe("holiday alert", () => {
+    it("doesn't show the holiday alert when there are no holidays", () => {
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper(
+            { ...defaultClaimDetail },
+            [], // documents, default
+            [], // errors, default
+            jest.fn(), // loadClaimDetailMock, default
+            defaultPayments, // payments, default
+            true, // approval notice, default
+            true, // loaded documents, default
+            [] // no holidays
+          ),
+        },
+        props
+      );
+      expect(
+        screen.queryByText(defaultHolidayAlertText)
+      ).not.toBeInTheDocument();
+    });
+
+    it("shows the holiday alert when there are holidays", () => {
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper(
+            { ...defaultClaimDetail },
+            [], // documents, default
+            [], // errors, default
+            jest.fn(), // loadClaimDetailMock, default
+            defaultPayments, // payments, default
+            true, // approval notice, default
+            true, // loaded documents, default
+            defaultHolidays // holidays, default
+          ),
+        },
+        props
+      );
+      expect(screen.queryByText(defaultHolidayAlertText)).toBeInTheDocument();
     });
   });
 

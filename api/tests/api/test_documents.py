@@ -26,25 +26,13 @@ def enable_docs_multipart_upload(monkeypatch):
     return new_env
 
 
-CERTIFICATION_FORM_DATA = {
-    "document_type": "Certification Form",
-    "name": "certification_form.png",
-}
+CERTIFICATION_FORM_DATA = {"document_type": "Certification Form", "name": "certification_form.png"}
 
-VALID_FORM_DATA = {
-    "document_type": "Passport",
-    "name": "passport.png",
-    "description": "Passport",
-}
+VALID_FORM_DATA = {"document_type": "Passport", "name": "passport.png", "description": "Passport"}
 
-VALID_MISSING_NAME_DESCRIPTION_FORM_DATA = {
-    "document_type": "Passport",
-    "description": "Passport",
-}
+VALID_MISSING_NAME_DESCRIPTION_FORM_DATA = {"document_type": "Passport", "description": "Passport"}
 
-MISSING_DOCUMENT_TYPE_FORM_DATA = {
-    "description": "Passport",
-}
+MISSING_DOCUMENT_TYPE_FORM_DATA = {"description": "Passport"}
 
 FILE_WITH_NO_EXTENSION = (io.BytesIO(b"abcdef"), "test")
 
@@ -933,7 +921,7 @@ def test_documents_download_mismatch_case(
         return [
             models.customer_api.Document.parse_obj(
                 fineos_client.fineos_document_empty_dates_to_none(document1)
-            ),
+            )
         ]
 
     monkeypatch.setattr(

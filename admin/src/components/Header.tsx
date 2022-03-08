@@ -1,9 +1,13 @@
-import { useState, useRef } from "react";
-import Link from "next/link";
 import * as api from "../api";
+
+import { useRef, useState } from "react";
+
+import { ChevronLeftIcon } from "@heroicons/react/solid";
+import Link from "next/link";
 import { LoadingState } from "../../src/pages/_app";
-import { logout } from "../../src/utils/azure_sso_authorization";
+import PFMLLogo from "./PFMLLogo";
 import classNames from "classnames";
+import { logout } from "../../src/utils/azure_sso_authorization";
 
 export type Props = {
   user: api.AdminUserResponse | null;
@@ -71,7 +75,9 @@ const Header = ({
           <a
             title="Paid Family & Medical Leave - Massachusetts"
             className="page__logo-link"
-          ></a>
+          >
+            <PFMLLogo className="pfml-logo-header" />
+          </a>
         </Link>
       </div>
       {user && (
@@ -102,6 +108,7 @@ const Header = ({
               <span className="user-options__name">
                 {user?.first_name} {user?.last_name}
               </span>
+              <ChevronLeftIcon className="user-options__trigger-icon" />
             </a>
             {dropdownIsOpen && (
               <ul

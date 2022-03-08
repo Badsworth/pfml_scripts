@@ -64,7 +64,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         PROCESSED_ACH_FILE = "processed_ach_file"
 
     def __init__(
-        self, db_session: massgov.pfml.db.Session, log_entry_db_session: massgov.pfml.db.Session,
+        self, db_session: massgov.pfml.db.Session, log_entry_db_session: massgov.pfml.db.Session
     ) -> None:
         """Constructor."""
         pub_ach_inbound_path = delegated_config.get_s3_config().pfml_pub_ach_archive_path
@@ -177,7 +177,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         )
         if pub_eft is None:
             logger.warning(
-                "Prenote: id number not in pub_eft table", extra=ach_return.get_details_for_log(),
+                "Prenote: id number not in pub_eft table", extra=ach_return.get_details_for_log()
             )
             self.increment(self.Metrics.EFT_PRENOTE_ID_NOT_FOUND_COUNT)
 
@@ -249,8 +249,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         )
         if payment is None:
             logger.warning(
-                "ACH Return: id number not in payment table",
-                extra=ach_return.get_details_for_log(),
+                "ACH Return: id number not in payment table", extra=ach_return.get_details_for_log()
             )
             self.increment(self.Metrics.PAYMENT_ID_NOT_FOUND_COUNT)
 
@@ -333,9 +332,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
                 **delegated_payments_util.get_traceable_payment_details(payment, end_state),
             }
 
-            logger.error(
-                "ACH Return: unexpected state for payment", extra=details,
-            )
+            logger.error("ACH Return: unexpected state for payment", extra=details)
             self.increment(self.Metrics.PAYMENT_UNEXPECTED_STATE_COUNT)
 
             self.add_pub_error(
@@ -418,9 +415,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
                 **delegated_payments_util.get_traceable_payment_details(payment, end_state),
             }
 
-            logger.error(
-                "ACH Notification: unexpected state for payment", extra=details,
-            )
+            logger.error("ACH Notification: unexpected state for payment", extra=details)
             self.increment(self.Metrics.PAYMENT_NOTIFICATION_UNEXPECTED_STATE_COUNT)
 
             self.add_pub_error(
