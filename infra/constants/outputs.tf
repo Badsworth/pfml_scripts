@@ -207,7 +207,7 @@ output "slackbot_channels" {
 }
 
 output "bucket_replication_environment" {
-  value = "test"
+  value = "prod"
 }
 
 # Env Var mappings for ECS Tasks
