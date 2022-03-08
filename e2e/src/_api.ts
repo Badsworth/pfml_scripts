@@ -398,8 +398,13 @@ export interface EmployeeResponse {
   other_name?: string | null;
   email_address?: string | null;
   last_name?: string;
-  phone_number?: string | null;
-  tax_identifier_last4: string;
+  phone_numbers?: (Phone | null)[];
+  tax_identifier_last4?: string | null;
+  tax_identifier?: SsnItin | null;
+  fineos_customer_number?: string | null;
+  mass_id_number?: MassId | null;
+  date_of_birth?: MaskedDate | null;
+  created_at?: any;
 }
 export interface GETEmployeesByEmployeeIdResponse extends SuccessfulResponse {
   data?: EmployeeResponse;
@@ -414,14 +419,31 @@ export interface EmployeeUpdateRequest {
 export interface PATCHEmployeesByEmployeeIdResponse extends SuccessfulResponse {
   data?: EmployeeResponse;
 }
-export interface EmployeeSearchRequest {
-  first_name: string;
-  middle_name?: string;
-  last_name: string;
-  tax_identifier_last4: string;
+export type NonMaskedSsnItin = string;
+export interface EmployeeSearchRequestTermsMetadata {
+  first_name?: string | null;
+  last_name?: string | null;
+  email_address?: string | null;
+  phone_number?: string | null;
+  tax_identifier?: NonMaskedSsnItin | null;
+  fineos_customer_number?: string | null;
 }
+export interface SearchRequestOrderMetadata {
+  by?: "created_at" | null;
+  direction?: ("ascending" | "descending") | null;
+}
+export interface SearchRequestPagingMetadata {
+  offset?: number | null;
+  size?: number | null;
+}
+export interface EmployeeSearchRequest {
+  terms: EmployeeSearchRequestTermsMetadata;
+  order?: SearchRequestOrderMetadata | null;
+  paging?: SearchRequestPagingMetadata | null;
+}
+export type EmployeesResponse = EmployeeResponse[];
 export interface POSTEmployeesSearchResponse extends SuccessfulResponse {
-  data?: EmployeeResponse;
+  data?: EmployeesResponse;
 }
 export interface EmployerResponse {
   employer_id?: string;
