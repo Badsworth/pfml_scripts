@@ -73,3 +73,56 @@ export const Default = (args: {
 
   return <Index appLogic={appLogic} user={user} query={query} />;
 };
+
+// This update is currently behind the splitClaimsAcrossBY
+// which will need to be enabled to see the new content
+export const WithBenefitYearNotice = (args: {
+  total_pages: number;
+  query: keyof typeof queries;
+}) => {
+  const claims = [];
+  for (let i = 0; i < 10; i++) {
+    const claim = createMockBenefitsApplication(
+      faker.random.arrayElement(["submitted", "completed"]),
+      faker.random.arrayElement(["medicalLeaveReason", "bondingLeaveReason"])
+    );
+    claim.application_id = `${i}`;
+    claim.fineos_absence_id = `NTN-111-ABS-${i}`;
+    claims.push(claim);
+  }
+
+  const user = new User({});
+
+  const appLogic = useMockableAppLogic({
+    documents: {
+      isLoadingClaimDocuments: () => false,
+    },
+    benefitYears: {
+      getCurrentBenefitYear: () => ({
+        benefit_year_end_date: new Date().toISOString(),
+        benefit_year_start_date: new Date().toISOString(),
+        employee_id: "2a340cf8-6d2a-4f82-a075-73588d003f8f",
+        current_benefit_year: true,
+      }),
+    },
+    benefitsApplications: {
+      benefitsApplications: new ApiResourceCollection<BenefitsApplication>(
+        "application_id",
+        claims
+      ),
+      isLoadingClaims: false,
+      paginationMeta: {
+        page_offset: 1,
+        page_size: 25,
+        total_pages: args.total_pages ? args.total_pages : 1,
+        total_records: claims.length,
+        order_by: "created_at",
+        order_direction: "ascending",
+      },
+    },
+  });
+
+  const query = queries[args.query];
+
+  return <Index appLogic={appLogic} user={user} query={query} />;
+};

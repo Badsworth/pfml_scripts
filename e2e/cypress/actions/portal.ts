@@ -56,8 +56,7 @@ function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
     claimantShowMFA: config("MFA_ENABLED") === "true",
     employerShowMultiLeave: true,
     channelSwitching: config("HAS_CHANNEL_SWITCHING") === "true",
-    employerShowMultiLeaveDashboard:
-      config("HAS_UPDATED_ER_DASHBOARD") === "true",
+    employerShowMultiLeaveDashboard: true,
   };
   cy.setCookie("_ff", JSON.stringify({ ...defaults, ...flags }), { log: true });
 }
@@ -887,12 +886,6 @@ export function visitActionRequiredERFormPage(
       `/employers/applications/new-application/?absence_id=${fineosAbsenceId}`
     );
   }
-  if (config("HAS_UPDATED_ER_DASHBOARD") === "true") return;
-  cy.contains("Are you the right person to respond to this application?", {
-    timeout: 20000,
-  });
-  cy.contains("label", "Yes").click();
-  cy.contains("Agree and submit").click();
   cy.contains("span", fineosAbsenceId);
 }
 

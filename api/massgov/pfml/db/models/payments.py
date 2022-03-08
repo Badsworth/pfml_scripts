@@ -6,7 +6,14 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql.schema import Index
 
 import massgov.pfml.util.logging
-from massgov.pfml.db.models.employees import Claim, Employee, ImportLog, Payment, ReferenceFile
+from massgov.pfml.db.models.employees import (
+    Claim,
+    Employee,
+    ImportLog,
+    Payment,
+    PaymentDetails,
+    ReferenceFile,
+)
 
 from ..lookup import LookupTable
 from .base import Base, TimestampMixin, deprecated_column, uuid_gen
@@ -152,6 +159,45 @@ class FineosExtractVpeiPaymentDetails(Base, TimestampMixin):
         peclassid,
         peindexid,
         unique=False,
+    )
+
+    reference_file = relationship(ReferenceFile)
+
+
+class FineosExtractVpeiPaymentLine(Base, TimestampMixin):
+    __tablename__ = "fineos_extract_vpei_payment_line"
+
+    vpei_payment_line_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
+    c = Column(Text)
+    i = Column(Text)
+    lastupdatedate = Column(Text)
+    c_osuser_updatedby = Column(Text)
+    i_osuser_updatedby = Column(Text)
+    amount_monamt = Column(Text)
+    amount_moncur = Column(Text)
+    integrtype = Column(Text)
+    linetype = Column(Text)
+    reference = Column(Text)
+    reservecatego = Column(Text)
+    reservetype = Column(Text)
+    sequencenumbe = Column(Text)
+    subtotals = Column(Text)
+    taxableincome = Column(Text)
+    usetocalcrule = Column(Text)
+    c_pymnteif_paymentlines = Column(Text)
+    i_pymnteif_paymentlines = Column(Text)
+    paymentdetailclassid = Column(Text)
+    paymentdetailindexid = Column(Text)
+    purchasedetailclassid = Column(Text)
+    purchasedetailindexid = Column(Text)
+    dateinterface = Column(Text)
+
+    reference_file_id = Column(
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
+    )
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
     )
 
     reference_file = relationship(ReferenceFile)
@@ -908,6 +954,30 @@ class MmarsPaymentRefunds(Base, TimestampMixin):
     payment_id = Column(PostgreSQLUUID, ForeignKey("payment.payment_id"), index=True, nullable=True)
 
     payment = relationship(Payment)
+
+
+class PaymentLine(Base, TimestampMixin):
+    __tablename__ = "payment_line"
+    payment_line_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
+    vpei_payment_line_id = Column(
+        PostgreSQLUUID,
+        ForeignKey("fineos_extract_vpei_payment_line.vpei_payment_line_id"),
+        nullable=False,
+    )
+    payment_id = Column(PostgreSQLUUID, ForeignKey("payment.payment_id"), index=True)
+    payment_details_id = Column(
+        PostgreSQLUUID, ForeignKey("payment_details.payment_details_id"), index=True, nullable=True
+    )
+
+    payment_line_c_value = Column(Text, index=True, nullable=False)
+    payment_line_i_value = Column(Text, index=True, nullable=False)
+
+    amount = Column(Numeric(asdecimal=True), nullable=False)
+    line_type = Column(Text, nullable=False)
+
+    payment = relationship(Payment)
+    payment_details = relationship(PaymentDetails)
 
 
 class FineosWritebackDetails(Base, TimestampMixin):

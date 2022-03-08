@@ -6,7 +6,7 @@ import { useState } from "react";
 const useHolidaysLogic = ({ errorsLogic }: { errorsLogic: ErrorsLogic }) => {
   const holidaysApi = new HolidaysApi();
 
-  const [holidays, setHolidays] = useState<Holiday>();
+  const [holidays, setHolidays] = useState<Holiday[]>();
   const [isLoadingHolidays, setIsLoadingHolidays] = useState<boolean>();
   const hasLoadedHolidays = !!holidays;
 

@@ -1,6 +1,7 @@
 /* eslint sort-keys: ["error", "asc"] */
 import useApplicationImportsLogic from "./useApplicationImportsLogic";
 import useAuthLogic from "./useAuthLogic";
+import useBenefitYearsLogic from "./useBenefitYearsLogic";
 import useBenefitsApplicationsLogic from "./useBenefitsApplicationsLogic";
 import useClaimsLogic from "./useClaimsLogic";
 import useDocumentsLogic from "./useDocumentsLogic";
@@ -34,6 +35,8 @@ const useAppLogic = () => {
     portalFlow,
   });
 
+  const benefitYears = useBenefitYearsLogic({ errorsLogic });
+
   const benefitsApplications = useBenefitsApplicationsLogic({
     errorsLogic,
     portalFlow,
@@ -55,6 +58,8 @@ const useAppLogic = () => {
     setUser: users.setUser,
   });
 
+  const featureFlags = useFeatureFlagsLogic();
+
   const holidays = useHolidaysLogic({
     errorsLogic,
   });
@@ -63,13 +68,12 @@ const useAppLogic = () => {
     errorsLogic,
   });
 
-  const featureFlags = useFeatureFlagsLogic();
-
   return {
     // `_errorsLogic` should not be used except for testing
     _errorsLogic: errorsLogic,
     applicationImports,
     auth,
+    benefitYears,
     benefitsApplications,
     catchError: errorsLogic.catchError,
     claims,

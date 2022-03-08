@@ -52,6 +52,23 @@ def test_flags_get_enabled_feature_flags_with_start_end_options(client, test_db_
     assert flag_response.get("options") == {"page_routes": ["/applications/*", "/employers/*"]}
 
 
+def test_flags_get_enabled_feature_flag_no_start_end_options(client):
+    mock_features_file = """
+maintenance:
+    enabled: 1
+"""
+    with patch("massgov.pfml.util.files.open_stream", mock_open(read_data=mock_features_file)):
+        response = client.get("/v1/flags")
+        assert response.status_code == 200
+        response_data = response.get_json().get("data")
+        assert len(response_data) == 1
+        flag_response = response_data[0]
+        assert flag_response.get("enabled") is True
+        assert flag_response.get("start") is None
+        assert flag_response.get("end") is None
+        assert flag_response.get("options") is None
+
+
 def test_flags_get_empty(client):
     response = client.get("/v1/flags")
     assert response.status_code == 200

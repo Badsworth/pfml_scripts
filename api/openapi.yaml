@@ -492,7 +492,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ClaimRequest"
+              $ref: "#/components/schemas/ClaimSearchRequest"
       responses:
         "200":
           description: The claim information.
@@ -1639,6 +1639,11 @@ components:
           schema:
             $ref: "#/components/schemas/UserUpdateRequest"
       required: true
+    ClaimSearchRequest:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ClaimSearchRequest"
     EmployeeSearchRequest:
       content:
         application/json:
@@ -2046,17 +2051,6 @@ components:
               example: "2020-06-26T01:02:03.967736+00:00"
               readOnly: true
 
-    FlagWithLogsResponse:
-      type: array
-      items:
-        $ref: "#/components/schemas/FlagWithLog"
-
-
-    FlagsResponse:
-      type: array
-      items:
-        $ref: "#/components/schemas/Flag"
-
     UserResponse:
       type: object
       properties:
@@ -2229,6 +2223,19 @@ components:
           example: "SMS"
         mfa_phone_number:
           $ref: "#/components/schemas/Phone"
+
+    ClaimSearchRequest:
+      type: object
+      properties:
+        terms:
+          $ref: "#/components/schemas/ClaimSearchRequestTermsMetadata"
+        order:
+          $ref: "#/components/schemas/SearchRequestOrderMetadata"
+          nullable: true
+        paging:
+          $ref: "#/components/schemas/SearchRequestPagingMetadata"
+          nullable: true
+      required: ["terms"]
 
     EmployeeSearchRequest:
       type: object
@@ -3194,61 +3201,6 @@ components:
       type: array
       items:
         $ref: "#/components/schemas/ClaimResponse"
-
-    ClaimRequest:
-      type: object
-      properties:
-        page_size:
-          type: integer
-          format: int32
-          minimum: 1
-          default: 25
-        page_offset:
-          type: integer
-          format: int32
-          minimum: 1
-          default: 1
-        order_by:
-          type: string
-          default: "created_at"
-          enum: ["fineos_absence_status", "created_at", "employee"]
-        order_direction:
-          type: string
-          default: "descending"
-          enum: ["ascending", "descending"]
-        employer_id:
-          type: array
-          items:
-            type: string
-            format: uuid
-          description: ID of Employer to query claims for
-        employee_id:
-          type: array
-          items:
-            type: string
-            format: uuid
-          description: ID(s) of Employee to query claims for
-        claim_status:
-          type: string
-          description: >
-            claim status used to filter the request,
-            single claim status or a comma seperated list of claim status (i.e claim_status="Approved,Closed"),
-            the valid status are "Approved", "Closed", "Completed", "Declined", "Open requirement" and "Pending - no action".
-        search:
-          type: string
-          description: >
-            A search string used to filter the request that,
-            when provided, is used in a fuzzy search against the claims'
-            Absence Case IDs, in addition to the employees' first, middle, and last names.
-            When the string is empty, it is ignored.
-        allow_hrd:
-          type: boolean
-          description: A temporary boolean value used to allow smoke testers to see HRD dashboard
-
-        is_reviewable:
-          type: string
-          enum: ["yes", "no"]
-          description: A string value used to check whether or not to filter claims where a review is requested for a leave admin.
 
     EmployeesResponse:
       type: array
@@ -4385,6 +4337,47 @@ components:
         paging:
           $ref: "#/components/schemas/SearchRequestPagingMetadata"
           nullable: true
+
+    ClaimSearchRequestTermsMetadata:
+      type: object
+      properties:
+        employer_id:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: ID of Employer to query claims for
+        employee_id:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: ID(s) of Employee to query claims for
+        claim_status:
+          type: string
+          description: >
+            claim status used to filter the request,
+            single claim status or a comma seperated list of claim status (i.e claim_status="Approved,Closed"),
+            the valid status are "Approved", "Closed", "Completed", "Declined", "Open requirement" and "Pending - no action".
+        search:
+          type: string
+          description: >
+            A search string used to filter the request that,
+            when provided, is used in a fuzzy search against the claims'
+            Absence Case IDs, in addition to the employees' first, middle, and last names.
+            When the string is empty, it is ignored.
+        allow_hrd:
+          type: boolean
+          description: A temporary boolean value used to allow smoke testers to see HRD dashboard
+        is_reviewable:
+          type: string
+          enum: ["yes", "no"]
+          description: A string value used to check whether or not to filter claims where a review is requested for a leave admin.
+        request_decision:
+          type: string
+          enum: ["approved", "denied", "withdrawn", "pending", "cancelled"]
+          description: > 
+            request decision used in filtering, request_decision is a status associated with an absence_period
 
     EmployeeSearchRequestTermsMetadata:
       type: object

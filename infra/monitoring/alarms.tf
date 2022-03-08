@@ -134,3 +134,48 @@ module "event_bridge_rules" {
   source        = "../modules/terraform_event_bridge_rules"
   sns_topic_arn = aws_sns_topic.sns_resource_changes.arn
 }
+
+module "sns_aws_config_configuration_changes" {
+  source = "../modules/aws_resource_change_alarm"
+
+  alarm_name        = "aws_config_configuration_changes"
+  alarm_description = "AWS Config Configuration Changes Occured"
+  metric_name       = "AWSConfigConfigurationChanges"
+  namespace         = "LogMetrics"
+  pattern           = "{($.eventSource=config.amazonaws.com) && (($.eventName=StopConfigurationRecorder) || ($.eventName=DeleteDeliveryChannel) || ($.eventName=PutDeliveryChannel) || ($.eventName=PutConfigurationRecorder))}"
+  sns_topic         = aws_sns_topic.sns_resource_changes.arn
+}
+
+module "sns_kms_cmk_changes" {
+  source = "../modules/aws_resource_change_alarm"
+
+  alarm_name        = "kms_cmk_changes"
+  alarm_description = "Customer Managed KMS Key Changes Occured"
+  metric_name       = "KmsCmkChanges"
+  namespace         = "LogMetrics"
+  pattern           = "{ ($.eventSource = kms.amazonaws.com) &&  (($.eventName=DisableKey) || ($.eventName=ScheduleKeyDeletion)) }"
+  sns_topic         = aws_sns_topic.sns_resource_changes.arn
+}
+
+module "sns_nacl_changes" {
+  source = "../modules/aws_resource_change_alarm"
+
+  alarm_name        = "nacl_changes"
+  alarm_description = "Network Access Control List Changes Occured"
+  metric_name       = "NACLChanges"
+  namespace         = "LogMetrics"
+  pattern           = "{($.eventName=CreateNetworkAcl) || ($.eventName=CreateNetworkAclEntry) || ($.eventName=DeleteNetworkAcl) || ($.eventName=DeleteNetworkAclEntry) || ($.eventName=ReplaceNetworkAclEntry) || ($.eventName=ReplaceNetworkAclAssociation)}"
+  sns_topic         = aws_sns_topic.sns_resource_changes.arn
+}
+
+module "sns_security_group_changes" {
+  source = "../modules/aws_resource_change_alarm"
+
+  alarm_name        = "security_group_changes"
+  alarm_description = "Security Group Changes Occured"
+  metric_name       = "SecurityGroupChanges"
+  namespace         = "LogMetrics"
+  pattern           = "{($.eventName=AuthorizeSecurityGroupIngress) || ($.eventName=AuthorizeSecurityGroupEgress) || ($.eventName=RevokeSecurityGroupIngress) || ($.eventName=RevokeSecurityGroupEgress) || ($.eventName=CreateSecurityGroup) || ($.eventName=DeleteSecurityGroup)}"
+  sns_topic         = aws_sns_topic.sns_resource_changes.arn
+}
+

@@ -969,12 +969,12 @@ class BenefitYear(Base, TimestampMixin):
     total_wages = Column(Numeric(asdecimal=True))
 
     @typed_hybrid_property
-    def current_benefit_year(self):
+    def current_benefit_year(self) -> bool:
         today = date.today()
         return today >= self.start_date and today <= self.end_date
 
     @current_benefit_year.expression
-    def current_benefit_year(cls):  # noqa: B902
+    def current_benefit_year(cls) -> bool:  # noqa: B902
         return func.now().between(cls.start_date, cls.end_date)
 
     contributions = cast(
@@ -1095,6 +1095,13 @@ class PaymentDetails(Base, TimestampMixin):
     __tablename__ = "payment_details"
     payment_details_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     payment_id = Column(PostgreSQLUUID, ForeignKey(Payment.payment_id), nullable=False, index=True)
+
+    payment_details_c_value = Column(Text, index=True)
+    payment_details_i_value = Column(Text, index=True)
+
+    vpei_payment_details_id = Column(
+        PostgreSQLUUID, ForeignKey("fineos_extract_vpei_payment_details.vpei_payment_details_id")
+    )
 
     period_start_date = Column(Date)
     period_end_date = Column(Date)

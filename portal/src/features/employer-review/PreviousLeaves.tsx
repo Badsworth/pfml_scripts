@@ -51,15 +51,6 @@ const PreviousLeaves = (props: PreviousLeavesProps) => {
       </Heading>
       <Trans
         i18nKey="components.employersPreviousLeaves.explanation"
-        components={{
-          "calculate-reductions-link": (
-            <a
-              href={routes.external.massgov.calculateReductions}
-              target="_blank"
-              rel="noopener"
-            />
-          ),
-        }}
         tOptions={{
           context:
             claim.computed_start_dates.other_reason ===

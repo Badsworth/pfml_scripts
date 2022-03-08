@@ -8,6 +8,7 @@ import { AbsencePeriod } from "../../../../src/models/AbsencePeriod";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { AppLogic } from "../../../../src/hooks/useAppLogic";
 import ClaimDetail from "../../../../src/models/ClaimDetail";
+import { Holiday } from "../../../../src/models/Holiday";
 import LeaveReason from "../../../../src/models/LeaveReason";
 import { NotFoundError } from "../../../../src/errors";
 import { Payment } from "../../../../src/models/Payment";
@@ -36,6 +37,7 @@ interface SetupOptions {
   goTo?: jest.Mock;
   approvalDate?: string;
   includeApprovalNotice?: boolean;
+  holidays?: Holiday[];
 }
 
 const setupHelper =
@@ -45,6 +47,7 @@ const setupHelper =
     goTo = jest.fn(),
     approvalDate = defaultApprovalDate.format("YYYY-MM-DD"),
     includeApprovalNotice = false,
+    holidays = defaultHolidays,
   }: SetupOptions) =>
   (appLogicHook: AppLogic) => {
     appLogicHook.claims.claimDetail = new ClaimDetail({
@@ -55,6 +58,10 @@ const setupHelper =
     appLogicHook.errors = [];
     appLogicHook.documents.loadAll = jest.fn();
     appLogicHook.documents.hasLoadedClaimDocuments = () => true;
+    appLogicHook.holidays.holidays = holidays;
+    appLogicHook.holidays.loadHolidays = jest.fn();
+    appLogicHook.holidays.hasLoadedHolidays = true;
+    appLogicHook.holidays.isLoadingHolidays = false;
     appLogicHook.portalFlow.goTo = goTo;
     if (includeApprovalNotice) {
       appLogicHook.documents.documents = createApprovalNotice(approvalDate);
@@ -86,6 +93,10 @@ const defaultClaimDetailAttributes = {
   },
   absence_periods: [defaultAbsencePeriod],
 };
+
+const defaultHolidays = [{ name: "Memorial Day", date: "2022-05-30" }];
+const defaultHolidayAlertText =
+  "Due to the upcoming holiday, payments may be delayed by one business day.";
 
 const props = {
   query: {
@@ -145,7 +156,11 @@ describe("Payments", () => {
       props
     );
 
-    expect(screen.getByRole("region")).toMatchSnapshot();
+    const bondingAlertText =
+      "If you are giving birth, you may also be eligible for paid medical leave";
+    expect(
+      screen.getByText(bondingAlertText, { exact: false })
+    ).toBeInTheDocument();
   });
 
   it("displays info alert if claimant has pregnancy but not bonding claims", () => {
@@ -166,7 +181,11 @@ describe("Payments", () => {
       props
     );
 
-    expect(screen.getByRole("region")).toMatchSnapshot();
+    const pregnancyAlertText =
+      "You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends.";
+    expect(
+      screen.getByText(pregnancyAlertText, { exact: false })
+    ).toBeInTheDocument();
   });
 
   it("does not display info alert if claimant has bonding AND pregnancy claims", () => {
@@ -191,7 +210,30 @@ describe("Payments", () => {
       },
       props
     );
-    expect(screen.queryByRole("region")).not.toBeInTheDocument();
+    const bondingAlertText =
+      "If you are giving birth, you may also be eligible for paid medical leave";
+    const pregnancyAlertText =
+      "You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends.";
+    expect(
+      screen.queryByText(bondingAlertText, { exact: false })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(pregnancyAlertText, { exact: false })
+    ).not.toBeInTheDocument();
+  });
+
+  it("doesn't show the holiday alert when there are no holidays", () => {
+    renderPage(
+      Payments,
+      { addCustomSetup: setupHelper({ holidays: [] }) },
+      props
+    );
+    expect(screen.queryByText(defaultHolidayAlertText)).not.toBeInTheDocument();
+  });
+
+  it("shows the holiday alert when there are holidays", () => {
+    renderPage(Payments, { addCustomSetup: setupHelper({}) }, props);
+    expect(screen.queryByText(defaultHolidayAlertText)).toBeInTheDocument();
   });
 
   it("renders the `Your payments` intro content section", () => {
@@ -351,6 +393,12 @@ describe("Payments", () => {
           errors: [new NotFoundError()],
           documents: {
             loadAll: { loadAllClaimDocuments: jest.fn() },
+          },
+          holidays: {
+            holidays: defaultHolidays,
+            loadHolidays: jest.fn(),
+            hasLoadedHolidays: true,
+            isLoadingHolidays: false,
           },
           payments: {
             loadPayments: jest.fn(),
