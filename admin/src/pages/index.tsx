@@ -4,8 +4,7 @@ import {
   ApiResponse,
   Flag,
   FlagWithLog,
-  FlagWithLogsResponse,
-  FlagsResponse,
+  GETAdminFlagLogsByNameResponse,
   getAdminFlagLogsByName,
   patchAdminFlagsByName,
 } from "../api";
@@ -24,8 +23,9 @@ export const Timezone = "America/New_York";
 export const TimezoneAbbr = moment().tz(Timezone).zoneAbbr();
 
 export default function Maintenance() {
-  const [maintenanceHistory, setMaintenanceHistory] =
-    React.useState<FlagWithLogsResponse>([]);
+  const [maintenanceHistory, setMaintenanceHistory] = React.useState<
+    FlagWithLog[]
+  >([]);
   const [maintenance, setMaintenance] = React.useState<Flag | null>(null);
 
   const router = useRouter();
@@ -35,7 +35,7 @@ export default function Maintenance() {
 
   React.useEffect(() => {
     getAdminFlagLogsByName({ name: "maintenance" }).then(
-      (response: ApiResponse<FlagWithLogsResponse>) => {
+      (response: ApiResponse<GETAdminFlagLogsByNameResponse>) => {
         // The stubbed API endpoint returns an object unfortunately. It will
         // be an array once the endpoint is updated.
         const logs = Array.isArray(response.data) ? response.data : [];
