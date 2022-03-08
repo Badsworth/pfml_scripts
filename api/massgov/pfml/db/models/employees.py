@@ -969,12 +969,12 @@ class BenefitYear(Base, TimestampMixin):
     total_wages = Column(Numeric(asdecimal=True))
 
     @typed_hybrid_property
-    def current_benefit_year(self):
+    def current_benefit_year(self) -> bool:
         today = date.today()
         return today >= self.start_date and today <= self.end_date
 
     @current_benefit_year.expression
-    def current_benefit_year(cls):  # noqa: B902
+    def current_benefit_year(cls) -> bool:  # noqa: B902
         return func.now().between(cls.start_date, cls.end_date)
 
     contributions = cast(

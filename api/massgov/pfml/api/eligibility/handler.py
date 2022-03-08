@@ -28,6 +28,7 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 
 class BenefitYearsSearchTerms(PydanticBaseModel):
     employee_id: Optional[str]
+    current: Optional[bool]
 
 
 BenefitYearSearchRequest = SearchEnvelope[BenefitYearsSearchTerms]
@@ -77,6 +78,8 @@ def benefit_years_search():
         # See: https://github.com/EOLWD/pfml/blob/0ac0c389695edf9338c23142eef141a2d4399b91/api/massgov/pfml/db/models/applications.py#L390
         valid_applications = [va for va in applications if va.employee]
         request = BenefitYearSearchRequest.parse_obj(connexion.request.json)
+        terms = request.terms
+
         with PaginationAPIContext(BenefitYear, request=request) as pagination_context:
             employee_ids = []
             for valid_application in valid_applications:
@@ -85,6 +88,10 @@ def benefit_years_search():
                 if valid_application.employee:
                     employee_ids.append(valid_application.employee.employee_id)
             query = db_session.query(BenefitYear).filter(BenefitYear.employee_id.in_(employee_ids))
+
+            if terms.current is not None:
+                query = query.filter(BenefitYear.current_benefit_year == terms.current)  # type: ignore
+
             is_asc = pagination_context.order_direction == OrderDirection.asc.value
             sort_fn = asc if is_asc else desc
             query = query.order_by(sort_fn(pagination_context.order_key))

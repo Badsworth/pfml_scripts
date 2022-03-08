@@ -2,7 +2,7 @@
 # Tests for /v1/financial-eligibility API.
 #
 from collections import namedtuple
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from enum import Enum
 
@@ -887,6 +887,113 @@ def test_benefit_year_search_current_year_at_edge_start_and_end(
             json={"terms": {}},
         )
         assert_benefit_year_search_response(response, expected_benefit_years)
+
+
+def test_benefit_year_search_current(
+    client,
+    test_db_session,
+    initialize_factories_session,
+    tax_id,
+    auth_token,
+    user,
+    employee,
+):
+    ApplicationFactory.create(user=user, tax_identifier=tax_id)
+    # Create two benefit years, one of which is current
+
+    today = date.today()
+    past_by_start = today - timedelta(weeks=117)
+    past_by_end = today - timedelta(weeks=65)
+    past_by_2_start = today - timedelta(weeks=64)
+    past_by_2_end = today - timedelta(weeks=12)
+    current_by_start = today - timedelta(weeks=11)
+    current_by_end = today + timedelta(weeks=41)
+
+    past_by = BenefitYear(
+        start_date=past_by_start,
+        end_date=past_by_end,
+        employee_id=employee.employee_id,
+        total_wages=Decimal(0),
+    )
+    past_by_2 = BenefitYear(
+        start_date=past_by_2_start,
+        end_date=past_by_2_end,
+        employee_id=employee.employee_id,
+        total_wages=Decimal(0),
+    )
+    current_by = BenefitYear(
+        start_date=current_by_start,
+        end_date=current_by_end,
+        employee_id=employee.employee_id,
+        total_wages=Decimal(0),
+    )
+    test_db_session.add(past_by)
+    test_db_session.add(past_by_2)
+    test_db_session.add(current_by)
+    test_db_session.commit()
+
+    response_no_filter = client.post(
+        "/v1/benefit-years/search",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"terms": {}},
+    )
+    expected_response_no_filter = [
+        {
+            "benefit_year_end_date": current_by_end.strftime("%Y-%m-%d"),
+            "benefit_year_start_date": current_by_start.strftime("%Y-%m-%d"),
+            "employee_id": employee.employee_id.__str__(),
+            "current_benefit_year": True,
+        },
+        {
+            "benefit_year_end_date": past_by_2_end.strftime("%Y-%m-%d"),
+            "benefit_year_start_date": past_by_2_start.strftime("%Y-%m-%d"),
+            "employee_id": employee.employee_id.__str__(),
+            "current_benefit_year": False,
+        },
+        {
+            "benefit_year_end_date": past_by_end.strftime("%Y-%m-%d"),
+            "benefit_year_start_date": past_by_start.strftime("%Y-%m-%d"),
+            "employee_id": employee.employee_id.__str__(),
+            "current_benefit_year": False,
+        },
+    ]
+    assert_benefit_year_search_response(response_no_filter, expected_response_no_filter)
+
+    response_currrent_true = client.post(
+        "/v1/benefit-years/search",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"terms": {"current": True}},
+    )
+    expected_response_current_true = [
+        {
+            "benefit_year_end_date": current_by_end.strftime("%Y-%m-%d"),
+            "benefit_year_start_date": current_by_start.strftime("%Y-%m-%d"),
+            "employee_id": employee.employee_id.__str__(),
+            "current_benefit_year": True,
+        },
+    ]
+    assert_benefit_year_search_response(response_currrent_true, expected_response_current_true)
+
+    response_current_false = client.post(
+        "/v1/benefit-years/search",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"terms": {"current": False}},
+    )
+    expected_response_currrent_false = [
+        {
+            "benefit_year_end_date": past_by_2_end.strftime("%Y-%m-%d"),
+            "benefit_year_start_date": past_by_2_start.strftime("%Y-%m-%d"),
+            "employee_id": employee.employee_id.__str__(),
+            "current_benefit_year": False,
+        },
+        {
+            "benefit_year_end_date": past_by_end.strftime("%Y-%m-%d"),
+            "benefit_year_start_date": past_by_start.strftime("%Y-%m-%d"),
+            "employee_id": employee.employee_id.__str__(),
+            "current_benefit_year": False,
+        },
+    ]
+    assert_benefit_year_search_response(response_current_false, expected_response_currrent_false)
 
 
 def assert_benefit_year_search_response(response, expected_benefit_years):
