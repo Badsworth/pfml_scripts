@@ -16,7 +16,9 @@ export default class BenefitYearsApi extends BaseApi {
   }
 
   getBenefitYears = async () => {
-    const { data } = await this.request<BenefitYear[]>("POST", "search", {});
+    const { data } = await this.request<BenefitYear[]>("POST", "search", {
+      terms: {},
+    });
 
     return data;
   };

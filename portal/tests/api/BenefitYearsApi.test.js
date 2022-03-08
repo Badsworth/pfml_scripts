@@ -18,6 +18,7 @@ describe("BenefitYearsApi", () => {
       expect.objectContaining({
         headers: expect.any(Object),
         method: "POST",
+        body: JSON.stringify({ terms: {} }),
       })
     );
   });
