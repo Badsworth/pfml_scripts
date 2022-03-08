@@ -98,29 +98,13 @@ class NotificationCaseSummary(base.NotificationCaseSummary):
     )
 
 
-# Placeholder classes for modifications work
-# Remove these once the FINEOS 21.3.2 upgrade is complete and the API spec files are updated
-# TODO: https://lwd.atlassian.net/browse/PORTAL-1671
-class ChangeRequestPeriod(BaseModel):
-    endDate: date = Field(..., description="ISO 8601 date format", example="1999-12-31")
-    startDate: date = Field(..., description="ISO 8601 date format", example="1999-12-31")
+# Support placeholder alternative name
+# TODO (PORTAL-1671): update code to use correct FINEOS model name
+class ChangeRequestReason(base.ReasonRequest):
+    pass
 
 
-# Placeholder classes for modifications work
-class ChangeRequestReason(BaseModel):
-    fullId: int = Field(..., description="Reason enum id")
-    name: str = Field(..., description="Reason enum name", example="Employee Requested Removal")
-
-
-# Placeholder classes for modifications work
-class LeavePeriodChangeRequest(BaseModel):
-    reason: ChangeRequestReason = Field(
-        ..., description="Reason for the leave period change request"
-    )
-    additionalNotes: str = Field(None, description="Change Request notes", example="Withdrawal")
-    changeRequestPeriods: List[ChangeRequestPeriod] = Field(
-        ...,
-        description="List of periods for leave period change request.",
-        max_items=20,
-        min_items=1,
-    )
+# Support placeholder alternative name
+# TODO (PORTAL-1671): update code to use correct FINEOS model name
+class LeavePeriodChangeRequest(base.CreateLeavePeriodsChangeRequestCommand):
+    pass

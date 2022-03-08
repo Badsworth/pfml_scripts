@@ -3,7 +3,6 @@ from .overrides import (  # noqa: F401
     AbsencePeriodStatus,
     AdditionalInformation,
     Attribute,
-    ChangeRequestPeriod,
     ChangeRequestReason,
     ContactDetails,
     EmailAddressV20,
