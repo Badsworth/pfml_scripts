@@ -91,10 +91,7 @@ describe("Applications", () => {
       screen.getByRole("link", {
         name: "application review and approval process",
       })
-    ).toHaveAttribute(
-      "href",
-      "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-application-approval-timeline"
-    );
+    ).toHaveAttribute("href", "https://mass.gov/pfml/application-timeline");
   });
 
   it("displays prompt for channel switching when feature flag is enabled", () => {

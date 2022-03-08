@@ -121,17 +121,11 @@ const routes = {
       "https://www.dol.gov/agencies/whd/fact-sheets/28C-fmla-eldercare",
     massTaxConnect: "https://mtc.dor.state.ma.us/mtc/_/",
     massgov: {
-      approvalTimeline:
-        "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-application-approval-timeline",
+      approvalTimeline: "https://mass.gov/pfml/application-timeline",
       benefitsCalculator:
         "https://calculator.digital.mass.gov/pfml/yourbenefits/",
-      benefitsGuide: "https://www.mass.gov/how-pfml-benefits-are-calculated",
       benefitsGuide_aboutBondingLeave:
         "https://www.mass.gov/family-leave-bonding",
-      benefitsGuide_aboutCaringLeave:
-        "https://www.mass.gov/family-leave-caring",
-      benefitsGuide_aboutMedicalLeave:
-        "https://www.mass.gov/leave-types-medical",
       benefitsGuide_benefitYears:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-overview-and-benefits#getting-paid-and-taxes-on-benefits-",
       benefitsGuide_benefitsAmountDetails:
@@ -139,8 +133,6 @@ const routes = {
       benefitsGuide_seriousHealthCondition:
         "https://www.mass.gov/pfml-serious-health-condition",
       calculateHours: "https://www.mass.gov/pfml-calculate-hours",
-      calculateReductions:
-        "https://www.mass.gov/guides/what-to-expect-when-you-apply-for-paid-family-and-medical-leave-benefits#-calculate-any-reductions-",
       caregiverCertificationForm: "https://www.mass.gov/family-caring-form",
       caregiverRelationship:
         "https://www.mass.gov/family-caring-leave-relationships",
@@ -162,12 +154,8 @@ const routes = {
       feedbackClaimant: "https://www.mass.gov/paidleave-claimant-feedback",
       feedbackEmployer: "https://www.mass.gov/paidleave-employer-feedback",
       healthcareProviderForm: "https://www.mass.gov/medical-leave-form",
-      howToApplyPaidLeave:
-        "https://www.mass.gov/guides/what-is-paid-family-and-medical-leave#-how-can-i-apply-for-paid-leave-massachusetts-benefits",
       identityProof:
         "https://www.mass.gov/info-details/identity-proof-for-paid-leave",
-      index:
-        "https://www.mass.gov/topics/paid-family-and-medical-leave-in-massachusetts",
       informedConsent: "https://www.mass.gov/paidleave-informedconsent",
       intermittentLeaveGuide:
         "https://www.mass.gov/intermittent-leave-instructions",
@@ -184,8 +172,6 @@ const routes = {
       privacyPolicy: "https://www.mass.gov/privacypolicy",
       proofOfBirthOrPlacement:
         "https://www.mass.gov/info-details/required-documents-for-your-paid-family-and-medical-leave-pfml-application#for-family-leave-applications-",
-      reductionsEmployerBenefits:
-        "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-",
       reductionsOverview:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions",
       requestAnAppealForPFML:
@@ -196,8 +182,6 @@ const routes = {
       taxGuide:
         "https://www.mass.gov/service-details/find-a-tax-professional-to-help-with-your-taxes",
       taxLiability: "https://www.mass.gov/pfml-tax-liability",
-      timeline:
-        "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-application-approval-timeline",
       usingAccruedPaidLeave:
         "https://www.mass.gov/info-details/how-other-leave-and-benefits-can-affect-your-paid-family-and-medical-leave#paid-time-off-through-your-employer-",
       usingOtherLeave:

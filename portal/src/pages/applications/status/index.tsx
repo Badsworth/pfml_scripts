@@ -640,7 +640,7 @@ export const Timeline = ({
         components={{
           "timeline-link": (
             <a
-              href={routes.external.massgov.timeline}
+              href={routes.external.massgov.approvalTimeline}
               rel="noopener noreferrer"
               target="_blank"
             />
