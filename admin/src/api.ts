@@ -17,7 +17,7 @@ const environments = [
   "prod",
   "stage",
   "test",
-  "trn",
+  "training",
   "trn2",
   "uat",
 ] as const;
