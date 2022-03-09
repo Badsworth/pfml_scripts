@@ -44,6 +44,8 @@ data "aws_ecs_cluster" "long" {
 module "api" {
   source = "../../template"
 
+  logging_level = "massgov.pfml.fineos.fineos_client=DEBUG"
+
   environment_name = local.environment_name
   # st_use_mock_dor_data    = false
   # st_decrypt_dor_data     = false
