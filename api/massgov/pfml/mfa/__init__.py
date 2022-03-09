@@ -5,7 +5,7 @@ import massgov.pfml.api.app as app
 import massgov.pfml.cognito.config as cognito_config
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import User
-from massgov.pfml.util.aws.cognito import admin_disable_user_mfa, disable_user_mfa, enable_user_mfa
+from massgov.pfml.util.aws.cognito import admin_disable_user_mfa, set_user_mfa
 from massgov.pfml.util.aws.ses import EmailRecipient, send_templated_email
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -21,7 +21,7 @@ def handle_mfa_enabled(user: User, cognito_auth_token: str) -> None:
     logger.info("MFA enabled for user")
 
     try:
-        enable_user_mfa(user.email_address, cognito_auth_token)
+        set_user_mfa(user.email_address, True, cognito_auth_token)
     except Exception as error:
         logger.error("Error enabling MFA", exc_info=error)
         raise error
@@ -47,7 +47,9 @@ def handle_mfa_disabled(
 
     try:
         if sync_cognito_preferences:
-            disable_user_mfa(user.email_address, cognito_auth_token)
+            # todo: what should happen if this is local env? should we not make this call?
+            # todo: will this work locally now that we're using the user's auth token?
+            set_user_mfa(user.email_address, False, cognito_auth_token)
 
         if app.get_config().environment == "local" and app.get_config().disable_sending_emails:
             logger.info(
@@ -113,6 +115,7 @@ def handle_mfa_disabled_by_admin(user: User, last_enabled_at: Optional[datetime]
     logger.info("MFA disabled for user", extra=log_attributes)
 
     try:
+        # todo: will this work locally? should we skip this call?
         admin_disable_user_mfa(user.email_address)
         if app.get_config().environment == "local" and app.get_config().disable_sending_emails:
             logger.info(

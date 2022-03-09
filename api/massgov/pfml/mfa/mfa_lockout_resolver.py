@@ -1,6 +1,6 @@
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
-from massgov.pfml.api.services.users import admin_disable_mfa as admin_disable_mfa
+from massgov.pfml.api.services.users import admin_disable_mfa
 from massgov.pfml.db.models.employees import User
 from massgov.pfml.db.queries.users import get_user_by_email
 from massgov.pfml.util.aws.sns import check_phone_number_opt_out, opt_in_phone_number
@@ -79,9 +79,9 @@ class MfaLockoutResolver:
                 if self.should_commit_changes:
                     admin_disable_mfa(db_session, user)
                 else:
-                    self._log_info("(DRY RUN: Skipping API call to disable user MFA)")
+                    self._log_info("(DRY RUN: Skipping call to disable user MFA)")
             except Exception as e:
-                self._log_error("Error disabling user MFA in Cognito", e)
+                self._log_error("Error disabling user MFA", e)
                 raise e
 
         self._log_info("...Done!")

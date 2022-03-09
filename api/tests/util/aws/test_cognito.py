@@ -371,7 +371,7 @@ class TestDisableUserMFA:
     def test_success(self, mock_create_cognito, mock_cognito, auth_token):
         mock_create_cognito.return_value = mock_cognito
 
-        cognito_util.disable_user_mfa("foo@bar.com", auth_token)
+        cognito_util.set_user_mfa("foo@bar.com", False, auth_token)
 
         mock_cognito.set_user_mfa_preference.assert_called_with(
             SMSMfaSettings={"Enabled": False}, AccessToken=auth_token
@@ -392,6 +392,6 @@ class TestDisableUserMFA:
         mock_set_mfa_prefs.side_effect = user_not_found
 
         with pytest.raises(Exception):
-            cognito_util.disable_user_mfa("foo@bar.com", auth_token)
+            cognito_util.set_user_mfa("foo@bar.com", False, auth_token)
 
         assert "User not found with email" in caplog.text
