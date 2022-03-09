@@ -1444,6 +1444,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
 
+
   /admin/authorize:
     get:
       security:
@@ -4383,6 +4384,14 @@ components:
         current:
           type: boolean
           example: false
+        end_date_within:
+          type: array
+          items:
+            type: string
+            format: date
+          minItems: 2
+          maxItems: 2
+          example: ['2020-12-12','2021-01-10']
     
     BenefitYearsSearchRequest:
       type: object
