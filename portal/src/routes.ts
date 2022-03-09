@@ -132,6 +132,8 @@ const routes = {
         "https://www.mass.gov/how-much-will-i-get-paid",
       benefitsGuide_seriousHealthCondition:
         "https://www.mass.gov/pfml-serious-health-condition",
+      benefitsGuide_weeklyBenefitAmounts:
+        "https://www.mass.gov/info-details/how-pfml-weekly-benefit-amounts-are-calculated",
       calculateHours: "https://www.mass.gov/pfml-calculate-hours",
       caregiverCertificationForm: "https://www.mass.gov/family-caring-form",
       caregiverRelationship:

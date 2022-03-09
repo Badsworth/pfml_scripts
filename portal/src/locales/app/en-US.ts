@@ -851,6 +851,11 @@ const shared: {
   contactCenterPhoneNumberNoBreak:
     "(833)$t(chars.nbsp)344$t(chars.nbhyphen)7365",
   contactCenterReportHoursPhoneNumber: "(857) 972-9256",
+  crossedBenefitYearBodySubmitBoth:
+    "<p>Your current benefit year is {{benfitYearStartDate}} to {{benefitYearEndDate}}. You can submit an application for leave that crosses into a new benefit year.</p><p>After you submit, we’ll review each application separately. This means that:</p><ul><li>The Department's determination for one application may be different from its determination for the other.</li><li>The Department will calculate your weekly benefit amount for each application separately. You may receive different payment amounts for each application. Learn more about <weekly-benefits-amounts-link>how PFML weekly benefit amounts are calculated.</weekly-benefits-amounts-link></li><li>You'll have two 7-day waiting periods, one at the start of each period of your leave. Learn more about the <waiting-week-link>7-day waiting period</waiting-week-link>.</li>",
+  crossedBenefitYearBodySubmitOne:
+    "<p>Your current benefit year is {{benfitYearStartDate}} to {{benefitYearEndDate}}. You can submit an application for leave that crosses into a new benefit year. After you submit Part 1 of your application, we'll automatically split this application into two, one for each benefit year.</p><p>After we split your application, you will be able to complete your application for {{leaveStartDate}} to {{benefitYearEndDate}} right away.</p><p>You will be able to complete your second application for the rest of your leave on {{ableToSubmitOn}}. This is 60 days before the start of your new benefit year. Applications cannot be completed and submitted until 60 days before the start of leave.</p>",
+  crossedBenefitYearHeader: "Your leave dates cross into a new benefit year.",
   dateRangeDelimiter: "to",
   day_Friday: "Friday",
   day_Monday: "Monday",
