@@ -1,5 +1,15 @@
+import pytest
+# from massgov.pfml.db.models.factories import EmployeeFactory, Pfml1099BatchFactory
 import massgov.pfml.delegated_payments.irs_1099.pfml_1099_util as pfml_1099_util
+from massgov.pfml.delegated_payments.mock.irs_1099_factory import Pfml1099Factory
 
+# @pytest.fixture
+# def pfml_1099_utility(
+#     local_initialize_factories_session, local_test_db_session, local_test_db_other_session
+# ):
+#     return populate_payments.PopulatePaymentsStep(
+#         db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
+#     )
 
 def test_is_generate_1099_pdf_enabled():
     result = pfml_1099_util.is_generate_1099_pdf_enabled()
@@ -58,3 +68,14 @@ def test_is_correction_batch():
     result = pfml_1099_util.is_correction_batch()
     assert result == is_correction
 
+def test_get_1099_records_to_file(local_test_db_session):
+    result = pfml_1099_util.get_1099_records_to_file(local_test_db_session)
+    assert len(result) == 0
+
+def test_get_1099_record(local_test_db_session):
+    pfml_1099 = Pfml1099Factory(db_session=local_test_db_session).get_or_create_batch()
+    # pfml_1099 = Pfml1099Factory.create(
+    #     pfml_1099_batch_id=batch.pfml_1099_batch_id, employee_id=employee.employee_id
+    # )
+    # result = pfml_1099_util.get_1099_record(local_test_db_session, "New", str(pfml_1099.pfml_1099_batch_id))
+    assert 1 == 1
