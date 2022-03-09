@@ -28,9 +28,6 @@ const flagsConfig = {
     // TODO (CP-534): Show all options when portal supports activeDutyFamily, serviceMemberFamily
     claimantShowMilitaryLeaveTypes: false,
 
-    // When this flag is false, you can bypass the deparment capture form when applying
-    claimantShowOrganizationUnits: false,
-
     // When this flag is enabled payment status phase three work will be displayed.
     claimantShowPaymentsPhaseThree: false,
 

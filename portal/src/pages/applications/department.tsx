@@ -12,7 +12,6 @@ import OrganizationUnit from "../../models/OrganizationUnit";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { Trans } from "react-i18next";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -28,8 +27,6 @@ type RadioOrComboboxField = "comboOrgUnit" | "radioOrgUnit";
 export const Department = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
-
-  const showDepartments = isFeatureEnabled("claimantShowOrganizationUnits");
 
   const { organization_unit_id, organization_unit_selection } = pick(
     props,
@@ -134,7 +131,7 @@ export const Department = (props: WithBenefitsApplicationProps) => {
   // The claimant flow should already check both requirements below
   // but we still want to prevent direct access to this page
   // if the feature flag is False or this employer has zero org units
-  if (!showDepartments || claim.employer_organization_units.length === 0) {
+  if (claim.employer_organization_units.length === 0) {
     appLogic.portalFlow.goToNextPage(
       { claim },
       { claim_id: claim.application_id }

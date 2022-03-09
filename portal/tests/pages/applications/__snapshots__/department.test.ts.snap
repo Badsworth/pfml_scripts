@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`DepartmentPage when claimantShowOrganizationUnits feature flag is enabled renders the confirmation page 1`] = `
+exports[`DepartmentPage renders the confirmation page 1`] = `
 <div>
   <form
     class="usa-form"
@@ -78,7 +78,7 @@ exports[`DepartmentPage when claimantShowOrganizationUnits feature flag is enabl
 </div>
 `;
 
-exports[`DepartmentPage when claimantShowOrganizationUnits feature flag is enabled renders the page with a long list 1`] = `
+exports[`DepartmentPage renders the page with a long list 1`] = `
 <div>
   <form
     class="usa-form"
