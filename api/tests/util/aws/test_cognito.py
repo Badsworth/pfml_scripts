@@ -356,11 +356,10 @@ def test_lookup_user_mfa_status_with_no_attrs(monkeypatch, mock_cognito, mock_co
     assert mfa_status is False
 
 
-class TestDisableUserMFA:
+class TestSetUserMFA:
     @pytest.fixture
     def mock_cognito(self):
         mock_cognito = MagicMock()
-        mock_cognito.admin_set_user_mfa_preference = MagicMock()
         return mock_cognito
 
     @pytest.fixture
@@ -368,7 +367,17 @@ class TestDisableUserMFA:
         return "user cognito auth token"
 
     @mock.patch("massgov.pfml.util.aws.cognito.create_cognito_client")
-    def test_success(self, mock_create_cognito, mock_cognito, auth_token):
+    def test_enable_success(self, mock_create_cognito, mock_cognito, auth_token):
+        mock_create_cognito.return_value = mock_cognito
+
+        cognito_util.set_user_mfa("foo@bar.com", True, auth_token)
+
+        mock_cognito.set_user_mfa_preference.assert_called_with(
+            SMSMfaSettings={"Enabled": True}, AccessToken=auth_token
+        )
+
+    @mock.patch("massgov.pfml.util.aws.cognito.create_cognito_client")
+    def test_disable_success(self, mock_create_cognito, mock_cognito, auth_token):
         mock_create_cognito.return_value = mock_cognito
 
         cognito_util.set_user_mfa("foo@bar.com", False, auth_token)
@@ -393,5 +402,39 @@ class TestDisableUserMFA:
 
         with pytest.raises(Exception):
             cognito_util.set_user_mfa("foo@bar.com", False, auth_token)
+
+        assert "User not found" in caplog.text
+
+
+class TestAdminDisableUserMFA:
+    @pytest.fixture
+    def mock_cognito(self):
+        mock_cognito = MagicMock()
+        return mock_cognito
+
+    @mock.patch("massgov.pfml.util.aws.cognito.create_cognito_client")
+    def test_success(self, mock_create_cognito, mock_cognito):
+        mock_create_cognito.return_value = mock_cognito
+
+        cognito_util.admin_disable_user_mfa("foo@bar.com")
+
+        mock_cognito.admin_set_user_mfa_preference.assert_called_with(
+            SMSMfaSettings={"Enabled": False}, Username="foo@bar.com", UserPoolId=mock.ANY
+        )
+
+    @mock.patch("massgov.pfml.util.aws.cognito.create_cognito_client")
+    def test_user_not_found_raises_exception(self, mock_create_cognito, mock_cognito, caplog):
+        mock_create_cognito.return_value = mock_cognito
+
+        user_not_found = boto3.client("cognito-idp", "us-east-1").exceptions.UserNotFoundException(
+            error_response={"Error": {"Code": "UserNotFoundException", "Message": ":("}},
+            operation_name="Foo",
+        )
+
+        mock_set_mfa_prefs = mock_cognito.admin_set_user_mfa_preference
+        mock_set_mfa_prefs.side_effect = user_not_found
+
+        with pytest.raises(Exception):
+            cognito_util.admin_disable_user_mfa("foo@bar.com")
 
         assert "User not found with email" in caplog.text
