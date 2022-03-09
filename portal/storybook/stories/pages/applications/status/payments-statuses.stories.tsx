@@ -33,24 +33,6 @@ const transactionDateOptions: {
 export default {
   title: "Pages/Applications/Status/Payment Statuses",
   component: Payments,
-  argTypes: {
-    "Payment Status": {
-      options: ["Cancelled", "Delayed", "Pending", "Sent to bank"],
-      control: { type: "select" },
-    },
-    "Writeback Status": {
-      options: [
-        "Address Validation Error",
-        "Bank Processing Error",
-        "EFT Account Information Error",
-      ],
-      control: { type: "select" },
-    },
-    "Transaction Date": {
-      options: Object.keys(transactionDateOptions),
-      control: { type: "select" },
-    },
-  },
 };
 
 interface StoryProps {
@@ -155,4 +137,22 @@ Delay.parameters = { controls: { exclude: ["user", "appLogic", "query"] } };
 Delay.args = {
   "Payment Status": "Delayed",
   "Transaction Date": "Today",
+};
+Delay.argTypes = {
+  "Payment Status": {
+    options: ["Cancelled", "Delayed", "Pending", "Sent to bank"],
+    control: { type: "select" },
+  },
+  "Writeback Status": {
+    options: [
+      "Address Validation Error",
+      "Bank Processing Error",
+      "EFT Account Information Error",
+    ],
+    control: { type: "select" },
+  },
+  "Transaction Date": {
+    options: Object.keys(transactionDateOptions),
+    control: { type: "select" },
+  },
 };
