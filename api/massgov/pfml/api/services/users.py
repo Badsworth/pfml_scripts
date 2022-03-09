@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Optional, cast
 
 import massgov.pfml.db as db
 import massgov.pfml.db.lookups as db_lookups
@@ -57,6 +57,8 @@ def _update_mfa_preference(
         if value is not None
         else None
     )
+    # the type checker doesn't know that user.mfa_delivery_preference can be None so
+    # ignore the type warning
     user.mfa_delivery_preference = mfa_preference  # type: ignore
 
     # Keep a copy of the last updated timestamp before we update it. This is used later for logging
@@ -89,7 +91,9 @@ def _update_mfa_preference_audit_trail(db_session: db.Session, user: User, updat
     else:
         mfa_updated_by = db_lookups.by_value(db_session, LkMFADeliveryPreferenceUpdatedBy, "User")
 
-    user.mfa_delivery_preference_updated_by = mfa_updated_by  # type: ignore
+    mfa_updated_by = cast(LkMFADeliveryPreferenceUpdatedBy, mfa_updated_by)
+
+    user.mfa_delivery_preference_updated_by = mfa_updated_by
 
 
 def admin_disable_mfa(db_session: db.Session, user: User,) -> None:
@@ -100,8 +104,10 @@ def admin_disable_mfa(db_session: db.Session, user: User,) -> None:
     if MFADeliveryPreference.OPT_OUT.mfa_delivery_preference_description == existing_mfa_preference:
         return
 
-    opt_out = db_lookups.by_value(db_session, LkMFADeliveryPreference, "Opt Out")
-    user.mfa_delivery_preference = opt_out  # type: ignore
+    opt_out = cast(
+        LkMFADeliveryPreference, db_lookups.by_value(db_session, LkMFADeliveryPreference, "Opt Out")
+    )
+    user.mfa_delivery_preference = opt_out
 
     # Keep a copy of the last updated timestamp before we update it. This is used later for logging
     # feature metrics
