@@ -197,7 +197,8 @@ def users_patch(user_id):
         ensure(EDIT, user)
 
     headers = flask.request.headers
-    auth_header = headers.get("Authorization", None)
+    auth_header = headers.get("Authorization")
+    assert auth_header
     # todo (PORTAL-1828): Remove X-FF-Sync-Cognito-Preferences feature flag header
     sync_cognito_preferences = headers.get("X-FF-Sync-Cognito-Preferences", None) == "true"
     cognito_auth_token = auth_header[7:]
