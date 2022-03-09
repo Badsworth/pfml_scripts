@@ -46,16 +46,16 @@ def handle_mfa_disabled(
     logger.info("MFA disabled for user", extra=log_attributes)
 
     try:
-        if sync_cognito_preferences:
-            # todo: what should happen if this is local env? should we not make this call?
-            # todo: will this work locally now that we're using the user's auth token?
-            set_user_mfa(user.email_address, False, cognito_auth_token)
-
+        # todo: rename the disable_sending_emails flag to something more generic
         if app.get_config().environment == "local" and app.get_config().disable_sending_emails:
             logger.info(
-                "Skipping sending an MFA disabled notification email", extra=log_attributes,
+                "Skipping updating Cognito or sending an MFA disabled notification email",
+                extra=log_attributes,
             )
         else:
+            if sync_cognito_preferences:
+                set_user_mfa(user.email_address, False, cognito_auth_token)
+
             _send_mfa_disabled_email(user.email_address, user.mfa_phone_number_last_four())
     except Exception as error:
         logger.error("Error disabling user MFA", exc_info=error)
@@ -115,13 +115,13 @@ def handle_mfa_disabled_by_admin(user: User, last_enabled_at: Optional[datetime]
     logger.info("MFA disabled for user", extra=log_attributes)
 
     try:
-        # todo: will this work locally? should we skip this call?
-        admin_disable_user_mfa(user.email_address)
         if app.get_config().environment == "local" and app.get_config().disable_sending_emails:
             logger.info(
-                "Skipping sending an MFA disabled notification email", extra=log_attributes,
+                "Skipping updating Cognito or sending an MFA disabled notification email",
+                extra=log_attributes,
             )
         else:
+            admin_disable_user_mfa(user.email_address)
             _send_mfa_disabled_email(user.email_address, user.mfa_phone_number_last_four())
     except Exception as error:
         logger.error("Error disabling user MFA", exc_info=error)
