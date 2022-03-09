@@ -5,7 +5,7 @@ import pytest
 
 from massgov.pfml.api.models.common import Phone
 from massgov.pfml.api.models.users.requests import UserUpdateRequest
-from massgov.pfml.api.services.users import update_user
+from massgov.pfml.api.services.users import admin_disable_mfa, update_user
 from tests.conftest import get_mock_logger
 
 
@@ -90,16 +90,19 @@ class TestUpdateUser:
             == "User"
         )
 
-    def test_audit_trail_as_admin(self, user, test_db_session, auth_token):
-        update_request = UserUpdateRequest(mfa_delivery_preference="SMS")
-        update_user(test_db_session, user, update_request, False, auth_token, updated_by="Admin")
+    @mock.patch("massgov.pfml.api.services.users.handle_mfa_disabled_by_admin")
+    def test_admin_disable_mfa_audit_trail(
+        self, mock_handle_mfa_disabled_by_admin, user_with_mfa, test_db_session, auth_token
+    ):
+        # todo: add test to verify other side-effects of this call
+        admin_disable_mfa(test_db_session, user_with_mfa)
 
         test_db_session.commit()
-        test_db_session.refresh(user)
+        test_db_session.refresh(user_with_mfa)
 
-        assert user.mfa_delivery_preference_updated_by_id == 2
+        assert user_with_mfa.mfa_delivery_preference_updated_by_id == 2
         assert (
-            user.mfa_delivery_preference_updated_by.mfa_delivery_preference_updated_by_description
+            user_with_mfa.mfa_delivery_preference_updated_by.mfa_delivery_preference_updated_by_description
             == "Admin"
         )
 

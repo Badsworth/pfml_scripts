@@ -11,7 +11,7 @@ from massgov.pfml.db.models.employees import (
     MFADeliveryPreference,
     User,
 )
-from massgov.pfml.mfa import handle_mfa_disabled, handle_mfa_enabled
+from massgov.pfml.mfa import handle_mfa_disabled, handle_mfa_disabled_by_admin, handle_mfa_enabled
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -95,17 +95,21 @@ def _update_mfa_preference_audit_trail(db_session: db.Session, user: User, updat
     setattr(user, mfa_delivery_preference_updated_by, mfa_updated_by)
 
 
-# todo: add comment
 def admin_disable_mfa(db_session: db.Session, user: User,) -> None:
+    """API administrator action for disabling MFA on a user's account. This is used to unlock users who have
+    been locked out of their account due to MFA but should be used carefully, only after a user has had their
+    identity verified"""
     existing_mfa_preference = user.mfa_preference_description()
     if MFADeliveryPreference.OPT_OUT.mfa_delivery_preference_description == existing_mfa_preference:
         return
 
-    setattr(user, "mfa_delivery_preference", MFADeliveryPreference.OPT_OUT)
+    opt_out = db_lookups.by_value(db_session, LkMFADeliveryPreference, "Opt Out")
+    setattr(user, "mfa_delivery_preference", opt_out)
 
     # Keep a copy of the last updated timestamp before we update it. This is used later for logging
     # feature metrics
     updated_by = "admin"
+    last_updated_at = user.mfa_delivery_preference_updated_at
 
     _update_mfa_preference_audit_trail(db_session, user, updated_by)
 
@@ -114,3 +118,5 @@ def admin_disable_mfa(db_session: db.Session, user: User,) -> None:
         "updated_by": updated_by,
     }
     logger.info("MFA disabled for user", extra=log_attributes)
+
+    handle_mfa_disabled_by_admin(user, last_updated_at)

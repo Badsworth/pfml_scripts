@@ -27,14 +27,10 @@ class TestMfaLockoutResolver:
         "massgov.pfml.mfa.mfa_lockout_resolver.check_phone_number_opt_out", return_value=True,
     )
     @patch("massgov.pfml.mfa.mfa_lockout_resolver.opt_in_phone_number")
-    @patch("massgov.pfml.mfa.mfa_lockout_resolver.admin_disable_user_mfa_cognito")
-    @patch("massgov.pfml.mfa.mfa_lockout_resolver.admin_disable_user_mfa_pfml")
-    @patch("massgov.pfml.mfa.mfa_lockout_resolver.send_mfa_disabled_email")
+    @patch("massgov.pfml.mfa.mfa_lockout_resolver.admin_disable_mfa")
     def test_mfa_lockout_resolution_dry_run(
         self,
-        mock_send_email,
-        mock_disable_mfa_pfml,
-        mock_disable_mfa_cognito,
+        mock_disable_mfa,
         mock_opt_in_phone_number,
         mock_opt_out,
         mock_get_user,
@@ -57,9 +53,7 @@ class TestMfaLockoutResolver:
         mfa_lockout_resolver.run()
 
         # check that none of the methods that make external calls are called
-        mock_send_email.assert_not_called()
-        mock_disable_mfa_pfml.assert_not_called()
-        mock_disable_mfa_cognito.assert_not_called()
+        mock_disable_mfa.assert_not_called()
         mock_opt_out.assert_called_once_with(user_with_mfa.mfa_phone_number)
         mock_opt_in_phone_number.assert_not_called()
 
@@ -121,34 +115,6 @@ class TestMfaLockoutResolver:
             )
             self.mock_logger.error.assert_any_call(
                 "Error finding user in PFML database", e, extra=self.mfa_lockout_resolver.log_attr,
-            )
-
-    @patch("massgov.pfml.mfa.mfa_lockout_resolver.logger", mock_logger)
-    @patch("massgov.pfml.mfa.mfa_lockout_resolver.admin_disable_user_mfa_cognito")
-    def test_disable_mfa_cognito(self, mock_admin_disable_user_mfa_cognito):
-        self.mfa_lockout_resolver._disable_mfa_cognito()
-        mock_admin_disable_user_mfa_cognito.assert_called_once_with(
-            self.mfa_lockout_resolver.user_email
-        )
-        self.mock_logger.info.assert_any_call(
-            "Disabling user MFA in Cognito", extra=self.mfa_lockout_resolver.log_attr
-        )
-
-    @patch("massgov.pfml.mfa.mfa_lockout_resolver.logger", mock_logger)
-    @patch("massgov.pfml.mfa.mfa_lockout_resolver.admin_disable_user_mfa_cognito")
-    def test_disable_mfa_cognito_error(self, mock_admin_disable_user_mfa_cognito):
-        mock_admin_disable_user_mfa_cognito.side_effect = Exception("ran into an error")
-        mfa_lockout_resolver = create_lockout_resolver(dry_run=False)
-        with pytest.raises(Exception) as e:
-            mfa_lockout_resolver._disable_mfa_cognito()
-            mock_admin_disable_user_mfa_cognito.assert_called_once_with(
-                mfa_lockout_resolver.user_email
-            )
-            self.mock_logger.info.assert_any_call(
-                "Disabling user MFA in Cognito", extra=self.mfa_lockout_resolver.log_attr
-            )
-            self.mock_logger.error.assert_any_call(
-                "Error disabling user MFA in Cognito", e, extra=self.mfa_lockout_resolver.log_attr,
             )
 
     @patch("massgov.pfml.mfa.mfa_lockout_resolver.logger", mock_logger)
@@ -214,23 +180,22 @@ class TestMfaLockoutResolver:
             )
 
     @patch("massgov.pfml.mfa.mfa_lockout_resolver.logger", mock_logger)
-    @patch("massgov.pfml.mfa.mfa_lockout_resolver.admin_disable_user_mfa_pfml")
-    def test_disable_mfa_pfml(self, mock_admin_disable_user_mfa_pfml, user):
-        self.mfa_lockout_resolver._disable_mfa_pfml(user)
+    @patch("massgov.pfml.mfa.mfa_lockout_resolver.admin_disable_mfa")
+    def test_disable_mfa(self, mock_admin_disable_mfa, user):
+        self.mfa_lockout_resolver._disable_mfa(user)
 
-        mock_admin_disable_user_mfa_pfml.assert_called_once()
-        # assert user_with_mfa.mfa_delivery_preference.mfa_delivery_preference_id == 2
+        mock_admin_disable_mfa.assert_called_once()
         self.mock_logger.info.assert_any_call(
-            "Disabling user MFA in PFML db", extra=self.mfa_lockout_resolver.log_attr
+            "Disabling user MFA", extra=self.mfa_lockout_resolver.log_attr
         )
 
     @patch("massgov.pfml.mfa.mfa_lockout_resolver.logger", mock_logger)
-    @patch("massgov.pfml.mfa.mfa_lockout_resolver.admin_disable_user_mfa_pfml")
-    def test_disable_mfa_pfml_error(self, mock_admin_disable_user_mfa_pfml, user):
-        mock_admin_disable_user_mfa_pfml.side_effect = Exception("ran into an error")
+    @patch("massgov.pfml.mfa.mfa_lockout_resolver.admin_disable_mfa")
+    def test_disable_mfa_error(self, mock_admin_disable_mfa, user):
+        mock_admin_disable_mfa.side_effect = Exception("ran into an error")
 
         with pytest.raises(Exception) as e:
-            self.mfa_lockout_resolver._disable_mfa_pfml(user)
+            self.mfa_lockout_resolver._disable_mfa(user)
 
             self.mock_logger.info.assert_any_call(
                 "Setting user opt-in in SNS", extra=self.mfa_lockout_resolver.log_attr

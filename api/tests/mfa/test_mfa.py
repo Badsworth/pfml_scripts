@@ -33,6 +33,7 @@ class TestHandleMfaDisabled:
                 "last_enabled_at": mock.ANY,
                 "time_since_enabled_in_sec": mock.ANY,
                 "updated_by": "user",
+                "sync_cognito_preferences": False,
             },
         )
         assert (
@@ -50,7 +51,8 @@ class TestHandleMfaDisabled:
         )
 
         self.mock_logger.info.assert_any_call(
-            "MFA disabled for user", extra={"updated_by": "user",},
+            "MFA disabled for user",
+            extra={"updated_by": "user", "sync_cognito_preferences": False},
         )
 
     @mock.patch("massgov.pfml.mfa.send_templated_email")
@@ -87,6 +89,7 @@ class TestHandleMfaDisabled:
                 "last_enabled_at": mock.ANY,
                 "time_since_enabled_in_sec": mock.ANY,
                 "updated_by": "user",
+                "sync_cognito_preferences": False,
             },
         )
 

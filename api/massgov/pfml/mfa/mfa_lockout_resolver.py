@@ -1,10 +1,8 @@
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
-from massgov.pfml.api.services.users import admin_disable_mfa as admin_disable_user_mfa_pfml
+from massgov.pfml.api.services.users import admin_disable_mfa as admin_disable_mfa
 from massgov.pfml.db.models.employees import User
 from massgov.pfml.db.queries.users import get_user_by_email
-from massgov.pfml.mfa import send_mfa_disabled_email
-from massgov.pfml.util.aws.cognito import admin_disable_user_mfa as admin_disable_user_mfa_cognito
 from massgov.pfml.util.aws.sns import check_phone_number_opt_out, opt_in_phone_number
 
 logger = logging.get_logger(__name__)
@@ -54,9 +52,7 @@ class MfaLockoutResolver:
 
     def _resolve_lockout(self, user: User) -> None:
 
-        self._disable_mfa_cognito()
-        self._disable_mfa_pfml(user)
-        self._send_mfa_disabled_email(user)
+        self._disable_mfa(user)
         self._set_sns_opt_in(user)
 
     def _get_user(self) -> User:
@@ -75,17 +71,18 @@ class MfaLockoutResolver:
         self._log_info("...Done!")
         return user
 
-    def _disable_mfa_cognito(self) -> None:
-        self._log_info("Disabling user MFA in Cognito")
+    def _disable_mfa(self, user: User) -> None:
+        self._log_info("Disabling user MFA")
 
-        try:
-            if self.should_commit_changes:
-                admin_disable_user_mfa_cognito(self.user_email)
-            else:
-                self._log_info("(DRY RUN: Skipping API call to disable user MFA)")
-        except Exception as e:
-            self._log_error("Error disabling user MFA in Cognito", e)
-            raise e
+        with db.session_scope(self.db_session_raw) as db_session:
+            try:
+                if self.should_commit_changes:
+                    admin_disable_mfa(db_session, user)
+                else:
+                    self._log_info("(DRY RUN: Skipping API call to disable user MFA)")
+            except Exception as e:
+                self._log_error("Error disabling user MFA in Cognito", e)
+                raise e
 
         self._log_info("...Done!")
 
@@ -115,35 +112,6 @@ class MfaLockoutResolver:
                 raise e
 
         self._log_info("...Done!")
-
-    def _disable_mfa_pfml(self, user: User) -> None:
-        self._log_info("Disabling user MFA in PFML db")
-
-        with db.session_scope(self.db_session_raw) as db_session:
-            try:
-                if self.should_commit_changes:
-                    admin_disable_user_mfa_pfml(db_session, user)
-                else:
-                    self._log_info("(DRY RUN: Skipping API call to disable MFA in PFML DB)")
-            except Exception as e:
-                self._log_error("Error disabling user MFA in PFML db", e)
-                raise e
-
-        self._log_info("...Done!")
-
-    def _send_mfa_disabled_email(self, user: User) -> None:
-        self._log_info("Sending MFA disabled email")
-
-        try:
-            if self.should_commit_changes:
-                assert user.email_address
-                assert user.mfa_phone_number_last_four()
-                send_mfa_disabled_email(user.email_address, user.mfa_phone_number_last_four())
-            else:
-                self._log_info("(DRY RUN: Skipping sending MFA disabled email)")
-        except Exception as e:
-            self._log_error("Error MFA disabled email", e)
-            raise e
 
     def _log_info(self, message: str) -> None:
         """Helper for adding metadata to each log statement"""
