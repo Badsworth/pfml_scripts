@@ -221,41 +221,141 @@ class TestSendToFineos:
         assert claim.employer == employer
 
 
-def test_document_upload(user, test_db_session):
-    application = ApplicationFactory.create(
-        user=user, work_pattern=WorkPatternFixedFactory.create()
-    )
-    application.employer_fein = "179892886"
-    application.tax_identifier.tax_identifier = "784569632"
+@pytest.fixture
+def file():
+    file = MagicMock()
+    file.name = "test.png"
+    file.content = io.BytesIO(b"abcdef")
+    file.content_type = "image/png"
 
-    fineos_actions.send_to_fineos(application, test_db_session, user)
-    updated_application = test_db_session.query(Application).get(application.application_id)
+    return file
 
-    assert updated_application.claim.fineos_absence_id is not None
 
-    file = io.BytesIO(b"abcdef")
-    file_content = file.read()
-    file_name = "test.png"
-    content_type = "image/png"
+@pytest.fixture
+def document():
+    document = MagicMock()
+    document.type = "Passport"
+    document.description = "Test document upload description"
 
-    document_type = "Passport"
-    description = "Test document upload description"
+    return document
 
-    fineos_document = fineos_actions.upload_document(
-        updated_application,
-        document_type,
-        file_content,
-        file_name,
-        content_type,
-        description,
-        test_db_session,
-    ).dict()
-    assert fineos_document["caseId"] == application.claim.fineos_absence_id
-    assert fineos_document["documentId"] == 3011  # See massgov/pfml/fineos/mock_client.py
-    assert fineos_document["name"] == document_type
-    assert fineos_document["fileExtension"] == ".png"
-    assert fineos_document["originalFilename"] == file_name
-    assert fineos_document["description"] == description
+
+class TestUploadDocument:
+    def test_success(self, user, document, file, test_db_session):
+        application = ApplicationFactory.create(
+            user=user, work_pattern=WorkPatternFixedFactory.create()
+        )
+        application.employer_fein = "179892886"
+        application.tax_identifier.tax_identifier = "784569632"
+
+        fineos_actions.send_to_fineos(application, test_db_session, user)
+        updated_application = test_db_session.query(Application).get(application.application_id)
+
+        assert updated_application.claim.fineos_absence_id is not None
+
+        fineos_document = fineos_actions.upload_document(
+            updated_application,
+            document.type,
+            file.content,
+            file.name,
+            file.content_type,
+            document.description,
+            test_db_session,
+        ).dict()
+
+        assert fineos_document["caseId"] == application.claim.fineos_absence_id
+        assert fineos_document["documentId"] == 3011  # See massgov/pfml/fineos/mock_client.py
+        assert fineos_document["name"] == document.type
+        assert fineos_document["fileExtension"] == ".png"
+        assert fineos_document["originalFilename"] == file.name
+        assert fineos_document["description"] == document.description
+
+
+class TestUploadDocumentWithClaim:
+    # Run `initialize_factories_session` for all tests,
+    # so that it doesn't need to be manually included
+    @pytest.fixture(autouse=True)
+    def setup_factories(self, initialize_factories_session):
+        return
+
+    @pytest.fixture
+    def mock_fineos(self):
+        mock_fineos = MagicMock()
+        mock_fineos.find_employer.return_value = "1234"
+        return mock_fineos
+
+    def test_success(self, claim, document, file, test_db_session):
+        fineos_document = fineos_actions.upload_document_with_claim(
+            claim,
+            document.type,
+            file.content,
+            file.name,
+            file.content_type,
+            document.description,
+            test_db_session,
+            with_multipart=False,
+        ).dict()
+
+        assert fineos_document["caseId"] == claim.fineos_absence_id
+        assert fineos_document["documentId"] == 3011  # See massgov/pfml/fineos/mock_client.py
+        assert fineos_document["name"] == document.type
+        assert fineos_document["fileExtension"] == ".png"
+        assert fineos_document["originalFilename"] == file.name
+        assert fineos_document["description"] == document.description
+
+    @mock.patch("massgov.pfml.fineos.create_client")
+    def test_uploads_to_fineos(
+        self, mock_create_fineos, mock_fineos, claim, document, file, test_db_session
+    ):
+        mock_create_fineos.return_value = mock_fineos
+
+        fineos_actions.upload_document_with_claim(
+            claim,
+            document.type,
+            file.content,
+            file.name,
+            file.content_type,
+            document.description,
+            test_db_session,
+            with_multipart=False,
+        )
+
+        mock_fineos.upload_document.assert_called_once_with(
+            mock.ANY,
+            claim.fineos_absence_id,
+            document.type,
+            file.content,
+            file.name,
+            file.content_type,
+            document.description,
+        )
+
+    @mock.patch("massgov.pfml.fineos.create_client")
+    def test_uploads_to_fineos_with_multipart(
+        self, mock_create_fineos, mock_fineos, claim, document, file, test_db_session
+    ):
+        mock_create_fineos.return_value = mock_fineos
+
+        fineos_actions.upload_document_with_claim(
+            claim,
+            document.type,
+            file.content,
+            file.name,
+            file.content_type,
+            document.description,
+            test_db_session,
+            with_multipart=True,
+        )
+
+        mock_fineos.upload_document_multipart.assert_called_once_with(
+            mock.ANY,
+            claim.fineos_absence_id,
+            document.type,
+            file.content,
+            file.name,
+            file.content_type,
+            document.description,
+        )
 
 
 def test_submit_direct_deposit_payment_preference(user, test_db_session):
