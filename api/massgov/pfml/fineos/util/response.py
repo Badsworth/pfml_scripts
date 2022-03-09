@@ -10,7 +10,6 @@ from massgov.pfml.fineos import exception
 def fineos_document_empty_dates_to_none(response_json: dict) -> dict:
     # Document effectiveFrom and effectiveTo are empty and set to empty strings
     # These fields are not set by the portal. Set to none to avoid validation errors.
-
     if response_json["effectiveFrom"] == "":
         response_json["effectiveFrom"] = None
 
@@ -52,14 +51,14 @@ def is_expected_failure(err_message: str, expected_failures: Optional[Set[str]])
 def log_validation_error(
     err: exception.FINEOSUnprocessableEntity, expected_failures: Optional[Set[str]] = None
 ) -> None:
-    """ Parse 422 responses from FINEOS and log individual validation errors.
-        422 responses are expected to be in this format:
+    """Parse 422 responses from FINEOS and log individual validation errors.
+    422 responses are expected to be in this format:
 
-        [
-           { "validationMessage": "error 1" },
-           { "validationMessage": "error 2" },
-           ...
-        ]
+    [
+       { "validationMessage": "error 1" },
+       { "validationMessage": "error 2" },
+       ...
+    ]
     """
 
     # Try to parse the error as a JSON array.

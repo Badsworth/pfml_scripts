@@ -1,38 +1,38 @@
-import { DocumentType, DocumentTypeEnum } from "../../../models/Document";
 import LeaveReason, { LeaveReasonType } from "../../../models/LeaveReason";
 import PreviousLeave, {
   PreviousLeaveType,
 } from "../../../models/PreviousLeave";
 import React, { useEffect, useState } from "react";
-import { get, isEqual, isNil, omit } from "lodash";
+import { get, isEqual } from "lodash";
 import withEmployerClaim, {
   WithEmployerClaimProps,
 } from "../../../hoc/withEmployerClaim";
-
 import Alert from "../../../components/core/Alert";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/core/Button";
-import CaringLeaveQuestion from "src/components/employers/CaringLeaveQuestion";
-import ConcurrentLeave from "../../../components/employers/ConcurrentLeave";
+import CaringLeaveQuestion from "src/features/employer-review/CaringLeaveQuestion";
+import CertificationsAndAbsencePeriods from "../../../features/employer-review/CertificationsAndAbsencePeriods";
+import ConcurrentLeave from "../../../features/employer-review/ConcurrentLeave";
 import ConcurrentLeaveModel from "../../../models/ConcurrentLeave";
-import EmployeeInformation from "../../../components/employers/EmployeeInformation";
-import EmployeeNotice from "../../../components/employers/EmployeeNotice";
+import EmployeeInformation from "../../../features/employer-review/EmployeeInformation";
+import EmployeeNotice from "../../../features/employer-review/EmployeeNotice";
 import EmployerBenefit from "../../../models/EmployerBenefit";
-import EmployerBenefits from "../../../components/employers/EmployerBenefits";
-import EmployerDecision from "../../../components/employers/EmployerDecision";
-import Feedback from "../../../components/employers/Feedback";
-import FraudReport from "../../../components/employers/FraudReport";
+import EmployerBenefits from "../../../features/employer-review/EmployerBenefits";
+import EmployerDecision from "../../../features/employer-review/EmployerDecision";
+import Feedback from "../../../features/employer-review/Feedback";
+import FraudReport from "../../../features/employer-review/FraudReport";
 import Heading from "../../../components/core/Heading";
-import LeaveDetails from "../../../components/employers/LeaveDetails";
-import LeaveSchedule from "../../../components/employers/LeaveSchedule";
-import PreviousLeaves from "../../../components/employers/PreviousLeaves";
+import HeadingPrefix from "src/components/core/HeadingPrefix";
+import PreviousLeaves from "../../../features/employer-review/PreviousLeaves";
 import ReviewHeading from "../../../components/ReviewHeading";
-import ReviewRow from "../../../components/ReviewRow";
-import SupportingWorkDetails from "../../../components/employers/SupportingWorkDetails";
 import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
-import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
-import formatDateRange from "../../../utils/formatDateRange";
+import WeeklyHoursWorkedRow from "../../../features/employer-review/WeeklyHoursWorkedRow";
+import { findDocumentsByLeaveReason } from "../../../models/Document";
+import findErrorMessageForField from "../../../utils/findErrorMessageForField";
+import formatDate from "../../../utils/formatDate";
+import { getSoonestReviewableFollowUpDate } from "../../../models/ManagedRequirement";
+import isBlank from "../../../utils/isBlank";
 import leaveReasonToPreviousLeaveReason from "../../../utils/leaveReasonToPreviousLeaveReason";
 import routes from "../../../routes";
 import updateAmendments from "../../../utils/updateAmendments";
@@ -44,13 +44,12 @@ import { useTranslation } from "../../../locales/i18n";
 export const Review = (props: WithEmployerClaimProps) => {
   const { appLogic, claim } = props;
   const {
-    appErrors,
+    errors,
     employers: { claimDocumentsMap, downloadDocument, loadDocuments },
   } = appLogic;
   const { t } = useTranslation();
 
   const absenceId = claim.fineos_absence_id;
-
   const shouldShowV2 = !!claim.uses_second_eform_version;
 
   if (claim.is_reviewable === false) {
@@ -95,7 +94,7 @@ export const Review = (props: WithEmployerClaimProps) => {
   });
 
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });
@@ -164,6 +163,7 @@ export const Review = (props: WithEmployerClaimProps) => {
       formState.relationshipInaccurateReason === "");
   const isCaringLeave = get(claim, "leave_details.reason") === LeaveReason.care;
 
+  // TODO (PORTAL-1234): Move documents loading and state
   useEffect(() => {
     loadDocuments(absenceId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -172,22 +172,10 @@ export const Review = (props: WithEmployerClaimProps) => {
   // only cert forms should be shown
   const allDocuments = claimDocumentsMap.get(absenceId)?.items || [];
 
-  // TODO (CP-1983): Remove caring leave feature flag check
-  // after turning on caring leave feature flag, use `findDocumentsByLeaveReason`
-  // instead of `findDocumentsByTypes`
-  const leaveReason: LeaveReasonType | undefined = get(
-    claim,
-    "leave_details.reason"
-  );
-  const certificationDocumentTypes: DocumentTypeEnum[] = [
-    DocumentType.certification.medicalCertification,
-  ];
-  if (leaveReason) {
-    certificationDocumentTypes.push(DocumentType.certification[leaveReason]);
-  }
-  const certificationDocuments = findDocumentsByTypes(
+  const leaveReason = claim.leave_details?.reason as LeaveReasonType;
+  const certificationDocuments = findDocumentsByLeaveReason(
     allDocuments,
-    certificationDocumentTypes
+    leaveReason
   );
 
   const handleBenefitInputAdd = () => {
@@ -333,16 +321,18 @@ export const Review = (props: WithEmployerClaimProps) => {
 
     const concurrent_leave =
       formState.amendedConcurrentLeave || formState.addedConcurrentLeave;
-    const employer_benefits = allEmployerBenefits.map((benefit) =>
-      omit(benefit, ["employer_benefit_id"])
-    );
-    const previous_leaves = allPreviousLeaves.map((leave) =>
-      omit(leave, ["previous_leave_id"])
-    );
+    const employer_benefits = allEmployerBenefits.map((benefit) => {
+      const { employer_benefit_id, ...rest } = benefit;
+      return rest;
+    });
+    const previous_leaves = allPreviousLeaves.map((leave) => {
+      const { previous_leave_id, ...rest } = leave;
+      return rest;
+    });
 
     // canceling amendments causes their values in formState to be null.
     // in these cases, we want to restore the claimant-provided, original values.
-    const hours_worked_per_week = isNil(formState.hours_worked_per_week)
+    const hours_worked_per_week = isBlank(formState.hours_worked_per_week)
       ? claim.hours_worked_per_week
       : formState.hours_worked_per_week;
 
@@ -398,60 +388,41 @@ export const Review = (props: WithEmployerClaimProps) => {
   return (
     <div className="maxw-desktop-lg">
       <BackButton />
+      <HeadingPrefix>
+        {t("pages.employersClaimsReview.absenceIdLabel", {
+          absenceId: claim.fineos_absence_id,
+        })}
+      </HeadingPrefix>
       <Title>
         {t("pages.employersClaimsReview.title", {
           name: claim.fullName,
         })}
       </Title>
       <Alert state="warning" noIcon>
+        {claim.wasPreviouslyReviewed && (
+          <p>
+            <strong>
+              <Trans
+                i18nKey="pages.employersClaimsReview.previouslyReviewed"
+                values={{
+                  context: claim.lastReviewedAt ? "withDate" : undefined,
+                  date: claim.lastReviewedAt
+                    ? formatDate(claim.lastReviewedAt).short()
+                    : undefined,
+                }}
+              />
+            </strong>
+          </p>
+        )}
+
         <Trans
           i18nKey="pages.employersClaimsReview.instructionsFollowUpDate"
-          values={{ date: formatDateRange(claim.follow_up_date) }}
+          values={{
+            date: getSoonestReviewableFollowUpDate(claim.managed_requirements),
+          }}
         />
       </Alert>
       <p>{t("pages.employersClaimsReview.instructionsAmendment")}</p>
-      {!!claim.employer_dba && (
-        <ReviewRow
-          level="2"
-          label={t("pages.employersClaimsReview.organizationNameLabel")}
-          noBorder
-          data-test="org-name-row"
-        >
-          {claim.employer_dba}
-        </ReviewRow>
-      )}
-      <ReviewRow
-        level="2"
-        label={t("pages.employersClaimsReview.employerIdentifierLabel")}
-        noBorder
-        data-test="ein-row"
-      >
-        {claim.employer_fein}
-      </ReviewRow>
-      <EmployeeInformation claim={claim} />
-      <LeaveDetails
-        claim={claim}
-        documents={certificationDocuments}
-        downloadDocument={downloadDocument}
-      />
-      {isCaringLeave && (
-        <CaringLeaveQuestion
-          errorMsg={appErrors.fieldErrorMessage(
-            "relationship_inaccurate_reason"
-          )}
-          believeRelationshipAccurate={formState.believeRelationshipAccurate}
-          onChangeBelieveRelationshipAccurate={
-            handleBelieveRelationshipAccurateChange
-          }
-          onChangeRelationshipInaccurateReason={
-            handleRelationshipInaccurateReason
-          }
-        />
-      )}
-      <LeaveSchedule
-        claim={claim}
-        hasDocuments={!!certificationDocuments.length}
-      />
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
       <form
         id="employer-review-form"
@@ -459,14 +430,36 @@ export const Review = (props: WithEmployerClaimProps) => {
         method="post"
         onKeyDown={handleKeyDown}
       >
-        <SupportingWorkDetails
-          appErrors={appErrors}
+        <EmployeeInformation claim={claim} />
+        <WeeklyHoursWorkedRow
+          errors={errors}
           clearField={clearField}
           getField={getField}
           getFunctionalInputProps={getFunctionalInputProps}
           initialHoursWorkedPerWeek={claim.hours_worked_per_week}
           updateFields={updateFields}
         />
+        <CertificationsAndAbsencePeriods
+          claim={claim}
+          documents={certificationDocuments}
+          downloadDocument={downloadDocument}
+        />
+
+        {isCaringLeave && (
+          <CaringLeaveQuestion
+            errorMsg={findErrorMessageForField(
+              errors,
+              "relationship_inaccurate_reason"
+            )}
+            believeRelationshipAccurate={formState.believeRelationshipAccurate}
+            onChangeBelieveRelationshipAccurate={
+              handleBelieveRelationshipAccurateChange
+            }
+            onChangeRelationshipInaccurateReason={
+              handleRelationshipInaccurateReason
+            }
+          />
+        )}
 
         <ReviewHeading level="2">
           {t("pages.employersClaimsReview.otherLeavesTitle")}
@@ -504,7 +497,8 @@ export const Review = (props: WithEmployerClaimProps) => {
               </div>
             </div>
             <PreviousLeaves
-              appErrors={appErrors}
+              errors={errors}
+              claim={claim}
               previousLeaves={formState.previousLeaves}
               addedPreviousLeaves={formState.addedPreviousLeaves}
               onAdd={handlePreviousLeaveAdd}
@@ -513,7 +507,7 @@ export const Review = (props: WithEmployerClaimProps) => {
               shouldShowV2={shouldShowV2}
             />
             <ConcurrentLeave
-              appErrors={appErrors}
+              errors={errors}
               addedConcurrentLeave={formState.addedConcurrentLeave}
               claim={claim}
               concurrentLeave={formState.concurrentLeave}
@@ -524,7 +518,7 @@ export const Review = (props: WithEmployerClaimProps) => {
           </React.Fragment>
         )}
         <EmployerBenefits
-          appErrors={appErrors}
+          errors={errors}
           employerBenefits={formState.employerBenefits}
           addedBenefits={formState.addedBenefits}
           onAdd={handleBenefitInputAdd}

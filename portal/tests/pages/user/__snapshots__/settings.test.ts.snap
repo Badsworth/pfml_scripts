@@ -1,0 +1,218 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ComponentWithUser displays success alert when user sets up SMS MFA 1`] = `
+<div
+  aria-labelledby="alert-heading17"
+  class="usa-alert usa-alert--success margin-bottom-3"
+  role="region"
+  tabindex="-1"
+>
+  <div
+    class="usa-alert__body"
+  >
+    <h2
+      class="usa-alert__heading font-heading-md text-bold"
+      id="alert-heading17"
+    >
+      Phone number confirmed
+    </h2>
+    <div
+      class="usa-alert__text"
+    >
+      To protect your security, we'll send you a 6-digit code when you log in to verify it's really you.
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ComponentWithUser renders the page 1`] = `
+<div>
+  <div
+    class="measure-6"
+  >
+    <a
+      class="usa-button margin-bottom-5 usa-button--unstyled"
+      href="/applications"
+    >
+      <svg
+        class="margin-right-05"
+        height="12"
+        viewBox="0 0 448 512"
+        width="12"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"
+          fill="currentColor"
+        />
+      </svg>
+      Back to applications
+    </a>
+    <h1
+      class="js-title margin-top-0 margin-bottom-6 font-heading-lg line-height-sans-2"
+      tabindex="-1"
+    >
+      Settings
+    </h1>
+    <div
+      class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+    >
+      <h3
+        class="flex-fill margin-right-1 font-heading-md text-bold"
+      >
+        Account information
+      </h3>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Email address
+        </h3>
+        mock@gmail.com
+      </div>
+    </div>
+    <div
+      class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+    >
+      <h3
+        class="flex-fill margin-right-1 font-heading-md text-bold"
+      >
+        Additional login verification
+      </h3>
+    </div>
+    <p>
+      Make your account more secure by providing a phone number to associate with your account. We'll send you a 6-digit code to verify it's really you. You’ll need to enter the code in order to log in to your account. In the future, you’ll also be able to access sensitive information like tax documents (when available) once you set this up.
+    </p>
+    <p>
+      You will need to provide a phone number that can receive text messages (SMS) and that you’ll have consistent access to in case we need to verify your login.
+    </p>
+    <p>
+      <strong>
+        Additional login verification is not enabled
+      </strong>
+    </p>
+    <a
+      class="usa-button"
+      href="/two-factor/sms/setup?returnToSettings=true"
+    >
+      Add additional verification
+    </a>
+  </div>
+</div>
+`;
+
+exports[`ComponentWithUser when MFA is enabled shows MFA configuration 1`] = `
+<div>
+  <div
+    class="measure-6"
+  >
+    <a
+      class="usa-button margin-bottom-5 usa-button--unstyled"
+      href="/applications"
+    >
+      <svg
+        class="margin-right-05"
+        height="12"
+        viewBox="0 0 448 512"
+        width="12"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"
+          fill="currentColor"
+        />
+      </svg>
+      Back to applications
+    </a>
+    <h1
+      class="js-title margin-top-0 margin-bottom-6 font-heading-lg line-height-sans-2"
+      tabindex="-1"
+    >
+      Settings
+    </h1>
+    <div
+      class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+    >
+      <h3
+        class="flex-fill margin-right-1 font-heading-md text-bold"
+      >
+        Account information
+      </h3>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Email address
+        </h3>
+        mock@gmail.com
+      </div>
+    </div>
+    <div
+      class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+    >
+      <h3
+        class="flex-fill margin-right-1 font-heading-md text-bold"
+      >
+        Additional login verification
+      </h3>
+    </div>
+    <p>
+      To protect your security, we'll send you a 6-digit code to verify it's really you. You’ll need to enter the code in order to log in to your account.
+    </p>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Additional login verification is enabled
+        </h3>
+      </div>
+      <button
+        class="usa-button position-relative width-auto display-flex usa-button--unstyled"
+        type="button"
+      >
+        <strong>
+          Edit
+        </strong>
+      </button>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Phone number
+        </h3>
+        ***-***-1234
+      </div>
+      <a
+        aria-label="Edit: Phone number"
+        class="usa-link"
+        href="/two-factor/sms/setup?returnToSettings=true"
+      >
+        Edit
+      </a>
+    </div>
+  </div>
+</div>
+`;

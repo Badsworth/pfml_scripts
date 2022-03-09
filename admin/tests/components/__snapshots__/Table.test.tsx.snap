@@ -27,13 +27,13 @@ exports[`ActionCard renders the default component 1`] = `
   >
     <tr>
       <td
-        className="table__col"
+        className=" table__col"
         width="25%"
       >
         Test One
       </td>
       <td
-        className="table__col"
+        className=" table__col table__col--last-cell"
         width="75%"
       >
         Test description one
@@ -41,13 +41,13 @@ exports[`ActionCard renders the default component 1`] = `
     </tr>
     <tr>
       <td
-        className="table__col"
+        className=" table__col table__col--last-row"
         width="25%"
       >
         Test Two
       </td>
       <td
-        className="table__col"
+        className=" table__col table__col--last-row table__col--last-cell"
         width="75%"
       >
         Test description two

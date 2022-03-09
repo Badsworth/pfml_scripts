@@ -1,10 +1,10 @@
 /* eslint-disable no-alert */
 import Button from "src/components/core/Button";
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 import React from "react";
 
 export default {
-  title: "Core Components/Buttons/Button",
+  title: "Core Components/Button",
   component: Button,
   args: {
     children: "Submit",

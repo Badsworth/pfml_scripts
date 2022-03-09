@@ -105,6 +105,15 @@ locals {
       ]
     },
 
+    "db-create-servicenow-user" = {
+      command = ["db-create-servicenow-user"],
+      env = [
+        local.db_access,
+        { name : "COGNITO_SERVICENOW_APP_CLIENT_ID", valueFrom : "/service/${local.app_name}/${var.environment_name}/cognito_servicenow_app_client_id" },
+        { name : "COGNITO_INTERNAL_SERVICENOW_ROLE_APP_CLIENT_ID", valueFrom : "/service/${local.app_name}/${var.environment_name}/cognito_internal_servicenow_role_app_client_id" }
+      ]
+    },
+
     "execute-sql" = {
       command   = ["execute-sql"]
       task_role = aws_iam_role.task_execute_sql_task_role.arn
@@ -129,6 +138,34 @@ locals {
       ]
     },
 
+    "dor_create_pending_filing_submission" = {
+      command   = ["dor_create_pending_filing_submission"],
+      task_role = aws_iam_role.dor_pending_filing_sub_task_role.arn,
+      cpu       = 4096,
+      memory    = 18432,
+      env = [
+        local.db_access,
+        { name : "INPUT_FOLDER_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/dfml" },
+        { name : "OUTPUT_FOLDER_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/dor" }
+      ]
+    },
+
+    "dor-pending-filing-response-import" = {
+      command        = ["dor-pending-filing-response-import"],
+      task_role      = aws_iam_role.dor_import_task_role.arn,
+      execution_role = aws_iam_role.dor_import_execution_role.arn,
+      cpu            = 4096,
+      memory         = 18432,
+      env = [
+        local.db_access,
+        { name : "DECRYPT", value : "true" },
+        { name : "FOLDER_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/dor/received" },
+        { name : "CSV_FOLDER_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/dfml/received/" },
+        { name : "GPG_DECRYPTION_KEY", valueFrom : "/service/${local.app_name}-dor-import/${var.environment_name}/gpg_decryption_key" },
+        { name : "GPG_DECRYPTION_KEY_PASSPHRASE", valueFrom : "/service/${local.app_name}-dor-import/${var.environment_name}/gpg_decryption_key_passphrase" }
+      ]
+    },
+
     "fineos-import-employee-updates" = {
       command   = ["fineos-import-employee-updates"]
       task_role = aws_iam_role.fineos_import_employee_updates_task_role.arn
@@ -136,6 +173,18 @@ locals {
       memory    = 9216
       env = [
         local.db_access,
+        local.fineos_s3_access
+      ]
+    },
+
+    "fineos-import-la-units" = {
+      command   = ["fineos-import-la-units"]
+      task_role = aws_iam_role.fineos_import_la_org_units_task_role.arn
+      cpu       = 2048
+      memory    = 9216
+      env = [
+        local.db_access,
+        local.fineos_api_access,
         local.fineos_s3_access
       ]
     },
@@ -191,7 +240,8 @@ locals {
         local.pub_s3_folders,
         { name : "PUB_PAYMENT_STARTING_CHECK_NUMBER", value : "106" },
         { name : "DFML_PUB_ROUTING_NUMBER", valueFrom : "/service/${local.app_name}/${var.environment_name}/dfml_pub_routing_number" },
-        { name : "DFML_PUB_ACCOUNT_NUMBER", valueFrom : "/service/${local.app_name}/${var.environment_name}/dfml_pub_account_number" }
+        { name : "DFML_PUB_ACCOUNT_NUMBER", valueFrom : "/service/${local.app_name}/${var.environment_name}/dfml_pub_account_number" },
+        { "name" : "ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS", "value" : var.enable_employer_reimbursement_payments }
       ]
     },
 
@@ -229,8 +279,10 @@ locals {
         local.pub_s3_folders,
         { name : "FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", value : "2021-06-12" },
         { name : "FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", value : "2021-06-12" },
+        { name : "FINEOS_1099_DATA_EXTRACT_MAX_HISTORY_DATE", value : "2022-01-01" },
         { name : "USE_EXPERIAN_SOAP_CLIENT", value : "1" },
-        { name : "EXPERIAN_AUTH_TOKEN", valueFrom : "/service/${local.app_name}/common/experian-auth-token" }
+        { name : "EXPERIAN_AUTH_TOKEN", valueFrom : "/service/${local.app_name}/common/experian-auth-token" },
+        { "name" : "ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS", "value" : var.enable_employer_reimbursement_payments }
       ]
     },
 
@@ -261,7 +313,9 @@ locals {
 
     "fineos-import-iaww" = {
       command   = ["fineos-import-iaww"]
-      task_role = aws_iam_role.pub_payments_process_fineos_task_role.arn
+      task_role = aws_iam_role.fineos_import_iaww_task_role.arn
+      cpu       = 2048
+      memory    = 8192
       env = [
         local.db_access,
         local.fineos_s3_access,
@@ -277,6 +331,15 @@ locals {
         local.fineos_s3_access
       ]
     },
+
+    "sftp-tool" = {
+      command        = ["sftp-tool"]
+      task_role      = aws_iam_role.sftp_tool_role.arn
+      execution_role = aws_iam_role.sftp_tool_execution_role.arn
+      env = [
+        local.base_sftp_access
+      ]
+    }
 
     "cps-errors-crawler" = {
       command             = ["cps-errors-crawler"]
@@ -329,6 +392,19 @@ locals {
       ]
     }
 
+    "dua-generate-and-send-employer-request-file" = {
+      command        = ["dua-generate-and-send-employer-request-file"]
+      task_role      = aws_iam_role.dua_employee_workflow_task_role.arn
+      execution_role = aws_iam_role.dua_employee_workflow_execution_role.arn
+      cpu            = 2048,
+      memory         = 4096,
+      env = [
+        local.db_access,
+        local.eolwd_moveit_access,
+        local.reductions_folders
+      ]
+    }
+
     "dua-backfill-employee-gender" = {
       command        = ["dua-backfill-employee-gender"]
       task_role      = aws_iam_role.dua_employee_workflow_task_role.arn
@@ -353,12 +429,67 @@ locals {
       ]
     }
 
+    "dua-import-employer" = {
+      command        = ["dua-import-employer"]
+      task_role      = aws_iam_role.dua_employee_workflow_task_role.arn
+      execution_role = aws_iam_role.dua_employee_workflow_execution_role.arn
+      cpu            = 2048,
+      memory         = 4096,
+      env = [
+        local.db_access,
+        local.eolwd_moveit_access,
+        local.reductions_folders
+      ]
+    }
+
+    "dua-import-employer-unit" = {
+      command        = ["dua-import-employer-unit"]
+      task_role      = aws_iam_role.dua_employee_workflow_task_role.arn
+      execution_role = aws_iam_role.dua_employee_workflow_execution_role.arn
+      cpu            = 2048,
+      memory         = 4096,
+      env = [
+        local.db_access,
+        local.eolwd_moveit_access,
+        local.reductions_folders
+      ]
+    }
+
     "report-sequential-employment" = {
       command   = ["report-sequential-employment"]
       task_role = aws_iam_role.task_execute_sql_task_role.arn
       env = [
         local.db_access,
         { name : "S3_BUCKET", value : "s3://massgov-pfml-${var.environment_name}-execute-sql-export" }
+      ]
+    },
+
+    "pub-payments-copy-audit-report" = {
+      command   = ["pub-payments-copy-audit-report"]
+      task_role = aws_iam_role.pub_payments_copy_audit_report_task_role.arn
+      cpu       = 2048,
+      memory    = 4096,
+      env = [
+        local.db_access,
+        local.pub_s3_folders,
+      ]
+    },
+
+    "mfa-lockout-resolution" = {
+      command   = ["mfa-lockout-resolution"]
+      task_role = aws_iam_role.mfa_lockout_resolution_task_role.arn
+      env = [
+        local.db_access,
+        local.cognito_access,
+        local.emails
+      ]
+    },
+
+    "backfill-benefit-years" = {
+      command   = ["backfill-benefit-years"]
+      task_role = null
+      env = [
+        local.db_access
       ]
     },
   }

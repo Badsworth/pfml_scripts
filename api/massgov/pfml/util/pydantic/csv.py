@@ -11,7 +11,7 @@ class DataWriter(csv_util.EncodingDictWriter, Generic[_T]):
     by_alias: bool
 
     def __init__(
-        self, f: Any, row_type: Type[_T], by_alias: bool = True, *args: Any, **kwds: Any,
+        self, f: Any, row_type: Type[_T], by_alias: bool = True, *args: Any, **kwds: Any
     ) -> None:
         self.by_alias = by_alias
 

@@ -12,8 +12,8 @@ import massgov.pfml.db as db
 import massgov.pfml.util.batch.log as batch_log
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
+from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.employees import (
-    AbsenceStatus,
     Claim,
     DuaReductionPayment,
     DuaReductionPaymentReferenceFile,
@@ -94,11 +94,7 @@ class Constants:
     ABSENCE_CASE_PERIOD_START_FIELD = "ABSENCE_PERIOD_START_DATE"
     ABSENCE_CASE_PERIOD_END_FIELD = "ABSENCE_PERIOD_END_DATE"
 
-    CLAIMANT_LIST_FIELDS = [
-        CASE_ID_FIELD,
-        SSN_FIELD,
-        BENEFIT_START_DATE_FIELD,
-    ]
+    CLAIMANT_LIST_FIELDS = [CASE_ID_FIELD, SSN_FIELD, BENEFIT_START_DATE_FIELD]
 
     DFML_REPORT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP = {
         CUSTOMER_ID_FIELD: "fineos_customer_number",
@@ -281,7 +277,7 @@ def load_new_dua_payments(
 
 
 def _load_dua_payment_from_reference_file(
-    ref_file: ReferenceFile, archive_directory: str, db_session: db.Session,
+    ref_file: ReferenceFile, archive_directory: str, db_session: db.Session
 ) -> Tuple[int, int]:
     new_row_count = 0
     total_row_count = 0
@@ -422,7 +418,7 @@ def _get_non_submitted_reduction_payments(
     return (
         db_session.query(DuaReductionPayment, Claim)
         .outerjoin(
-            Employee, DuaReductionPayment.fineos_customer_number == Employee.fineos_customer_number,
+            Employee, DuaReductionPayment.fineos_customer_number == Employee.fineos_customer_number
         )
         .outerjoin(Claim, Claim.employee_id == Employee.employee_id)
         .filter(DuaReductionPayment.created_at >= ninety_days_ago)

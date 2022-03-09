@@ -5,7 +5,7 @@ import pytest
 
 import massgov.pfml.db as db
 import massgov.pfml.experian.address_validate_soap.client as soap_api
-from massgov.pfml.db.models.employees import Claim, Employee, ExperianAddressPair, GeoState, Payment
+from massgov.pfml.db.models.employees import Claim, Employee, ExperianAddressPair, Payment
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ClaimFactory,
@@ -14,11 +14,12 @@ from massgov.pfml.db.models.factories import (
     ExperianAddressPairFactory,
     PaymentFactory,
 )
+from massgov.pfml.db.models.geo import GeoState
 from massgov.pfml.delegated_payments.address_validation import Constants
 from massgov.pfml.delegated_payments.claimant_address_validation import (
     ClaimantAddressValidationStep,
 )
-from massgov.pfml.delegated_payments.mock.fineos_extract_data import FineosClaimantData
+from massgov.pfml.delegated_payments.mock.fineos_extract_data import FineosPaymentData
 from massgov.pfml.experian.address_validate_soap.client import Client
 from massgov.pfml.experian.address_validate_soap.mock_caller import MockVerificationZeepCaller
 from massgov.pfml.experian.address_validate_soap.models import VerifyLevel
@@ -49,7 +50,7 @@ def employee_factory():
 
 @pytest.fixture
 def employee_extract_factory():
-    claimant_data = FineosClaimantData()
+    claimant_data = FineosPaymentData()
     return claimant_data
 
 
@@ -84,9 +85,9 @@ def test_construct_address_data(employee_extract_factory):
     AddressFactory.address_line_one = employee_extract_factory.address_1
     AddressFactory.city = employee_extract_factory.city
     AddressFactory.geo_state_id = employee_extract_factory.state
-    AddressFactory.zip_code = employee_extract_factory.post_code
+    AddressFactory.zip_code = employee_extract_factory.zip_code
 
-    assert len(AddressFactory.zip_code) == 5
+    assert len(AddressFactory.zip_code) == 10
 
 
 def is_address_same(address, employee_extract_factory):
@@ -95,7 +96,7 @@ def is_address_same(address, employee_extract_factory):
         address.fineos_address.address_line_one == employee_extract_factory.address_1
         and address.city == employee_extract_factory.city
         and address.geo_state_id == employee_extract_factory.state
-        and address.zip_code == employee_extract_factory.post_code
+        and address.zip_code == employee_extract_factory.zip_code
     ):
         result = True
     assert result is False
@@ -112,13 +113,13 @@ def test_validate_claimant_address_has_all_parts(employee_extract_factory):
         not employee_extract_factory.address_1
         or not employee_extract_factory.city
         or not employee_extract_factory.state
-        or not employee_extract_factory.post_code
+        or not employee_extract_factory.zip_code
     ):
         result = False
     assert result is True
 
 
-def test_process_address_via_soap_api(employee_extract_factory, address_factory,) -> None:
+def test_process_address_via_soap_api(employee_extract_factory, address_factory) -> None:
     mock_caller = MockVerificationZeepCaller()
 
     client = Client(mock_caller)
@@ -159,7 +160,8 @@ def test_create_address_report(claimant_address_step):
     report_path = "local_s3/agency-transfer/reports/"
     file_name = "Claimant_address_report"
     out_path = claimant_address_step.create_address_report(results, file_name, report_path)
-    assert out_path
+    full_path = report_path + out_path.name
+    assert str(out_path) == full_path
 
 
 def test_is_address_new_or_updated(local_test_db_session, employee_extract_factory):

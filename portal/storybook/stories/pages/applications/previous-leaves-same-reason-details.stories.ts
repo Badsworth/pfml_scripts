@@ -1,8 +1,8 @@
-import { MockBenefitsApplicationBuilder } from "tests/test-utils/mock-model-builder";
+import { MockBenefitsApplicationBuilder } from "lib/mock-helpers/mock-model-builder";
 import generateClaimPageStory from "storybook/utils/generateClaimPageStory";
 
 const leavePeriodAttrs = {
-  start_date: "2021-03-07",
+  start_date: "2022-03-07",
 };
 
 const mockClaims = {
@@ -17,7 +17,7 @@ const mockClaims = {
   caring: new MockBenefitsApplicationBuilder()
     .employed()
     .caringLeaveReason()
-    .continuous()
+    .continuous(leavePeriodAttrs)
     .create(),
 };
 

@@ -15,6 +15,9 @@ interface ErrorBoundaryProps {
  * instead of the component tree that crashed. Error boundaries catch errors
  * during rendering, in lifecycle methods, and in constructors of the whole
  * tree below them.
+ *
+ * See `ErrorsSummary` instead for the alert that's displayed for errors we
+ * anticipate, like validation errors.
  * @see https://reactjs.org/docs/error-boundaries.html
  */
 export class ErrorBoundary extends React.Component<ErrorBoundaryProps> {

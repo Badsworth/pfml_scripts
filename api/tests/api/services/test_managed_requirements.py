@@ -94,9 +94,7 @@ class TestManagedRequirementService:
         return ManagedRequirementFactory.create()
 
     @pytest.fixture
-    def complete_valid_fineos_managed_requirement(
-        self, fineos_man_req,
-    ):
+    def complete_valid_fineos_managed_requirement(self, fineos_man_req):
         return fineos_man_req()
 
     @pytest.fixture
@@ -133,7 +131,7 @@ class TestManagedRequirementService:
                 suppressed_valid_fineos_managed_requirement,
             ]
             updated_man_reqs = update_employer_confirmation_requirements(
-                test_db_session, user_leave_admin.user_id, fin_man_reqs,
+                test_db_session, user_leave_admin.user_id, fin_man_reqs
             )
 
             assert len(updated_man_reqs) == 2
@@ -180,7 +178,7 @@ class TestManagedRequirementService:
                 wrong_type_invalid_fineos_managed_requirement,
             ]
             updated_man_reqs = update_employer_confirmation_requirements(
-                test_db_session, user_leave_admin.user_id, fin_man_reqs,
+                test_db_session, user_leave_admin.user_id, fin_man_reqs
             )
 
             assert len(updated_man_reqs) == 1
@@ -205,7 +203,7 @@ class TestManagedRequirementService:
                 not_found_invalid_fineos_managed_requirement,
             ]
             updated_man_reqs = update_employer_confirmation_requirements(
-                test_db_session, user_leave_admin.user_id, fin_man_reqs,
+                test_db_session, user_leave_admin.user_id, fin_man_reqs
             )
 
             assert len(updated_man_reqs) == 1

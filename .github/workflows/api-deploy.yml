@@ -13,10 +13,22 @@ on:
         required: true
         default: "test"
         description: |
-          🛑 DO NOT CHANGE THE DROPDOWN ABOVE FOR THE WORKFLOW. KEEP IT ON "main" BRANCH.     
+          🛑 DO NOT CHANGE THE DROPDOWN ABOVE FOR THE WORKFLOW. KEEP IT ON "main" BRANCH.
           --------------------------------------
           ⬇️ Environment to be deployed.
-            (test, performance, stage, training, uat, prod, breakfix, cps-preview).
+        type: choice
+        options:
+          - breakfix
+          - cps-preview
+          - infra-test
+          - long
+          - performance
+          - prod
+          - stage
+          - test
+          - training
+          - trn2
+          - uat
       version:
         required: true
         default: "main"
@@ -42,6 +54,7 @@ on:
       - main
     paths:
       - api/**
+      - pdf_api/**
       - infra/api/**
       - infra/ecs-tasks/**
       - infra/env-shared/**
@@ -51,12 +64,11 @@ env:
   workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
   version: ${{ github.event.inputs.version || 'main' }}
   deployment_env: ${{ github.event.inputs.deployment_env || 'test' }}
-  deploys_channel: "C01HEAJPE76" #mass-pfml-deploys-shared
   working-dir: ./api
   terraform-api-dir: ./infra/api/environments
   terraform-env-shared-dir: ./infra/env-shared/environments
   terraform-ecs-tasks-dir: ./infra/ecs-tasks/environments
-  terraform-version: 0.14.7
+  terraformVersion: 0.14.7
   python-version: 3.9
 
   # Set a timeout of two minutes for all terraform commands in the workflow
@@ -122,7 +134,7 @@ jobs:
           fi
 
           echo "::set-output name=commit_hash::$commit_hash"
-          
+
       - name: Commit and push new code to archival branch
         if: "!contains(env.deployment_env, 'test')"
         run: |
@@ -197,10 +209,12 @@ jobs:
           environment: "API (${{ needs.deploy-info.outputs.api-env }})"
           ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
 
-  start-comms-slack:
-    name: Start deploy comms (Slack)
+  start-comms-teams:
+    name: Start deploy comms (Teams)
     needs: [update-the-deploy-branch, deploy-info]
-    if: ${{ !contains(github.event.inputs.version || 'main', 'main') || !contains(github.event.inputs.deployment_env || 'test', 'test' )}} # Mutes notifications for auto-deploys to test    
+    outputs:
+      version_link: ${{ steps.create_version_link.outputs.version_link }}
+    if: ${{ !contains(github.event.inputs.version || 'main', 'main') || !contains(github.event.inputs.deployment_env || 'test', 'test' )}} # Mutes notifications for auto-deploys to test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -220,28 +234,35 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
-      - name: Pull slackbot API token from SSM
+      - name: Pull teams uri from SSM
         uses: "marvinpinto/action-inject-ssm-secrets@latest"
         with:
-          ssm_parameter: "/admin/common/nava-slackbot-api-key"
-          env_variable_name: "slackbot_token"
+          ssm_parameter: "/admin/common/teams-deploy-uri"
+          env_variable_name: "teams_uri"
 
-      - name: Post to Slack
+      - name: Create version link
+        id: create_version_link
+        env:
+          feature_branch_link: "[${{ env.version }}](https://github.com/EOLWD/pfml/commits/${{ env.version }})"
+          release_tag_link: "[${{ env.version }}](https://github.com/EOLWD/pfml/releases/tag/${{ env.version }})"
         run: |
-          SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
-          -H 'Content-Type: application/json;charset=utf-8' \
+          if [[ ${{ env.version }} == api/* ]]; then
+            echo "::set-output name=version_link::${{ env.release_tag_link }}"
+          else
+            echo "::set-output name=version_link::${{ env.feature_branch_link }}"
+          fi
+
+      - name: Post to Teams
+        run: |
+          RESPONSE=$(curl -fsLS -X POST ${{ env.TEAMS_URI }} \
+          --header 'Content-Type: application/json' \
           --data '{
-            "channel": "${{ env.deploys_channel }}",
-            "attachments": [{
-              "title": "API ${{ needs.deploy-info.outputs.api-env }} deployment #${{ github.run_number }} was started\n${{ needs.deploy-info.outputs.subtitle }}",
-              "color": "warning",
-              "fields": [
-                { "title": "started by", "value": "*${{ github.actor }}*", "short": true },
-                { "title": "releasing", "value": "*${{ env.version }}*", "short": true },
-                { "title": "commit details", "value": "*${{ env.commit_details }}*" }
-              ]
-            }]
-          }' https://slack.com/api/chat.postMessage)
+            "@type": "MessageCard",
+            "themeColor": "FF0000",
+            "title": "API Deployment Started",
+            "text": "Starting [API Deploy](${{ env.workflow_self_link }}) #${{ github.run_number }} of **${{ steps.create_version_link.outputs.version_link }}** to **${{ needs.deploy-info.outputs.api-env }}**"
+            }'
+          )
 
   extra-env-deploy:
     if: github.event.inputs.deployment_env == 'stage'
@@ -289,22 +310,41 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
-      - name: Check if the image exist in ECR
-        id: ecr-check
+      - name: Check if the image exist in pfml-api ECR
+        id: ecr-check-pfml-api
         run: |
           make ecr-login
           aws ecr describe-images --repository-name=pfml-api --image-ids=imageTag=${{ needs.update-the-deploy-branch.outputs.commit_hash }} --region us-east-1
         continue-on-error: true
         working-directory: ${{ env.working-dir }}
 
-      - name: Echo message
-        if: steps.ecr-check.outcome == 'success'
+      - name: Echo message pfml-api
+        if: steps.ecr-check-pfml-api.outcome == 'success'
         run: echo "Docker image already built; skipping rebuild."
 
-      - name: Build and upload docker image artifact
-        if: steps.ecr-check.outcome == 'failure'
+      - name: Build and upload api docker image artifact
+        if: steps.ecr-check-pfml-api.outcome == 'failure'
         run: make build-and-publish
         working-directory: ${{ env.working-dir }}
+
+      ### Steps below are copies of the above 3 steps but for the pfml-pdf-api image/container pertaining to 1099
+
+      - name: Check if the image exist in pfml-pdf-api ECR
+        id: ecr-check-pfml-pdf-api
+        run: |
+          make ecr-login
+          aws ecr describe-images --repository-name=pfml-pdf-api --image-ids=imageTag=${{ needs.update-the-deploy-branch.outputs.commit_hash }} --region us-east-1
+        continue-on-error: true
+        working-directory: ${{ env.working-dir }}
+
+      - name: Echo message pfml-pdf-api
+        if: steps.ecr-check-pfml-pdf-api.outcome == 'success'
+        run: echo "Docker image already built; skipping rebuild."
+
+      - name: Build and upload pdf-api docker image artifact
+        if: steps.ecr-check-pfml-pdf-api.outcome == 'failure'
+        run: make -f ../api/Makefile build-and-publish-pdf-api
+        working-directory: ./pdf_api
 
   api-db-migrate-up:
     name: Run migrations
@@ -330,7 +370,7 @@ jobs:
 
       - uses: hashicorp/setup-terraform@v1.2.1
         with:
-          terraform_version: 0.14.7
+          terraform_version: ${{ env.terraformVersion }}
           terraform_wrapper: false
 
       - name: Terraform Init
@@ -379,7 +419,7 @@ jobs:
 
       - uses: hashicorp/setup-terraform@v1.2.1
         with:
-          terraform_version: 0.14.7
+          terraform_version: ${{ env.terraformVersion }}
           terraform_wrapper: false
 
       - name: Terraform Init
@@ -407,7 +447,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-        
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -419,7 +459,7 @@ jobs:
 
       - uses: hashicorp/setup-terraform@v1.2.1
         with:
-          terraform_version: ${{ env.terraform-version }}
+          terraform_version: ${{ env.terraformVersion }}
           terraform_wrapper: false
 
       - name: Terraform Init
@@ -506,6 +546,9 @@ jobs:
           training: "980608199"
           breakfix: "1298450359"
           cps-preview: "1386420590"
+          long: "1531932432"
+          trn2: "1545153521"
+          infra-test: "1487363319"
       - name: Create a custom deployment record
         run: |
           newrelic events post --event "{ \"eventType\": \"CustomDeploymentMarker\", \"component\": \"api\", \"environment\":\"${{ needs.deploy-info.outputs.api-env }}\", \"version\": \"${{ env.version || needs.update-the-deploy-branch.outputs.commit_hash }}\" }"
@@ -530,42 +573,30 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
+      - uses: hashicorp/setup-terraform@v1.2.1
+        with:
+          terraform_version: ${{ env.terraformVersion }}
+          terraform_wrapper: false
+
       - name: Terraform Init
         id: terraform_init
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env.terraform-version }}
-          tf_actions_subcommand: init
-          tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraform-env-shared-dir }}/${{ needs.deploy-info.outputs.api-env }}
+        run: terraform init
+        working-directory: ${{ env.terraform-env-shared-dir }}/${{ needs.deploy-info.outputs.api-env }}
 
       - name: Terraform Plan with new docker image
         id: terraform_plan
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env.terraform-version }}
-          tf_actions_subcommand: plan
-          tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraform-env-shared-dir }}/${{ needs.deploy-info.outputs.api-env }}
-          args: "-out=plan.tfplan"
+        run: terraform plan -out=plan.tfplan
+        working-directory: ${{ env.terraform-env-shared-dir }}/${{ needs.deploy-info.outputs.api-env }}
 
       - name: Terraform Apply from execution plan
         id: terraform_apply
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env.terraform-version }}
-          tf_actions_subcommand: apply
-          tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraform-env-shared-dir }}/${{ needs.deploy-info.outputs.api-env }}
-          args: "plan.tfplan"
+        run: terraform apply plan.tfplan
+        working-directory: ${{ env.terraform-env-shared-dir }}/${{ needs.deploy-info.outputs.api-env }}
 
       - name: Terraform Output
         id: terraform_output
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env.terraform-version }}
-          tf_actions_subcommand: output
-          tf_actions_working_dir: ${{ env.terraform-env-shared-dir }}/${{ needs.deploy-info.outputs.api-env }}
+        run: terraform output -json
+        working-directory: ${{ env.terraform-env-shared-dir }}/${{ needs.deploy-info.outputs.api-env }}
         env:
         # Clear out the CLI args for terraform output
           TF_CLI_ARGS: ''
@@ -584,7 +615,7 @@ jobs:
       - name: Set deploy-state value
         id: deploy-state
         run: echo "::set-output name=deploy-state::${{ env.WORKFLOW_CONCLUSION }}"
-  
+
   finish-comms-github:
     name: Finish deploy comms (GitHub)
     needs: [start-comms-github, deploy-info, postdeploy-info]
@@ -608,19 +639,14 @@ jobs:
           token: ${{ secrets.PFML_DEVOPS_TOKEN }}
           ref: main
 
-  finish-comms-slack:
-    name: Finish deploy comms (Slack)
-    needs: [start-comms-slack, deploy-info, postdeploy-info]
+
+  post-to-teams:
+    name: post end status to teams
+    needs: [start-comms-teams, deploy-info, postdeploy-info]
     runs-on: ubuntu-latest
-    outputs:
-      message-ts: ${{ steps.post-to-slack.outputs.message-ts }}
-    # Notifies if there's a failure on auto-deploys to test
-    if: always() && 
-      (
-        (needs.start-comms-slack.result == 'success' && !contains(github.event.inputs.version || 'main', 'main')) ||
-        (needs.postdeploy-info.outputs.deploy-state == 'timed_out' || needs.postdeploy-info.outputs.deploy-state == 'failure')
-      )
     steps:
+      - uses: actions/checkout@v2
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -630,84 +656,53 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
-      - name: Pull slackbot API token from SSM
+      - name: Pull teams uri from SSM
         uses: "marvinpinto/action-inject-ssm-secrets@latest"
         with:
-          ssm_parameter: "/admin/common/nava-slackbot-api-key"
-          env_variable_name: "slackbot_token"
+          ssm_parameter: "/admin/common/teams-deploy-uri"
+          env_variable_name: "teams_uri"
 
-      - name: Choose Slackbot message
-        id: choose_finish_message
-        env:
-          deployment_success: "API ${{ needs.deploy-info.outputs.api-env }} deployment #${{ github.run_number }} succeeded"
-          deployment_failure: "API ${{ needs.deploy-info.outputs.api-env }} deployment #${{ github.run_number }} failed"
-          deployment_cancelled: "API ${{ needs.deploy-info.outputs.api-env }} deployment #${{ github.run_number }} was cancelled"
+      - name: Post to Teams
         run: |
-          if [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'success' ]]; then
-            echo "::set-output name=message::${{ env.deployment_success }}"
-            echo "::set-output name=color::good"
-          elif [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'cancelled' ]]; then
-            echo "::set-output name=message::${{ env.deployment_cancelled }}"
-            echo "::set-output name=color::#35373b"
-          elif [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'skipped' ]]; then
-            echo "::set-output name=message::${{ env.deployment_cancelled }}"
-            echo "::set-output name=color::#35373b"
-          elif [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'neutral' ]]; then
-            echo "::set-output name=message::${{ env.deployment_cancelled }}"
-            echo "::set-output name=color::#35373b"
-          elif [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'timed_out' ]]; then
-            echo "::set-output name=message::${{ env.deployment_failure }}"
-            echo "::set-output name=color::danger"
-          elif [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'failure' ]]; then
-            echo "::set-output name=message::${{ env.deployment_failure }}"
-            echo "::set-output name=color::danger"
-          else
-            echo "::set-output name=message::${{ env.deployment_failure }}"
-            echo "::set-output name=color::#2767cf"
-          fi
-
-      - name: Post to Slack
-        id: post-to-slack
-        run: |
-          SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
-          -H 'Content-Type: application/json;charset=utf-8' \
+          RESPONSE=$(curl -fsLS -X POST ${{ env.TEAMS_URI }} \
+          --header 'Content-Type: application/json' \
           --data '{
-            "channel": "${{ env.deploys_channel }}",
-            "attachments": [{
-              "title": "${{ steps.choose_finish_message.outputs.message }}\n${{ needs.deploy-info.outputs.subtitle }}",
-              "color": "${{ steps.choose_finish_message.outputs.color }}",
-              "fields": [
-                { "title": "started by", "value": "`${{ github.actor }}`", "short": true },
-                { "title": "released", "value": "`${{ env.version }}`", "short": true },
-              ]
-            }]
-          }' https://slack.com/api/chat.postMessage)
-
-          MESSAGE_TS=$(echo $SLACKBOT_RESPONSE | jq -r '.ts')
-          echo $MESSAGE_TS
-          echo "::set-output name=message-ts::$MESSAGE_TS"
+            "@type": "MessageCard",
+            "themeColor": "2986CC",
+            "title": "API Deploy Completed",
+            "text": "API deploy #${{ github.run_number }} ${{ needs.postdeploy-info.outputs.deploy-state }} in **${{ env.deployment_env}}**: [workflow run](${{ env.workflow_self_link }})"
+            }'
+          )
 
   end-to-end:
-    name: End-to-End Test Deployment
-    runs-on: ubuntu-latest
+    name: E2E Tests
     needs: [update-the-deploy-branch, api-release, api-gateway-release]
-    if: github.event.inputs.deployment_env != 'prod'
-    steps:
-      - name: Trigger E2E Workflow
-        uses: aurelien-baudet/workflow-dispatch@v2
-        with:
-          workflow: e2e-cypress.yml
-          token: ${{ secrets.PFML_DEVOPS_TOKEN }}
-          wait-for-completion: true
-          ref: "main"
-          inputs: |
-            {
-              "target_environment": ${{ toJSON(env.deployment_env) }},
-              "cypress_tags": "Deploy,Deploy-API",
-              "run_unstable": "${{ env.deployment_env != 'test' && 'false' || 'true' }}",
-              "run_nightly": "false",
-              "title_override": ${{ toJSON(format('API Deploy: {0} to {1}', env.version, env.deployment_env)) }}
-            }
+    if: github.event.inputs.deployment_env != 'prod' && github.event.inputs.deployment_env != 'infra-test'
+    # Always run tests from main to avoid coupling test code to release code.
+    uses: EOLWD/pfml/.github/workflows/e2e-tests.yml@main
+    with:
+      # We're not allowed to reference the env context when invoking reusable workflows,
+      # only inputs, needs, github, and secrets.
+      target_environment: ${{ github.event.inputs.deployment_env || 'test' }}
+      cypress_tags: "Deploy,Deploy-API"
+      run_stable: true
+      title_override: "${{ format('API Deploy: {0} to {1}', github.event.inputs.version || 'main', github.event.inputs.deployment_env || 'test') }}"
+    secrets:
+      # These secrets must be kept in sync with e2e-tests.yml
+      E2E_FINEOS_PASSWORD: ${{ secrets.E2E_FINEOS_PASSWORD }}
+      E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
+      E2E_EMPLOYER_PORTAL_PASSWORD: ${{ secrets.E2E_EMPLOYER_PORTAL_PASSWORD }}
+      E2E_TESTMAIL_APIKEY: ${{ secrets.E2E_TESTMAIL_APIKEY }}
+      E2E_SSO_PASSWORD: ${{ secrets.E2E_SSO_PASSWORD }}
+      E2E_SSO_USERNAME: ${{ secrets.E2E_SSO_USERNAME }}
+      E2E_TWILIO_ACCOUNTSID: ${{ secrets.E2E_TWILIO_ACCOUNTSID }}
+      E2E_TWILIO_AUTHTOKEN: ${{ secrets.E2E_TWILIO_AUTHTOKEN }}
+      CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+      CYPRESS_RECORD_KEY_UNSTABLE: ${{ secrets.CYPRESS_RECORD_KEY_UNSTABLE }}
+      CYPRESS_RECORD_KEY_MORNING: ${{ secrets.CYPRESS_RECORD_KEY_MORNING }}
+      CYPRESS_RECORD_KEY_TARGETED: ${{ secrets.CYPRESS_RECORD_KEY_TARGETED }}
+      PFML_AWS_ACCESS_KEY_ID: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+      PFML_AWS_SECRET_ACCESS_KEY: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
 
   load-test:
     name: "Trigger Load Testing"
@@ -718,7 +713,7 @@ jobs:
     if: github.event.inputs.deployment_env == 'performance' && github.event.inputs.performLoadTest == 'true'
     steps:
       - name: Trigger LST run with no Spikes using Artillery
-        uses: aurelien-baudet/workflow-dispatch@v2
+        uses: aurelien-baudet/workflow-dispatch@v2.1.1
         with:
           workflow: e2e-artillery.yml
           token: ${{ secrets.PFML_DEVOPS_TOKEN }}
@@ -731,14 +726,15 @@ jobs:
               "debug": "false"
             }
 
-  post-e2e-failures-to-slack:
-    name: Post E2E failures to Slack
-    needs: [finish-comms-slack, end-to-end]
+  post-e2e-failures-to-teams:
+    name: Post E2E Failures to Teams
+    needs: [end-to-end]
     # Run if the E2E tests failed or timed out. Applies to any environment that runs E2E tests.
-    if: always() &&
-        (needs.end-to-end.result == 'failure' || needs.end-to-end.result == 'timed_out')
+    if: always() && (needs.end-to-end.result == 'failure' || needs.end-to-end.result == 'timed_out')
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -748,23 +744,22 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
-      - name: Pull slackbot API token from SSM
+      - name: Pull teams uri from SSM
         uses: "marvinpinto/action-inject-ssm-secrets@latest"
         with:
-          ssm_parameter: "/admin/common/nava-slackbot-api-key"
-          env_variable_name: "slackbot_token"
+          ssm_parameter: "/admin/common/teams-deploy-uri"
+          env_variable_name: "teams_uri"
 
-      - name: Post to Slack
+      - name: Post to Teams
         run: |
-          echo "Slackbot message reply TS is ${{ needs.finish-comms-slack.outputs.message-ts }}"
-          
-          SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
-          -H 'Content-Type: application/json;charset=utf-8' \
+          RESPONSE=$(curl -fsLS -X POST ${{ env.TEAMS_URI }} \
+          --header 'Content-Type: application/json' \
           --data '{
-            "channel": "${{ env.deploys_channel }}",
-            "thread_ts": "${{ needs.finish-comms-slack.outputs.message-ts }}",
-            "attachments": [{
-              "title": "E2E Test failed in ${{ github.event.inputs.deployment_env || 'test' }} (<${{ env.workflow_self_link }}|build logs>)",
-              "color": "danger"
+            "@type": "MessageCard",
+            "themeColor": "FF0000",
+            "title": "E2E Tests Failed",
+            "text": "E2E tests failed in ${{ github.event.inputs.deployment_env || 'test'}} [build logs](${{ env.workflow_self_link }})",
+            "sections": [{
+                "activityImage":"https://th.bing.com/th/id/R.ee8882f44294e8a6f1732a54343ff17e?rik=FAYIPD4sACftKw&riu=http%3a%2f%2f3.bp.blogspot.com%2f-u6MZBWbGcZI%2fUT4mft01YTI%2fAAAAAAAADpU%2fJubGsyGdL00%2fs1600%2ffailure.png&ehk=ranH%2bkeeo59wsILuyxVyNTIR2oUECprijedE01jHq34%3d&risl=&pid=ImgRaw&r=0"
             }]
-          }' https://slack.com/api/chat.postMessage)
+          }')

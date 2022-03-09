@@ -1,6 +1,6 @@
 import { DocumentType } from "src/models/Document";
 import DownloadableDocument from "src/components/DownloadableDocument";
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 import React from "react";
 
 const DOCUMENT = {

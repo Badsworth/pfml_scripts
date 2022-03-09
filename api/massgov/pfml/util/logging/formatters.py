@@ -47,6 +47,7 @@ class JsonFormatter(logging.Formatter):  # noqa: B1
             record.method = flask.request.method
             record.path = flask.request.path
             record.request_id = flask.request.headers.get("x-amzn-requestid", "")
+            record.mass_pfml_agent_id = flask.request.headers.get("Mass-PFML-Agent-ID", "")
 
         super(JsonFormatter, self).format(record)
 
@@ -60,20 +61,14 @@ class JsonFormatter(logging.Formatter):  # noqa: B1
         if flask.has_request_context():
             # Warning: do not access current_user as that may result in SQLAlchemy calls, but this
             # logging call may have happened due to a database failure.
-            user_id = flask.g.get("current_user_user_id")
+
+            user_attributes = flask.g.get("current_user_log_attributes")
             azure_user_sub_id = flask.g.get("azure_user_sub_id")
-            if user_id:
-                output.update(
-                    {
-                        "current_user.user_id": user_id,
-                        "current_user.auth_id": flask.g.get("current_user_auth_id", ""),
-                        "current_user.role_ids": flask.g.get("current_user_role_ids", ""),
-                    }
-                )
+
+            if user_attributes:
+                output.update(user_attributes)
             if azure_user_sub_id:
-                output.update(
-                    {"azure_user.sub_id": azure_user_sub_id,}
-                )
+                output.update({"azure_user.sub_id": azure_user_sub_id})
 
         # Inject New Relic tracing metadata for Logs in Context features.
         # This is not the suggested way to implement it, but the NewRelicContextFormatter

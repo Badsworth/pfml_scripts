@@ -1,7 +1,8 @@
 from typing import Optional
 
 import massgov.pfml.experian.address_validate_soap.models as sm
-from massgov.pfml.db.models.employees import Address, GeoState
+from massgov.pfml.db.models.employees import Address
+from massgov.pfml.db.models.geo import GeoState
 from massgov.pfml.experian.address_validate_soap.layouts import Layout
 from massgov.pfml.experian.experian_util import address_to_experian_search_text
 

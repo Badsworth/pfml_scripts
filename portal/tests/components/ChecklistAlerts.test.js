@@ -37,9 +37,6 @@ describe("ChecklistAlerts", () => {
   });
 
   it("If tax just submitted, renders tax alert", () => {
-    process.env.featureFlags = {
-      claimantShowTaxWithholding: true,
-    };
     renderComponent({
       submitted: "taxPref",
     });

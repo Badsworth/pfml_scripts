@@ -1,0 +1,81 @@
+name: Portal Mass.gov Links Scanner
+
+on:
+  workflow_dispatch:
+  # Scheduled to run every Monday at 12 PM EST
+  # Ran weekly rather than daily since it's unlikely we'll
+  # be able to fix links within a day, so recurring errors
+  # would be annoying.
+  schedule:
+    - cron: '0 17 * * 1'
+
+env:
+  nodeVersion: 16.x
+  working-dir: ./portal
+  cache-package-lock: ./portal/package-lock.json
+  workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+jobs:
+  check-links:
+    runs-on: ubuntu-latest
+    outputs:
+      # This output gets set through the check-links.ts script
+      badUrls: ${{ steps.test.outputs.badUrls }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          cache: 'npm'
+          cache-dependency-path: ${{ env.cache-package-lock }}
+          node-version: ${{ env.nodeVersion }}
+
+      - name: install
+        run: npm ci --audit false
+        working-directory: ${{ env.working-dir }}
+
+      - name: build
+        run: ./node_modules/.bin/tsc bin/check-links.ts --outDir builds/
+        working-directory: ${{ env.working-dir }}
+
+      - name: Test mass.gov links
+        id: test
+        run: node builds/bin/check-links.js
+        working-directory: ${{ env.working-dir }}
+
+  post-to-teams:
+    needs: [check-links]
+    if: always() && needs.check-links.result == 'failure'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Pull teams uri from SSM
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/admin/common/teams-deploy-uri"
+          env_variable_name: "teams_uri"
+
+      - name: post failures to teams
+        run: |
+          RESPONSE=$(curl -fsLS -X POST ${{ env.TEAMS_URI }} \
+          --header 'Content-Type: application/json' \
+          --data '{
+            "@type": "MessageCard",
+            "themeColor": "FF0000",
+            "title": "Link Scanner Warning",
+            "text": "Link Scanner identified broken external link(s) referenced in the Portal codebase in ${{ env.workflow_self_link }}.\n View the link scanner output here: ${{ needs.check-links.outputs.badUrls }}",
+            "sections": [{}]
+            }'
+          )

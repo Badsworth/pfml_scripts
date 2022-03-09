@@ -1,6 +1,7 @@
 import enum
 
 import massgov.pfml.api.util.state_log_util as state_log_util
+import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import PaymentMethod, State
 from massgov.pfml.delegated_payments.step import Step
@@ -32,7 +33,7 @@ class PaymentMethodsSplitStep(Step):
 
         if state_log_count == 0:
             logger.warning(
-                "No payments found in state %s, nothing to split", READY_STATE.state_description,
+                "No payments found in state %s, nothing to split", READY_STATE.state_description
             )
             return
 
@@ -61,6 +62,13 @@ class PaymentMethodsSplitStep(Step):
                     outcome=message,
                     db_session=self.db_session,
                 )
+                logger.info(
+                    "Moved EFT payment to state %s in preparation of creating PUB files",
+                    State.DELEGATED_PAYMENT_ADD_TO_PUB_TRANSACTION_EFT.state_description,
+                    extra=payments_util.get_traceable_payment_details(
+                        payment, State.DELEGATED_PAYMENT_ADD_TO_PUB_TRANSACTION_EFT
+                    ),
+                )
             elif payment_method_id == PaymentMethod.CHECK.payment_method_id:
                 self.increment(self.Metrics.CHECK_PAYMENT_COUNT)
                 message = state_log_util.build_outcome(
@@ -72,6 +80,14 @@ class PaymentMethodsSplitStep(Step):
                     outcome=message,
                     db_session=self.db_session,
                 )
+                logger.info(
+                    "Moved check payment to state %s in preparation of creating PUB files",
+                    State.DELEGATED_PAYMENT_ADD_TO_PUB_TRANSACTION_CHECK.state_description,
+                    extra=payments_util.get_traceable_payment_details(
+                        payment, State.DELEGATED_PAYMENT_ADD_TO_PUB_TRANSACTION_CHECK
+                    ),
+                )
+
             else:
                 # raise an exception, put more details than just this here so we can trace back to the payment.
                 raise PaymentMethodsSplitError(

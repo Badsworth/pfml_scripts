@@ -1,5 +1,6 @@
 import massgov.pfml.experian.physical_address.service as experian_address_service
-from massgov.pfml.db.models.employees import Address, Country, GeoState
+from massgov.pfml.db.models.employees import Address
+from massgov.pfml.db.models.geo import Country, GeoState
 from massgov.pfml.experian.physical_address.client.models import (
     AddressFormatV1Address,
     AddressFormatV1Components,
@@ -156,7 +157,7 @@ def test_experian_format_response_to_address_partial_empty_info(mocker):
     experian_address_format_response = AddressFormatV1Response(
         result=AddressFormatV1Result(
             global_address_key="foo",
-            address=AddressFormatV1Address(address_line_1="", locality="", postal_code="",),
+            address=AddressFormatV1Address(address_line_1="", locality="", postal_code=""),
             components=AddressFormatV1Components(country_iso_3=""),
         )
     )

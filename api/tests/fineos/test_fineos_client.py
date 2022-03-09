@@ -8,7 +8,6 @@ import pathlib
 import re
 import time
 import xml.etree.ElementTree
-from unittest import mock
 
 import defusedxml.ElementTree
 import pytest
@@ -16,7 +15,14 @@ import requests
 
 import massgov.pfml.fineos.fineos_client
 import massgov.pfml.fineos.models
+from massgov.pfml.api.models.applications.common import DocumentType
 from massgov.pfml.fineos.exception import FINEOSClientError
+from massgov.pfml.fineos.mock_client import mock_document
+from massgov.pfml.fineos.models.customer_api import (
+    ChangeRequestPeriod,
+    ChangeRequestReason,
+    LeavePeriodChangeRequest,
+)
 from massgov.pfml.fineos.models.customer_api.spec import AbsenceDetails
 from massgov.pfml.fineos.models.group_client_api import EForm, EFormAttribute, ModelEnum
 
@@ -711,7 +717,7 @@ def test_get_fineos_error_method_name(httpserver, fineos_client):
 
 def test_get_fineos_correlation_id_with_non_json():
     response = requests.Response()
-    type(response).text = mock.PropertyMock(return_value="not_json")
+    response._content = "not_json".encode("utf-8")
 
     cid = massgov.pfml.fineos.fineos_client.get_fineos_correlation_id(response)
     assert cid is None
@@ -719,7 +725,7 @@ def test_get_fineos_correlation_id_with_non_json():
 
 def test_get_fineos_correlation_id_with_json_list():
     response = requests.Response()
-    type(response).text = mock.PropertyMock(return_value='[{"ha":"ha"}]')
+    response._content = '[{"ha":"ha"}]'.encode("utf-8")
 
     cid = massgov.pfml.fineos.fineos_client.get_fineos_correlation_id(response)
     assert cid is None
@@ -727,7 +733,7 @@ def test_get_fineos_correlation_id_with_json_list():
 
 def test_get_fineos_correlation_id_with_string():
     response = requests.Response()
-    type(response).text = mock.PropertyMock(return_value='{"correlationId":"1234"}')
+    response._content = '{"correlationId":"1234"}'.encode("utf-8")
 
     cid = massgov.pfml.fineos.fineos_client.get_fineos_correlation_id(response)
     assert cid == "1234"
@@ -735,7 +741,7 @@ def test_get_fineos_correlation_id_with_string():
 
 def test_get_fineos_correlation_id_with_int():
     response = requests.Response()
-    type(response).text = mock.PropertyMock(return_value='{"correlationId":1234}')
+    response._content = '{"correlationId":1234}'.encode("utf-8")
 
     cid = massgov.pfml.fineos.fineos_client.get_fineos_correlation_id(response)
     assert cid == 1234
@@ -743,8 +749,57 @@ def test_get_fineos_correlation_id_with_int():
 
 def test_customer_api_documents_403(httpserver, fineos_client):
     httpserver.expect_request(
-        "/customerapi/customer/cases/123456789/documents", method="GET",
+        "/customerapi/customer/cases/123456789/documents", method="GET"
     ).respond_with_data("", status=403, content_type="application/json")
 
     documents = fineos_client.get_documents("FINEOS_WEB_ID", "123456789")
     assert len(documents) == 0
+
+
+def test_customer_api_document_upload_multipart_success(httpserver, fineos_client):
+    case_id = "NTN-464041-ABS-01"
+    document_type = DocumentType.identification_proof
+    description = "test document"
+    filename = "test.pdf"
+    content_type = "application/pdf"
+    file_content = b""
+
+    document_response = mock_document(case_id, document_type, filename, description)
+
+    httpserver.expect_request(
+        f"/customerapi/customer/cases/{case_id}/documents/upload/{document_type}", method="POST"
+    ).respond_with_data(json.dumps(document_response), status=200, content_type="application/json")
+
+    document = fineos_client.upload_document_multipart(
+        "FINEOS_WEB_ID", case_id, document_type, file_content, filename, content_type, description
+    )
+    assert document.documentId == document_response["documentId"]
+    assert document.caseId == document_response["caseId"]
+
+
+class TestCreateOrUpdateLeavePeriodChangeRequest:
+    @pytest.fixture
+    def change_request(self):
+        return LeavePeriodChangeRequest(
+            reason=ChangeRequestReason(fullId=0, name="Employee Requested Removal"),
+            changeRequestPeriods=[
+                ChangeRequestPeriod(
+                    endDate=datetime.date(2022, 2, 15), startDate=datetime.date(2022, 2, 14)
+                )
+            ],
+            additionalNotes="Withdrawal",
+        )
+
+    def test_success(self, fineos_client, change_request):
+        response = fineos_client.create_or_update_leave_period_change_request(
+            "web_id", "absence_id", change_request
+        )
+
+        reason = response.reason
+        assert reason.name == "Employee Requested Removal"
+
+        assert response.additionalNotes == "Withdrawal"
+
+        period = response.changeRequestPeriods[0]
+        assert period.startDate == datetime.date(2022, 2, 14)
+        assert period.endDate == datetime.date(2022, 2, 15)

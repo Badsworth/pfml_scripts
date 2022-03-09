@@ -11,15 +11,12 @@ import massgov.pfml.db as db
 import massgov.pfml.delegated_payments.delegated_fineos_pei_writeback as writeback
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
-    Flow,
     LkPaymentMethod,
-    LkState,
     Payment,
     PaymentMethod,
     PaymentReferenceFile,
     ReferenceFile,
     ReferenceFileType,
-    State,
     StateLog,
 )
 from massgov.pfml.db.models.payments import (
@@ -28,6 +25,7 @@ from massgov.pfml.db.models.payments import (
     FineosWritebackTransactionStatus,
     LkFineosWritebackTransactionStatus,
 )
+from massgov.pfml.db.models.state import Flow, LkState, State
 from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 from massgov.pfml.util.datetime import get_now_us_eastern
 
@@ -444,7 +442,7 @@ def test_process_payments_for_writeback(
 
 
 def test_process_payments_for_writeback_no_payments_ready_for_writeback(
-    fineos_pei_writeback_step, test_db_session,
+    fineos_pei_writeback_step, test_db_session
 ):
     # Create some small amount of Payments that are in a state other than the one we pick up
     # for the writeback.

@@ -16,7 +16,7 @@ describe("Employer dashboard", () => {
   });
   it("LA should be able to view, filter, sort claims and search by name", () => {
     cy.dependsOnPreviousPass([submit]);
-    portal.before();
+    portal.before({ employerShowMultiLeaveDashboard: false });
     cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
       assertValidClaim(claim);
       portal.loginLeaveAdmin(claim.employer_fein);
@@ -61,9 +61,11 @@ describe("Employer dashboard", () => {
           expect($table.children().length).to.be.gt(0);
         })
         .find('th[data-label="Employee name"]')
-        .first()
         .then(($th) => {
-          portal.searchClaims($th.text(), false);
+          const names = $th.toArray();
+          const name = names.find((n) => n.innerText !== "--");
+          if (!name) return; // No employee match will be found
+          portal.searchClaims(name.innerText, false);
           portal.clearSearch();
         });
     });

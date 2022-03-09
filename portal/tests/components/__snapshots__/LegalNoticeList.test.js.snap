@@ -15,7 +15,7 @@ exports[`LegalNoticeList renders only documents that are legal notices 1`] = `
     >
       <svg
         aria-hidden="true"
-        class="usa-icon--size-3 margin-right-1"
+        class="usa-icon usa-icon--size-3 margin-right-1"
         fill="currentColor"
         focusable="false"
         role="img"
@@ -34,7 +34,7 @@ exports[`LegalNoticeList renders only documents that are legal notices 1`] = `
         <div
           class="text-base-dark"
         >
-          Posted 4/5/2020
+          Posted 4/5/2020.
         </div>
       </div>
     </li>

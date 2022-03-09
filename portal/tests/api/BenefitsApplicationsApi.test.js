@@ -1,10 +1,10 @@
 import PaymentPreference, {
   PaymentPreferenceMethod,
 } from "../../src/models/PaymentPreference";
+import ApiResourceCollection from "../../src/models/ApiResourceCollection";
 import BenefitsApplication from "../../src/models/BenefitsApplication";
-import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
 import BenefitsApplicationsApi from "../../src/api/BenefitsApplicationsApi";
-
+import { ValidationError } from "../../src/errors";
 import { mockAuth } from "../test-utils";
 
 jest.mock("../../src/services/tracker");
@@ -32,7 +32,6 @@ describe("BenefitsApplicationsApi", () => {
   };
 
   beforeEach(() => {
-    process.env.featureFlags = {};
     jest.resetAllMocks();
     mockAuth(true, accessTokenJwt);
 
@@ -80,11 +79,12 @@ describe("BenefitsApplicationsApi", () => {
       expect(claimResponse).toBeInstanceOf(BenefitsApplication);
       expect(claimResponse).toEqual(claim);
       expect(rest).toMatchInlineSnapshot(`
-        Object {
-          "warnings": Array [
-            Object {
+        {
+          "warnings": [
+            {
               "field": "first_name",
               "message": "First name is required",
+              "namespace": "applications",
               "type": "required",
             },
           ],
@@ -115,7 +115,7 @@ describe("BenefitsApplicationsApi", () => {
       it("sends GET request to /applications", async () => {
         await claimsApi.getClaims();
         expect(fetch).toHaveBeenCalledWith(
-          `${process.env.apiUrl}/applications`,
+          `${process.env.apiUrl}/applications?order_by=created_at&order_direction=descending&page_offset=1`,
           {
             body: null,
             headers: baseRequestHeaders,
@@ -127,7 +127,7 @@ describe("BenefitsApplicationsApi", () => {
       it("resolves with claims properties", async () => {
         const { claims: claimsResponse } = await claimsApi.getClaims();
 
-        expect(claimsResponse).toBeInstanceOf(BenefitsApplicationCollection);
+        expect(claimsResponse).toBeInstanceOf(ApiResourceCollection);
         expect(claimsResponse.items).toEqual([claim]);
       });
     });
@@ -175,14 +175,19 @@ describe("BenefitsApplicationsApi", () => {
     describe("unsuccessful request", () => {
       beforeEach(() => {
         global.fetch = mockFetch({
-          response: { data: null },
+          response: { data: null, errors: [{ type: "invalid" }] },
           status: 400,
           ok: false,
         });
       });
 
       it("throws error", async () => {
-        await expect(claimsApi.createClaim()).rejects.toThrow();
+        try {
+          await claimsApi.createClaim({});
+        } catch (error) {
+          expect(error).toBeInstanceOf(ValidationError);
+          expect(error.issues[0].namespace).toBe("applications");
+        }
       });
     });
   });
@@ -257,8 +262,8 @@ describe("BenefitsApplicationsApi", () => {
       expect(claimResponse).toBeInstanceOf(BenefitsApplication);
       expect(claimResponse).toEqual(claim);
       expect(rest).toMatchInlineSnapshot(`
-        Object {
-          "warnings": Array [],
+        {
+          "warnings": [],
         }
       `);
     });
@@ -297,6 +302,22 @@ describe("BenefitsApplicationsApi", () => {
 
       expect(claimResponse).toBeInstanceOf(BenefitsApplication);
       expect(claimResponse).toEqual(claim);
+    });
+
+    it("makes a request using the FF header when splitClaimsAcrossBY is true", async () => {
+      process.env.featureFlags = JSON.stringify({ splitClaimsAcrossBY: true });
+      await claimsApi.submitClaim(claim.application_id);
+      expect(fetch).toHaveBeenCalledWith(
+        `${process.env.apiUrl}/applications/${claim.application_id}/submit_application`,
+        {
+          body: null,
+          headers: {
+            ...baseRequestHeaders,
+            "X-FF-Split-Claims-Across-BY": "true",
+          },
+          method: "POST",
+        }
+      );
     });
   });
 
@@ -341,8 +362,8 @@ describe("BenefitsApplicationsApi", () => {
       expect(claimResponse).toBeInstanceOf(BenefitsApplication);
       expect(claimResponse).toEqual(claim);
       expect(rest).toMatchInlineSnapshot(`
-        Object {
-          "warnings": Array [],
+        {
+          "warnings": [],
         }
       `);
     });
@@ -387,8 +408,8 @@ describe("BenefitsApplicationsApi", () => {
       expect(claimResponse).toBeInstanceOf(BenefitsApplication);
       expect(claimResponse).toEqual(claim);
       expect(rest).toMatchInlineSnapshot(`
-        Object {
-          "warnings": Array [],
+        {
+          "warnings": [],
         }
       `);
     });

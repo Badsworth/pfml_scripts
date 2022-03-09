@@ -114,6 +114,11 @@ variable "enable_alarm_api_ram" {
   default     = true
 }
 
+variable "enable_document_multipart_upload" {
+  description = "Enable document uploads through the FINEOS multipart endpoint"
+  type        = string
+  default     = "1"
+}
 
 variable "cors_origins" {
   description = "A list of origins to allow CORS requests from."
@@ -254,6 +259,42 @@ variable "portal_base_url" {
   default     = ""
 }
 
+variable "admin_portal_base_url" {
+  description = "Admin Portal base URL for Azure log in and redirect URLs."
+  type        = string
+  default     = ""
+}
+
+variable "azure_ad_authority_domain" {
+  description = "The main azure domain used for public keys and logging out."
+  type        = string
+  default     = ""
+}
+
+variable "azure_ad_client_id" {
+  description = "Used to associate with the Azure AD application."
+  type        = string
+  default     = ""
+}
+
+variable "azure_ad_client_secret" {
+  description = "Used to generate the access token."
+  type        = string
+  default     = ""
+}
+
+variable "azure_ad_parent_group" {
+  description = "The main authentication group, which represents either prod or non-prod."
+  type        = string
+  default     = ""
+}
+
+variable "azure_ad_tenant_id" {
+  description = "Identifies the Azure AD tenant to use for authentication. AKA directory ID."
+  type        = string
+  default     = ""
+}
+
 variable "enable_application_fraud_check" {
   description = "Enable the fraud check for application submission"
   type        = string
@@ -277,6 +318,24 @@ variable "cognito_provisioned_concurrency_level_min" {
   default     = 1
 }
 
+variable "pfml_email_address" {
+  description = "\"Send from\" address for outgoing emails sent to claimants and leave administrators"
+  type        = string
+  default     = ""
+}
+
+variable "bounce_forwarding_email_address" {
+  description = "\"Send to\" address for bounced back outgoing emails"
+  type        = string
+  default     = ""
+}
+
+variable "bounce_forwarding_email_address_arn" {
+  description = "\"Send to\" address for bounced back outgoing emails (ARN)"
+  type        = string
+  default     = ""
+}
+
 variable "release_version" {
   description = "API release version"
   type        = string
@@ -295,7 +354,13 @@ variable "use_claim_status_url" {
   default     = true
 }
 
-variable "enable_pdf_document_compression" {
-  description = "Enable or disable PDF compression on document upload"
+variable "enable_application_import" {
+  description = "Enable or disable claimant application import"
   type        = string
+}
+
+variable "enable_employee_endpoints" {
+  description = "Specifies if the /employees/* API endpoints are enabled"
+  type        = string
+  default     = "0"
 }

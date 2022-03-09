@@ -1,10 +1,11 @@
 import enum
 from decimal import Decimal
-from typing import cast
+from typing import Dict, Tuple, cast
 
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging as logging
-from massgov.pfml.db.models.employees import AbsencePeriod, ReferenceFile, ReferenceFileType
+from massgov.pfml.api.eligibility.benefit_year import _get_persisted_benefit_year_for_date
+from massgov.pfml.db.models.employees import AbsencePeriod, Claim, ReferenceFile, ReferenceFileType
 from massgov.pfml.db.models.payments import (
     FineosExtractVbiLeavePlanRequestedAbsence,
     FineosExtractVPaidLeaveInstruction,
@@ -20,6 +21,10 @@ class IAWWExtractStep(Step):
     update fineos_average_weekly_wage for matching absence_periods
     """
 
+    leave_plan_requested_absence_records_map: Dict[
+        Tuple[str, str], FineosExtractVbiLeavePlanRequestedAbsence
+    ] = {}
+
     class Metrics(str, enum.Enum):
         PAID_LEAVE_INSTRUCTION_RECORD_COUNT = "paid_leave_instruction_record_count"
         PROCESSED_PAID_LEAVE_INSTRUCTION_COUNT = "processed_paid_leave_instruction_count"
@@ -33,7 +38,8 @@ class IAWWExtractStep(Step):
         NOT_MATCHING_LEAVE_PLAN_REQUESTED_ABSENCE_RECORD_COUNT = (
             "not_matching_leave_plan_requested_absence_record_count"
         )
-        ABSENCE_PERIODS_UPDATED = "absence_periods_updated"
+        ABSENCE_PERIODS_IAWW_ADDED = "absence_periods_iaww_added"
+        ABSENCE_PERIODS_IAWW_UPDATED = "absence_periods_iaww_updated"
 
     def run_step(self):
         logger.info("Processing IAWW extract data")
@@ -70,24 +76,16 @@ class IAWWExtractStep(Step):
             if validation_container.has_validation_issues():
                 self.increment(self.Metrics.PAID_LEAVE_INSTRUCTION_VALIDATION_ISSUE_COUNT)
                 logger.info(
-                    f"Encoutred validation issue while processing leave instruction record: {validation_container.get_reasons()}"
+                    f"Encountered validation issue while processing leave instruction record: {validation_container.get_reasons()}"
                 )
                 return None
 
             logger.debug(f"Processing paid leave instruction record C={c_value}, I={i_value}")
 
-            leave_plan_requested_absence_record = (
-                self.db_session.query(FineosExtractVbiLeavePlanRequestedAbsence)
-                .filter(
-                    FineosExtractVbiLeavePlanRequestedAbsence.selectedplan_classid
-                    == c_leaveplan_value,
-                    FineosExtractVbiLeavePlanRequestedAbsence.selectedplan_indexid
-                    == i_leaveplan_value,
-                    FineosExtractVbiLeavePlanRequestedAbsence.reference_file_id
-                    == reference_file.reference_file_id,
+            if c_leaveplan_value and i_leaveplan_value:
+                leave_plan_requested_absence_record = self.leave_plan_requested_absence_records_map.get(
+                    (c_leaveplan_value, i_leaveplan_value)
                 )
-                .first()
-            )
 
             if leave_plan_requested_absence_record:
                 self.increment(self.Metrics.LEAVE_PLAN_REQUESTED_ABSENCE_RECORD_COUNT)
@@ -106,21 +104,51 @@ class IAWWExtractStep(Step):
                     logger.info("Leave plan requested does not contain leaverequest_id_value")
                     return None
 
-                # TO-DO post MVP we will need to handle an updated IAWW from FINEOS, but for the MVP
-                # we will only populate the IAWW if we don't already have a value for it
                 absence_periods = (
                     self.db_session.query(AbsencePeriod)
                     .filter(AbsencePeriod.fineos_leave_request_id == int(leaverequest_id_value))
-                    .filter(AbsencePeriod.fineos_average_weekly_wage.is_(None))
                     .all()
                 )
 
                 for absence_period in absence_periods:
+                    curr_aww = absence_period.fineos_average_weekly_wage
                     absence_period.fineos_average_weekly_wage = Decimal(cast(str, aww_value))
-                    self.increment(self.Metrics.ABSENCE_PERIODS_UPDATED)
-                    logger.debug(
-                        f"Absence period {absence_period.absence_period_id} updated with AWW={aww_value}"
-                    )
+                    if curr_aww is None:
+                        self.increment(self.Metrics.ABSENCE_PERIODS_IAWW_ADDED)
+                        logger.debug(
+                            f"Absence period {absence_period.absence_period_id} updated with AWW={aww_value}"
+                        )
+                    else:
+                        self.increment(self.Metrics.ABSENCE_PERIODS_IAWW_UPDATED)
+                        logger.debug(
+                            f"Absence period {absence_period.absence_period_id} updated from AWW={curr_aww} to AWW={aww_value}"
+                        )
+
+                        # Update any associated benefit years
+                        claim = (
+                            self.db_session.query(Claim)
+                            .filter(Claim.claim_id == absence_period.claim_id)
+                            .one()
+                        )
+
+                        benefit_year = (
+                            _get_persisted_benefit_year_for_date(
+                                self.db_session, claim.employee_id, claim.absence_period_start_date
+                            )
+                            if claim.employee_id and claim.absence_period_start_date
+                            else None
+                        )
+                        if benefit_year:
+                            for contribution in benefit_year.contributions:
+                                if contribution.employer_id == claim.employer_id:
+                                    contribution.average_weekly_wage = (
+                                        absence_period.fineos_average_weekly_wage
+                                    )
+
+                                    logger.debug(
+                                        f"Benefit year {benefit_year.benefit_year_id} updated from AWW={curr_aww} to AWW={aww_value} for employer {claim.employer_id}"
+                                    )
+
             else:
                 self.increment(self.Metrics.NOT_MATCHING_LEAVE_PLAN_REQUESTED_ABSENCE_RECORD_COUNT)
                 logger.info(
@@ -141,6 +169,35 @@ class IAWWExtractStep(Step):
             raise
 
         return None
+
+    def get_leave_plan_requested_absence_records_map(self, reference_file: ReferenceFile) -> None:
+        raw_leave_plan_requested_absence_records = self.db_session.query(
+            FineosExtractVbiLeavePlanRequestedAbsence
+        ).filter(
+            FineosExtractVbiLeavePlanRequestedAbsence.reference_file_id
+            == reference_file.reference_file_id
+        )
+
+        for record in raw_leave_plan_requested_absence_records:
+            selectedplan_classid = record.selectedplan_classid
+            selectedplan_indexid = record.selectedplan_indexid
+            if selectedplan_classid and selectedplan_indexid:
+                if (
+                    selectedplan_classid,
+                    selectedplan_indexid,
+                ) in self.leave_plan_requested_absence_records_map.keys():
+                    logger.error(
+                        "Duplicate entries found in the leave plan requested absence records.",
+                        extra={
+                            "selectedplan_classid": selectedplan_classid,
+                            "selectedplan_indexid": selectedplan_indexid,
+                        },
+                    )
+                    continue
+
+                self.leave_plan_requested_absence_records_map[
+                    (selectedplan_classid, selectedplan_indexid)
+                ] = record
 
     def process_records(self) -> None:
         # Grab the latest payment extract reference file
@@ -173,6 +230,9 @@ class IAWWExtractStep(Step):
             )
             .all()
         )
+
+        self.get_leave_plan_requested_absence_records_map(reference_file)
+
         for raw_paid_leave_instruction_record in raw_paid_leave_instruction_records:
             self.increment(self.Metrics.PAID_LEAVE_INSTRUCTION_RECORD_COUNT)
             self.process_paid_leave_instruction_record(

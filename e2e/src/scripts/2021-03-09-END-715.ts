@@ -3,11 +3,11 @@ import EmployeePool from "../generation/Employee";
 import DOR from "../generation/writers/DOR";
 import dataDirectory from "../generation/DataDirectory";
 import path from "path";
-import multipipe from "multipipe";
 import stringify from "csv-stringify";
 import fs from "fs";
 import { map, pipeline, writeToStream } from "streaming-iterables";
 import EmployeeIndex from "../generation/writers/EmployeeIndex";
+import { chain } from "stream-chain";
 
 /**
  * This is a data generation script.
@@ -59,7 +59,7 @@ import EmployeeIndex from "../generation/writers/EmployeeIndex";
       };
     };
 
-    const employerIndexStream = multipipe(
+    const employerIndexStream = chain([
       stringify({
         header: true,
         columns: {
@@ -71,8 +71,8 @@ import EmployeeIndex from "../generation/writers/EmployeeIndex";
           q4: "2020-12-31 Withholdings",
         },
       }),
-      fs.createWriteStream(storage.dir + "/employers.csv")
-    );
+      fs.createWriteStream(storage.dir + "/employers.csv"),
+    ]);
 
     await pipeline(
       () => employerPool,

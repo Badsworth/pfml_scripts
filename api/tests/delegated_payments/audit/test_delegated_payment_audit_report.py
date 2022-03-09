@@ -1,7 +1,8 @@
 import csv
 import os
 import tempfile
-from datetime import date
+from datetime import date, datetime
+from decimal import Decimal
 from typing import List
 
 import pytest
@@ -10,9 +11,21 @@ from freezegun import freeze_time
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
-from massgov.pfml.db.models.employees import Payment, ReferenceFile, ReferenceFileType, State
-from massgov.pfml.db.models.factories import ClaimFactory, PaymentFactory
-from massgov.pfml.db.models.payments import PaymentAuditReportDetails, PaymentAuditReportType
+from massgov.pfml.db.models.employees import (
+    Payment,
+    PaymentMethod,
+    PaymentTransactionType,
+    ReferenceFile,
+    ReferenceFileType,
+    State,
+)
+from massgov.pfml.db.models.factories import ClaimFactory, LinkSplitPaymentFactory, PaymentFactory
+from massgov.pfml.db.models.payments import (
+    FineosWritebackDetails,
+    FineosWritebackTransactionStatus,
+    PaymentAuditReportDetails,
+    PaymentAuditReportType,
+)
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
     PaymentAuditCSV,
@@ -28,6 +41,10 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
     get_payment_preference,
     stage_payment_audit_report_details,
     write_audit_report,
+)
+from massgov.pfml.delegated_payments.audit.delegated_payment_preapproval_util import (
+    PreapprovalIssue,
+    get_payment_preapproval_status,
 )
 from massgov.pfml.delegated_payments.audit.mock.delegated_payment_audit_generator import (
     AUDIT_SCENARIO_DESCRIPTORS,
@@ -133,8 +150,16 @@ def test_get_payment_audit_report_details(test_db_session, initialize_factories_
     )
     stage_payment_audit_report_details(
         payment,
-        PaymentAuditReportType.LEAVE_PLAN_IN_REVIEW,
-        "Leave Plan In Review Test Message",  # Not used
+        PaymentAuditReportType.EXCEEDS_26_WEEKS_TOTAL_LEAVE,
+        "Total leave duration exceeded Test Message",
+        None,
+        test_db_session,
+    )
+
+    stage_payment_audit_report_details(
+        payment,
+        PaymentAuditReportType.PAYMENT_DATE_MISMATCH,
+        "Payment date mismatch Test Message",
         None,
         test_db_session,
     )
@@ -149,17 +174,664 @@ def test_get_payment_audit_report_details(test_db_session, initialize_factories_
     assert audit_report_details.dua_additional_income_details == "DUA Reduction Test Message"
     assert audit_report_details.dia_additional_income_details == "DIA Reduction Test Message"
     assert audit_report_details.dor_fineos_name_mismatch_details == "Name mismatch Test Message"
-    assert audit_report_details.skipped_by_program_integrity
     assert (
-        audit_report_details.rejected_notes
-        == f"{PaymentAuditReportType.DUA_ADDITIONAL_INCOME.payment_audit_report_type_description}, {PaymentAuditReportType.DIA_ADDITIONAL_INCOME.payment_audit_report_type_description}, {PaymentAuditReportType.DOR_FINEOS_NAME_MISMATCH.payment_audit_report_type_description}, {PaymentAuditReportType.LEAVE_PLAN_IN_REVIEW.payment_audit_report_type_description} (Skipped)"
+        audit_report_details.payment_date_mismatch_details == "Payment date mismatch Test Message"
+    )
+    assert (
+        audit_report_details.exceeds_26_weeks_total_leave_details
+        == "Total leave duration exceeded Test Message"
+    )
+    assert audit_report_details.rejected_by_program_integrity is True
+    assert audit_report_details.skipped_by_program_integrity is False
+    assert audit_report_details.rejected_notes == ", ".join(
+        [
+            PaymentAuditReportType.DUA_ADDITIONAL_INCOME.payment_audit_report_type_description,
+            PaymentAuditReportType.DIA_ADDITIONAL_INCOME.payment_audit_report_type_description,
+            PaymentAuditReportType.DOR_FINEOS_NAME_MISMATCH.payment_audit_report_type_description,
+            PaymentAuditReportType.EXCEEDS_26_WEEKS_TOTAL_LEAVE.payment_audit_report_type_description,
+            f"{PaymentAuditReportType.PAYMENT_DATE_MISMATCH.payment_audit_report_type_description} (Rejected)",
+        ]
     )
 
     # test that the audit report time was set
     audit_report_details = test_db_session.query(PaymentAuditReportDetails).all()
-    assert len(audit_report_details) == 4
+    assert len(audit_report_details) == 5
     for audit_report_detail in audit_report_details:
         assert audit_report_detail.added_to_audit_report_at == audit_report_time
+
+
+# See: https://lwd.atlassian.net/browse/API-1954 for description of cases
+class TestGetPaymentPreapprovalStatus:
+    def test_preapproved_payment(self, initialize_factories_session, test_db_session):
+        delegated_payment = DelegatedPaymentFactory(test_db_session, fineos_pei_i_value=0)
+        employee = delegated_payment.get_or_create_employee()
+        preapproved_payment = delegated_payment.get_or_create_payment()
+
+        # The preapproval status only looks at the last three payments, so even though
+        # this failed it's not included in calculating the preapproval status
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=preapproved_payment.fineos_leave_request_id,
+            experian_address_pair=preapproved_payment.experian_address_pair,
+            add_import_log=True,
+            employee=employee,
+            fineos_pei_i_value=1,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_ERROR_FROM_BANK)
+
+        # Three most recents payments are all successful
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=preapproved_payment.fineos_leave_request_id,
+            experian_address_pair=preapproved_payment.experian_address_pair,
+            add_import_log=True,
+            employee=employee,
+            fineos_pei_i_value=2,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=preapproved_payment.fineos_leave_request_id,
+            experian_address_pair=preapproved_payment.experian_address_pair,
+            add_import_log=True,
+            employee=employee,
+            fineos_pei_i_value=3,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=preapproved_payment.fineos_leave_request_id,
+            experian_address_pair=preapproved_payment.experian_address_pair,
+            add_import_log=True,
+            employee=employee,
+            fineos_pei_i_value=4,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+
+        approval_status = get_payment_preapproval_status(
+            preapproved_payment, list(), test_db_session
+        )
+        assert approval_status.is_preapproved()
+        assert approval_status.get_preapproval_issue_description() is None
+
+    def test_preapproved_with_duplicated_payments(
+        self, initialize_factories_session, test_db_session
+    ):
+        delegated_payment = DelegatedPaymentFactory(test_db_session, fineos_pei_i_value=0)
+        employee = delegated_payment.get_or_create_employee()
+        preapproved_payment = delegated_payment.get_or_create_payment()
+
+        # Payment is duplicated and preapproval status should only consider the
+        # most recent on (using the import log id)
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=preapproved_payment.fineos_leave_request_id,
+            experian_address_pair=preapproved_payment.experian_address_pair,
+            add_import_log=True,
+            employee=employee,
+            fineos_pei_i_value=1,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_ERROR_FROM_BANK)
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=preapproved_payment.fineos_leave_request_id,
+            experian_address_pair=preapproved_payment.experian_address_pair,
+            add_import_log=True,
+            employee=employee,
+            fineos_pei_i_value=1,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_ERROR_FROM_BANK)
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=preapproved_payment.fineos_leave_request_id,
+            experian_address_pair=preapproved_payment.experian_address_pair,
+            add_import_log=True,
+            employee=employee,
+            fineos_pei_i_value=1,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_ERROR_FROM_BANK)
+        # This is the most recent payment and should be the only one considered
+        # for pre-approval with an I value of 1
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=preapproved_payment.fineos_leave_request_id,
+            experian_address_pair=preapproved_payment.experian_address_pair,
+            add_import_log=True,
+            employee=employee,
+            fineos_pei_i_value=1,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+
+        # Other two past, successful payments
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=preapproved_payment.fineos_leave_request_id,
+            experian_address_pair=preapproved_payment.experian_address_pair,
+            add_import_log=True,
+            employee=employee,
+            fineos_pei_i_value=3,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        # The preapproval status only looks at the last three payments, so even though
+        # this failed it's not included in calculating the preapproval status
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=preapproved_payment.fineos_leave_request_id,
+            experian_address_pair=preapproved_payment.experian_address_pair,
+            add_import_log=True,
+            employee=employee,
+            fineos_pei_i_value=4,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+
+        approval_status = get_payment_preapproval_status(
+            preapproved_payment, list(), test_db_session
+        )
+        assert approval_status.is_preapproved()
+        assert approval_status.get_preapproval_issue_description() is None
+
+    def test_not_preapproved_duplicate_payments(
+        self, initialize_factories_session, test_db_session
+    ):
+        delegated_payment = DelegatedPaymentFactory(test_db_session, fineos_pei_i_value=0)
+        employee = delegated_payment.get_or_create_employee()
+        preapproved_payment = delegated_payment.get_or_create_payment()
+
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=preapproved_payment.fineos_leave_request_id,
+            experian_address_pair=preapproved_payment.experian_address_pair,
+            add_import_log=True,
+            employee=employee,
+            fineos_pei_i_value=1,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=preapproved_payment.fineos_leave_request_id,
+            experian_address_pair=preapproved_payment.experian_address_pair,
+            add_import_log=True,
+            employee=employee,
+            fineos_pei_i_value=1,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=preapproved_payment.fineos_leave_request_id,
+            experian_address_pair=preapproved_payment.experian_address_pair,
+            add_import_log=True,
+            employee=employee,
+            fineos_pei_i_value=1,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+
+        approval_status = get_payment_preapproval_status(
+            preapproved_payment, list(), test_db_session
+        )
+        assert not approval_status.is_preapproved()
+        assert (
+            approval_status.get_preapproval_issue_description()
+            == PreapprovalIssue.LESS_THAN_THREE_PREVIOUS_PAYMENTS
+        )
+
+    def test_preapproved_previous_payments_in_same_import(
+        self, initialize_factories_session, test_db_session
+    ):
+        delegated_payment = DelegatedPaymentFactory(test_db_session, fineos_pei_i_value=0)
+        employee = delegated_payment.get_or_create_employee()
+        preapproved_payment = delegated_payment.get_or_create_payment()
+
+        first_previous_payment = DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=preapproved_payment.fineos_leave_request_id,
+            experian_address_pair=preapproved_payment.experian_address_pair,
+            add_import_log=True,
+            employee=employee,
+            fineos_pei_i_value=1,
+        )
+        import_log = first_previous_payment.get_or_create_import_log()
+        first_previous_payment.get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+
+        # Three most recents payments are all successful
+        # Use the same import log for all previous payments to verify the distinct logic
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=preapproved_payment.fineos_leave_request_id,
+            experian_address_pair=preapproved_payment.experian_address_pair,
+            import_log=import_log,
+            employee=employee,
+            fineos_pei_i_value=2,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=preapproved_payment.fineos_leave_request_id,
+            experian_address_pair=preapproved_payment.experian_address_pair,
+            import_log=import_log,
+            employee=employee,
+            fineos_pei_i_value=3,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=preapproved_payment.fineos_leave_request_id,
+            experian_address_pair=preapproved_payment.experian_address_pair,
+            import_log=import_log,
+            employee=employee,
+            fineos_pei_i_value=4,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+
+        approval_status = get_payment_preapproval_status(
+            preapproved_payment, list(), test_db_session
+        )
+        assert approval_status.is_preapproved()
+        assert approval_status.get_preapproval_issue_description() is None
+
+    def test_not_preapproved_tax_witholding(self, initialize_factories_session, test_db_session):
+        federal_tax_witholding_payment = DelegatedPaymentFactory(
+            test_db_session, payment_transaction_type=PaymentTransactionType.FEDERAL_TAX_WITHHOLDING
+        ).get_or_create_payment()
+        approval_status = get_payment_preapproval_status(
+            federal_tax_witholding_payment, list(), test_db_session
+        )
+        assert not approval_status.is_preapproved()
+        assert (
+            approval_status.get_preapproval_issue_description()
+            == PreapprovalIssue.ORPHANED_TAX_WITHOLDING.value
+        )
+
+        state_tax_witholding_payment = DelegatedPaymentFactory(
+            test_db_session, payment_transaction_type=PaymentTransactionType.STATE_TAX_WITHHOLDING
+        ).get_or_create_payment()
+        approval_status = get_payment_preapproval_status(
+            state_tax_witholding_payment, list(), test_db_session
+        )
+
+        assert not approval_status.is_preapproved()
+        assert (
+            approval_status.get_preapproval_issue_description()
+            == PreapprovalIssue.ORPHANED_TAX_WITHOLDING.value
+        )
+
+    def test_not_preapproved_employer_reimbursement(
+        self, initialize_factories_session, test_db_session
+    ):
+        employer_reimbursement_payment = DelegatedPaymentFactory(
+            test_db_session, payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT
+        ).get_or_create_payment()
+        approval_status = get_payment_preapproval_status(
+            employer_reimbursement_payment, list(), test_db_session
+        )
+        assert not approval_status.is_preapproved()
+        assert (
+            approval_status.get_preapproval_issue_description()
+            == PreapprovalIssue.ORPHANED_EMPLOYER_REIMBURSEMENT.value
+        )
+
+    def test_not_preapproved_past_payments_were_employer_reimbursement(
+        self, initialize_factories_session, test_db_session
+    ):
+        delegated_payment = DelegatedPaymentFactory(test_db_session)
+        claim = delegated_payment.get_or_create_claim()
+        employee = delegated_payment.get_or_create_employee()
+        payment = delegated_payment.get_or_create_payment()
+
+        # Payment associated with the claim
+        DelegatedPaymentFactory(
+            test_db_session,
+            claim=claim,
+            payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+
+        DelegatedPaymentFactory(
+            test_db_session,
+            claim=claim,
+            payment_transaction_type=PaymentTransactionType.STANDARD,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            experian_address_pair=payment.experian_address_pair,
+            employee=employee,
+            add_import_log=True,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        DelegatedPaymentFactory(
+            test_db_session,
+            claim=claim,
+            payment_transaction_type=PaymentTransactionType.STANDARD,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            experian_address_pair=payment.experian_address_pair,
+            employee=employee,
+            add_import_log=True,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        DelegatedPaymentFactory(
+            test_db_session,
+            claim=claim,
+            payment_transaction_type=PaymentTransactionType.STANDARD,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            experian_address_pair=payment.experian_address_pair,
+            employee=employee,
+            add_import_log=True,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+
+        approval_status = get_payment_preapproval_status(payment, list(), test_db_session)
+        assert not approval_status.is_preapproved()
+        assert (
+            approval_status.get_preapproval_issue_description()
+            == PreapprovalIssue.CLAIM_CONTAINS_EMPLOYER_REIMBURSEMENT.value
+        )
+
+    def test_not_preapproved_payment_has_audit_report_details(
+        self, initialize_factories_session, test_db_session
+    ):
+        # Not preapproved because there are audit report details associated
+        delegated_payment = DelegatedPaymentFactory(test_db_session)
+        employee = delegated_payment.get_or_create_employee()
+        payment = delegated_payment.get_or_create_payment()
+
+        DelegatedPaymentFactory(
+            test_db_session,
+            payment_transaction_type=PaymentTransactionType.STANDARD,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            experian_address_pair=payment.experian_address_pair,
+            employee=employee,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        DelegatedPaymentFactory(
+            test_db_session,
+            payment_transaction_type=PaymentTransactionType.STANDARD,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            experian_address_pair=payment.experian_address_pair,
+            employee=employee,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        DelegatedPaymentFactory(
+            test_db_session,
+            payment_transaction_type=PaymentTransactionType.STANDARD,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            experian_address_pair=payment.experian_address_pair,
+            employee=employee,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+
+        # Two audit report details
+        payment_audit_report_details_1 = PaymentAuditReportDetails(
+            payment_id=payment.payment_id,
+            audit_report_type=PaymentAuditReportType.DOR_FINEOS_NAME_MISMATCH,
+            audit_report_type_id=PaymentAuditReportType.DOR_FINEOS_NAME_MISMATCH.payment_audit_report_type_id,
+        )
+        payment_audit_report_details_2 = PaymentAuditReportDetails(
+            payment_id=payment.payment_id,
+            audit_report_type=PaymentAuditReportType.DIA_ADDITIONAL_INCOME,
+            audit_report_type_id=PaymentAuditReportType.DIA_ADDITIONAL_INCOME.payment_audit_report_type_id,
+        )
+
+        approval_status = get_payment_preapproval_status(
+            payment,
+            [payment_audit_report_details_1, payment_audit_report_details_2],
+            test_db_session,
+        )
+        assert not approval_status.is_preapproved()
+        assert (
+            approval_status.get_preapproval_issue_description()
+            == f"{PaymentAuditReportType.DOR_FINEOS_NAME_MISMATCH.payment_audit_report_type_description},{PaymentAuditReportType.DIA_ADDITIONAL_INCOME.payment_audit_report_type_description}"
+        )
+
+    def test_not_preapproved_last_three_payments_not_all_successful(
+        self, initialize_factories_session, test_db_session
+    ):
+        delegated_payment = DelegatedPaymentFactory(test_db_session)
+        employee = delegated_payment.get_or_create_employee()
+        payment = delegated_payment.get_or_create_payment()
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            add_import_log=True,
+            experian_address_pair=payment.experian_address_pair,
+            employee=employee,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            add_import_log=True,
+            experian_address_pair=payment.experian_address_pair,
+            employee=employee,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_ERROR_FROM_BANK)
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            add_import_log=True,
+            experian_address_pair=payment.experian_address_pair,
+            employee=employee,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        approval_status = get_payment_preapproval_status(payment, list(), test_db_session)
+        assert not approval_status.is_preapproved()
+        assert (
+            approval_status.get_preapproval_issue_description()
+            == PreapprovalIssue.LAST_THREE_PAYMENTS_NOT_SUCCESSFUL.value
+        )
+
+    def test_not_preapproved_name_changed(self, initialize_factories_session, test_db_session):
+        delegated_payment = DelegatedPaymentFactory(test_db_session)
+        employee = delegated_payment.get_or_create_employee()
+        payment = delegated_payment.get_or_create_payment()
+
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            experian_address_pair=payment.experian_address_pair,
+            employee=employee,
+            add_import_log=True,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            experian_address_pair=payment.experian_address_pair,
+            employee=employee,
+            add_import_log=True,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+
+        # The most recent payment has a different
+        delegated_different_name_payment = DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            add_import_log=True,
+            experian_address_pair=payment.experian_address_pair,
+        )
+        different_employee = delegated_different_name_payment.get_or_create_employee()
+        delegated_different_name_payment.get_or_create_payment_with_state(
+            State.DELEGATED_PAYMENT_COMPLETE
+        )
+
+        approval_status = get_payment_preapproval_status(payment, list(), test_db_session)
+        assert not approval_status.is_preapproved()
+        assert (
+            approval_status.get_preapproval_issue_description()
+            == f"{PreapprovalIssue.CHANGED_NAME.value}: {different_employee.fineos_employee_first_name} {different_employee.fineos_employee_last_name} -> {employee.fineos_employee_first_name} {employee.fineos_employee_last_name}"
+        )
+
+    def test_not_preapproved_pub_eft_changed(self, initialize_factories_session, test_db_session):
+        payment_delegated = DelegatedPaymentFactory(test_db_session, set_pub_eft_in_payment=True)
+        pub_eft = payment_delegated.get_or_create_pub_eft()
+        employee = payment_delegated.get_or_create_employee()
+        payment = payment_delegated.get_or_create_payment()
+
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            experian_address_pair=payment.experian_address_pair,
+            employee=employee,
+            add_import_log=True,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            experian_address_pair=payment.experian_address_pair,
+            employee=employee,
+            add_import_log=True,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+
+        # The most recent payment has a different pub_eft
+        different_pub_eft_delegated = DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            add_import_log=True,
+            experian_address_pair=payment.experian_address_pair,
+            employee=employee,
+            set_pub_eft_in_payment=True,
+        )
+        different_pub_eft_delegated.get_or_create_pub_eft()
+        different_pub_eft = different_pub_eft_delegated.get_or_create_payment_with_state(
+            State.DELEGATED_PAYMENT_COMPLETE
+        )
+
+        approval_status = get_payment_preapproval_status(payment, list(), test_db_session)
+        assert not approval_status.is_preapproved()
+        assert (
+            approval_status.get_preapproval_issue_description()
+            == f"{PreapprovalIssue.CHANGED_EFT}: {different_pub_eft.pub_eft_id} -> {pub_eft.pub_eft_id}"
+        )
+
+    def test_not_preapproved_payment_method_changed(
+        self, initialize_factories_session, test_db_session
+    ):
+        delegated_payment = DelegatedPaymentFactory(
+            test_db_session, payment_method=PaymentMethod.ACH
+        )
+        employee = delegated_payment.get_or_create_employee()
+        payment = delegated_payment.get_or_create_payment()
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            experian_address_pair=payment.experian_address_pair,
+            employee=employee,
+            add_import_log=True,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            experian_address_pair=payment.experian_address_pair,
+            employee=employee,
+            add_import_log=True,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+
+        # The most recent payment had a different payment method
+        DelegatedPaymentFactory(
+            test_db_session,
+            employee=employee,
+            payment_method=PaymentMethod.DEBIT,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            add_import_log=True,
+            experian_address_pair=payment.experian_address_pair,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+
+        approval_status = get_payment_preapproval_status(payment, list(), test_db_session)
+        assert not approval_status.is_preapproved()
+        assert (
+            approval_status.get_preapproval_issue_description()
+            == f"{PreapprovalIssue.CHANGED_PAYMENT_PREFERENCE}: {PaymentMethod.DEBIT.payment_method_description} -> {PaymentMethod.ACH.payment_method_description}"
+        )
+
+    def test_not_preapproved_address_change(self, initialize_factories_session, test_db_session):
+        delegated_payment = DelegatedPaymentFactory(test_db_session)
+        employee = delegated_payment.get_or_create_employee()
+        address = delegated_payment.get_or_create_address()
+        payment = delegated_payment.get_or_create_payment()
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            experian_address_pair=payment.experian_address_pair,
+            employee=employee,
+            add_import_log=True,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            experian_address_pair=payment.experian_address_pair,
+            employee=employee,
+            add_import_log=True,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+
+        # The most recent payment has a different address
+        delegated_different_address_payment = DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            add_import_log=True,
+            employee=employee,
+        )
+        different_address = delegated_different_address_payment.get_or_create_address()
+        delegated_different_address_payment.get_or_create_payment_with_state(
+            State.DELEGATED_PAYMENT_COMPLETE
+        )
+
+        approval_status = get_payment_preapproval_status(payment, list(), test_db_session)
+        assert not approval_status.is_preapproved()
+        assert (
+            approval_status.get_preapproval_issue_description()
+            == f"{PreapprovalIssue.CHANGED_ADDRESS}: {different_address.address_line_one} {different_address.city} {different_address.zip_code} -> {address.address_line_one} {address.city} {address.zip_code}"
+        )
+
+    def test_not_preapproved_multiple_reasons(self, initialize_factories_session, test_db_session):
+        # Tests that multiple issues are detected. In this case:
+        # different name on last payment
+        # one of the last three payments had an error
+        # there exists audit detail records
+
+        delegated_payment = DelegatedPaymentFactory(test_db_session)
+        current_employee = delegated_payment.get_or_create_employee()
+        payment = delegated_payment.get_or_create_payment()
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            experian_address_pair=payment.experian_address_pair,
+            add_import_log=True,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_ERROR_FROM_BANK)
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            experian_address_pair=payment.experian_address_pair,
+            add_import_log=True,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+
+        # The most recnet payment has a different name
+        delegated_different_name_payment = DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            experian_address_pair=payment.experian_address_pair,
+        )
+        different_employee_name = delegated_different_name_payment.get_or_create_employee()
+        delegated_different_name_payment.get_or_create_payment_with_state(
+            State.DELEGATED_PAYMENT_COMPLETE
+        )
+
+        payment_audit_report_details_1 = PaymentAuditReportDetails(
+            payment_id=payment.payment_id,
+            audit_report_type=PaymentAuditReportType.DOR_FINEOS_NAME_MISMATCH,
+            audit_report_type_id=PaymentAuditReportType.DOR_FINEOS_NAME_MISMATCH.payment_audit_report_type_id,
+        )
+        payment_audit_report_details_2 = PaymentAuditReportDetails(
+            payment_id=payment.payment_id,
+            audit_report_type=PaymentAuditReportType.DIA_ADDITIONAL_INCOME,
+            audit_report_type_id=PaymentAuditReportType.DIA_ADDITIONAL_INCOME.payment_audit_report_type_id,
+        )
+
+        approval_status = get_payment_preapproval_status(
+            payment,
+            [payment_audit_report_details_1, payment_audit_report_details_2],
+            test_db_session,
+        )
+        assert not approval_status.is_preapproved()
+        assert (
+            approval_status.get_preapproval_issue_description()
+            == f"{PaymentAuditReportType.DOR_FINEOS_NAME_MISMATCH.payment_audit_report_type_description},{PaymentAuditReportType.DIA_ADDITIONAL_INCOME.payment_audit_report_type_description};{PreapprovalIssue.LAST_THREE_PAYMENTS_NOT_SUCCESSFUL.value};{PreapprovalIssue.CHANGED_NAME.value}: {different_employee_name.fineos_employee_first_name} {different_employee_name.fineos_employee_last_name} -> {current_employee.fineos_employee_first_name} {current_employee.fineos_employee_last_name}"
+        )
+
+    def test_not_preapproved_bad_state_log(self, initialize_factories_session, test_db_session):
+        delegated_payment = DelegatedPaymentFactory(test_db_session)
+        employee = delegated_payment.get_or_create_employee()
+        payment = delegated_payment.get_or_create_payment()
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            experian_address_pair=payment.experian_address_pair,
+            employee=employee,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            experian_address_pair=payment.experian_address_pair,
+            employee=employee,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        # Payment is missing a latest state log
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            experian_address_pair=payment.experian_address_pair,
+            employee=employee,
+        ).get_or_create_payment()
+
+        approval_status = get_payment_preapproval_status(payment, list(), test_db_session)
+        assert not approval_status.is_preapproved()
+        assert approval_status.get_preapproval_issue_description() == PreapprovalIssue.UNKNOWN
 
 
 def test_is_first_time_payment(
@@ -171,20 +843,20 @@ def test_is_first_time_payment(
 
     claim = ClaimFactory.create()
     payment = DelegatedPaymentFactory(
-        test_db_session, claim=claim,
+        test_db_session, claim=claim
     ).get_or_create_payment_with_state(
         State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
     )
 
     assert payment_audit_report_step.previously_audit_sent_count(payment) == 0
 
-    DelegatedPaymentFactory(test_db_session, claim=claim,).get_or_create_payment_with_state(
+    DelegatedPaymentFactory(test_db_session, claim=claim).get_or_create_payment_with_state(
         State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
     )
 
     assert payment_audit_report_step.previously_audit_sent_count(payment) == 0
 
-    previous_rejected_payment_factory = DelegatedPaymentFactory(test_db_session, claim=claim,)
+    previous_rejected_payment_factory = DelegatedPaymentFactory(test_db_session, claim=claim)
     previous_rejected_payment_factory.get_or_create_payment_with_state(
         State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT
     )
@@ -194,7 +866,7 @@ def test_is_first_time_payment(
 
     assert payment_audit_report_step.previously_audit_sent_count(payment) == 1
 
-    previous_bank_error_payment_factory = DelegatedPaymentFactory(test_db_session, claim=claim,)
+    previous_bank_error_payment_factory = DelegatedPaymentFactory(test_db_session, claim=claim)
     previous_bank_error_payment_factory.get_or_create_payment_with_state(
         State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT
     )
@@ -383,6 +1055,118 @@ def test_previously_rejected_payment_count(
     assert payment_audit_report_step.previously_skipped_payment_count(payment) == 2
 
 
+def test_previously_paid_payments(test_db_session, initialize_factories_session):
+    claim = ClaimFactory()
+    date_start = date(2021, 1, 1)
+    date_end = date(2021, 1, 16)
+    initial_payment = PaymentFactory(
+        period_start_date=date_start, period_end_date=date_end, claim=claim
+    )
+    second_payment = PaymentFactory(
+        period_start_date=date_start, period_end_date=date_end, claim=claim
+    )
+    third_payment = PaymentFactory(
+        period_start_date=date_start, period_end_date=date_end, claim=claim
+    )
+
+    # Second payment will be returned because it has a PAID writeback detail
+    second_payment_wb_detail = FineosWritebackDetails(
+        payment=second_payment,
+        transaction_status_id=FineosWritebackTransactionStatus.PAID.transaction_status_id,
+    )
+    # Third payment will NOT be returned because of it's error status
+    # Which happens chronologically after it's paid status
+    third_payment_wb_detail1 = FineosWritebackDetails(
+        payment=third_payment,
+        transaction_status_id=FineosWritebackTransactionStatus.PAID.transaction_status_id,
+    )
+
+    third_payment_wb_detail2 = FineosWritebackDetails(
+        payment=third_payment,
+        transaction_status_id=FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR.transaction_status_id,
+    )
+
+    test_db_session.add_all(
+        [second_payment_wb_detail, third_payment_wb_detail1, third_payment_wb_detail2]
+    )
+    test_db_session.commit()
+
+    payment_audit_report_step = PaymentAuditReportStep(
+        db_session=test_db_session, log_entry_db_session=test_db_session
+    )
+
+    previous_payments = payment_audit_report_step.previously_paid_payments(initial_payment)
+
+    assert len(previous_payments) == 1
+    assert previous_payments[0][0] == second_payment
+    assert previous_payments[0][1] == second_payment_wb_detail
+
+
+def test_build_payment_audit_data_set_with_previously_paid_payments(
+    test_db_session, payment_audit_report_step, initialize_factories_session
+):
+    claim = ClaimFactory()
+    date_start = date(2021, 1, 1)
+    date_end = date(2021, 1, 16)
+    initial_payment = PaymentFactory(
+        period_start_date=date_start, period_end_date=date_end, claim=claim
+    )
+    second_payment = PaymentFactory(
+        period_start_date=date_start, period_end_date=date_end, claim=claim
+    )
+    third_payment = PaymentFactory(
+        period_start_date=date_start, period_end_date=date_end, claim=claim
+    )
+    # Fourth payment will have no writeback detail and will be shown in the new columns
+    fourth_payment = PaymentFactory(
+        period_start_date=date_start, period_end_date=date_end, claim=claim
+    )
+
+    # Second payment will be returned because it has a PAID writeback detail
+    second_payment_wb_detail = FineosWritebackDetails(
+        payment=second_payment,
+        transaction_status_id=FineosWritebackTransactionStatus.PAID.transaction_status_id,
+        writeback_sent_at=datetime.now(),
+    )
+    # Third payment will NOT be returned because of it's error status
+    # Which happens chronologically after it's paid status
+    third_payment_wb_detail1 = FineosWritebackDetails(
+        payment=third_payment,
+        transaction_status_id=FineosWritebackTransactionStatus.PAID.transaction_status_id,
+    )
+
+    third_payment_wb_detail2 = FineosWritebackDetails(
+        payment=third_payment,
+        transaction_status_id=FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR.transaction_status_id,
+    )
+
+    test_db_session.add_all(
+        [second_payment_wb_detail, third_payment_wb_detail1, third_payment_wb_detail2]
+    )
+    test_db_session.commit()
+
+    payment_audit_report_step = PaymentAuditReportStep(
+        db_session=test_db_session, log_entry_db_session=test_db_session
+    )
+
+    audit_data = payment_audit_report_step.build_payment_audit_data_set([initial_payment])
+
+    assert len(audit_data) == 1
+    assert audit_data[0].previously_paid_payment_count == 2
+
+    paid_payments_column_string = (
+        f"Payment C={second_payment.fineos_pei_c_value}, "
+        f"I={second_payment.fineos_pei_i_value}: amount={second_payment.amount}, "
+        f"transaction_status={FineosWritebackTransactionStatus.PAID.transaction_status_description}, "
+        f"writeback_sent_at={second_payment_wb_detail.writeback_sent_at}\n"
+        f"Payment C={fourth_payment.fineos_pei_c_value}, "
+        f"I={fourth_payment.fineos_pei_i_value}: amount={fourth_payment.amount}, "
+        f"transaction_status=N/A, "
+        f"writeback_sent_at=N/A\n"
+    )
+    assert audit_data[0].previously_paid_payments_string == paid_payments_column_string
+
+
 def test_write_audit_report(tmp_path, test_db_session, initialize_factories_session):
     payment_audit_scenario_data_set: List[AuditScenarioData] = generate_audit_report_dataset(
         DEFAULT_AUDIT_SCENARIO_DATA_SET, test_db_session
@@ -468,6 +1252,9 @@ def validate_payment_audit_csv_row_by_payment_audit_data(
 
     assert row[PAYMENT_AUDIT_CSV_HEADERS.dor_fineos_name_mismatch_details] == ""
 
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.exceeds_26_weeks_total_leave_details] == ""
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.payment_date_mismatch_details] == ""
+
     assert row[PAYMENT_AUDIT_CSV_HEADERS.rejected_by_program_integrity] == ""
 
     assert row[PAYMENT_AUDIT_CSV_HEADERS.skipped_by_program_integrity] == "", error_msg
@@ -475,6 +1262,13 @@ def validate_payment_audit_csv_row_by_payment_audit_data(
     if scenario_descriptor.audit_report_detail_informational:
         assert row[PAYMENT_AUDIT_CSV_HEADERS.rejected_notes]
         assert row[PAYMENT_AUDIT_CSV_HEADERS.rejected_notes] != ""
+
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.is_preapproved] == (
+        "Y" if scenario_descriptor.preapproval_issues == "" else ""
+    )
+    assert (
+        row[PAYMENT_AUDIT_CSV_HEADERS.preapproval_issues] == scenario_descriptor.preapproval_issues
+    )
 
 
 def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Payment):
@@ -534,7 +1328,7 @@ def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Pay
 
 def validate_address_columns(row: PaymentAuditCSV, payment: Payment):
     def validate_address_columns_helper(
-        address_line_one, address_line_two, city, state, zip_code, is_address_verified,
+        address_line_one, address_line_two, city, state, zip_code, is_address_verified
     ):
         assert row[PAYMENT_AUDIT_CSV_HEADERS.address_line_1] == address_line_one
         assert row[PAYMENT_AUDIT_CSV_HEADERS.address_line_2] == address_line_two
@@ -604,6 +1398,17 @@ def test_generate_audit_report(test_db_session, payment_audit_report_step, monke
     )
     assert len(sampled_state_logs) == len(DEFAULT_AUDIT_SCENARIO_DATA_SET)
 
+    # Writeback logs
+    writeback_details = (
+        test_db_session.query(FineosWritebackDetails)
+        .filter(
+            FineosWritebackDetails.transaction_status_id
+            == FineosWritebackTransactionStatus.PAYMENT_AUDIT_IN_PROGRESS.transaction_status_id
+        )
+        .all()
+    )
+    assert len(writeback_details) == len(DEFAULT_AUDIT_SCENARIO_DATA_SET)
+
     # check that audit report file was generated in outbound folder with correct number of rows
     expected_audit_report_archive_folder_path = os.path.join(
         archive_folder_path, payments_util.Constants.S3_OUTBOUND_SENT_DIR, date_folder
@@ -650,6 +1455,234 @@ def test_generate_audit_report(test_db_session, payment_audit_report_step, monke
 
     # check that audit report file was generated in outgoing folder without any timestamps in path/name
     assert_files(outgoing_folder_path, ["Payment-Audit-Report.csv"])
+
+
+def test_orphaned_withholding_payments(
+    initialize_factories_session, test_db_session, test_db_other_session, monkeypatch
+):
+
+    payments: List[Payment] = []
+
+    # Create a bunch of payments
+    payment_audit_report_step = PaymentAuditReportStep(
+        db_session=test_db_session, log_entry_db_session=test_db_other_session
+    )
+
+    claim = ClaimFactory.create()
+    payment = DelegatedPaymentFactory(
+        test_db_session, claim=claim
+    ).get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
+    )
+
+    withholding_payment_1 = DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        payment_transaction_type=PaymentTransactionType.FEDERAL_TAX_WITHHOLDING,
+    ).get_or_create_payment_with_state(State.FEDERAL_WITHHOLDING_ORPHANED_PENDING_AUDIT)
+
+    withholding_payment_2 = DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        payment_transaction_type=PaymentTransactionType.STATE_TAX_WITHHOLDING,
+    ).get_or_create_payment_with_state(State.STATE_WITHHOLDING_ORPHANED_PENDING_AUDIT)
+
+    withholding_payment_3 = DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        payment_transaction_type=PaymentTransactionType.FEDERAL_TAX_WITHHOLDING,
+    ).get_or_create_payment_with_state(State.FEDERAL_WITHHOLDING_ORPHANED_PENDING_AUDIT)
+
+    withholding_payment_4 = DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        payment_transaction_type=PaymentTransactionType.STATE_TAX_WITHHOLDING,
+    ).get_or_create_payment_with_state(State.STATE_WITHHOLDING_ORPHANED_PENDING_AUDIT)
+
+    payments.append(payment)
+    payments.append(withholding_payment_1)
+    payments.append(withholding_payment_2)
+    payments.append(withholding_payment_3)
+    payments.append(withholding_payment_4)
+
+    assert payment_audit_report_step.audit_sent_count(payments) == 0
+    payment_audit_report_step.run_step()
+    assert payment_audit_report_step.audit_sent_count(payments) == 5
+
+
+def test_related_withholding_payments(
+    initialize_factories_session, test_db_session, test_db_other_session, monkeypatch
+):
+
+    payments: List[Payment] = []
+
+    # Create a bunch of payments
+    payment_audit_report_step = PaymentAuditReportStep(
+        db_session=test_db_session, log_entry_db_session=test_db_other_session
+    )
+
+    claim = ClaimFactory.create()
+    payment = DelegatedPaymentFactory(
+        test_db_session, claim=claim
+    ).get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
+    )
+
+    withholding_payment_1 = DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        payment_transaction_type=PaymentTransactionType.FEDERAL_TAX_WITHHOLDING,
+    ).get_or_create_payment_with_state(State.FEDERAL_WITHHOLDING_RELATED_PENDING_AUDIT)
+
+    withholding_payment_2 = DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        payment_transaction_type=PaymentTransactionType.STATE_TAX_WITHHOLDING,
+    ).get_or_create_payment_with_state(State.FEDERAL_WITHHOLDING_RELATED_PENDING_AUDIT)
+
+    withholding_payment_3 = DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        payment_transaction_type=PaymentTransactionType.FEDERAL_TAX_WITHHOLDING,
+    ).get_or_create_payment_with_state(State.FEDERAL_WITHHOLDING_RELATED_PENDING_AUDIT)
+
+    withholding_payment_4 = DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        payment_transaction_type=PaymentTransactionType.STATE_TAX_WITHHOLDING,
+    ).get_or_create_payment_with_state(State.FEDERAL_WITHHOLDING_RELATED_PENDING_AUDIT)
+
+    # Create the Payment Relationships
+    related_1 = LinkSplitPaymentFactory.create(
+        payment=payment, related_payment=withholding_payment_1
+    )
+    related_2 = LinkSplitPaymentFactory.create(
+        payment=payment, related_payment=withholding_payment_2
+    )
+    related_3 = LinkSplitPaymentFactory.create(
+        payment=payment, related_payment=withholding_payment_3
+    )
+    related_4 = LinkSplitPaymentFactory.create(
+        payment=payment, related_payment=withholding_payment_4
+    )
+
+    assert related_1 is not None
+    assert related_2 is not None
+    assert related_3 is not None
+    assert related_4 is not None
+
+    payments.append(payment)
+    payments.append(withholding_payment_1)
+    payments.append(withholding_payment_2)
+    payments.append(withholding_payment_3)
+    payments.append(withholding_payment_4)
+
+    assert payment_audit_report_step.audit_sent_count(payments) == 0
+    payment_audit_report_step.run_step()
+    assert payment_audit_report_step.audit_sent_count(payments) == 1
+
+
+def test_calculate_withholding_amounts(test_db_session, initialize_factories_session):
+
+    claim = ClaimFactory()
+    date_start = date(2021, 1, 1)
+    date_end = date(2021, 1, 16)
+
+    # Create a Primary Payment
+    payment = PaymentFactory(
+        period_start_date=date_start,
+        period_end_date=date_end,
+        claim=claim,
+        amount=Decimal("700.00"),
+        fineos_pei_i_value="58000",
+        payment_transaction_type_id=PaymentTransactionType.STANDARD.payment_transaction_type_id,
+    )
+
+    # Create a bunch of Payments
+    payments: List[Payment] = []
+    payment_1 = PaymentFactory(
+        period_start_date=date_start,
+        period_end_date=date_end,
+        claim=claim,
+        amount=Decimal("100.00"),
+        fineos_pei_i_value="58001",
+        payment_transaction_type_id=PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id,
+    )
+    payment_2 = PaymentFactory(
+        period_start_date=date_start,
+        period_end_date=date_end,
+        claim=claim,
+        amount=Decimal("20.00"),
+        fineos_pei_i_value="58002",
+        payment_transaction_type_id=PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,
+    )
+    payment_3 = PaymentFactory(
+        period_start_date=date_start,
+        period_end_date=date_end,
+        claim=claim,
+        amount=Decimal("110.00"),
+        fineos_pei_i_value="58003",
+        payment_transaction_type_id=PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id,
+    )
+    payment_4 = PaymentFactory(
+        period_start_date=date_start,
+        period_end_date=date_end,
+        claim=claim,
+        amount=Decimal("21.00"),
+        fineos_pei_i_value="58004",
+        payment_transaction_type_id=PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,
+    )
+    payment_5 = PaymentFactory(
+        period_start_date=date_start,
+        period_end_date=date_end,
+        claim=claim,
+        amount=Decimal("120.00"),
+        fineos_pei_i_value="58005",
+        payment_transaction_type_id=PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id,
+    )
+    payment_6 = PaymentFactory(
+        period_start_date=date_start,
+        period_end_date=date_end,
+        claim=claim,
+        amount=Decimal("22.00"),
+        fineos_pei_i_value="58006",
+        payment_transaction_type_id=PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,
+    )
+
+    payments.append(payment_1)
+    payments.append(payment_2)
+    payments.append(payment_3)
+    payments.append(payment_4)
+    payments.append(payment_5)
+    payments.append(payment_6)
+
+    payment_audit_report_step = PaymentAuditReportStep(
+        db_session=test_db_session, log_entry_db_session=test_db_session
+    )
+
+    # Test Federal Withholding Amount
+    federal_tax_amount = payment_audit_report_step.calculate_federal_withholding_amount(
+        payment=payment, link_payments=payments
+    )
+    assert federal_tax_amount == 330.00
+
+    # Test State Withholding Amount
+    state_tax_amount = payment_audit_report_step.calculate_state_withholding_amount(
+        payment=payment, link_payments=payments
+    )
+    assert state_tax_amount == 63.00
+
+    # Test Federal Withholding I Values
+    federal_tax_values = payment_audit_report_step.get_federal_withholding_i_value(
+        link_payments=payments
+    )
+    assert federal_tax_values == "58001 58003 58005"
+
+    # Test State Withholding I Values
+    state_tax_values = payment_audit_report_step.get_state_withholding_i_value(
+        link_payments=payments
+    )
+    assert state_tax_values == "58002 58004 58006"
 
 
 # Assertion helpers

@@ -16,7 +16,7 @@ exports[`DownloadableDocument renders document with icon and additional classnam
 >
   <svg
     aria-hidden="true"
-    class="usa-icon--size-3"
+    class="usa-icon usa-icon--size-3"
     fill="currentColor"
     focusable="false"
     role="img"

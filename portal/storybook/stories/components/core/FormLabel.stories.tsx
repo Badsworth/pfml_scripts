@@ -1,5 +1,5 @@
 import FormLabel from "src/components/core/FormLabel";
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 import React from "react";
 
 export default {

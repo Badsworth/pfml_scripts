@@ -33,6 +33,12 @@ const payments = {
     account_number: "014901507",
     bank_account_type: "Checking" as const,
   },
+  eftinvalid: {
+    payment_method: "Elec Funds Transfer" as const,
+    routing_number: "555555855",
+    account_number: "123456789",
+    bank_account_type: "Checking" as const,
+  },
 };
 
 export const PMT1: ScenarioSpecification = {
@@ -234,27 +240,27 @@ export const PRENOTE1: ScenarioSpecification = {
 };
 
 // Prenote request – invalid bank routing number, valid account number
-// export const PRENOTE2: ScenarioSpecification = {
-//   employee: { wages: 30000, metadata: { prenoted: "no" } },
-//   claim: {
-//     label: "PRENOTE2",
-//     reason: "Serious Health Condition - Employee",
-//     has_continuous_leave_periods: true,
-//     leave_dates: [addWeeks(new Date(), 1), addWeeks(new Date(), 4)],
-//     address: addresses.valid,
-//     payment: payments.eftinvalid,
-//     docs: {
-//       HCP: {},
-//       MASSID: {},
-//     },
-//     employerResponse: {
-//       hours_worked_per_week: 40,
-//       employer_decision: "Approve",
-//       fraud: "No",
-//     },
-//     metadata: { postSubmit: "APPROVEDOCS" },
-//   },
-// };
+export const PRENOTE2: ScenarioSpecification = {
+  employee: { wages: 30000, metadata: { prenoted: "no" } },
+  claim: {
+    label: "PRENOTE2",
+    reason: "Serious Health Condition - Employee",
+    has_continuous_leave_periods: true,
+    leave_dates: [addWeeks(new Date(), 1), addWeeks(new Date(), 4)],
+    address: addresses.valid,
+    payment: payments.eftinvalid,
+    docs: {
+      HCP: {},
+      MASSID: {},
+    },
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+      fraud: "No",
+    },
+    metadata: { postSubmit: "APPROVEDOCS" },
+  },
+};
 
 // Invalid Address
 export const PRENOTE5: ScenarioSpecification = {

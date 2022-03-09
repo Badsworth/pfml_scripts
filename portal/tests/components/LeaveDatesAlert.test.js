@@ -2,6 +2,8 @@ import { render, screen } from "@testing-library/react";
 import LeaveDatesAlert from "../../src/components/LeaveDatesAlert";
 import React from "react";
 
+jest.mock("../../src/hooks/useUniqueId");
+
 describe("LeaveDatesAlert", () => {
   it("renders Alert with given dates", () => {
     const { container } = render(
@@ -21,6 +23,7 @@ describe("LeaveDatesAlert", () => {
     expect(screen.getByRole("heading")).toMatchInlineSnapshot(`
       <h3
         class="usa-alert__heading font-heading-md text-bold"
+        id="mock-unique-id"
       >
         Your leave dates for paid leave from PFML
       </h3>

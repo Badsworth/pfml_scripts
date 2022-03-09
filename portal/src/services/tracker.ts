@@ -155,6 +155,14 @@ function trackFetchRequest(requestName: string) {
 }
 
 /**
+ * Ensure Cognito AJAX requests are traceable in New Relic
+ * @param action - name of the Cognito method being called
+ */
+function trackAuthRequest(action: string) {
+  trackFetchRequest(`cognito ${action}`);
+}
+
+/**
  * Call this after a fetch request being tracked with trackFetchRequest has completed,
  * so subsequent requests made by third-party scripts (e.g Google Analytics) don't get
  * tracked under the same browser interaction.
@@ -180,6 +188,7 @@ export default {
   markFetchRequestEnd,
   noticeError,
   startPageView,
+  trackAuthRequest,
   trackEvent,
   trackFetchRequest,
 };

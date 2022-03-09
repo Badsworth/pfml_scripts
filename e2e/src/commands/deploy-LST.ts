@@ -68,7 +68,7 @@ const cmd: CommandModule<SystemWideArgs, PresetArgs> = {
         // the configuration parameter once you're ready for others to use them.
       }
     );
-    const run_id = `${format(new Date(), 'MM-dd-yyyy')}-${uuid()}`;
+    const run_id = `${format(new Date(), "MM-dd-yyyy")}-${uuid()}`;
     const local_tag = `e2e-lst:${run_id}`;
     const remote_tag = `${deployer.registry}:${run_id}`;
     const cmd_args = {
@@ -103,6 +103,7 @@ const cmd: CommandModule<SystemWideArgs, PresetArgs> = {
       "EMPLOYER_PORTAL_PASSWORD" as const,
       "TESTMAIL_APIKEY" as const,
       "FINEOS_USERS" as const,
+      "LST_FILE_RANGE" as const,
     ];
     const environment = secretNames.reduce(
       (env, name) => {

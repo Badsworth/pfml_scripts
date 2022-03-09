@@ -1,34 +1,51 @@
-import { BenefitsApplicationDocument, DocumentType } from "src/models/Document";
-import AppErrorInfo from "src/models/AppErrorInfo";
-import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
-import DocumentCollection from "src/models/DocumentCollection";
+import { ClaimDocument, DocumentType } from "src/models/Document";
+import LeaveReason, { LeaveReasonType } from "src/models/LeaveReason";
+import { AbsencePeriod } from "src/models/AbsencePeriod";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import EmployerClaim from "src/models/EmployerClaim";
-import { Props } from "storybook/types";
+import { ManagedRequirement } from "src/models/ManagedRequirement";
+import { MockEmployerClaimBuilder } from "lib/mock-helpers/mock-model-builder";
+import { Props } from "types/common";
 import React from "react";
 import { Review } from "src/pages/employers/applications/review";
 import User from "src/models/User";
-import { createMockEmployerClaim } from "tests/test-utils/createMockEmployerClaim";
+import { ValidationError } from "src/errors";
+import createAbsencePeriod from "lib/mock-helpers/createAbsencePeriod";
+import { createMockManagedRequirement } from "lib/mock-helpers/createMockManagedRequirement";
+import { faker } from "@faker-js/faker";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
+
+const absencePeriodTypes: Array<AbsencePeriod["period_type"]> = [
+  "Continuous",
+  "Reduced Schedule",
+  "Intermittent",
+];
 
 export default {
   title: "Pages/Employers/Applications/Review",
   component: Review,
   argTypes: {
-    claimOption: {
+    "Absence period reasons": {
       control: {
-        type: "radio",
-        options: [
-          "Continuous or reduced - documentation",
-          "Continuous or reduced - without documentation",
-          "Intermittent - documentation",
-          "Intermittent - without documentation",
-        ],
+        type: "check",
+        options: Object.values(LeaveReason),
       },
     },
-    "Leave reason": {
+    "Absence period types": {
       control: {
-        type: "radio",
-        options: ["Bonding", "Medical", "Care", "Pregnancy"],
+        type: "check",
+        options: absencePeriodTypes,
+      },
+    },
+    "Includes documentation": {
+      control: {
+        type: "boolean",
+        options: ["Yes", "No"],
+      },
+    },
+    "Number of absence periods for each leave reason": {
+      control: {
+        type: "number",
       },
     },
     // Todo(EMPLOYER-1453): remove V1 eform functionality
@@ -53,157 +70,225 @@ export default {
         ],
       },
     },
+    "Reviewed Previously": {
+      control: {
+        type: "radio",
+        options: ["No", "Yes, via Portal", "Yes, via contact center"],
+      },
+    },
   },
   args: {
-    claimOption: "Continuous or reduced - documentation",
-    "Leave reason": "Medical",
+    "Absence period reasons": [LeaveReason.medical],
+    "Absence period types": [absencePeriodTypes[0]],
     "Claimant EForm Version": "Version 2 (after 2021-07-14)",
+    "Includes documentation": true,
+    "Number of absence periods for each leave reason": 1,
+    "Reviewed Previously": "No",
   },
 };
 
-type DocumentationOption = "documentation" | "without documentation";
-
 export const Default = (
   args: Props<typeof Review> & {
-    claimOption: `${string} - ${DocumentationOption}`;
+    "Absence period reasons": LeaveReasonType[];
+    "Absence period types": Array<AbsencePeriod["period_type"]>;
     "Claimant EForm Version": string;
+    "Includes documentation": boolean;
+    "Number of absence periods for each leave reason": number;
+    "Reviewed Previously": string;
     errorTypes: string[];
-    "Leave reason": string;
   }
 ) => {
-  const { claimOption } = args;
+  // Add fallbacks in case the user unchecked all the checkboxes, which would
+  // cause a JS exception if left empty:
+  const selectedLeaveReasons: LeaveReasonType[] = args["Absence period reasons"]
+    .length
+    ? args["Absence period reasons"]
+    : [LeaveReason.medical];
+
+  const managedRequirements: ManagedRequirement[] = [
+    createMockManagedRequirement({
+      follow_up_date: "2021-12-10",
+      status: "Open",
+    }),
+    createMockManagedRequirement({
+      follow_up_date: "2021-08-30",
+      responded_at:
+        args["Reviewed Previously"] === "Yes, via Portal" ? "2021-10-01" : "",
+      status: args["Reviewed Previously"] !== "No" ? "Complete" : "Suppressed",
+    }),
+  ];
+
+  const selectedLeaveTypes: Array<AbsencePeriod["period_type"]> = args[
+    "Absence period types"
+  ].length
+    ? args["Absence period types"]
+    : ["Continuous"];
+
+  const claim = createEmployerClaimFromArgs({
+    ...args,
+    "Absence period reasons": selectedLeaveReasons,
+    "Absence period types": selectedLeaveTypes,
+    "Managed Requirements": managedRequirements,
+  });
+
   const errorTypes = args.errorTypes || [];
-  const documentationOption = claimOption.split("-")[1] as DocumentationOption;
-
-  const leaveReason = {
-    Bonding: "bondingLeaveReason",
-    Medical: "medicalLeaveReason",
-    Care: "caringLeaveReason",
-    Pregnancy: "pregnancyLeaveReason",
-  }[args["Leave reason"]];
-
-  const formVersion: string[] | undefined =
-    {
-      "Version 1 (before 2021-07-14)": ["eformsV1"],
-      "Version 2 (after 2021-07-14)": ["eformsV2", "concurrentLeave"],
-    }[args["Claimant EForm Version"]] || [];
-
-  const optionText = claimOption.toLowerCase();
-  const leaveTypes = [
-    optionText.includes("continuous") && "continuous",
-    optionText.includes("intermittent") && "intermittent",
-    optionText.includes("reduced") && "reducedSchedule",
-  ].filter((text) => text); // removes falsy values
-
-  const claim = createMockEmployerClaim(
-    "completed",
-    "previousLeaves",
-    "reviewable",
-    leaveReason,
-    ...formVersion,
-    ...leaveTypes
-  ) as EmployerClaim;
+  const documents = args["Includes documentation"]
+    ? args["Absence period reasons"]
+        .map((reason) => createCertificationDocumentForReason(reason))
+        .filter((d) => d !== null)
+    : [];
 
   const appLogic = useMockableAppLogic({
-    appErrors: getAppErrorInfoCollection(errorTypes),
+    errors: [new ValidationError(getErrorInfoCollection(errorTypes))],
     employers: {
-      claimDocumentsMap: getDocumentsMap(
-        documentationOption,
-        claim.leave_details.reason,
-        claim.fineos_absence_id
-      ),
+      claimDocumentsMap: new Map([
+        [
+          claim.fineos_absence_id,
+          new ApiResourceCollection<ClaimDocument>(
+            "fineos_document_id",
+            documents as ClaimDocument[]
+          ),
+        ],
+      ]),
     },
   });
 
   return <Review appLogic={appLogic} claim={claim} user={new User({})} />;
 };
 
-function getDocumentsMap(
-  documentation: DocumentationOption,
-  leaveReason: string | null,
-  absenceId: string
-) {
-  const isWithoutDocumentation = documentation.includes(
-    "without documentation"
-  );
+function createEmployerClaimFromArgs(args: {
+  "Absence period reasons": LeaveReasonType[];
+  "Absence period types": Array<AbsencePeriod["period_type"]>;
+  "Claimant EForm Version": string;
+  "Number of absence periods for each leave reason": number;
+  "Managed Requirements": ManagedRequirement[];
+}): EmployerClaim {
+  // Generate one absence period for each selected leave reason
+  const absence_periods: AbsencePeriod[] = [];
+  args["Absence period reasons"].forEach((reason: LeaveReasonType) => {
+    Array.from(
+      Array(args["Number of absence periods for each leave reason"])
+    ).forEach(() => {
+      absence_periods.push(
+        createAbsencePeriod({
+          reason,
+          period_type: faker.random.arrayElement(args["Absence period types"]),
+        })
+      );
+    });
+  });
 
-  if (
-    isWithoutDocumentation ||
-    !leaveReason ||
-    !(leaveReason in DocumentType.certification)
-  ) {
-    return new Map([[absenceId, new DocumentCollection()]]);
+  let claimBuilder = new MockEmployerClaimBuilder()
+    .completed()
+    .previousLeaves();
+
+  if (args["Claimant EForm Version"] === "Version 1 (before 2021-07-14)") {
+    claimBuilder = claimBuilder.eformsV1();
+  } else {
+    claimBuilder = claimBuilder.eformsV2().concurrentLeave();
   }
 
-  const documentData: BenefitsApplicationDocument = {
-    application_id: "mock-application-id",
+  const claim = claimBuilder.create();
+  claim.absence_periods = absence_periods;
+
+  // TODO (PORTAL-1117): leave_details will be removed in the future
+  claim.leave_details = {
+    ...claim.leave_details,
+    reason: absence_periods[0].reason,
+    continuous_leave_periods: absence_periods
+      .filter((period) => period.period_type === "Continuous")
+      .map((period) => ({
+        start_date: period.absence_period_start_date,
+        end_date: period.absence_period_end_date,
+      })),
+    reduced_schedule_leave_periods: absence_periods
+      .filter((period) => period.period_type === "Reduced Schedule")
+      .map((period) => ({
+        start_date: period.absence_period_start_date,
+        end_date: period.absence_period_end_date,
+      })),
+    intermittent_leave_periods: absence_periods
+      .filter((period) => period.period_type === "Intermittent")
+      .map((period) => ({
+        leave_period_id: period.fineos_leave_request_id,
+        start_date: period.absence_period_start_date,
+        end_date: period.absence_period_end_date,
+        duration: 1,
+        duration_basis: "Days",
+        frequency: 1,
+        frequency_interval: null,
+        frequency_interval_basis: "Weeks",
+      })),
+  };
+
+  claim.managed_requirements = args["Managed Requirements"];
+  return claim;
+}
+
+function createCertificationDocumentForReason(
+  leaveReason: LeaveReasonType
+): ClaimDocument | null {
+  if (!(leaveReason in DocumentType.certification)) {
+    return null;
+  }
+
+  const document: ClaimDocument = {
     content_type: "application/pdf",
     created_at: "2020-01-02",
-    description: "",
+    description: "Mock document description",
     document_type:
       DocumentType.certification[
         leaveReason as keyof typeof DocumentType.certification
       ],
-    fineos_document_id: "202020",
+    fineos_document_id: faker.datatype.uuid(),
     name: `${leaveReason} document`,
-    user_id: "",
   };
 
-  return new Map([[absenceId, new DocumentCollection([documentData])]]);
+  return document;
 }
 
-function getAppErrorInfoCollection(errorTypes: string[] = []) {
+function getErrorInfoCollection(errorTypes: string[] = []) {
   const errors = [];
 
   if (errorTypes.includes("Hours worked per week - minimum")) {
-    errors.push(
-      new AppErrorInfo({
-        message: "Enter the average weekly hours.",
-        type: "minimum",
-        field: "hours_worked_per_week",
-      })
-    );
+    errors.push({
+      type: "minimum",
+      field: "hours_worked_per_week",
+      namespace: "employers",
+    });
   }
 
   if (errorTypes.includes("Hours worked per week - maximum")) {
-    errors.push(
-      new AppErrorInfo({
-        message: "Average weekly hours must be 168 or fewer.",
-        type: "maximum",
-        field: "hours_worked_per_week",
-      })
-    );
+    errors.push({
+      type: "maximum",
+      field: "hours_worked_per_week",
+      namespace: "employers",
+    });
   }
 
   if (errorTypes.includes("Employer benefit - benefit end date")) {
-    errors.push(
-      new AppErrorInfo({
-        message: "benefit_end_date cannot be earlier than benefit_start_date",
-        type: "minimum",
-        field: "employer_benefits[0].benefit_end_date",
-      })
-    );
+    errors.push({
+      type: "minimum",
+      field: "employer_benefits[0].benefit_end_date",
+      namespace: "employers",
+    });
   }
 
   if (errorTypes.includes("Previous leave - leave start date")) {
-    errors.push(
-      new AppErrorInfo({
-        message: "Previous leaves cannot start before 2021",
-        type: "invalid_previous_leave_start_date",
-        field: "previous_leaves[0].leave_start_date",
-      })
-    );
+    errors.push({
+      type: "invalid_previous_leave_start_date",
+      field: "previous_leaves[0].leave_start_date",
+      namespace: "employers",
+    });
   }
 
   if (errorTypes.includes("Previous leave - leave end date")) {
-    errors.push(
-      new AppErrorInfo({
-        message: "leave_end_date cannot be earlier than leave_start_date",
-        type: "minimum",
-        field: "previous_leaves[0].leave_end_date",
-      })
-    );
+    errors.push({
+      type: "minimum",
+      field: "previous_leaves[0].leave_end_date",
+      namespace: "employers",
+    });
   }
 
-  return new AppErrorInfoCollection(errors);
+  return errors;
 }

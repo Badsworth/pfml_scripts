@@ -19,6 +19,7 @@ from massgov.pfml.db.models.employees import (
     State,
     StateLog,
 )
+from massgov.pfml.db.models.state import LkState
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -35,10 +36,25 @@ class PostProcessingMetrics(str, enum.Enum):
     PAYMENT_DIA_REDUCTION_OVERLAP = "payment_dia_reduction_overlap"
 
     # DOR <> FINEOS name mismatch
-    PAYMENT_DOR_FINEOS_NAME_MISMATCH = "payment_dor_fineos_name_mismatch"
+    PAYMENT_DOR_FINEOS_NAME_MISMATCH_COUNT = "payment_dor_fineos_name_mismatch_count"
+    PAYMENT_DOR_FINEOS_NAME_SWAPPED_COUNT = "payment_dor_fineos_name_swapped_count"
+    PAYMENT_DOR_FINEOS_NAME_PASS_COUNT = "payment_dor_fineos_name_pass_count"
 
     # Metrics specific to the in review processor
     PAYMENT_LEAVE_PLAN_IN_REVIEW_COUNT = "payment_leave_plan_in_review"
+
+    # Fineos leave duration
+    PAYMENT_LEAVE_DURATION_THRESHOLD_EXCEEDED_COUNT = (
+        "payment_leave_duration_threshold_exceeded_count"
+    )
+    PAYMENT_LEAVE_DURATION_PASS_COUNT = "payment_leave_duration_pass_count"
+    PAYMENT_LEAVE_DURATION_MISSING_BENEFIT_YEAR_COUNT = (
+        "payment_leave_duration_missing_benefit_year_count"
+    )
+    # Payment dates mismatch
+    PAYMENT_DATE_MISSING_REQUIRED_DATA_COUNT = "payment_date_missing_required_data_count"
+    PAYMENT_DATE_MISMATCH_COUNT = "payment_date_mismatch_count"
+    PAYMENT_DATE_PASS_COUNT = "payment_date_pass_count"
 
 
 @total_ordering  # Handles supporting sort with just __eq__ and __lt__
@@ -82,11 +98,11 @@ class PaymentContainer:
         return self._get_sort_key() < other._get_sort_key()
 
     def get_traceable_details(
-        self, add_validation_issues: bool = False
+        self, add_validation_issues: bool = False, state: Optional[LkState] = None
     ) -> Dict[str, Optional[Any]]:
         # For logging purposes, this returns useful, traceable details
 
-        details = payments_util.get_traceable_payment_details(self.payment)
+        details = payments_util.get_traceable_payment_details(self.payment, state)
 
         # This is just the reason codes, the details of the validation
         # container can potentially contain PII which we do not want to log.
@@ -191,12 +207,14 @@ class PayPeriodGroup:
     def get_amount_available_in_pay_period(self) -> Decimal:
         return max(Decimal("0.00"), self.maximum_weekly_amount - self.get_total_amount())
 
+    def add_absence_case_id(self, absence_case_id: str) -> None:
+        self.absence_case_ids.add(absence_case_id)
+
     def add_payment_from_details(
         self, payment_details: PaymentDetails, payment_scenario: PaymentScenario
     ) -> None:
-        amount = payment_details.amount
+        amount = payment_details.business_net_amount
         payment = payment_details.payment
-        self.absence_case_ids.add(str(payment.claim.fineos_absence_id))
 
         details_to_update = None
         if payment_scenario == PaymentScenario.PREVIOUS_PAYMENT:
@@ -313,10 +331,12 @@ def get_reduction_amount(payment_amount: Decimal, amount_available: Decimal) -> 
 def make_payment_detail_log(
     payment_detail: PaymentDetails, amount_available: Optional[Decimal] = None
 ) -> str:
-    msg = f"[StartDate={payment_detail.period_start_date},EndDate={payment_detail.period_end_date},Amount=${payment_detail.amount}]"
+    msg = f"[StartDate={payment_detail.period_start_date},EndDate={payment_detail.period_end_date},Amount=${payment_detail.business_net_amount}]"
 
     if amount_available is not None:
-        reduction_amount = get_reduction_amount(payment_detail.amount, amount_available)
+        reduction_amount = get_reduction_amount(
+            payment_detail.business_net_amount, amount_available
+        )
         if reduction_amount == Decimal(0):
             msg += " does not require a reduction for this pay period."
         else:
@@ -436,7 +456,7 @@ class MaximumWeeklyBenefitsAuditMessageBuilder:
                     continue
 
                 for payment_details in payment_detail_group.payment_details:
-                    amount_attempting_to_pay += payment_details.amount
+                    amount_attempting_to_pay += payment_details.business_net_amount
 
             reduction_amount = get_reduction_amount(amount_attempting_to_pay, amount_available)
             pay_period_overview_msg += f"; Over the cap by ${reduction_amount}"

@@ -14,11 +14,17 @@ export interface Issue {
   // Technical message intended for debugging purposes, but
   // can be used as a last resort if no other message is available.
   message?: string;
+  // Typically the API resource:
+  namespace: string;
   rule?: string;
   type?: string;
 }
 
-class BasePortalError extends Error {
+export interface ErrorWithIssues extends BasePortalError {
+  issues?: Issue[];
+}
+
+export class BasePortalError extends Error {
   constructor(message?: string) {
     super(message);
 
@@ -30,17 +36,34 @@ class BasePortalError extends Error {
 }
 
 /**
+ * Checks if this error has the shape of an error from the Cognito API
+ * @param error
+ * @returns boolean, whether this is a Cognito error or not
+ */
+export function isCognitoError(error: unknown): error is CognitoError {
+  if (
+    error &&
+    typeof error === "object" &&
+    error.hasOwnProperty("code") !== undefined
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
  * A Cognito authentication step failed.
  */
 export class CognitoAuthError extends BasePortalError {
   cognitoError: CognitoError;
-  issue: Issue | null;
+  issues: Issue[];
 
   constructor(cognitoError: CognitoError, issue: Issue | null = null) {
     super();
     this.name = "CognitoAuthError";
     this.cognitoError = cognitoError;
-    this.issue = issue;
+    this.issues = issue ? [issue] : [];
   }
 }
 
@@ -157,7 +180,7 @@ export class DocumentsUploadError extends BasePortalError {
   // ID of the file causing errors, so the issues can be displayed inline
   file_id: string;
   // the validation issue returned by the API
-  issue: Issue | null;
+  issues: Issue[];
 
   constructor(
     application_id: string,
@@ -168,7 +191,7 @@ export class DocumentsUploadError extends BasePortalError {
     super(message);
     this.application_id = application_id;
     this.file_id = file_id;
-    this.issue = issue;
+    this.issues = issue ? [issue] : [];
     this.name = "DocumentsUploadError";
   }
 }
@@ -179,12 +202,12 @@ export class DocumentsUploadError extends BasePortalError {
 export class ClaimWithdrawnError extends BasePortalError {
   // ID of the Claim that was withdrawn
   fineos_absence_id: string;
-  issue: Issue;
+  issues: Issue[];
 
   constructor(fineos_absence_id: string, issue: Issue, message?: string) {
     super(message);
     this.fineos_absence_id = fineos_absence_id;
-    this.issue = issue;
+    this.issues = [issue];
     this.name = "ClaimWithdrawnError";
   }
 }
@@ -211,18 +234,15 @@ export class UnauthorizedError extends ApiRequestError {
 
 /**
  * A request wasn't completed due to one or more validation issues
- * @example new ValidationError([{ field: "tax_identifier", type: "pattern", message: "Field didn't match \d{9}" }], "applications")
+ * @example new ValidationError([{ field: "tax_identifier", type: "pattern", message: "Field didn't match \d{9}", namespace: "applications" }])
  */
 export class ValidationError extends BasePortalError {
   // List of validation issues returned by the API
   issues: Issue[];
-  // Used in the i18n message keys, prefixed to the field name (e.g. `prefix.field_name`)
-  i18nPrefix: string;
 
-  constructor(issues: Issue[], i18nPrefix: string) {
+  constructor(issues: Issue[]) {
     super();
     this.issues = issues;
-    this.i18nPrefix = i18nPrefix;
     this.name = "ValidationError";
   }
 }

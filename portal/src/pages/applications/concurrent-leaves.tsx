@@ -4,7 +4,8 @@ import withBenefitsApplication, {
 } from "../../hoc/withBenefitsApplication";
 
 import Details from "../../components/core/Details";
-import IconHeading from "../../components/core/IconHeading";
+import Heading from "../../components/core/Heading";
+import Icon from "../../components/core/Icon";
 import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
 import QuestionPage from "../../components/QuestionPage";
@@ -23,7 +24,7 @@ export const ConcurrentLeaves = (props: WithBenefitsApplicationProps) => {
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
 
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });
@@ -76,7 +77,11 @@ export const ConcurrentLeaves = (props: WithBenefitsApplicationProps) => {
             value: "false",
           },
         ]}
-        label={t("pages.claimsConcurrentLeaves.sectionLabel")}
+        label={
+          <Heading level="2" size="1">
+            {t("pages.claimsConcurrentLeaves.sectionLabel")}
+          </Heading>
+        }
         type="radio"
         hint={
           <div className="margin-bottom-5">
@@ -85,12 +90,16 @@ export const ConcurrentLeaves = (props: WithBenefitsApplicationProps) => {
               endDate={claim.leaveEndDate}
               showWaitingDayPeriod={!isIntermittent}
             />
-
-            <IconHeading name="check_circle">
+            <Heading level="3">
+              <Icon
+                name="check"
+                size={3}
+                className="text-secondary text-middle margin-right-1 margin-top-neg-05"
+              />
               {t("pages.claimsConcurrentLeaves.hintWhatKindHeading")}
-            </IconHeading>
+            </Heading>
 
-            <div className="margin-top-1 margin-left-3 margin-bottom-2">
+            <div className="margin-top-1 margin-left-4 margin-bottom-2">
               <Trans
                 i18nKey={`pages.claimsConcurrentLeaves.intro`}
                 components={{ div: <div />, li: <li />, ul: <ul /> }}
@@ -100,18 +109,27 @@ export const ConcurrentLeaves = (props: WithBenefitsApplicationProps) => {
 
             {isContinuousReducedIntro && (
               <Fragment>
-                <IconHeading name="check_circle">
+                <Heading level="3">
+                  <Icon
+                    name="check"
+                    size={3}
+                    className="text-secondary text-middle margin-right-1 margin-top-neg-05"
+                  />
                   {t(
                     "pages.claimsConcurrentLeaves.whenToReportContinuousLeave"
                   )}
-                </IconHeading>
+                </Heading>
                 <div className="margin-top-1 margin-left-3 margin-bottom-2">
                   {t("pages.claimsConcurrentLeaves.typesOfLeaveToReport")}
                 </div>
-
-                <IconHeading name="check_circle">
+                <Heading level="3">
+                  <Icon
+                    name="check"
+                    size={3}
+                    className="text-secondary text-middle margin-right-1 margin-top-neg-05"
+                  />
                   {t("pages.claimsConcurrentLeaves.whenToReportReducedLeave")}
-                </IconHeading>
+                </Heading>
                 <div className="margin-top-1 margin-left-3 margin-bottom-2">
                   <Trans
                     i18nKey="pages.claimsConcurrentLeaves.intro"
@@ -133,11 +151,16 @@ export const ConcurrentLeaves = (props: WithBenefitsApplicationProps) => {
                 />
               </Details>
             )}
-            <IconHeading name="cancel">
+            <Heading level="3">
+              <Icon
+                name="close"
+                size={3}
+                className="text-error text-middle margin-right-1 margin-top-neg-05"
+              />
               {t("pages.claimsConcurrentLeaves.dontNeedToReport", {
                 context: isIntermittent ? "intermittentLeave" : null,
               })}
-            </IconHeading>
+            </Heading>
           </div>
         }
       />

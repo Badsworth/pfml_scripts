@@ -300,10 +300,14 @@ def process_csv_row(
         report.errored_employee_occupation_count += 1
         return
 
-    employee_occupation: Optional[EmployeeOccupation] = db_session.query(EmployeeOccupation).filter(
-        EmployeeOccupation.employee_id == employee.employee_id,
-        EmployeeOccupation.employer_id == employer_id,
-    ).one_or_none()
+    employee_occupation: Optional[EmployeeOccupation] = (
+        db_session.query(EmployeeOccupation)
+        .filter(
+            EmployeeOccupation.employee_id == employee.employee_id,
+            EmployeeOccupation.employer_id == employer_id,
+        )
+        .one_or_none()
+    )
 
     if employee_occupation is None:
         employee_occupation = EmployeeOccupation()

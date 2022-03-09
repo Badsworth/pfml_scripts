@@ -1,8 +1,7 @@
 import { render, screen } from "@testing-library/react";
-import AppErrorInfo from "../../src/models/AppErrorInfo";
-import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import FieldsetAddress from "../../src/components/FieldsetAddress";
 import React from "react";
+import { ValidationError } from "../../src/errors";
 import userEvent from "@testing-library/user-event";
 
 const renderComponent = (customProps = {}) => {
@@ -16,7 +15,7 @@ const renderComponent = (customProps = {}) => {
 
   const { container } = render(
     <FieldsetAddress
-      appErrors={new AppErrorInfoCollection()}
+      errors={[]}
       label={"What is your address?"}
       name={"address"}
       onChange={jest.fn()}
@@ -61,7 +60,7 @@ describe("FieldsetAddress", () => {
 
       return (
         <FieldsetAddress
-          appErrors={new AppErrorInfoCollection()}
+          errors={[]}
           label={"What is your address?"}
           name={"address"}
           onChange={handleChange}
@@ -83,44 +82,49 @@ describe("FieldsetAddress", () => {
   });
 
   it("displays errors on the associated inputs when there are errors", () => {
-    const appErrors = new AppErrorInfoCollection([
-      new AppErrorInfo({
-        field: "address.line_1",
-        message: "Address is required",
-      }),
-      new AppErrorInfo({
-        field: "address.line_2",
-        message: "Address 2 is required",
-      }),
-      new AppErrorInfo({
-        field: "address.city",
-        message: "City is required",
-      }),
-      new AppErrorInfo({
-        field: "address.state",
-        message: "State is required",
-      }),
-      new AppErrorInfo({
-        field: "address.zip",
-        message: "ZIP is required",
-      }),
-    ]);
-    renderComponent({ appErrors });
+    const errors = [
+      new ValidationError(
+        [
+          {
+            field: "address.line_1",
+          },
+          {
+            field: "address.line_2",
+          },
+          {
+            field: "address.city",
+          },
+          {
+            field: "address.state",
+          },
+          {
+            field: "address.zip",
+          },
+        ],
+        "test"
+      ),
+    ];
+    renderComponent({ errors });
 
+    // We don't have translations for the mock issues above, so it falls back to the default message
     expect(
-      screen.getByRole("textbox", { name: /Address is required/i })
+      screen.getByRole("textbox", {
+        name: /Address Field .+ has invalid value/i,
+      })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("textbox", { name: /Address 2 is required/i })
+      screen.getByRole("textbox", {
+        name: /Address line 2 .+ has invalid value/i,
+      })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("textbox", { name: /City is required/i })
+      screen.getByRole("textbox", { name: /City .+ has invalid value/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("combobox", { name: /State is required/i })
+      screen.getByRole("combobox", { name: /State .+ has invalid value/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("textbox", { name: /ZIP is required/i })
+      screen.getByRole("textbox", { name: /ZIP .+ has invalid value/i })
     ).toBeInTheDocument();
   });
 

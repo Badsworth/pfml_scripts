@@ -28,7 +28,7 @@ terraform {
       source = "pagerduty/pagerduty"
     }
   }
-    
+
   backend "s3" {
     bucket         = "massgov-pfml-$ENV_NAME-env-mgmt"
     key            = "terraform/api.tfstate"
@@ -90,10 +90,12 @@ module "api" {
   # TODO: This value is provided by FINEOS over Interchange.
   fineos_client_oauth2_client_id                   = ""
 
+  pfml_email_address                                  = ""
+  bounce_forwarding_email_address                     = ""
+  bounce_forwarding_email_address_arn                 = null
+
   # TODO: Connect to ServiceNow. Usually in nonprod you'll connect to stage.
   service_now_base_url = "https://savilinxstage.servicenowservices.com"
 
   dor_fineos_etl_schedule_expression               = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour
-  
-  enable_pdf_document_compression = "0"
 }

@@ -129,7 +129,7 @@ def _assert_payment_state_log_outcome(
 
 
 def test_run_step_state_transitions_soap(
-    local_initialize_factories_session, local_test_db_session, local_test_db_other_session,
+    local_initialize_factories_session, local_test_db_session, local_test_db_other_session
 ):
     mock_caller = MockVerificationZeepCaller()
 
@@ -237,7 +237,7 @@ def test_run_step_state_transitions_soap(
 
 
 def test_run_step_state_transitions_malformed_address(
-    local_initialize_factories_session, local_test_db_session, local_test_db_other_session,
+    local_initialize_factories_session, local_test_db_session, local_test_db_other_session
 ):
     # Testing that if the address is missing pieces, it'll still move to the appropriate
     # state and that Experian will not be called at all.
@@ -269,7 +269,7 @@ def test_run_step_state_transitions_malformed_address(
 
     # Check payment would have gone to the error state
     _assert_payment_state(
-        local_test_db_other_session, State.PAYMENT_FAILED_ADDRESS_VALIDATION, [check_payment],
+        local_test_db_other_session, State.PAYMENT_FAILED_ADDRESS_VALIDATION, [check_payment]
     )
 
     # EFT payment would have gone to the success state despite the issue
@@ -281,7 +281,7 @@ def test_run_step_state_transitions_malformed_address(
 
 
 def test_run_step_no_database_changes_on_exception_soap(
-    local_initialize_factories_session, local_test_db_session, local_test_db_other_session,
+    local_initialize_factories_session, local_test_db_session, local_test_db_other_session
 ):
     mock_caller = MockVerificationZeepCaller()
 
@@ -334,7 +334,7 @@ def test_run_step_no_database_changes_on_exception_soap(
 
 
 def test_run_step_experian_soap_exception(
-    local_initialize_factories_session, local_test_db_session, local_test_db_other_session,
+    local_initialize_factories_session, local_test_db_session, local_test_db_other_session
 ):
     mock_caller = MockVerificationZeepCaller()
 
@@ -389,7 +389,7 @@ def test_run_step_experian_soap_exception(
 
 
 def test_run_step_state_log_outcome_field_soap(
-    local_initialize_factories_session, local_test_db_session, local_test_db_other_session,
+    local_initialize_factories_session, local_test_db_session, local_test_db_other_session
 ):
     mock_caller = MockVerificationZeepCaller()
 

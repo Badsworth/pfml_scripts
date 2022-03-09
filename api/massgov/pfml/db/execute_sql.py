@@ -24,7 +24,7 @@ S3_BUCKET = os.environ.get("S3_EXPORT_BUCKET", None)
 
 
 def get_file_target(args, count):
-    """ Produce a target based on the parameters provided """
+    """Produce a target based on the parameters provided"""
     if args.use_date:
         return f"{args.s3_output}/{date.today()}/query{count}.csv"
     return f"{args.s3_output}-query{count}.csv"
@@ -57,7 +57,7 @@ def execute_sql():
 
 
 def execute_sql_statement_s3(db_session, sql, bucket, file_target):
-    """ Export the results of an SQL statement to S3 """
+    """Export the results of an SQL statement to S3"""
     logger.info("exporting results of %r to %s in %s", sql, file_target, bucket)
     file_path = f"s3://{bucket}/{file_target}"
     execute_sql_statement_file_path(db_session, sql, file_path)
@@ -103,7 +103,7 @@ def output_result_rows(result, print_limit):
 
 def parse_args():
     """Parse command line arguments and flags."""
-    parser = argparse.ArgumentParser(description="Execute SQL statements on the database",)
+    parser = argparse.ArgumentParser(description="Execute SQL statements on the database")
     parser.add_argument("sql", nargs="+", help="SQL statements")
     parser.add_argument("--limit", type=int, default=100, help="Row limit when printing output")
     parser.add_argument(

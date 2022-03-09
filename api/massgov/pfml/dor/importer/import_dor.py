@@ -453,7 +453,7 @@ def handle_import_exception(
 
 
 def process_daily_import(
-    db_session: Session, employer_file_path: str, employee_file_path: str, decrypter: Crypt,
+    db_session: Session, employer_file_path: str, employee_file_path: str, decrypter: Crypt
 ) -> ImportReport:
     logger.info("Starting to process files")
     report = ImportReport(
@@ -723,7 +723,7 @@ def import_employers(
     )
 
     bulk_save(
-        db_session, employer_address_relationship_models_to_create, "Employer Address Mapping",
+        db_session, employer_address_relationship_models_to_create, "Employer Address Mapping"
     )
     db_session.commit()
 
@@ -823,9 +823,7 @@ def import_employees(
     import_log_entry_id: int,
 ) -> None:
     """Create or update employees data in the db"""
-    logger.info(
-        "Start import of employees import - lines: %i", len(employee_info_list),
-    )
+    logger.info("Start import of employees import - lines: %i", len(employee_info_list))
 
     # 1 - Stage employee info for creation
     logger.info("Staging employee info for creation")
@@ -911,7 +909,7 @@ def import_employees(
 
         new_employee_id = ssn_to_new_employee_id[ssn]
         new_employee = dor_persistence_util.dict_to_employee(
-            employee_info, import_log_entry_id, new_employee_id, ssn_to_new_tax_id[ssn],
+            employee_info, import_log_entry_id, new_employee_id, ssn_to_new_tax_id[ssn]
         )
         employee_models_to_create.append(new_employee)
         # Enqueue newly created employee for push to FINEOS
@@ -1078,7 +1076,7 @@ def log_employees_with_new_employers(
         employer_id_set = employee_id_to_employer_id_set.get(employee_id, None)
         if employer_id_set is None or employer_id not in employer_id_set:
             push_to_fineos_queue_item = EmployeePushToFineosQueue(
-                employee_id=employee_id, employer_id=employer_id, action="UPDATE_NEW_EMPLOYER",
+                employee_id=employee_id, employer_id=employer_id, action="UPDATE_NEW_EMPLOYER"
             )
             push_to_fineos_queue_items_to_create.append(push_to_fineos_queue_item)
             already_logged_employee_id_employer_id_tuples.add((employee_id, employer_id))
@@ -1086,7 +1084,7 @@ def log_employees_with_new_employers(
     push_to_fineos_queue_items_count = len(push_to_fineos_queue_items_to_create)
     if push_to_fineos_queue_items_count > 0:
         logger.info(
-            "Logging employees as updated for new employer: %i", push_to_fineos_queue_items_count,
+            "Logging employees as updated for new employer: %i", push_to_fineos_queue_items_count
         )
         bulk_save(
             db_session,
@@ -1097,7 +1095,7 @@ def log_employees_with_new_employers(
 
     report.logged_employees_for_new_employer += push_to_fineos_queue_items_count
     logger.info(
-        "Done - Check and log employees with new employers: %i", push_to_fineos_queue_items_count,
+        "Done - Check and log employees with new employers: %i", push_to_fineos_queue_items_count
     )
 
 
@@ -1268,7 +1266,7 @@ def import_wage_data(
             extra={"record_count": len(wage_history_records)},
         )
         bulk_save(
-            db_session, wage_history_records, "Batch creating WagesAndContributionsHistory records",
+            db_session, wage_history_records, "Batch creating WagesAndContributionsHistory records"
         )
 
         db_session.commit()
@@ -1394,7 +1392,7 @@ def import_employer_pfml_contributions(
             )
 
         is_updated = dor_persistence_util.check_and_update_employer_quarterly_contribution(
-            employer_quarterly_contribution, employer_info, import_log_entry_id,
+            employer_quarterly_contribution, employer_info, import_log_entry_id
         )
 
         if is_updated:

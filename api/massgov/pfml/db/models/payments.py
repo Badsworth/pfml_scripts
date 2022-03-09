@@ -6,13 +6,67 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql.schema import Index
 
 import massgov.pfml.util.logging
-from massgov.pfml.db.models.employees import Claim, Employee, ImportLog, Payment, ReferenceFile
+from massgov.pfml.db.models.employees import (
+    Claim,
+    Employee,
+    ImportLog,
+    Payment,
+    PaymentDetails,
+    ReferenceFile,
+)
 
 from ..lookup import LookupTable
-from .base import Base, TimestampMixin, uuid_gen
+from .base import Base, TimestampMixin, deprecated_column, uuid_gen
 from .common import PostgreSQLUUID
+from .common import XMLType as XML
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
+
+
+class FineosExtractVbiTaskReportSom(Base, TimestampMixin):
+    __tablename__ = "fineos_extract_vbi_task_report_som"
+    vbi_task_report_som_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
+    taskid = Column(Text)
+    tasktableid = Column(Text)
+    departmenttableid = Column(Text)
+    departmentid = Column(Text)
+    roletableid = Column(Text)
+    roleid = Column(Text)
+    usertableid = Column(Text)
+    userid = Column(Text)
+    worktypetableid = Column(Text)
+    worktypeid = Column(Text)
+    deptname = Column(Text)
+    username = Column(Text)
+    userloginid = Column(Text)
+    subjectreference = Column(Text)
+    taskcreator = Column(Text)
+    taskowner = Column(Text)
+    creationdate = Column(Text)
+    startdate = Column(Text)
+    closeddate = Column(Text)
+    calculatedsla = Column(Text)
+    hourstocomplete = Column(Text)
+    exceededworktime = Column(Text)
+    targetdate = Column(Text)
+    onholduntildate = Column(Text)
+    status = Column(Text)
+    tasktypename = Column(Text)
+    casetype = Column(Text)
+    notificationnumber = Column(Text)
+    casenumber = Column(Text, index=True)
+
+    reference_file_id = Column(
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
+    )
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+    reference_file = relationship(ReferenceFile)
+
+    Index("ix_vbi_task_report_som_casenumber_reference_file_id", casenumber, reference_file_id)
 
 
 class FineosExtractVpei(Base, TimestampMixin):
@@ -156,6 +210,45 @@ class FineosExtractVpeiPaymentDetails(Base, TimestampMixin):
     reference_file = relationship(ReferenceFile)
 
 
+class FineosExtractVpeiPaymentLine(Base, TimestampMixin):
+    __tablename__ = "fineos_extract_vpei_payment_line"
+
+    vpei_payment_line_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
+    c = Column(Text)
+    i = Column(Text)
+    lastupdatedate = Column(Text)
+    c_osuser_updatedby = Column(Text)
+    i_osuser_updatedby = Column(Text)
+    amount_monamt = Column(Text)
+    amount_moncur = Column(Text)
+    integrtype = Column(Text)
+    linetype = Column(Text)
+    reference = Column(Text)
+    reservecatego = Column(Text)
+    reservetype = Column(Text)
+    sequencenumbe = Column(Text)
+    subtotals = Column(Text)
+    taxableincome = Column(Text)
+    usetocalcrule = Column(Text)
+    c_pymnteif_paymentlines = Column(Text)
+    i_pymnteif_paymentlines = Column(Text)
+    paymentdetailclassid = Column(Text)
+    paymentdetailindexid = Column(Text)
+    purchasedetailclassid = Column(Text)
+    purchasedetailindexid = Column(Text)
+    dateinterface = Column(Text)
+
+    reference_file_id = Column(
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
+    )
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+    reference_file = relationship(ReferenceFile)
+
+
 class FineosExtractVpeiClaimDetails(Base, TimestampMixin):
     __tablename__ = "fineos_extract_vpei_claim_details"
 
@@ -252,6 +345,7 @@ class FineosExtractVbiRequestedAbsenceSom(Base, TimestampMixin):
     employee_customerno = Column(Text)
     employee_manager_customerno = Column(Text)
     employee_addtl_mngr_customerno = Column(Text)
+    orgunit_name = Column(Text)
     employer_customerno = Column(Text)
     employer_name = Column(Text)
     employment_classid = Column(Text)
@@ -686,6 +780,34 @@ class FineosExtractVPaidLeaveInstruction(Base, TimestampMixin):
     reference_file = relationship(ReferenceFile)
 
 
+class FineosExtractVbi1099DataSom(Base, TimestampMixin):
+    __tablename__ = "fineos_extract_vbi_1099_data_som"
+    vbi_1099_data_som_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    firstnames = Column(Text)
+    lastname = Column(Text)
+    customerno = Column(Text)
+    packeddata = Column(XML)
+    documenttype = Column(Text)
+    c = Column(Text)
+
+    reference_file_id = Column(
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
+    )
+
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+    Index(
+        "ix_vbi_1099_data_som_import_log_id_customerno",
+        fineos_extract_import_log_id,
+        customerno,
+        unique=False,
+    )
+
+    reference_file = relationship(ReferenceFile)
+
+
 class MmarsPaymentData(Base, TimestampMixin):
     __tablename__ = "mmars_payment_data"
 
@@ -821,9 +943,24 @@ class MmarsPaymentData(Base, TimestampMixin):
     doc_last_modified_by = Column(Text)
     doc_last_modified_on = Column(TIMESTAMP)
     NoFilter = Column(Text)
-    payment_id = Column(PostgreSQLUUID, ForeignKey("payment.payment_id"), index=True, nullable=True)
+    payment_id = deprecated_column(
+        PostgreSQLUUID, ForeignKey("payment.payment_id"), index=True, nullable=True
+    )
 
-    payment = relationship(Payment)
+    claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True, nullable=True)
+    employee_id = Column(
+        PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True, nullable=True
+    )
+    payment_i_value = Column(Text)
+
+    claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True, nullable=True)
+    claim = relationship(Claim)
+
+    employee_id = Column(
+        PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True, nullable=True
+    )
+    employee = relationship(Employee)
+    payment_i_value = Column(Text)
 
 
 class MmarsPaymentRefunds(Base, TimestampMixin):
@@ -865,6 +1002,30 @@ class MmarsPaymentRefunds(Base, TimestampMixin):
     payment = relationship(Payment)
 
 
+class PaymentLine(Base, TimestampMixin):
+    __tablename__ = "payment_line"
+    payment_line_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
+    vpei_payment_line_id = Column(
+        PostgreSQLUUID,
+        ForeignKey("fineos_extract_vpei_payment_line.vpei_payment_line_id"),
+        nullable=False,
+    )
+    payment_id = Column(PostgreSQLUUID, ForeignKey("payment.payment_id"), index=True)
+    payment_details_id = Column(
+        PostgreSQLUUID, ForeignKey("payment_details.payment_details_id"), index=True, nullable=True
+    )
+
+    payment_line_c_value = Column(Text, index=True, nullable=False)
+    payment_line_i_value = Column(Text, index=True, nullable=False)
+
+    amount = Column(Numeric(asdecimal=True), nullable=False)
+    line_type = Column(Text, nullable=False)
+
+    payment = relationship(Payment)
+    payment_details = relationship(PaymentDetails)
+
+
 class FineosWritebackDetails(Base, TimestampMixin):
     __tablename__ = "fineos_writeback_details"
     fineos_writeback_details_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
@@ -878,7 +1039,7 @@ class FineosWritebackDetails(Base, TimestampMixin):
         nullable=False,
     )
     import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
-    writeback_sent_at = Column(TIMESTAMP(timezone=True), nullable=True,)
+    writeback_sent_at = Column(TIMESTAMP(timezone=True), nullable=True)
 
     payment = relationship(Payment, back_populates="fineos_writeback_details")
     transaction_status = relationship("LkFineosWritebackTransactionStatus")
@@ -888,7 +1049,7 @@ class FineosWritebackDetails(Base, TimestampMixin):
 # Because of how the app is loaded, we need
 # to define this here, after both classes are registered
 Payment.fineos_writeback_details = relationship(  # type: ignore
-    FineosWritebackDetails, back_populates="payment", order_by="FineosWritebackDetails.created_at",
+    FineosWritebackDetails, back_populates="payment", order_by="FineosWritebackDetails.created_at"
 )
 
 
@@ -953,9 +1114,9 @@ class FineosWritebackTransactionStatus(LookupTable):
     DATA_ISSUE_IN_SYSTEM = LkFineosWritebackTransactionStatus(
         5, "Payment System Error", PENDING_ACTIVE_WRITEBACK_RECORD_STATUS
     )
-    TOTAL_BENEFITS_OVER_CAP = LkFineosWritebackTransactionStatus(
+    DEPRECATED_TOTAL_BENEFITS_OVER_CAP = LkFineosWritebackTransactionStatus(
         6, "Max Weekly Benefits Exceeded", ACTIVE_WRITEBACK_RECORD_STATUS
-    )
+    )  # Duplicate of 18 - WEEKLY_BENEFITS_AMOUNT_EXCEEDS_850, use that instead
     ADDRESS_VALIDATION_ERROR = LkFineosWritebackTransactionStatus(
         7, "Address Validation Error", ACTIVE_WRITEBACK_RECORD_STATUS
     )
@@ -1017,59 +1178,39 @@ class FineosWritebackTransactionStatus(LookupTable):
         23, "InvalidPayment NameMismatch", ACTIVE_WRITEBACK_RECORD_STATUS
     )
 
+    WITHHOLDING_ERROR = LkFineosWritebackTransactionStatus(
+        24, "PrimaryPayment ProcessingErr", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    PAYMENT_AUDIT_IN_PROGRESS = LkFineosWritebackTransactionStatus(
+        25, "Payment Audit In Progress", PENDING_ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    VOID_CHECK = LkFineosWritebackTransactionStatus(
+        26, "PUB Check Voided", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    STOP_CHECK = LkFineosWritebackTransactionStatus(
+        27, "PUB Check Undeliverable", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    STALE_CHECK = LkFineosWritebackTransactionStatus(
+        28, "PUB Check Stale", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    LEAVE_DURATION_MAX_EXCEEDED = LkFineosWritebackTransactionStatus(
+        29, "Max Leave Duration Exceeded", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    INVALID_ROUTING_NUMBER = LkFineosWritebackTransactionStatus(
+        30, "Invalid Routing Number", PENDING_ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
 
 class AuditReportAction(str, Enum):
     REJECTED = "REJECTED"
     SKIPPED = "SKIPPED"
     INFORMATIONAL = "INFORMATIONAL"
-    # These below actions are for scenarios where
-    # we want to default to skipped/rejected, but
-    # the details we put in the reject notes are sufficient
-    # and don't require populating an additional column
-    SKIPPED_NO_COLUMN = "SKIPPED_NO_COLUMN"
-    REJECTED_NO_COLUMN = "REJECTED_NO_COLUMN"
-    INFORMATIONAL_NO_COLUMN = "INFORMATIONAL_NO_COLUMN"
-
-    # These below methods help us group the behavior
-    # of these actions by effectively mapping the string
-    # value to the enum
-
-    @staticmethod
-    def should_populate_column(audit_report_action_str: str) -> bool:
-        if audit_report_action_str in [
-            AuditReportAction.SKIPPED_NO_COLUMN,
-            AuditReportAction.REJECTED_NO_COLUMN,
-            AuditReportAction.INFORMATIONAL_NO_COLUMN,
-        ]:
-            return False
-        return True
-
-    @staticmethod
-    def is_rejected(audit_report_action_str: str) -> bool:
-        if audit_report_action_str in [
-            AuditReportAction.REJECTED,
-            AuditReportAction.REJECTED_NO_COLUMN,
-        ]:
-            return True
-        return False
-
-    @staticmethod
-    def is_skipped(audit_report_action_str: str) -> bool:
-        if audit_report_action_str in [
-            AuditReportAction.SKIPPED,
-            AuditReportAction.SKIPPED_NO_COLUMN,
-        ]:
-            return True
-        return False
-
-    @staticmethod
-    def is_informational(audit_report_action_str: str) -> bool:
-        if audit_report_action_str in [
-            AuditReportAction.INFORMATIONAL,
-            audit_report_action_str == AuditReportAction.INFORMATIONAL_NO_COLUMN,
-        ]:
-            return True
-        return False
 
 
 class LkPaymentAuditReportType(Base):
@@ -1077,16 +1218,19 @@ class LkPaymentAuditReportType(Base):
     payment_audit_report_type_id = Column(Integer, primary_key=True, autoincrement=True)
     payment_audit_report_type_description = Column(Text, nullable=False)
     payment_audit_report_action = Column(Text, nullable=False)
+    payment_audit_report_column = Column(Text, nullable=True)
 
     def __init__(
         self,
         payment_audit_report_type_id,
         payment_audit_report_type_description,
         payment_audit_report_action,
+        payment_audit_report_column,
     ):
         self.payment_audit_report_type_id = payment_audit_report_type_id
         self.payment_audit_report_type_description = payment_audit_report_type_description
         self.payment_audit_report_action = payment_audit_report_action
+        self.payment_audit_report_column = payment_audit_report_column
 
 
 class PaymentAuditReportType(LookupTable):
@@ -1095,25 +1239,38 @@ class PaymentAuditReportType(LookupTable):
         "payment_audit_report_type_id",
         "payment_audit_report_type_description",
         "payment_audit_report_action",
+        "payment_audit_report_column",
     )
 
     DEPRECATED_MAX_WEEKLY_BENEFITS = LkPaymentAuditReportType(
-        1, "Deprecated - Max Weekly Benefits", AuditReportAction.REJECTED
+        1, "Deprecated - Max Weekly Benefits", AuditReportAction.REJECTED, None
     )
     DEPRECATED_DUA_DIA_REDUCTION = LkPaymentAuditReportType(
-        2, "DUA DIA Reduction (Deprecated)", AuditReportAction.INFORMATIONAL
+        2, "Deprecated - DUA DIA Reduction (Deprecated)", AuditReportAction.INFORMATIONAL, None
     )
-    LEAVE_PLAN_IN_REVIEW = LkPaymentAuditReportType(
-        3, "Leave Plan In Review", AuditReportAction.SKIPPED_NO_COLUMN
+    DEPRECATED_LEAVE_PLAN_IN_REVIEW = LkPaymentAuditReportType(
+        3, "Deprecated - Leave Plan In Review", AuditReportAction.SKIPPED, None
     )
     DOR_FINEOS_NAME_MISMATCH = LkPaymentAuditReportType(
-        4, "DOR FINEOS Name Mismatch", AuditReportAction.INFORMATIONAL
+        4,
+        "DOR FINEOS Name Mismatch",
+        AuditReportAction.INFORMATIONAL,
+        "dor_fineos_name_mismatch_details",
     )
     DUA_ADDITIONAL_INCOME = LkPaymentAuditReportType(
-        5, "DUA Additional Income", AuditReportAction.INFORMATIONAL
+        5, "DUA Additional Income", AuditReportAction.INFORMATIONAL, "dua_additional_income_details"
     )
     DIA_ADDITIONAL_INCOME = LkPaymentAuditReportType(
-        6, "DIA Additional Income", AuditReportAction.INFORMATIONAL
+        6, "DIA Additional Income", AuditReportAction.INFORMATIONAL, "dia_additional_income_details"
+    )
+    PAYMENT_DATE_MISMATCH = LkPaymentAuditReportType(
+        7, "Payment Date Mismatch", AuditReportAction.REJECTED, "payment_date_mismatch_details"
+    )
+    EXCEEDS_26_WEEKS_TOTAL_LEAVE = LkPaymentAuditReportType(
+        8,
+        "Exceeds 26 weeks of total leave",
+        AuditReportAction.INFORMATIONAL,
+        "exceeds_26_weeks_total_leave_details",
     )
 
 
@@ -1129,7 +1286,7 @@ class PaymentAuditReportDetails(Base, TimestampMixin):
         nullable=False,
     )
     details = Column(JSON, nullable=False)
-    added_to_audit_report_at = Column(TIMESTAMP(timezone=True), nullable=True,)
+    added_to_audit_report_at = Column(TIMESTAMP(timezone=True), nullable=True)
     import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
 
     payment = relationship(Payment)
@@ -1142,19 +1299,14 @@ class LkWithholdingType(Base):
     withholding_type_id = Column(Integer, primary_key=True, autoincrement=True)
     withholding_type_description = Column(Text, nullable=False)
 
-    def __init__(
-        self, withholding_type_id, withholding_type_description,
-    ):
+    def __init__(self, withholding_type_id, withholding_type_description):
         self.withholding_type_id = withholding_type_id
         self.withholding_type_description = withholding_type_description
 
 
 class WithholdingType(LookupTable):
     model = LkWithholdingType
-    column_names = (
-        "withholding_type_id",
-        "withholding_type_description",
-    )
+    column_names = ("withholding_type_id", "withholding_type_description")
 
     FEDERAL = LkWithholdingType(1, "Federal Tax")
     STATE = LkWithholdingType(2, "State Tax")
@@ -1197,6 +1349,7 @@ class Pfml1099Payment(Base, TimestampMixin):
     )
     payment_amount = Column(Numeric, nullable=False)
     payment_date = Column(Date, nullable=False)
+    cancel_date = Column(Date, nullable=True)
 
     payment = relationship(Payment)
     claim = relationship(Claim)
@@ -1256,6 +1409,16 @@ class Pfml1099Refund(Base, TimestampMixin):
     employee = relationship(Employee)
 
 
+class Pfml1099RefundBackup(Base, TimestampMixin):
+    __tablename__ = "pfml_1099_refund_backup"
+    pfml_1099_refund_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    pfml_1099_batch_id = Column(PostgreSQLUUID, nullable=True)
+    payment_id = Column(PostgreSQLUUID, nullable=True)
+    employee_id = Column(PostgreSQLUUID, nullable=True)
+    refund_amount = Column(Numeric, nullable=True)
+    refund_date = Column(Date, nullable=True)
+
+
 class Pfml1099(Base, TimestampMixin):
     __tablename__ = "pfml_1099"
     pfml_1099_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
@@ -1267,6 +1430,9 @@ class Pfml1099(Base, TimestampMixin):
         PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True, nullable=False
     )
     tax_identifier_id = Column(PostgreSQLUUID, nullable=False)
+    account_number = Column(Text)
+    c = Column(Text)
+    i = Column(Text)
     first_name = Column(Text, nullable=False)
     last_name = Column(Text, nullable=False)
     address_line_1 = Column(Text, nullable=False)
@@ -1279,6 +1445,23 @@ class Pfml1099(Base, TimestampMixin):
     federal_tax_withholdings = Column(Numeric(asdecimal=True), nullable=False)
     overpayment_repayments = Column(Numeric(asdecimal=True), nullable=False)
     correction_ind = Column(Boolean, nullable=False)
+    s3_location = Column(Text, nullable=True)
+    fineos_status = Column(Text, nullable=True, default="New")
+    irs_submission_date = Column(Date, nullable=True)
+
+    employee = relationship(Employee)
+
+
+class Pfml1099Request(Base, TimestampMixin):
+    __tablename__ = "pfml_1099_request"
+    pfml_1099_request_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    employee_id = Column(
+        PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True, nullable=False
+    )
+    correction_ind = Column(Boolean, nullable=False)
+    pfml_1099_batch_id = Column(
+        PostgreSQLUUID, ForeignKey("pfml_1099_batch.pfml_1099_batch_id"), index=True, nullable=True
+    )
 
     employee = relationship(Employee)
 
@@ -1292,6 +1475,136 @@ class LinkSplitPayment(Base, TimestampMixin):
     related_payment = cast(
         "Optional[Payment]", relationship(Payment, foreign_keys=[related_payment_id])
     )
+
+
+#### Writeback Status Mapping Configuration
+# This config helps us map the following:
+# AuditReportType -> Reject Notes -> Writeback transaction status
+class AuditReportDetailGroup:
+    reject_notes_str: str
+    inbound_reject_notes_str: str
+
+    writeback_transaction_status: LkFineosWritebackTransactionStatus
+    audit_report_type: Optional[LkPaymentAuditReportType]
+
+    def __init__(
+        self,
+        reject_notes_str: str,
+        writeback_transaction_status: LkFineosWritebackTransactionStatus,
+        inbound_reject_notes_override_str: Optional[str] = None,
+        audit_report_type: Optional[LkPaymentAuditReportType] = None,
+    ):
+        self.reject_notes_str = reject_notes_str
+        self.writeback_transaction_status = writeback_transaction_status
+        self.inbound_reject_notes_str = (
+            inbound_reject_notes_override_str
+            if inbound_reject_notes_override_str
+            else self.reject_notes_str
+        )
+        self.audit_report_type = audit_report_type
+
+
+# All scenarios where the payment
+# would be marked as rejected
+AUDIT_REJECT_DETAIL_GROUPS = [
+    AuditReportDetailGroup(
+        reject_notes_str=PaymentAuditReportType.DUA_ADDITIONAL_INCOME.payment_audit_report_type_description,
+        writeback_transaction_status=FineosWritebackTransactionStatus.DUA_ADDITIONAL_INCOME,
+        audit_report_type=PaymentAuditReportType.DUA_ADDITIONAL_INCOME,
+    ),
+    AuditReportDetailGroup(
+        reject_notes_str=PaymentAuditReportType.DIA_ADDITIONAL_INCOME.payment_audit_report_type_description,
+        writeback_transaction_status=FineosWritebackTransactionStatus.DIA_ADDITIONAL_INCOME,
+        audit_report_type=PaymentAuditReportType.DIA_ADDITIONAL_INCOME,
+    ),
+    AuditReportDetailGroup(
+        reject_notes_str=PaymentAuditReportType.DOR_FINEOS_NAME_MISMATCH.payment_audit_report_type_description,
+        writeback_transaction_status=FineosWritebackTransactionStatus.NAME_MISMATCH,
+        audit_report_type=PaymentAuditReportType.DOR_FINEOS_NAME_MISMATCH,
+        inbound_reject_notes_override_str="Name mismatch",  # Rather than the "DOR FINEOS Name Mismatch" that we send
+    ),
+    AuditReportDetailGroup(
+        reject_notes_str=PaymentAuditReportType.EXCEEDS_26_WEEKS_TOTAL_LEAVE.payment_audit_report_type_description,
+        writeback_transaction_status=FineosWritebackTransactionStatus.LEAVE_DURATION_MAX_EXCEEDED,
+        audit_report_type=PaymentAuditReportType.EXCEEDS_26_WEEKS_TOTAL_LEAVE,
+    ),
+    AuditReportDetailGroup(
+        reject_notes_str=PaymentAuditReportType.PAYMENT_DATE_MISMATCH.payment_audit_report_type_description,
+        writeback_transaction_status=FineosWritebackTransactionStatus.LEAVE_DATES_CHANGE,
+        audit_report_type=PaymentAuditReportType.PAYMENT_DATE_MISMATCH,
+    ),
+    AuditReportDetailGroup(
+        reject_notes_str="Self-Reported Additional Income",
+        writeback_transaction_status=FineosWritebackTransactionStatus.SELF_REPORTED_ADDITIONAL_INCOME,
+        audit_report_type=None,
+    ),
+    AuditReportDetailGroup(
+        reject_notes_str="Waiting Week",
+        writeback_transaction_status=FineosWritebackTransactionStatus.WAITING_WEEK,
+        audit_report_type=None,
+    ),
+    AuditReportDetailGroup(
+        reject_notes_str="InvalidPayment PaidDate",
+        writeback_transaction_status=FineosWritebackTransactionStatus.ALREADY_PAID_FOR_DATES,
+        audit_report_type=None,
+    ),
+    AuditReportDetailGroup(
+        reject_notes_str="Leave Dates Change",
+        writeback_transaction_status=FineosWritebackTransactionStatus.LEAVE_DATES_CHANGE,
+        audit_report_type=None,
+    ),
+    AuditReportDetailGroup(
+        reject_notes_str="Under or Over payments(Adhocs needed)",
+        writeback_transaction_status=FineosWritebackTransactionStatus.UNDER_OR_OVERPAY_ADJUSTMENT,
+        audit_report_type=None,
+    ),
+    # TODO: Potentially remove below? Check with audit team if the new automation requires
+    # that we handle these cases in the audit report anymore.
+    AuditReportDetailGroup(
+        reject_notes_str="Exempt Employer",
+        writeback_transaction_status=FineosWritebackTransactionStatus.EXEMPT_EMPLOYER,
+        audit_report_type=None,
+    ),
+    AuditReportDetailGroup(
+        reject_notes_str="Weekly benefit amount exceeds $850",
+        writeback_transaction_status=FineosWritebackTransactionStatus.WEEKLY_BENEFITS_AMOUNT_EXCEEDS_850,
+        audit_report_type=None,
+    ),
+    # Fallback value
+    AuditReportDetailGroup(
+        reject_notes_str="Other",
+        writeback_transaction_status=FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION,
+        audit_report_type=None,
+    ),
+]
+
+AUDIT_REJECT_NOTE_TO_WRITEBACK_TRANSACTION_STATUS = {
+    group.inbound_reject_notes_str: group.writeback_transaction_status
+    for group in AUDIT_REJECT_DETAIL_GROUPS
+}
+
+# We currently don't have any scenarios for skipped
+# records that get specific audit statuses
+# but creating to show the pattern
+AUDIT_SKIPPED_DETAIL_GROUPS = [
+    # TODO: Potentially remove below? Check with audit team if the new automation requires
+    # that we handle these cases in the audit report anymore.
+    AuditReportDetailGroup(
+        reject_notes_str="Leave Plan In Review",
+        writeback_transaction_status=FineosWritebackTransactionStatus.LEAVE_IN_REVIEW,
+        audit_report_type=None,
+    ),
+    # Fallback Value
+    AuditReportDetailGroup(
+        reject_notes_str="Other",
+        writeback_transaction_status=FineosWritebackTransactionStatus.PENDING_PAYMENT_AUDIT,
+        audit_report_type=None,
+    ),
+]
+AUDIT_SKIPPED_NOTE_TO_WRITEBACK_TRANSACTION_STATUS = {
+    group.inbound_reject_notes_str: group.writeback_transaction_status
+    for group in AUDIT_SKIPPED_DETAIL_GROUPS
+}
 
 
 def sync_lookup_tables(db_session):

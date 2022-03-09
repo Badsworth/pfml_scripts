@@ -12,10 +12,14 @@ locals {
     "pub-payments-process-fineos",
     "weekend-pub-claimant-extract",
     "dua-generate-and-send-employee-request-file",
+    "dua-generate-and-send-employer-request-file",
     "dua-import-employee-demographics",
+    "dua-import-employer",
+    "dua-import-employer-unit",
     "pub-payments-process-snapshot",
     "pub-payments-process-1099-documents",
-    "pub-claimant-address-validation"
+    "pub-claimant-address-validation",
+    "pub-payments-copy-audit-report",
   ]
 }
 

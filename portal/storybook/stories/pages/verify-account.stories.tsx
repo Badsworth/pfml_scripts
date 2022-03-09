@@ -1,4 +1,4 @@
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 import React from "react";
 import VerifyAccount from "src/pages/verify-account";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";

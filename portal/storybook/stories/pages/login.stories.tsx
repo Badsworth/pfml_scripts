@@ -1,5 +1,5 @@
 import Login from "src/pages/login";
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 import React from "react";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 

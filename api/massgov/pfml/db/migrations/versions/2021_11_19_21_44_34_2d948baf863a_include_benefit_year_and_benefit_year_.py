@@ -37,7 +37,7 @@ def upgrade():
         sa.Column("start_date", sa.Date(), nullable=False),
         sa.Column("end_date", sa.Date(), nullable=False),
         sa.Column("total_wages", sa.Numeric(), nullable=True),
-        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"],),
+        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"]),
         sa.PrimaryKeyConstraint("benefit_year_id"),
     )
     op.create_index(
@@ -62,9 +62,9 @@ def upgrade():
         sa.Column("employer_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("employee_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("average_weekly_wage", sa.Numeric(), nullable=False),
-        sa.ForeignKeyConstraint(["benefit_year_id"], ["benefit_year.benefit_year_id"],),
-        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"],),
-        sa.ForeignKeyConstraint(["employer_id"], ["employer.employer_id"],),
+        sa.ForeignKeyConstraint(["benefit_year_id"], ["benefit_year.benefit_year_id"]),
+        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"]),
+        sa.ForeignKeyConstraint(["employer_id"], ["employer.employer_id"]),
         sa.PrimaryKeyConstraint("benefit_year_contribution_id"),
     )
     op.create_index(

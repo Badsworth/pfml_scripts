@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import InputCurrency from "src/components/core/InputCurrency";
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 
 export default {
   title: "Core Components/Forms/InputCurrency",

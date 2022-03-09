@@ -1,7 +1,7 @@
-import { DocumentUploadRequest } from "_api";
 import { format, addMonths, addDays } from "date-fns";
 import { config, getFineosBaseUrl } from "./common";
 import { Credentials } from "../../src/types";
+import { FineosDocumentType } from "./fineos.enums";
 /**
  * This function is used to fetch and set the proper cookies for access Fineos UAT
  *
@@ -261,7 +261,7 @@ export const clickNext = (
  * @returns name of the fixture file, see `e2e/cypress/fixtures`
  */
 export function getFixtureDocumentName(
-  document_type: DocumentUploadRequest["document_type"]
+  document_type: FineosDocumentType
 ): string {
   switch (document_type) {
     case "Driver's License Mass":
@@ -371,6 +371,23 @@ export function assertDocumentsInFolder(
       cy.get("#DocumentTypeListviewWidget").should("contain.text", name)
     );
   cy.get("#DocumentTypeListviewWidget").should("contain.text", documentName);
+}
+
+/**
+ * Find the Appeals claim subcase number
+ * @return appeal_case_id
+ */
+export function findAppealNumber(type: string): Cypress.Chainable<string> {
+  const appealmatcher = new RegExp(
+    `${type} - (NTN-[0-9]{1,6}-[A-Z]{3}-[0-9]{2}-[A-Z]{2}-[0-9]{2})`
+  );
+  return cy.findAllByText(appealmatcher).then((el) => {
+    const match = el.text().match(appealmatcher);
+    if (!match) {
+      throw new Error();
+    }
+    return cy.wrap(match[1]);
+  });
 }
 
 /**

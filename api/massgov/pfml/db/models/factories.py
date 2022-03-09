@@ -17,8 +17,10 @@ from sqlalchemy.orm import scoped_session
 import massgov.pfml.db as db
 import massgov.pfml.db.models.applications as application_models
 import massgov.pfml.db.models.employees as employee_models
+import massgov.pfml.db.models.geo as geo_models
 import massgov.pfml.db.models.payments as payment_models
 import massgov.pfml.db.models.verifications as verification_models
+import massgov.pfml.fineos.mock.field
 import massgov.pfml.util.datetime as datetime_util
 from massgov.pfml.api.authentication.azure import AzureUser
 from massgov.pfml.types import Fein as FeinType
@@ -169,7 +171,9 @@ class EmployerOnlyDORDataFactory(EmployerOnlyRequiredFactory):
 
 
 class EmployerFactory(EmployerOnlyDORDataFactory):
-    fineos_employer_id = factory.Sequence(lambda n: n + 1)
+    fineos_employer_id = factory.LazyAttribute(
+        lambda e: massgov.pfml.fineos.mock.field.fake_customer_no(e.employer_fein)
+    )
 
 
 class TaxIdentifierFactory(BaseFactory):
@@ -329,7 +333,7 @@ class EmployerQuarterlyContributionFactory(BaseFactory):
     employer = factory.SubFactory(EmployerFactory)
     employer_id = factory.LazyAttribute(lambda w: w.employer.employer_id)
     filing_period = datetime.now().strftime("%Y-%m-%d")
-    employer_total_pfml_contribution = factory.Faker("random_int")
+    employer_total_pfml_contribution = factory.Faker("random_int", min=1)
     pfm_account_id = factory.Faker("random_int")
 
 
@@ -383,6 +387,18 @@ class WagesAndContributionsFactory(BaseFactory):
     employee_id = factory.LazyAttribute(lambda w: w.employee.employee_id)
 
 
+class OrganizationUnitFactory(BaseFactory):
+    class Meta:
+        model = employee_models.OrganizationUnit
+
+    organization_unit_id = Generators.UuidObj
+
+    fineos_id = factory.Faker("numerify", text="PE:#####:##########")
+    name = factory.Faker("company")
+    employer = factory.SubFactory(EmployerFactory)
+    employer_id = factory.LazyAttribute(lambda c: c.employer.employer_id)
+
+
 class ClaimFactory(BaseFactory):
     class Meta:
         model = employee_models.Claim
@@ -397,6 +413,10 @@ class ClaimFactory(BaseFactory):
     fineos_notification_id = None
     employee = factory.SubFactory(EmployeeFactory)
     employee_id = factory.LazyAttribute(lambda w: w.employee.employee_id)
+    organization_unit = None
+    organization_unit_id = factory.LazyAttribute(
+        lambda w: w.organization_unit.organization_unit_id if w.organization_unit else None
+    )
 
 
 class AbsencePeriodFactory(BaseFactory):
@@ -472,6 +492,8 @@ class PaymentFactory(BaseFactory):
     fineos_pei_c_value = "9000"
     # The I value is unique for all payments and should be a string, not an int.
     fineos_pei_i_value = factory.Sequence(lambda n: "%d" % n)
+
+    fineos_leave_request_id = factory.Faker("random_int")
 
     claim = factory.SubFactory(ClaimFactory)
     claim_id = factory.LazyAttribute(lambda a: a.claim.claim_id)
@@ -592,6 +614,7 @@ class ApplicationFactory(BaseFactory):
         application_models.LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id
     )
     leave_reason_qualifier_id = None
+    split_from_application_id = None
 
     created_at = Generators.TransactionDateTime
     updated_at = factory.LazyAttribute(lambda a: a.created_at + timedelta(days=1))
@@ -605,7 +628,7 @@ class AddressFactory(BaseFactory):
     address_line_one = factory.Faker("street_address")
     city = factory.Faker("city")
     zip_code = factory.Faker("postcode")
-    geo_state_id = employee_models.GeoState.MA.geo_state_id
+    geo_state_id = geo_models.GeoState.MA.geo_state_id
 
 
 class CtrAddressPairFactory(BaseFactory):
@@ -885,7 +908,7 @@ class WorkPatternRotatingFactory(WorkPatternFixedFactory):
     work_pattern_days = factory.LazyAttribute(
         lambda w: [
             application_models.WorkPatternDay(
-                work_pattern_id=w.work_pattern_id, day_of_week_id=i % 7 + 1, minutes=8 * 60,
+                work_pattern_id=w.work_pattern_id, day_of_week_id=i % 7 + 1, minutes=8 * 60
             )
             for i in range(28)
         ]
@@ -943,16 +966,6 @@ class ImportLogFactory(BaseFactory):
         model = employee_models.ImportLog
 
 
-class OrganizationUnitFactory(BaseFactory):
-    class Meta:
-        model = employee_models.OrganizationUnit
-
-    fineos_id = None
-    name = factory.Faker("company")
-    employer = factory.SubFactory(EmployerFactory)
-    employer_id = factory.LazyAttribute(lambda c: c.employer.employer_id)
-
-
 class MmarsPaymentDataFactory(BaseFactory):
     class Meta:
         model = payment_models.MmarsPaymentData
@@ -984,7 +997,7 @@ class MmarsPaymentDataFactory(BaseFactory):
         "date_between_dates", date_start=date(2021, 1, 1), date_end=date(2021, 1, 15)
     )
     pymt_service_to_date = factory.LazyAttribute(
-        lambda a: a.pymt_service_from_date + timedelta(days=7)
+        lambda a: a.pymt_service_from_date + timedelta(days=7) if a.pymt_service_from_date else None
     )
     encumbrance_doc_code = "GAE"
     encumbrance_doc_dept = "EOL"
@@ -1015,14 +1028,16 @@ class MmarsPaymentDataFactory(BaseFactory):
     check_descr = "Check Description - Factory"
     warrant_no = "M11"
     warrant_select_date = factory.LazyAttribute(
-        lambda a: a.pymt_service_to_date + timedelta(days=1)
+        lambda a: a.pymt_service_to_date + timedelta(days=1) if a.pymt_service_to_date else None
     )
     check_eft_issue_date = factory.LazyAttribute(
-        lambda a: a.warrant_select_date + timedelta(days=2)
+        lambda a: a.warrant_select_date + timedelta(days=2) if a.warrant_select_date else None
     )
     bank_account_code = "0"
     check_eft_no = "1234456"
-    cleared_date = factory.LazyAttribute(lambda a: a.warrant_select_date + timedelta(days=10))
+    cleared_date = factory.LazyAttribute(
+        lambda a: a.warrant_select_date + timedelta(days=10) if a.warrant_select_date else None
+    )
     appropriation = "70030632"
     appropriation_name = "Family and Medical Leave Benefit Payments"
     object_class = "RR"
@@ -1088,29 +1103,6 @@ class MmarsPaymentDataFactory(BaseFactory):
     doc_last_modified_on = warrant_select_date
 
 
-class Pfml1099Factory(BaseFactory):
-    class Meta:
-        model = payment_models.Pfml1099
-
-    pfml_1099_id = Generators.UuidObj
-    pfml_1099_batch_id = Generators.UuidObj
-    tax_year = 2021
-    employee_id = Generators.UuidObj
-    tax_identifier_id = Generators.UuidObj
-    first_name = "Joe"
-    last_name = "Pel"
-    address_line_1 = "172 Pearl St"
-    address_line_2 = ""
-    city = "Somerville"
-    state = "MA"
-    zip = "02145"
-    gross_payments = 1000.00
-    state_tax_withholdings = 100.00
-    federal_tax_withholdings = 15.00
-    overpayment_repayments = 0.00
-    correction_ind = False
-
-
 class Pfml1099BatchFactory(BaseFactory):
     class Meta:
         model = payment_models.Pfml1099Batch
@@ -1123,6 +1115,35 @@ class Pfml1099BatchFactory(BaseFactory):
     )
     correction_ind = False
     batch_status = "Created"
+
+
+class Pfml1099Factory(BaseFactory):
+    class Meta:
+        model = payment_models.Pfml1099
+
+    pfml_1099_id = Generators.UuidObj
+
+    pfml_1099_batch_id = Generators.UuidObj
+
+    tax_year = 2021
+    employee_id = Generators.UuidObj
+    tax_identifier_id = Generators.UuidObj
+    c = "9999"
+    i = "9999"
+    first_name = factory.Faker("first_name")
+    last_name = factory.Faker("last_name")
+    address_line_1 = factory.Faker("street_address")
+    address_line_2 = ""
+    city = factory.Faker("city")
+    state = factory.Faker("state_abbr")
+    zip = factory.Faker("postcode")
+    gross_payments = Generators.Money
+    state_tax_withholdings = Generators.Money
+    federal_tax_withholdings = Generators.Money
+    overpayment_repayments = 0.00
+    correction_ind = False
+    s3_location = "local_s3/Batch-1/Sub-Batch-1/test.pdf"
+    fineos_status = "New"
 
 
 class Pfml1099MMARSPaymentFactory(BaseFactory):
@@ -1295,3 +1316,68 @@ class EmployeeOccupationFactory(BaseFactory):
 
     employer = factory.SubFactory(EmployerFactory)
     employer_id = factory.LazyAttribute(lambda d: d.employer.employer_id)
+
+
+class UserLeaveAdministratorFactory(BaseFactory):
+    class Meta:
+        model = employee_models.UserLeaveAdministrator
+
+    user = factory.SubFactory(UserFactory, roles=[employee_models.Role.EMPLOYER])
+    user_id = factory.LazyAttribute(lambda u: u.user.user_id)
+    employer = factory.SubFactory(EmployerFactory)
+    employer_id = factory.LazyAttribute(lambda u: u.employer.employer_id)
+    fineos_web_id = factory.Faker("numerify", text="pfml_leave_admin_#####")
+    verification = None
+
+
+class LinkSplitPaymentFactory(BaseFactory):
+    class Meta:
+        model = payment_models.LinkSplitPayment
+
+    payment = factory.SubFactory(PaymentFactory)
+    payment_id = factory.LazyAttribute(lambda c: c.payment.payment_id)
+
+    related_payment = factory.SubFactory(PaymentFactory)
+    related_payment_id = factory.LazyAttribute(lambda c: c.related_payment.payment_id)
+
+
+class BenefitYearFactory(BaseFactory):
+    class Meta:
+        model = employee_models.BenefitYear
+
+    employee = factory.SubFactory(EmployeeFactory)
+    employee_id = factory.LazyAttribute(lambda w: w.employee.employee_id)
+
+    start_date = date(2021, 1, 3)
+    end_date = date(2022, 1, 1)
+
+    base_period_start_date = None
+    base_period_end_date = None
+    total_wages = 0
+
+
+class Pfml1099RequestFactory(BaseFactory):
+    class Meta:
+        model = payment_models.Pfml1099Request
+
+    pfml_1099_request_id = Generators.UuidObj
+    employee_id = Generators.UuidObj
+    correction_ind = factory.Faker("boolean")
+    pfml_1099_batch_id = Generators.UuidObj
+
+
+class ChangeRequestFactory(BaseFactory):
+    class Meta:
+        model = employee_models.ChangeRequest
+
+    change_request_id = Generators.UuidObj
+    change_request_type_id = 1
+    claim = factory.SubFactory(ClaimFactory)
+    claim_id = factory.LazyAttribute(lambda w: w.claim.claim_id)
+    start_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 2, 1), date_end=date(2021, 2, 15)
+    )
+    end_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 2, 16), date_end=date(2021, 2, 28)
+    )
+    submitted_time = None

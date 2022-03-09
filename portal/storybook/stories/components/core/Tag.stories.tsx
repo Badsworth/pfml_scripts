@@ -1,4 +1,4 @@
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 import React from "react";
 import Tag from "src/components/core/Tag";
 import { capitalize } from "lodash";
@@ -16,7 +16,6 @@ const states: Array<Props<typeof Tag>["state"]> = [
   "error",
   "warning",
   "inactive",
-  "pending",
 ];
 
 export const Default = (args: Props<typeof Tag>) => (

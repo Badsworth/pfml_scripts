@@ -17,9 +17,7 @@ import Lead from "../../components/core/Lead";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { Trans } from "react-i18next";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import { isPotentialRoutingNumber } from "../../utils/isPotentialRoutingNumber";
-import routes from "../../routes";
 import tracker from "src/services/tracker";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -40,8 +38,6 @@ export const fields = [
 export const PaymentMethod = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
-  // TODO(Portal-1001): - Remove featureFlag
-  const taxWithholdingEnabled = isFeatureEnabled("claimantShowTaxWithholding");
 
   const { formState, getField, updateFields, clearField } = useFormState(
     pick(props, fields).claim
@@ -66,7 +62,7 @@ export const PaymentMethod = (props: WithBenefitsApplicationProps) => {
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });
@@ -95,11 +91,7 @@ export const PaymentMethod = (props: WithBenefitsApplicationProps) => {
 
   return (
     <QuestionPage
-      continueButtonLabel={
-        taxWithholdingEnabled
-          ? t("pages.claimsPaymentMethod.submitPayment")
-          : t("pages.claimsPaymentMethod.submitPart2Button")
-      }
+      continueButtonLabel={t("pages.claimsPaymentMethod.submitPayment")}
       onSave={handleSubmit}
       title={t("pages.claimsPaymentMethod.title")}
     >
@@ -196,32 +188,14 @@ export const PaymentMethod = (props: WithBenefitsApplicationProps) => {
         </Fieldset>
       </ConditionalContent>
       <div className="margin-top-6 margin-bottom-2">
-        {taxWithholdingEnabled ? (
-          <Trans
-            i18nKey="pages.claimsPaymentMethod.warning"
-            components={{
-              "contact-center-phone-link": (
-                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-              ),
-            }}
-          />
-        ) : (
-          <Trans
-            i18nKey="pages.claimsPaymentMethod.partTwoNextSteps"
-            components={{
-              "contact-center-phone-link": (
-                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-              ),
-              "benefits-guide-link": (
-                <a
-                  href={routes.external.massgov.benefitsGuide}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                />
-              ),
-            }}
-          />
-        )}
+        <Trans
+          i18nKey="pages.claimsPaymentMethod.warning"
+          components={{
+            "contact-center-phone-link": (
+              <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+            ),
+          }}
+        />
       </div>
     </QuestionPage>
   );

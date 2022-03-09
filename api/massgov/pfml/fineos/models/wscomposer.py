@@ -69,8 +69,8 @@ class OCPartyLocationAssociationItem(pydantic.BaseModel):
     LastUpdateDate: str = "1753-01-01T00:00:00"
     UserUpdatedBy: str = "EMAIL@MASS.GOV"
     Description: Optional[str] = None
-    EffectiveFrom: str = "1753-01-01T00:00:00"
-    EffectiveTo: str = "1754-01-01T00:00:00"
+    EffectiveFrom: Optional[str] = "1753-01-01T00:00:00"
+    EffectiveTo: Optional[str] = "1754-01-01T00:00:00"
     ExternalReference: Any = None
     Name: str = "HQ"
     PartyLocationAssociationType: InstanceDomainAndFullId = InstanceDomainAndFullId(
@@ -108,8 +108,8 @@ class OCOrganisationUnitItem(pydantic.BaseModel):
     BOEVersion: int = 0
     LastUpdateDate: str = "1753-01-01T00:00:00"
     UserUpdatedBy: str = "EMAIL@MASS.GOV"
-    EffectiveFrom: str = "1753-01-01T00:00:00"
-    EffectiveTo: str = "1754-01-01T00:00:00"
+    EffectiveFrom: Optional[str] = "1753-01-01T00:00:00"
+    EffectiveTo: Optional[str] = "1754-01-01T00:00:00"
     ExternalReference: Any = None
     Name: str = "HRD"
     SourceSystem: InstanceDomainAndFullId = InstanceDomainAndFullId(
@@ -145,7 +145,7 @@ class OCOrganisationDefaultItem(pydantic.BaseModel):
             FullId=8736002,
         )
     )
-    LastSuccessfulLogon: str = "1753-01-01T00:00:00"
+    LastSuccessfulLogon: Optional[str] = "1753-01-01T00:00:00"
     NotificationIssued: bool = False
     PartyType: InstanceDomainAndFullId = InstanceDomainAndFullId(
         InstanceDomainAndFullId=InstanceDomainAndFullIdItem(
@@ -166,8 +166,8 @@ class OCOrganisationDefaultItem(pydantic.BaseModel):
         )
     )
     SuppressMktg: bool = False
-    TenureStart: str = "1753-01-01T00:00:00"
-    AccountingDate: str = "1753-01-01T00:00:00"
+    TenureStart: Optional[str] = "1753-01-01T00:00:00"
+    AccountingDate: Optional[str] = "1753-01-01T00:00:00"
     BusinessType: InstanceDomainAndFullId = InstanceDomainAndFullId(
         InstanceDomainAndFullId=InstanceDomainAndFullIdItem(
             InstanceName="Unknown", DomainName="Organisation Business Type", FullId=3328000
@@ -176,17 +176,17 @@ class OCOrganisationDefaultItem(pydantic.BaseModel):
     CompanyNumber: Any = None
     CorporateTaxDistrict: Any = None
     CorporateTaxNumber: str
-    DateBusinessCommenced: str = "1753-01-01T00:00:00"
-    DateOfIncorporation: str = "1753-01-01T00:00:00"
+    DateBusinessCommenced: Optional[str] = "1753-01-01T00:00:00"
+    DateOfIncorporation: Optional[str] = "1753-01-01T00:00:00"
     DoingBusinessAs: str
-    EndOfTrading: str = "1753-01-01T00:00:00"
+    EndOfTrading: Optional[str] = "1753-01-01T00:00:00"
     EOTReasonCode: InstanceDomainAndFullId = InstanceDomainAndFullId(
         InstanceDomainAndFullId=InstanceDomainAndFullIdItem(
             InstanceName="Unknown", DomainName="EndOfTradingReasonCode", FullId=6592000
         )
     )
     EOTReasonInd: bool = False
-    FinancialYearEnd: str = "1753-01-01T00:00:00"
+    FinancialYearEnd: Optional[str] = "1753-01-01T00:00:00"
     LegalBusinessName: str
     LegalStatus: InstanceDomainAndFullId = InstanceDomainAndFullId(
         InstanceDomainAndFullId=InstanceDomainAndFullIdItem(
@@ -226,8 +226,8 @@ class OCOrganisationNameItem(pydantic.BaseModel):
     ShortName: Any = None
     UpperName: Any = None
     UpperShortName: Any = None
-    ValidFrom: str = "1753-01-01T00:00:00"
-    ValidTo: str = "1753-01-01T00:00:00"
+    ValidFrom: Optional[str] = "1753-01-01T00:00:00"
+    ValidTo: Optional[str] = "1753-01-01T00:00:00"
     DefaultName: bool = True
     RunBOValidations: bool = True
     organisationWithDefault: OCOrganisationWithDefault
@@ -255,7 +255,7 @@ class OCOrganisationItem(pydantic.BaseModel):
             FullId=8736002,
         )
     )
-    LastSuccessfulLogon: str = "1753-01-01T00:00:00"
+    LastSuccessfulLogon: Optional[str] = "1753-01-01T00:00:00"
     NotificationIssued: bool = False
     PartyType: InstanceDomainAndFullId = InstanceDomainAndFullId(
         InstanceDomainAndFullId=InstanceDomainAndFullIdItem(
@@ -276,12 +276,12 @@ class OCOrganisationItem(pydantic.BaseModel):
         )
     )
     SuppressMktg: bool = False
-    TenureStart: str = "1753-01-01T00:00:00"
+    TenureStart: Optional[str] = "1753-01-01T00:00:00"
     personalContactMediums: Any = None
     partyContactPreferences: Any = None
     partyAliases: OCPartyAlias = OCPartyAlias(OCPartyAlias=[OCPartyAliasItem()])
     pointsOfContact: Any = None
-    AccountingDate: str = "1753-01-01T00:00:00"
+    AccountingDate: Optional[str] = "1753-01-01T00:00:00"
     BusinessType: InstanceDomainAndFullId = InstanceDomainAndFullId(
         InstanceDomainAndFullId=InstanceDomainAndFullIdItem(
             InstanceName="Unknown", DomainName="Organisation Business Type", FullId=3328000
@@ -290,17 +290,17 @@ class OCOrganisationItem(pydantic.BaseModel):
     CompanyNumber: Any = None
     CorporateTaxDistrict: Any = None
     CorporateTaxNumber: str
-    DateBusinessCommenced: str = "1753-01-01T00:00:00"
-    DateOfIncorporation: str = "1753-01-01T00:00:00"
+    DateBusinessCommenced: Optional[str] = "1753-01-01T00:00:00"
+    DateOfIncorporation: Optional[str] = "1753-01-01T00:00:00"
     DoingBusinessAs: Optional[str]
-    EndOfTrading: str = "1753-01-01T00:00:00"
+    EndOfTrading: Optional[str] = "1753-01-01T00:00:00"
     EOTReasonCode: InstanceDomainAndFullId = InstanceDomainAndFullId(
         InstanceDomainAndFullId=InstanceDomainAndFullIdItem(
             InstanceName="Unknown", DomainName="EndOfTradingReasonCode", FullId=6592000
         )
     )
     EOTReasonInd: bool = False
-    FinancialYearEnd: str = "1753-01-01T00:00:00"
+    FinancialYearEnd: Optional[str] = "1753-01-01T00:00:00"
     LegalBusinessName: Optional[str]
     LegalStatus: InstanceDomainAndFullId = InstanceDomainAndFullId(
         InstanceDomainAndFullId=InstanceDomainAndFullIdItem(
@@ -323,10 +323,32 @@ class OCOrganisationItem(pydantic.BaseModel):
 class OCOrganisation(pydantic.BaseModel):
     OCOrganisation: List[OCOrganisationItem]
 
+    def get_customer_number(self):
+        return str(self.OCOrganisation[0].CustomerNo)
+
+    def get_worksite_id(self):
+        units = self.OCOrganisation[0].organisationUnits
+        try:
+            worksite_id = (
+                units.OrganisationUnit[0]  # type: ignore
+                .orgUnitLocationLinks.OrgUnitLocationLink[0]
+                .partyLocationAssociation.OCPartyLocationAssociation[0]
+                .OID
+            )
+        except AttributeError:
+            worksite_id = None
+        return worksite_id
+
+    def get_organization_units(self) -> Optional[List[OCOrganisationUnitItem]]:
+        has_org_units = self.OCOrganisation[0].organisationUnits
+        if has_org_units is not None:
+            return has_org_units.OrganisationUnit
+        return None
+
 
 class PartyIntegrationDTOItem(pydantic.BaseModel):
-    EffectiveDate: str = "1753-01-01T00:00:00"
-    EndDate: str = "1753-01-01T00:00:00"
+    EffectiveDate: Optional[str] = "1753-01-01T00:00:00"
+    EndDate: Optional[str] = "1753-01-01T00:00:00"
     PartyTypeFlag: str = "Employer"
     SourceSystemName: str = "Unknown"
     person: Any = None

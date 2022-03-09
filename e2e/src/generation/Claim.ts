@@ -23,7 +23,7 @@ import fs from "fs";
 import { promisify } from "util";
 import path from "path";
 import * as si from "streaming-iterables";
-import ndjson from "ndjson";
+import * as ndjson from "../stream/ndjson";
 import { StreamWrapper } from "./FileWrapper";
 import { collect, map, AnyIterable } from "streaming-iterables";
 import { OtherIncome } from "../api";
@@ -243,6 +243,14 @@ export class ClaimGenerator {
       has_previous_leaves_other_reason: !!previous_leaves_other_reason,
       has_previous_leaves_same_reason: !!previous_leaves_same_reason,
     };
+    if (
+      spec.metadata?.doc_filename &&
+      typeof spec.metadata?.doc_filename !== "string"
+    ) {
+      throw Error(
+        "Invalid value for property doc_filename - type must be 'string'"
+      );
+    }
     return {
       id: uuid(),
       // @todo: Rename to label?

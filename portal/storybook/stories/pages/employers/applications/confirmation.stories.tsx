@@ -1,5 +1,5 @@
 import { Confirmation } from "src/pages/employers/applications/confirmation";
-import { MockEmployerClaimBuilder } from "tests/test-utils/mock-model-builder";
+import { MockEmployerClaimBuilder } from "lib/mock-helpers/mock-model-builder";
 import React from "react";
 import User from "src/models/User";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
@@ -15,10 +15,7 @@ export const Default = () => {
   return (
     <Confirmation
       appLogic={appLogic}
-      claim={new MockEmployerClaimBuilder()
-        .completed()
-        .reviewable(true)
-        .create()}
+      claim={new MockEmployerClaimBuilder().completed().reviewable().create()}
       user={new User({})}
     />
   );

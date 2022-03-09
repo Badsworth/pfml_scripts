@@ -73,8 +73,7 @@ def split_sftp_url(path):
 def get_s3_client(
     bucket_name: str, boto_session: Optional[boto3.Session] = None
 ) -> botocore.client.BaseClient:
-    """Returns the appropriate S3 client for a given bucket
-    """
+    """Returns the appropriate S3 client for a given bucket"""
     if boto_session:
         return boto_session.client("s3")
     elif bucket_name.startswith(FINEOS_BUCKET_PREFIX):
@@ -376,11 +375,11 @@ def read_file(path, mode="r", encoding=None):
     return smart_open.open(path, mode, encoding=encoding).read()
 
 
-def write_file(path, mode="w", encoding=None):
+def write_file(path, mode="w", encoding=None, use_s3_multipart_upload=True):
     if not is_s3_path(path):
         os.makedirs(os.path.dirname(path), exist_ok=True)
     config = botocore.client.Config(retries={"max_attempts": 10, "mode": "standard"})
-    params = {"resource_kwargs": {"config": config}}
+    params = {"resource_kwargs": {"config": config}, "multipart_upload": use_s3_multipart_upload}
     return smart_open.open(path, mode, encoding=encoding, transport_params=params)
 
 
@@ -430,15 +429,20 @@ def copy_file_from_s3_to_sftp(source: str, dest: str, sftp: paramiko.SFTPClient)
 # Copy the file through a local tempfile instead of streaming from SFTP directly to S3 to reduce the
 # number of network connections open at any given time (1 at a time instead of 2).
 def copy_file_from_sftp_to_s3(source: str, dest: str, sftp: paramiko.SFTPClient) -> None:
-    if not is_s3_path(dest):
-        raise ValueError("dest must be an S3 URI")
 
     # Download file from SFTP to a tempfile.
     _handle, tempfile_path = tempfile.mkstemp()
     sftp.get(source, tempfile_path)
 
-    # Copy the file from the local tempfile to S3 destination.
-    upload_to_s3(tempfile_path, dest)
+    upload_file(tempfile_path, dest)
+
+
+def upload_file(src: str, dest: str) -> None:
+    if not is_s3_path(dest):
+        copy_file(src, dest)
+    else:
+        # Copy the file from the local tempfile to S3 destination.
+        upload_to_s3(src, dest)
 
 
 def remove_if_exists(path: str) -> None:

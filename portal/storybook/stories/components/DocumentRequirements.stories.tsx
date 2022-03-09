@@ -1,9 +1,9 @@
 import DocumentRequirements from "src/components/DocumentRequirements";
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 import React from "react";
 
 export default {
-  title: "Components/DocumentRequirements",
+  title: "Features/Applications/DocumentRequirements",
   component: DocumentRequirements,
   argTypes: {
     type: {

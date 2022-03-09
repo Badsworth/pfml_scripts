@@ -1,4 +1,4 @@
-from typing import Callable, List, Union
+from typing import Callable, Union
 
 from bouncer.constants import CREATE, EDIT, READ  # noqa: F401 F403
 from bouncer.models import RuleList
@@ -13,16 +13,9 @@ from massgov.pfml.db.models.applications import (
     Notification,
     RMVCheck,
 )
-from massgov.pfml.db.models.employees import AzurePermission, Employee, LkRole, Role, User
-
-
-def has_role_in(user: User, accepted_roles: List[LkRole]) -> bool:
-    accepted_role_ids = set(role.role_id for role in accepted_roles)
-    for role in user.roles:
-        if role.role_id in accepted_role_ids:
-            return True
-
-    return False
+from massgov.pfml.db.models.azure import AzurePermission
+from massgov.pfml.db.models.employees import Employee, Role, User
+from massgov.pfml.util.users import has_role_in
 
 
 def create_authorization(
@@ -38,15 +31,14 @@ def create_authorization(
             financial_eligibility(user, they)
             rmv_check(user, they)
             notifications(user, they)
-        elif has_role_in(user, [Role.SERVICE_NOW]):
-            pass
+        elif has_role_in(user, [Role.PFML_CRM]):
+            if enable_employees:
+                employees(user, they)
         else:
             users(user, they)
             applications(user, they)
             documents(user, they)
             leave_admins(user, they)
-            if enable_employees:
-                employees(user, they)
 
     return define_authorization
 
@@ -86,7 +78,7 @@ def can_download(user: User, doc: Union[Document, DocumentResponse]) -> bool:
         return False
 
     # Regular users can download a limited number of doc types.
-    if not user.roles:
+    if user.is_worker_user:
         regular_user_allowed_doc_types = [
             d.lower()
             for d in [
@@ -95,6 +87,12 @@ def can_download(user: User, doc: Union[Document, DocumentResponse]) -> bool:
                 DocumentType.DENIAL_NOTICE.document_type_description,
                 DocumentType.WITHDRAWAL_NOTICE.document_type_description,
                 DocumentType.APPEAL_ACKNOWLEDGMENT.document_type_description,
+                DocumentType.MAXIMUM_WEEKLY_BENEFIT_CHANGE_NOTICE.document_type_description,
+                DocumentType.BENEFIT_AMOUNT_CHANGE_NOTICE.document_type_description,
+                DocumentType.LEAVE_ALLOTMENT_CHANGE_NOTICE.document_type_description,
+                DocumentType.APPROVED_TIME_CANCELLED.document_type_description,
+                DocumentType.CHANGE_REQUEST_APPROVED.document_type_description,
+                DocumentType.CHANGE_REQUEST_DENIED.document_type_description,
             ]
         ]
 
@@ -120,11 +118,12 @@ def users(user: User, they: RuleList) -> None:
 
 
 def employees(user: User, they: RuleList) -> None:
-    they.can((READ, EDIT), Employee)
+    they.can(READ, Employee)
 
 
 def applications(user: User, they: RuleList) -> None:
-    they.can(CREATE, Application)
+    if user.is_worker_user:
+        they.can(CREATE, Application)
     they.can((EDIT, READ), Application, user_id=user.user_id)
 
 
@@ -135,13 +134,9 @@ def documents(user: User, they: RuleList) -> None:
         lambda d: d.user_id == user.user_id and user.consented_to_data_sharing is True,
     )
 
-    they.can(
-        READ, Document, lambda d: d.user_id == user.user_id and can_download(user, d),
-    )
+    they.can(READ, Document, lambda d: d.user_id == user.user_id and can_download(user, d))
 
-    they.can(
-        READ, DocumentResponse, lambda d: d.user_id == user.user_id and can_download(user, d),
-    )
+    they.can(READ, DocumentResponse, lambda d: d.user_id == user.user_id and can_download(user, d))
 
 
 def notifications(user: User, they: RuleList) -> None:

@@ -174,7 +174,7 @@ class OtherInfoAttributeBuilder(EFormAttributeBuilder):
             "type": "enumValue",
             "domainName": "PleaseSelectYesNoIdontKnow",
         },
-        "relationship_inaccurate_reason": {"name": "V2WhyInaccurate", "type": "stringValue",},
+        "relationship_inaccurate_reason": {"name": "V2WhyInaccurate", "type": "stringValue"},
     }
 
     def __init__(self, target):

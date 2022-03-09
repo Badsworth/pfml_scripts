@@ -1,12 +1,11 @@
 import Step, { ClaimSteps } from "src/models/Step";
 import { Checklist } from "src/pages/applications/checklist";
 import { DocumentType } from "src/models/Document";
-import { MockBenefitsApplicationBuilder } from "tests/test-utils/mock-model-builder";
-import { Props } from "storybook/types";
+import { MockBenefitsApplicationBuilder } from "lib/mock-helpers/mock-model-builder";
+import { Props } from "types/common";
 import React from "react";
 import User from "src/models/User";
 import claimantConfig from "src/flows/claimant";
-import { find } from "lodash";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 /**
@@ -17,10 +16,14 @@ import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 function generateWarningsForStep(name: string) {
   const allSteps = Step.createClaimStepsFromMachine(claimantConfig);
 
-  const step = find(allSteps, { name });
+  const step = allSteps.find((s) => s.name === name);
 
   return step?.fields.map((field) => {
-    return { field: field.replace(/^claim./, ""), message: "Mocked warning" };
+    return {
+      field: field.replace(/^claim./, ""),
+      message: "Mocked warning",
+      namespace: "applications",
+    };
   });
 }
 

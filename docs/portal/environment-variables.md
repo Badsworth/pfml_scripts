@@ -6,11 +6,12 @@ Environment variables include [feature flags](feature-flags.md), [maintenance pa
 
 Default environment variables live in [`portal/config/default.js`](../../portal/config/default.js).
 
-Each environment has a corresponding configuration file in [`portal/config`](../../portal/config/), for example `production.js`
+Each environment has a corresponding configuration file in [`portal/config`](../../portal/config/), for example `prod.js`
 
 The default environment variables are merged with the environment-specific config file in [`portal/config/index.js`](../../portal/config/index.js). A default environment variable can be overridden in the environment-specific config file.
 
 - **Portal environment variables should never include a secret!** Since the Portal is only served on the client-side, these environment variables will be publicly accessible.
+- Environment variable values must be strings.
 - Each time you add a new environment variable, ensure that you add it to each environment's config file, so that an environment isn't missing anything. If the variable value is shared across many environments, consider adding it as a default environment variable in [`portal/config/default.js`](../../portal/config/default.js).
 
 ## Referencing an environment variable
@@ -22,8 +23,6 @@ Amplify.config(process.env.myCustomKey);
 ```
 
 ## How it works
-
-We use environment specific NPM scripts in [`portal/package.json`](../../portal/package.json) to bundle builds with the correct configuration. For example `build:stage`.
 
 The target environment is set as the `BUILD_ENV`. For example:
 

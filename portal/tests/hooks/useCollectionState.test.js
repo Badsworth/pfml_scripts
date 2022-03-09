@@ -1,22 +1,20 @@
 import { act, renderHook } from "@testing-library/react-hooks";
-import BaseCollection from "../../src/models/BaseCollection";
+import ApiResourceCollection from "../../src/models/ApiResourceCollection";
 import useCollectionState from "../../src/hooks/useCollectionState";
 
-class TestCollection extends BaseCollection {
-  get idProperty() {
-    return "testId";
-  }
-}
+const ID_PROPERTY = "testId";
 
 describe("useCollectionState", () => {
   it("sets the collection", () => {
     const { result } = renderHook(() =>
-      useCollectionState(new TestCollection([]))
+      useCollectionState(new ApiResourceCollection(ID_PROPERTY, []))
     );
 
     act(() => {
       result.current.setCollection(
-        new TestCollection([{ testId: "mock-setCollection-id" }])
+        new ApiResourceCollection(ID_PROPERTY, [
+          { testId: "mock-setCollection-id" },
+        ])
       );
     });
 
@@ -27,7 +25,9 @@ describe("useCollectionState", () => {
 
   it("adds item to collection", () => {
     const { result } = renderHook(() =>
-      useCollectionState(new TestCollection([{ testId: "123" }]))
+      useCollectionState(
+        new ApiResourceCollection(ID_PROPERTY, [{ testId: "123" }])
+      )
     );
 
     act(() => {
@@ -43,7 +43,9 @@ describe("useCollectionState", () => {
   it("updates an item properties", () => {
     const { result } = renderHook(() =>
       useCollectionState(
-        new TestCollection([{ testId: "123", testProp: "testValue" }])
+        new ApiResourceCollection(ID_PROPERTY, [
+          { testId: "123", testProp: "testValue" },
+        ])
       )
     );
 
@@ -60,7 +62,10 @@ describe("useCollectionState", () => {
   it("removes item from collection", () => {
     const { result } = renderHook(() =>
       useCollectionState(
-        new TestCollection([{ testId: "123" }, { testId: "456" }])
+        new ApiResourceCollection(ID_PROPERTY, [
+          { testId: "123" },
+          { testId: "456" },
+        ])
       )
     );
 

@@ -1,6 +1,7 @@
 import {
   BenefitsApplicationDocument,
   DocumentType,
+  findDocumentsByTypes,
 } from "../../models/Document";
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
@@ -12,6 +13,7 @@ import Accordion from "../../components/core/Accordion";
 import AccordionItem from "../../components/core/AccordionItem";
 import Alert from "../../components/core/Alert";
 import DocumentRequirements from "../../components/DocumentRequirements";
+import { DocumentsUploadError } from "../../errors";
 import FileCardList from "../../components/FileCardList";
 import FileUploadDetails from "../../components/FileUploadDetails";
 import Heading from "../../components/core/Heading";
@@ -19,7 +21,6 @@ import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import Spinner from "../../components/core/Spinner";
 import { Trans } from "react-i18next";
-import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import { get } from "lodash";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import routes from "../../routes";
@@ -56,9 +57,9 @@ export const UploadId = (props: UploadIdProps) => {
   const contentContext = hasStateId ? "mass" : "other";
   const absence_id = get(claim, "fineos_absence_id");
 
-  const { appErrors, portalFlow } = appLogic;
+  const { errors, portalFlow } = appLogic;
   const hasLoadingDocumentsError = hasDocumentsLoadError(
-    appErrors,
+    errors,
     claim.application_id
   );
 
@@ -95,12 +96,16 @@ export const UploadId = (props: UploadIdProps) => {
     }
   };
 
-  const fileErrors = appErrors.items.filter(
-    (appErrorInfo) => appErrorInfo.meta && appErrorInfo.meta.file_id
-  );
+  const fileErrors = errors.filter(
+    (error) => error instanceof DocumentsUploadError
+  ) as DocumentsUploadError[];
 
   return (
-    <QuestionPage title={t("pages.claimsUploadId.title")} onSave={handleSave}>
+    <QuestionPage
+      buttonLoadingMessage={t("pages.claimsUploadId.uploadingMessage")}
+      title={t("pages.claimsUploadId.title")}
+      onSave={handleSave}
+    >
       <div className="measure-6">
         <Heading level="2" size="1">
           {t("pages.claimsUploadId.sectionLabel", { context: contentContext })}
@@ -170,9 +175,7 @@ export const UploadId = (props: UploadIdProps) => {
         {isLoadingDocuments && !hasLoadingDocumentsError && (
           <div className="margin-top-8 text-center">
             <Spinner
-              aria-valuetext={t(
-                "components.withBenefitsApplications.loadingLabel"
-              )}
+              aria-label={t("components.withBenefitsApplications.loadingLabel")}
             />
           </div>
         )}

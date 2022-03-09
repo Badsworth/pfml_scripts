@@ -1,0 +1,46 @@
+.checkbox {
+  background: #fff;
+  border: solid 1px $Color-GraniteGray-200;
+  border-radius: $Border-Radius;
+  color: $Color-GraniteGray-200;
+  display: inline-block;
+  height: 16px;
+  margin: 0 0.57em 0 0;
+  position: relative;
+  width: 16px;
+}
+
+.checkbox--checked {
+  background: $Color-BayBlue-50;
+  border-color: $Color-BayBlue-500;
+  color: $Color-BayBlue-500;
+}
+
+.checkbox--checked.checkbox--disabled {
+  background: $Color-GraniteGray-50;
+  border-color: $Color-GraniteGray-300;
+  color: $Color-GraniteGray-300;
+}
+
+.checkbox input[type='checkbox'] {
+  appearance: none;
+  display: block;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  width: 16px;
+}
+
+.checkbox-icon {
+  color: $Color-BayBlue-500;
+  display: block;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 1em;
+}
+
+.checkbox input[type='checkbox'][disabled] + .checkbox-icon {
+  color: $Color-GraniteGray-300;
+}

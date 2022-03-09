@@ -17,7 +17,7 @@ def access_log_start(request):
         "Started %s %s",
         request.method,
         request.full_path,
-        extra={"remote_addr": request.remote_addr,},
+        extra={"remote_addr": request.remote_addr},
     )
 
 
@@ -73,9 +73,7 @@ def access_log_error(request, response, response_time_ms, full_data=False):
     if full_data:
         extra["response_data"] = response.data
 
-    logger.warning(
-        "%s %s %s", response.status_code, request.method, request.full_path, extra=extra,
-    )
+    logger.warning("%s %s %s", response.status_code, request.method, request.full_path, extra=extra)
 
 
 def is_load_balancer_health_check(request):

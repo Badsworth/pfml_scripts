@@ -4,11 +4,9 @@ using System.Threading.Tasks;
 using System.Reflection;
 using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
-using Amazon.Runtime.CredentialManagement;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.S3.Util;
-using Amazon.Runtime;
 
 namespace PfmlPdfApi.Utilities
 {
@@ -26,8 +24,9 @@ namespace PfmlPdfApi.Utilities
         /// </summary>
         /// <param name="fileName">The file name</param>
         /// <param name="stream">The stream object</param>
+        /// <param name="contentType">The contentType value</param>
         /// <returns></returns>
-        Task<bool> CreateFileAsync(string fileName, MemoryStream stream);
+        Task<bool> CreateFileAsync(string fileName, MemoryStream stream, string contentType = "application/pdf");
 
         /// <summary>
         /// Gets a file
@@ -76,7 +75,7 @@ namespace PfmlPdfApi.Utilities
             return true;
         }
 
-        public async Task<bool> CreateFileAsync(string fileName, MemoryStream stream)
+        public async Task<bool> CreateFileAsync(string fileName, MemoryStream stream, string contentType = "application/pdf")
         {
             var mStream = new MemoryStream(stream.ToArray());
             mStream.Seek(0, SeekOrigin.Begin);
@@ -86,7 +85,7 @@ namespace PfmlPdfApi.Utilities
                 BucketName = _amazonS3Setting.BucketName,
                 Key = $"{_amazonS3Setting.Key}/{fileName}",
                 InputStream = mStream,
-                ContentType = "application/pdf"
+                ContentType = contentType
             };
 
             await CreateObjectAsync(request);
@@ -209,15 +208,23 @@ namespace PfmlPdfApi.Utilities
 
         private async Task<IAmazonS3> GetAWSClient()
         {
-            var awsClient = new AmazonS3Client();
-            bool bucketExists = await AmazonS3Util.DoesS3BucketExistV2Async(awsClient, _amazonS3Setting.BucketName);
+            try
+            {
+                var awsClient = new AmazonS3Client();
+                bool bucketExists = await AmazonS3Util.DoesS3BucketExistV2Async(awsClient, _amazonS3Setting.BucketName);
 
-            if (bucketExists)
-                Console.WriteLine($"Amazon S3 Service: Succesfully connected to S3 Bucket {_amazonS3Setting.BucketName}");
-            else
-                throw new Exception($"Amazon S3 Service: Amazon S3 bucket with name '{_amazonS3Setting.BucketName}' does not exist.");
+                if (bucketExists)
+                    Console.WriteLine($"Amazon S3 Service: Succesfully connected to S3 Bucket {_amazonS3Setting.BucketName}");
+                else
+                    throw new Exception($"Amazon S3 Service: Amazon S3 bucket with name '{_amazonS3Setting.BucketName}' does not exist.");
 
-            return awsClient;
+                return awsClient;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                throw;
+            }
         }
     }
 }

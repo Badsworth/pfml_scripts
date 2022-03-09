@@ -40,6 +40,14 @@
     "FINEOSUrl": "%/customerapi/customer/cases/%/documents/base64Upload/%"
   },
   {
+    "FINEOSMethod": "POST",
+    "FINEOSUrl": "%/api/v1/document/uploadAndIndexDocumentToFineosDMS"
+  },
+  {
+    "FINEOSMethod": "POST",
+    "FINEOSUrl": "%/customer/cases/%/documents/upload/%"
+  },
+  {
     "FINEOSMethod": "GET",
     "FINEOSUrl": "%/customerapi/customer/cases/%/documents?includeChildCases=True"
   },
@@ -122,5 +130,9 @@
   {
     "FINEOSMethod": "POST",
     "FINEOSUrl": "%/integration-services/wscomposer/webservice?config=OccupationDetailUpdateService&userid=%"
+  },
+  {
+    "FINEOSMethod": "POST",
+    "FINEOSUrl": "%/integration-services/wscomposer/webservice?config=OptInSITFITService&userid=%"
   }
 ]

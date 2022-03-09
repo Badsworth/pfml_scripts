@@ -2,7 +2,8 @@ locals {
   environment_name = "test"
 }
 provider "aws" {
-  region = "us-east-1"
+  region  = "us-east-1"
+  version = "3.74.1"
 }
 
 terraform {
@@ -80,8 +81,9 @@ module "tasks" {
   enable_register_admins_job = true
 
   enable_pub_automation_fineos           = true
-  enable_pub_automation_create_pub_files = false
+  enable_pub_automation_create_pub_files = true
   enable_pub_automation_process_returns  = false
+  enable_fineos_import_iaww              = true
 
   rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-test/rmv_client_certificate-zWimpc"
@@ -93,7 +95,16 @@ module "tasks" {
   dor_fineos_etl_schedule_expression_standard         = "cron(5 * * * ? *)"
   dor_fineos_etl_schedule_expression_daylight_savings = "cron(5 * * * ? *)"
 
-  pdf_api_host             = "http://localhost:5000"
-  enable_generate_1099_pdf = "1"
-  enable_merge_1099_pdf    = "1"
+  pdf_api_host                    = "http://localhost:5000"
+  enable_generate_1099_pdf        = "1"
+  generate_1099_max_files         = "1000"
+  enable_merge_1099_pdf           = "1"
+  enable_upload_1099_pdf          = "1"
+  upload_max_files_to_fineos      = "10"
+  enable_1099_testfile_generation = "0"
+  irs_1099_correction_ind         = "0"
+
+  enable_employer_reimbursement_payments = "0"
+
+  enable_pub_payments_copy_audit_report_schedule = true
 }

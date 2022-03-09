@@ -27,18 +27,18 @@ output "infra_admin_sso_arn" {
 #       https://lwd.atlassian.net/wiki/spaces/DD/pages/272072807/Tagging+Standards.
 output "environment_tags" {
   value = {
-    "test"        = "test"
-    "stage"       = "stage"
-    "prod"        = "prod"
-    "nonprod"     = "stage"
-    "performance" = "qa"
-    "training"    = "train"
-    "uat"         = "uat"
     "breakfix"    = "qa"
     "cps-preview" = "qa"
-    "adhoc"       = "test"
-    "long"        = "test"
     "infra-test"  = "test"
+    "long"        = "test"
+    "nonprod"     = "stage"
+    "performance" = "qa"
+    "prod"        = "prod"
+    "stage"       = "stage"
+    "test"        = "test"
+    "training"    = "train"
+    "trn2"        = "trn2"
+    "uat"         = "uat"
   }
 }
 
@@ -49,16 +49,17 @@ output "environment_tags" {
 #
 output "environment_shorthand" {
   value = {
-    "test"        = "test"
-    "stage"       = "stage"
-    "prod"        = "prod"
-    "performance" = "perf"
-    "training"    = "train"
-    "uat"         = "uat"
     "breakfix"    = "bfx"
     "cps-preview" = "cpspr"
-    "long"        = "long"
     "infra-test"  = "itest"
+    "long"        = "long"
+    "performance" = "perf"
+    "prod"        = "prod"
+    "stage"       = "stage"
+    "test"        = "test"
+    "training"    = "train"
+    "trn2"        = "trn2"
+    "uat"         = "uat"
   }
 }
 
@@ -70,17 +71,17 @@ output "environment_shorthand" {
 #
 output "smartronix_environment_tags" {
   value = {
-    "test"        = "Development"
-    "stage"       = "Staging"
-    "prod"        = "Production"
-    "performance" = "QA"
-    "training"    = "Sandbox"
-    "uat"         = "UAT"
     "breakfix"    = "Breakfix"
     "cps-preview" = "CPSPreview"
-    "adhoc"       = "Adhoc"
-    "long"        = "LONG"
     "infra-test"  = "Sandbox"
+    "long"        = "LONG"
+    "prod"        = "Production"
+    "performance" = "QA"
+    "stage"       = "Staging"
+    "test"        = "Development"
+    "training"    = "Sandbox"
+    "uat"         = "UAT"
+    "trn2"        = "TRN2"
   }
 }
 
@@ -106,35 +107,53 @@ output "nonprod_admin_roles" {
 }
 
 # Mapping of environments to pretty domains.
-# Note that the EOTSS-recommended format changed to use the eol.mass.gov domain.
+# Note that the EOTSS-recommended format changed to use the `dfml.eol.mass.gov` domain.
 #
 output "domains" {
   value = {
-    "infra-test"  = "paidleave-infra-test.dfml.eol.mass.gov",
-    "test"        = "paidleave-test.mass.gov",
-    "stage"       = "paidleave-stage.mass.gov",
-    "performance" = "paidleave-performance.mass.gov",
-    "training"    = "paidleave-training.mass.gov",
     "breakfix"    = "paidleave-breakfix.eol.mass.gov",
     "cps-preview" = "paidleave-cps-preview.eol.mass.gov",
-    "uat"         = "paidleave-uat.mass.gov",
-    "prod"        = "paidleave.mass.gov",
     "long"        = "paidleave-long.dfml.eol.mass.gov"
+    "performance" = "paidleave-performance.mass.gov",
+    "prod"        = "paidleave.mass.gov",
+    "infra-test"  = "paidleave-infra-test.dfml.eol.mass.gov",
+    "stage"       = "paidleave-stage.mass.gov",
+    "test"        = "paidleave-test.mass.gov",
+    "training"    = "paidleave-training.mass.gov",
+    "uat"         = "paidleave-uat.mass.gov",
+    "trn2"        = "paidleave-trn2.dfml.eol.mass.gov"
+  }
+}
+
+output "admin_domains" {
+  value = {
+    "breakfix"    = "paidleave-admin-breakfix.dfml.eol.mass.gov",
+    "cps-preview" = "paidleave-admin-cps-preview.dfml.eol.mass.gov",
+    "infra-test"  = "paidleave-admin-infra-test.dfml.eol.mass.gov",
+    "long"        = "paidleave-admin-long.dfml.eol.mass.gov",
+    "performance" = "paidleave-admin-performance.dfml.eol.mass.gov",
+    "prod"        = "paidleave-admin.dfml.eol.mass.gov",
+    "stage"       = "paidleave-admin-stage.dfml.eol.mass.gov",
+    "test"        = "paidleave-admin-test.dfml.eol.mass.gov",
+    "training"    = "paidleave-admin-training.dfml.eol.mass.gov",
+    "trn2"        = "paidleave-admin-trn2.dfml.eol.mass.gov"
+    "uat"         = "paidleave-admin-uat.dfml.eol.mass.gov",
   }
 }
 
 output "api_domains" {
   value = {
-    "infra-test"  = "paidleave-api-infra-test.dfml.eol.mass.gov",
-    "test"        = "paidleave-api-test.mass.gov",
-    "stage"       = "paidleave-api-stage.mass.gov",
-    "performance" = "paidleave-api-performance.mass.gov",
-    "training"    = "paidleave-api-training.mass.gov",
     "breakfix"    = "paidleave-api-breakfix.eol.mass.gov",
     "cps-preview" = "paidleave-api-cps-preview.eol.mass.gov",
-    "uat"         = "paidleave-api-uat.mass.gov",
+    "infra-test"  = "paidleave-api-infra-test.dfml.eol.mass.gov",
+    "long"        = "paidleave-api-long.dfml.eol.mass.gov"
+    "performance" = "paidleave-api-performance.mass.gov",
     "prod"        = "paidleave-api.mass.gov",
-    "long"        = "paidleave-long.dfml.eol.mass.gov"
+    "stage"       = "paidleave-api-stage.mass.gov",
+    "test"        = "paidleave-api-test.mass.gov",
+    "training"    = "paidleave-api-training.mass.gov",
+    "uat"         = "paidleave-api-uat.mass.gov",
+    "trn2"        = "paidleave-api-trn2.dfml.eol.mass.gov"
   }
 }
 
@@ -143,16 +162,36 @@ output "cert_domains" {
   # you cannot lookup certs by a SAN, so we lookup based on the first domain
   # that is specified in the certificate.
   value = {
-    "infra-test"  = "paidleave-infra-test.dfml.eol.mass.gov",
-    "test"        = "paidleave-test.mass.gov",
-    "stage"       = "paidleave-test.mass.gov",
-    "performance" = "paidleave-performance.mass.gov",
-    "training"    = "paidleave-performance.mass.gov",
     "breakfix"    = "paidleave-breakfix.eol.mass.gov",
     "cps-preview" = "paidleave-breakfix.eol.mass.gov",
-    "uat"         = "paidleave-uat.mass.gov",
-    "prod"        = "paidleave.mass.gov",
+    "infra-test"  = "paidleave-infra-test.dfml.eol.mass.gov",
     "long"        = "paidleave-long.dfml.eol.mass.gov"
+    "performance" = "paidleave-performance.mass.gov",
+    "prod"        = "paidleave.mass.gov",
+    "stage"       = "paidleave-test.mass.gov",
+    "test"        = "paidleave-test.mass.gov",
+    "training"    = "paidleave-performance.mass.gov",
+    "uat"         = "paidleave-uat.mass.gov",
+    "trn2"        = "paidleave-trn2.dfml.eol.mass.gov"
+  }
+}
+
+# Mapping of admin portal environments to certificate domain lookups
+output "admin_portal_cert_domains" {
+  # you cannot lookup certs by a SAN, so we lookup based on the first domain
+  # that is specified in the certificate.
+  value = {
+    "breakfix"    = "paidleave-admin-breakfix.dfml.eol.mass.gov",
+    "cps-preview" = "paidleave-admin-cps-preview.dfml.eol.mass.gov",
+    "infra-test"  = "paidleave-admin-infra-test.dfml.eol.mass.gov",
+    "long"        = "paidleave-admin-long.dfml.eol.mass.gov",
+    "performance" = "paidleave-admin-performance.dfml.eol.mass.gov",
+    "prod"        = "paidleave-admin.dfml.eol.mass.gov",
+    "stage"       = "paidleave-admin-stage.dfml.eol.mass.gov",
+    "training"    = "paidleave-admin-training.dfml.eol.mass.gov"
+    "trn2"        = "paidleave-admin-trn2.dfml.eol.mass.gov",
+    "test"        = "paidleave-admin-test.dfml.eol.mass.gov",
+    "uat"         = "paidleave-admin-uat.dfml.eol.mass.gov",
   }
 }
 
@@ -168,22 +207,141 @@ output "slackbot_channels" {
 }
 
 output "bucket_replication_environment" {
-  value = "test"
+  value = "prod"
 }
 
-# Env Var mappings for ECS Tasks 
+# Env Var mappings for ECS Tasks
 # Currently only used in aws_ecs_task_definition.ecs_tasks_1099 resource
 output "env_var_mappings" {
   value = {
-    "test"        = "Test"
-    "stage"       = "Staging"
-    "prod"        = "Production"
-    "performance" = "Performance"
-    "training"    = "Training"
-    "uat"         = "UAT"
     "breakfix"    = "Breakfix"
     "cps-preview" = "CPSPreview"
-    "long"        = "Long"
     "infra-test"  = "Test"
+    "long"        = "Long"
+    "performance" = "Performance"
+    "prod"        = "Production"
+    "stage"       = "Staging"
+    "test"        = "Test"
+    "training"    = "Training"
+    "uat"         = "UAT"
+    "trn2"        = "Training"
   }
+}
+
+# Master list of IPs to whitelist for the Admin Portal WAF
+output "admin_portal_waf_whitelist" {
+  value = [
+    "72.234.3.211/32",   # Last Call Media WFH IP
+    "86.107.55.213/32",  # Last Call Media WFH IP
+    "75.134.71.16/32",   # Last Call Media WFH IP
+    "68.204.24.240/32",  # Last Call Media WFH IP - Tyler
+    "68.84.12.117/32",   # Last Call Media WFH IP - Niki Ramlogan
+    "71.227.169.195/32", # Last Call Media WFH IP - Jessi Murray
+    "73.39.112.119/32",  # Last Call Media WFH IP - Jim Ruggiero
+    "73.47.218.158/32",  # Chris Griffith WFH
+    "47.200.176.201/32", # Ben WFH
+    "47.199.161.99/32",  # Jamie WFH
+    "76.202.246.67/32",  # Mark WFH
+    "70.122.162.186/32", # Jake WFH
+    "35.174.218.119/32", # PFML nat-0e7778fcf7a7fc067
+    "3.234.51.136/32"    # PFML nat-022bece54348228b5
+  ]
+}
+
+# High risk country codes to block on WAFs
+output "high_risk_country_codes" {
+  value = [
+    "AF", # Afghanistan
+    "DZ", # Algeria
+    "BY", # Belarus
+    "BI", # Burundi
+    "CM", # Cameroon
+    "CF", # Central African Republic
+    "TD", # Chad
+    "CN", # China
+    "CO", # Colombia
+    "CD", # Democratic Republic of the Congo
+    "CU", # Cuba
+    "EG", # Egypt
+    "SV", # El Savador
+    "ER", # Eritrea
+    "HT", # Haiti
+    "HN", # Honduras
+    "HK", # Hong Kong
+    "IR", # Iran
+    "IQ", # Iraq
+    "IL", # Israel
+    "KE", # Kenya
+    "KP", # Korea (the Democratic People's Republic of)
+    "LB", # Lebanon
+    "LY", # Libya
+    "ML", # Mali
+    "MR", # Mauritania
+    "MX", # Mexico
+    "MM", # Myanmar 
+    "NE", # Niger
+    "NG", # Nigeria
+    "PK", # Pakistan
+    "PH", # Philippines
+    "RU", # Russia
+    "SA", # Saudi Arabia
+    "SO", # Somalia
+    "SS", # South Sudan
+    "SY", # Syria
+    "TH", # Thailand
+    "UA", # Ukraine
+    "VE", # Venezuela
+    "YE", # Yemen
+    "ZW", # Zimbabwe 
+  ]
+}
+
+#
+# Environments where multi-factor authentication / 2FA should be enabled
+#
+output "env_mfa_enabled" {
+  value = [
+    "test",
+    "stage",
+    "prod",
+    "performance",
+    "training",
+    "uat",
+    "breakfix",
+    "cps-preview",
+    "long",
+    "trn2",
+    "infra-test"
+  ]
+}
+
+output "aws_sns_sms_monthly_spend_limit" {
+  value = 9180
+}
+
+output "newrelic_account_id" {
+  description = "PFML's New Relic sub-account number"
+  value       = "2837112"
+}
+
+output "newrelic_trusted_account_key" {
+  description = "EOLWD's New Relic parent account number"
+  value       = "1606654"
+}
+
+#
+# Import manually created s3 buckets for management in s3.tf
+#
+output "import_buckets" {
+  value = [
+    "aws-glue-assets-498823821309-us-east-1",
+    "aws-glue-scripts-498823821309-us-east-1",
+    "aws-glue-temporary-498823821309-us-east-1",
+    "massgov-pfml-demo-business-intelligence-tool",
+    "cf-templates-rvbkfcj4nho2-us-east-1",
+    "config-bucket-498823821309",
+    "test-eotss-aws-cloudopsteam-config-tags",
+    "smx-pfml-test-db-testing",
+    "massgov-pfml-test-experian-soap"
+  ]
 }

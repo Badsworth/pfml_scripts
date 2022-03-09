@@ -127,6 +127,7 @@ def test_max_weekly_audit_builder(local_test_db_session, local_initialize_factor
         errored_payment.payment_details[0],
         payment_post_processing_util.PaymentScenario.UNPAYABLE_PAYMENT,
     )
+    pay_period_group.add_absence_case_id(errored_payment.claim.fineos_absence_id)
 
     # Previous payment for the pay period
     prior_payment_container = _create_payment_container(
@@ -142,6 +143,7 @@ def test_max_weekly_audit_builder(local_test_db_session, local_initialize_factor
         prior_payment.payment_details[0],
         payment_post_processing_util.PaymentScenario.PREVIOUS_PAYMENT,
     )
+    pay_period_group.add_absence_case_id(prior_payment.claim.fineos_absence_id)
 
     # Current payable payment for the period (In same claim as prior payment)
     additional_current_payment_container = _create_payment_container(
@@ -158,6 +160,7 @@ def test_max_weekly_audit_builder(local_test_db_session, local_initialize_factor
         additional_current_payment.payment_details[0],
         payment_post_processing_util.PaymentScenario.CURRENT_PAYABLE_PAYMENT,
     )
+    pay_period_group.add_absence_case_id(additional_current_payment.claim.fineos_absence_id)
 
     builder = payment_post_processing_util.MaximumWeeklyBenefitsAuditMessageBuilder(
         errored_payment_container
@@ -244,10 +247,12 @@ def test_max_weekly_audit_builder_multiple_pay_periods(
         errored_payment.payment_details[0],
         payment_post_processing_util.PaymentScenario.UNPAYABLE_PAYMENT,
     )
+    pay_period_group1.add_absence_case_id(errored_payment.claim.fineos_absence_id)
     pay_period_group2.add_payment_from_details(
         errored_payment.payment_details[1],
         payment_post_processing_util.PaymentScenario.UNPAYABLE_PAYMENT,
     )
+    pay_period_group2.add_absence_case_id(errored_payment.claim.fineos_absence_id)
 
     # Previous payment for the second pay period
     prior_payment_container = _create_payment_container(
@@ -263,6 +268,7 @@ def test_max_weekly_audit_builder_multiple_pay_periods(
         prior_payment.payment_details[0],
         payment_post_processing_util.PaymentScenario.PREVIOUS_PAYMENT,
     )
+    pay_period_group2.add_absence_case_id(prior_payment.claim.fineos_absence_id)
 
     builder = payment_post_processing_util.MaximumWeeklyBenefitsAuditMessageBuilder(
         errored_payment_container

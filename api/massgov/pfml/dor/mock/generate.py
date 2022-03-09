@@ -120,9 +120,7 @@ def main():
     employer_file.close()
     employee_file.close()
 
-    logger.info(
-        "DONE: output files %s, %s", employer_path, employee_path,
-    )
+    logger.info("DONE: output files %s, %s", employer_path, employee_path)
 
 
 # == main processor ==
@@ -135,6 +133,8 @@ def generate(
     update_mode=False,
     fein_base=100000000,
     ssn_base=250000000,
+    set_empty_dba=False,
+    set_empty_city=False,
 ):
     if employer_count <= 0 or employer_count % 100 != 0:
         raise RuntimeError("employer_count must be a multiple of 100")
@@ -148,7 +148,11 @@ def generate(
     employee_generate_id = 1
     for chunk in range(0, employer_count, 100):
         # Generate employers
-        employers = tuple(generate_employers(chunk + 1, 100, update_mode, fein_base))
+        employers = tuple(
+            generate_employers(
+                chunk + 1, 100, update_mode, fein_base, set_empty_dba, set_empty_city
+            )
+        )
 
         total_employees = sum(employer["number_of_employees"] for employer in employers)
 
@@ -228,13 +232,28 @@ def write_employer_wage_row(employer_wage_row, employer_wage_row_file):
     employer_wage_row_file.write(line)
 
 
-def generate_employers(base_id, employer_count, update_mode=False, fein_base=100000000):
+def generate_employers(
+    base_id,
+    employer_count,
+    update_mode=False,
+    fein_base=100000000,
+    set_empty_dba=False,
+    set_empty_city=False,
+):
     """Generate employer rows"""
     for index in range(employer_count):
-        yield generate_single_employer(base_id + index, update_mode, fein_base)
+        yield generate_single_employer(
+            base_id + index, update_mode, fein_base, set_empty_dba, set_empty_city
+        )
 
 
-def generate_single_employer(employer_generate_id, update_mode=False, fein_base=100000000):
+def generate_single_employer(
+    employer_generate_id,
+    update_mode=False,
+    fein_base=100000000,
+    set_empty_dba=False,
+    set_empty_city=False,
+):
     """Generate a single employer.
 
     This is intended to always generate the same fake values for a given employer_generate_id.
@@ -260,8 +279,8 @@ def generate_single_employer(employer_generate_id, update_mode=False, fein_base=
         employer_address_zip,
     ) = generate_fake_address()
 
-    employer_dba = employer_name
-    if random.random() < 0.2:
+    employer_dba = "" if set_empty_dba else employer_name
+    if not set_empty_dba and random.random() < 0.2:
         employer_dba = fake.company()
 
     family_exemption = fake.boolean()
@@ -283,8 +302,8 @@ def generate_single_employer(employer_generate_id, update_mode=False, fein_base=
         if random.random() < 0.1:
             employer_name = fake.company()
 
-        employer_dba = employer_name
-        if random.random() < 0.3:
+        employer_dba = "" if set_empty_dba else employer_name
+        if not set_empty_dba and random.random() < 0.3:
             employer_dba = fake.company()
 
             (
@@ -302,7 +321,7 @@ def generate_single_employer(employer_generate_id, update_mode=False, fein_base=
         "employer_name": employer_name,
         "fein": fein,
         "employer_address_street": employer_address_street,
-        "employer_address_city": employer_address_city,
+        "employer_address_city": "" if set_empty_city else employer_address_city,
         "employer_address_state": employer_address_state,
         "employer_address_zip": employer_address_zip,
         "employer_address_country": employer_address_country,
@@ -346,6 +365,7 @@ def generate_employer_wage_rows(employer):
 
 def generate_fake_address():
     """Generate a fake address."""
+
     street = fake.street_address()
     city = fake.city()
     if random.random() < 0.05:
@@ -420,30 +440,21 @@ def generate_single_employee(
             # Special scenario 2: two quarters, wages $5000 and $10000
             # Financial eligibility: fails 30x rule
             qtr_wages = decimal.Decimal(5000)  # initial quarterly wage
-            quarters = (
-                Quarter(2020, 4),
-                Quarter(2021, 1),
-            )
+            quarters = (Quarter(2020, 4), Quarter(2021, 1))
             wage_change_random_pool = (10000 - 5000,)
 
         elif (employee_generate_id % 100) <= 13:
             # Special scenario 3: two quarters, wages $2000 and $2000
             # Financial eligibility: when 1 employer, not eligible / when 2 employers, eligible
             qtr_wages = decimal.Decimal(2000)  # initial quarterly wage
-            quarters = (
-                Quarter(2020, 4),
-                Quarter(2021, 1),
-            )
+            quarters = (Quarter(2020, 4), Quarter(2021, 1))
             wage_change_random_pool = (0,)
 
         elif (employee_generate_id % 100) <= 15:
             # Special scenario 4: two quarters, wages $5000 and $21000
             # Financial eligibility: eligible in 2021, but not in 2022 (due to 2021 max benefit)
             qtr_wages = decimal.Decimal(5000)  # initial quarterly wage
-            quarters = (
-                Quarter(2021, 3),
-                Quarter(2021, 4),
-            )
+            quarters = (Quarter(2021, 3), Quarter(2021, 4))
             wage_change_random_pool = (21000 - 5000,)
 
         else:

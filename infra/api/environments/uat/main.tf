@@ -49,6 +49,8 @@ module "api" {
     "https://paidleave-uat.mass.gov",
     "https://d31sked9ffq37g.cloudfront.net",
     "https://paidleave-api-uat.mass.gov",
+    # Allow requests from the Admin Portal
+    "https://paidleave-admin-uat.dfml.eol.mass.gov",
     "https://0mv19lqx41.execute-api.us-east-1.amazonaws.com"
   ]
 
@@ -70,12 +72,23 @@ module "api" {
   fineos_client_oauth2_url                            = "https://uat-api.masspfml.fineos.com/oauth2/token"
   fineos_client_oauth2_client_id                      = "61on8s7n66i0gj913didkmn5q"
   fineos_import_employee_updates_input_directory_path = "s3://fin-sompre-data-export/UAT/dataexports"
-  service_now_base_url                                = "https://savilinxstage.servicenowservices.com"
+  pfml_email_address                                  = "PFML_DoNotReply@eol.mass.gov"
+  bounce_forwarding_email_address                     = "PFML_DoNotReply@eol.mass.gov"
+  bounce_forwarding_email_address_arn                 = "arn:aws:ses:us-east-1:498823821309:identity/PFML_DoNotReply@eol.mass.gov"
+  service_now_base_url                                = "https://savilinxuat.servicenowservices.com"
   portal_base_url                                     = "https://paidleave-uat.mass.gov"
+  admin_portal_base_url                               = "https://paidleave-admin-uat.dfml.eol.mass.gov"
   fineos_aws_iam_role_arn                             = "arn:aws:iam::016390658835:role/sompre-IAMRoles-CustomerAccountAccessRole-S0EP9ABIA02Z"
   fineos_aws_iam_role_external_id                     = "8jFBtjr4UA@"
   enable_application_fraud_check                      = "0"
   release_version                                     = var.release_version
 
-  enable_pdf_document_compression = "0"
+  azure_ad_authority_domain = "login.microsoftonline.com"
+  azure_ad_client_id        = "ecc75e15-cd60-4e28-b62f-d1bf80e05d4d"
+  azure_ad_parent_group     = "TSS-SG-PFML_ADMIN_PORTAL_NON_PROD"
+  azure_ad_tenant_id        = "3e861d16-48b7-4a0e-9806-8c04d81b7b2a"
+
+  enable_document_multipart_upload = "1"
+  enable_application_import        = "1"
+  enable_employee_endpoints        = "1"
 }

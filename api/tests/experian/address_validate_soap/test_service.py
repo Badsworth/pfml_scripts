@@ -1,5 +1,6 @@
 import massgov.pfml.experian.address_validate_soap.models as sm
-from massgov.pfml.db.models.employees import Address, Country, GeoState
+from massgov.pfml.db.models.employees import Address
+from massgov.pfml.db.models.geo import Country, GeoState
 from massgov.pfml.experian.address_validate_soap.service import (
     Constants,
     address_to_experian_verification_search,

@@ -1,5 +1,5 @@
 import { DocumentUpload } from "src/pages/applications/upload/[documentType]";
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 import React from "react";
 import User from "src/models/User";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";

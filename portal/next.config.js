@@ -1,11 +1,14 @@
+// @ts-check - This file has to be a .js file since it's not ran through a transpiler.
 const mayflowerAssets = require("@massds/mayflower-assets");
 const buildEnv = process.env.BUILD_ENV || "development";
 const releaseVersion = process.env.releaseVersion
   ? `massgov-pfml-portal@${process.env.releaseVersion.replace("portal/", "")}`
-  : null;
-const envVariables = require("./config")[buildEnv];
+  : "";
+const envVariables = require("./config")[buildEnv] || {};
 const featureFlags = require("./config/featureFlags")(buildEnv);
+// @ts-expect-error Typing for this module isn't super important for our purposes:
 const withImages = require("next-images");
+// @ts-expect-error Typing for this module isn't super important for our purposes:
 const withBundleAnalyzer = require("@next/bundle-analyzer")({
   enabled: process.env.ANALYZE_BUNDLE === "true",
 });
@@ -14,6 +17,9 @@ const withTranspileModules = require("next-transpile-modules");
 // eslint-disable-next-line no-console
 console.log(`📦 Using "${buildEnv}" environment variables to build the site.`);
 
+/**
+ * @type {import('next').NextConfig}
+ */
 const config = {
   // In our code, we can reference environment variables from process.env
   // https://nextjs.org/docs/api-reference/next.config.js/environment-variables
@@ -57,6 +63,9 @@ const config = {
   },
 };
 
+/**
+ * @type {import('next').NextConfig}
+ */
 module.exports = withBundleAnalyzer(
   // We transpile Mayflower and USWDS since there's an issue that results in untranspiled
   // modules being included in our code, which breaks IE11 compatibility

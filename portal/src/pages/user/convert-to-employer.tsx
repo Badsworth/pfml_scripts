@@ -16,19 +16,19 @@ import { useTranslation } from "../../locales/i18n";
 export const ConvertToEmployer = (props: WithBenefitsApplicationsProps) => {
   const { appLogic, user, claims } = props;
   const { t } = useTranslation();
-  const { convertUser } = appLogic.users;
+  const { convertUserToEmployer } = appLogic.users;
 
   const { formState, updateFields } = useFormState({ employer_fein: "" });
   const hasClaims = !claims.isEmpty;
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });
 
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
-    await convertUser(user.user_id, {
+    await convertUserToEmployer(user.user_id, {
       employer_fein: formState.employer_fein,
     });
   });

@@ -12,6 +12,7 @@ function reformat(date: string): string {
 
 export default class FosterPlacementLetter extends AbstractDocumentGenerator<{
   invalid?: boolean;
+  filename?: string;
 }> {
   documentSource(): string {
     return this.path("foster-adopt-cert.pdf");

@@ -5,6 +5,10 @@ from typing import List
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
+from massgov.pfml.db.models.payments import (
+    FineosExtractVbiLeavePlanRequestedAbsence,
+    FineosExtractVPaidLeaveInstruction,
+)
 from massgov.pfml.delegated_payments.delegated_fineos_iaww_extract import IAWWExtractStep
 from massgov.pfml.delegated_payments.fineos_extract_step import (
     IAWW_EXTRACT_CONFIG,
@@ -18,11 +22,7 @@ logger = logging.get_logger(__name__)
 ALL = "ALL"
 CONSUME_FINEOS_IAWW = "consume-fineos-iaww"
 IAWW_EXTRACT = "iaww-extract"
-ALLOWED_VALUES = [
-    ALL,
-    CONSUME_FINEOS_IAWW,
-    IAWW_EXTRACT,
-]
+ALLOWED_VALUES = [ALL, CONSUME_FINEOS_IAWW, IAWW_EXTRACT]
 
 
 class Configuration:
@@ -71,6 +71,16 @@ def _process_iaww_from_fineos(
     """Extract IAWW data from FINEOS"""
     logger.info("Start - FINEOS IAWW Extract ECS Task")
     start_time = get_now_us_eastern()
+
+    # We can truncate the old data in the tables before we extract the latest data since both
+    # of these files are full extracts
+    try:
+        db_session.query(FineosExtractVPaidLeaveInstruction).delete()
+        db_session.query(FineosExtractVbiLeavePlanRequestedAbsence).delete()
+        db_session.commit()
+    except Exception as ex:
+        logger.warning("Unable to truncate IAWW extract tables", exc_info=ex)
+        db_session.rollback()
 
     if config.consume_fineoss_iaww:
         FineosExtractStep(

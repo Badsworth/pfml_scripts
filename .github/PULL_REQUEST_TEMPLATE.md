@@ -9,7 +9,7 @@ Subtask: https://lwd.atlassian.net/browse/{SUBTASK TICKET ID}
 
 ## ℹ️ Context for reviewers
 
-(Testing instructions, background context, more in-depth details of the implementation, and anything else you'd like to call out or ask reviewers.)
+(Testing instructions, background context, more in-depth details of the implementation, and anything else you'd like to call out or ask reviewers. Explain how the changes were verified.)
 
 ## 👀 Demo
 
@@ -17,4 +17,4 @@ Subtask: https://lwd.atlassian.net/browse/{SUBTASK TICKET ID}
 
 ## 📜 Link to relevant documentation
 
-(Provide links to documentation that are relevant to the code changes being made.)
+(Provide links to documentation, such as tech specs, that are relevant to the code changes being made.)

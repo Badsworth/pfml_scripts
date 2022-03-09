@@ -1,7 +1,6 @@
 import { render, screen } from "@testing-library/react";
-import AppErrorInfo from "../../src/models/AppErrorInfo";
-import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import Flag from "../../src/models/Flag";
+import { InternalServerError } from "../../src/errors";
 import PageWrapper from "../../src/components/PageWrapper";
 import React from "react";
 import User from "../../src/models/User";
@@ -51,15 +50,15 @@ const PageWrapperWithAppLogic = ({
 describe("PageWrapper", () => {
   beforeEach(() => {
     // Enable rendering of the site
-    process.env.featureFlags = {
+    process.env.featureFlags = JSON.stringify({
       pfmlTerriyay: true,
-    };
+    });
   });
 
   it("doesn't render the site when the 'pfmlTerriyay' feature flag is disabled", () => {
-    process.env.featureFlags = {
+    process.env.featureFlags = JSON.stringify({
       pfmlTerriyay: false,
-    };
+    });
 
     const { container } = render(<PageWrapperWithAppLogic />);
 
@@ -304,10 +303,10 @@ describe("PageWrapper", () => {
   });
 
   it("bypasses MaintenanceTakeover when noMaintenance feature flag is present", () => {
-    process.env.featureFlags = {
+    process.env.featureFlags = JSON.stringify({
       noMaintenance: true,
       pfmlTerriyay: true,
-    };
+    });
     mockRouter.pathname = "/login";
 
     const maintenanceProp = new Flag({
@@ -329,15 +328,11 @@ describe("PageWrapper", () => {
       <PageWrapperWithAppLogic
         addAppLogicMocks={(_appLogic) => {
           appLogic = _appLogic;
-          appLogic.appErrors = new AppErrorInfoCollection([
-            new AppErrorInfo({
-              message: "Error message",
-            }),
-          ]);
+          appLogic.errors = [new InternalServerError()];
         }}
       />
     );
 
-    expect(screen.getByText("Error message")).toBeInTheDocument();
+    expect(screen.getByText(/unexpected error/)).toBeInTheDocument();
   });
 });

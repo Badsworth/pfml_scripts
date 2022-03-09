@@ -11,6 +11,12 @@ export default {
 
 export const Page = () => {
   const appLogic = useMockableAppLogic();
-  const user = new User({ mfa_phone_number: "123-456-7891" });
-  return <ConfirmSMS appLogic={appLogic} user={user} />;
+  const user = new User({
+    mfa_phone_number: {
+      int_code: "1",
+      phone_type: "Cell",
+      phone_number: "***-***-7891",
+    },
+  });
+  return <ConfirmSMS appLogic={appLogic} user={user} query={{}} />;
 };

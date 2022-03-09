@@ -1,4 +1,5 @@
 import copy
+import datetime
 import logging  # noqa: B1
 from datetime import date, timedelta
 from unittest import mock
@@ -13,6 +14,7 @@ from massgov.pfml.api.models.claims.common import PreviousLeave
 from massgov.pfml.api.models.common import ConcurrentLeave
 from massgov.pfml.api.services.administrator_fineos_actions import (
     EformTypes,
+    _get_computed_start_dates,
     _get_leave_details,
     download_document_as_leave_admin,
     get_claim_as_leave_admin,
@@ -20,14 +22,70 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
     register_leave_admin_with_fineos,
 )
 from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
+from massgov.pfml.db.models.absences import AbsencePeriodType
 from massgov.pfml.db.models.employees import UserLeaveAdministrator
 from massgov.pfml.db.models.factories import EmployerFactory
-from massgov.pfml.fineos import FINEOSClient, create_client
+from massgov.pfml.fineos import FINEOSClient
+from massgov.pfml.fineos.mock.eform import MOCK_EFORM_OTHER_INCOME_V1, MOCK_EFORM_OTHER_INCOME_V2
 from massgov.pfml.fineos.models import CreateOrUpdateLeaveAdmin, group_client_api
 from massgov.pfml.fineos.models.group_client_api import (
     GroupClientDocument,
     ManagedRequirementDetails,
 )
+
+
+def create_mock_period_decision(
+    startDate: str, endDate: str, periodType: str, periodReference: str = "PL-14448-0000004930"
+):
+    return {
+        "absence": {"id": "NTN-3769-ABS-01", "caseReference": "NTN-3769-ABS-01"},
+        "employee": {"id": "2957", "name": "Emilie Muller"},
+        "period": {
+            "periodReference": periodReference,
+            "parentPeriodReference": "",
+            "relatedToEpisodic": periodType
+            == AbsencePeriodType.EPISODIC.absence_period_type_description,
+            "startDate": startDate,
+            "endDate": endDate,
+            "balanceDeduction": 0,
+            "timeRequested": "",
+            "timeDeducted": "",
+            "timeDeductedBasis": "",
+            "timeDecisionStatus": "",
+            "timeDecisionReason": "",
+            "type": periodType,
+            "status": "Known",
+            "leavePlan": {
+                "id": "abdc368f-ace6-4d6a-b697-f1016fe8a314",
+                "name": "MA PFML - Employee",
+                "shortName": "MA PFML - Employee",
+                "applicabilityStatus": "Applicable",
+                "eligibilityStatus": "Not Known",
+                "availabilityStatus": "N/A",
+                "adjudicationStatus": "Undecided",
+                "evidenceStatus": "Pending",
+                "category": "Paid",
+                "calculationPeriodMethod": "Rolling Forward - Sunday",
+                "timeBankMethod": "Length / Duration",
+                "timeWithinPeriod": 52,
+                "timeWithinPeriodBasis": "Weeks",
+                "fixedYearStartDay": 0,
+                "fixedYearStartMonth": "Please Select",
+                "timeEntitlement": 20,
+                "timeEntitlementBasis": "Weeks",
+                "paidLeaveCaseId": "",
+            },
+            "leaveRequest": {
+                "id": "PL-14432-0000006172",
+                "reasonName": "Serious Health Condition - Employee",
+                "qualifier1": "Not Work Related",
+                "qualifier2": "Accident / Injury",
+                "decisionStatus": "Pending",
+                "approvalReason": "Please Select",
+                "denialReason": "Please Select",
+            },
+        },
+    }
 
 
 @pytest.fixture
@@ -37,150 +95,21 @@ def period_decisions():
             "startDate": "2021-01-04",
             "endDate": "2021-02-24",
             "decisions": [
-                {
-                    "absence": {"id": "NTN-3769-ABS-01", "caseReference": "NTN-3769-ABS-01"},
-                    "employee": {"id": "2957", "name": "Emilie Muller"},
-                    "period": {
-                        "periodReference": "PL-14448-0000004930",
-                        "parentPeriodReference": "",
-                        "relatedToEpisodic": True,
-                        "startDate": "2021-01-15",
-                        "endDate": "2021-01-20",
-                        "balanceDeduction": 0,
-                        "timeRequested": "",
-                        "timeDeducted": "",
-                        "timeDeductedBasis": "",
-                        "timeDecisionStatus": "",
-                        "timeDecisionReason": "",
-                        "type": "Episodic",
-                        "status": "Known",
-                        "leavePlan": {
-                            "id": "abdc368f-ace6-4d6a-b697-f1016fe8a314",
-                            "name": "MA PFML - Employee",
-                            "shortName": "MA PFML - Employee",
-                            "applicabilityStatus": "Applicable",
-                            "eligibilityStatus": "Not Known",
-                            "availabilityStatus": "N/A",
-                            "adjudicationStatus": "Undecided",
-                            "evidenceStatus": "Pending",
-                            "category": "Paid",
-                            "calculationPeriodMethod": "Rolling Forward - Sunday",
-                            "timeBankMethod": "Length / Duration",
-                            "timeWithinPeriod": 52,
-                            "timeWithinPeriodBasis": "Weeks",
-                            "fixedYearStartDay": 0,
-                            "fixedYearStartMonth": "Please Select",
-                            "timeEntitlement": 20,
-                            "timeEntitlementBasis": "Weeks",
-                            "paidLeaveCaseId": "",
-                        },
-                        "leaveRequest": {
-                            "id": "PL-14432-0000006172",
-                            "reasonName": "Serious Health Condition - Employee",
-                            "qualifier1": "Not Work Related",
-                            "qualifier2": "Accident / Injury",
-                            "decisionStatus": "Pending",
-                            "approvalReason": "Please Select",
-                            "denialReason": "Please Select",
-                        },
-                    },
-                },
-                {
-                    "absence": {"id": "NTN-3769-ABS-01", "caseReference": "NTN-3769-ABS-01"},
-                    "employee": {"id": "2957", "name": "Emilie Muller"},
-                    "period": {
-                        "periodReference": "PL-14448-0000004930",
-                        "parentPeriodReference": "",
-                        "relatedToEpisodic": False,
-                        "startDate": "2021-01-04",
-                        "endDate": "2021-01-29",
-                        "balanceDeduction": 0,
-                        "timeRequested": "",
-                        "timeDeducted": "",
-                        "timeDeductedBasis": "",
-                        "timeDecisionStatus": "",
-                        "timeDecisionReason": "",
-                        "type": "Reduced Schedule",
-                        "status": "Known",
-                        "leavePlan": {
-                            "id": "abdc368f-ace6-4d6a-b697-f1016fe8a314",
-                            "name": "MA PFML - Employee",
-                            "shortName": "MA PFML - Employee",
-                            "applicabilityStatus": "Applicable",
-                            "eligibilityStatus": "Not Known",
-                            "availabilityStatus": "N/A",
-                            "adjudicationStatus": "Undecided",
-                            "evidenceStatus": "Pending",
-                            "category": "Paid",
-                            "calculationPeriodMethod": "Rolling Forward - Sunday",
-                            "timeBankMethod": "Length / Duration",
-                            "timeWithinPeriod": 52,
-                            "timeWithinPeriodBasis": "Weeks",
-                            "fixedYearStartDay": 0,
-                            "fixedYearStartMonth": "Please Select",
-                            "timeEntitlement": 20,
-                            "timeEntitlementBasis": "Weeks",
-                            "paidLeaveCaseId": "",
-                        },
-                        "leaveRequest": {
-                            "id": "PL-14432-0000006172",
-                            "reasonName": "Serious Health Condition - Employee",
-                            "qualifier1": "Not Work Related",
-                            "qualifier2": "Accident / Injury",
-                            "decisionStatus": "Pending",
-                            "approvalReason": "Please Select",
-                            "denialReason": "Please Select",
-                        },
-                    },
-                },
-                {
-                    "absence": {"id": "NTN-3769-ABS-01", "caseReference": "NTN-3769-ABS-01"},
-                    "employee": {"id": "2957", "name": "Emilie Muller"},
-                    "period": {
-                        "periodReference": "PL-14449-0000007164",
-                        "parentPeriodReference": "",
-                        "relatedToEpisodic": False,
-                        "startDate": "2021-02-01",
-                        "endDate": "2021-02-24",
-                        "balanceDeduction": 0,
-                        "timeRequested": "",
-                        "timeDeducted": "",
-                        "timeDeductedBasis": "",
-                        "timeDecisionStatus": "",
-                        "timeDecisionReason": "",
-                        "type": "Time off period",
-                        "status": "Known",
-                        "leavePlan": {
-                            "id": "abdc368f-ace6-4d6a-b697-f1016fe8a314",
-                            "name": "MA PFML - Employee",
-                            "shortName": "MA PFML - Employee",
-                            "applicabilityStatus": "Applicable",
-                            "eligibilityStatus": "Not Known",
-                            "availabilityStatus": "N/A",
-                            "adjudicationStatus": "Undecided",
-                            "evidenceStatus": "Pending",
-                            "category": "Paid",
-                            "calculationPeriodMethod": "Rolling Forward - Sunday",
-                            "timeBankMethod": "Length / Duration",
-                            "timeWithinPeriod": 52,
-                            "timeWithinPeriodBasis": "Weeks",
-                            "fixedYearStartDay": 0,
-                            "fixedYearStartMonth": "Please Select",
-                            "timeEntitlement": 20,
-                            "timeEntitlementBasis": "Weeks",
-                            "paidLeaveCaseId": "",
-                        },
-                        "leaveRequest": {
-                            "id": "PL-14432-0000006172",
-                            "reasonName": "Serious Health Condition - Employee",
-                            "qualifier1": "Not Work Related",
-                            "qualifier2": "Accident / Injury",
-                            "decisionStatus": "Pending",
-                            "approvalReason": "Please Select",
-                            "denialReason": "Please Select",
-                        },
-                    },
-                },
+                create_mock_period_decision(
+                    startDate="2021-01-15",
+                    endDate="2021-01-20",
+                    periodType=AbsencePeriodType.EPISODIC.absence_period_type_description,
+                ),
+                create_mock_period_decision(
+                    startDate="2021-01-04",
+                    endDate="2021-01-29",
+                    periodType=AbsencePeriodType.REDUCED_SCHEDULE.absence_period_type_description,
+                ),
+                create_mock_period_decision(
+                    startDate="2021-02-01",
+                    endDate="2021-02-24",
+                    periodType=AbsencePeriodType.TIME_OFF_PERIOD.absence_period_type_description,
+                ),
             ],
         }
     )
@@ -263,7 +192,7 @@ def mock_fineos_client_period_decisions(period_decisions_data):
     def mock_period_decisions(*args, **kwargs):
         return period_decisions_data
 
-    mock_client = create_client()
+    mock_client = massgov.pfml.fineos.mock_client.MockFINEOSClient()
     mock_client.get_absence_period_decisions = mock_period_decisions
     return mock_client
 
@@ -1082,11 +1011,9 @@ def mock_fineos_other_leaves_v2_eform():
         )
 
     def mock_eform_summary(*args, **kwargs):
-        return [
-            group_client_api.EFormSummary(eformId=12345, eformType=EformTypes.OTHER_LEAVES),
-        ]
+        return [group_client_api.EFormSummary(eformId=12345, eformType=EformTypes.OTHER_LEAVES)]
 
-    mock_client = create_client()
+    mock_client = massgov.pfml.fineos.mock_client.MockFINEOSClient()
     mock_client.get_eform = mock_eform
     mock_client.get_eform_summary = mock_eform_summary
 
@@ -1365,26 +1292,10 @@ def mock_fineos_other_leaves_v2_accrued_leave_different_employer_eform():
         )
 
     def mock_eform_summary(*args, **kwargs):
-        return [
-            group_client_api.EFormSummary(eformId=12345, eformType=EformTypes.OTHER_LEAVES),
-        ]
+        return [group_client_api.EFormSummary(eformId=12345, eformType=EformTypes.OTHER_LEAVES)]
 
-    mock_client = create_client()
+    mock_client = massgov.pfml.fineos.mock_client.MockFINEOSClient()
     mock_client.get_eform = mock_eform
-    mock_client.get_eform_summary = mock_eform_summary
-
-    return mock_client
-
-
-@pytest.fixture
-def mock_fineos_other_income_eform_both_versions(period_decisions):
-    def mock_eform_summary(*args, **kwargs):
-        return [
-            group_client_api.EFormSummary(eformId=12345, eformType=EformTypes.OTHER_INCOME),
-            group_client_api.EFormSummary(eformId=12354, eformType=EformTypes.OTHER_INCOME_V2),
-        ]
-
-    mock_client = create_client()
     mock_client.get_eform_summary = mock_eform_summary
 
     return mock_client
@@ -1393,9 +1304,7 @@ def mock_fineos_other_income_eform_both_versions(period_decisions):
 @pytest.fixture
 def mock_fineos_other_income_v1_eform():
     def mock_eform_summary(*args, **kwargs):
-        return [
-            group_client_api.EFormSummary(eformId=12345, eformType=EformTypes.OTHER_INCOME),
-        ]
+        return [group_client_api.EFormSummary(eformId=12345, eformType=EformTypes.OTHER_INCOME)]
 
     def mock_get_eform(*args, **kwargs):
         return group_client_api.EForm(
@@ -1622,7 +1531,7 @@ def mock_fineos_other_income_v1_eform():
             ],
         )
 
-    mock_client = create_client()
+    mock_client = massgov.pfml.fineos.mock_client.MockFINEOSClient()
     mock_client.get_eform_summary = mock_eform_summary
     mock_client.get_eform = mock_get_eform
 
@@ -1682,7 +1591,7 @@ def test_register_previously_registered_leave_admin_with_fineos(
     )
     test_db_session.add(ula)
     test_db_session.commit()
-    fineos_client = create_client()
+    fineos_client = massgov.pfml.fineos.mock_client.MockFINEOSClient()
     caplog.set_level(logging.INFO)  # noqa: B1
     capture = massgov.pfml.fineos.mock_client.start_capture()
 
@@ -1746,61 +1655,199 @@ def test_get_leave_details(period_decisions):
     assert leave_details.reduced_schedule_leave_periods[0].end_date == date(2021, 1, 29)
 
 
-def test_get_claim_plan(mock_fineos_period_decisions, initialize_factories_session):
+@pytest.mark.parametrize(
+    "input_period_type, output_period_type",
+    [
+        (
+            AbsencePeriodType.CONTINUOUS.absence_period_type_description,
+            AbsencePeriodType.CONTINUOUS.absence_period_type_description,
+        ),
+        (
+            AbsencePeriodType.INTERMITTENT.absence_period_type_description,
+            AbsencePeriodType.INTERMITTENT.absence_period_type_description,
+        ),
+        (
+            AbsencePeriodType.REDUCED_SCHEDULE.absence_period_type_description,
+            AbsencePeriodType.REDUCED_SCHEDULE.absence_period_type_description,
+        ),
+        (
+            AbsencePeriodType.EPISODIC.absence_period_type_description,
+            AbsencePeriodType.INTERMITTENT.absence_period_type_description,
+        ),
+        (
+            AbsencePeriodType.TIME_OFF_PERIOD.absence_period_type_description,
+            AbsencePeriodType.CONTINUOUS.absence_period_type_description,
+        ),
+    ],
+)
+def test_get_claim_absence_period_types(input_period_type, output_period_type):
+    mock_period_decisions = group_client_api.PeriodDecisions.parse_obj(
+        {
+            "startDate": "2021-01-01",
+            "endDate": "2021-01-31",
+            "decisions": [
+                create_mock_period_decision(
+                    startDate="2020-01-01", endDate="2020-01-10", periodType=input_period_type
+                )
+            ],
+        }
+    )
+    mock_client = mock_fineos_client_period_decisions(mock_period_decisions)
+    employer = EmployerFactory.build()
+
+    claim, _, _ = get_claim_as_leave_admin(
+        employer.fineos_employer_id, "NTN-001-ABS-001", employer, fineos_client=mock_client
+    )
+
+    assert claim.absence_periods[0].period_type == output_period_type
+
+
+def test_computed_start_dates_for_absence_with_no_reason():
+    period_decisions = group_client_api.PeriodDecisions.parse_obj(
+        {
+            "decisions": [
+                {
+                    "period": {
+                        "startDate": "2021-01-01",
+                        "endDate": "2021-01-31",
+                        "leaveRequest": {"reasonName": None},
+                    }
+                }
+            ]
+        }
+    )
+    computed_start_dates = _get_computed_start_dates(period_decisions.dict())
+    assert computed_start_dates.other_reason is None
+    assert computed_start_dates.same_reason is None
+
+
+def test_computed_start_dates_for_claim_with_no_leave_periods():
+    period_decisions = group_client_api.PeriodDecisions.parse_obj({"decisions": []})
+    computed_start_dates = _get_computed_start_dates(period_decisions.dict())
+    assert computed_start_dates.same_reason is None
+    assert computed_start_dates.other_reason is None
+
+
+def test_computed_start_dates_for_caring_leave_with_prior_year_after_launch():
+    period_decisions = group_client_api.PeriodDecisions.parse_obj(
+        {
+            "decisions": [
+                {
+                    "period": {
+                        "startDate": "2022-07-30",
+                        "endDate": "2021-01-31",
+                        "leaveRequest": {"reasonName": "Care for a Family Member"},
+                    }
+                }
+            ]
+        }
+    )
+    computed_start_dates = _get_computed_start_dates(period_decisions.dict())
+    assert computed_start_dates.same_reason == date(2021, 7, 25)
+    assert computed_start_dates.other_reason == date(2021, 7, 25)
+    assert computed_start_dates.same_reason.strftime("%A") == "Sunday"
+    assert computed_start_dates.other_reason.strftime("%A") == "Sunday"
+
+
+def test_get_claim_absence_period_grouped_by_reference():
+    mock_period_decisions = group_client_api.PeriodDecisions.parse_obj(
+        {
+            "startDate": "2021-01-01",
+            "endDate": "2021-01-31",
+            "decisions": [
+                create_mock_period_decision(
+                    startDate="2020-01-01",
+                    endDate="2020-01-02",
+                    periodType=AbsencePeriodType.INTERMITTENT.absence_period_type_description,
+                    periodReference="PL-1-1",
+                ),
+                create_mock_period_decision(
+                    startDate="2020-01-03",
+                    endDate="2020-01-04",
+                    periodType=AbsencePeriodType.INTERMITTENT.absence_period_type_description,
+                    periodReference="PL-1-1",
+                ),
+                # Different periodReference, so shouldn't be merged with the periods above.
+                create_mock_period_decision(
+                    startDate="2020-01-05",
+                    endDate="2020-01-31",
+                    periodType=AbsencePeriodType.CONTINUOUS.absence_period_type_description,
+                    periodReference="PL-2-2",
+                ),
+            ],
+        }
+    )
+    mock_client = mock_fineos_client_period_decisions(mock_period_decisions)
+    employer = EmployerFactory.build()
+
+    claim, _, _ = get_claim_as_leave_admin(
+        employer.fineos_employer_id, "NTN-001-ABS-001", employer, fineos_client=mock_client
+    )
+
+    assert len(claim.absence_periods) == 2
+    assert (
+        claim.absence_periods[0].period_type
+        == AbsencePeriodType.INTERMITTENT.absence_period_type_description
+    )
+    assert (
+        claim.absence_periods[1].period_type
+        == AbsencePeriodType.CONTINUOUS.absence_period_type_description
+    )
+
+    assert claim.absence_periods[0].absence_period_start_date == datetime.date(2020, 1, 1)
+    assert claim.absence_periods[0].absence_period_end_date == datetime.date(2020, 1, 4)
+
+    assert claim.absence_periods[1].absence_period_start_date == datetime.date(2020, 1, 5)
+    assert claim.absence_periods[1].absence_period_end_date == datetime.date(2020, 1, 31)
+
+
+def test_get_claim_plan(mock_fineos_period_decisions):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
-    employer = EmployerFactory.create()
+    employer = EmployerFactory.build()
     leave_details, _, _ = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions
     )
     assert leave_details.status == "Known"
 
 
-def test_get_claim_no_plan(mock_fineos_period_decisions_no_plan, initialize_factories_session):
+def test_get_claim_no_plan(mock_fineos_period_decisions_no_plan):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
-    employer = EmployerFactory.create()
+    employer = EmployerFactory.build()
     leave_details, _, _ = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions_no_plan
     )
     assert leave_details.status == "Known"
 
 
-def test_get_claim_eform_type_contains_neither_version(
-    mock_fineos_period_decisions, initialize_factories_session
-):
+def test_get_claim_eform_type_contains_neither_version(mock_fineos_period_decisions):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
-    employer = EmployerFactory.create()
+    employer = EmployerFactory.build()
     leave_details, _, _ = get_claim_as_leave_admin(
-        fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions,
+        fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions
     )
     assert leave_details.uses_second_eform_version is True
 
 
-def test_get_claim_other_income_eform_type_contains_both_versions(
-    mock_fineos_other_income_eform_both_versions, initialize_factories_session
-):
+def test_get_claim_other_income_eform_type_contains_both_versions():
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
-    employer = EmployerFactory.create()
+    client = massgov.pfml.fineos.mock_client.MockFINEOSClient(
+        mock_eforms=(MOCK_EFORM_OTHER_INCOME_V1, MOCK_EFORM_OTHER_INCOME_V2)
+    )
+    employer = EmployerFactory.build()
     with pytest.raises(ContainsV1AndV2Eforms):
-        get_claim_as_leave_admin(
-            fineos_user_id,
-            absence_id,
-            employer,
-            fineos_client=mock_fineos_other_income_eform_both_versions,
-        )
+        get_claim_as_leave_admin(fineos_user_id, absence_id, employer, fineos_client=client)
 
 
-def test_get_claim_other_leaves_v2_eform(
-    mock_fineos_other_leaves_v2_eform, initialize_factories_session
-):
+def test_get_claim_other_leaves_v2_eform(mock_fineos_other_leaves_v2_eform):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
-    employer = EmployerFactory.create()
+    employer = EmployerFactory.build()
     leave_details, _, _ = get_claim_as_leave_admin(
-        fineos_user_id, absence_id, employer, fineos_client=mock_fineos_other_leaves_v2_eform,
+        fineos_user_id, absence_id, employer, fineos_client=mock_fineos_other_leaves_v2_eform
     )
 
     assert leave_details.uses_second_eform_version is True
@@ -1877,11 +1924,11 @@ def test_get_claim_other_leaves_v2_eform(
 
 
 def test_get_claim_other_leaves_v2_accrued_leave_different_employer_eform(
-    mock_fineos_other_leaves_v2_accrued_leave_different_employer_eform, initialize_factories_session
+    mock_fineos_other_leaves_v2_accrued_leave_different_employer_eform,
 ):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
-    employer = EmployerFactory.create()
+    employer = EmployerFactory.build()
     leave_details, _, _ = get_claim_as_leave_admin(
         fineos_user_id,
         absence_id,
@@ -1904,12 +1951,12 @@ def test_get_claim_other_leaves_v2_accrued_leave_different_employer_eform(
     assert leave_details.concurrent_leave is None
 
 
-def test_get_claim_other_income(mock_fineos_other_income_v1_eform, initialize_factories_session):
+def test_get_claim_other_income(mock_fineos_other_income_v1_eform):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
-    employer = EmployerFactory.create()
+    employer = EmployerFactory.build()
     leave_details, _, _ = get_claim_as_leave_admin(
-        fineos_user_id, absence_id, employer, fineos_client=mock_fineos_other_income_v1_eform,
+        fineos_user_id, absence_id, employer, fineos_client=mock_fineos_other_income_v1_eform
     )
     assert leave_details.date_of_birth == "****-12-25"
     assert len(leave_details.employer_benefits) == 1
@@ -1934,8 +1981,6 @@ def test_get_claim_other_income(mock_fineos_other_income_v1_eform, initialize_fa
     assert leave_details.residential_address.state == "GA"
     assert leave_details.residential_address.zip == "30303"
     assert leave_details.tax_identifier == "***-**-1234"
-    assert leave_details.follow_up_date == date(2021, 2, 1)
-    assert leave_details.is_reviewable is False
     assert leave_details.status == "Known"
     assert leave_details.uses_second_eform_version is False
 
@@ -1957,13 +2002,12 @@ def test_get_claim_with_open_managed_requirement(
     mock_get_req.return_value = returned_managed_req
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
-    employer = EmployerFactory.create()
+    employer = EmployerFactory.build()
     leave_details, managed_requirements, _ = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions
     )
     assert leave_details.status == "Known"
     assert len(managed_requirements) == len(mock_managed_requirements)
-    assert leave_details.is_reviewable
 
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
@@ -1981,13 +2025,12 @@ def test_get_claim_with_closed_managed_requirement(
     mock_get_req.return_value = returned_managed_req
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
-    employer = EmployerFactory.create()
+    employer = EmployerFactory.build()
     leave_details, managed_requirements, _ = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions
     )
     assert leave_details.status == "Known"
     assert len(managed_requirements) == len(mock_managed_requirements)
-    assert not leave_details.is_reviewable
 
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
@@ -2005,13 +2048,12 @@ def test_get_claim_with_open_expired_managed_requirement(
     mock_get_req.return_value = returned_managed_req
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
-    employer = EmployerFactory.create()
+    employer = EmployerFactory.build()
     leave_details, managed_requirements, _ = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions
     )
     assert leave_details.status == "Known"
     assert len(managed_requirements) == len(mock_managed_requirements)
-    assert not leave_details.is_reviewable
 
 
 # testing class for get_documents_as_leave_admin
@@ -2026,30 +2068,91 @@ class TestGetDocumentsAsLeaveAdmin:
             caseId="123",
             description="foo bar",
             originalFilename="test.pdf",
+            fileExtension=".pdf",
+        )
+
+    @pytest.fixture
+    def group_client_image_png(self):
+        return GroupClientDocument(
+            name="own serious health condition form",
+            documentId=2,
+            type="image",
+            caseId="123",
+            description="foo bar",
+            originalFilename="test.png",
+            fileExtension=".png",
+        )
+
+    @pytest.fixture
+    def group_client_image_jpeg(self):
+        return GroupClientDocument(
+            name="own serious health condition form",
+            documentId=3,
+            type="image",
+            caseId="123",
+            description="foo bar",
+            originalFilename="test.jpeg",
+            fileExtension=".jpeg",
+        )
+
+    @pytest.fixture
+    def group_client_image_jpg(self):
+        return GroupClientDocument(
+            name="own serious health condition form",
+            documentId=4,
+            type="image",
+            caseId="123",
+            description="foo bar",
+            originalFilename="test.jpg",
+            fileExtension=".jpg",
         )
 
     @pytest.fixture
     def group_client_doc_invalid_type(self):
         return GroupClientDocument(
             name="invalid type",
-            documentId=2,
+            documentId=5,
             type="document",
             caseId="234",
             description="foo bar",
             originalFilename="test.pdf",
+            fileExtension=".pdf",
+        )
+
+    @pytest.fixture
+    def group_client_doc_invalid_extension(self):
+        return GroupClientDocument(
+            name="approval notice",
+            documentId=6,
+            type="document",
+            caseId="456",
+            description="foo bar",
+            originalFilename="test.docx",
+            fileExtension=".docx",
         )
 
     def test_get_documents(
-        self, mock_group_client_get_docs, group_client_document, group_client_doc_invalid_type,
+        self,
+        mock_group_client_get_docs,
+        group_client_document,
+        group_client_image_png,
+        group_client_image_jpeg,
+        group_client_image_jpg,
+        group_client_doc_invalid_type,
+        group_client_doc_invalid_extension,
     ):
         mock_group_client_get_docs.return_value = [
             group_client_document,
+            group_client_image_png,
+            group_client_image_jpeg,
+            group_client_image_jpg,
             group_client_doc_invalid_type,
+            group_client_doc_invalid_extension,
         ]
         documents = get_documents_as_leave_admin("fake-user-id", "fake-absence-id")
         mock_group_client_get_docs.assert_called_once_with("fake-user-id", "fake-absence-id")
-        assert len(documents) == 1
-        assert documents[0].fineos_document_id == "1"
+        assert len(documents) == 4
+        assert [d.fineos_document_id for d in documents] == ["1", "2", "3", "4"]
 
 
 # testing class for download_document_as_leave_admin

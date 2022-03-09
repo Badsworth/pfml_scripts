@@ -1,3 +1,7 @@
+import {
+  ApiResponse,
+  GETClaimsByFineosAbsenceIdResponse,
+} from "./../../src/_api";
 /// <reference types="cypress" />
 // ***********************************************************
 // This example plugins/index.js can be used to load plugins
@@ -11,7 +15,6 @@
 
 import config, { configuration } from "../../src/config";
 import path from "path";
-import webpackPreprocessor from "@cypress/webpack-preprocessor";
 import {
   getAuthManager,
   getEmployeePool,
@@ -36,6 +39,7 @@ import TestMailClient, {
   Email,
   GetEmailsOpts,
 } from "../../src/submission/TestMailClient";
+import TwilioClient, { MFAOpts } from "../../src/submission/TwilioClient";
 import DocumentWaiter from "./DocumentWaiter";
 import { ClaimGenerator, DehydratedClaim } from "../../src/generation/Claim";
 import * as scenarios from "../../src/scenarios";
@@ -45,6 +49,8 @@ import { chooseRolePreset } from "../../src/util/fineosRoleSwitching";
 import { FineosSecurityGroups } from "../../src/submission/fineos.pages";
 import { Fineos } from "../../src/submission/fineos.pages";
 import { beforeRunCollectMetadata } from "../reporters/new-relic-collect-metadata";
+import { getClaimsByFineos_absence_id } from "_api";
+import EmployeePool from "../../src/generation/Employee";
 
 export default function (
   on: Cypress.PluginEvents,
@@ -53,6 +59,10 @@ export default function (
   const verificationFetcher = getVerificationFetcher();
   const authenticator = getAuthManager();
   const submitter = getPortalSubmitter();
+  const twilio_client = new TwilioClient(
+    config("TWILIO_ACCOUNTSID"),
+    config("TWILIO_AUTHTOKEN")
+  );
   const documentWaiter = new DocumentWaiter(
     config("API_BASEURL"),
     authenticator
@@ -63,7 +73,9 @@ export default function (
     getAuthVerification: (toAddress: string) => {
       return verificationFetcher.getVerificationCodeForUser(toAddress);
     },
-
+    async mfaVerification(opts: MFAOpts): Promise<string> {
+      return await twilio_client.getPhoneVerification(opts);
+    },
     async chooseFineosRole({
       userId,
       preset,
@@ -157,13 +169,26 @@ export default function (
     waitForClaimDocuments:
       documentWaiter.waitForClaimDocuments.bind(documentWaiter),
 
-    async generateClaim(scenarioID: Scenarios): Promise<DehydratedClaim> {
+    async generateClaim(
+      arg: Scenarios | { scenario: Scenarios; employeePoolFileName?: string }
+    ): Promise<DehydratedClaim> {
+      let scenarioID: Scenarios;
+      let employeePoolFileName: string | null = null;
+
+      if (typeof arg === "object") {
+        scenarioID = arg.scenario;
+        employeePoolFileName = arg.employeePoolFileName || null;
+      } else {
+        scenarioID = arg;
+      }
       if (!(scenarioID in scenarios)) {
         throw new Error(`Invalid scenario: ${scenarioID}`);
       }
       const scenario = scenarios[scenarioID];
       const claim = ClaimGenerator.generate(
-        await getEmployeePool(),
+        employeePoolFileName
+          ? await EmployeePool.load(employeePoolFileName)
+          : await getEmployeePool(),
         scenario.employee,
         scenario.claim as APIClaimSpec
       );
@@ -211,12 +236,52 @@ export default function (
       }
       return null;
     },
-  });
 
-  const options = {
-    webpackOptions: require("../../webpack.config.ts"),
-  };
-  on("file:preprocessor", webpackPreprocessor(options));
+    async findFirstApprovedClaim({
+      applications,
+      credentials,
+    }: {
+      applications: ApplicationResponse[];
+      credentials: Credentials;
+    }): Promise<ApplicationResponse | 0> {
+      const authManager = getAuthManager();
+      const session = await authManager.authenticate(
+        credentials.username,
+        credentials.password
+      );
+      for (let i = 0; i < applications.length && i < 15; i++) {
+        let response: ApiResponse<GETClaimsByFineosAbsenceIdResponse>;
+        try {
+          response = await getClaimsByFineos_absence_id(
+            {
+              fineos_absence_id: applications[i].fineos_absence_id as string,
+            },
+            {
+              baseUrl: authManager.apiBaseUrl,
+              headers: {
+                Authorization: `Bearer ${session
+                  .getAccessToken()
+                  .getJwtToken()}`,
+                "User-Agent": "PFML Business Simulation Bot",
+              },
+            }
+          );
+        } catch (e) {
+          if (!new RegExp(/withdrawn/i).test(e.message)) throw e;
+          else continue;
+        }
+        if (!response.data.data?.absence_periods)
+          throw Error("Missing absence_period property from response");
+        const { absence_periods } = response.data.data;
+        if (
+          absence_periods.length > 0 &&
+          absence_periods[0].request_decision === "Approved"
+        )
+          return applications[i];
+      }
+      return 0;
+    },
+  });
 
   // Pass config values through as environment variables, which we will access via Cypress.env() in actions/common.ts.
   const configEntries = Object.entries(configuration).map(([k, v]) => [

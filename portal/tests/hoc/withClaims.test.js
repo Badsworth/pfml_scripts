@@ -1,6 +1,6 @@
 import { screen, waitFor } from "@testing-library/react";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import Claim from "../../src/models/Claim";
-import ClaimCollection from "../../src/models/ClaimCollection";
 import React from "react";
 import { renderPage } from "../test-utils";
 import withClaims from "../../src/hoc/withClaims";
@@ -59,7 +59,10 @@ describe("withClaims", () => {
 
     setup({
       addCustomSetup: (appLogic) => {
-        const claimsCollection = new ClaimCollection([mockClaim]);
+        const claimsCollection = new ApiResourceCollection(
+          "fineos_absence_id",
+          [mockClaim]
+        );
         appLogic.claims.claims = claimsCollection;
         appLogic.claims.paginationMeta = mockPaginationMeta;
         appLogic.claims.isLoadingClaims = false;
@@ -87,8 +90,10 @@ describe("withClaims", () => {
       page_offset: "2",
       claim_status: "Approved,Pending",
       employer_id: "mock-employer-id",
+      is_reviewable: "yes",
       order_by: "employee",
       order_direction: "descending",
+      request_decision: "approved",
       search: "foo",
     };
 
@@ -101,17 +106,15 @@ describe("withClaims", () => {
       apiParams
     );
 
-    expect(spy).toHaveBeenLastCalledWith(
-      "2",
-      {
-        order_by: "employee",
-        order_direction: "descending",
-      },
-      {
-        claim_status: "Approved,Pending",
-        employer_id: "mock-employer-id",
-        search: "foo",
-      }
-    );
+    expect(spy).toHaveBeenLastCalledWith({
+      page_offset: "2",
+      claim_status: "Approved,Pending",
+      employer_id: "mock-employer-id",
+      is_reviewable: "yes",
+      order_by: "employee",
+      order_direction: "descending",
+      request_decision: "approved",
+      search: "foo",
+    });
   });
 });

@@ -1,4 +1,3 @@
-import { isNil, range } from "lodash";
 import Dropdown from "./Dropdown";
 import Fieldset from "./Fieldset";
 import FormLabel from "./FormLabel";
@@ -7,6 +6,7 @@ import React from "react";
 import classnames from "classnames";
 import convertMinutesToHours from "../../utils/convertMinutesToHours";
 import isBlank from "../../utils/isBlank";
+import { range } from "lodash";
 
 interface InputHoursProps {
   /**
@@ -167,7 +167,7 @@ const InputHours = (props: InputHoursProps) => {
         width="small"
         labelClassName="text-normal"
         inputMode="numeric"
-        value={isNil(props.value) ? "" : hoursMinutes.hours}
+        value={isBlank(props.value) ? "" : hoursMinutes.hours}
         valueType="integer"
         allowNegative={false}
         onChange={handleHoursChange}
@@ -180,7 +180,7 @@ const InputHours = (props: InputHoursProps) => {
         smallLabel
         labelClassName="text-normal"
         choices={minuteChoices}
-        value={isNil(props.value) ? "" : hoursMinutes.minutes}
+        value={isBlank(props.value) ? "" : hoursMinutes.minutes}
         onChange={handleMinutesChange}
       />
     </Fieldset>

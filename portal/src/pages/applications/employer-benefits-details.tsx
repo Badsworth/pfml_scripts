@@ -1,5 +1,4 @@
 import EmployerBenefit, {
-  EmployerBenefitFrequency,
   EmployerBenefitType,
 } from "../../models/EmployerBenefit";
 import { get, pick } from "lodash";
@@ -7,12 +6,9 @@ import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
-import Dropdown from "../../components/core/Dropdown";
 import Fieldset from "../../components/core/Fieldset";
-import FormLabel from "../../components/core/FormLabel";
 import Heading from "../../components/core/Heading";
 import InputChoiceGroup from "../../components/core/InputChoiceGroup";
-import InputCurrency from "../../components/core/InputCurrency";
 import InputDate from "../../components/core/InputDate";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
 import QuestionPage from "../../components/QuestionPage";
@@ -24,8 +20,6 @@ import { useTranslation } from "react-i18next";
 
 export const fields = [
   "claim.employer_benefits",
-  "claim.employer_benefits[*].benefit_amount_dollars",
-  "claim.employer_benefits[*].benefit_amount_frequency",
   "claim.employer_benefits[*].benefit_end_date",
   "claim.employer_benefits[*].benefit_start_date",
   "claim.employer_benefits[*].benefit_type",
@@ -68,7 +62,7 @@ export const EmployerBenefitsDetails = (
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });
@@ -146,26 +140,11 @@ export const EmployerBenefitCard = (props: EmployerBenefitCardProps) => {
   };
   const selectedType = entry.benefit_type;
 
-  const benefitFrequencyChoiceKeys: Array<
-    keyof typeof EmployerBenefitFrequency
-  > = ["daily", "weekly", "monthly", "inTotal"];
-
   const benefitTypeChoiceKeys: Array<keyof typeof EmployerBenefitType> = [
     "shortTermDisability",
     "permanentDisability",
     "familyOrMedicalLeave",
   ];
-
-  const benefitFrequencyChoices = benefitFrequencyChoiceKeys.map(
-    (frequencyKey) => {
-      return {
-        label: t("pages.claimsEmployerBenefitsDetails.amountFrequency", {
-          context: frequencyKey,
-        }),
-        value: EmployerBenefitFrequency[frequencyKey],
-      };
-    }
-  );
 
   return (
     <React.Fragment>
@@ -188,29 +167,6 @@ export const EmployerBenefitCard = (props: EmployerBenefitCardProps) => {
         })}
         label={t("pages.claimsEmployerBenefitsDetails.typeLabel")}
         type="radio"
-        smallLabel
-      />
-      <InputDate
-        {...getFunctionalInputProps(
-          `employer_benefits[${index}].benefit_start_date`
-        )}
-        label={t("pages.claimsEmployerBenefitsDetails.startDateLabel")}
-        example={t("components.form.dateInputExample")}
-        dayLabel={t("components.form.dateInputDayLabel")}
-        monthLabel={t("components.form.dateInputMonthLabel")}
-        yearLabel={t("components.form.dateInputYearLabel")}
-        smallLabel
-      />
-      <InputDate
-        {...getFunctionalInputProps(
-          `employer_benefits[${index}].benefit_end_date`
-        )}
-        label={t("pages.claimsEmployerBenefitsDetails.endDateLabel")}
-        example={t("components.form.dateInputExample")}
-        dayLabel={t("components.form.dateInputDayLabel")}
-        monthLabel={t("components.form.dateInputMonthLabel")}
-        yearLabel={t("components.form.dateInputYearLabel")}
-        optionalText={t("components.form.optional")}
         smallLabel
       />
       <InputChoiceGroup
@@ -241,37 +197,36 @@ export const EmployerBenefitCard = (props: EmployerBenefitCardProps) => {
       />
       <ConditionalContent
         fieldNamesClearedWhenHidden={[
-          `employer_benefits[${index}].benefit_amount_frequency`,
-          `employer_benefits[${index}].benefit_amount_dollars`,
+          `employer_benefits[${index}].benefit_start_date`,
+          `employer_benefits[${index}].benefit_end_date`,
         ]}
         clearField={clearField}
         getField={getEntryField}
         updateFields={updateFields}
-        visible={get(entry, "is_full_salary_continuous") === false}
+        visible={get(entry, "is_full_salary_continuous") === true}
       >
         <Fieldset>
-          <FormLabel component="legend" small>
-            {t("pages.claimsEmployerBenefitsDetails.amountLegend")}
-          </FormLabel>
-          <InputCurrency
+          <InputDate
             {...getFunctionalInputProps(
-              `employer_benefits[${index}].benefit_amount_dollars`,
-              { fallbackValue: null }
+              `employer_benefits[${index}].benefit_start_date`
             )}
-            label={t("pages.claimsEmployerBenefitsDetails.amountLabel")}
-            labelClassName="text-normal margin-top-0"
-            formGroupClassName="margin-top-05"
+            label={t("pages.claimsEmployerBenefitsDetails.startDateLabel")}
+            example={t("components.form.dateInputExample")}
+            dayLabel={t("components.form.dateInputDayLabel")}
+            monthLabel={t("components.form.dateInputMonthLabel")}
+            yearLabel={t("components.form.dateInputYearLabel")}
             smallLabel
           />
-          <Dropdown
+          <InputDate
             {...getFunctionalInputProps(
-              `employer_benefits[${index}].benefit_amount_frequency`
+              `employer_benefits[${index}].benefit_end_date`
             )}
-            choices={benefitFrequencyChoices}
-            label={t(
-              "pages.claimsEmployerBenefitsDetails.amountFrequencyLabel"
-            )}
-            labelClassName="text-normal margin-top-0"
+            label={t("pages.claimsEmployerBenefitsDetails.endDateLabel")}
+            example={t("components.form.dateInputExample")}
+            dayLabel={t("components.form.dateInputDayLabel")}
+            monthLabel={t("components.form.dateInputMonthLabel")}
+            yearLabel={t("components.form.dateInputYearLabel")}
+            optionalText={t("components.form.optional")}
             smallLabel
           />
         </Fieldset>

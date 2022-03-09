@@ -1,3 +1,4 @@
+import enum
 import uuid
 
 import massgov.pfml.delegated_payments.irs_1099.pfml_1099_util as pfml_1099_util
@@ -9,20 +10,23 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 class PopulateRefundsStep(Step):
+    class Metrics(str, enum.Enum):
+        REFUND_COUNT = "refund_count"
+
     def run_step(self) -> None:
         self._populate_refunds()
 
     def _populate_refunds(self) -> None:
         logger.info("1099 Documents - Populate Refunds Step")
 
-        # Get all overpayment data for the 1099 batch
-        overpayment_results = pfml_1099_util.get_overpayments(self.db_session)
-
         # Get the current batch
         batch = pfml_1099_util.get_current_1099_batch(self.db_session)
         if batch is None:
             logger.error("No current batch exists. This should never happen.")
             raise Exception("Batch cannot be empty at this point.")
+
+        # Get all overpayment data for the 1099 batch
+        overpayment_results = pfml_1099_util.get_overpayments(self.db_session, batch)
 
         try:
             # Create 1099 refund record for each overpayment
@@ -58,6 +62,7 @@ class PopulateRefundsStep(Step):
                     "Created 1099 refund.",
                     extra={"pfml_1099_refund_id": pfml_1099_overpayment.pfml_1099_refund_id},
                 )
+                self.increment(self.Metrics.REFUND_COUNT)
 
             self.db_session.commit()
         except Exception:

@@ -11,7 +11,7 @@ import massgov.pfml.dua.demographics as demographics
 import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import ReferenceFile
-from massgov.pfml.dua.config import get_moveit_config, get_s3_config
+from massgov.pfml.dua.config import get_moveit_config, get_transfer_config
 from massgov.pfml.util.batch.log import LogEntry
 from massgov.pfml.util.bg import background_task
 
@@ -42,7 +42,8 @@ class Configuration:
             "--import-mode",
             choices=IMPORT_MODE_ALLOWED_VALUES,
             default=FILE,
-            help="Indicate which mode to process: MOVEIT scans MOVEit, FILE takes a direct path. FILE must be accompanies by --file arg",
+            help="Indicate which mode to process: MOVEIT scans MOVEit, FILE takes a direct path. FILE must be "
+            "accompanies by --file arg",
         )
 
         parser.add_argument(
@@ -52,7 +53,8 @@ class Configuration:
 
         parser.add_argument(
             "--start-date",
-            help="Specifies a start date when set-org-unit-id is run. Must be in ISO-8601 format. If not set, start time of run will be used if also importing a file, otherwise will process all records.",
+            help="Specifies a start date when set-org-unit-id is run. Must be in ISO-8601 format. If not set, "
+            "start time of run will be used if also importing a file, otherwise will process all records.",
         )
 
         parser.add_argument(
@@ -94,18 +96,26 @@ def main():
         db.init(), close=True
     ) as log_entry_db_session:
         with LogEntry(log_entry_db_session, "DUA import_demographics_file") as log_entry:
-            s3_config = get_s3_config()
 
             if config.import_demographics_file:
+                transfer_config = get_transfer_config()
+
                 if config.import_mode == MOVEIT:
                     moveit_config = get_moveit_config()
                     reference_files = demographics.download_demographics_file_from_moveit(
-                        db_session, log_entry, s3_config=s3_config, moveit_config=moveit_config
+                        db_session,
+                        log_entry,
+                        transfer_config=transfer_config,
+                        moveit_config=moveit_config,
                     )
 
                     for file in reference_files:
                         demographics.load_demographics_file(
-                            db_session, file, log_entry, move_files=True, s3_config=s3_config
+                            db_session,
+                            file,
+                            log_entry,
+                            move_files=True,
+                            transfer_config=transfer_config,
                         )
 
                 elif config.import_mode == FILE:
@@ -113,7 +123,7 @@ def main():
                         db_session,
                         ReferenceFile(file_location=config.file_path),
                         log_entry,
-                        s3_config=s3_config,
+                        transfer_config=transfer_config,
                     )
 
             if config.set_org_unit_id:

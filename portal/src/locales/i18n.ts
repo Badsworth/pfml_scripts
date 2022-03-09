@@ -3,6 +3,7 @@
  * @see docs/internationalization.md
  */
 import i18next, { FormatFunction, Resource } from "i18next";
+import bytesToMb from "../utils/bytesToMb";
 import englishLocale from "./app/en-US";
 import formatValue from "./formatters";
 import { initReactI18next } from "react-i18next";
@@ -44,6 +45,11 @@ export const initializeI18n = (
         debug: process.env.NODE_ENV === "development",
         fallbackLng: defaultLocale,
         interpolation: {
+          defaultVariables: {
+            fileSizeMaxMB: bytesToMb(
+              Number(process.env.fileSizeMaxBytesFineos)
+            ),
+          },
           escapeValue: false, // react already escapes values
           format: formatValue as FormatFunction,
         },

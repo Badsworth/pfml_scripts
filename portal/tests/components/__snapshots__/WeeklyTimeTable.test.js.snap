@@ -2,7 +2,7 @@
 
 exports[`WeeklyTimeTable renders a table with days of the week and times 1`] = `
 <table
-  class="usa-table usa-table--borderless c-table"
+  class="usa-table usa-table--borderless"
 >
   <thead>
     <tr>

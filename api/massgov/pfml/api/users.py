@@ -1,5 +1,5 @@
 import connexion
-from werkzeug.exceptions import BadRequest, NotFound
+from werkzeug.exceptions import BadRequest
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
@@ -10,12 +10,13 @@ from massgov.pfml.api.models.users.requests import (
     UserCreateRequest,
     UserUpdateRequest,
 )
-from massgov.pfml.api.models.users.responses import user_response
+from massgov.pfml.api.models.users.responses import UserResponse
 from massgov.pfml.api.services.users import update_user
 from massgov.pfml.api.util.deepgetattr import deepgetattr
 from massgov.pfml.api.validation.exceptions import IssueType, ValidationErrorDetail
 from massgov.pfml.api.validation.user_rules import (
     get_users_convert_employer_issues,
+    get_users_patch_issues,
     get_users_post_employer_issues,
     get_users_post_required_fields_issues,
 )
@@ -85,10 +86,8 @@ def users_post():
                 errors=[e.issue],
                 data={},
             ).to_api_response()
-        data = user_response(user, db_session)
-    logger.info(
-        "users_post success - account created", extra={"is_employer": str(is_employer)},
-    )
+        data = UserResponse.from_orm(user).dict()
+    logger.info("users_post success - account created", extra={"is_employer": str(is_employer)})
 
     return response_util.success_response(
         data=data,
@@ -100,10 +99,10 @@ def users_post():
 def users_get(user_id):
     with app.db_session() as db_session:
         u = get_or_404(db_session, User, user_id)
-        data = user_response(u, db_session)
+        data = UserResponse.from_orm(u).dict()
     ensure(READ, u)
     return response_util.success_response(
-        message="Successfully retrieved user", data=data,
+        message="Successfully retrieved user", data=data
     ).to_api_response()
 
 
@@ -152,14 +151,14 @@ def users_convert_employer(user_id):
             add_leave_admin_and_role(db_session, updated_user, employer)
             db_session.commit()
             db_session.refresh(updated_user)
-        data = user_response(updated_user, db_session)
+        data = UserResponse.from_orm(updated_user).dict()
     logger.info(
         "users_convert_employer success - account converted",
         extra={"employer_id": employer.employer_id},
     )
 
     return response_util.success_response(
-        message="Successfully converted user", status_code=201, data=data,
+        message="Successfully converted user", status_code=201, data=data
     ).to_api_response()
 
 
@@ -167,16 +166,11 @@ def users_current_get():
     """Return the currently authenticated user"""
     current_user = app.current_user()
 
-    # this should not ever be the case once authentication is required
-    if current_user is None:
-        raise NotFound
-
     ensure(READ, current_user)
-    with app.db_session() as db_session:
-        data = user_response(current_user, db_session)
+    data = UserResponse.from_orm(current_user).dict()
 
     return response_util.success_response(
-        message="Successfully retrieved current user", data=data,
+        message="Successfully retrieved current user", data=data
     ).to_api_response()
 
 
@@ -184,14 +178,24 @@ def users_patch(user_id):
     """This endpoint modifies the user specified by the user_id"""
     body = UserUpdateRequest.parse_obj(connexion.request.json)
 
+    issues = get_users_patch_issues(body)
+    if issues:
+        logger.info("users_patch failure - request has invalid fields")
+        return response_util.error_response(
+            status_code=BadRequest,
+            message="Request does not include valid fields.",
+            errors=issues,
+            data={},
+        ).to_api_response()
+
     with app.db_session() as db_session:
         user = get_or_404(db_session, User, user_id)
 
-    ensure(EDIT, user)
+        ensure(EDIT, user)
 
-    updated_user = update_user(user, body)
-    data = user_response(updated_user, db_session)
+    updated_user = update_user(db_session, user, body)
+    data = UserResponse.from_orm(updated_user).dict()
 
     return response_util.success_response(
-        message="Successfully updated user", data=data,
+        message="Successfully updated user", data=data
     ).to_api_response()

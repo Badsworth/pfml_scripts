@@ -19,11 +19,49 @@ resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
   }
 
   #------------------------------------------------------------------------------#
+  #                        log4j-ZDE AWS WAF rule                            #
+  #------------------------------------------------------------------------------#
+  rule {
+    name     = "mass-pfml-${var.environment_name}-log4j-ZDE-acl"
+    priority = 0
+
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesKnownBadInputsRuleSet"
+        vendor_name = "AWS"
+
+        excluded_rule {
+          name = "Host_localhost_HEADER"
+        }
+
+        excluded_rule {
+          name = "PROPFIND_METHOD"
+        }
+
+        excluded_rule {
+          name = "ExploitablePaths_URIPATH"
+        }
+
+      }
+    }
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "log4j-ZDE"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  #------------------------------------------------------------------------------#
   #                        Rate-limiting AWS WAF rule                            #
   #------------------------------------------------------------------------------#
   rule {
     name     = "mass-pfml-${var.environment_name}-rate-based-acl"
-    priority = 0
+    priority = 1
 
     dynamic "action" {
       for_each = var.enforce_cloudfront_rate_limit ? [1] : []
@@ -52,12 +90,34 @@ resource "aws_wafv2_web_acl" "cloudfront_waf_acl" {
       sampled_requests_enabled   = true
     }
   }
+
+  #------------------------------------------------------------------------------#
+  #                            Geo Match AWS WAF rule                            #
+  #------------------------------------------------------------------------------#
+  rule {
+    name     = "massgov-pfml-${var.environment_name}-block-high-risk-countries-rule"
+    priority = 2
+    action {
+      block {}
+    }
+    statement {
+      geo_match_statement {
+        country_codes = module.constants.high_risk_country_codes
+      }
+    }
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "massgov-pfml-${var.environment_name}-block-high-risk-countries"
+      sampled_requests_enabled   = true
+    }
+  }
+
   #------------------------------------------------------------------------------#
   #                      Fortinet OWASP 10 AWS WAF rule                          #
   #------------------------------------------------------------------------------#
   rule {
     name     = "mass-pfml-${var.environment_name}-fortinet-managed-rules"
-    priority = 1
+    priority = 3
 
 
     dynamic "override_action" {

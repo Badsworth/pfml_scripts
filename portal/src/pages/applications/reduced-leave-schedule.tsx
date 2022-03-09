@@ -21,7 +21,6 @@ import { Trans } from "react-i18next";
 import WeeklyTimeTable from "../../components/WeeklyTimeTable";
 import convertMinutesToHours from "../../utils/convertMinutesToHours";
 import findKeyByValue from "../../utils/findKeyByValue";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import spreadMinutesOverWeek from "../../utils/spreadMinutesOverWeek";
 import useFormState from "../../hooks/useFormState";
@@ -108,7 +107,7 @@ export const ReducedLeaveSchedule = (props: WithBenefitsApplicationProps) => {
   );
 
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });
@@ -170,11 +169,7 @@ export const ReducedLeaveSchedule = (props: WithBenefitsApplicationProps) => {
           <Trans
             i18nKey="pages.claimsReducedLeaveSchedule.leadCertGuidance"
             tOptions={{
-              context:
-                claim.isMedicalOrPregnancyLeave &&
-                isFeatureEnabled("updateMedicalCertForm")
-                  ? "updateMedicalCertForm"
-                  : contentContext,
+              context: contentContext,
             }}
           />
         </Lead>

@@ -2,7 +2,8 @@ locals {
   environment_name = "prod"
 }
 provider "aws" {
-  region = "us-east-1"
+  region  = "us-east-1"
+  version = "3.74.1"
 }
 
 terraform {
@@ -83,6 +84,7 @@ module "tasks" {
   enable_pub_automation_fineos           = true
   enable_pub_automation_create_pub_files = true
   enable_pub_automation_process_returns  = true
+  enable_fineos_import_iaww              = true
 
   enable_reductions_send_claimant_lists_to_agencies_schedule = true
   enable_reductions_process_agency_data_schedule             = true
@@ -97,7 +99,14 @@ module "tasks" {
   dor_fineos_etl_schedule_expression_standard         = "cron(30 1 * * ? *)"
   dor_fineos_etl_schedule_expression_daylight_savings = "cron(30 0 * * ? *)"
 
-  pdf_api_host             = "http://localhost:5000"
-  enable_generate_1099_pdf = "0"
-  enable_merge_1099_pdf    = "0"
+  pdf_api_host                    = "http://localhost:5000"
+  enable_generate_1099_pdf        = "0"
+  generate_1099_max_files         = "1000"
+  enable_merge_1099_pdf           = "0"
+  enable_upload_1099_pdf          = "0"
+  upload_max_files_to_fineos      = "10"
+  enable_1099_testfile_generation = "0"
+  irs_1099_correction_ind         = "0"
+
+  enable_employer_reimbursement_payments = "0"
 }

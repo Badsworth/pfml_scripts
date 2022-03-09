@@ -1,25 +1,19 @@
 import {
+  BondingFosterClaim,
   CaringLeaveClaim,
   MilitaryCaregiverClaim,
   MilitaryExigencyClaim,
   ScenarioSpecification,
 } from "../generation/Scenario";
-import {
-  addWeeks,
-  subWeeks,
-  startOfWeek,
-  addDays,
-  subDays,
-  parseISO,
-} from "date-fns";
-import * as faker from "faker";
+import { addWeeks, subWeeks, startOfWeek, addDays, subDays } from "date-fns";
+
 /**
  * Cypress Testing Scenarios.
  *
  * 99% of our Cypress scenarios are short claims (1 day). If you add a new scenario here, please ensure it is a
  * short claim, or you explain why it is not.
  */
-export const BHAP1: ScenarioSpecification = {
+export const BHAP1: ScenarioSpecification<BondingFosterClaim> = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
     label: "BHAP1",
@@ -158,7 +152,6 @@ export const MRAP30: ScenarioSpecification = {
   },
 };
 
-// Only used in ignored `bond_continuous_approval_payment_90K.ts` spec
 export const BCAP90: ScenarioSpecification = {
   employee: {
     wages: 90000,
@@ -175,7 +168,7 @@ export const BCAP90: ScenarioSpecification = {
     },
     // This scenario requires a 2 week leave time for payment calculation purposes.
     leave_dates: [subWeeks(mostRecentSunday, 1), addWeeks(mostRecentSunday, 1)],
-    metadata: { expected_weekly_payment: "850.00" },
+    metadata: { expected_weekly_payment: "1084.31" },
   },
 };
 
@@ -188,7 +181,7 @@ export const BIAP60: ScenarioSpecification = {
     label: "BIAP60",
     reason: "Child Bonding",
     reason_qualifier: "Newborn",
-    bondingDate: "future",
+    bondingDate: "past",
     work_pattern_spec: "0,240,240,240,240,240,0",
     docs: {
       MASSID: {},
@@ -198,10 +191,11 @@ export const BIAP60: ScenarioSpecification = {
       duration: 5,
       duration_basis: "Days",
     },
+    is_withholding_tax: false,
     // This scenario requires a 4 week leave time for payment calculation purposes.
-    leave_dates: [subWeeks(mostRecentSunday, 3), addWeeks(mostRecentSunday, 1)],
+    leave_dates: [subWeeks(mostRecentSunday, 4), mostRecentSunday],
     metadata: {
-      expected_weekly_payment: "800.09",
+      expected_weekly_payment: "831.06",
       spanHoursStart: "4",
       spanHoursEnd: "4",
     },
@@ -232,7 +226,18 @@ export const CCAP90: ScenarioSpecification = {
     work_pattern_spec: "0,720,0,720,0,720,0",
     docs: { MASSID: {}, CARING: {} },
     leave_dates: [subWeeks(mostRecentSunday, 1), addWeeks(mostRecentSunday, 1)],
-    metadata: { expected_weekly_payment: "850.00" },
+    metadata: { expected_weekly_payment: "1084.31" },
+  },
+};
+
+export const CCAP90ER: ScenarioSpecification = {
+  ...CCAP90,
+  claim: {
+    ...CCAP90.claim,
+    employerResponse: {
+      employer_decision: "Approve",
+      hours_worked_per_week: 40,
+    },
   },
 };
 
@@ -246,6 +251,35 @@ export const CDENY2: ScenarioSpecification = {
     docs: {
       MASSID: {},
       CARING: {},
+    },
+  },
+};
+
+export const CDENY2ER: ScenarioSpecification = {
+  ...CDENY2,
+  claim: {
+    ...CDENY2.claim,
+    employerResponse: {
+      employer_decision: "Approve",
+      hours_worked_per_week: 40,
+    },
+  },
+};
+
+export const ORGUNIT: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "ORGUNIT",
+    shortClaim: true,
+    has_continuous_leave_periods: true,
+    reason: "Care for a Family Member",
+    docs: {
+      MASSID: {},
+      CARING: {},
+    },
+    metadata: {
+      orgunits: "Division of Administrative Law Appeals",
+      worksite: "TEAMX_",
     },
   },
 };
@@ -291,6 +325,21 @@ export const MED_OLB: ScenarioSpecification = {
         worked_per_week_minutes: 1200,
       },
     ],
+  },
+};
+
+export const CONCURRENT: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "CONCURRENT",
+    shortClaim: true,
+    reason: "Serious Health Condition - Employee",
+    work_pattern_spec: "0,315,315,315,315,315,0",
+    docs: {
+      MASSID: {},
+      //HCP: {}
+    },
+    concurrent_leave: { is_for_current_employer: true },
   },
 };
 
@@ -363,35 +412,23 @@ export const CONTINUOUS_MEDICAL_OLB: ScenarioSpecification = {
       },
     ],
     concurrent_leave: { is_for_current_employer: true },
-    metadata: { expected_weekly_payment: "850.00" },
+    metadata: { expected_weekly_payment: "1084.31" },
   },
 };
 
-const getFutureStartDates2022 = (): [Date, Date] => {
-  const start = faker.date.between(
-    parseISO("2022-01-03"),
-    addDays(new Date(), 60)
-  );
-  const startDate = startOfWeek(start);
-  const endDate = addWeeks(startDate, 2);
-  return [startDate, endDate];
-};
 export const BHAP1_OLB: ScenarioSpecification = {
   employee: { mass_id: true, wages: 90000 },
   claim: {
     label: "BHAP1_OLB",
     reason: "Child Bonding",
-    reason_qualifier: "Foster Care", // @todo: remove after 1/14/22. This is a temporary workaround for future leave, so that employer can make amendments
-    // reason_qualifier: "Newborn",
-    // bondingDate: "future",
+    reason_qualifier: "Newborn",
+    bondingDate: "future",
     docs: {
       MASSID: {},
-      FOSTERPLACEMENT: {},
+      BIRTHCERTIFICATE: {},
     },
     // Create a leave in progress, so we can check adjustments for both made and future payments.
-    // @todo: reinstate after 1/14/22 - this scenario is used for testing tax withholdings, where claims must start after 1/1/22
-    // leave_dates: [subWeeks(mostRecentSunday, 2), addWeeks(mostRecentSunday, 2)],
-    leave_dates: getFutureStartDates2022(),
+    leave_dates: [subWeeks(mostRecentSunday, 2), addWeeks(mostRecentSunday, 2)],
     // Leave start & end dates here and in employer benefits empty so they match the leave dates automatically
     other_incomes: [
       {
@@ -417,8 +454,9 @@ export const BHAP1_OLB: ScenarioSpecification = {
         worked_per_week_minutes: 1200,
       },
     ],
+    is_withholding_tax: true,
     concurrent_leave: { is_for_current_employer: true },
-    metadata: { expected_weekly_payment: "850.00" },
+    metadata: { expected_weekly_payment: "1084.31" },
   },
 };
 
@@ -509,14 +547,22 @@ export const WDCLAIM: ScenarioSpecification = {
   },
 };
 
-export const HIST_CASE: ScenarioSpecification = {
+export const HIST_CASE: ScenarioSpecification<CaringLeaveClaim> = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
     label: "HIST_CASE",
     shortClaim: true,
     has_continuous_leave_periods: true,
     reason: "Care for a Family Member",
-    docs: {},
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+      fraud: "No",
+    },
+    docs: {
+      MASSID: {},
+      CARING: {},
+    },
   },
 };
 
@@ -540,6 +586,33 @@ export const MED_LSDCR: ScenarioSpecification = {
   },
 };
 
+export const MED_ERRE: ScenarioSpecification = {
+  employee: {
+    wages: 30000,
+    mass_id: true,
+  },
+  claim: {
+    label: "MED_ERRE",
+    shortClaim: true,
+    reason: "Serious Health Condition - Employee",
+    leave_dates: [subWeeks(mostRecentSunday, 2), addWeeks(mostRecentSunday, 2)],
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+      fraud: "No",
+      employer_benefits: [],
+    },
+    docs: {
+      HCP: {},
+      MASSID: {},
+    },
+    metadata: {
+      expected_weekly_payment: "461.54",
+      employerReAmount: 100,
+    },
+  },
+};
+
 export const CARE_TAXES: ScenarioSpecification<CaringLeaveClaim> = {
   employee: { wages: 30000 },
   claim: {
@@ -549,8 +622,36 @@ export const CARE_TAXES: ScenarioSpecification<CaringLeaveClaim> = {
       startOfWeek(addDays(new Date(), 60)), // claims must start in 2022 in order to test SIT/FIT withholdings
       startOfWeek(addDays(new Date(), 74)),
     ],
+    is_withholding_tax: true,
     work_pattern_spec: "standard",
     reduced_leave_spec: "0,240,240,240,240,240,0",
     docs: { CARING: {}, MASSID: {} },
+  },
+};
+
+export const MED_CONT_ER_APPROVE: ScenarioSpecification = {
+  employee: { wages: 60000 },
+  claim: {
+    reason: "Serious Health Condition - Employee",
+    label: "MED_CONT_ER_APPROVE",
+    leave_dates: [
+      startOfWeek(subWeeks(new Date(), 3)),
+      startOfWeek(addWeeks(new Date(), 1)),
+    ],
+    address: {
+      city: "Washington",
+      line_1: "1600 Pennsylvania Avenue NW",
+      state: "DC",
+      zip: "20500",
+    },
+    work_pattern_spec: "standard",
+    docs: { MASSID: {}, HCP: {} },
+    payment: {
+      payment_method: "Check",
+    },
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+    },
   },
 };

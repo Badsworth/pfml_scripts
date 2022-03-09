@@ -22,7 +22,7 @@ interface ResetPasswordProps {
 
 export const ResetPassword = (props: ResetPasswordProps) => {
   const { appLogic } = props;
-  const { appErrors, auth } = appLogic;
+  const { errors, auth } = appLogic;
   const { t } = useTranslation();
 
   const cachedEmail = get(auth, "authData.resetPasswordUsername", "");
@@ -51,7 +51,7 @@ export const ResetPassword = (props: ResetPasswordProps) => {
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors,
+    errors,
     formState,
     updateFields,
   });
@@ -62,7 +62,7 @@ export const ResetPassword = (props: ResetPasswordProps) => {
         label={t("pages.authResetPassword.backToLoginLink")}
         href={routes.auth.login}
       />
-      {codeResent && appErrors.isEmpty && (
+      {codeResent && !errors.length && (
         <Alert
           className="margin-bottom-3 margin-top-0"
           heading={t("pages.authResetPassword.codeResentHeading")}

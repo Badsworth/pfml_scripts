@@ -794,9 +794,9 @@ def process_a_list_of_employers(
 
     logger.info(f"Starting eligibility feeds generation for a list of employers: {employer_ids}")
 
-    employers_to_process: List[Employer] = db_session.query(Employer).filter(
-        Employer.employer_id.in_(employer_ids)
-    ).all()
+    employers_to_process: List[Employer] = (
+        db_session.query(Employer).filter(Employer.employer_id.in_(employer_ids)).all()
+    )
     employers_to_process_count = len(employers_to_process)
 
     if employers_to_process_count != len(employer_ids):
@@ -920,7 +920,7 @@ def open_and_write_to_eligibility_file(
                 s3_obj = output_file.to_boto3()
 
             write_employees_to_csv(
-                employer, str(fineos_employer_id), number_of_employees, employees, output_file,
+                employer, str(fineos_employer_id), number_of_employees, employees, output_file
             )
     except Exception:
         logger.info(

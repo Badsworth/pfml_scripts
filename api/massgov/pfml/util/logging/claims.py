@@ -1,11 +1,13 @@
 from collections import defaultdict
-from typing import Any, Dict, Optional
+from datetime import date
+from typing import Any, Dict, List, Optional
 
 import massgov.pfml.util.logging
 from massgov.pfml.api.models.claims.common import EmployerClaimReview
 from massgov.pfml.api.models.claims.responses import (
-    AbsencePeriodStatusResponse,
+    AbsencePeriodResponse,
     DetailedClaimResponse,
+    ManagedRequirementResponse,
 )
 from massgov.pfml.db.models.employees import Claim
 
@@ -25,6 +27,19 @@ def get_claim_log_attributes(claim: Optional[Claim]) -> Dict[str, Any]:
     )
 
     return {"leave_reason": leave_reason}
+
+
+def get_managed_requirements_log_attributes(
+    managed_requirements: List[ManagedRequirementResponse],
+) -> Dict[str, Any]:
+    responded_requirements = list(
+        filter(lambda r: r.responded_at is not None, managed_requirements)
+    )
+
+    return {
+        "num_requirements": len(managed_requirements),
+        "num_responded_requirements": len(responded_requirements),
+    }
 
 
 def get_claim_review_log_attributes(claim_review: Optional[EmployerClaimReview]) -> Dict[str, Any]:
@@ -57,7 +72,9 @@ def log_get_claim_metrics(claim: DetailedClaimResponse) -> None:
         period_dict[period.request_decision].append(period)
 
         # log individual absence period info as well
-        _log_get_claim_absence_period(claim, period)
+        log_absence_period(
+            claim.fineos_absence_id, period, "get_claim - Found absence period for claim"
+        )
 
     approved_periods = period_dict["Approved"]
     denied_periods = period_dict["Denied"]
@@ -65,6 +82,7 @@ def log_get_claim_metrics(claim: DetailedClaimResponse) -> None:
 
     log_attributes: Dict[str, Any] = {
         "absence_id": claim.fineos_absence_id,
+        "absence_case_id": claim.fineos_absence_id,
         "num_absence_periods": len(periods),
         "num_approved_absence_periods": len(approved_periods),
         "num_denied_absence_periods": len(denied_periods),
@@ -78,7 +96,10 @@ def log_get_claim_metrics(claim: DetailedClaimResponse) -> None:
         if requirements is None or len(requirements) == 0:
             logger.warning(
                 "get_claim - No managed requirements found for claim with pending absence period",
-                extra={"absence_id": claim.fineos_absence_id},
+                extra={
+                    "absence_id": claim.fineos_absence_id,
+                    "absence_case_id": claim.fineos_absence_id,
+                },
             )
         else:
             open_requirements = list(filter(lambda r: r.status == "Open", requirements))
@@ -91,22 +112,46 @@ def log_get_claim_metrics(claim: DetailedClaimResponse) -> None:
             else:
                 logger.warning(
                     "get_claim - Multiple open requirements for claim",
-                    extra={"absence_id": claim.fineos_absence_id},
+                    extra={
+                        "absence_id": claim.fineos_absence_id,
+                        "absence_case_id": claim.fineos_absence_id,
+                    },
                 )
 
     logger.info("get_claim success", extra=log_attributes)
 
 
-def _log_get_claim_absence_period(
-    claim: DetailedClaimResponse, absence_period: AbsencePeriodStatusResponse
+def log_absence_period(
+    fineos_absence_id: Optional[str], absence_period: AbsencePeriodResponse, message: str
 ) -> None:
     log_attributes = {
-        "absence_id": claim.fineos_absence_id,
-        "leave_period_id": absence_period.fineos_leave_period_id,
+        "absence_id": fineos_absence_id,
+        "absence_case_id": fineos_absence_id,
+        "leave_request_id": absence_period.fineos_leave_request_id,
         "reason": absence_period.reason,
         "request_decision": absence_period.request_decision,
         "start_date": absence_period.absence_period_start_date,
         "end_date": absence_period.absence_period_end_date,
     }
 
-    logger.info("get_claim - Found absence period for claim", extra=log_attributes)
+    logger.info(message, extra=log_attributes)
+
+
+def log_managed_requirement(
+    managed_requirement: ManagedRequirementResponse, fineos_absence_id: str
+) -> None:
+    log_attributes: Dict[str, Any] = {
+        "absence_case_id": fineos_absence_id,
+        "follow_up_date": managed_requirement.follow_up_date,
+        "responded_at": managed_requirement.responded_at,
+        "status": managed_requirement.status,
+        "category": managed_requirement.category,
+        "type": managed_requirement.type,
+    }
+
+    if managed_requirement.status == "Open" and managed_requirement.follow_up_date is not None:
+        current_date = date.today()
+        days_to_follow_up_date = managed_requirement.follow_up_date - current_date
+        log_attributes.update({"days_to_follow_up_date": days_to_follow_up_date.days})
+
+    logger.info("Found managed requirement for claim", extra=log_attributes)

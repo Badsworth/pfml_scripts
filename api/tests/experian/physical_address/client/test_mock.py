@@ -1,7 +1,7 @@
 import pytest
 
-from massgov.pfml.db.models.employees import GeoState
 from massgov.pfml.db.models.factories import AddressFactory
+from massgov.pfml.db.models.geo import GeoState
 from massgov.pfml.experian.experian_util import MockExperianException
 from massgov.pfml.experian.physical_address.client.mock import MockClient
 from massgov.pfml.experian.physical_address.client.models import Confidence

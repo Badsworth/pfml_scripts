@@ -2,7 +2,7 @@ import withUser, { WithUserProps } from "../../../hoc/withUser";
 import Alert from "../../../components/core/Alert";
 import BackButton from "../../../components/BackButton";
 import ButtonLink from "../../../components/ButtonLink";
-import LeaveAdministratorRow from "../../../components/employers/LeaveAdministratorRow";
+import LeaveAdministratorRow from "../../../features/employer-review/LeaveAdministratorRow";
 import React from "react";
 import Table from "../../../components/core/Table";
 import Title from "../../../components/core/Title";

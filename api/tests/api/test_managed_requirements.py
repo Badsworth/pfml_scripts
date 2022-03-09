@@ -71,7 +71,7 @@ class TestManagedRequirementQuery:
     @pytest.fixture
     def claim(self, employer):
         return ClaimFactory.create(
-            employer_id=employer.employer_id, fineos_absence_id=leave_admin_body["absence_case_id"],
+            employer_id=employer.employer_id, fineos_absence_id=leave_admin_body["absence_case_id"]
         )
 
     @pytest.fixture
@@ -99,7 +99,7 @@ class TestManagedRequirementQuery:
         self, client, test_db_session, claim, fineos_managed_requirement
     ):
         create_managed_requirement_from_fineos(
-            test_db_session, claim.claim_id, fineos_managed_requirement, {}
+            test_db_session, claim.claim_id, fineos_managed_requirement
         )
         managed_requirement = get_managed_requirement_by_fineos_managed_requirement_id(
             fineos_managed_requirement.managedReqId, test_db_session
@@ -112,9 +112,8 @@ class TestManagedRequirementQuery:
         self, client, test_db_session, claim, fineos_managed_requirement
     ):
         db_requirement = create_managed_requirement_from_fineos(
-            test_db_session, claim.claim_id, fineos_managed_requirement, {}
+            test_db_session, claim.claim_id, fineos_managed_requirement
         )
-
         # create existing managed requirements in db not in sync with fineos managed requirements
         fineos_managed_requirement.followUpDate = date.today() + timedelta(days=7)
         fineos_managed_requirement.status = ManagedRequirementStatus.get_description(2)

@@ -1,0 +1,315 @@
+#
+# This workflow actually runs E2E tests: Cypress and Jest.
+#
+# It is a "reusable" workflow, meaning it can only be triggered as part of another workflow.
+# It runs tests in parallel, and tests are split into four categories:
+#   * Stable - tests that must pass before release.
+#   * Unstable - tests that are advisory (for upcoming features) and should not block release.
+#   * Ignored - tests that are not run at all in CI.
+#   * Morning - tests that run to check features are working correctly.
+
+# This name shouldn't matter, as it isn't displayed. We add "ZZ" to make it float to the bottom
+# of the workflows list in case it somehow gets triggered directly.
+name: "ZZ: E2E Tests"
+
+on:
+  # Note: Inputs must be kept in sync between workflow_call and workflow_run.
+  workflow_call:
+    inputs:
+      target_environment:
+        description: "Target Environment"
+        required: true
+        default: "test"
+        type: string
+      cypress_tags:
+        description: "Cypress Run Tags"
+        required: false
+        default: "Manual - Other"
+        type: string
+      title_override:
+        description: "Title Override (replaces commit message in Cypress Dashboard)"
+        type: string
+        required: false
+      run_stable:
+        description: |
+          🛑 REMEMBER TO UNCHECK IF YOU WANT TO RUN A SINGLE/GROUP OF TESTS     
+          --------------------------------------
+          ⬇️ Run tests in stable group. This is checked by default 
+          and runs the core suite of tests that are needed to pass
+          prior to deployments.          
+        required: false
+        default: true
+        type: boolean
+      run_unstable:
+        description: "Run tests in unstable group"
+        required: false
+        default: false
+        type: boolean
+      run_morning:
+        description: "Run tests in morning group"
+        required: false
+        default: false
+        type: boolean
+      run_targeted:
+        description: |
+          ⬇️ Run a specific test, comma seperated (no space)
+          list of tests, or blob: Ex:  cypress/specs/stable/feature/api_**         
+        required: false
+        default: false
+        type: boolean
+      targeted_pattern: 
+        description: "Input Pattern"          
+        required: false
+        default: "cypress/specs/<group>/<type>/**"
+        type: string
+    secrets:
+      # Note: this is EVERY secret we use in this workflow. It's critical that these line up with what's
+      # in our actual secrets, so when this workflow is invoked using workflow_dispatch, we can still access
+      # them.
+      E2E_FINEOS_PASSWORD: { description: "", required: true }
+      E2E_PORTAL_PASSWORD: { description: "", required: true }
+      E2E_EMPLOYER_PORTAL_PASSWORD: { description: "", required: true }
+      E2E_TESTMAIL_APIKEY: { description: "", required: true }
+      E2E_SSO_PASSWORD: { description: "", required: true }
+      E2E_SSO_USERNAME: { description: "", required: true }
+      E2E_TWILIO_ACCOUNTSID: { description: "", required: true }
+      E2E_TWILIO_AUTHTOKEN: { description: "", required: true }
+      CYPRESS_RECORD_KEY: { description: "", required: true }
+      CYPRESS_RECORD_KEY_UNSTABLE: { description: "", required: true }
+      CYPRESS_RECORD_KEY_MORNING: { description: "", required: true }
+      CYPRESS_RECORD_KEY_TARGETED: { description: "", required: true }
+      PFML_AWS_ACCESS_KEY_ID: { description: "", required: true }
+      PFML_AWS_SECRET_ACCESS_KEY: { description: "", required: true }
+
+defaults:
+  run:
+    working-directory: e2e
+
+env:
+  E2E_ENVIRONMENT: ${{ inputs.target_environment }}
+  COMMIT_INFO_MESSAGE: |
+    ${{ inputs.title_override || format('Manual Run: {0}', inputs.target_environment) }}
+  # Setup any secret overrides that are necessary here.
+  # Most other environment variables will come from /e2e/config.json,
+  # as determined by the E2E_ENVIRONMENT variable.
+  E2E_FINEOS_PASSWORD: ${{ secrets.E2E_FINEOS_PASSWORD }}
+  E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
+  E2E_EMPLOYER_PORTAL_PASSWORD: ${{ secrets.E2E_EMPLOYER_PORTAL_PASSWORD }}
+  E2E_TESTMAIL_APIKEY: ${{ secrets.E2E_TESTMAIL_APIKEY }}
+  E2E_SSO_PASSWORD: ${{ secrets.E2E_SSO_PASSWORD }}
+  E2E_SSO_USERNAME: ${{ secrets.E2E_SSO_USERNAME }}
+  E2E_TWILIO_ACCOUNTSID: ${{ secrets.E2E_TWILIO_ACCOUNTSID }}
+  E2E_TWILIO_AUTHTOKEN: ${{ secrets.E2E_TWILIO_AUTHTOKEN }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # Caching/build performance - Move Cypress, Playwright binary storage to .npm to leverage caching.
+  CYPRESS_CACHE_FOLDER: /home/runner/.npm/.cypress-cache
+  PLAYWRIGHT_BROWSERS_PATH: /home/runner/.npm/.playwright-cache
+  PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 1 # We never actually need puppeteer chromium installed
+  TEST_RUN_ID: ${{ github.repository }}-${{ github.run_id }}-${{ github.run_attempt}}
+
+# Prevent this workflow from running more than 1x concurrently in any environment.
+# This prevents us from overloading the environment with requests, which causes false failures.
+# Cypress & Flood share the same concurrency key to prevent E2E and Flood running concurrently.
+concurrency: E2E-${{ inputs.target_environment }}
+
+jobs:
+  # Health check job. Ensures Fineos is online before proceeding with testing. This saves resources
+  # when we know we're going to get a high failure rate.
+  health:
+    name: Health Check ** ${{ inputs.target_environment }} **
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v2
+      - name: Check Fineos Online
+        run: |
+          fineos_url=$(cat config.json | jq -re '.["${{ env.E2E_ENVIRONMENT }}"].FINEOS_BASEURL')
+          status_code=$(curl -s -o /dev/null -w "%{http_code}" "$fineos_url")
+          echo "Received ${status_code} from ${fineos_url}"
+          test "$status_code" -lt 500
+
+  cypress:
+    name: Cypress
+    needs: [health]
+    runs-on: ubuntu-latest
+    # At the job level, we extend timeout from 6 minutes to 30. We'll set tighter timeouts for steps below to prevent
+    # hung tests from spinning endlessly.
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        containers: [1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with: { node-version: "14.x" }
+      - name: "Install Node Modules"
+        uses: bahmutov/npm-install@v1
+        with:
+          working-directory: e2e
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+      - name: Pull the newrelic API key from parameter store for reporting
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/service/pfml-api/common/newrelic-license-key"
+          env_variable_name: "E2E_NEWRELIC_INGEST_KEY"
+
+      # Run Cypress tests.
+      - name: Cypress Tests (Commit Stable)
+        uses: cypress-io/github-action@v2
+        timeout-minutes: 20
+        with:
+          spec: "cypress/specs/stable/**"
+          record: true
+          parallel: true
+          install: false
+          working-directory: e2e
+          ci-build-id: ${{ env.TEST_RUN_ID }}
+          group: Commit Stable
+          tag: "${{ inputs.cypress_tags }},Env-${{ inputs.target_environment }}"
+          config: reporter=cypress/reporters/new-relic.js
+          # With this action, we need to force triggering Cypress via CLI rather than API to fix a node version
+          # mixup. See https://github.com/cypress-io/github-action/issues/489
+          command-prefix: "--"
+          browser: "chrome"
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          CYPRESS_PROJECT_ID: "wjoxhr"
+        if: inputs.run_stable
+
+      # Run Cypress tests.
+      - name: Cypress Tests (Commit Unstable)
+        uses: cypress-io/github-action@v2
+        with:
+          spec: "cypress/specs/unstable/**"
+          record: true
+          parallel: true
+          working-directory: e2e
+          ci-build-id: ${{ env.TEST_RUN_ID }}
+          group: Unstable
+          install: false
+          tag: "${{ inputs.cypress_tags }},Env-${{ inputs.target_environment }}"
+          config: trashAssetsBeforeRuns=false,reporter=cypress/reporters/new-relic.js
+          # With this action, we need to force triggering Cypress via CLI rather than API to fix a node version
+          # mixup. See https://github.com/cypress-io/github-action/issues/489
+          command-prefix: "--"
+          browser: "chrome"
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY_UNSTABLE }}
+          CYPRESS_PROJECT_ID: "2wzg2w"
+        # Always run this step if requested, even if stable tests fail.
+        if: inputs.run_unstable
+        # Do not allow this step to fail the job. It is informational, not mandatory.
+        continue-on-error: true
+        # Setting a step timeout here prevents a hung unstable test from timing out at the job level - it times out at
+        # the step level instead, allowing continue-on-error to do its job.
+        timeout-minutes: 15
+
+      # Run Morning Cypress tests (with the Morning runs).
+      - name: Cypress Tests (Morning)
+        uses: cypress-io/github-action@v2
+        timeout-minutes: 15
+        with:
+          spec: "cypress/specs/morning/**"
+          record: true
+          parallel: true
+          working-directory: e2e
+          group: Morning
+          ci-build-id: ${{ env.TEST_RUN_ID }}
+          install: false
+          tag: "${{ inputs.cypress_tags }},Env-${{ inputs.target_environment }}"
+          config: trashAssetsBeforeRuns=false,reporter=cypress/reporters/new-relic.js
+          # With this action, we need to force triggering Cypress via CLI rather than API to fix a node version
+          # mixup. See https://github.com/cypress-io/github-action/issues/489
+          command-prefix: "--"
+          browser: "chrome"
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY_MORNING }}
+          CYPRESS_PROJECT_ID: "tvt4k6"
+        if: inputs.run_morning
+      
+      # Run Cypress tests (Targeted).
+      - name: Cypress Tests (Targeted)
+        uses: cypress-io/github-action@v2
+        timeout-minutes: 15
+        with:
+          spec: ${{ inputs.targeted_pattern }}
+          record: true
+          parallel: true
+          install: false
+          working-directory: e2e
+          ci-build-id: ${{ env.TEST_RUN_ID }}
+          group: Targeted
+          tag: "${{ inputs.cypress_tags }},Env-${{ inputs.target_environment }}"
+          config: reporter=cypress/reporters/new-relic.js
+          # With this action, we need to force triggering Cypress via CLI rather than API to fix a node version
+          # mixup. See https://github.com/cypress-io/github-action/issues/489
+          command-prefix: "--"
+          browser: "chrome"
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY_TARGETED }}
+          CYPRESS_PROJECT_ID: "98snsi"
+        if: inputs.run_targeted
+
+      - name: "Archive screenshots"
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          # See https://github.com/actions/upload-artifact#uploading-to-the-same-artifact for an explanation of
+          # why we use a different name for each instance.
+          name: cypress-screenshots ${{ matrix.containers }}
+          path: e2e/cypress/screenshots
+          if-no-files-found: "ignore"
+
+  # Run Integration Tests.
+  integration:
+    name: Integration
+    needs: [health]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with: { node-version: "14.x" }
+      - name: "Install Node Modules"
+        uses: bahmutov/npm-install@v1
+        with:
+          working-directory: e2e
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      # Pull the Server to Server API Oauth creds from parameter store
+      - name: Pull Client_ID from SSM
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/service/pfml-api/${{ inputs.target_environment }}/cognito_internal_fineos_role_app_client_id"
+          env_variable_name: "E2E_API_FINEOS_CLIENT_ID"
+      - name: Pull Client_SECRET from SSM
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/service/pfml-api/${{ inputs.target_environment }}/cognito_internal_fineos_role_app_client_secret"
+          env_variable_name: "E2E_API_FINEOS_CLIENT_SECRET"
+      - name: Pull the newrelic API key from parameter store for reporting
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/service/pfml-api/common/newrelic-license-key"
+          env_variable_name: "E2E_NEWRELIC_INGEST_KEY"
+
+      - name: Integration Tests
+        run: npm run test:integration:ci -- --group=stable${{ inputs.run_unstable && ' --group=unstable' || '' }}${{ inputs.run_morning && ' --group=morning' || '' }}

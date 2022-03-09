@@ -4,32 +4,49 @@ from itertools import chain, combinations
 from typing import Any, Dict, Iterable, List, Optional, Union
 
 from dateutil.relativedelta import relativedelta
-from werkzeug.datastructures import Headers
 
 import massgov.pfml.db as db
 import massgov.pfml.util.logging
+from massgov.pfml.api.constants.application import (
+    CARING_LEAVE_EARLIEST_START_DATE,
+    CERTIFICATION_DOC_TYPES,
+    ID_DOC_TYPES,
+    PFML_PROGRAM_LAUNCH_DATE,
+)
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
+from massgov.pfml.api.models.applications.requests import ApplicationImportRequestBody
+from massgov.pfml.api.models.common import (
+    get_computed_start_dates,
+    get_earliest_start_date,
+    get_leave_reason,
+)
 from massgov.pfml.api.services.applications import (
     ContinuousLeavePeriod,
     IntermittentLeavePeriod,
     ReducedScheduleLeavePeriod,
 )
+from massgov.pfml.api.services.fineos_actions import get_documents
 from massgov.pfml.api.util.deepgetattr import deepgetattr
-from massgov.pfml.api.validation.exceptions import IssueRule, IssueType, ValidationErrorDetail
+from massgov.pfml.api.validation.exceptions import (
+    IssueRule,
+    IssueType,
+    ValidationErrorDetail,
+    ValidationException,
+)
 from massgov.pfml.db.models.applications import (
     Application,
+    Document,
     EmployerBenefit,
     EmploymentStatus,
     LeaveReason,
     LeaveReasonQualifier,
+    LkDocumentType,
     OtherIncome,
     PreviousLeave,
 )
-from massgov.pfml.db.models.employees import PaymentMethod
+from massgov.pfml.db.models.employees import Claim, PaymentMethod
 from massgov.pfml.util.routing_number_validation import validate_routing_number
 
-CARING_LEAVE_EARLIEST_START_DATE = date(2021, 7, 1)
-PFML_PROGRAM_LAUNCH_DATE = date(2021, 1, 1)
 MAX_DAYS_IN_ADVANCE_TO_SUBMIT = 60
 MAX_DAYS_IN_LEAVE_PERIOD_RANGE = 364
 MAX_MINUTES_IN_WEEK = 10080  # 60 * 24 * 7
@@ -37,7 +54,7 @@ MAX_MINUTES_IN_WEEK = 10080  # 60 * 24 * 7
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
-def get_application_issues(application: Application) -> List[ValidationErrorDetail]:
+def get_application_submit_issues(application: Application) -> List[ValidationErrorDetail]:
     """Takes in application and outputs any validation issues.
     These issues are either fields that are always required for an application or fields that are conditionally required based on previous input.
     """
@@ -50,22 +67,24 @@ def get_application_issues(application: Application) -> List[ValidationErrorDeta
 
 
 def get_application_complete_issues(
-    application: Application, headers: Headers
+    application: Application, db_session: db.Session
 ) -> List[ValidationErrorDetail]:
     """Takes in an application and outputs any validation issues.
-        Goes beyond get_application_issues to validate fields required only by complete step, usually steps later in the application process.
+    Validates only the data entered post-submit (Parts 2-3) are present, allowing an application to be completed.
     """
-    issues = get_application_issues(application)
+    issues = []
+    issues += get_app_complete_payments_issues(application)
+    issues += get_documents_issues(application, db_session)
 
-    # only verify tax when tax is enabled
-    if headers.get("X-FF-Tax-Withholding-Enabled") and not isinstance(
-        application.is_withholding_tax, bool
-    ):
+    # Application must have a case in Fineos in order to be completed. This is equivalent to saying
+    # that "Part 1" of the application flow in the Portal has been fulfilled. We don't run the
+    # validations in get_application_submit_issues here, because there are scenarios where new
+    # rules may be introduced, but those rules don't apply if the application was already "submitted".
+    if not application.claim or not application.claim.fineos_absence_id:
         issues.append(
             ValidationErrorDetail(
-                type=IssueType.required,
-                message="Tax withholding preference is required",
-                field="is_withholding_tax",
+                type=IssueType.object_not_found,
+                message="A case must exist before it can be marked as complete.",
             )
         )
     return issues
@@ -241,11 +260,14 @@ def get_employer_benefits_issues(application: Application) -> List[ValidationErr
 def get_employer_benefit_issues(
     benefit: EmployerBenefit, index: int
 ) -> List[ValidationErrorDetail]:
+    """
+    Checks whether required fields are included in an EmployerBenefit.
+    If is_full_salary_continuous (i.e. a full wage replacement), then a start date is required.
+    """
     benefit_path = f"employer_benefits[{index}]"
     issues = []
 
     required_fields = [
-        "benefit_start_date",
         "benefit_type_id",
         "is_full_salary_continuous",
     ]
@@ -253,14 +275,8 @@ def get_employer_benefit_issues(
         benefit_path, benefit, required_fields, {"benefit_type_id": "benefit_type",},
     )
 
-    if benefit.is_full_salary_continuous is False:
-        issues += check_required_fields(
-            benefit_path,
-            benefit,
-            ["benefit_amount_dollars", "benefit_amount_frequency_id",],
-            {"benefit_amount_frequency_id": "benefit_amount_frequency",},
-        )
-        issues += check_zero_income_amount(benefit_path, benefit, "benefit_amount_dollars",)
+    if benefit.is_full_salary_continuous is True:
+        issues += check_required_fields(benefit_path, benefit, ["benefit_start_date"], {},)
 
     start_date = benefit.benefit_start_date
     start_date_path = f"{benefit_path}.benefit_start_date"
@@ -446,7 +462,9 @@ def get_previous_leaves_other_reason_issues(
         )
     else:
         for index, leave in enumerate(application.previous_leaves_other_reason, 0):
-            issues += get_previous_leave_issues(leave, f"previous_leaves_other_reason[{index}]")
+            issues += get_previous_leave_issues(
+                leave, f"previous_leaves_other_reason[{index}]", application
+            )
             issues += check_required_fields(
                 f"previous_leaves_other_reason[{index}]",
                 leave,
@@ -474,12 +492,16 @@ def get_previous_leaves_same_reason_issues(application: Application) -> List[Val
         )
     else:
         for index, leave in enumerate(application.previous_leaves_same_reason, 0):
-            issues += get_previous_leave_issues(leave, f"previous_leaves_same_reason[{index}]")
+            issues += get_previous_leave_issues(
+                leave, f"previous_leaves_same_reason[{index}]", application
+            )
 
     return issues
 
 
-def get_previous_leave_issues(leave: PreviousLeave, leave_path: str) -> List[ValidationErrorDetail]:
+def get_previous_leave_issues(
+    leave: PreviousLeave, leave_path: str, application: Application
+) -> List[ValidationErrorDetail]:
     issues = []
 
     required_fields = [
@@ -500,12 +522,29 @@ def get_previous_leave_issues(leave: PreviousLeave, leave_path: str) -> List[Val
             )
         )
 
+    minimum_date = PFML_PROGRAM_LAUNCH_DATE
+
+    earliest_start_date = get_earliest_start_date(application)
+    leave_reason = get_leave_reason(application)
+    if earliest_start_date and leave_reason:
+        computed_start_dates = get_computed_start_dates(earliest_start_date, leave_reason)
+        if (
+            leave_path.startswith("previous_leaves_same_reason")
+            and computed_start_dates.same_reason
+        ):
+            minimum_date = computed_start_dates.same_reason
+        elif (
+            leave_path.startswith("previous_leaves_other_reason")
+            and computed_start_dates.other_reason
+        ):
+            minimum_date = computed_start_dates.other_reason
+
     start_date = leave.leave_start_date
     start_date_path = f"{leave_path}.leave_start_date"
     end_date = leave.leave_end_date
     end_date_path = f"{leave_path}.leave_end_date"
     issues += check_date_range(
-        start_date, start_date_path, end_date, end_date_path, minimum_date=PFML_PROGRAM_LAUNCH_DATE,
+        start_date, start_date_path, end_date, end_date_path, minimum_date=minimum_date,
     )
 
     return issues
@@ -1338,3 +1377,134 @@ def validate_application_state(
             extra={"application.application_id": existing_application.application_id},
         )
     return issues
+
+
+def get_app_complete_payments_issues(application: Application) -> List[ValidationErrorDetail]:
+    """Validate payments related selections are complete. Called from application complete endpoint."""
+    issues = []
+
+    if not application.has_submitted_payment_preference:
+        issues.append(
+            ValidationErrorDetail(
+                message="Payment preference is required",
+                type=IssueType.required,
+                field="payment_method",
+            )
+        )
+
+    if not isinstance(application.is_withholding_tax, bool):
+        issues.append(
+            ValidationErrorDetail(
+                type=IssueType.required,
+                message="Tax withholding preference is required",
+                field="is_withholding_tax",
+            )
+        )
+    return issues
+
+
+def get_documents_issues(
+    application: Application, db_session: db.Session
+) -> List[ValidationErrorDetail]:
+    """Validate document selections are complete. Called from application complete endpoint."""
+    issues = []
+
+    has_id_doc = has_type_of_document(ID_DOC_TYPES, db_session, application)
+
+    if not has_id_doc:
+        issues.append(
+            ValidationErrorDetail(
+                type=IssueType.required, message="An identification document is required"
+            )
+        )
+    ## Currently leaving out validation for bonding due to more complex business logic around child start date
+    if application.leave_reason_id == LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id:
+        has_cert_doc = has_type_of_document(CERTIFICATION_DOC_TYPES, db_session, application)
+        if not has_cert_doc:
+            issues.append(
+                ValidationErrorDetail(
+                    type=IssueType.required, message="A certification document is required"
+                )
+            )
+    return issues
+
+
+def has_type_of_document(
+    doc_types: List[LkDocumentType], db_session: db.Session, application: Application
+) -> bool:
+    """Helper to retrieve if an application has a particular type of document associated with it."""
+    doc_type_identifiers = [doc_type.document_type_id for doc_type in doc_types]
+    doc_type_descriptions = [doc_type.document_type_description.lower() for doc_type in doc_types]
+    has_doc = bool(
+        (
+            db_session.query(Document)
+            .filter(
+                Document.application_id == application.application_id,
+                Document.document_type_id.in_(doc_type_identifiers),
+            )
+            .first()
+        )
+    )
+
+    if not has_doc:
+        fineos_documents = get_documents(application, db_session)
+        for doc_response_obj in fineos_documents:
+            if doc_response_obj.document_type:
+                if doc_response_obj.document_type.lower() in doc_type_descriptions:
+                    has_doc = True
+
+    return has_doc
+
+
+def validate_application_import_request_for_claim(
+    body: ApplicationImportRequestBody, claim: Optional[Claim]
+) -> None:
+    """
+    Validates the application import request body has all required fields, and matches a target claim.
+
+    Raises ``ValidationException`` if any validation rule is not met.
+    """
+    required_field_issues = []
+    required_fields = ["absence_case_id", "tax_identifier"]
+
+    for field in required_fields:
+        val = getattr(body, field)
+        if val is None:
+            required_field_issues.append(
+                ValidationErrorDetail(
+                    type=IssueType.required, message=f"{field} is required", field=field,
+                )
+            )
+
+    if len(required_field_issues) > 0:
+        raise ValidationException(required_field_issues)
+
+    if claim is None:
+        logger.info(
+            "application import failure - claim not found",
+            extra={"absence_case_id": body.absence_case_id},
+        )
+        raise ValidationException(
+            [
+                ValidationErrorDetail(
+                    message="Code 1: An issue occurred while trying to import the application.",
+                    type=IssueType.incorrect,
+                )
+            ]
+        )
+
+    # Only validate the tax_id when the claim has one set. A separate validator handles the case
+    # where the claim.employee_tax_identifier is not set.
+    if claim.employee_tax_identifier and claim.employee_tax_identifier != body.tax_identifier:
+        logger.info(
+            "application import failure - tax_identifier mismatch",
+            extra={"absence_case_id": body.absence_case_id, "claim_id": claim.claim_id,},
+        )
+        raise ValidationException(
+            [
+                ValidationErrorDetail(
+                    message="Code 2: An issue occurred while trying to import the application.",
+                    type=IssueType.incorrect,
+                )
+            ]
+        )

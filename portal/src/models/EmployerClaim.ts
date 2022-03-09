@@ -1,11 +1,17 @@
 import BaseBenefitsApplication, {
   BaseLeavePeriod,
 } from "./BaseBenefitsApplication";
+import {
+  ManagedRequirement,
+  getSoonestReviewableManagedRequirement,
+} from "../models/ManagedRequirement";
+import { AbsencePeriod } from "./AbsencePeriod";
 import Address from "./Address";
 import ConcurrentLeave from "./ConcurrentLeave";
 import EmployerBenefit from "./EmployerBenefit";
 import { IntermittentLeavePeriod } from "./BenefitsApplication";
 import PreviousLeave from "./PreviousLeave";
+import isBlank from "../utils/isBlank";
 import { merge } from "lodash";
 
 /**
@@ -15,6 +21,7 @@ import { merge } from "lodash";
  * TODO (EMPLOYER-1130): Rename this model to clarify this nuance.
  */
 class EmployerClaim extends BaseBenefitsApplication {
+  absence_periods: AbsencePeriod[];
   employer_id: string;
   fineos_absence_id: string;
   created_at: string;
@@ -25,10 +32,9 @@ class EmployerClaim extends BaseBenefitsApplication {
   employer_benefits: EmployerBenefit[];
   date_of_birth: string | null = null;
   employer_fein: string;
-  employer_dba: string;
-  follow_up_date: string | null = null;
+  employer_dba: string | null;
   hours_worked_per_week: number | null = null;
-  is_reviewable: boolean;
+  managed_requirements: ManagedRequirement[] = [];
   residential_address: Address;
   status: string;
   tax_identifier: string | null = null;
@@ -36,6 +42,11 @@ class EmployerClaim extends BaseBenefitsApplication {
   // does this claim use the old or new version of other leave / income eforms?
   // Todo(EMPLOYER-1453): remove V1 eform functionality
   uses_second_eform_version: boolean;
+
+  computed_start_dates: {
+    other_reason: string | null;
+    same_reason: string | null;
+  };
 
   leave_details: {
     continuous_leave_periods: BaseLeavePeriod[];
@@ -49,6 +60,62 @@ class EmployerClaim extends BaseBenefitsApplication {
     super();
     // Recursively merge with the defaults
     merge(this, attrs);
+
+    this.absence_periods = this.absence_periods.map(
+      (absence_period) => new AbsencePeriod(absence_period)
+    );
+  }
+
+  get is_reviewable() {
+    return !!getSoonestReviewableManagedRequirement(this.managed_requirements);
+  }
+
+  get lastReviewedAt(): string | undefined {
+    if (this.managed_requirements?.length) {
+      const nonBlankDates = this.managed_requirements
+        .map((managedRequirement) => managedRequirement.responded_at)
+        .filter((date): date is string => !isBlank(date))
+        .sort();
+
+      return nonBlankDates.length ? nonBlankDates[0] : undefined;
+    }
+  }
+
+  get wasPreviouslyReviewed(): boolean {
+    if (this.managed_requirements?.length) {
+      return this.managed_requirements.some((managedRequirement) => {
+        // "Suppressed" indicates the managed requirement has been been closed, but doesn't mean it was *reviewed*
+        return managedRequirement.status === "Complete";
+      });
+    }
+
+    return false;
+  }
+
+  /**
+   * Returns earliest start date across all absence periods
+   */
+  get leaveStartDate() {
+    const startDates: string[] = this.absence_periods
+      .map((period) => period.absence_period_start_date)
+      .sort();
+
+    if (!startDates.length) return null;
+
+    return startDates[0];
+  }
+
+  /**
+   * Returns latest end date across all absence periods
+   */
+  get leaveEndDate() {
+    const endDates: string[] = this.absence_periods
+      .map((period) => period.absence_period_end_date)
+      .sort();
+
+    if (!endDates.length) return null;
+
+    return endDates[endDates.length - 1];
   }
 }
 

@@ -40,7 +40,7 @@ class NotificationRequest(PydanticBaseModel):
 
     @validator("recipients")
     def validate_recipients(cls, v, values, **kwargs):  # noqa: B902
-        """ Validate conditionally required recipient parameters """
+        """Validate conditionally required recipient parameters"""
         recipient_type = values["recipient_type"]
 
         error_list = []

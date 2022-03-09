@@ -4,8 +4,8 @@ import { Readable } from "stream";
 import stringify from "csv-stringify";
 import { generators } from "../generation/documents";
 import { formatISO } from "date-fns";
-import multipipe from "multipipe";
 import yaml from "js-yaml";
+import { chain } from "stream-chain";
 
 function describeClaimLeaveType(claimSpec: ScenarioSpecification["claim"]) {
   if (claimSpec.has_continuous_leave_periods) {
@@ -151,10 +151,10 @@ const columns = {
 const describeScenarios = map(describeScenario);
 
 export default (scenarios: ScenarioSpecification[]): NodeJS.ReadableStream =>
-  multipipe(
+  chain([
     Readable.from(describeScenarios(scenarios)),
     stringify({
       header: true,
       columns,
-    })
-  );
+    }),
+  ]);

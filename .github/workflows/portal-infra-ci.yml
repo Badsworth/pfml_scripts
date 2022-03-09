@@ -8,7 +8,7 @@ on:
       - infra/portal/**/*.js
 
 env:
-  nodeVersion: 15.x
+  nodeVersion: 16.x
 
 jobs:
   test:

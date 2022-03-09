@@ -3,8 +3,8 @@ import { Auth } from "@aws-amplify/auth";
 import UsersApi from "../../src/api/UsersApi";
 import routes from "../../src/routes";
 import tracker from "../../src/services/tracker";
-import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import useAuthLogic from "../../src/hooks/useAuthLogic";
+import useErrorsLogic from "../../src/hooks/useErrorsLogic";
 import usePortalFlow from "../../src/hooks/usePortalFlow";
 
 jest.mock("@aws-amplify/auth");
@@ -20,13 +20,13 @@ function mockPortalFlow() {
 }
 
 describe("useAuthLogic", () => {
-  let appErrors,
-    appErrorsLogic,
-    ein,
+  let ein,
+    errors,
+    errorsLogic,
     password,
     portalFlow,
     render,
-    setAppErrors,
+    setErrors,
     username,
     verificationCode;
 
@@ -39,14 +39,38 @@ describe("useAuthLogic", () => {
     render = (customPortalFlow) => {
       return renderHook(() => {
         portalFlow = customPortalFlow || usePortalFlow();
-        appErrorsLogic = useAppErrorsLogic({ portalFlow });
-        ({ appErrors, setAppErrors } = appErrorsLogic);
+        errorsLogic = useErrorsLogic({ portalFlow });
+        ({ errors, setErrors } = errorsLogic);
         return useAuthLogic({
-          appErrorsLogic,
+          errorsLogic,
           portalFlow,
         });
       });
     };
+  });
+
+  it("isPhoneVerified returns verification status of Cognito user's phone", async () => {
+    Auth.currentAuthenticatedUser.mockResolvedValueOnce({
+      attributes: {
+        phone_number_verified: true,
+      },
+    });
+    const { result } = render();
+
+    await act(async () => {
+      const isVerified = await result.current.isPhoneVerified();
+      expect(isVerified).toBe(true);
+    });
+
+    Auth.currentAuthenticatedUser.mockResolvedValueOnce({
+      attributes: {
+        phone_number_verified: false,
+      },
+    });
+    await act(async () => {
+      const isVerified = await result.current.isPhoneVerified();
+      expect(isVerified).toBe(false);
+    });
   });
 
   it("can call out to Auth.forgotPassword", async () => {
@@ -71,9 +95,9 @@ describe("useAuthLogic", () => {
   it("For forgotPassword, does not change page when Cognito request fails", async () => {
     const portalFlow = mockPortalFlow();
     const { result } = renderHook(() => {
-      appErrorsLogic = useAppErrorsLogic({ portalFlow });
+      errorsLogic = useErrorsLogic({ portalFlow });
       return useAuthLogic({
-        appErrorsLogic,
+        errorsLogic,
         portalFlow,
       });
     });
@@ -120,7 +144,7 @@ describe("useAuthLogic", () => {
       await result.current.resendForgotPasswordCode(username);
     });
 
-    expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+    expect(tracker.trackAuthRequest).toHaveBeenCalledTimes(1);
     expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
   });
 
@@ -131,10 +155,16 @@ describe("useAuthLogic", () => {
     act(() => {
       result.current.resendForgotPasswordCode(username);
     });
-    expect(appErrors.items).toHaveLength(1);
-    expect(appErrors.items[0].message).toMatchInlineSnapshot(
-      `"Enter your email address"`
-    );
+    expect(errors).toHaveLength(1);
+    expect(errors[0].issues).toMatchInlineSnapshot(`
+      [
+        {
+          "field": "username",
+          "namespace": "auth",
+          "type": "required",
+        },
+      ]
+    `);
 
     expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
       issueField: "username",
@@ -160,10 +190,15 @@ describe("useAuthLogic", () => {
     act(() => {
       result.current.resendForgotPasswordCode(username);
     });
-    expect(appErrors.items).toHaveLength(1);
-    expect(appErrors.items[0].message).toMatchInlineSnapshot(
-      `"Incorrect email"`
-    );
+    expect(errors).toHaveLength(1);
+    expect(errors[0].issues).toMatchInlineSnapshot(`
+      [
+        {
+          "namespace": "auth",
+          "type": "userNotFound",
+        },
+      ]
+    `);
   });
 
   it("For resendForgotPasswordCode, sets app errors when Auth.forgotPassword throws InvalidParameterException", () => {
@@ -182,10 +217,15 @@ describe("useAuthLogic", () => {
     act(() => {
       result.current.resendForgotPasswordCode(username);
     });
-    expect(appErrors.items).toHaveLength(1);
-    expect(appErrors.items[0].message).toMatchInlineSnapshot(
-      `"Enter all required information"`
-    );
+    expect(errors).toHaveLength(1);
+    expect(errors[0].issues).toMatchInlineSnapshot(`
+      [
+        {
+          "namespace": "auth",
+          "type": "invalidParametersFallback",
+        },
+      ]
+    `);
   });
 
   it("For resendForgotPasswordCode, sets app errors when Auth.forgotPassword throws NotAuthorizedException due to security reasons", () => {
@@ -203,10 +243,15 @@ describe("useAuthLogic", () => {
     act(() => {
       result.current.resendForgotPasswordCode(username);
     });
-    expect(appErrors.items).toHaveLength(1);
-    expect(appErrors.items[0].message).toMatchInlineSnapshot(
-      `"Your authentication attempt has been blocked due to suspicious activity. We sent you an email to confirm your identity. Check your email and then follow the instructions to try again. If this continues to occur, call the contact center at (833) 344‑7365."`
-    );
+    expect(errors).toHaveLength(1);
+    expect(errors[0].issues).toMatchInlineSnapshot(`
+      [
+        {
+          "namespace": "auth",
+          "type": "attemptBlocked_forgotPassword",
+        },
+      ]
+    `);
   });
 
   it("For resendForgotPasswordCode, sets app errors when Auth.forgotPassword throws LimitExceededException due to too many forget password requests", () => {
@@ -224,10 +269,15 @@ describe("useAuthLogic", () => {
     act(() => {
       result.current.resendForgotPasswordCode(username);
     });
-    expect(appErrors.items).toHaveLength(1);
-    expect(appErrors.items[0].message).toMatchInlineSnapshot(
-      `"Your account is temporarily locked because of too many forget password requests. Wait 15 minutes before trying again."`
-    );
+    expect(errors).toHaveLength(1);
+    expect(errors[0].issues).toMatchInlineSnapshot(`
+      [
+        {
+          "namespace": "auth",
+          "type": "attemptsLimitExceeded_forgotPassword",
+        },
+      ]
+    `);
   });
 
   it("For resendForgotPasswordCode, sets system error message when Auth.forgotPassword throws unanticipated error", () => {
@@ -239,10 +289,8 @@ describe("useAuthLogic", () => {
     act(() => {
       result.current.resendForgotPasswordCode(username);
     });
-    expect(appErrors.items).toHaveLength(1);
-    expect(appErrors.items[0].message).toMatchInlineSnapshot(
-      `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
-    );
+    expect(errors).toHaveLength(1);
+    expect(errors[0].issues).toHaveLength(0);
   });
 
   it("For resendForgotPasswordCode, tracks Cognito request errors", async () => {
@@ -266,13 +314,20 @@ describe("useAuthLogic", () => {
   it("For resendForgotPasswordCode,clears existing errors", async () => {
     const { result } = render();
     await act(async () => {
-      appErrors = [{ message: "Pre-existing error" }];
+      errors = [{ message: "Pre-existing error" }];
       await result.current.resendForgotPasswordCode(username);
     });
-    expect(appErrors.items).toHaveLength(0);
+    expect(errors).toHaveLength(0);
   });
 
   describe("login", () => {
+    beforeAll(() => {
+      jest.spyOn(Auth, "signIn").mockImplementation(() => {
+        const cognitoUser = {};
+        return cognitoUser;
+      });
+    });
+
     it("calls Auth.signIn", async () => {
       const { result } = render();
       await act(async () => {
@@ -287,7 +342,7 @@ describe("useAuthLogic", () => {
         await result.current.login(username, password);
       });
 
-      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+      expect(tracker.trackAuthRequest).toHaveBeenCalledTimes(1);
       expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
     });
 
@@ -315,13 +370,21 @@ describe("useAuthLogic", () => {
       await act(async () => {
         await result.current.login();
       });
-      expect(appErrors.items).toHaveLength(2);
-      expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
-            Array [
-              "Enter your email address",
-              "Enter your password",
-            ]
-          `);
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "field": "username",
+            "namespace": "auth",
+            "type": "required",
+          },
+          {
+            "field": "password",
+            "namespace": "auth",
+            "type": "required",
+          },
+        ]
+      `);
 
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "username",
@@ -352,10 +415,15 @@ describe("useAuthLogic", () => {
       await act(async () => {
         await result.current.login(username, password);
       });
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Incorrect email or password"`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "namespace": "auth",
+            "type": "incorrectEmailOrPassword",
+          },
+        ]
+      `);
     });
 
     it("sets app errors when Auth.signIn throws InvalidParameterException", async () => {
@@ -374,10 +442,15 @@ describe("useAuthLogic", () => {
       await act(async () => {
         await result.current.login(username, password);
       });
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Enter all required information"`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "namespace": "auth",
+            "type": "invalidParametersFallback",
+          },
+        ]
+      `);
     });
 
     it("sets app errors when Auth.signIn throws NotAuthorizedException due to security reasons", async () => {
@@ -395,10 +468,15 @@ describe("useAuthLogic", () => {
       await act(async () => {
         await result.current.login(username, password);
       });
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Your log in attempt was blocked due to suspicious activity. You will need to reset your password to continue. We’ve also sent you an email to confirm your identity."`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "namespace": "auth",
+            "type": "attemptBlocked_login",
+          },
+        ]
+      `);
     });
 
     it("sets app errors when Auth.signIn throws NotAuthorizedException due to incorrect username or password", async () => {
@@ -416,10 +494,15 @@ describe("useAuthLogic", () => {
       await act(async () => {
         await result.current.login(username, password);
       });
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Incorrect email or password"`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "namespace": "auth",
+            "type": "incorrectEmailOrPassword",
+          },
+        ]
+      `);
     });
 
     it("sets app errors when Auth.signIn throws NotAuthorizedException due to too many failed login attempts", async () => {
@@ -437,10 +520,15 @@ describe("useAuthLogic", () => {
       await act(async () => {
         await result.current.login(username, password);
       });
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Your account is temporarily locked because of too many failed login attempts. Wait 15 minutes before trying again."`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "namespace": "auth",
+            "type": "attemptsLimitExceeded_login",
+          },
+        ]
+      `);
     });
 
     it("sets app errors and tracks event when Auth.signIn throws NotAuthorizedException with unexpected message", async () => {
@@ -462,10 +550,15 @@ describe("useAuthLogic", () => {
         await result.current.login(username, password);
       });
 
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"This message wasn't expected by Portal code and is the error from Cognito."`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "message": "This message wasn't expected by Portal code and is the error from Cognito.",
+            "namespace": "auth",
+          },
+        ]
+      `);
       expect(tracker.trackEvent).toHaveBeenLastCalledWith(
         "AuthError",
         expect.objectContaining({ errorMessage: cognitoError.message })
@@ -489,10 +582,15 @@ describe("useAuthLogic", () => {
       await act(async () => {
         await result.current.login(username, password);
       });
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Enter all required information"`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "namespace": "auth",
+            "type": "invalidParametersFallback",
+          },
+        ]
+      `);
     });
 
     it("sets system error message when Auth.signIn throws unanticipated error", async () => {
@@ -505,10 +603,8 @@ describe("useAuthLogic", () => {
         await result.current.login(username, password);
       });
       await waitFor(() => {
-        expect(appErrors.items).toHaveLength(1);
-        expect(appErrors.items[0].message).toMatchInlineSnapshot(
-          `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
-        );
+        expect(errors).toHaveLength(1);
+        expect(errors[0].issues).toHaveLength(0);
       });
     });
 
@@ -534,11 +630,11 @@ describe("useAuthLogic", () => {
       const { result, waitFor } = render();
 
       await act(async () => {
-        appErrors = [{ message: "Pre-existing error" }];
+        errors = [{ message: "Pre-existing error" }];
         await result.current.login(username, password);
       });
       await waitFor(() => {
-        expect(appErrors.items).toHaveLength(0);
+        expect(errors).toHaveLength(0);
       });
     });
 
@@ -583,6 +679,23 @@ describe("useAuthLogic", () => {
       );
     });
 
+    it("directs to the page to verify an MFA challenge even if the feature flag is not on", async () => {
+      jest.spyOn(Auth, "signIn").mockImplementationOnce(() => {
+        const cognitoUser = { challengeName: "SMS_MFA" };
+        return cognitoUser;
+      });
+      const portalFlow = mockPortalFlow();
+      const { result } = render(portalFlow);
+      await act(async () => {
+        await result.current.login(username, password);
+      });
+      expect(portalFlow.goToPageFor).toHaveBeenCalledWith(
+        "VERIFY_CODE",
+        {},
+        { next: undefined }
+      );
+    });
+
     it("sets app errors when Auth.signIn throws PasswordResetRequiredException", async () => {
       jest.spyOn(Auth, "signIn").mockImplementationOnce(() => {
         // Ignore lint rule since AWS Auth class actually throws an object literal
@@ -594,11 +707,287 @@ describe("useAuthLogic", () => {
         await result.current.login(username, password);
       });
       await waitFor(() => {
-        expect(appErrors.items).toHaveLength(1);
-        expect(appErrors.items[0].message).toMatchInlineSnapshot(
-          `"Your password must be reset before you can log in again. Click the \\"Forgot your password?\\" link below to reset your password."`
-        );
+        expect(errors).toHaveLength(1);
+        expect(errors[0].issues).toMatchInlineSnapshot(`
+          [
+            {
+              "field": "password",
+              "namespace": "auth",
+              "type": "resetRequiredException",
+            },
+          ]
+        `);
       });
+    });
+
+    describe("with claimantShowMFA feature flag enabled", () => {
+      const next = "/applications";
+      const portalFlow = mockPortalFlow();
+
+      beforeEach(() => {
+        process.env.featureFlags = JSON.stringify({
+          claimantShowMFA: true,
+        });
+      });
+
+      describe("with no MFA challenge", () => {
+        let usersApi;
+
+        beforeAll(() => {
+          // The mock of UsersApi returns an object with references to a singleton
+          // of getCurrentUser and updateUser so this will reference the same
+          // jest.fn mocks that are used in the hook.
+          usersApi = new UsersApi();
+
+          jest.spyOn(Auth, "signIn").mockImplementation(() => {
+            const cognitoUser = {};
+            return cognitoUser;
+          });
+        });
+
+        it("sets isLoggedIn to true", async () => {
+          const { result } = render();
+
+          await act(async () => {
+            await result.current.login(username, password);
+          });
+
+          expect(result.current.isLoggedIn).toBe(true);
+        });
+
+        it("redirects to the ENABLE_MFA page if user has not made an MFA selection", async () => {
+          const { result } = render(portalFlow);
+
+          usersApi.getCurrentUser.mockImplementationOnce(() => {
+            const apiUser = {
+              user: {
+                mfa_delivery_preference: null,
+              },
+            };
+
+            return apiUser;
+          });
+
+          await act(async () => {
+            await result.current.login(username, password, next);
+          });
+
+          expect(portalFlow.goToPageFor).toHaveBeenCalledWith("ENABLE_MFA");
+        });
+
+        it("does not redirect to MFA setup if user is an Employer", async () => {
+          const { result } = render(portalFlow);
+
+          usersApi.getCurrentUser.mockImplementationOnce(() => {
+            const apiUser = {
+              user: {
+                mfa_delivery_preference: null,
+                hasEmployerRole: true,
+              },
+            };
+
+            return apiUser;
+          });
+
+          await act(async () => {
+            await result.current.login(username, password, next);
+          });
+
+          expect(portalFlow.goTo).toHaveBeenCalledWith(next);
+        });
+
+        it("redirects to the next page if user has made MFA selection", async () => {
+          const { result } = render(portalFlow);
+
+          usersApi.getCurrentUser.mockImplementationOnce(() => {
+            const apiUser = {
+              user: {
+                mfa_delivery_preference: "SMS",
+              },
+            };
+
+            return apiUser;
+          });
+
+          await act(async () => {
+            await result.current.login(username, password, next);
+          });
+
+          expect(portalFlow.goTo).toHaveBeenCalledWith(next);
+        });
+      });
+
+      describe("with an MFA challenge", () => {
+        beforeAll(() => {
+          jest.spyOn(Auth, "signIn").mockImplementation(() => {
+            const cognitoUser = {
+              challengeName: "SMS_MFA",
+            };
+            return cognitoUser;
+          });
+        });
+
+        it("does not mark the user as logged in", async () => {
+          const { result } = render();
+
+          await act(async () => {
+            await result.current.login(username, password);
+          });
+
+          expect(result.current.isLoggedIn).not.toBe(true);
+        });
+
+        it("redirects to the VERIFY_CODE page", async () => {
+          const { result } = render(portalFlow);
+
+          await act(async () => {
+            await result.current.login(username, password, next);
+          });
+
+          expect(portalFlow.goToPageFor).toHaveBeenCalledWith(
+            "VERIFY_CODE",
+            {},
+            { next: "/applications" }
+          );
+        });
+      });
+    });
+  });
+
+  describe("verifyMFACodeAndLogin", () => {
+    const next = "/applications";
+
+    it("validates the code was entered", async () => {
+      const { result } = render();
+
+      await act(async () => {
+        await result.current.verifyMFACodeAndLogin("", next);
+      });
+
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "field": "code",
+            "namespace": "mfa",
+            "type": "required",
+          },
+        ]
+      `);
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "code",
+        issueRule: "",
+        issueType: "required",
+      });
+    });
+
+    it("validates the code format", async () => {
+      const { result } = render();
+
+      await act(async () => {
+        await result.current.verifyMFACodeAndLogin("aaaa", next);
+      });
+
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "field": "code",
+            "namespace": "mfa",
+            "type": "pattern",
+          },
+        ]
+      `);
+      expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
+        issueField: "code",
+        issueRule: "",
+        issueType: "pattern",
+      });
+    });
+
+    it("calls Auth.confirmSignIn", async () => {
+      const { result } = render();
+
+      await act(async () => {
+        await result.current.verifyMFACodeAndLogin(verificationCode, next);
+      });
+
+      expect(Auth.confirmSignIn).toHaveBeenCalledWith(
+        undefined,
+        verificationCode,
+        "SMS_MFA"
+      );
+    });
+
+    it("throws an invalid code error when the code is rejected", async () => {
+      jest.spyOn(Auth, "confirmSignIn").mockImplementationOnce(() => {
+        throw new Error("invalid code");
+      });
+      const { result } = render();
+
+      await act(async () => {
+        await result.current.verifyMFACodeAndLogin(verificationCode, next);
+      });
+
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "field": "code",
+            "namespace": "auth",
+            "type": "invalidMFACode",
+          },
+        ]
+      `);
+    });
+
+    it("throws an attempts exceeded error when throttles login", async () => {
+      jest.spyOn(Auth, "confirmSignIn").mockImplementationOnce(() => {
+        // Ignore lint rule since AWS Auth class actually throws an object literal
+        // eslint-disable-next-line no-throw-literal
+        throw {
+          code: "NotAuthorizedException",
+          message: "User temporarily locked. Try again soon",
+          name: "NotAuthorizedException",
+        };
+      });
+      const { result } = render();
+
+      await act(async () => {
+        await result.current.verifyMFACodeAndLogin(verificationCode, next);
+      });
+
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "field": "code",
+            "namespace": "auth",
+            "type": "attemptsExceeded",
+          },
+        ]
+      `);
+    });
+
+    it("tracks request", async () => {
+      const { result } = render();
+
+      await act(async () => {
+        await result.current.verifyMFACodeAndLogin(verificationCode, next);
+      });
+
+      expect(tracker.trackAuthRequest).toHaveBeenCalledTimes(1);
+      expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
+    });
+
+    it("sets isLoggedIn to true", async () => {
+      const { result } = render();
+
+      await act(async () => {
+        await result.current.verifyMFACodeAndLogin(verificationCode, next);
+      });
+
+      expect(result.current.isLoggedIn).toBe(true);
     });
   });
 
@@ -670,7 +1059,7 @@ describe("useAuthLogic", () => {
         await result.current.logout();
       });
 
-      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+      expect(tracker.trackAuthRequest).toHaveBeenCalledTimes(1);
       expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
     });
   });
@@ -895,7 +1284,7 @@ describe("useAuthLogic", () => {
         await result.current.resendVerifyAccountCode(username);
       });
 
-      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+      expect(tracker.trackAuthRequest).toHaveBeenCalledTimes(1);
       expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
     });
 
@@ -906,10 +1295,16 @@ describe("useAuthLogic", () => {
       act(() => {
         result.current.resendVerifyAccountCode(username);
       });
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Enter your email address"`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "field": "username",
+            "namespace": "auth",
+            "type": "required",
+          },
+        ]
+      `);
 
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "username",
@@ -929,10 +1324,8 @@ describe("useAuthLogic", () => {
       act(() => {
         result.current.resendVerifyAccountCode(username);
       });
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toHaveLength(0);
     });
 
     it("tracks Cognito request errors", async () => {
@@ -957,10 +1350,10 @@ describe("useAuthLogic", () => {
       const { result } = render();
 
       act(() => {
-        setAppErrors([{ message: "Pre-existing error" }]);
+        setErrors([{ message: "Pre-existing error" }]);
         result.current.resendVerifyAccountCode(username);
       });
-      expect(appErrors.items).toHaveLength(0);
+      expect(errors).toHaveLength(0);
     });
   });
 
@@ -989,7 +1382,7 @@ describe("useAuthLogic", () => {
         );
       });
 
-      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+      expect(tracker.trackAuthRequest).toHaveBeenCalledTimes(1);
       expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
     });
 
@@ -1013,12 +1406,24 @@ describe("useAuthLogic", () => {
         result.current.resetPassword();
       });
 
-      expect(appErrors.items).toHaveLength(3);
-      expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
-        Array [
-          "Enter the 6-digit code sent to your email",
-          "Enter your email address",
-          "Enter your password",
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "field": "code",
+            "namespace": "mfa",
+            "type": "required",
+          },
+          {
+            "field": "username",
+            "namespace": "auth",
+            "type": "required",
+          },
+          {
+            "field": "password",
+            "namespace": "auth",
+            "type": "required",
+          },
         ]
       `);
 
@@ -1057,10 +1462,16 @@ describe("useAuthLogic", () => {
         result.current.resetPassword(username, verificationCode, password);
       });
 
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Invalid verification code. Make sure the code matches the code emailed to you."`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "field": "code",
+            "namespace": "auth",
+            "type": "mismatchException",
+          },
+        ]
+      `);
     });
 
     it("sets app errors when ExpiredCodeException is thrown", () => {
@@ -1079,10 +1490,16 @@ describe("useAuthLogic", () => {
         result.current.resetPassword(username, verificationCode, password);
       });
 
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Sorry, your verification code has expired or has already been used."`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "field": "code",
+            "namespace": "auth",
+            "type": "expired",
+          },
+        ]
+      `);
     });
 
     it("sets app errors when InvalidParameterException is thrown", () => {
@@ -1102,10 +1519,15 @@ describe("useAuthLogic", () => {
         result.current.resetPassword(username, verificationCode, password);
       });
 
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Check the requirements and try again. Ensure all required information is entered and the password meets the requirements."`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "namespace": "auth",
+            "type": "invalidParametersIncludingMaybePassword",
+          },
+        ]
+      `);
     });
 
     it("sets app errors when InvalidPasswordException is thrown due to non-conforming password", () => {
@@ -1124,10 +1546,16 @@ describe("useAuthLogic", () => {
         result.current.resetPassword(username, verificationCode, password);
       });
 
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Your password does not meet the requirements. Please check the requirements and try again."`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "field": "password",
+            "namespace": "auth",
+            "type": "invalid",
+          },
+        ]
+      `);
     });
 
     it("sets app errors when InvalidPasswordException is thrown due to insecure password", () => {
@@ -1146,10 +1574,16 @@ describe("useAuthLogic", () => {
         result.current.resetPassword(username, verificationCode, password);
       });
 
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Choose a different password. Avoid commonly used passwords and avoid using the same password on multiple websites."`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "field": "password",
+            "namespace": "auth",
+            "type": "insecure",
+          },
+        ]
+      `);
     });
 
     it("sets app errors when UserNotConfirmedException is thrown", () => {
@@ -1168,10 +1602,15 @@ describe("useAuthLogic", () => {
         result.current.resetPassword(username, verificationCode, password);
       });
 
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Confirm your account by following the instructions in the verification email sent to your inbox."`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "namespace": "auth",
+            "type": "userNotConfirmed",
+          },
+        ]
+      `);
     });
 
     it("sets app errors when UserNotFoundException is thrown", () => {
@@ -1190,10 +1629,15 @@ describe("useAuthLogic", () => {
         result.current.resetPassword(username, verificationCode, password);
       });
 
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Incorrect email"`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "namespace": "auth",
+            "type": "userNotFound",
+          },
+        ]
+      `);
     });
 
     it("tracks Cognito request errors", async () => {
@@ -1222,10 +1666,10 @@ describe("useAuthLogic", () => {
       const { result } = render();
 
       act(() => {
-        setAppErrors([{ message: "Pre-existing error" }]);
+        setErrors([{ message: "Pre-existing error" }]);
         result.current.resetPassword(username, verificationCode, password);
       });
-      expect(appErrors.items).toHaveLength(0);
+      expect(errors).toHaveLength(0);
     });
   });
 
@@ -1249,7 +1693,7 @@ describe("useAuthLogic", () => {
         await result.current.verifyAccount(username, verificationCode);
       });
 
-      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+      expect(tracker.trackAuthRequest).toHaveBeenCalledTimes(1);
       expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
     });
 
@@ -1274,11 +1718,19 @@ describe("useAuthLogic", () => {
         result.current.verifyAccount(username, verificationCode);
       });
 
-      expect(appErrors.items).toHaveLength(2);
-      expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
-        Array [
-          "Enter the 6-digit code sent to your email",
-          "Enter your email address",
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "field": "code",
+            "namespace": "mfa",
+            "type": "required",
+          },
+          {
+            "field": "username",
+            "namespace": "auth",
+            "type": "required",
+          },
         ]
       `);
 
@@ -1310,10 +1762,10 @@ describe("useAuthLogic", () => {
         act(() => {
           result.current.verifyAccount(username, code);
         });
-        expect(appErrors.items).toHaveLength(1);
-        expect(appErrors.items[0].message).toEqual(
-          "Enter the 6-digit code sent to your email and ensure it does not include any punctuation."
-        );
+        expect(errors).toHaveLength(1);
+        expect(errors[0].issues).toEqual([
+          { field: "code", type: "pattern", namespace: "mfa" },
+        ]);
 
         expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
           issueField: "code",
@@ -1340,10 +1792,16 @@ describe("useAuthLogic", () => {
       act(() => {
         result.current.verifyAccount(username, verificationCode);
       });
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Invalid verification code. Make sure the code matches the code emailed to you."`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "field": "code",
+            "namespace": "auth",
+            "type": "mismatchException",
+          },
+        ]
+      `);
     });
 
     it("sets app errors when verification code has expired", () => {
@@ -1361,10 +1819,16 @@ describe("useAuthLogic", () => {
       act(() => {
         result.current.verifyAccount(username, verificationCode);
       });
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Sorry, your verification code has expired or has already been used."`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "field": "code",
+            "namespace": "auth",
+            "type": "expired",
+          },
+        ]
+      `);
     });
 
     it("redirects to the login page when account is already verified", async () => {
@@ -1412,7 +1876,7 @@ describe("useAuthLogic", () => {
         };
       });
 
-      expect.assertions(cognitoErrors.length * 2);
+      expect.assertions(cognitoErrors.length);
 
       for (const cognitoError of cognitoErrors) {
         jest.spyOn(Auth, "confirmSignUp").mockImplementationOnce(() => {
@@ -1424,10 +1888,7 @@ describe("useAuthLogic", () => {
         act(() => {
           result.current.verifyAccount(username, verificationCode);
         });
-        expect(appErrors.items).toHaveLength(1);
-        expect(appErrors.items[0].message).toMatchInlineSnapshot(
-          `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
-        );
+        expect(errors).toHaveLength(1);
       }
     });
 
@@ -1440,10 +1901,8 @@ describe("useAuthLogic", () => {
       act(() => {
         result.current.verifyAccount(username, verificationCode);
       });
-      expect(appErrors.items).toHaveLength(1);
-      expect(appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toHaveLength(0);
     });
 
     it("tracks Cognito request errors", async () => {
@@ -1468,10 +1927,10 @@ describe("useAuthLogic", () => {
       const { result } = render();
 
       act(() => {
-        setAppErrors([{ message: "Pre-existing error" }]);
+        setErrors([{ message: "Pre-existing error" }]);
         result.current.verifyAccount(username, verificationCode);
       });
-      expect(appErrors.items).toHaveLength(0);
+      expect(errors).toHaveLength(0);
     });
 
     it("routes to login page with account verified message", async () => {

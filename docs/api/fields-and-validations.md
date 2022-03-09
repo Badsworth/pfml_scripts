@@ -84,14 +84,14 @@ The current convention for this set of validations is to:
 - Add `get_*_issues` method for validating an endpoint
 - Call `get_*_issues` with the API request and check if there are any issues returned
 
-----
+---
 
 ### How Application validation works
 
-A `get_application_issues` function exists for reporting potential "warnings" on an application. These are primarily rules related to required or conditionally required fields, but may also relate to rules that span multiple fields.
+A `get_application_submit_issues` function exists for reporting potential "warnings" on an application at the time part 1 is submitted. These are primarily rules related to required or conditionally required fields, but may also relate to rules that span multiple fields.
 
 For `GET` and `PATCH` requests to the `/applications/:application_id` endpoint, these validations result in data still saving to our database and a 200 status code with `warnings` rather than `errors`, since we expect requests to not always have a complete application, since a user will be filling out the application through a multi-page experience.
 
-For `POST` requests to /applications/:application_id/complete_application and /applications/:application_id/submit_application, these validations result in a 400 status code with `errors` when a rule is not fulfilled.
+For `POST` requests to `/applications/:application_id/*` endpoints, these validations result in a 400 status code with `errors` when a rule is not fulfilled.
 
 These validations are located in `application_rules.py`.

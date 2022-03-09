@@ -1,5 +1,5 @@
 import BackButton from "src/components/BackButton";
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 import React from "react";
 import Title from "src/components/core/Title";
 

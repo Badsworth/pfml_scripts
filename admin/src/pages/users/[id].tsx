@@ -10,6 +10,7 @@ import Link from "next/link";
 import isClient from "../../utils/isClient";
 
 import { tempUsers } from "./index";
+import Breadcrumb from "../../components/Breadcrumb";
 
 type AccountInfoRow = {
   title: string;
@@ -77,12 +78,9 @@ export default function AccountInfo() {
       <Helmet>
         <title>Account Information</title>
       </Helmet>
-      <Link href={`/users?search=${searchTerm}`}>
-        <a className="btn--plain page__back-button">
-          <i className="pfml-icon--arrow-1 page__back-icon"></i>
-          Back to results
-        </a>
-      </Link>
+      {/* TODO pass in results URL.*/}
+      <Breadcrumb text="Back to Results" href="/users" />
+
       <h1 className="page__title">Account Information</h1>
 
       <Table<AccountInfoRow>

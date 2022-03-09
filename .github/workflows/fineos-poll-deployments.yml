@@ -18,7 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         environment:
-          [ "test", "stage", "performance", "cps-preview", "training" ]
+          [ "test", "stage", "performance", "cps-preview", "training", "long", "trn2" ]
     env:
       NEW_RELIC_ACCOUNT_ID: 2837112
     steps:
@@ -39,17 +39,23 @@ jobs:
         id: publish-deployments
 
       - name: Trigger E2E Workflow
-        uses: aurelien-baudet/workflow-dispatch@v2
+        # This workflow intentionally doesn't use workflow_call because at the moment, it doesn't support matrix builds.
+        # Also, since we don't wait for results or care about having an accurate run URL, the benefit is small.
+        uses: aurelien-baudet/workflow-dispatch@v2.1.1
         if: steps.publish-deployments.outputs.was_deployed == 'true'
         with:
           workflow: e2e-cypress.yml
           token: ${{ secrets.PFML_DEVOPS_TOKEN }}
           wait-for-completion: false
+          display-workflow-run-url-interval: 30s
           inputs: |
             {
               "target_environment": "${{ matrix.environment }}",
-              "cypress_tags": "Deploy-Fineos",
+              "cypress_tags": "Deploy,Deploy-Fineos",
+              "run_stable": "true",
               "run_unstable": "false",
-              "run_nightly": "false",
-              "title_override": "Fineos Deploy: ${{ steps.publish-deployments.outputs.version }}"
+              "run_morning": "false",
+              "run_targeted": "false",
+              "targeted_pattern": "cypress/specs/stable/feature/**",
+              "title_override": "${{ format('Fineos Deploy: {0} to {1}', steps.publish-deployments.outputs.version, matrix.environment) }}"
             }

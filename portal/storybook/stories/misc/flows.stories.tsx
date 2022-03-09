@@ -37,6 +37,15 @@ export const ClaimantSteps = () => (
   />
 );
 
+export const ApplicationImport = () => (
+  <FlowDiagram
+    states={pick(claimant.states, [
+      routes.applications.importClaim,
+      routes.applications.index,
+    ])}
+  />
+);
+
 export const ClaimantFields = () => {
   const steps = Step.createClaimStepsFromMachine(claimant, { claim: {} });
 

@@ -8,13 +8,13 @@ resource "newrelic_synthetics_monitor" "portal_ping" {
   type      = "SIMPLE"
   frequency = 10
   status    = "ENABLED"
-  locations = ["AWS_US_EAST_1"]
+  locations = ["AWS_US_EAST_1", "AWS_US_WEST_1"]
 
   uri = local.domain
   # Validate that this string is on the page
   # SIMPLE synthetics only evaluate the returned HTML and do not
   # execute javascript, so the pmflTerriyay feature flag has no effect
-  validation_string = var.environment_name == "prod" ? "Create a worker account" : "Hello world"
+  validation_string = var.environment_name == "prod" ? "apply for Paid Family and Medical Leave" : "Hello world"
 }
 
 resource "newrelic_synthetics_monitor" "portal_scripted_browser" {
@@ -22,7 +22,7 @@ resource "newrelic_synthetics_monitor" "portal_scripted_browser" {
   type      = "SCRIPT_BROWSER"
   frequency = 10
   status    = "ENABLED"
-  locations = ["AWS_US_EAST_1"]
+  locations = ["AWS_US_EAST_1", "AWS_US_WEST_1"]
 }
 
 resource "newrelic_synthetics_monitor_script" "portal_browser_script" {

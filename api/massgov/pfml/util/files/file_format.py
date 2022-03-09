@@ -3,18 +3,25 @@
 #
 
 from dataclasses import dataclass
-from typing import Callable, Dict, Optional, Sequence
+from typing import Any, Callable, Dict, Optional, Sequence
 
 
 class LineParseError(Exception):
     """An error when parsing a FileFormat line."""
 
 
+def parse_empty_as_none(str: str) -> Optional[str]:
+    if not str:
+        return None
+
+    return str
+
+
 @dataclass
 class FieldFormat:
     property_name: str
     length: int
-    conversion_function: Optional[Callable] = None
+    conversion_function: Optional[Callable[[str], Any]] = None
 
 
 class FileFormat:
@@ -38,8 +45,10 @@ class FileFormat:
             column_value = line[start_index:end_index].strip()
 
             conversion_function = column_format.conversion_function
+
+            # if no conversion function is provided, ensure empty strings are parsed as None
             if conversion_function is None:
-                object[property_name] = column_value
+                object[property_name] = parse_empty_as_none(column_value)
             else:
                 try:
                     object[property_name] = conversion_function(column_value)

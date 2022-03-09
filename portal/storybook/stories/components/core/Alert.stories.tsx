@@ -1,5 +1,5 @@
 import Alert from "src/components/core/Alert";
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 import React from "react";
 
 export default {
@@ -49,7 +49,7 @@ export const Slim = () => (
   </Alert>
 );
 
-export const neutral = () => (
+export const Neutral = () => (
   <Alert state="info" neutral>
     This info alert has a neutral background color.
   </Alert>
@@ -57,10 +57,10 @@ export const neutral = () => (
 
 export const AutoWidth = () => (
   <React.Fragment>
-    <Alert state="info" autoWidth>
+    <Alert state="info" aria-label="no wrapping" autoWidth>
       This alert's width fits its content.
     </Alert>
-    <Alert state="info" autoWidth>
+    <Alert state="info" aria-label="wrapping" autoWidth>
       This alert is also only as wide as its content. However, its content is
       long enough to wrap to multiple lines and cause the alert to fill the
       width of its container.

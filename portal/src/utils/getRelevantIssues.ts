@@ -1,7 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-import { compact, find, map } from "lodash";
 import { Issue } from "../errors";
+import { compact } from "lodash";
 
 /**
  * Combines API errors and warnings into a single array of issues.
@@ -10,16 +8,19 @@ import { Issue } from "../errors";
 function getRelevantIssues(
   errors: Issue[] = [],
   warnings: Issue[] = [],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   pages: any[] = []
 ) {
   let relevantWarnings = warnings;
 
   if (warnings.length && pages.length) {
-    const applicableRules = compact(map(pages, "meta.applicableRules").flat());
+    const applicableRules = compact(
+      pages.map((page) => page.meta?.applicableRules).flat()
+    );
 
     // Get the array of fields from each page, and output a single array of all those fields
     // [["firstName", "last_name"], ["ssn"]] => ["firstName", "last_name", "ssn"]
-    let fields = map(pages, "meta.fields").flat();
+    let fields = pages.map((page) => page.meta?.fields).flat();
 
     // Remove falsy values, which may occur if a page didn't include a set of fields,
     // then remove the model prefix:
@@ -59,7 +60,9 @@ function getRelevantIssues(
   // When we have a disallow_hybrid_intermittent_leave issue, then we don't
   // show intermittent leave field-level issues since those are redundant
   // and likely confusing if shown
-  if (find(issues, { rule: "disallow_hybrid_intermittent_leave" })) {
+  if (
+    issues.find((issue) => issue.rule === "disallow_hybrid_intermittent_leave")
+  ) {
     issues = issues.filter(({ field = "" }) => {
       return !field.startsWith("leave_details.intermittent_leave_periods[0]");
     });

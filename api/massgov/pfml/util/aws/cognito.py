@@ -3,7 +3,9 @@ from typing import Optional, Union
 
 import boto3
 import botocore
+from botocore.exceptions import ClientError
 
+import massgov.pfml.api.app as app
 import massgov.pfml.util.logging
 from massgov.pfml.api.validation.exceptions import IssueType, ValidationErrorDetail
 from massgov.pfml.cognito.exceptions import (
@@ -15,6 +17,7 @@ from massgov.pfml.cognito.exceptions import (
 )
 
 USER_ID_ATTRIBUTE = "sub"
+USER_MFA_VERIFIED_ATTRIBUTE = "phone_number_verified"
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
@@ -59,6 +62,18 @@ def lookup_cognito_account_id(
 
         raise CognitoSubNotFound("Cognito did not return an ID for the user!")
     return None
+
+
+def is_mfa_phone_verified(email: str, cognito_user_pool_id: str) -> Union[bool, None]:
+    cognito_client = create_cognito_client()
+    response = cognito_client.admin_get_user(Username=email, UserPoolId=cognito_user_pool_id)
+
+    if response and response["UserAttributes"]:
+        for attr in response["UserAttributes"]:
+            if attr["Name"] == USER_MFA_VERIFIED_ATTRIBUTE:
+                return True if attr["Value"] == "true" else False
+
+    return False
 
 
 def create_cognito_account(
@@ -153,3 +168,28 @@ def create_cognito_account(
         ) from error
 
     return response["UserSub"]
+
+
+def disable_user_mfa(email: str) -> None:
+    cognito_client = create_cognito_client()
+    cognito_user_pool_id = app.get_config().cognito_user_pool_id
+
+    try:
+        cognito_client.admin_set_user_mfa_preference(
+            SMSMfaSettings={"Enabled": False}, Username=email, UserPoolId=cognito_user_pool_id
+        )
+    except Exception as error:
+        if isinstance(error, ClientError) and "InvalidParameterException" in str(error.__class__):
+            logger.error(
+                "Error updating MFA preference in Cognito - Invalid parameter in request",
+                exc_info=error,
+            )
+        elif isinstance(error, ClientError) and "UserNotFoundException" in str(error.__class__):
+            logger.error(
+                "Error updating MFA preference in Cognito - User not found with email",
+                exc_info=error,
+            )
+        else:
+            logger.error("Error updating MFA preference in Cognito", exc_info=error)
+
+        raise error

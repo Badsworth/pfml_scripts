@@ -1,8 +1,9 @@
 import { Issue, ValidationError } from "../errors";
-import { AppErrorsLogic } from "./useAppErrorsLogic";
+import ApiResourceCollection from "../models/ApiResourceCollection";
 import Compressor from "compressorjs";
+import { ErrorsLogic } from "./useErrorsLogic";
 import TempFile from "../models/TempFile";
-import TempFileCollection from "../models/TempFileCollection";
+import bytesToMb from "../utils/bytesToMb";
 import { isFeatureEnabled } from "../services/featureFlags";
 import { snakeCase } from "lodash";
 import { t } from "../locales/i18n";
@@ -15,16 +16,6 @@ const defaultAllowedFileTypes = [
   "image/jpeg",
   "application/pdf",
 ] as const;
-
-// Fineos uploads are Base64-encoded. Their limit is 6mb. 4.5mb is the max size before base64 encoding.
-const fineosMaximumFileSize = 4500000; // bytes
-// PFML API Gateway has a 10mb payload size limit, so we shouldn't attempt to send files beyond this.
-// https://docs.aws.amazon.com/apigateway/latest/developerguide/limits.html#http-api-quotas
-const apiGatewayMaximumFileSize = 10000000;
-
-function bytesToMb(bytes: number): number {
-  return bytes / 1000000;
-}
 
 // Exclusion reasons
 const disallowedReasons = {
@@ -39,7 +30,7 @@ const disallowedReasons = {
  * @param maximumFileSize - Size at which compression will be attempted
  */
 function optimizeImageSize(file: File): Promise<File> {
-  const maximumImageSize = fineosMaximumFileSize;
+  const maximumImageSize = Number(process.env.fileSizeMaxBytesFineos);
 
   return new Promise((resolve) => {
     if (
@@ -110,8 +101,8 @@ function filterAllowedFiles(
       file.type === "application/pdf" && isFeatureEnabled("sendLargePdfToApi");
 
     const exceedsSizeLimit = useApiGatewaySizeLimit
-      ? file.size >= apiGatewayMaximumFileSize
-      : file.size > fineosMaximumFileSize;
+      ? file.size >= Number(process.env.fileSizeMaxBytesApiGateway)
+      : file.size > Number(process.env.fileSizeMaxBytesFineos);
 
     if (exceedsSizeLimit) {
       disallowedReason = useApiGatewaySizeLimit
@@ -165,15 +156,16 @@ function getIssueForDisallowedFile(
       : disallowedReason;
 
   return {
-    message: t("errors.invalidFile", {
+    message: t("errors.documents.file.clientSideError", {
       context,
       sizeLimit:
         disallowedReason === disallowedReasons.apiGatewaySize
-          ? bytesToMb(apiGatewayMaximumFileSize)
-          : bytesToMb(fineosMaximumFileSize),
+          ? bytesToMb(Number(process.env.fileSizeMaxBytesApiGateway))
+          : bytesToMb(Number(process.env.fileSizeMaxBytesFineos)),
       disallowedFileNames:
         disallowedFile instanceof File ? disallowedFile.name : "",
     }),
+    namespace: "documents",
   };
 }
 
@@ -183,14 +175,14 @@ const useFilesLogic = ({
   clearErrors,
 }: {
   allowedFileTypes?: readonly string[];
-  catchError: AppErrorsLogic["catchError"];
-  clearErrors: AppErrorsLogic["clearErrors"];
+  catchError: ErrorsLogic["catchError"];
+  clearErrors: ErrorsLogic["clearErrors"];
 }) => {
   const {
     collection: files,
     addItems: addFiles,
     removeItem: removeFile,
-  } = useCollectionState(new TempFileCollection());
+  } = useCollectionState(new ApiResourceCollection<TempFile>("id"));
 
   /**
    * Async function handles file optimization and filter logic
@@ -206,8 +198,7 @@ const useFilesLogic = ({
     addFiles(allowedFiles.map((file) => new TempFile({ file })));
 
     if (issues.length > 0) {
-      const i18nPrefix = "files";
-      catchError(new ValidationError(issues, i18nPrefix));
+      catchError(new ValidationError(issues));
     }
   };
 

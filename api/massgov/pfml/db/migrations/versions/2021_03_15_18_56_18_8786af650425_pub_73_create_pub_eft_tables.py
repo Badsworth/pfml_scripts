@@ -39,17 +39,17 @@ def upgrade():
         ),
         sa.Column("prenote_response_at", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(
-            ["bank_account_type_id"], ["lk_bank_account_type.bank_account_type_id"],
+            ["bank_account_type_id"], ["lk_bank_account_type.bank_account_type_id"]
         ),
-        sa.ForeignKeyConstraint(["prenote_state_id"], ["lk_prenote_state.prenote_state_id"],),
+        sa.ForeignKeyConstraint(["prenote_state_id"], ["lk_prenote_state.prenote_state_id"]),
         sa.PrimaryKeyConstraint("pub_eft_id"),
     )
     op.create_table(
         "link_employee_pub_eft_pair",
         sa.Column("employee_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("pub_eft_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"],),
-        sa.ForeignKeyConstraint(["pub_eft_id"], ["pub_eft.pub_eft_id"],),
+        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"]),
+        sa.ForeignKeyConstraint(["pub_eft_id"], ["pub_eft.pub_eft_id"]),
         sa.PrimaryKeyConstraint("employee_id", "pub_eft_id"),
     )
     op.add_column("payment", sa.Column("pub_eft_id", postgresql.UUID(as_uuid=True), nullable=True))

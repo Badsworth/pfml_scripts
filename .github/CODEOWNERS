@@ -6,34 +6,17 @@
 # See: https://help.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners#example-of-a-codeowners-file
 # ProTip: https://help.github.com/en/github/setting-up-and-managing-organizations-and-teams/managing-code-review-assignment-for-your-team
 
-/portal/ @EOLWD/pfml-portal
+/.github/workflows/ @EOLWD/pfml-infra
+/.github/actions/ @EOLWD/pfml-infra
+/.github/CODEOWNERS @EOLWD/pfml-infra
+
+/bin/ @EOLWD/pfml-infra
 /docs/portal/ @EOLWD/pfml-portal
-/infra/portal/ @EOLWD/pfml-portal
 /e2e/ @EOLWD/pfml-e2e
-/.github/ @EOLWD/pfml-infra
+/infra/portal/ @EOLWD/pfml-portal @EOLWD/pfml-infra
+/infra/admin-portal/ @EOLWD/pfml-infra @EOLWD/pfml-admin-portal
+/infra/bi/ @EOLWD/pfml-infra @EOLWD/pfml-business-intel
+/pdf_api/ @EOLWD/pfml-pdf-api 
 
-/portal/src/pages/applications/status.js @EOLWD/pfml-acorn-street
-/portal/src/components/ApplicationCard.js @EOLWD/pfml-acorn-street
-
-# These patterns include ** to match both api/massgov/pfml/DIR and api/tests/DIR
-/api/                                                  @jamesbursa @oscarAtNava
-/api/**/util/                                          @chouinar @jamesbursa
-/api/**/api/                                           @jamesbursa @shebryant
-/api/**/api/*.py                                       @doshitan @shebryant
-/api/**/api/auth*/                                     @doshitan @shebryant
-/api/**/api/claims*                                    @kyeah @aorticweb
-/api/**/api/services/*applications.py                  @doshitan
-/api/**/api/services/*fineos_actions.py                @kyeah @oscarAtNava
-/api/**/api/services/*administrator_fineos_actions.py  @kyeah @aorticweb
-/api/**/api/eligibility/                               @EyuelAbebe @jamesbursa
-/api/**/api/validation/                                @antxaddis @kyeah
-/api/**/db/                                            @doshitan @jamesbursa
-/api/**/delegated_payments/                            @chouinar @antxaddis
-/api/**/dor/                                           @antxaddis @mhuneke
-/api/**/fineos/                                        @doshitan @oscarAtNava
-/api/**/reductions/                                    @mhuneke @doshitan
-/api/**/rmv/                                           @doshitan @austin-gardner
-/api/**/servicenow/                                    @kyeah
-/api/?ocker*                                           @jamesbursa @kyeah
-/api/Makefile                                          @doshitan @jamesbursa
-/api/openapi.yaml                                      @oscarAtNava @shebryant
+/api/**/delegated_payments/ @EOLWD/pfml-payments
+/api/**/irs_1099/ @EOLWD/pfml-pdf-api

@@ -45,7 +45,7 @@ class TestFindUserAndRegister:
         fineos_client = fineos.create_client()
 
         leave_admin = UserLeaveAdministrator(
-            user_id=employer_user.user_id, employer_id=employer.employer_id, fineos_web_id=None,
+            user_id=employer_user.user_id, employer_id=employer.employer_id, fineos_web_id=None
         )
 
         test_db_session.add(leave_admin)
@@ -129,7 +129,7 @@ class TestFindAdminsWithoutRegistration:
     ):
         employer = EmployerFactory.create()
         leave_admin = UserLeaveAdministrator(
-            user_id=employer_user.user_id, employer_id=employer.employer_id, fineos_web_id=None,
+            user_id=employer_user.user_id, employer_id=employer.employer_id, fineos_web_id=None
         )
 
         test_db_session.add(leave_admin)

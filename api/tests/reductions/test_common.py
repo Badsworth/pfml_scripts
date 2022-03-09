@@ -1,5 +1,5 @@
 import massgov.pfml.reductions.common as reductions_common
-from massgov.pfml.db.models.employees import AbsenceStatus
+from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.factories import ClaimFactory, EmployeeFactory
 
 

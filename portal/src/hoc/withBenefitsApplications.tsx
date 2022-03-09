@@ -1,11 +1,17 @@
 import React, { useEffect } from "react";
 import withUser, { WithUserProps } from "./withUser";
-import BenefitsApplicationCollection from "../models/BenefitsApplicationCollection";
+import ApiResourceCollection from "../models/ApiResourceCollection";
+import BenefitsApplication from "../models/BenefitsApplication";
+import PaginationMeta from "src/models/PaginationMeta";
 import Spinner from "../components/core/Spinner";
 import { useTranslation } from "../locales/i18n";
 
+export interface ApiParams {
+  page_offset?: string;
+}
 export interface WithBenefitsApplicationsProps extends WithUserProps {
-  claims: BenefitsApplicationCollection;
+  claims: ApiResourceCollection<BenefitsApplication>;
+  paginationMeta: PaginationMeta;
 }
 
 /**
@@ -13,37 +19,38 @@ export interface WithBenefitsApplicationsProps extends WithUserProps {
  * The higher order component also loads the claims if they have not already been loaded.
  */
 function withBenefitsApplications<T extends WithBenefitsApplicationsProps>(
-  Component: React.ComponentType<T>
+  Component: React.ComponentType<T>,
+  apiParams: ApiParams = {}
 ) {
   const ComponentWithClaims = (props: WithUserProps) => {
     const { appLogic } = props;
+    const { page_offset } = apiParams;
     const { t } = useTranslation();
 
-    const benefitsApplications =
-      appLogic.benefitsApplications.benefitsApplications;
-    const shouldLoad = !appLogic.benefitsApplications.hasLoadedAll;
+    const { benefitsApplications, paginationMeta, isLoadingClaims } =
+      appLogic.benefitsApplications;
 
     useEffect(() => {
-      if (shouldLoad) {
-        appLogic.benefitsApplications.loadAll();
-      }
-
+      appLogic.benefitsApplications.loadPage(page_offset);
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [shouldLoad]);
+    }, [isLoadingClaims, page_offset]);
 
-    if (shouldLoad) {
+    if (isLoadingClaims) {
       return (
         <div className="margin-top-8 text-center">
           <Spinner
-            aria-valuetext={t(
-              "components.withBenefitsApplications.loadingLabel"
-            )}
+            aria-label={t("components.withBenefitsApplications.loadingLabel")}
           />
         </div>
       );
     }
-
-    return <Component {...(props as T)} claims={benefitsApplications} />;
+    return (
+      <Component
+        {...(props as T)}
+        claims={benefitsApplications}
+        paginationMeta={paginationMeta}
+      />
+    );
   };
   return withUser(ComponentWithClaims);
 }

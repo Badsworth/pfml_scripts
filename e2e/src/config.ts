@@ -54,9 +54,13 @@ function getRawEnvironment() {
     EMPLOYEES_FILE: process.env.E2E_EMPLOYEES_FILE,
     EMPLOYERS_FILE: process.env.E2E_EMPLOYERS_FILE,
 
-    FLOOD_API_TOKEN: process.env.E2E_FLOOD_API_TOKEN,
     LST_EMPLOYEES_FILE: process.env.E2E_LST_EMPLOYEES_FILE,
     LST_EMPLOYERS_FILE: process.env.E2E_LST_EMPLOYERS_FILE,
+
+    ORGUNIT_EMPLOYEES_FILE: process.env.ORGUNIT_EMPLOYEES_FILE,
+    ORGUNIT_EMPLOYERS_FILE: process.env.ORGUNIT_EMPLOYERS_FILE,
+
+    HAS_FINEOS_JANUARY_RELEASE: process.env.HAS_FINEOS_JANUARY_RELEASE,
 
     NEWRELIC_APIKEY: process.env.E2E_NEWRELIC_APIKEY,
     NEWRELIC_ACCOUNTID: process.env.E2E_NEWRELIC_ACCOUNTID,
@@ -65,8 +69,22 @@ function getRawEnvironment() {
     DOR_IMPORT_URI: process.env.E2E_DOR_IMPORT_URI,
     DOR_ETL_ARN: process.env.E2E_DOR_ETL_ARN,
 
-    FINEOS_HAS_TAX_WITHHOLDING: process.env.FINEOS_HAS_TAX_WITHHOLDING,
-    HAS_UPDATED_MAX_BENFIT: process.env.HAS_UPDATED_MAX_BENFIT,
+    TWILIO_ACCOUNTSID: process.env.E2E_TWILIO_ACCOUNTSID,
+    TWILIO_AUTHTOKEN: process.env.E2E_TWILIO_AUTHTOKEN,
+    TWILIO_NUMBERS: process.env.E2E_TWILIO_NUMBERS,
+
+    FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION:
+      process.env.FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION,
+    HAS_ORGUNITS_SETUP: process.env.HAS_ORGUNITS_SETUP,
+    HAS_LARGE_FILE_COMPRESSION: process.env.HAS_LARGE_FILE_COMPRESSION,
+    HAS_EMPLOYER_REIMBURSEMENTS: process.env.HAS_EMPLOYER_REIMBURSEMENTS,
+    HAS_APRIL_UPGRADE: process.env.HAS_APRIL_UPGRADE,
+    HAS_FEB_RELEASE: process.env.HAS_FEB_RELEASE,
+    LST_FILE_RANGE: process.env.E2E_LST_FILE_RANGE, // valid values are "small", "large", "full_range"
+    MFA_ENABLED: process.env.MFA_ENABLED,
+    S3_INTELLIGENCE_TOOL_BUCKET: process.env.E2E_S3_INTELLIGENCE_TOOL_BUCKET,
+    HAS_CHANNEL_SWITCHING: process.env.HAS_CHANNEL_SWITCHING,
+    HAS_UPDATED_ER_DASHBOARD: process.env.E2E_HAS_UPDATED_ER_DASHBOARD,
   };
 }
 
@@ -107,6 +125,9 @@ export const factory: ConfigFactory = (env: string) => {
     ...fileConfiguration._default, // Defaults
     ...file,
     ...environment,
+    // explicitly map the environment we've been passed. Otherwise, ENVIRONMENT always comes from
+    // the .env file, which is not correct when we're using an explicit config factory.
+    ENVIRONMENT: env,
   };
   const get: ConfigFunction = (name) => {
     const value = configuration[name];

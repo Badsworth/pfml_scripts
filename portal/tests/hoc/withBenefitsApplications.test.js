@@ -1,6 +1,6 @@
 import { screen, waitFor } from "@testing-library/react";
+import ApiResourceCollection from "../../src/models/ApiResourceCollection";
 import BenefitsApplication from "../../src/models/BenefitsApplication";
-import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
 import React from "react";
 import { renderPage } from "../test-utils";
 import withBenefitsApplications from "../../src/hoc/withBenefitsApplications";
@@ -9,17 +9,17 @@ const mockPageContent = "Applications are loaded. This is the page.";
 
 jest.mock("../../src/hooks/useAppLogic");
 
-function setup({ addCustomSetup } = {}) {
+function setup({ addCustomSetup } = {}, apiParams) {
   const PageComponent = (props) => (
     <div>
       {mockPageContent}
+      Page {props.paginationMeta?.page_offset}
       {props.claims.items.map((application) => (
         <div key={application.application_id}>{application.application_id}</div>
       ))}
     </div>
   );
-  const WrappedComponent = withBenefitsApplications(PageComponent);
-
+  const WrappedComponent = withBenefitsApplications(PageComponent, apiParams);
   renderPage(WrappedComponent, {
     addCustomSetup,
   });
@@ -29,6 +29,8 @@ describe("withBenefitsApplications", () => {
   it("shows spinner when loading application state", async () => {
     setup({
       addCustomSetup: (appLogic) => {
+        appLogic.benefitsApplications.loadPage = jest.fn();
+        appLogic.benefitsApplications.isLoadingClaims = true;
         jest
           .spyOn(
             appLogic.benefitsApplications,
@@ -46,6 +48,7 @@ describe("withBenefitsApplications", () => {
 
     setup({
       addCustomSetup: (appLogic) => {
+        appLogic.benefitsApplications.loadPage = jest.fn();
         spy = jest.spyOn(appLogic.auth, "requireLogin");
       },
     });
@@ -62,9 +65,10 @@ describe("withBenefitsApplications", () => {
 
     setup({
       addCustomSetup: (appLogic) => {
-        const claims = new BenefitsApplicationCollection([mockClaim]);
+        const claims = new ApiResourceCollection("application_id", [mockClaim]);
         appLogic.benefitsApplications.benefitsApplications = claims;
-        appLogic.benefitsApplications.hasLoadedAll = true;
+        appLogic.benefitsApplications.isLoadingClaims = false;
+        appLogic.benefitsApplications.loadPage = jest.fn();
       },
     });
 

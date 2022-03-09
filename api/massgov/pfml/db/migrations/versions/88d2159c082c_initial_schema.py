@@ -130,9 +130,9 @@ def upgrade():
         sa.Column("state_type", sa.Integer(), nullable=True),
         sa.Column("zip_code", sa.Text(), nullable=True),
         sa.Column("country_type", sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(["address_type"], ["lk_address_type.address_type"],),
-        sa.ForeignKeyConstraint(["country_type"], ["lk_country.country_type"],),
-        sa.ForeignKeyConstraint(["state_type"], ["lk_geo_state.state_type"],),
+        sa.ForeignKeyConstraint(["address_type"], ["lk_address_type.address_type"]),
+        sa.ForeignKeyConstraint(["country_type"], ["lk_country.country_type"]),
+        sa.ForeignKeyConstraint(["state_type"], ["lk_geo_state.state_type"]),
         sa.PrimaryKeyConstraint("address_id"),
     )
     op.create_table(
@@ -142,7 +142,7 @@ def upgrade():
         sa.Column("bank_routing_nbr", sa.Integer(), nullable=True),
         sa.Column("bank_account_nbr", sa.Integer(), nullable=True),
         sa.Column("gift_card_nbr", sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(["payment_type"], ["lk_payment_type.payment_type"],),
+        sa.ForeignKeyConstraint(["payment_type"], ["lk_payment_type.payment_type"]),
         sa.PrimaryKeyConstraint("payment_info_id"),
     )
     op.create_table(
@@ -150,7 +150,7 @@ def upgrade():
         sa.Column("user_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("active_directory_id", sa.Text(), nullable=True),
         sa.Column("status_type", sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(["status_type"], ["lk_status.status_type"],),
+        sa.ForeignKeyConstraint(["status_type"], ["lk_status.status_type"]),
         sa.PrimaryKeyConstraint("user_id"),
     )
     op.create_table(
@@ -172,32 +172,30 @@ def upgrade():
         sa.Column("occupation_type", sa.Integer(), nullable=True),
         sa.Column("education_level_type", sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(
-            ["education_level_type"], ["lk_education_level.education_level_type"],
+            ["education_level_type"], ["lk_education_level.education_level_type"]
         ),
-        sa.ForeignKeyConstraint(["gender_type"], ["lk_gender.gender_type"],),
-        sa.ForeignKeyConstraint(
-            ["marital_status_type"], ["lk_marital_status.marital_status_type"],
-        ),
-        sa.ForeignKeyConstraint(["occupation_type"], ["lk_occupation.occupation_type"],),
-        sa.ForeignKeyConstraint(["payment_info_id"], ["payment_information.payment_info_id"],),
-        sa.ForeignKeyConstraint(["race_type"], ["lk_race.race_type"],),
+        sa.ForeignKeyConstraint(["gender_type"], ["lk_gender.gender_type"]),
+        sa.ForeignKeyConstraint(["marital_status_type"], ["lk_marital_status.marital_status_type"]),
+        sa.ForeignKeyConstraint(["occupation_type"], ["lk_occupation.occupation_type"]),
+        sa.ForeignKeyConstraint(["payment_info_id"], ["payment_information.payment_info_id"]),
+        sa.ForeignKeyConstraint(["race_type"], ["lk_race.race_type"]),
         sa.PrimaryKeyConstraint("employee_id"),
     )
     op.create_table(
         "link_employer_address",
         sa.Column("employer_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("address_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.ForeignKeyConstraint(["address_id"], ["address.address_id"],),
-        sa.ForeignKeyConstraint(["employer_id"], ["employer.employer_id"],),
+        sa.ForeignKeyConstraint(["address_id"], ["address.address_id"]),
+        sa.ForeignKeyConstraint(["employer_id"], ["employer.employer_id"]),
         sa.PrimaryKeyConstraint("employer_id", "address_id"),
     )
     op.create_table(
         "link_health_care_provider_address",
         sa.Column("health_care_provider_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("address_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.ForeignKeyConstraint(["address_id"], ["address.address_id"],),
+        sa.ForeignKeyConstraint(["address_id"], ["address.address_id"]),
         sa.ForeignKeyConstraint(
-            ["health_care_provider_id"], ["health_care_provider.health_care_provider_id"],
+            ["health_care_provider_id"], ["health_care_provider.health_care_provider_id"]
         ),
         sa.PrimaryKeyConstraint("health_care_provider_id", "address_id"),
     )
@@ -206,8 +204,8 @@ def upgrade():
         sa.Column("user_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("role_type", sa.Integer(), nullable=False),
         sa.Column("related_role_id", postgresql.UUID(as_uuid=True), nullable=True),
-        sa.ForeignKeyConstraint(["role_type"], ["lk_role.role_type"],),
-        sa.ForeignKeyConstraint(["user_id"], ["user.user_id"],),
+        sa.ForeignKeyConstraint(["role_type"], ["lk_role.role_type"]),
+        sa.ForeignKeyConstraint(["user_id"], ["user.user_id"]),
         sa.PrimaryKeyConstraint("user_id", "role_type"),
     )
     op.create_table(
@@ -218,15 +216,15 @@ def upgrade():
             ["authorized_representative_id"],
             ["authorized_representative.authorized_representative_id"],
         ),
-        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"],),
+        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"]),
         sa.PrimaryKeyConstraint("authorized_representative_id", "employee_id"),
     )
     op.create_table(
         "link_employee_address",
         sa.Column("employee_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("address_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.ForeignKeyConstraint(["address_id"], ["address.address_id"],),
-        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"],),
+        sa.ForeignKeyConstraint(["address_id"], ["address.address_id"]),
+        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"]),
         sa.PrimaryKeyConstraint("employee_id", "address_id"),
     )
     op.create_table(
@@ -242,8 +240,8 @@ def upgrade():
         sa.Column("employer_qtr_wages", sa.Numeric(), nullable=False),
         sa.Column("employer_med_contribution", sa.Numeric(), nullable=False),
         sa.Column("employer_fam_contribution", sa.Numeric(), nullable=False),
-        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"],),
-        sa.ForeignKeyConstraint(["employer_id"], ["employer.employer_id"],),
+        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"]),
+        sa.ForeignKeyConstraint(["employer_id"], ["employer.employer_id"]),
         sa.PrimaryKeyConstraint("wage_and_contribution_id"),
     )
     # ### end Alembic commands ###

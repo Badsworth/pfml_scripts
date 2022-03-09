@@ -10,16 +10,15 @@ from massgov.pfml.db.models.base import uuid_gen
 from massgov.pfml.db.models.employees import (
     Address,
     AddressType,
-    Country,
     Employee,
     Employer,
     EmployerAddress,
     EmployerQuarterlyContribution,
-    GeoState,
     TaxIdentifier,
     WagesAndContributions,
     WagesAndContributionsHistory,
 )
+from massgov.pfml.db.models.geo import Country, GeoState
 from massgov.pfml.dor.importer.dor_file_formats import (
     EmployerQuarterlyKey,
     ParsedEmployeeLine,
@@ -245,7 +244,7 @@ def create_employee(
 
 
 def check_and_update_employee(
-    existing_employee: Employee, employee_info: ParsedEmployeeLine, import_log_entry_id: int,
+    existing_employee: Employee, employee_info: ParsedEmployeeLine, import_log_entry_id: int
 ) -> bool:
     do_update = (
         existing_employee.first_name != employee_info["employee_first_name"]
@@ -260,7 +259,7 @@ def check_and_update_employee(
 
 
 def update_employee(
-    existing_employee: Employee, employee_info: ParsedEmployeeLine, import_log_entry_id: int,
+    existing_employee: Employee, employee_info: ParsedEmployeeLine, import_log_entry_id: int
 ) -> Employee:
     existing_employee.first_name = employee_info["employee_first_name"]
     existing_employee.last_name = employee_info["employee_last_name"]
@@ -426,7 +425,7 @@ def get_wages_and_contributions_by_employee_ids(
 ) -> List[WagesAndContributions]:
     return list(
         db_session.query(WagesAndContributions).filter(
-            WagesAndContributions.employee_id.in_(employee_ids),
+            WagesAndContributions.employee_id.in_(employee_ids)
         )
     )
 

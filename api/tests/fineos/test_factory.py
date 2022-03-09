@@ -8,7 +8,7 @@ import massgov.pfml.fineos.factory
 
 
 def test_fineos_client_config_from_env_default():
-    config = massgov.pfml.fineos.factory.FINEOSClientConfig.from_env()
+    config = massgov.pfml.fineos.factory.FINEOSClientConfig(_env_file=None)
     assert config == massgov.pfml.fineos.factory.FINEOSClientConfig(
         integration_services_api_url=None,
         customer_api_url=None,
@@ -33,7 +33,7 @@ def test_fineos_client_config_from_env(monkeypatch):
     monkeypatch.setenv("FINEOS_CLIENT_OAUTH2_CLIENT_ID", "1234567890abcdefghij")
     monkeypatch.setenv("FINEOS_CLIENT_OAUTH2_CLIENT_SECRET", "abcdefghijklmnopqrstuvwxyz")
 
-    config = massgov.pfml.fineos.factory.FINEOSClientConfig.from_env()
+    config = massgov.pfml.fineos.factory.FINEOSClientConfig()
     assert config == massgov.pfml.fineos.factory.FINEOSClientConfig(
         integration_services_api_url="https://2.abc.test/integrationservicesapi/",
         group_client_api_url="https://2.abc.test/groupclientapi/",
@@ -47,7 +47,17 @@ def test_fineos_client_config_from_env(monkeypatch):
 
 
 def test_create_client_default_is_mock():
-    client = massgov.pfml.fineos.factory.create_client()
+    empty_config = massgov.pfml.fineos.factory.FINEOSClientConfig(
+        integration_services_api_url=None,
+        customer_api_url=None,
+        group_client_api_url=None,
+        wscomposer_api_url=None,
+        wscomposer_user_id="CONTENT",
+        oauth2_url=None,
+        oauth2_client_id=None,
+        oauth2_client_secret=None,
+    )
+    client = massgov.pfml.fineos.factory.create_client(empty_config)
     assert type(client) == massgov.pfml.fineos.mock_client.MockFINEOSClient
 
 

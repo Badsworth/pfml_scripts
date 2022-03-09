@@ -1,11 +1,41 @@
 from typing import List, Optional
 
 import massgov.pfml.db as db
-from massgov.pfml.api.models.users.requests import UserCreateRequest
+from massgov.pfml.api.models.users.requests import UserCreateRequest, UserUpdateRequest
 from massgov.pfml.api.util.deepgetattr import deepgetattr
 from massgov.pfml.api.validation.exceptions import IssueRule, IssueType, ValidationErrorDetail
 from massgov.pfml.db.models.applications import Application
 from massgov.pfml.db.models.employees import Employer, Role, User
+
+
+def get_users_convert_claimant_issues(user: User) -> List[ValidationErrorDetail]:
+    """Validate that the user is an unverified leave admin"""
+    issues = []
+
+    verified_leave_admins = [
+        ula
+        for ula in user.user_leave_administrators
+        if ula.fineos_web_id is not None or ula.verification_id is not None
+    ]
+
+    if Role.EMPLOYER.role_id not in [role.role_id for role in user.roles]:
+        issues.append(
+            ValidationErrorDetail(
+                field="role.role_description",
+                message="You're not an employer!",
+                type=IssueType.conflicting,
+            )
+        )
+    if len(verified_leave_admins) > 0:
+        issues.append(
+            ValidationErrorDetail(
+                field="role.role_description",
+                message="Verified Leave Admins cannot convert their account!",
+                type=IssueType.conflicting,
+            )
+        )
+
+    return issues
 
 
 def get_users_convert_employer_issues(
@@ -53,7 +83,7 @@ def get_users_post_required_fields_issues(
         if val is None:
             issues.append(
                 ValidationErrorDetail(
-                    type=IssueType.required, message=f"{field} is required", field=field,
+                    type=IssueType.required, message=f"{field} is required", field=field
                 )
             )
 
@@ -93,5 +123,26 @@ def get_users_post_employer_issues(employer: Optional[Employer]) -> List[Validat
                 type=IssueType.require_contributing_employer,
             )
         )
+
+    return issues
+
+
+def get_users_patch_issues(user_patch_request: UserUpdateRequest) -> List[ValidationErrorDetail]:
+    """Validate that the patch request has all required fields"""
+    issues = []
+
+    if user_patch_request.mfa_phone_number:
+        required_fields = ["phone_number", "int_code", "phone_type"]
+        for field in required_fields:
+            if deepgetattr(user_patch_request, "mfa_phone_number.{}".format(field)) is None:
+                issues.append(
+                    ValidationErrorDetail(
+                        field="mfa_phone_number.{}".format(field),
+                        type=IssueType.required,
+                        message="{} is required when mfa_phone_number is included in request".format(
+                            field
+                        ),
+                    )
+                )
 
     return issues

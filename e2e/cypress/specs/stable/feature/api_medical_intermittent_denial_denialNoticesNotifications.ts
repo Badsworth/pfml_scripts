@@ -2,6 +2,7 @@ import { fineos, portal, email, fineosPages } from "../../../actions";
 import { Submission } from "../../../../src/types";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { getClaimantCredentials } from "../../../config";
+import { config } from "../../../actions/common";
 
 describe("Denial Notification and Notice", () => {
   before(() => {
@@ -24,7 +25,11 @@ describe("Denial Notification and Notice", () => {
         claimPage.triggerNotice("Preliminary Designation");
         fineos.onTab("Absence Hub");
         claimPage.shouldHaveStatus("Eligibility", "Not Met");
-        claimPage.deny("Claimant wages failed 30x rule");
+        if (config("HAS_APRIL_UPGRADE") === "true") {
+          claimPage.deny("Claimant wages failed 30x rule", true, true);
+        } else {
+          claimPage.deny("Claimant wages failed 30x rule", true, false);
+        }
         claimPage.triggerNotice("Leave Request Declined");
         claimPage.documents((docPage) =>
           docPage.assertDocumentExists("Denial Notice")
@@ -82,7 +87,7 @@ describe("Denial Notification and Notice", () => {
           portal.checkNoticeForLeaveAdmin(
             submission.fineos_absence_id,
             employeeFullName,
-            "denial"
+            "Denial notice (PDF)"
           );
           portal.downloadLegalNotice(submission.fineos_absence_id);
         });
@@ -111,7 +116,7 @@ describe("Denial Notification and Notice", () => {
                 messageWildcard: submission.fineos_absence_id,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
               },
-              45000
+              75000
             )
             .then(() => {
               const dob =
@@ -151,7 +156,7 @@ describe("Denial Notification and Notice", () => {
               },
               // Adding an additional 30 seconds based on recent failures
               // retrieving this notification during E2E runs
-              60000
+              90000
             )
             .then(() => {
               const dob =
@@ -181,17 +186,13 @@ describe("Denial Notification and Notice", () => {
         );
         // Check email for Claimant/Employee
         email
-          .getEmails(
-            {
-              address: "gqzap.notifications@inbox.testmail.app",
-              subjectWildcard: subjectClaimant,
-              messageWildcard: submission.fineos_absence_id,
-              timestamp_from: submission.timestamp_from,
-              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-            },
-            // Reduced timeout, since we have multiple tests that run prior to this.
-            30000
-          )
+          .getEmails({
+            address: "gqzap.notifications@inbox.testmail.app",
+            subjectWildcard: subjectClaimant,
+            messageWildcard: submission.fineos_absence_id,
+            timestamp_from: submission.timestamp_from,
+            debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+          })
           .then(() => {
             cy.contains(submission.fineos_absence_id);
           });

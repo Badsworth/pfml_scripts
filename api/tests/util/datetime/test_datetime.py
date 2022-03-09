@@ -64,3 +64,46 @@ def test_getnow_est_edt():
         assert "2021-01-01 14:00:00-05:00" == str(datetime_util.get_now_us_eastern())
     with freeze_time("2021-08-01 19:00:00"):
         assert "2021-08-01 15:00:00-04:00" == str(datetime_util.get_now_us_eastern())
+
+
+def test_datetime_str_to_date():
+    assert datetime_util.datetime_str_to_date("2019-12-30") == date(2019, 12, 30)
+    assert datetime_util.datetime_str_to_date("") is None
+    assert datetime_util.datetime_str_to_date(None) is None
+
+
+@pytest.mark.parametrize(
+    "test_date,is_contained",
+    [
+        (date(2021, 5, 1), False),  # before
+        ((date(2021, 5, 16)), False),  # after
+        (date(2021, 5, 7), True),  # on start
+        ((date(2021, 5, 15)), True),  # on end
+        # within
+        (date(2021, 5, 8), True),
+        (date(2021, 5, 12), True),
+        (date(2021, 5, 14), True),
+    ],
+)
+def test_is_date_contained(test_date, is_contained):
+    c_range = [date(2021, 5, 7), date(2021, 5, 15)]
+    assert datetime_util.is_date_contained(c_range, test_date) == is_contained
+
+
+@pytest.mark.parametrize(
+    "test_range,is_contained",
+    [
+        ((date(2021, 4, 1), date(2021, 5, 1)), False),  # before
+        ((date(2021, 5, 1), date(2021, 5, 7)), False),  # overlaps start
+        ((date(2021, 5, 15), date(2021, 5, 25)), False),  # overlaps end
+        ((date(2021, 5, 16), date(2021, 5, 25)), False),  # after
+        # within
+        ((date(2021, 5, 7), date(2021, 5, 15)), True),  # entire range
+        ((date(2021, 5, 7), date(2021, 5, 14)), True),  # includes start
+        ((date(2021, 5, 8), date(2021, 5, 15)), True),  # includes end
+        ((date(2021, 5, 8), date(2021, 5, 14)), True),
+    ],
+)
+def test_is_range_contained(test_range, is_contained):
+    c_range = [date(2021, 5, 7), date(2021, 5, 15)]
+    assert datetime_util.is_range_contained(c_range, test_range) == is_contained

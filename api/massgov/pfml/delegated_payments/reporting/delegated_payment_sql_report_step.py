@@ -62,7 +62,7 @@ class ReportStep(Step):
 
             try:
                 self.generate_report(
-                    outbound_path, archive_path, report.report_name.value, report.sql_command,
+                    outbound_path, archive_path, report.report_name.value, report.sql_command
                 )
                 generated_reports.append(report.report_name.value)
                 self.increment(self.Metrics.REPORT_GENERATED_COUNT)
@@ -79,7 +79,7 @@ class ReportStep(Step):
             )
 
     def generate_report(
-        self, outbound_path: str, archive_path: str, report_name: str, sql_command: str,
+        self, outbound_path: str, archive_path: str, report_name: str, sql_command: str
     ) -> None:
         logger.info("Generating report: %s", report_name)
 

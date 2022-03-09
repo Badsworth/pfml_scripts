@@ -22,7 +22,7 @@ export const TaxWithholding = (props: WithBenefitsApplicationProps) => {
   const withholdTax = get(formState, "is_withholding_tax");
 
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });

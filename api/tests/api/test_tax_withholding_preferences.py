@@ -77,14 +77,12 @@ def test_submit_withholding_preference_already_set(
     )
     tests.api.validate_error_response(
         response,
-        403,
-        "Application {} could not be updated. Tax withholding preference already submitted".format(
-            application_id
-        ),
+        400,
+        message="Invalid request",
         errors=[
             {
                 "field": "is_withholding_tax",
-                "message": "Tax withholding preference is already submitted",
+                "message": "Tax withholding preference is already set",
                 "type": "duplicate",
             }
         ],

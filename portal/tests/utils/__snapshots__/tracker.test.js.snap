@@ -1,15 +1,15 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`tracker initialize sets New Relic config 1`] = `
-Object {
-  "info": Object {
+{
+  "info": {
     "applicationID": "mock-new-relic-id",
     "beacon": "bam.nr-data.net",
     "errorBeacon": "bam.nr-data.net",
     "licenseKey": "NRJS-9852fe81d192bbc09c5",
     "sa": 1,
   },
-  "loader_config": Object {
+  "loader_config": {
     "accountID": "2837112",
     "agentID": "mock-new-relic-id",
     "applicationID": "mock-new-relic-id",

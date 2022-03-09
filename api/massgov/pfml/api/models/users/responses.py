@@ -3,7 +3,10 @@ from typing import Any, Dict, List, Optional
 from pydantic import UUID4, Field
 from sqlalchemy.orm import contains_eager
 
+import massgov.pfml.api.app as app
+from massgov.pfml.api.models.common import LookupEnum, MaskedPhoneResponse
 from massgov.pfml.db import Session
+from massgov.pfml.db.models.applications import Application
 from massgov.pfml.db.models.employees import (
     Employer,
     EmployerQuarterlyContribution,
@@ -15,34 +18,76 @@ from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import FEINFormattedStr
 
 
+class MFADeliveryPreference(str, LookupEnum):
+    sms = "SMS"
+    opt_out = "Opt Out"
+
+
 class RoleResponse(PydanticBaseModel):
     role_id: int
     role_description: str
 
 
-class EmployerResponse(PydanticBaseModel):
-    employer_dba: str
+class ApplicationNamesResponse(PydanticBaseModel):
+    first_name: Optional[str]
+    middle_name: Optional[str]
+    last_name: Optional[str]
+
+
+class UserEmployerResponse(PydanticBaseModel):
+    employer_dba: Optional[str]
     employer_fein: FEINFormattedStr
     employer_id: UUID4
     has_verification_data: bool
 
 
 class UserLeaveAdminResponse(PydanticBaseModel):
-    employer: EmployerResponse
+    employer: UserEmployerResponse
     has_fineos_registration: bool
     verified: bool
 
 
 class UserResponse(PydanticBaseModel):
-    """Response object for a given User result """
+    """Response object for a given User result"""
 
     user_id: UUID4
     auth_id: str = Field(alias="sub_id")
     email_address: str
-    mfa_phone_number: Optional[str]
+    mfa_delivery_preference: Optional[MFADeliveryPreference]
+    mfa_phone_number: Optional[MaskedPhoneResponse]
+    # Optional since it isn't populated at first in from_orm(). After that it
+    # should always be a potentially empty list.
+    application_names: Optional[List[ApplicationNamesResponse]]
     consented_to_data_sharing: bool
     roles: List[RoleResponse]
-    user_leave_administrators: List[UserLeaveAdminResponse]
+    user_leave_administrators: list
+
+    @classmethod
+    def from_orm(cls, user: User) -> "UserResponse":
+        user_response = super().from_orm(user)
+        with app.db_session() as db_session:
+            user_leave_administrators = get_user_leave_administrators(user, db_session)
+            application_names_data = (
+                db_session.query(
+                    Application.first_name, Application.middle_name, Application.last_name
+                )
+                .filter(Application.user_id == user.user_id)
+                .distinct()
+                .limit(5)
+                .all()
+            )
+        user_leave_administrators_data = [
+            normalize_user_leave_admin_response(UserLeaveAdminResponse.from_orm(ula))
+            for ula in user_leave_administrators
+        ]
+        user_response.user_leave_administrators = user_leave_administrators_data
+        user_response.application_names = [
+            ApplicationNamesResponse(
+                first_name=n.first_name, middle_name=n.middle_name, last_name=n.last_name
+            )
+            for n in application_names_data
+        ]
+        return user_response
 
 
 class AuthURIResponse(PydanticBaseModel):
@@ -68,7 +113,7 @@ class AdminTokenResponse(PydanticBaseModel):
 
 
 class AdminUserResponse(PydanticBaseModel):
-    """Response object for a given AzureUser object """
+    """Response object for a given AzureUser object"""
 
     sub_id: str
     first_name: Optional[str]
@@ -96,18 +141,6 @@ def get_user_leave_administrators(user: User, db: Session) -> List[UserLeaveAdmi
         .filter(UserLeaveAdministrator.user_id == user.user_id)
         .all()
     )
-
-
-def user_response(user: User, db: Session) -> Dict[str, Any]:
-    user_leave_administrators = get_user_leave_administrators(user, db)
-    response = UserResponse.from_orm(user)
-    user_leave_administrators_data = [
-        normalize_user_leave_admin_response(UserLeaveAdminResponse.from_orm(ula))
-        for ula in user_leave_administrators
-    ]
-    response_data = response.dict()
-    response_data["user_leave_administrators"] = user_leave_administrators_data
-    return response_data
 
 
 def normalize_user_leave_admin_response(

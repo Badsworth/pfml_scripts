@@ -6,15 +6,23 @@ SHELL = /bin/bash -o pipefail
 export AWS_DEFAULT_REGION := us-east-1
 
 DOCKER_REPO ?= pfml-api
+# additional repo for 1099 image
+DOCKER_PDF_REPO ?= pfml-pdf-api
 DOCKER_REGISTRY ?= 498823821309.dkr.ecr.us-east-1.amazonaws.com
-
-# Generate a unique tag based solely on the git hash.
-# This will be the identifier used for deployment via terraform.
-IMAGE_TAG := $(shell git rev-parse HEAD)
 
 # Generate an informational tag so we can see where every image comes from.
 DATE := $(shell date -u '+%Y%m%d.%H%M%S')
 INFO_TAG := $(DATE).$(USER)
+
+GIT_REPO_AVAILABLE := $(shell git rev-parse --is-inside-work-tree 2>/dev/null)
+
+# Generate a unique tag based solely on the git hash.
+# This will be the identifier used for deployment via terraform.
+ifdef GIT_REPO_AVAILABLE
+IMAGE_TAG := $(shell git rev-parse HEAD)
+else
+IMAGE_TAG := "uknown-dev.$(DATE)"
+endif
 
 # Use -T to avoid making a pseudo-TTY, since docker-compose makes a real TTY by
 # default. -T is needed for Github Actions to work properly with its version of
@@ -98,9 +106,6 @@ clean-docker: ## Remove project docker artifacts (which includes the DB)
 clean-docker-volumes: ## Remove project docker volumes (which includes the DB state)
 	docker-compose down --volumes
 
-clean-node: ## Remove project Node.js modules
-	rm -rf node_modules
-
 clean-venv: ## Remove active poetry virtualenv
 	rm -rf $(shell poetry env info --path)
 
@@ -121,6 +126,12 @@ create-erds:
 
 create-leave-admin-and-claims: ## Create local API Leave Admin user and claims
 	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create-leave-admin-and-claims.py $(args)
+
+create-benefit-years: ## Create local benefit years data
+	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create-benefit-years.py $(args)
+
+create-claim-with-payments-for-user: ## Create local API user with claims + payments (usable with payment status API)
+	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create_claim_with_payments_for_user.py $(args)
 
 create-user: ## Create local API User
 	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create-user.py $(args)
@@ -154,8 +165,14 @@ fineos-daily-generate: ## Generate fake FINEOS employee extract
 fineos-import-employee-updates: ## Generate fake FINEOS employee extract
 	FINEOS_FOLDER_PATH=fineos_daily_mock FINEOS_AWS_IAM_ROLE_ARN="arn" FINEOS_AWS_IAM_ROLE_EXTERNAL_ID="1" $(PY_RUN_CMD) fineos-import-employee-updates $(DECODE_LOG)
 
+fineos-import-la-units: ## Import fake FINEOS leave admin org unit extract
+	FINEOS_FOLDER_PATH=fineos_daily_mock FINEOS_AWS_IAM_ROLE_ARN="arn" FINEOS_AWS_IAM_ROLE_EXTERNAL_ID="1" $(PY_RUN_CMD) fineos-import-la-units $(DECODE_LOG)
+
 dor-import: ## Run a DOR import using fake data (see dor-generate)
 	FOLDER_PATH=dor_mock $(PY_RUN_CMD) dor-import $(DECODE_LOG)
+
+mfa-lockout-resolution: ## Disable MFA on a user's account
+	$(PY_RUN_CMD) mfa-lockout-resolution $(args) $(DECODE_LOG)
 
 load-employers-to-fineos: ## Send employers from our database to the FINEOS API
 	$(PY_RUN_CMD) load-employers-to-fineos $(DECODE_LOG)
@@ -163,6 +180,24 @@ load-employers-to-fineos: ## Send employers from our database to the FINEOS API
 fineos-eligibility-feed-export: ## Run an eligibility feed export
 	mkdir -p eligibility_export/absence-eligibility/upload
 	OUTPUT_DIRECTORY_PATH=eligibility_export FINEOS_AWS_IAM_ROLE_ARN="arn" FINEOS_AWS_IAM_ROLE_EXTERNAL_ID="1" $(PY_RUN_CMD) fineos-eligibility-feed-export $(DECODE_LOG)
+
+dua-import-employee-demographics:
+	$(PY_RUN_CMD) dua-import-employee-demographics $(args) $(DECODE_LOG)
+
+dua-import-employer:
+	$(PY_RUN_CMD) dua-import-employer $(args) $(DECODE_LOG)
+
+dua-import-employer-unit:
+	$(PY_RUN_CMD) dua-import-employer-unit $(args) $(DECODE_LOG)
+
+dua-generate-and-send-employee-request-file:
+	$(PY_RUN_CMD) dua-generate-and-send-employee-request-file $(args) $(DECODE_LOG)
+
+dua-generate-and-send-employer-request-file:
+	$(PY_RUN_CMD) dua-generate-and-send-employer-request-file $(args) $(DECODE_LOG)
+
+sftp-tool:
+	$(PY_RUN_CMD) sftp-tool $(args) $(DECODE_LOG)
 
 pub-payments-process-fineos:
 	$(PY_RUN_CMD) pub-payments-process-fineos --steps ALL $(DECODE_LOG)
@@ -205,11 +240,15 @@ ecr-login: ## Login to ECR for Docker
 	aws ecr get-login-password --region 'us-east-1' | \
 	docker login --username AWS --password-stdin 498823821309.dkr.ecr.us-east-1.amazonaws.com
 
-pre-commit: 
+pre-commit:
 	$(PY_RUN_CMD) isort --atomic --apply $(args)
 	$(PY_RUN_CMD) black $(args)
-	$(PY_RUN_CMD) flake8 $(args)
-	$(PY_RUN_CMD) mypy $(args)
+ifdef flake_args
+	$(PY_RUN_CMD) flake8 $(flake_args)
+endif
+ifdef mypy_args
+	$(PY_RUN_CMD) mypy $(mypy_args)
+endif
 
 format: ## Format code
 	$(PY_RUN_CMD) isort --atomic --apply
@@ -222,12 +261,12 @@ format-check: ## Check format of code
 # Allow command to be run with max={num}, where {num} is the number of recent commits to include.
 # e.g. max=0 is only 'dirty' file changes, max=1 includes changes from the latest commit.
 format-changed: max := 0
-format-changed: FILES := $(shell { \
+format-changed: FILES := $(shell [ "$(GIT_REPO_AVAILABLE)" = "true" ] && { \
 	git diff --name-only --relative HEAD~$(max); \
 	git diff --name-only --staged --relative HEAD~$(max); \
 	git ls-files --other --exclude-standard HEAD~$(max);} | \
 	grep \\.py | uniq)
-format-changed: ## Format changed files
+format-changed: ## Format changed files, $max var determines number of commits to compare
 	$(PY_RUN_CMD) isort --atomic --apply $(FILES)
 	$(PY_RUN_CMD) black $(FILES)
 
@@ -255,9 +294,21 @@ ifdef CI
  FLAKE8_FORMAT := '::warning file=api/%(path)s,line=%(row)d,col=%(col)d::%(path)s:%(row)d:%(col)d: %(code)s %(text)s'
  MYPY_FLAGS := --no-pretty
  MYPY_POSTPROC := | perl -pe "s/^(.+):(\d+):(\d+): error: (.*)/::warning file=api\/\1,line=\2,col=\3::\4/"
+ SPECTRAL_POSTPROC := --format=text | perl -pe "s/^\/tmp\/(.+):(\d+):(\d+) (error|warning) (.*)/::warning file=api\/\1,line=\2,col=\3::\4 \5/"
 else
  FLAKE8_FORMAT := default
 endif
+
+lint-changed: max := 0
+lint-changed: FILES := $(shell [ "$(GIT_REPO_AVAILABLE)" = "true" ] && { \
+	git diff --name-only --relative HEAD~$(max); \
+	git diff --name-only --staged --relative HEAD~$(max); \
+	git ls-files --other --exclude-standard HEAD~$(max);} | \
+	grep -E '^(massgov|tests|bin)/.*\.py' | sort -u)
+lint-changed: FILES_MYPY := $(shell echo $(FILES) | tr " " "\n" | grep -E '^(massgov|bin)/')
+lint-changed: ## Lint changed files, $max var determines number of commits to compare
+	$(PY_RUN_CMD) flake8 --format=$(FLAKE8_FORMAT) $(FILES)
+	$(PY_RUN_CMD) mypy $(MYPY_FLAGS) $(FILES_MYPY) $(MYPY_POSTPROC)
 
 lint: ## Run linting
 lint: lint-spectral lint-py db-check-model-parity
@@ -279,7 +330,7 @@ lint-security: ## Run security linting
 
 lint-spectral: ## Run OpenAPI Spec linting
 	docker run --rm --tty --cap-drop=ALL --network=none --read-only --volume=$(PWD):/tmp:ro \
-           stoplight/spectral:6 lint /tmp/$(OPEN_API_PATH) --ruleset /tmp/.spectral.yaml
+           stoplight/spectral:6 lint /tmp/$(OPEN_API_PATH) --ruleset /tmp/.spectral.yaml $(SPECTRAL_POSTPROC)
 
 login: start ## Start shell in running container
 	docker exec -it $(APP_NAME) bash
@@ -294,6 +345,11 @@ login-db-admin: ## Start psql with project environment variables and admin user
 	PGPASSWORD=$$DB_ADMIN_PASSWORD psql --host=$$DB_HOST --username=$$DB_ADMIN_USERNAME $$DB_NAME
 
 logs: start ## View API logs
+	docker-compose logs --follow --no-color $(APP_NAME) $(DECODE_LOG)
+
+
+logs-local: ## Run start-local, with API logs
+logs-local: start-local
 	docker-compose logs --follow --no-color $(APP_NAME) $(DECODE_LOG)
 
 logs-db: start ## View DB logs
@@ -314,6 +370,10 @@ start: ## Start all containers
 start: jwks.json
 	docker-compose up --detach
 
+start-local: ## Start all containers using a cognito instance, in order to match local-to-local development with portal
+start-local:
+	docker-compose --env-file .env.local up --detach
+
 start-db: ## Start DB container
 	docker-compose up --detach mass-pfml-db
 
@@ -323,6 +383,9 @@ stop: ## Stop all running containers
 build-and-publish: ## Build and publish release image
 build-and-publish: api-image-build api-image-publish
 
+build-and-publish-pdf-api: ## Build and publish release image for PDF API
+build-and-publish-pdf-api: pdf-api-image-build pdf-api-image-publish
+
 api-image-build: ## Build release image
 	docker build \
 		--tag $(APP_NAME):latest \
@@ -330,6 +393,13 @@ api-image-build: ## Build release image
 		--target app \
 		--build-arg RUN_USER=container \
 		--build-arg RUN_UID=4000 \
+		.
+
+pdf-api-image-build: ## Build release pdf-api image
+	docker build \
+		--tag $(APP_NAME)-pdf:latest \
+		--tag $(APP_NAME)-pdf:$(IMAGE_TAG) \
+		--target final \
 		.
 
 release-start-api: jwks.json ## starts api container without an attached database
@@ -346,13 +416,24 @@ pre-flight-test: db-upgrade db-create-users release-start-api health-check
 api-image-publish: ## Tag and push release
 api-image-publish: ecr-login api-image-tag api-image-push
 
+pdf-api-image-publish: ## Tag and push pdf-api release
+pdf-api-image-publish: ecr-login pdf-api-image-tag pdf-api-image-push
+
 api-image-push: ## Push release image to the registry
 	docker push $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(IMAGE_TAG)
 	docker push $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(INFO_TAG)
 
+pdf-api-image-push: ## Push release pdf-api image to the registry
+	docker push $(DOCKER_REGISTRY)/$(DOCKER_PDF_REPO):$(IMAGE_TAG)
+	docker push $(DOCKER_REGISTRY)/$(DOCKER_PDF_REPO):$(INFO_TAG)
+
 api-image-tag: ## Tag release image for registry
 	docker tag $(APP_NAME):$(IMAGE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(IMAGE_TAG)
 	docker tag $(APP_NAME):$(IMAGE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_REPO):$(INFO_TAG)
+
+pdf-api-image-tag: ## Tag release pdf-api image for registry
+	docker tag $(APP_NAME)-pdf:$(IMAGE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_PDF_REPO):$(IMAGE_TAG)
+	docker tag $(APP_NAME)-pdf:$(IMAGE_TAG) $(DOCKER_REGISTRY)/$(DOCKER_PDF_REPO):$(INFO_TAG)
 
 runcmd: ## Run poetry command
 	$(PY_RUN_CMD) $(cmd)
@@ -498,7 +579,7 @@ release-list: ## Generate comma-separated list of ticket ids for $refs
 	tr '\n' ',' | sed 's/,$$//'
 
 
-API_RELEASE_BRANCHES := $(addprefix origin/, main deploy/api/stage deploy/api/prod deploy/api/performance deploy/api/training deploy/api/uat deploy/api/breakfix deploy/api/cps-preview)
+API_RELEASE_BRANCHES := $(addprefix origin/, main deploy/api/stage deploy/api/prod deploy/api/performance deploy/api/training deploy/api/uat deploy/api/breakfix deploy/api/cps-preview deploy/api/long deploy/api/trn2 deploy/api/infra-test)
 where-ticket: ## Search release branches for $ticket
 	@for b in $(API_RELEASE_BRANCHES); do echo "## $$b ##"; \
 		git --no-pager log --oneline --decorate --grep=$(ticket) $$b; \
@@ -532,8 +613,10 @@ help: ## Displays this help screen
 	@echo "APP_NAME=$(APP_NAME)"
 	@echo "INFO_TAG=$(INFO_TAG)"
 	@echo "RUN_CMD_OPT=$(RUN_CMD_OPT)"
+	@echo "GIT_REPO_AVAILABLE=$(GIT_REPO_AVAILABLE)"
 	@echo "IMAGE_TAG=$(IMAGE_TAG)"
 	@echo "RUN_UID=$(RUN_UID)"
 	@echo "RUN_USER=$(RUN_USER)"
 	@echo "SHELL=$(SHELL)"
 	@echo "MAKE_VERSION=$(MAKE_VERSION)"
+	@echo "COGNITO_USER_POOL_KEYS_URL=$(COGNITO_USER_POOL_KEYS_URL)"

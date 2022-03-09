@@ -6,6 +6,8 @@ import pytest
 from freezegun import freeze_time
 
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
+from massgov.pfml.api.models.applications.requests import ApplicationImportRequestBody
+from massgov.pfml.api.models.applications.responses import DocumentResponse
 from massgov.pfml.api.validation.application_rules import (
     get_always_required_issues,
     get_application_complete_issues,
@@ -17,10 +19,17 @@ from massgov.pfml.api.validation.application_rules import (
     get_payments_issues,
     get_reduced_schedule_leave_issues,
     get_work_pattern_issues,
+    validate_application_import_request_for_claim,
 )
-from massgov.pfml.api.validation.exceptions import IssueRule, IssueType, ValidationErrorDetail
+from massgov.pfml.api.validation.exceptions import (
+    IssueRule,
+    IssueType,
+    ValidationErrorDetail,
+    ValidationException,
+)
 from massgov.pfml.db.models.applications import (
     ConcurrentLeave,
+    DocumentType,
     EmployerBenefit,
     EmploymentStatus,
     IntermittentLeavePeriod,
@@ -35,8 +44,10 @@ from massgov.pfml.db.models.employees import PaymentMethod
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,
+    ClaimFactory,
     ConcurrentLeaveFactory,
     ContinuousLeavePeriodFactory,
+    DocumentFactory,
     EmployerBenefitFactory,
     IntermittentLeavePeriodFactory,
     OtherIncomeFactory,
@@ -44,6 +55,7 @@ from massgov.pfml.db.models.factories import (
     PreviousLeaveOtherReasonFactory,
     PreviousLeaveSameReasonFactory,
     ReducedScheduleLeavePeriodFactory,
+    TaxIdentifierFactory,
     WorkPatternFixedFactory,
     WorkPatternVariableFactory,
 )
@@ -289,7 +301,7 @@ def test_residential_address_required():
 def test_residential_address_fields_required():
     test_app = ApplicationFactory.build(
         residential_address=AddressFactory.build(
-            address_line_one=None, city=None, geo_state_id=None, zip_code=None,
+            address_line_one=None, city=None, geo_state_id=None, zip_code=None
         ),
         employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id,
         employer_notification_date=date(2021, 1, 3),
@@ -325,7 +337,7 @@ def test_residential_address_fields_required():
 def test_mailing_address_fields_required():
     test_app = ApplicationFactory.build(
         mailing_address=AddressFactory.build(
-            address_line_one=None, city=None, geo_state_id=None, zip_code=None,
+            address_line_one=None, city=None, geo_state_id=None, zip_code=None
         ),
         employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id,
         employer_notification_date=date(2021, 1, 3),
@@ -661,7 +673,7 @@ def test_min_leave_periods():
             message="At least one leave period should be entered",
             rule=IssueRule.min_leave_periods,
             type=IssueType.required,
-        ),
+        )
     ] == issues
 
 
@@ -716,7 +728,7 @@ def test_leave_period_end_date_before_start_date():
             type=IssueType.minimum,
             message="end_date cannot be earlier than the start_date",
             field="leave_details.continuous_leave_periods[0].end_date",
-        ),
+        )
     ] == continuous_leave_issues
 
     assert [
@@ -724,7 +736,7 @@ def test_leave_period_end_date_before_start_date():
             type=IssueType.minimum,
             message="end_date cannot be earlier than the start_date",
             field="leave_details.intermittent_leave_periods[0].end_date",
-        ),
+        )
     ] == intermittent_leave_issues
 
     assert [
@@ -732,7 +744,7 @@ def test_leave_period_end_date_before_start_date():
             type=IssueType.minimum,
             message="end_date cannot be earlier than the start_date",
             field="leave_details.reduced_schedule_leave_periods[0].end_date",
-        ),
+        )
     ] == reduced_schedule_leave_issues
 
 
@@ -770,7 +782,7 @@ def test_leave_period_disallow_12mo_leave_period_per_type():
             message="Leave cannot exceed 364 days",
             rule=IssueRule.disallow_12mo_continuous_leave_period,
             type="",
-        ),
+        )
     ] == continuous_leave_issues
 
     assert [
@@ -778,7 +790,7 @@ def test_leave_period_disallow_12mo_leave_period_per_type():
             message="Leave cannot exceed 364 days",
             rule=IssueRule.disallow_12mo_intermittent_leave_period,
             type="",
-        ),
+        )
     ] == intermittent_leave_issues
 
     assert [
@@ -786,7 +798,7 @@ def test_leave_period_disallow_12mo_leave_period_per_type():
             message="Leave cannot exceed 364 days",
             rule=IssueRule.disallow_12mo_reduced_leave_period,
             type="",
-        ),
+        )
     ] == reduced_schedule_leave_issues
 
 
@@ -818,7 +830,7 @@ def test_leave_period_disallow_12mo_leave_period():
             rule=IssueRule.disallow_12mo_leave_period,
             message="Leave cannot exceed 364 days",
             type="",
-        ),
+        )
     ] == issues
 
 
@@ -829,7 +841,7 @@ def test_leave_period_allows_same_start_end_date():
             reduced_schedule_leave_periods=[
                 ReducedScheduleLeavePeriodFactory.build(
                     start_date=start_end_date, end_date=start_end_date
-                ),
+                )
             ]
         )
     )
@@ -1651,8 +1663,7 @@ def test_employer_fein_required_for_employed_claimants():
 
 def test_employer_fein_not_required_for_self_employed_claimants():
     test_app = ApplicationFactory.build(
-        employer_fein=None,
-        employment_status_id=EmploymentStatus.SELF_EMPLOYED.employment_status_id,
+        employer_fein=None, employment_status_id=EmploymentStatus.SELF_EMPLOYED.employment_status_id
     )
     issues = get_conditional_issues(test_app)
     assert not issues
@@ -1673,8 +1684,7 @@ def test_employer_notification_date_required():
 
 def test_employer_notification_date_required_when_employed():
     test_app = ApplicationFactory.build(
-        employer_notified=False,
-        employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id,
+        employer_notified=False, employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id
     )
     issues = get_conditional_issues(test_app)
     assert [
@@ -1719,34 +1729,6 @@ def test_has_employer_benefits_true_no_benefit():
     ] == issues
 
 
-def test_has_employer_benefits_true_zero_benefit():
-    application = ApplicationFactory.build()
-    application.has_employer_benefits = True
-
-    benefits = [
-        EmployerBenefitFactory.build(
-            application_id=application.application_id,
-            benefit_amount_dollars=0,
-            is_full_salary_continuous=False,
-        )
-    ]
-    application.employer_benefits = benefits
-    issues = get_conditional_issues(application)
-
-    assert [
-        ValidationErrorDetail(
-            type=IssueType.minimum,
-            message="benefit_amount_dollars must be greater than zero",
-            field="employer_benefits[0].benefit_amount_dollars",
-        )
-    ] == issues
-
-    application.employer_benefits[0].is_full_salary_continuous = True
-    issues = get_conditional_issues(application)
-
-    assert len(issues) == 0
-
-
 def test_employer_benefit_no_issues():
     application = ApplicationFactory.build()
     benefits = [EmployerBenefitFactory.build(application_id=application.application_id)]
@@ -1762,11 +1744,6 @@ def test_employer_benefit_missing_fields():
     assert [
         ValidationErrorDetail(
             type=IssueType.required,
-            message="employer_benefits[0].benefit_start_date is required",
-            field="employer_benefits[0].benefit_start_date",
-        ),
-        ValidationErrorDetail(
-            type=IssueType.required,
             message="employer_benefits[0].benefit_type is required",
             field="employer_benefits[0].benefit_type",
         ),
@@ -1778,36 +1755,11 @@ def test_employer_benefit_missing_fields():
     ] == issues
 
 
-def test_benefit_amount_and_frequency_required():
-    test_app = ApplicationFactory.build(
-        employer_benefits=[
-            EmployerBenefit(
-                is_full_salary_continuous=False,
-                benefit_start_date=date(2021, 1, 3),
-                benefit_type_id=0,
-            )
-        ]
-    )
-    issues = get_conditional_issues(test_app)
-    assert [
-        ValidationErrorDetail(
-            type=IssueType.required,
-            message="employer_benefits[0].benefit_amount_dollars is required",
-            field="employer_benefits[0].benefit_amount_dollars",
-        ),
-        ValidationErrorDetail(
-            type=IssueType.required,
-            message="employer_benefits[0].benefit_amount_frequency is required",
-            field="employer_benefits[0].benefit_amount_frequency",
-        ),
-    ] == issues
-
-
 def test_employer_benefit_start_date_must_be_after_2020():
     application = ApplicationFactory.build()
     benefits = [
         EmployerBenefitFactory.build(
-            application_id=application.application_id, benefit_start_date=date(2020, 12, 31),
+            application_id=application.application_id, benefit_start_date=date(2020, 12, 31)
         )
     ]
     application.employer_benefits = benefits
@@ -1818,7 +1770,7 @@ def test_employer_benefit_start_date_must_be_after_2020():
             type=IssueType.minimum,
             message="employer_benefits[0].benefit_start_date cannot be earlier than 2021-01-01",
             field="employer_benefits[0].benefit_start_date",
-        ),
+        )
     ] == issues
 
 
@@ -1826,7 +1778,7 @@ def test_employer_benefit_end_date_must_be_after_2020():
     application = ApplicationFactory.build()
     benefits = [
         EmployerBenefitFactory.build(
-            application_id=application.application_id, benefit_end_date=date(2020, 12, 31),
+            application_id=application.application_id, benefit_end_date=date(2020, 12, 31)
         )
     ]
     application.employer_benefits = benefits
@@ -1837,7 +1789,7 @@ def test_employer_benefit_end_date_must_be_after_2020():
             type=IssueType.minimum,
             message="employer_benefits[0].benefit_end_date cannot be earlier than 2021-01-01",
             field="employer_benefits[0].benefit_end_date",
-        ),
+        )
     ] == issues
 
 
@@ -1858,7 +1810,28 @@ def test_employer_benefit_end_date_must_be_after_start_date():
             type=IssueType.invalid_date_range,
             message="employer_benefits[0].benefit_end_date cannot be earlier than employer_benefits[0].benefit_start_date",
             field="employer_benefits[0].benefit_end_date",
-        ),
+        )
+    ] == issues
+
+
+def test_employer_benefit_requires_start_date_when_is_full_salary_continuous_is_true():
+    application = ApplicationFactory.build()
+    benefits = [
+        EmployerBenefitFactory.build(
+            application_id=application.application_id,
+            is_full_salary_continuous=True,
+            benefit_start_date=None,
+        )
+    ]
+    application.employer_benefits = benefits
+
+    issues = get_conditional_issues(application)
+    assert [
+        ValidationErrorDetail(
+            type=IssueType.required,
+            message="employer_benefits[0].benefit_start_date is required",
+            field="employer_benefits[0].benefit_start_date",
+        )
     ] == issues
 
 
@@ -1973,9 +1946,7 @@ def test_has_other_incomes_true_zero_income():
     application.has_other_incomes = True
 
     incomes = [
-        OtherIncomeFactory.build(
-            application_id=application.application_id, income_amount_dollars=0,
-        )
+        OtherIncomeFactory.build(application_id=application.application_id, income_amount_dollars=0)
     ]
     application.other_incomes = incomes
 
@@ -1991,7 +1962,7 @@ def test_has_other_incomes_true_zero_income():
 
 def test_other_income_no_issues():
     application = ApplicationFactory.build()
-    incomes = [OtherIncomeFactory.build(application_id=application.application_id,)]
+    incomes = [OtherIncomeFactory.build(application_id=application.application_id)]
     application.other_incomes = incomes
 
     issues = get_conditional_issues(application)
@@ -2034,7 +2005,7 @@ def test_other_income_start_date_must_be_after_2020():
     application = ApplicationFactory.build()
     incomes = [
         OtherIncomeFactory.build(
-            application_id=application.application_id, income_start_date=date(2020, 12, 31),
+            application_id=application.application_id, income_start_date=date(2020, 12, 31)
         )
     ]
     application.other_incomes = incomes
@@ -2045,7 +2016,7 @@ def test_other_income_start_date_must_be_after_2020():
             type=IssueType.minimum,
             message="other_incomes[0].income_start_date cannot be earlier than 2021-01-01",
             field="other_incomes[0].income_start_date",
-        ),
+        )
     ] == issues
 
 
@@ -2053,7 +2024,7 @@ def test_other_income_end_date_must_be_after_2020():
     application = ApplicationFactory.build()
     incomes = [
         OtherIncomeFactory.build(
-            application_id=application.application_id, income_end_date=date(2020, 12, 31),
+            application_id=application.application_id, income_end_date=date(2020, 12, 31)
         )
     ]
     application.other_incomes = incomes
@@ -2064,7 +2035,7 @@ def test_other_income_end_date_must_be_after_2020():
             type=IssueType.minimum,
             message="other_incomes[0].income_end_date cannot be earlier than 2021-01-01",
             field="other_incomes[0].income_end_date",
-        ),
+        )
     ] == issues
 
 
@@ -2085,7 +2056,7 @@ def test_other_income_end_date_must_be_after_start_date():
             type=IssueType.invalid_date_range,
             message="other_incomes[0].income_end_date cannot be earlier than other_incomes[0].income_start_date",
             field="other_incomes[0].income_end_date",
-        ),
+        )
     ] == issues
 
 
@@ -2209,7 +2180,7 @@ def test_previous_leave_no_issues():
     application.has_previous_leaves_other_reason = True
     application.has_previous_leaves_same_reason = False
     leaves_other_reason = [
-        PreviousLeaveOtherReasonFactory.build(application_id=application.application_id,)
+        PreviousLeaveOtherReasonFactory.build(application_id=application.application_id)
     ]
     application.previous_leaves_other_reason = leaves_other_reason
 
@@ -2288,7 +2259,7 @@ def test_previous_leave_start_date_must_be_after_2020():
     application = ApplicationFactory.build()
     leaves = [
         PreviousLeaveSameReasonFactory.build(
-            application_id=application.application_id, leave_start_date=date(2020, 12, 31),
+            application_id=application.application_id, leave_start_date=date(2020, 12, 31)
         )
     ]
     application.previous_leaves_same_reason = leaves
@@ -2299,7 +2270,7 @@ def test_previous_leave_start_date_must_be_after_2020():
             type=IssueType.minimum,
             message="previous_leaves_same_reason[0].leave_start_date cannot be earlier than 2021-01-01",
             field="previous_leaves_same_reason[0].leave_start_date",
-        ),
+        )
     ] == issues
 
 
@@ -2307,7 +2278,7 @@ def test_previous_leave_end_date_must_be_after_2020():
     application = ApplicationFactory.build()
     leaves = [
         PreviousLeaveOtherReasonFactory.build(
-            application_id=application.application_id, leave_end_date=date(2020, 12, 31),
+            application_id=application.application_id, leave_end_date=date(2020, 12, 31)
         )
     ]
     application.previous_leaves_other_reason = leaves
@@ -2318,6 +2289,73 @@ def test_previous_leave_end_date_must_be_after_2020():
             type=IssueType.minimum,
             message="previous_leaves_other_reason[0].leave_end_date cannot be earlier than 2021-01-01",
             field="previous_leaves_other_reason[0].leave_end_date",
+        )
+    ] == issues
+
+
+def test_previous_leave_start_dates_for_caring_leave_with_prior_year_before_launch():
+    application = ApplicationFactory.build(
+        leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id,
+    )
+    leave_periods = [
+        ContinuousLeavePeriodFactory.build(
+            application_id=application.application_id,
+            start_date=date(2021, 8, 1),
+            end_date=date(2021, 8, 15),
+        )
+    ]
+    application.continuous_leave_periods = leave_periods
+    leaves = [
+        PreviousLeaveSameReasonFactory.build(
+            application_id=application.application_id,
+            leave_start_date=date(2021, 4, 1),
+            leave_end_date=date(2021, 4, 15),
+        )
+    ]
+    application.previous_leaves_same_reason = leaves
+
+    issues = get_conditional_issues(application)
+    assert [
+        ValidationErrorDetail(
+            type=IssueType.minimum,
+            message="previous_leaves_same_reason[0].leave_start_date cannot be earlier than 2021-07-01",
+            field="previous_leaves_same_reason[0].leave_start_date",
+        ),
+        ValidationErrorDetail(
+            type=IssueType.minimum,
+            message="previous_leaves_same_reason[0].leave_end_date cannot be earlier than 2021-07-01",
+            field="previous_leaves_same_reason[0].leave_end_date",
+        ),
+    ] == issues
+
+
+def test_previous_leave_start_dates_for_caring_leave_with_prior_year_after_launch():
+    application = ApplicationFactory.build(
+        leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id,
+    )
+    leave_periods = [
+        ContinuousLeavePeriodFactory.build(
+            application_id=application.application_id,
+            start_date=date(2022, 8, 1),
+            end_date=date(2022, 8, 15),
+        )
+    ]
+    application.continuous_leave_periods = leave_periods
+    leaves = [
+        PreviousLeaveSameReasonFactory.build(
+            application_id=application.application_id,
+            leave_start_date=date(2021, 7, 30),
+            leave_end_date=date(2021, 8, 15),
+        )
+    ]
+    application.previous_leaves_same_reason = leaves
+
+    issues = get_conditional_issues(application)
+    assert [
+        ValidationErrorDetail(
+            type=IssueType.minimum,
+            message="previous_leaves_same_reason[0].leave_start_date cannot be earlier than 2021-08-01",
+            field="previous_leaves_same_reason[0].leave_start_date",
         ),
     ] == issues
 
@@ -2339,7 +2377,7 @@ def test_previous_leave_end_date_must_be_after_start_date():
             type=IssueType.invalid_date_range,
             message="previous_leaves_same_reason[0].leave_end_date cannot be earlier than previous_leaves_same_reason[0].leave_start_date",
             field="previous_leaves_same_reason[0].leave_end_date",
-        ),
+        )
     ] == issues
 
 
@@ -2393,7 +2431,7 @@ def test_previous_leaves_cannot_overlap_leave_periods():
             type=IssueType.conflicting,
             rule=IssueRule.disallow_overlapping_leave_period_with_previous_leave,
             message="Previous leaves cannot overlap with leave periods. Received leave period 2021-01-01 – 2021-02-28 and previous leave 2021-02-28 – 2021-03-12.",
-        ),
+        )
     ] == issues
 
     # Previous leaves for the same reason; reduced leave; previous leave overlapping with the beginning of the leave period
@@ -2422,7 +2460,7 @@ def test_previous_leaves_cannot_overlap_leave_periods():
             type=IssueType.conflicting,
             rule=IssueRule.disallow_overlapping_leave_period_with_previous_leave,
             message="Previous leaves cannot overlap with leave periods. Received leave period 2021-01-05 – 2021-02-28 and previous leave 2021-01-01 – 2021-01-05.",
-        ),
+        )
     ] == issues
 
     # Previous leaves for another reason; reduced leave; previous leave contained within the leave period
@@ -2449,7 +2487,7 @@ def test_previous_leaves_cannot_overlap_leave_periods():
             type=IssueType.conflicting,
             rule=IssueRule.disallow_overlapping_leave_period_with_previous_leave,
             message="Previous leaves cannot overlap with leave periods. Received leave period 2021-01-05 – 2021-02-28 and previous leave 2021-01-07 – 2021-01-24.",
-        ),
+        )
     ] == issues
 
     # Previous leaves for another reason; intermittent leave; previous leave contain the entire leave period
@@ -2478,40 +2516,190 @@ def test_previous_leaves_cannot_overlap_leave_periods():
             type=IssueType.conflicting,
             rule=IssueRule.disallow_overlapping_leave_period_with_previous_leave,
             message="Previous leaves cannot overlap with leave periods. Received leave period 2021-01-05 – 2021-02-28 and previous leave 2021-01-03 – 2021-03-01.",
-        ),
+        )
     ] == issues
 
 
 @pytest.mark.parametrize(
-    "headers, is_withholding_tax, expected_issues",
+    "is_withholding_tax, has_submitted_payment_preference, include_id_document, expected_issues",
     [
-        ({}, None, []),
         (
-            {"X-FF-Tax-Withholding-Enabled": True},
             None,
+            True,
+            True,
             [
                 ValidationErrorDetail(
                     type=IssueType.required,
                     message="Tax withholding preference is required",
                     field="is_withholding_tax",
-                ),
+                )
             ],
         ),
-        ({"X-FF-Tax-Withholding-Enabled": True}, True, []),
-        ({"X-FF-Tax-Withholding-Enabled": True}, False, []),
+        (False, True, True, []),
+        (True, True, True, []),
+        (
+            False,
+            False,
+            True,
+            [
+                ValidationErrorDetail(
+                    message="Payment preference is required",
+                    type=IssueType.required,
+                    field="payment_method",
+                )
+            ],
+        ),
+        (
+            True,
+            True,
+            False,
+            [
+                ValidationErrorDetail(
+                    type=IssueType.required, message="An identification document is required"
+                )
+            ],
+        ),
     ],
 )
-def test_get_application_complete_issues(headers, is_withholding_tax, expected_issues):
-    with mock.patch(
-        "massgov.pfml.api.validation.application_rules.get_application_issues", return_value=[]
-    ) as mock_get_app_issues:
-        application = ApplicationFactory.build(is_withholding_tax=is_withholding_tax)
+@mock.patch("massgov.pfml.api.validation.application_rules.get_documents")
+def test_get_application_complete_issues(
+    mock_get_docs,
+    is_withholding_tax,
+    has_submitted_payment_preference,
+    include_id_document,
+    expected_issues,
+    test_db_session,
+    user,
+    initialize_factories_session,
+):
+    application = ApplicationFactory.create(
+        is_withholding_tax=is_withholding_tax,
+        has_submitted_payment_preference=has_submitted_payment_preference,
+        claim=ClaimFactory.build(),
+        user_id=user.user_id,
+        leave_reason_id=LeaveReason.PREGNANCY_MATERNITY.leave_reason_id,
+    )
+    mock_get_docs.return_value = []
+    if include_id_document:
+        DocumentFactory.create(
+            user_id=application.user_id,
+            application_id=application.application_id,
+            document_type_id=DocumentType.PASSPORT.document_type_id,
+        )
 
-        issues = get_application_complete_issues(application, headers)
+    issues = get_application_complete_issues(application, test_db_session)
 
-        mock_get_app_issues.assert_called_once_with(application)
+    assert issues == expected_issues
 
-        assert issues == expected_issues
+
+def test_get_application_complete_issues_certification_validation(
+    initialize_factories_session, user, test_db_session
+):
+    application = ApplicationFactory.create(
+        is_withholding_tax=True,
+        has_submitted_payment_preference=True,
+        claim=ClaimFactory.build(),
+        user_id=user.user_id,
+        leave_reason_id=LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id,
+    )
+    DocumentFactory.create(
+        user_id=application.user_id,
+        application_id=application.application_id,
+        document_type_id=DocumentType.PASSPORT.document_type_id,
+    )
+
+    issues = get_application_complete_issues(application, test_db_session)
+
+    assert issues == [
+        ValidationErrorDetail(
+            type=IssueType.required, message="A certification document is required"
+        )
+    ]
+
+
+@pytest.mark.parametrize(
+    "document_type, expected_issues",
+    [
+        (
+            DocumentType.PASSPORT.document_type_description,
+            [
+                ValidationErrorDetail(
+                    type=IssueType.required, message="A certification document is required"
+                )
+            ],
+        ),
+        (
+            DocumentType.CHILD_BONDING_EVIDENCE_FORM.document_type_description,
+            [
+                ValidationErrorDetail(
+                    type=IssueType.required, message="An identification document is required"
+                )
+            ],
+        ),
+    ],
+)
+@mock.patch("massgov.pfml.api.validation.application_rules.get_documents")
+def test_get_application_complete_issues_fineos_fallback(
+    mock_get_documents,
+    document_type,
+    expected_issues,
+    initialize_factories_session,
+    user,
+    test_db_session,
+):
+    application = ApplicationFactory.create(
+        is_withholding_tax=True,
+        has_submitted_payment_preference=True,
+        claim=ClaimFactory.build(),
+        user_id=user.user_id,
+        leave_reason_id=LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id,
+    )
+
+    mock_get_documents.return_value = [
+        DocumentResponse(
+            user_id=user.user_id,
+            application_id=application.application_id,
+            document_type=document_type,
+            name="File.pdf",
+            description="my file",
+        )
+    ]
+
+    issues = get_application_complete_issues(application, test_db_session)
+
+    assert issues == expected_issues
+
+
+@mock.patch("massgov.pfml.api.validation.application_rules.get_documents_issues", return_value=[])
+def test_get_application_complete_issues_missing_absence_id(test_db_session):
+    claim = ClaimFactory.build(fineos_absence_id=None)
+    application = ApplicationFactory.build(
+        is_withholding_tax=False, claim=claim, has_submitted_payment_preference=True
+    )
+
+    issues = get_application_complete_issues(application, test_db_session)
+
+    assert issues == [
+        ValidationErrorDetail(
+            type=IssueType.object_not_found,
+            message="A case must exist before it can be marked as complete.",
+        )
+    ]
+
+
+@mock.patch("massgov.pfml.api.validation.application_rules.get_documents_issues", return_value=[])
+def test_get_application_complete_issues_missing_part1_field(test_db_session):
+    # This validation doesn't care if a new "Submit" rule isn't fulfilled, as long as a claim
+    # with a Fineos absence ID exists.
+    application = ApplicationFactory.build(
+        is_withholding_tax=False,
+        claim=ClaimFactory.build(),
+        first_name=None,
+        has_submitted_payment_preference=True,
+    )
+    issues = get_application_complete_issues(application, test_db_session)
+
+    assert not issues
 
 
 class TestGetConcurrentLeaveIssues:
@@ -2526,7 +2714,7 @@ class TestGetConcurrentLeaveIssues:
     def continuous_leave_periods(self, application):
         return [
             ContinuousLeavePeriodFactory.build(
-                start_date=date(2021, 11, 20), end_date=date(2021, 12, 28),
+                start_date=date(2021, 11, 20), end_date=date(2021, 12, 28)
             )
         ]
 
@@ -2534,7 +2722,7 @@ class TestGetConcurrentLeaveIssues:
     def reduced_leave_periods(self):
         return [
             ReducedScheduleLeavePeriodFactory.build(
-                start_date=date(2021, 11, 20), end_date=date(2021, 12, 28),
+                start_date=date(2021, 11, 20), end_date=date(2021, 12, 28)
             )
         ]
 
@@ -2693,3 +2881,39 @@ class TestGetConcurrentLeaveIssues:
 
         # should resolve without errors
         get_concurrent_leave_issues(application)
+
+
+class TestValidateApplicationImportRequestForClaim:
+    def test_tax_id_should_match_claim_tax_id(self):
+        claim = ClaimFactory.build()
+        claim.employee.tax_identifier = TaxIdentifierFactory.build(tax_identifier="000000000")
+
+        with pytest.raises(ValidationException) as exc:
+            validate_application_import_request_for_claim(
+                ApplicationImportRequestBody(
+                    tax_identifier="123456789",  # different SSN as on the claim
+                    absence_case_id=claim.fineos_absence_id,
+                ),
+                claim,
+            )
+
+        assert exc.value.errors == [
+            ValidationErrorDetail(
+                type=IssueType.incorrect,
+                message="Code 2: An issue occurred while trying to import the application.",
+            )
+        ]
+
+    def test_skips_tax_id_match_when_claim_has_no_tax_id(self):
+        claim = ClaimFactory.build()
+        claim.employee.tax_identifier = None
+
+        res = validate_application_import_request_for_claim(
+            ApplicationImportRequestBody(
+                tax_identifier="123456789", absence_case_id=claim.fineos_absence_id
+            ),
+            claim,
+        )
+
+        # No exception raised, so a success
+        assert res is None

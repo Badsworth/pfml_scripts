@@ -1,5 +1,5 @@
-import AppErrorInfo from "../../src/models/AppErrorInfo";
-import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
+import { ValidationError } from "../../src/errors";
+import { render } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import useFormState from "../../src/hooks/useFormState";
 import useFunctionalInputProps from "../../src/hooks/useFunctionalInputProps";
@@ -13,7 +13,7 @@ describe("useFunctionalInputProps", () => {
       });
 
       getFunctionalInputProps = useFunctionalInputProps({
-        appErrors: new AppErrorInfoCollection(),
+        errors: [],
         formState,
         updateFields,
       });
@@ -30,7 +30,7 @@ describe("useFunctionalInputProps", () => {
       const { formState, updateFields } = useFormState({});
 
       getFunctionalInputProps = useFunctionalInputProps({
-        appErrors: new AppErrorInfoCollection(),
+        errors: [],
         formState,
         updateFields,
       });
@@ -47,7 +47,7 @@ describe("useFunctionalInputProps", () => {
       const { formState, updateFields } = useFormState({});
 
       getFunctionalInputProps = useFunctionalInputProps({
-        appErrors: new AppErrorInfoCollection(),
+        errors: [],
         formState,
         updateFields,
       });
@@ -66,7 +66,7 @@ describe("useFunctionalInputProps", () => {
       const { formState, updateFields } = useFormState({ minutes: 0 });
 
       getFunctionalInputProps = useFunctionalInputProps({
-        appErrors: new AppErrorInfoCollection(),
+        errors: [],
         formState,
         updateFields,
       });
@@ -85,7 +85,7 @@ describe("useFunctionalInputProps", () => {
       });
 
       getFunctionalInputProps = useFunctionalInputProps({
-        appErrors: new AppErrorInfoCollection(),
+        errors: [],
         formState,
         updateFields,
       });
@@ -98,29 +98,34 @@ describe("useFunctionalInputProps", () => {
 
   it("sets the errorMsg prop to an error's message when one exists for the field", () => {
     let getFunctionalInputProps;
-    const issue = new AppErrorInfo({
-      message: "Field was invalid",
-      field: "first_name",
-    });
+    const error = new ValidationError(
+      [
+        {
+          field: "first_name",
+        },
+      ],
+      "applications"
+    );
 
     renderHook(() => {
-      const { formState, updateFields } = useFormState({
-        leave_details: { employer_notified: true },
-      });
+      const { formState, updateFields } = useFormState({});
 
       getFunctionalInputProps = useFunctionalInputProps({
-        appErrors: new AppErrorInfoCollection([issue]),
+        errors: [error],
         formState,
         updateFields,
       });
     });
 
-    const props = getFunctionalInputProps("leave_details.employer_notified");
+    const props = getFunctionalInputProps("first_name");
+    const { container } = render(props.errorMsg);
 
-    expect(props.errorMsg).toBe(issue.msg);
+    expect(container.firstChild).toMatchInlineSnapshot(
+      `Field (first_name) has invalid value.`
+    );
   });
 
-  it("doesn't require appErrors to be defined", () => {
+  it("doesn't require errors to be defined", () => {
     let getFunctionalInputProps;
 
     renderHook(() => {
@@ -135,8 +140,9 @@ describe("useFunctionalInputProps", () => {
     });
 
     const props = getFunctionalInputProps("employer_notified");
+    const { container } = render(props.errorMsg);
 
-    expect(props.errorMsg).toBeUndefined();
+    expect(container).toBeEmptyDOMElement();
   });
 
   it("sets the name and onChange props", () => {
@@ -148,7 +154,7 @@ describe("useFunctionalInputProps", () => {
       });
 
       getFunctionalInputProps = useFunctionalInputProps({
-        appErrors: new AppErrorInfoCollection(),
+        errors: [],
         formState,
         updateFields,
       });

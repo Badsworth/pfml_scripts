@@ -18,11 +18,7 @@ class LkIndustryCode(Base):
 
 class IndustryCode(LookupTable):
     model = LkIndustryCode
-    column_names = (
-        "industry_code_id",
-        "industry_code_description",
-        "industry_code_naics_code",
-    )
+    column_names = ("industry_code_id", "industry_code_description", "industry_code_naics_code")
 
     OILSEED_AND_GRAIN_FARMING = LkIndustryCode(1, "Oilseed and Grain Farming", 1111)
     VEGETABLE_AND_MELON_FARMING = LkIndustryCode(2, "Vegetable and Melon Farming", 1112)

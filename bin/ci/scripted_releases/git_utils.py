@@ -80,12 +80,12 @@ def cherrypick(*args):
 def merge(*args):
     gitcmd.merge(*args)
 
-
+# changes from https://github.com/EOLWD/pfml/pull/6161/files
 def create_branch(branch_name):
     fetch_remotes()
-    gitcmd.branch(branch_name, "main")
-    gitcmd.push("-u", "origin", branch_name)
-    logger.info(f"Branch '{branch_name}' created from HEAD of local main")
+    gitcmd.branch(branch_name, "origin/main")
+    gitcmd.push("-u", "origin", branch_name + ":" + branch_name)
+    logger.info(f"Branch '{branch_name}' created from HEAD of origin/main")
 
 
 def current_branch():
@@ -93,7 +93,8 @@ def current_branch():
 
 
 def most_recent_tag(app, release_branch):
-    t = gitcmd.describe("--tags", "--match", f"{app}/v*", "--abbrev=0", f"origin/{release_branch}")
+    # git python returns git output as a single string, hence the string manipulation
+    t = gitcmd.tag("--list", "--sort=-version:refname", f"{app}/v*", f"origin/{release_branch}").split("\n")[0]
     sha = gitcmd.rev_parse(t)
     logger.info(f"Latest {app} tag on '{release_branch}' is '{t}' with commit SHA '{sha[0:9]}'")
     return t, sha
@@ -151,7 +152,7 @@ def to_semver(version_str: str) -> semver.VersionInfo:
 
 def from_semver(sem_ver: semver.VersionInfo, app) -> str:
     if app == "portal":
-        return "portal/v" + str(sem_ver).split("0.")[-1]
+        return "portal/v" + str(sem_ver).split(".", 1)[1]
     elif app == "api":
         return "api/v" + str(sem_ver)
     elif app == "foobar":

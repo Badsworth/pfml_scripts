@@ -1,14 +1,12 @@
-import AppErrorInfo from "src/models/AppErrorInfo";
-import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import Flag from "src/models/Flag";
 import PageWrapper from "src/components/PageWrapper";
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 import React from "react";
 import User from "src/models/User";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 export default {
-  title: "Components/PageWrapper",
+  title: "Templates/Page wrapper",
   component: PageWrapper,
   argTypes: {
     Authentication: {
@@ -44,13 +42,9 @@ export const Default = (
     "Maintenance Page": string;
   }
 ) => {
-  const appErrors =
+  const errors =
     args.Errors === "Has errors"
-      ? [
-          new AppErrorInfo({
-            message: "This is a Storybook error message example.",
-          }),
-        ]
+      ? [new Error("This is a Storybook error message example.")]
       : [];
 
   const user =
@@ -67,7 +61,7 @@ export const Default = (
   });
 
   const appLogic = useMockableAppLogic({
-    appErrors: new AppErrorInfoCollection(appErrors),
+    errors,
     users: { user },
   });
 

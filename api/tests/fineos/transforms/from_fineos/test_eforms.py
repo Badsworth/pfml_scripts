@@ -40,7 +40,7 @@ def deprecated_other_income_eform():
                 },
                 {
                     "name": "WRT2",
-                    "enumValue": {"domainName": "WageReplacementType", "instanceValue": "Unknown",},
+                    "enumValue": {"domainName": "WageReplacementType", "instanceValue": "Unknown"},
                 },
                 {"name": "StartDate", "dateValue": "2020-10-01"},
                 {"name": "Spacer", "stringValue": ""},
@@ -66,7 +66,7 @@ def deprecated_other_income_eform():
                 },
                 {
                     "name": "WRT4",
-                    "enumValue": {"domainName": "WageReplacementType", "instanceValue": "Unknown",},
+                    "enumValue": {"domainName": "WageReplacementType", "instanceValue": "Unknown"},
                 },
                 {
                     "name": "ProgramType2",
@@ -202,7 +202,7 @@ def other_leave_eform():
                 },
                 {
                     "name": "V2QualifyingReason1",
-                    "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy",},
+                    "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy"},
                 },
                 {"name": "V2OtherLeavesPastLeaveEndDate2", "dateValue": "2020-12-15"},
                 {"name": "V2OtherLeavesPastLeaveEndDate1", "dateValue": "2020-09-22"},
@@ -237,6 +237,40 @@ def other_leave_eform():
                     "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "No"},
                 },
                 {"name": "V2SecondaryQualifyingReason2", "stringValue": "Military caregiver"},
+            ],
+        }
+    )
+
+
+@pytest.fixture
+def other_leave_eform_employer_unknown():
+    return EForm.parse_obj(
+        {
+            "eformType": "Other Leaves - current version",
+            "eformId": 11475,
+            "eformAttributes": [
+                {"name": "V2SecondaryQualifyingReason", "stringValue": "Military caregiver"},
+                {
+                    "name": "V2QualifyingReason1",
+                    "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy"},
+                },
+                {"name": "V2OtherLeavesPastLeaveEndDate1", "dateValue": "2020-09-22"},
+                {
+                    "name": "V2Applies1",
+                    "enumValue": {"domainName": "PleaseSelectYesNoUnknown", "instanceValue": "Yes"},
+                },
+                {"name": "V2OtherLeavesPastLeaveStartDate1", "dateValue": "2020-09-01"},
+                {
+                    "name": "V2LeaveFromEmployer1",
+                    "enumValue": {
+                        "domainName": "PleaseSelectYesNoUnknown",
+                        "instanceValue": "Unknown",
+                    },
+                },
+                {
+                    "name": "V2Leave1",
+                    "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "No"},
+                },
             ],
         }
     )
@@ -378,6 +412,23 @@ class TestTransformEformBody:
         assert other_leave_2["leave_reason"] == "Bonding with my child after birth or placement"
         assert other_leave_2["type"] == "same_reason"
 
+    def test_transform_other_leave_eform_employer_unknown(self, other_leave_eform_employer_unknown):
+        other_leaves_list = TransformPreviousLeaveFromOtherLeaveEform.from_fineos(
+            other_leave_eform_employer_unknown
+        )
+        assert other_leaves_list == [
+            PreviousLeave(
+                is_for_current_employer=None,
+                leave_start_date=date(2020, 9, 1),
+                leave_end_date=date(2020, 9, 22),
+                leave_reason=PreviousLeaveQualifyingReason.PREGNANCY_MATERNITY,
+                previous_leave_id=None,
+                worked_per_week_minutes=None,
+                leave_minutes=None,
+                type="other_reason",
+            )
+        ]
+
     def test_transform_eform_with_bad_values(self, other_leave_eform_bad_values):
         other_leaves_list = TransformPreviousLeaveFromOtherLeaveEform.from_fineos(
             other_leave_eform_bad_values
@@ -439,3 +490,28 @@ def test_transform_concurrent_leave_from_other_leave_eform_invalid_boolean():
 
     with pytest.raises(EformParseError, match="could not parse ConcurrentLeave object"):
         TransformConcurrentLeaveFromOtherLeaveEform.from_fineos(other_leave_eform)
+
+
+def test_transform_concurrent_leave_from_other_leave_eform_employer_unknown():
+    other_leave_eform = EForm.parse_obj(
+        {
+            "eformType": "Other Leaves - current version",
+            "eformId": 11475,
+            "eformAttributes": [
+                {"name": "V2AccruedStartDate1", "dateValue": "2021-05-11"},
+                {"name": "V2AccruedEndDate1", "dateValue": "2021-05-29"},
+                {
+                    "name": "V2AccruedPLEmployer1",
+                    "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "Unknown"},
+                },
+            ],
+        }
+    )
+
+    concurrent_leave = TransformConcurrentLeaveFromOtherLeaveEform.from_fineos(other_leave_eform)
+    assert concurrent_leave == ConcurrentLeave(
+        concurrent_leave_id=None,
+        is_for_current_employer=None,
+        leave_start_date=date(2021, 5, 11),
+        leave_end_date=date(2021, 5, 29),
+    )

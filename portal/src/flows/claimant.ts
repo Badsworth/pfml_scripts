@@ -11,6 +11,7 @@
  * is complete, in progress, or not started
  * @see ../models/Step
  */
+
 import BenefitsApplication, {
   EmploymentStatus,
   WorkPatternType,
@@ -23,6 +24,7 @@ import { fields as concurrentLeavesDetailsFields } from "../pages/applications/c
 import { fields as concurrentLeavesFields } from "../pages/applications/concurrent-leaves";
 import { fields as dateOfBirthFields } from "../pages/applications/date-of-birth";
 import { fields as dateOfChildFields } from "../pages/applications/date-of-child";
+import { fields as departmentFields } from "../pages/applications/department";
 import { fields as employerBenefitsDetailsFields } from "../pages/applications/employer-benefits-details";
 import { fields as employerBenefitsFields } from "../pages/applications/employer-benefits";
 import { fields as employmentStatusFields } from "../pages/applications/employment-status";
@@ -76,6 +78,10 @@ export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
   isMedicalOrPregnancyLeave: ({ claim }) =>
     claim?.isMedicalOrPregnancyLeave === true,
   isBondingLeave: ({ claim }) => claim?.isBondingLeave === true,
+  // TODO (PFMLPB-3195): Remove isFeatureEnabled check once feature flag is obsolete
+  hasEmployerWithDepartments: ({ claim }) =>
+    get(claim, "employment_status") === EmploymentStatus.employed &&
+    get(claim, "employer_organization_units", []).length > 0,
   isEmployed: ({ claim }) =>
     get(claim, "employment_status") === EmploymentStatus.employed,
   isCompleted: ({ claim }) => claim?.isCompleted === true,
@@ -147,14 +153,9 @@ const claimantFlow: {
     [routes.applications.getReady]: {
       meta: {},
       on: {
-        CONSENT_TO_DATA_SHARING: routes.user.consentToDataSharing,
+        IMPORT_APPLICATION: routes.applications.importClaim,
         START_APPLICATION: routes.applications.start,
         SHOW_APPLICATIONS: routes.applications.index,
-        /* We need this to trigger test coverage on
-         * the routes.user.convert page, which is
-         * otherwise isolated.
-         */
-        CONVERT_EMPLOYER: routes.user.convert,
       },
     },
     [routes.applications.start]: {
@@ -163,30 +164,20 @@ const claimantFlow: {
         CREATE_CLAIM: routes.applications.checklist,
       },
     },
-    [routes.user.convert]: {
-      meta: {},
+    [routes.applications.importClaim]: {
       on: {
-        PREVENT_CONVERSION: routes.applications.getReady,
-        /* We cannot move between 2 different flows due to
-         * claimant test only using claimant state, therefore,
-         * we have no access to redirect to employer pages
-         */
-        // CONTINUE: routes.employers.organizations,
-      },
-    },
-    [routes.user.consentToDataSharing]: {
-      meta: {},
-      on: {
-        // Route to Applications page to support users who are re-consenting.
-        // If they're new users with no claims, the Applications page will
-        // handle redirecting them.
         CONTINUE: routes.applications.index,
+        EDIT_PHONE: routes.user.settings,
+        ENABLE_MFA: routes.twoFactor.smsSetup,
+        VERIFY_PHONE: routes.twoFactor.smsConfirm,
       },
     },
     [routes.applications.index]: {
       meta: {},
       on: {
         CONTINUE: routes.applications.uploadDocsOptions,
+        IMPORT_APPLICATION: routes.applications.importClaim,
+        NEW_APPLICATION: routes.applications.getReady,
         PAYMENT: routes.applications.status.payments,
         STATUS: routes.applications.status.claim,
       },
@@ -630,6 +621,27 @@ const claimantFlow: {
         ],
         step: ClaimSteps.employerInformation,
         fields: employmentStatusFields,
+      },
+      on: {
+        CONTINUE: [
+          {
+            target: routes.applications.department,
+            cond: "hasEmployerWithDepartments",
+          },
+          {
+            target: routes.applications.notifiedEmployer,
+            cond: "isEmployed",
+          },
+          {
+            target: routes.applications.checklist,
+          },
+        ],
+      },
+    },
+    [routes.applications.department]: {
+      meta: {
+        step: ClaimSteps.employerInformation,
+        fields: departmentFields,
       },
       on: {
         CONTINUE: [

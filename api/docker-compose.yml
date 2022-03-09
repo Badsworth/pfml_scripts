@@ -1,10 +1,25 @@
 version: "3.8"
 
 services:
+  sftp:
+    image: atmoz/sftp
+    container_name: "mass-pfml-sftp"
+    ports:
+      - "2222:22"
+    command: foo:pass:1001
+    volumes:
+      - ./local_sftp/ssh_host_ed25519_key:/etc/ssh/ssh_host_ed25519_key
+      - ./local_sftp/ssh_host_rsa_key:/etc/ssh/ssh_host_rsa_key
+      - ./local_sftp/ssh_api_rsa_key.pub:/home/foo/.ssh/keys/ssh_api_rsa_key.pub:ro
+      - ./local_sftp/upload:/home/foo/upload
+    networks:
+      main:
+        aliases:
+          - mass-pfml-sftp
   mass-pfml-db:
     image: postgres:12.4-alpine
     container_name: "mass-pfml-db"
-    platform: linux/amd64 # Fix running on Apple silicon 
+    # platform: linux/amd64 # Fix running on Apple silicon 
     ports:
       - "5432:5432"
     # Docs for options to the postgres server command:
@@ -32,7 +47,7 @@ services:
     init: true
     links:
       - mass-pfml-db
-    platform: linux/amd64 # Fix running on Apple silicon 
+    # platform: linux/amd64 # Fix running on Apple silicon 
     ports:
       - "1550:1550"
     environment:
@@ -53,7 +68,7 @@ services:
       - DB_PASSWORD=secret123
       - DB_NESSUS_PASSWORD=nessussecret123
       - CORS_ORIGINS=http://localhost:3000,http://localhost:3001
-      - COGNITO_USER_POOL_KEYS_URL=file:///app/jwks.json
+      - COGNITO_USER_POOL_KEYS_URL=${COGNITO_USER_POOL_KEYS_URL:-file:///app/jwks.json}
       # Stage Cognito resource
       - COGNITO_USER_POOL_ID=us-east-1_HpL4XslLg
       - COGNITO_USER_POOL_CLIENT_ID=10rjcp71r8bnk4459c67bn18t8
@@ -68,28 +83,24 @@ services:
       - RMV_API_BEHAVIOR=fully_mocked
       # Enable this variable to configure /rmv-check
       - RMV_CHECK_MOCK_SUCCESS=1
-      # Enable these variables to use a real FINEOS API instead of a mock:
-      # - FINEOS_CLIENT_CUSTOMER_API_URL=https://idt-api.masspfml.fineos.com/customerapi/
-      # - FINEOS_CLIENT_WSCOMPOSER_API_URL=https://idt-api.masspfml.fineos.com/integration-services/wscomposer/
-      # - FINEOS_CLIENT_GROUP_CLIENT_API_URL=https://idt-api.masspfml.fineos.com/groupclientapi/
-      # - FINEOS_CLIENT_INTEGRATION_SERVICES_API_URL=https://idt-api.masspfml.fineos.com/integration-services/
-      # - FINEOS_CLIENT_OAUTH2_URL=https://idt-api.masspfml.fineos.com/oauth2/token
-      # - FINEOS_CLIENT_OAUTH2_CLIENT_ID=...
-      # - FINEOS_CLIENT_OAUTH2_CLIENT_SECRET=...
-      # - OAUTHLIB_INSECURE_TRANSPORT=1
       # Disable this variable and set the following three variables to use a real Service Now API instead of a mock:
       - ENABLE_MOCK_SERVICE_NOW_CLIENT=1
+      - ENABLE_RESPONSE_VALIDATION=1
+      - ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS=0
       # - SERVICE_NOW_BASE_URL=...
       # - SERVICE_NOW_USERNAME=...
       # - SERVICE_NOW_PASSWORD=...
       - PORTAL_BASE_URL=https://paidleave.mass.gov
       - ENABLE_APPLICATION_FRAUD_CHECK=0
-      - ENABLE_PDF_DOCUMENT_COMPRESSION=0
+      - ENABLE_DOCUMENT_MULTIPART_UPLOAD=0
+
       # Payments env vars
       # - PAYMENTS_GAX_BIEVNT_EMAIL=
       # - PAYMENTS_DFML_BUSINESS_OPERATIONS_EMAIL=
       - AGENCY_REDUCTIONS_EMAIL_ADDRESS=EOL-DL-DFML-Agency-Reductions@mass.gov
       - DFML_PROJECT_MANAGER_EMAIL_ADDRESS=
+      # Disabled locally so we don't need to authenticate with AWS SES
+      - DISABLE_SENDING_EMAILS=1
       - PFML_EMAIL_ADDRESS=PFML_DoNotReply@eol.mass.gov
       - BOUNCE_FORWARDING_EMAIL_ADDRESS=PFML_DoNotReply@eol.mass.gov
       # Uncomment and set these in order to run the FINEOS and CTR ECS tasks locally with real S3
@@ -107,7 +118,16 @@ services:
       #- FEATURES_FILE_PATH=file:///app/features.yaml
       - PDF_API_HOST=https://mass-pfml-pdf-api
       - ENABLE_GENERATE_1099_PDF=1
+      - GENERATE_1099_MAX_FILES=1000
       - ENABLE_MERGE_1099_PDF=1
+      - ENABLE_UPLOAD_1099_PDF=1
+      - ENABLE_APPLICATION_IMPORT=1
+      - UPLOAD_MAX_FILES_TO_FINEOS=10
+      - TEST_FILE_GENERATION_1099=0
+      - IRS_1099_CORRECTION_IND=0
+      - IRS_1099_TAX_YEAR=2021
+      - MOVEIT_SFTP_URI=sftp://foo@mass-pfml-sftp:22
+      - SFTP_URI=sftp://foo@mass-pfml-sftp:22
 
     networks:
       main:

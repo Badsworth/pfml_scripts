@@ -1,7 +1,5 @@
 import { mockAuth, mockFetch, renderPage } from "../test-utils";
 import { screen, waitFor } from "@testing-library/react";
-import AppErrorInfo from "../../src/models/AppErrorInfo";
-import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import React from "react";
 import User from "../../src/models/User";
 import { mockRouter } from "next/router";
@@ -34,6 +32,7 @@ function setup({ addCustomSetup, pathname = routes.applications.index } = {}) {
   const WrappedComponent = withUser(PageComponent);
 
   return renderPage(WrappedComponent, {
+    pathname,
     addCustomSetup,
     // We don't use the authentication mocking behavior of renderPage
     // because it mocks some of the user/auth logic that this test file
@@ -109,7 +108,7 @@ describe("withUser", () => {
     mockLoggedInUser();
     setup({
       addCustomSetup: (appLogic) => {
-        appLogic.appErrors = new AppErrorInfoCollection([new AppErrorInfo()]);
+        appLogic.errors = [new Error()];
       },
     });
 

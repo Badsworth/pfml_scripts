@@ -2,6 +2,7 @@ import { fineos, fineosPages, portal } from "../../../actions";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { ClaimPage } from "../../../actions/fineos.pages";
 import { Submission } from "../../../../src/types";
+import { config } from "../../../actions/common";
 
 describe("Create a new continuous leave, military caregiver claim in FINEOS", () => {
   const claimSubmission = it("Should be able to create a claim", () => {
@@ -11,7 +12,11 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
       cy.stash("claim", claim);
 
       fineosPages.ClaimantPage.visit(claim.claim.tax_identifier)
-        .createNotification(claim.claim)
+        .createNotification(
+          claim.claim,
+          claim.is_withholding_tax,
+          config("HAS_APRIL_UPGRADE") === "true"
+        )
         .then((fineos_absence_id) => {
           cy.log(fineos_absence_id);
           cy.stash("submission", { fineos_absence_id });

@@ -1,15 +1,15 @@
 import base64
 import tempfile
-from typing import Any, Dict
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import connexion
+import newrelic.agent
 import puremagic
-from flask import Response, abort, request
+from flask import Response, request
 from puremagic import PureError
 from pydantic import ValidationError
 from sqlalchemy import asc, desc
-from werkzeug.exceptions import BadRequest, Forbidden, NotFound, ServiceUnavailable, Unauthorized
+from werkzeug.exceptions import BadRequest, Forbidden, NotFound, ServiceUnavailable
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.services.applications as applications_service
@@ -19,15 +19,19 @@ import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
 import massgov.pfml.util.pdf as pdf_util
 from massgov.pfml.api.authorization.flask import CREATE, EDIT, READ, ensure
+from massgov.pfml.api.claims import get_claim_from_db
+from massgov.pfml.api.constants.application import ID_DOC_TYPES
 from massgov.pfml.api.models.applications.common import ContentType as AllowedContentTypes
 from massgov.pfml.api.models.applications.common import DocumentType as IoDocumentTypes
 from massgov.pfml.api.models.applications.requests import (
+    ApplicationImportRequestBody,
     ApplicationRequestBody,
     DocumentRequestBody,
     PaymentPreferenceRequestBody,
     TaxWithholdingPreferenceRequestBody,
 )
 from massgov.pfml.api.models.applications.responses import ApplicationResponse, DocumentResponse
+from massgov.pfml.api.models.common import OrderDirection
 from massgov.pfml.api.services.applications import get_document_by_id
 from massgov.pfml.api.services.fineos_actions import (
     complete_intake,
@@ -36,15 +40,18 @@ from massgov.pfml.api.services.fineos_actions import (
     get_documents,
     mark_documents_as_received,
     mark_single_document_as_received,
+    register_employee,
     send_tax_withholding_preference,
     send_to_fineos,
     submit_payment_preference,
     upload_document,
 )
+from massgov.pfml.api.util.paginate.paginator import PaginationAPIContext, page_for_api_context
 from massgov.pfml.api.validation.employment_validator import (
     get_contributing_employer_or_employee_issue,
 )
 from massgov.pfml.api.validation.exceptions import (
+    IssueRule,
     IssueType,
     ValidationErrorDetail,
     ValidationException,
@@ -57,12 +64,8 @@ from massgov.pfml.fineos.exception import (
     FINEOSUnprocessableEntity,
 )
 from massgov.pfml.fineos.models.customer_api import Base64EncodedFileData
+from massgov.pfml.util.aws import cognito
 from massgov.pfml.util.logging.applications import get_application_log_attributes
-from massgov.pfml.util.paginate.paginator import (
-    ApplicationPaginationAPIContext,
-    OrderDirection,
-    page_for_api_context,
-)
 from massgov.pfml.util.sqlalchemy import get_or_404
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -71,7 +74,7 @@ UPLOAD_SIZE_CONSTRAINT = 4500000  # bytes
 
 FILE_TOO_LARGE_MSG = "File is too large."
 FILE_SIZE_VALIDATION_ERROR = ValidationErrorDetail(
-    message=FILE_TOO_LARGE_MSG, type=IssueType.file_size, field="file",
+    message=FILE_TOO_LARGE_MSG, type=IssueType.file_size, field="file"
 )
 
 LEAVE_REASON_TO_DOCUMENT_TYPE_MAPPING = {
@@ -81,22 +84,22 @@ LEAVE_REASON_TO_DOCUMENT_TYPE_MAPPING = {
     LeaveReason.PREGNANCY_MATERNITY.leave_reason_description: DocumentType.PREGNANCY_MATERNITY_FORM,
 }
 
-ID_DOCS = [
-    DocumentType.PASSPORT.document_type_description,
-    DocumentType.DRIVERS_LICENSE_MASS.document_type_description,
-    DocumentType.DRIVERS_LICENSE_OTHER_STATE.document_type_description,
-    DocumentType.IDENTIFICATION_PROOF.document_type_description,
-]
-
 
 def application_get(application_id):
     with app.db_session() as db_session:
         existing_application = get_or_404(db_session, Application, application_id)
-
         ensure(READ, existing_application)
         application_response = ApplicationResponse.from_orm(existing_application)
 
-    issues = application_rules.get_application_issues(existing_application)
+    # Only run these validations if the application hasn't already been submitted. This
+    # prevents warnings from showing in the response for rules added after the application
+    # was submitted, which would cause a Portal user's Checklist to revert back to showing
+    # steps as incomplete, and they wouldn't be able to fix this.
+    issues = (
+        application_rules.get_application_submit_issues(existing_application)
+        if not existing_application.submitted_time
+        else []
+    )
 
     return response_util.success_response(
         message="Successfully retrieved application",
@@ -106,17 +109,14 @@ def application_get(application_id):
 
 
 def applications_get():
-    if user := app.current_user():
-        user_id = user.user_id
-    else:
-        raise Unauthorized
-    with ApplicationPaginationAPIContext(Application, request=request) as pagination_context:
+    user = app.current_user()
+    with PaginationAPIContext(Application, request=request) as pagination_context:
         with app.db_session() as db_session:
             is_asc = pagination_context.order_direction == OrderDirection.asc.value
             sort_fn = asc if is_asc else desc
             application_query = (
                 db_session.query(Application)
-                .filter(Application.user_id == user_id)
+                .filter(Application.user_id == user.user_id)
                 .order_by(sort_fn(pagination_context.order_key))
             )
             page = page_for_api_context(pagination_context, application_query)
@@ -130,21 +130,143 @@ def applications_get():
     ).to_api_response()
 
 
+# TODO (PORTAL-1832): Once Portal sends requests to /application-imports, this method and
+# the /applications/import endpoint can be removed. It may also make sense to rename the
+# method below to application_imports() (swap the plural) at that time.
+def deprecated_applications_import():
+    return applications_import()
+
+
+def applications_import():
+    if not app.get_app_config().enable_application_import:
+        return response_util.error_response(
+            status_code=Forbidden, message="Application import not currently available", errors=[]
+        ).to_api_response()
+
+    application = Application(application_id=uuid4())
+    ensure(CREATE, application)
+
+    user = app.current_user()
+    application.user = user
+
+    is_cognito_user_mfa_verified = cognito.is_mfa_phone_verified(application.user.email_address, app.get_app_config().cognito_user_pool_id)  # type: ignore
+    if not is_cognito_user_mfa_verified:
+        logger.info(
+            "application import failure - mfa not verified",
+            extra={
+                "absence_case_id": application.claim.fineos_absence_id
+                if application.claim
+                else None,
+                "user_id": application.user.user_id,
+            },
+        )
+        raise ValidationException(
+            errors=[
+                ValidationErrorDetail(
+                    field="mfa_delivery_preference",
+                    type=IssueType.required,
+                    message="User has not opted into MFA delivery preferences",
+                )
+            ]
+        )
+
+    body = connexion.request.json
+    application_import_request = ApplicationImportRequestBody.parse_obj(body)
+
+    claim = get_claim_from_db(application_import_request.absence_case_id)
+
+    application_rules.validate_application_import_request_for_claim(
+        application_import_request, claim
+    )
+    assert application_import_request.absence_case_id is not None
+
+    with app.db_session() as db_session:
+        error = applications_service.claim_is_valid_for_application_import(db_session, user, claim)
+        if error is not None:
+            return error.to_api_response()
+
+        db_session.add(application)
+        fineos = massgov.pfml.fineos.create_client()
+        # we have already check that the claim is not None in
+        # claim_is_valid_for_application_import
+        applications_service.set_application_fields_from_db_claim(
+            fineos, application, claim, db_session  # type: ignore
+        )
+        fineos_web_id = register_employee(
+            fineos, claim.employee_tax_identifier, application.employer_fein, db_session  # type: ignore
+        )
+        applications_service.set_application_absence_and_leave_period(
+            fineos, fineos_web_id, application, application_import_request.absence_case_id
+        )
+        applications_service.set_customer_detail_fields(
+            fineos, fineos_web_id, application, db_session
+        )
+        applications_service.set_customer_contact_detail_fields(
+            fineos, fineos_web_id, application, db_session
+        )
+        applications_service.set_employment_status_and_occupations(
+            fineos, fineos_web_id, application
+        )
+        applications_service.set_payment_preference_fields(
+            fineos, fineos_web_id, application, db_session
+        )
+        eform_cache: applications_service.EFORM_CACHE = {}
+        eform_summaries = fineos.customer_get_eform_summary(
+            fineos_web_id, application_import_request.absence_case_id
+        )
+        applications_service.set_other_leaves(
+            fineos,
+            fineos_web_id,
+            application,
+            db_session,
+            application_import_request.absence_case_id,
+            eform_summaries,
+            eform_cache,
+        )
+        applications_service.set_employer_benefits_from_fineos(
+            fineos,
+            fineos_web_id,
+            application,
+            db_session,
+            application_import_request.absence_case_id,
+            eform_summaries,
+            eform_cache,
+        )
+        applications_service.set_other_incomes_from_fineos(
+            fineos,
+            fineos_web_id,
+            application,
+            db_session,
+            application_import_request.absence_case_id,
+            eform_summaries,
+            eform_cache,
+        )
+        db_session.refresh(application)
+        db_session.commit()
+
+    log_attributes = get_application_log_attributes(application)
+    log_attributes["num_applications_on_account"] = str(
+        db_session.query(Application).filter(Application.user_id == user.user_id).count()
+    )
+    if claim:
+        time_elapsed = datetime_util.utcnow() - claim.created_at
+        minutes_elapsed = time_elapsed.total_seconds() / 60
+        log_attributes["minutes_between_claim_creation_and_import"] = str(minutes_elapsed)
+    logger.info("applications_import success", extra=log_attributes)
+
+    return response_util.success_response(
+        message="Successfully imported application",
+        data=ApplicationResponse.from_orm(application).dict(exclude_none=True),
+        status_code=201,
+    ).to_api_response()
+
+
 def applications_start():
     application = Application()
 
     ensure(CREATE, application)
 
-    now = datetime_util.utcnow()
-    application.start_time = now
-    application.updated_time = now
-
-    # this should always be the case at this point, but the type for
-    # current_user is still optional until we require authentication
-    if user := app.current_user():
-        application.user = user
-    else:
-        raise Unauthorized
+    application.user = app.current_user()
 
     with app.db_session() as db_session:
         db_session.add(application)
@@ -172,13 +294,13 @@ def applications_update(application_id):
         logger.info(
             "applications_update failure - application already submitted", extra=log_attributes
         )
+        message = "Application {} could not be updated. Application already submitted on {}".format(
+            existing_application.application_id, existing_application.submitted_time.strftime("%x")
+        )
         return response_util.error_response(
             status_code=Forbidden,
-            message="Application {} could not be updated. Application already submitted on {}".format(
-                existing_application.application_id,
-                existing_application.submitted_time.strftime("%x"),
-            ),
-            errors=[],
+            message=message,
+            errors=[ValidationErrorDetail(type=IssueType.exists, field="claim", message=message)],
             data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
         ).to_api_response()
 
@@ -193,7 +315,7 @@ def applications_update(application_id):
             db_session, application_request, existing_application
         )
 
-    issues = application_rules.get_application_issues(existing_application)
+    issues = application_rules.get_application_submit_issues(existing_application)
     employer_issue = get_contributing_employer_or_employee_issue(
         db_session, existing_application.employer_fein, existing_application.tax_identifier
     )
@@ -259,7 +381,7 @@ def applications_submit(application_id):
 
         log_attributes = get_application_log_attributes(existing_application)
 
-        issues = application_rules.get_application_issues(existing_application)
+        issues = application_rules.get_application_submit_issues(existing_application)
         employer_issue = get_contributing_employer_or_employee_issue(
             db_session, existing_application.employer_fein, existing_application.tax_identifier
         )
@@ -301,13 +423,16 @@ def applications_submit(application_id):
             logger.info(
                 "applications_submit failure - application already submitted", extra=log_attributes
             )
+            message = "Application {} could not be submitted. Application already submitted on {}".format(
+                existing_application.application_id,
+                existing_application.submitted_time.strftime("%x"),
+            )
             return response_util.error_response(
                 status_code=Forbidden,
-                message="Application {} could not be submitted. Application already submitted on {}".format(
-                    existing_application.application_id,
-                    existing_application.submitted_time.strftime("%x"),
-                ),
-                errors=[],
+                message=message,
+                errors=[
+                    ValidationErrorDetail(type=IssueType.exists, field="claim", message=message)
+                ],
                 data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
             ).to_api_response()
 
@@ -384,9 +509,7 @@ def applications_complete(application_id):
 
         log_attributes = get_application_log_attributes(existing_application)
 
-        issues = application_rules.get_application_complete_issues(
-            existing_application, request.headers
-        )
+        issues = application_rules.get_application_complete_issues(existing_application, db_session)
         if issues:
             logger.info(
                 "applications_complete failure - application failed validation",
@@ -414,7 +537,7 @@ def applications_complete(application_id):
         log_attributes = get_application_log_attributes(existing_application)
 
     logger.info(
-        "applications_complete - application documents marked as received", extra=log_attributes,
+        "applications_complete - application documents marked as received", extra=log_attributes
     )
 
     logger.info("applications_complete success", extra=log_attributes)
@@ -559,27 +682,14 @@ def document_upload(application_id, body, file):
             # attempt to compress the PDF and update file meta data.
             # A size constraint of 10MB is still enforced by the API gateway,
             # so the API should not expect to receive anything above this size
-            if (
-                app.get_config().enable_pdf_document_compression
-                and content_type == AllowedContentTypes.pdf.value
-                and file_size > UPLOAD_SIZE_CONSTRAINT
-            ):
+            if content_type == AllowedContentTypes.pdf.value and file_size > UPLOAD_SIZE_CONSTRAINT:
                 # tempfile.SpooledTemporaryFile writes the compressed file in-memory
-                with tempfile.SpooledTemporaryFile(mode="xb") as compressed_file:
-                    previous_file_size = file_size
+                with tempfile.SpooledTemporaryFile(mode="wb+") as compressed_file:
                     file_size = pdf_util.compress_pdf(file, compressed_file)
                     file_name = f"Compressed_{file_name}"
 
                     compressed_file.seek(0)
                     file_content = compressed_file.read()
-
-                    log_attrs: Dict[str, Any] = {
-                        **get_application_log_attributes(existing_application),
-                        **pdf_util.pdf_compression_attrs(previous_file_size, file_size),
-                    }
-                    logger.info(
-                        "document_upload - PDF compressed", extra={**log_attrs,},
-                    )
 
             # Validate file size, regardless of processing
             validate_file_size(file_size)
@@ -593,6 +703,10 @@ def document_upload(application_id, body, file):
                 data=document_details.dict(),
             ).to_api_response()
 
+        except (pdf_util.PDFCompressionError):
+            newrelic.agent.notice_error(attributes={"document_id": document.document_id})
+            raise ValidationException(errors=[FILE_SIZE_VALIDATION_ERROR])
+
         # use Certification Form when the feature flag for caring leave is active, but will otherwise use
         # State manage Paid Leave Confirmation. If the document type is Certification Form,
         # the API will map to the corresponding plan proof based on leave reason
@@ -603,9 +717,9 @@ def document_upload(application_id, body, file):
                 existing_application.leave_reason.leave_reason_description
             ].document_type_description
 
-        if document_type not in ID_DOCS:
+        if document_type not in [doc_type.document_type_description for doc_type in ID_DOC_TYPES]:
             # Check for existing STATE_MANAGED_PAID_LEAVE_CONFIRMATION documents, and reuse the doc type if there are docs
-            # Because existng claims where only part 1 has been submitted should continue using old doc type, submitted_time
+            # Because existing claims where only part 1 has been submitted should continue using old doc type, submitted_time
             # rather than existing docs should be examined
 
             if has_previous_state_managed_paid_leave(existing_application, db_session) or (
@@ -624,7 +738,7 @@ def document_upload(application_id, body, file):
             "document.document_type": document_type,
         }
 
-        # Upload document to fineos
+        # Upload document to FINEOS
         try:
             fineos_document = upload_document(
                 existing_application,
@@ -634,6 +748,7 @@ def document_upload(application_id, body, file):
                 content_type,
                 file_description,
                 db_session,
+                with_multipart=app.get_config().enable_document_multipart_upload,
             ).dict()
             logger.info(
                 "document_upload - document uploaded to claims processing system",
@@ -651,7 +766,15 @@ def document_upload(application_id, body, file):
                 return response_util.error_response(
                     status_code=BadRequest,
                     message=message,
-                    errors=[ValidationErrorDetail(type=IssueType.fineos_client, message=message)],
+                    errors=[
+                        ValidationErrorDetail(
+                            type=IssueType.fineos_client,
+                            message=message,
+                            rule=IssueRule.document_requirement_already_satisfied
+                            if "is not required for the case provided" in err.message  # noqa: B306
+                            else None,
+                        )
+                    ],
                     data=document_details.dict(),
                 ).to_api_response()
 
@@ -675,9 +798,7 @@ def document_upload(application_id, body, file):
         try:
             if document_details.mark_evidence_received:
                 mark_single_document_as_received(existing_application, document, db_session)
-                logger.info(
-                    "document_upload - evidence marked as received", extra=log_attributes,
-                )
+                logger.info("document_upload - evidence marked as received", extra=log_attributes)
         except Exception:
             logger.warning(
                 "document_upload failure - failure marking evidence as received",
@@ -697,16 +818,12 @@ def document_upload(application_id, body, file):
 
         db_session.commit()
 
-        logger.info(
-            "document_upload success", extra=log_attributes,
-        )
+        logger.info("document_upload success", extra=log_attributes)
         document_response = DocumentResponse.from_orm(document)
         document_response.content_type = content_type
         # Return response
         return response_util.success_response(
-            message="Successfully uploaded document",
-            data=document_response.dict(),
-            status_code=200,
+            message="Successfully uploaded document", data=document_response.dict(), status_code=200
         ).to_api_response()
 
 
@@ -721,7 +838,7 @@ def documents_get(application_id):
         # Check if application has been submitted to fineos
         if not existing_application.claim:
             return response_util.success_response(
-                message="Successfully retrieved documents", data=[], status_code=200,
+                message="Successfully retrieved documents", data=[], status_code=200
             ).to_api_response()
 
         documents = get_documents(existing_application, db_session)
@@ -729,7 +846,7 @@ def documents_get(application_id):
         documents_list = [doc.dict() for doc in documents]
 
         return response_util.success_response(
-            message="Successfully retrieved documents", data=documents_list, status_code=200,
+            message="Successfully retrieved documents", data=documents_list, status_code=200
         ).to_api_response()
 
 
@@ -797,7 +914,6 @@ def payment_preference_submit(application_id: UUID) -> Response:
                 db_session, payment_pref_request.payment_preference, existing_application
             )
 
-            existing_application.updated_time = datetime_util.utcnow()
             db_session.add(existing_application)
             db_session.commit()
             db_session.refresh(existing_application)
@@ -856,13 +972,20 @@ def payment_preference_submit(application_id: UUID) -> Response:
             "payment_preference_submit failure - payment preference already submitted",
             extra=log_attributes,
         )
+        message = "Application {} could not be updated. Payment preference already submitted".format(
+            existing_application.application_id
+        )
         return response_util.error_response(
             status_code=Forbidden,
-            message="Application {} could not be updated. Payment preference already submitted".format(
-                existing_application.application_id
-            ),
+            message=message,
             data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
-            errors=[],
+            errors=[
+                ValidationErrorDetail(
+                    type=IssueType.exists,
+                    field="payment_preference.payment_method",
+                    message=message,
+                )
+            ],
         ).to_api_response()
 
 
@@ -892,21 +1015,14 @@ def validate_tax_withholding_request(db_session, application_id, tax_preference_
             "submit_tax_withholding_preference failure - preference already set",
             extra=get_application_log_attributes(existing_application),
         )
-        abort(
-            response_util.error_response(
-                status_code=Forbidden,
-                message="Application {} could not be updated. Tax withholding preference already submitted".format(
-                    existing_application.application_id
-                ),
-                data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
-                errors=[
-                    ValidationErrorDetail(
-                        type=IssueType.duplicate,
-                        message="Tax withholding preference is already submitted",
-                        field="is_withholding_tax",
-                    )
-                ],
-            ).to_api_response()
+        raise ValidationException(
+            errors=[
+                ValidationErrorDetail(
+                    type=IssueType.duplicate,
+                    message="Tax withholding preference is already set",
+                    field="is_withholding_tax",
+                )
+            ]
         )
 
     return existing_application

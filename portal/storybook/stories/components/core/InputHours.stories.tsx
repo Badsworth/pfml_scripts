@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import InputHours from "src/components/core/InputHours";
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 
 export default {
   title: "Core Components/Forms/InputHours",

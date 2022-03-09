@@ -5,3 +5,5 @@ resource "aws_cloudwatch_log_subscription_filter" "rds_lambdafunction_logfilter"
   // Hard coded bc this function is managed by AWS SAM for now
   destination_arn = module.constants.newrelic_log_ingestion_arn
 }
+
+

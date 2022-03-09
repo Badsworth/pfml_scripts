@@ -34,5 +34,5 @@ module "pfml" {
 
   # AWS WAF ACL settings
   enable_regional_rate_based_acl = true
-  enable_fortinet_managed_rules  = false
+  enforce_fortinet_managed_rules = false
 }

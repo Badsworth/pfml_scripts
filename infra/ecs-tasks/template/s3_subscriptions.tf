@@ -37,6 +37,20 @@ module "trigger_agency_transfer_pub" {
   s3_bucket_arn              = data.aws_s3_bucket.agency_transfer.arn
 }
 
+module "trigger_fineos_import_iaww" {
+  source = "../../modules/s3_ecs_trigger"
+
+  environment_name   = var.environment_name
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
+
+  task_name                  = "fineos-import-iaww"
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["fineos-import-iaww"].family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_role              = aws_iam_role.fineos_import_iaww_task_role.arn
+  s3_bucket_arn              = data.aws_s3_bucket.agency_transfer.arn
+}
+
 resource "aws_s3_bucket_notification" "sharepoint_pub_notifications" {
   count  = var.enable_pub_automation_create_pub_files ? 1 : 0
   bucket = data.aws_s3_bucket.reports.id
@@ -44,18 +58,31 @@ resource "aws_s3_bucket_notification" "sharepoint_pub_notifications" {
   lambda_function {
     lambda_function_arn = module.trigger_sharepoint_pub.lambda_arn
     events              = ["s3:ObjectCreated:*"]
-    filter_prefix       = "dfml-responses"
+    filter_prefix       = "dfml-responses/Payment-Audit-Report"
   }
 }
 
-resource "aws_s3_bucket_notification" "agency_transfer_pub_notifications" {
-  count  = var.enable_pub_automation_process_returns ? 1 : 0
+resource "aws_s3_bucket_notification" "agency_transfer_notifications" {
+  count  = (var.enable_pub_automation_process_returns || var.enable_fineos_import_iaww) ? 1 : 0
   bucket = data.aws_s3_bucket.agency_transfer.id
 
-  lambda_function {
-    lambda_function_arn = module.trigger_agency_transfer_pub.lambda_arn
-    events              = ["s3:ObjectCreated:*"]
-    filter_prefix       = "pub/inbound/"
-    filter_suffix       = ".OK"
+  dynamic "lambda_function" {
+    for_each = var.enable_pub_automation_process_returns ? [1] : []
+    content {
+      lambda_function_arn = module.trigger_agency_transfer_pub.lambda_arn
+      events              = ["s3:ObjectCreated:*"]
+      filter_prefix       = "pub/inbound/"
+      filter_suffix       = ".OK"
+    }
+  }
+
+  dynamic "lambda_function" {
+    for_each = var.enable_fineos_import_iaww ? [1] : []
+    content {
+      lambda_function_arn = module.trigger_fineos_import_iaww.lambda_arn
+      events              = ["s3:ObjectCreated:*"]
+      filter_prefix       = "reports/processed/"
+      filter_suffix       = "pub-payments-process-fineos.SUCCESS"
+    }
   }
 }

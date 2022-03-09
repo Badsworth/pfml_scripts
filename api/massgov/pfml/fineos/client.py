@@ -4,7 +4,9 @@
 
 import abc
 from decimal import Decimal
-from typing import List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union
+
+from requests.models import Response
 
 from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
 from massgov.pfml.types import Fein
@@ -124,9 +126,21 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
+    def customer_get_eform_summary(
+        self, user_id: str, absence_id: str
+    ) -> List[models.customer_api.EFormSummary]:
+        pass
+
+    @abc.abstractmethod
     def get_eform(
         self, user_id: str, absence_id: str, eform_id: int
     ) -> models.group_client_api.EForm:
+        pass
+
+    @abc.abstractmethod
+    def customer_get_eform(
+        self, user_id: str, absence_id: str, eform_id: int
+    ) -> models.customer_api.EForm:
         pass
 
     def create_eform(self, user_id: str, absence_id: str, eform: EFormBody) -> None:
@@ -142,6 +156,12 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
+    def get_payment_preferences(
+        self, user_id: str
+    ) -> List[models.customer_api.PaymentPreferenceResponse]:
+        pass
+
+    @abc.abstractmethod
     def add_payment_preference(
         self, user_id: str, payment_preference: models.customer_api.NewPaymentPreference
     ) -> models.customer_api.PaymentPreferenceResponse:
@@ -153,11 +173,26 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         occupation_id: int,
         employment_status: Optional[str],
         hours_worked_per_week: Optional[Decimal],
+        fineos_org_unit_id: Optional[str],
+        worksite_id: Optional[str],
     ) -> None:
         pass
 
     @abc.abstractmethod
     def upload_document(
+        self,
+        user_id: str,
+        absence_id: str,
+        document_type: str,
+        file_content: bytes,
+        file_name: str,
+        content_type: str,
+        description: str,
+    ) -> models.customer_api.Document:
+        pass
+
+    @abc.abstractmethod
+    def upload_document_multipart(
         self,
         user_id: str,
         absence_id: str,
@@ -205,7 +240,7 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def get_week_based_work_pattern(
-        self, user_id: str, occupation_id: Union[str, int],
+        self, user_id: str, occupation_id: Union[str, int]
     ) -> models.customer_api.WeekBasedWorkPattern:
         pass
 
@@ -246,6 +281,16 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
+    def create_or_update_leave_period_change_request(
+        self,
+        fineos_web_id: str,
+        absence_id: str,
+        change_request: models.customer_api.LeavePeriodChangeRequest,
+    ) -> models.customer_api.LeavePeriodChangeRequest:
+        """Create or update a leave period change request in FINEOS."""
+        pass
+
+    @abc.abstractmethod
     def create_or_update_leave_admin(
         self, leave_admin_create_or_update: models.CreateOrUpdateLeaveAdmin
     ) -> Tuple[Optional[str], Optional[str]]:
@@ -264,4 +309,9 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def send_tax_withholding_preference(self, absence_id: str, is_withholding_tax: bool) -> None:
         """Send tax withholding preference to FINEOS"""
+        pass
+
+    @abc.abstractmethod
+    def upload_document_to_dms(self, file_name: str, file: bytes, data: Any) -> Response:
+        """Upload a 1099G document to fineos Api"""
         pass

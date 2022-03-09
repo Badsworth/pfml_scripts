@@ -1,7 +1,6 @@
 import os
 from datetime import date, datetime
 
-import pytest
 from freezegun import freeze_time
 
 import massgov.pfml.util.files as file_util
@@ -21,7 +20,7 @@ from massgov.pfml.db.models.factories import (
     EmployerFactory,
     OrganizationUnitFactory,
 )
-from massgov.pfml.dua.config import get_moveit_config, get_s3_config
+from massgov.pfml.dua.config import get_moveit_config, get_transfer_config
 from massgov.pfml.dua.demographics import (
     download_demographics_file_from_moveit,
     load_demographics_file,
@@ -29,47 +28,16 @@ from massgov.pfml.dua.demographics import (
 )
 from massgov.pfml.util.batch.log import LogEntry
 
-
-def get_mock_data():
-    return ReferenceFile(
-        file_location=os.path.join(
-            os.path.dirname(__file__), "test_files", "test_dua_demographic_data.csv"
-        )
-    )
-
-
-def get_mock_data_next():
-    return ReferenceFile(
-        file_location=os.path.join(
-            os.path.dirname(__file__), "test_files", "test_dua_demographic_data_other.csv"
-        )
-    )
-
-
-@pytest.fixture
-def add_test_employees(initialize_factories_session):
-    return [
-        EmployeeFactory.create(fineos_customer_number="1234567"),
-        EmployeeFactory.create(fineos_customer_number="7654321"),
-        EmployeeFactory.create(fineos_customer_number="1111111"),
-        EmployeeFactory.create(fineos_customer_number="2222222", gender_id=Gender.WOMAN.gender_id),
-        EmployeeFactory.create(fineos_customer_number="3333333"),
-        EmployeeFactory.create(fineos_customer_number="4444444"),
-        EmployeeFactory.create(fineos_customer_number="5555555"),
-        EmployeeFactory.create(fineos_customer_number="6666666"),
-        EmployeeFactory.create(fineos_customer_number="7777777"),
-        EmployeeFactory.create(fineos_customer_number="8888888"),
-        EmployeeFactory.create(fineos_customer_number="9999999"),
-    ]
+from .helpers import get_mock_reference_file
 
 
 def test_import_multiple_files_new_data(test_db_session, monkeypatch, mock_s3_bucket):
     monkeypatch.setenv("S3_BUCKET", f"s3://{mock_s3_bucket}")
     with LogEntry(test_db_session, "test log entry") as log_entry:
 
-        reference_file = get_mock_data()
-        s3_config = get_s3_config()
-        load_demographics_file(test_db_session, reference_file, log_entry, s3_config=s3_config)
+        reference_file = get_mock_reference_file("test_dua_demographic_data.csv")
+        transfer_config = get_transfer_config()
+        load_demographics_file(test_db_session, reference_file, log_entry, transfer_config)
 
         metrics = log_entry.metrics
 
@@ -95,8 +63,8 @@ def test_import_multiple_files_new_data(test_db_session, monkeypatch, mock_s3_bu
         assert found_data_to_validate
         assert len(processed_records) == 10
 
-        reference_file_next = get_mock_data_next()
-        load_demographics_file(test_db_session, reference_file_next, log_entry, s3_config=s3_config)
+        reference_file_next = get_mock_reference_file("test_dua_demographic_data_other.csv")
+        load_demographics_file(test_db_session, reference_file_next, log_entry, transfer_config)
 
         # 2 new rows in this file
         assert metrics["inserted_dua_demographics_row_count"] == 12
@@ -107,9 +75,9 @@ def test_update_employee_demographics_file_mode(test_db_session, monkeypatch, mo
     monkeypatch.setenv("S3_BUCKET", f"s3://{mock_s3_bucket}")
     with LogEntry(test_db_session, "test log entry") as log_entry:
 
-        reference_file = get_mock_data()
-        s3_config = get_s3_config()
-        load_demographics_file(test_db_session, reference_file, log_entry, s3_config=s3_config)
+        reference_file = get_mock_reference_file("test_dua_demographic_data.csv")
+        transfer_config = get_transfer_config()
+        load_demographics_file(test_db_session, reference_file, log_entry, transfer_config)
 
         metrics = log_entry.metrics
 
@@ -150,7 +118,7 @@ def test_set_employee_occupation_from_demographics_data(
 
         # Scenario where org unit id will be set on an existing occupation
         employee_without_existing_org_unit = EmployeeFactory(
-            fineos_customer_number="1234567", gender_id=Gender.WOMAN.gender_id,
+            fineos_customer_number="1234567", gender_id=Gender.WOMAN.gender_id
         )
 
         employee_without_existing_org_unit_occupation = EmployeeOccupationFactory(
@@ -267,6 +235,46 @@ def test_set_employee_occupation_from_demographics_data(
             == employee_without_existing_org_unit_occupation.employee_id
         )
         assert eligibility_updates[0].employer_id == employer.employer_id
+
+
+def test_set_employee_demographics_duplicate_employee_fineos_customer_numbers(
+    test_db_session, initialize_factories_session
+):
+    with LogEntry(test_db_session, "test log entry") as log_entry:
+        employer = EmployerFactory()
+        customer_number = "1234567"
+        employee_to_update_customer_number = "55555"
+        EmployeeFactory(fineos_customer_number=customer_number)
+        EmployeeFactory(fineos_customer_number=customer_number)
+        EmployeeFactory(fineos_customer_number=employee_to_update_customer_number)
+        org_unit = OrganizationUnitFactory(name="Foo", employer=employer)
+        reporting_unit_with_org_unit = DuaReportingUnitFactory(organization_unit=org_unit)
+
+        DuaEmployeeDemographicsFactory(
+            fineos_customer_number=customer_number,
+            date_of_birth=date(1998, 5, 6),
+            gender_code="M",
+            occupation_code=5191,
+            occupation_description="Packaging and Filling Machine Operators and Tenders",
+            employer_fein=employer.employer_fein,
+            employer_reporting_unit_number=reporting_unit_with_org_unit.dua_id,
+        )
+
+        DuaEmployeeDemographicsFactory(
+            fineos_customer_number=employee_to_update_customer_number,
+            date_of_birth=date(1998, 5, 6),
+            gender_code="M",
+            occupation_code=5191,
+            occupation_description="Packaging and Filling Machine Operators and Tenders",
+            employer_fein=employer.employer_fein,
+            employer_reporting_unit_number=reporting_unit_with_org_unit.dua_id,
+        )
+
+        test_db_session.commit()
+
+        set_employee_occupation_from_demographic_data(test_db_session, log_entry=log_entry)
+        metrics = log_entry.metrics
+        assert metrics["employee_skipped_count"] == 1
 
 
 def test_set_employee_occupation_from_demographics_data_multiple_dua_records(
@@ -496,46 +504,134 @@ def test_set_employee_occupation_from_demographics_data_missing_ids(
         assert len(eligibility_updates) == 0
 
 
+def test_set_employee_occupation_from_demographics_data_short_feins(
+    test_db_session, initialize_factories_session
+):
+    with LogEntry(test_db_session, "test log entry") as log_entry:
+        employer_one = EmployerFactory(employer_fein="012345678")
+
+        org_unit_one = OrganizationUnitFactory(employer=employer_one)
+
+        reporting_unit_one = DuaReportingUnitFactory(organization_unit=org_unit_one)
+
+        employee = EmployeeWithFineosNumberFactory()
+
+        employee_occupation_one = EmployeeOccupationFactory(
+            employee=employee, employer=employer_one
+        )
+
+        dua_employee_demographic_data = DuaEmployeeDemographicsFactory(
+            fineos_customer_number=employee.fineos_customer_number,
+            employer_fein=employer_one.employer_fein.strip("0"),
+            employer_reporting_unit_number=reporting_unit_one.dua_id,
+        )
+
+        test_db_session.commit()
+        test_db_session.refresh(dua_employee_demographic_data)
+
+        assert "0" not in dua_employee_demographic_data.employer_fein
+        dua_fein_before = dua_employee_demographic_data.employer_fein
+
+        set_employee_occupation_from_demographic_data(test_db_session, log_entry=log_entry)
+
+        metrics = log_entry.metrics
+
+        assert metrics["occupation_org_unit_set_count"] == 1
+
+        assert employee_occupation_one.organization_unit_id == org_unit_one.organization_unit_id
+
+        eligibility_updates = (
+            test_db_session.query(EmployeePushToFineosQueue)
+            .filter(EmployeePushToFineosQueue.action == "UPDATE_NEW_EMPLOYER")
+            .all()
+        )
+        assert len(eligibility_updates) == 1
+
+        assert {(eligibility_updates[0].employee_id, eligibility_updates[0].employer_id)} == {
+            (employee.employee_id, employer_one.employer_id)
+        }
+
+        # processing the occupation info shouldn't change FIEN in the DUA data,
+        # even if it was missing a leading zero
+        test_db_session.refresh(dua_employee_demographic_data)
+        assert dua_employee_demographic_data.employer_fein == dua_fein_before
+
+
+def test_set_employee_occupation_from_demographics_data_mismatched_employer_caught(
+    test_db_session, initialize_factories_session
+):
+    with LogEntry(test_db_session, "test log entry") as log_entry:
+        employer_one = EmployerFactory()
+
+        employer_two = EmployerFactory()
+        org_unit_two = OrganizationUnitFactory(employer=employer_two)
+        reporting_unit_two = DuaReportingUnitFactory(organization_unit=org_unit_two)
+
+        employee = EmployeeWithFineosNumberFactory()
+
+        employee_occupation_one = EmployeeOccupationFactory(
+            employee=employee, employer=employer_one
+        )
+
+        # Employee tied to employer_one, but the reporting unit listed is
+        # connected to employer_two in the DB
+        DuaEmployeeDemographicsFactory(
+            fineos_customer_number=employee.fineos_customer_number,
+            employer_fein=employer_one.employer_fein,
+            employer_reporting_unit_number=reporting_unit_two.dua_id,
+        )
+
+        test_db_session.commit()
+
+        set_employee_occupation_from_demographic_data(test_db_session, log_entry=log_entry)
+
+        metrics = log_entry.metrics
+
+        assert metrics["dua_reporting_unit_mismatched_employer_count"] == 1
+
+        assert employee_occupation_one.organization_unit_id is None
+
+        eligibility_updates = (
+            test_db_session.query(EmployeePushToFineosQueue)
+            .filter(EmployeePushToFineosQueue.action == "UPDATE_NEW_EMPLOYER")
+            .all()
+        )
+        assert len(eligibility_updates) == 0
+
+
 @freeze_time("2020-12-07")
 def test_update_employee_demographics_moveit_mode(
     initialize_factories_session,
     test_db_session,
-    monkeypatch,
     mock_s3_bucket,
     mock_sftp_client,
+    mock_sftp_paths,
     setup_mock_sftp_client,
 ):
 
-    source_directory_path = "dua/pending"
-    archive_directory_path = "dua/archive"
-    moveit_pickup_path = "/DFML/DUA/Inbound"
-
-    monkeypatch.setenv("S3_BUCKET", f"s3://{mock_s3_bucket}")
-    monkeypatch.setenv("S3_DUA_OUTBOUND_DIRECTORY_PATH", source_directory_path)
-    monkeypatch.setenv("S3_DUA_ARCHIVE_DIRECTORY_PATH", archive_directory_path)
-    monkeypatch.setenv("MOVEIT_SFTP_URI", "sftp://foo@bar.com")
-    monkeypatch.setenv("MOVEIT_SSH_KEY", "foo")
-
-    pending_directory = f"s3://{mock_s3_bucket}/{source_directory_path}"
-    archive_directory = f"s3://{mock_s3_bucket}/{archive_directory_path}"
+    paths = mock_sftp_paths
 
     with LogEntry(test_db_session, "test log entry") as log_entry:
-        reference_file = get_mock_data()
+        reference_file = get_mock_reference_file("test_dua_demographic_data.csv")
         filename = "DUA_DFML_CLM_DEM_202012070000.csv"
-        filepath = os.path.join(moveit_pickup_path, filename)
+        filepath = os.path.join(paths["moveit_pickup_path"], filename)
         mock_sftp_client._add_file(filepath, file_util.read_file(reference_file.file_location))
 
-        s3_config = get_s3_config()
+        transfer_config = get_transfer_config()
         moveit_config = get_moveit_config()
 
         reference_files = (
             download_demographics_file_from_moveit(
-                test_db_session, log_entry, s3_config=s3_config, moveit_config=moveit_config
+                test_db_session,
+                log_entry,
+                transfer_config=transfer_config,
+                moveit_config=moveit_config,
             ),
         )
 
-        assert len(file_util.list_files(pending_directory)) == 1
-        assert len(file_util.list_files(archive_directory)) == 0
+        assert filename in file_util.list_files(paths["pending_directory"])
+        # Note: local_s3/ doesn't get automatically cleared out between tests so repeated runs may fail
+        assert filename not in file_util.list_files(paths["archive_directory"])
         assert len(reference_files) == 1
 
         reference_files = (
@@ -546,11 +642,11 @@ def test_update_employee_demographics_moveit_mode(
         ).all()
         for file in reference_files:
             load_demographics_file(
-                test_db_session, file, log_entry, move_files=True, s3_config=s3_config
+                test_db_session, file, log_entry, move_files=True, transfer_config=transfer_config
             )
 
-        assert len(file_util.list_files(pending_directory)) == 0
-        assert len(file_util.list_files(archive_directory)) == 1
+        assert filename not in file_util.list_files(paths["pending_directory"])
+        assert filename in file_util.list_files(paths["archive_directory"])
 
         metrics = log_entry.metrics
 
@@ -561,6 +657,6 @@ def test_update_employee_demographics_moveit_mode(
         assert metrics["pending_dua_demographics_reference_files_count"] == 1
 
         reference_files = download_demographics_file_from_moveit(
-            test_db_session, log_entry, s3_config=s3_config, moveit_config=moveit_config
+            test_db_session, log_entry, transfer_config=transfer_config, moveit_config=moveit_config
         )
         assert len(reference_files) == 0

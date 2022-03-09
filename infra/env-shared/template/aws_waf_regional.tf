@@ -5,20 +5,18 @@
 # Ref:
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl
 
-# Regional rate-based rule. This can be attached to the API Gateway
-# Default allow unless IP is sending under "limit" requests per 5 minutes.
+# Regional API WAF
+
 
 locals {
-  api_gateway_stage_arn  = "arn:aws:apigateway:us-east-1::/restapis/${aws_api_gateway_rest_api.pfml.id}/stages/${var.environment_name}"
-  api_gateway_deployment = "aws_api_gateway_deployment.${var.environment_name}"
+  api_gateway_stage_arn     = "arn:aws:apigateway:us-east-1::/restapis/${aws_api_gateway_rest_api.pfml.id}/stages/${var.environment_name}"
+  api_gateway_deployment    = "aws_api_gateway_deployment.${var.environment_name}"
+  kinesis_data_firehose_arn = "arn:aws:firehose:us-east-1:498823821309:deliverystream/aws-waf-logs-${var.environment_name}-kinesis-to-s3"
 }
 
-resource "aws_wafv2_web_acl" "regional_rate_based_acl" {
-  name  = "mass-pfml-${var.environment_name}-regional-rate-based-acl"
+resource "aws_wafv2_web_acl" "regional_api_acl" {
+  name  = "mass-pfml-${var.environment_name}-api-acl"
   scope = "REGIONAL"
-
-  # Only apply this ACL if set to true in ../environments/<enviroment_name>/main.tf
-  count = var.enable_regional_rate_based_acl ? 1 : 0
 
   tags = merge(module.constants.common_tags, {
     environment = module.constants.environment_tags[local.constants_env]
@@ -28,12 +26,64 @@ resource "aws_wafv2_web_acl" "regional_rate_based_acl" {
     allow {}
   }
 
+  #------------------------------------------------------------------------------#
+  #                        log4j-ZDE AWS WAF rule                            #
+  #------------------------------------------------------------------------------#
   rule {
-    name     = "mass-pfml-${var.environment_name}-rate-based-acl"
+    name     = "mass-pfml-${var.environment_name}-log4j-ZDE-acl"
     priority = 0
 
-    action {
-      block {}
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesKnownBadInputsRuleSet"
+        vendor_name = "AWS"
+
+        excluded_rule {
+          name = "Host_localhost_HEADER"
+        }
+
+        excluded_rule {
+          name = "PROPFIND_METHOD"
+        }
+
+        excluded_rule {
+          name = "ExploitablePaths_URIPATH"
+        }
+
+      }
+    }
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "log4j-ZDE"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  #------------------------------------------------------------------------------#
+  #                        Rate-limiting AWS WAF rule                            #
+  #------------------------------------------------------------------------------#
+  # Default allow unless IP is sending under "limit" requests per 5 minutes.
+  rule {
+    name     = "mass-pfml-${var.environment_name}-rate-based-acl"
+    priority = 1
+
+    dynamic "action" {
+      for_each = var.enable_regional_rate_based_acl ? [1] : []
+      content {
+        block {}
+      }
+    }
+
+    dynamic "action" {
+      for_each = var.enable_regional_rate_based_acl ? [] : [1]
+      content {
+        count {}
+      }
     }
 
     statement {
@@ -50,6 +100,62 @@ resource "aws_wafv2_web_acl" "regional_rate_based_acl" {
     }
   }
 
+  #------------------------------------------------------------------------------#
+  #                            Geo Match AWS WAF rule                            #
+  #------------------------------------------------------------------------------#
+  rule {
+    name     = "massgov-pfml-${var.environment_name}-block-high-risk-countries-rule"
+    priority = 2
+    action {
+      block {}
+    }
+    statement {
+      geo_match_statement {
+        country_codes = module.constants.high_risk_country_codes
+      }
+    }
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "massgov-pfml-${var.environment_name}-block-high-risk-countries"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  #------------------------------------------------------------------------------#
+  #                      Fortinet OWASP 10 AWS WAF rule                          #
+  #------------------------------------------------------------------------------#
+  rule {
+    name     = "mass-pfml-${var.environment_name}-fortinet-managed-rules"
+    priority = 3
+
+    dynamic "override_action" {
+      for_each = var.enforce_fortinet_managed_rules ? [1] : []
+      content {
+        none {}
+      }
+    }
+
+    dynamic "override_action" {
+      for_each = var.enforce_fortinet_managed_rules ? [] : [1]
+      content {
+        count {}
+      }
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "all_rules"
+        vendor_name = "Fortinet"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "mass-pfml-${var.environment_name}-fortinet-rule-group"
+      sampled_requests_enabled   = true
+    }
+  }
+
   visibility_config {
     cloudwatch_metrics_enabled = true
     metric_name                = "mass-pfml-${var.environment_name}-rate-monitored"
@@ -58,66 +164,19 @@ resource "aws_wafv2_web_acl" "regional_rate_based_acl" {
 }
 
 resource "aws_wafv2_web_acl_association" "rate_based_acl" {
-  # Only apply this ACL if set to true in ../environments/<enviroment_name>/main.tf
-  count = var.enable_regional_rate_based_acl ? 1 : 0
-
   depends_on = [local.api_gateway_deployment]
   # must be an must be an ARN of an Application Load Balancer or an Amazon API Gateway stage.
-  # resource_arn will need to be manually entered prior to 
+  # resource_arn will need to be manually entered prior to
   resource_arn = local.api_gateway_stage_arn
-  web_acl_arn  = aws_wafv2_web_acl.regional_rate_based_acl[0].arn
+  web_acl_arn  = aws_wafv2_web_acl.regional_api_acl.arn
 }
 
 #------------------------------------------------------------------------------#
-#                     Fortinet Managed AWS WAF Rules                           #
+#                 Kinesis Data Firehose Logging Configuration                  #
 #------------------------------------------------------------------------------#
 
-
-# Ref:
-# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafregional_web_acl
-
-locals {
-
-  # The Fortinet subscription is procured outside of terraform.
-  # To find the regional fortinet rule id use ```$ aws waf-regional list-subscribed-rule-groups```
-  # at the command line.
-  regional_fortinet_rule_id = "a9ae79c6-5ffa-4758-aca7-5a6862b26fa6"
-}
-
-resource "aws_wafregional_web_acl" "fortinet_managed_rules" {
-  name        = "mass-pfml-${var.environment_name}-regional-fortinet-acl"
-  metric_name = "FortinetAWSAPIGatewayRuleset"
-
-  # Only apply this ACL if set to true in ../environments/<enviroment_name>/main.tf
-  count = var.enable_fortinet_managed_rules ? 1 : 0
-
-  tags = merge(module.constants.common_tags, {
-    environment = module.constants.environment_tags[local.constants_env]
-  })
-
-  default_action {
-    type = "ALLOW"
-  }
-
-  logging_configuration {
-    log_destination = aws_kinesis_firehose_delivery_stream.aws_waf.arn
-  }
-
-  rule {
-    priority = 1
-    rule_id  = local.regional_fortinet_rule_id
-    type     = "GROUP"
-
-    override_action {
-      # NONE  = None of the rules in the group will be overriden.
-      # COUNT = Count the rules that triggered but do not block.
-      type = var.enforce_fortinet_managed_rules ? "NONE" : "COUNT"
-    }
-  }
-}
-
-resource "aws_wafregional_web_acl_association" "fortinet_managed_rules" {
-  count        = var.enable_fortinet_managed_rules ? 1 : 0
-  resource_arn = local.api_gateway_stage_arn
-  web_acl_id   = aws_wafregional_web_acl.fortinet_managed_rules[0].id
+resource "aws_wafv2_web_acl_logging_configuration" "regional_waf_logging_config" {
+  depends_on              = [aws_wafv2_web_acl.regional_api_acl]
+  log_destination_configs = [local.kinesis_data_firehose_arn]
+  resource_arn            = aws_wafv2_web_acl.regional_api_acl.arn
 }

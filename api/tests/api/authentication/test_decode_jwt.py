@@ -8,7 +8,7 @@ from jose.exceptions import JWTError
 from werkzeug.exceptions import Unauthorized
 
 import massgov.pfml.api.authentication as authentication
-from massgov.pfml.db.models.employees import AzureGroup, AzureGroupPermission, AzurePermission
+from massgov.pfml.db.models.azure import AzureGroup, AzureGroupPermission, AzurePermission
 
 
 @pytest.fixture(scope="session")
@@ -84,7 +84,7 @@ def test_is_azure_token_true(mock_azure, azure_auth_token_unit):
 def test_is_azure_token_false(mock_azure, auth_claims_unit, azure_auth_private_key):
     # This token is created with an azure private key but lacks the key ID.
     # Therefore, it should not be recognized as an Azure token.
-    token = jwt.encode(auth_claims_unit, azure_auth_private_key, algorithm=ALGORITHMS.RS256,)
+    token = jwt.encode(auth_claims_unit, azure_auth_private_key, algorithm=ALGORITHMS.RS256)
     assert authentication._is_azure_token(token) is False
 
 
@@ -128,7 +128,7 @@ def test_process_azure_token_unauthorized(app, mock_azure, auth_claims_unit, tes
     # The user lacks the NON_PROD group and receives an unauthorized exception.
     decoded_azure_token["groups"] = [AzureGroup.NON_PROD_ADMIN.azure_group_guid]
     with pytest.raises(
-        Unauthorized, match="You do not have the correct group to access the Admin Portal.",
+        Unauthorized, match="You do not have the correct group to access the Admin Portal."
     ):
         with app.app.app_context():
             authentication._process_azure_token(test_db_session, decoded_azure_token)
@@ -243,6 +243,44 @@ def test_endpoint_rejects_token_with_alg_none(client, app, user, auth_token_alg_
 
         assert not hasattr(g, "current_user")
         assert response.status_code == 401
+
+
+def test_endpoint_snow_user_with_no_mass_pfml_agent_id_header(
+    client, app, snow_user, snow_user_token
+):
+    with app.app.test_request_context("/v1/users/current"):
+        response = client.get(
+            "/v1/users/current", headers={"Authorization": f"Bearer {snow_user_token}"}
+        )
+        assert response.status_code == 401
+
+        error_msg = "Invalid required header: Mass-PFML-Agent-ID"
+        assert error_msg in response.get_json()["message"]
+
+
+def test_endpoint_snow_user_with_empty_mass_pfml_agent_id_header(
+    client, app, snow_user, snow_user_token
+):
+    with app.app.test_request_context("/v1/users/current"):
+        response = client.get(
+            "/v1/users/current",
+            headers={"Authorization": f"Bearer {snow_user_token}", "Mass-PFML-Agent-ID": "   "},
+        )
+        assert response.status_code == 401
+
+        error_msg = "Invalid required header: Mass-PFML-Agent-ID"
+        assert error_msg in response.get_json()["message"]
+
+
+def test_endpoint_snow_user_with_mass_pfml_agent_id_header(client, app, snow_user, snow_user_token):
+    with app.app.test_request_context("/v1/users/current"):
+        response = client.get(
+            "/v1/users/current",
+            headers={"Authorization": f"Bearer {snow_user_token}", "Mass-PFML-Agent-ID": "123"},
+        )
+
+        # Currently, snow user does not have access to any routes
+        assert response.status_code == 403
 
 
 def test_endpoint_rejects_token_with_alg_hs256(client, app, user, auth_token_alg_hs256):

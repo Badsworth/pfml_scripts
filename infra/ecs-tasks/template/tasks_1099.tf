@@ -46,12 +46,12 @@ resource "aws_ecs_task_definition" "ecs_tasks_1099" {
         }
       },
 
-      environment = [for val in concat(local.common, local.db_access, local.fineos_s3_access, local.pub_s3_folders, local.irs_1099_documents) : val if contains(keys(val), "value")]
-      secrets     = [for val in concat(local.common, local.db_access, local.fineos_s3_access, local.pub_s3_folders, local.irs_1099_documents) : val if !contains(keys(val), "value")]
+      environment = [for val in concat(local.common, local.db_access, local.fineos_api_access, local.fineos_s3_access, local.pub_s3_folders, local.irs_1099_documents) : val if contains(keys(val), "value")]
+      secrets     = [for val in concat(local.common, local.db_access, local.fineos_api_access, local.fineos_s3_access, local.pub_s3_folders, local.irs_1099_documents) : val if !contains(keys(val), "value")]
     },
     {
       name                   = "pub-payments-process-1099-dot-net-generator-service",
-      image                  = format("%s:%s", data.aws_ecr_repository.pdf_api.repository_url, "latest"),
+      image                  = format("%s:%s", data.aws_ecr_repository.pdf_api.repository_url, var.service_docker_tag),
       command                = ["dotnet", "PfmlPdfApi.dll"],
       cpu                    = 2048,
       memory                 = 4096,

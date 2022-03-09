@@ -6,7 +6,7 @@ locals {
   #
   # The for_each logic below will automagically define your S3 bucket, so you
   # can go straight to running terraform apply.
-  environments = ["test", "stage", "prod", "performance", "training", "uat", "breakfix", "cps-preview", "adhoc", "long", "infra-test"]
+  environments = ["test", "stage", "prod", "performance", "training", "uat", "breakfix", "cps-preview", "long", "infra-test", "trn2"]
 }
 
 data "aws_iam_role" "replication" {
@@ -195,3 +195,182 @@ resource "aws_s3_bucket_public_access_block" "ses_to_newrelic_dlq" {
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Create S3 buckets for SNS text messaging usage reports.
+# Marking this bucket as prod, so only people with prod privs have access.
+#
+
+resource "aws_s3_bucket" "sns_sms_usage_reports" {
+  bucket = "massgov-pfml-sns-sms-usage-reports"
+  tags = merge(module.constants.common_tags, {
+    environment = "prod"
+    public      = "no"
+    Name        = "massgov-pfml-sns-sms-usage-reports"
+  })
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "sns_sms_usage_reports" {
+  bucket                  = aws_s3_bucket.sns_sms_usage_reports.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# Documentation: https://docs.aws.amazon.com/sns/latest/dg/sms_stats_usage.html
+resource "aws_s3_bucket_policy" "sns_sms_usage_reports" {
+  bucket = aws_s3_bucket.sns_sms_usage_reports.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "SnsSmsUsageReportsPolicy"
+    Statement = [
+      {
+        "Sid" : "AllowPutObject",
+        "Effect" : "Allow",
+        "Principal" : {
+          "Service" : "sns.amazonaws.com"
+        },
+        "Action" : "s3:PutObject",
+        "Resource" : "arn:aws:s3:::massgov-pfml-sns-sms-usage-reports/*",
+        "Condition" : {
+          "StringEquals" : {
+            "aws:SourceAccount" : data.aws_caller_identity.current.account_id
+          }
+        }
+      },
+      {
+        "Sid" : "AllowGetBucketLocation",
+        "Effect" : "Allow",
+        "Principal" : {
+          "Service" : "sns.amazonaws.com"
+        },
+        "Action" : "s3:GetBucketLocation",
+        "Resource" : "arn:aws:s3:::massgov-pfml-sns-sms-usage-reports",
+        "Condition" : {
+          "StringEquals" : {
+            "aws:SourceAccount" : data.aws_caller_identity.current.account_id
+          }
+        }
+      },
+      {
+        "Sid" : "AllowListBucket",
+        "Effect" : "Allow",
+        "Principal" : {
+          "Service" : "sns.amazonaws.com"
+        },
+        "Action" : "s3:ListBucket",
+        "Resource" : "arn:aws:s3:::massgov-pfml-sns-sms-usage-reports"
+      }
+    ]
+  })
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Bucket for Admin Portal CloudFront Access Logging
+# Complies with AWS Security Hub control - [CloudFront.5] 
+# https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards-fsbp-controls.html#fsbp-cloudfront-5
+resource "aws_s3_bucket" "admin_portal_cloudfront_access_logging" {
+  bucket = "massgov-pfml-admin-portal-cloudfront-logging"
+  acl    = "log-delivery-write"
+  lifecycle_rule {
+    enabled = true
+    expiration {
+      days = 30
+    }
+  }
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
+  tags = merge(module.constants.common_tags, {
+    environment = "all"
+    Name        = "massgov-pfml-admin-portal-cloudfront-logging"
+    public      = "no"
+  })
+}
+
+resource "aws_s3_bucket_public_access_block" "admin_portal_cloudfront_access_logging_block" {
+  bucket                  = aws_s3_bucket.admin_portal_cloudfront_access_logging.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# Bucket for Portal CloudFront Access Logging
+# Complies with AWS Security Hub control - [CloudFront.5] 
+# https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards-fsbp-controls.html#fsbp-cloudfront-5
+resource "aws_s3_bucket" "portal_cloudfront_access_logging" {
+  bucket = "massgov-pfml-portal-cloudfront-logging"
+  acl    = "log-delivery-write"
+  lifecycle_rule {
+    enabled = true
+    expiration {
+      days = 30
+    }
+  }
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
+  tags = merge(module.constants.common_tags, {
+    environment = "all"
+    Name        = "massgov-pfml-portal-cloudfront-logging"
+    public      = "no"
+  })
+}
+
+resource "aws_s3_bucket_public_access_block" "portal_cloudfront_access_logging_block" {
+  bucket                  = aws_s3_bucket.portal_cloudfront_access_logging.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+# ----------------------------------------------------------------------------------------------------------------------
+# Manage manually created buckets
+
+resource "aws_s3_bucket" "import_buckets" {
+  for_each = toset(module.constants.import_buckets)
+  bucket   = each.key
+  tags = merge(module.constants.common_tags, {
+    environment = "prod"
+    public      = "no"
+    Name        = each.key
+  })
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "import_buckets" {
+  for_each                = toset(module.constants.import_buckets)
+  bucket                  = aws_s3_bucket.import_buckets[each.key].id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# ----------------------------------------------------------------------------------------------------------------------

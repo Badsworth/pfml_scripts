@@ -1,6 +1,8 @@
-import { ClaimEmployee, ClaimEmployer, ManagedRequirement } from "./Claim";
-import { groupBy, orderBy } from "lodash";
-import { LeaveReasonType } from "./LeaveReason";
+import { ClaimEmployee, ClaimEmployer } from "./Claim";
+import { AbsencePeriod } from "./AbsencePeriod";
+import { ManagedRequirement } from "./ManagedRequirement";
+import dayjs from "dayjs";
+import { orderBy } from "lodash";
 
 class ClaimDetail {
   absence_periods: AbsencePeriod[] = [];
@@ -16,8 +18,6 @@ class ClaimDetail {
     employer_evidence: OutstandingEvidence[] | null;
   } | null = null;
 
-  payments: PaymentDetail[] = [];
-
   constructor(attrs?: Partial<ClaimDetail>) {
     if (!attrs) {
       return;
@@ -29,17 +29,12 @@ class ClaimDetail {
       this.employee = new ClaimEmployee(attrs.employee);
     }
 
-    this.absence_periods = this.absence_periods.map(
-      (absence_period) => new AbsencePeriod(absence_period)
+    this.absence_periods = orderBy(
+      this.absence_periods.map(
+        (absence_period) => new AbsencePeriod(absence_period)
+      ),
+      "absence_period_start_date"
     );
-  }
-
-  /**
-   * Get absence_periods grouped by their leave reason
-   * @returns {Object} an object that keys arrays of absence periods by their reason e.g { "Child Bonding": [AbsencePeriod] }
-   */
-  get absencePeriodsByReason() {
-    return groupBy(this.absence_periods, "reason");
   }
 
   /**
@@ -82,62 +77,59 @@ class ClaimDetail {
 
   get hasApprovedStatus() {
     return this.absence_periods.some(
-      (absence_period) =>
-        absence_period.request_decision ===
-        <AbsencePeriodRequestDecision>"Approved"
+      (absence_period) => absence_period.request_decision === "Approved"
     );
+  }
+
+  get hasInReviewStatus() {
+    return this.absence_periods.some(
+      (absenceItem) => absenceItem.request_decision === "In Review"
+    );
+  }
+
+  get hasProjectedStatus() {
+    return this.absence_periods.some(
+      (absenceItem) => absenceItem.request_decision === "Projected"
+    );
+  }
+
+  get hasPendingStatus() {
+    return this.absence_periods.some(
+      (absenceItem) => absenceItem.request_decision === "Pending"
+    );
+  }
+
+  get leaveDates(): AbsencePeriodDates[] {
+    return this.absence_periods.map(
+      ({ absence_period_start_date, absence_period_end_date }) => ({
+        absence_period_start_date,
+        absence_period_end_date,
+      })
+    );
+  }
+
+  get waitingWeek(): { startDate?: string; endDate?: string } {
+    if (this.leaveDates.length) {
+      return {
+        // API will return absence_periods sorted by start date, waiting week is the first week at the start of the claim
+        startDate: this.leaveDates[0].absence_period_start_date,
+        endDate: dayjs(this.leaveDates[0].absence_period_start_date)
+          .add(6, "days")
+          .format("YYYY-MM-DD"),
+      };
+    }
+    return {};
   }
 }
 
-export type AbsencePeriodRequestDecision =
-  | "Cancelled"
-  | "Pending"
-  | "Approved"
-  | "Denied"
-  | "Withdrawn";
-
-export class AbsencePeriod {
-  absence_period_end_date: string;
+interface AbsencePeriodDates {
   absence_period_start_date: string;
-  evidence_status: string | null = null;
-  fineos_leave_request_id: string | null = null;
-  period_type: "Continuous" | "Intermittent" | "Reduced Schedule";
-  reason: LeaveReasonType;
-  reason_qualifier_one = "";
-  reason_qualifier_two = "";
-  request_decision: AbsencePeriodRequestDecision;
-
-  constructor(attrs: Partial<AbsencePeriod> = {}) {
-    Object.assign(this, attrs);
-  }
+  absence_period_end_date: string;
 }
 
 interface OutstandingEvidence {
   document_name: string;
   is_document_received: boolean;
-}
-
-/**
- * Payment response associated with the Claim from API
- */
-export interface Payments {
-  absence_case_id: string;
-  payments: PaymentDetail[];
-}
-
-/**
- * Payment details associated with the Claim
- */
-export interface PaymentDetail {
-  payment_id: string;
-  period_start_date: string;
-  period_end_date: string;
-  amount: number | null;
-  sent_to_bank_date: string | null;
-  payment_method: string;
-  expected_send_date_start: string | null;
-  expected_send_date_end: string | null;
-  status: string;
 }
 
 export default ClaimDetail;

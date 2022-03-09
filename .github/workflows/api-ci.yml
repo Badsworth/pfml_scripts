@@ -20,7 +20,6 @@ defaults:
 
 env:
   CI: true
-  deploys_channel: "C01HEAJPE76" #mass-pfml-deploys-shared
   workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
 jobs:
@@ -58,10 +57,10 @@ jobs:
   # Check for test failures.
   get-test-dirs:
     runs-on: ubuntu-latest
-  
+
     outputs:
       matrix: ${{ steps.get-dirs.outputs.matrix }}
-    
+
     steps:
       - uses: actions/checkout@v2
 
@@ -72,14 +71,14 @@ jobs:
           cd tests/
           TEST_DIRS=$(ls -d */ | cut -f1 -d'/' | grep -v pycache | grep -v helpers | jq -R . | jq -s -c .)
           echo "::set-output name=matrix::$TEST_DIRS"
-          
+
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     if: always()
 
     needs: get-test-dirs
-    
+
     strategy:
       fail-fast: false
       matrix:
@@ -121,36 +120,66 @@ jobs:
         run: make pre-flight-test
 
   # Run Tenable container scanning
-  # TEMPORARILY DISABLED (INFRA-568): our underlying Tenable license changed, & our old credentials are no longer valid.
-#  scan-containers:
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#      - uses: actions/checkout@v2
-#
-#      - name: build image
-#        run: make api-image-build
-#
-#      - name: pull latest tenable image
-#        env:
-#          DOCKER_PW: ${{ secrets.PFML_TENABLE_DOCKER_PASSWORD }}
-#          DOCKER_USER: ${{ secrets.PFML_TENABLE_DOCKER_USER }}
-#        run: |
-#          echo "$DOCKER_PW" | docker login --username "$DOCKER_USER" --password-stdin tenableio-docker-consec-local.jfrog.io
-#          docker pull tenableio-docker-consec-local.jfrog.io/cs-scanner:latest
-#
-#      - name: run tenable scan
-#        env:
-#          TENABLE_ACCESS_KEY: ${{ secrets.TENABLE_ACCESS_KEY }}
-#          TENABLE_SECRET_KEY: ${{ secrets.TENABLE_SECRET_KEY }}
-#        run: |
-#          DOCKER_TAG=$(docker images | grep mass-pfml-api | grep -v latest | awk '{print $2}')
-#          docker save mass-pfml-api:$DOCKER_TAG | docker run \
-#          --env TENABLE_ACCESS_KEY=$TENABLE_ACCESS_KEY \
-#          --env TENABLE_SECRET_KEY=$TENABLE_SECRET_KEY \
-#          --env IMPORT_REPO_NAME=mass-pfml-api \
-#          --env CHECK_POLICY=true \
-#          --interactive tenableio-docker-consec-local.jfrog.io/cs-scanner:latest inspect-image mass-pfml-api:$DOCKER_TAG
+  scan-api-container:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: build API image
+        run: make api-image-build
+
+      - name: pull latest tenable image
+        env:
+          DOCKER_PW: ${{ secrets.PFML_TENABLE_DOCKER_PASSWORD }}
+          DOCKER_USER: ${{ secrets.PFML_TENABLE_DOCKER_USER }}
+        run: |
+          echo "$DOCKER_PW" | docker login --username "$DOCKER_USER" --password-stdin tenableio-docker-consec-local.jfrog.io
+          docker pull tenableio-docker-consec-local.jfrog.io/cs-scanner:latest
+
+      - name: run tenable scan on API image
+        env:
+          TENABLE_ACCESS_KEY: ${{ secrets.TENABLE_ACCESS_KEY }}
+          TENABLE_SECRET_KEY: ${{ secrets.TENABLE_SECRET_KEY }}
+        run: |
+          DOCKER_TAG=$(docker images | grep mass-pfml-api | grep -v latest | awk '{print $2}')
+          docker save mass-pfml-api:$DOCKER_TAG | docker run \
+          --env TENABLE_ACCESS_KEY=$TENABLE_ACCESS_KEY \
+          --env TENABLE_SECRET_KEY=$TENABLE_SECRET_KEY \
+          --env IMPORT_REPO_NAME=mass-pfml-api \
+          --env CHECK_POLICY=true \
+          --interactive tenableio-docker-consec-local.jfrog.io/cs-scanner:latest inspect-image mass-pfml-api:$DOCKER_TAG
+
+  scan-pdf-api-container:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: build PDF API image
+        run: make -f ../api/Makefile pdf-api-image-build
+        working-directory: ./pdf_api
+
+      - name: pull latest tenable image
+        env:
+          DOCKER_PW: ${{ secrets.PFML_TENABLE_DOCKER_PASSWORD }}
+          DOCKER_USER: ${{ secrets.PFML_TENABLE_DOCKER_USER }}
+        run: |
+          echo "$DOCKER_PW" | docker login --username "$DOCKER_USER" --password-stdin tenableio-docker-consec-local.jfrog.io
+          docker pull tenableio-docker-consec-local.jfrog.io/cs-scanner:latest
+
+      - name: run tenable scan on PDF API image
+        env:
+          TENABLE_ACCESS_KEY: ${{ secrets.TENABLE_ACCESS_KEY }}
+          TENABLE_SECRET_KEY: ${{ secrets.TENABLE_SECRET_KEY }}
+        run: |
+          DOCKER_TAG=$(docker images | grep mass-pfml-api-pdf | grep -v latest | awk '{print $2}')
+          docker save mass-pfml-api-pdf:$DOCKER_TAG | docker run \
+          --env TENABLE_ACCESS_KEY=$TENABLE_ACCESS_KEY \
+          --env TENABLE_SECRET_KEY=$TENABLE_SECRET_KEY \
+          --env IMPORT_REPO_NAME=mass-pfml-api-pdf \
+          --env CHECK_POLICY=true \
+          --interactive tenableio-docker-consec-local.jfrog.io/cs-scanner:latest inspect-image mass-pfml-api-pdf:$DOCKER_TAG
 
   # Run Terriyay
   get-test-state:
@@ -169,8 +198,9 @@ jobs:
         id: test-state
         run: echo "::set-output name=test-state::${{ env.WORKFLOW_CONCLUSION }}"
 
-  post-to-slack:
-    name: post failures to slack
+  # Run Terriyay
+  post-to-teams:
+    name: post failures to teams
     needs: [get-test-state]
     if: always() && (needs.get-test-state.outputs.test-state == 'failure' || needs.get-test-state.outputs.test-state == 'timed_out')
     runs-on: ubuntu-latest
@@ -186,21 +216,22 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
-      - name: Pull slackbot API token from SSM
+      - name: Pull teams uri from SSM
         uses: "marvinpinto/action-inject-ssm-secrets@latest"
         with:
-          ssm_parameter: "/admin/common/nava-slackbot-api-key"
-          env_variable_name: "slackbot_token"
+          ssm_parameter: "/admin/common/teams-deploy-uri"
+          env_variable_name: "teams_uri"
 
-      - name: Post to Slack
+      - name: Post to Teams
         run: |
-          SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
-          -H 'Content-Type: application/json;charset=utf-8' \
+          RESPONSE=$(curl -fsLS -X POST ${{ env.TEAMS_URI }} \
+          --header 'Content-Type: application/json' \
           --data '{
-            "channel": "${{ env.deploys_channel }}",
-            "attachments": [{
-              "title": "API tests failed in main (<${{ env.workflow_self_link }}|build logs>)",
-              "color": "danger"
-            }]
-          }' https://slack.com/api/chat.postMessage)
-
+            "@type": "MessageCard",
+            "themeColor": "FF0000",
+            "title": "API tests failed",
+            "text": "API tests failed in main ${{ env.workflow_self_link }}",
+            "sections": [{
+                "activityImage":"https://th.bing.com/th/id/R.ee8882f44294e8a6f1732a54343ff17e?rik=FAYIPD4sACftKw&riu=http%3a%2f%2f3.bp.blogspot.com%2f-u6MZBWbGcZI%2fUT4mft01YTI%2fAAAAAAAADpU%2fJubGsyGdL00%2fs1600%2ffailure.png&ehk=ranH%2bkeeo59wsILuyxVyNTIR2oUECprijedE01jHq34%3d&risl=&pid=ImgRaw&r=0"
+            }]'
+          )

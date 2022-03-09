@@ -5,14 +5,6 @@ import DOR from "../generation/writers/DOR";
 import EmployeeIndex from "../generation/writers/EmployeeIndex";
 import EmployerIndex from "../generation/writers/EmployerIndex";
 import { format } from "date-fns";
-import { transform } from "streaming-iterables";
-import InfraClient from "../InfraClient";
-import { factory as configFactory } from "../config";
-import { Environment } from "../types";
-import AuthManager from "../submission/AuthenticationManager";
-import { getLeaveAdminCredentials } from "../util/credentials";
-import { endOfQuarter, formatISO, subQuarters } from "date-fns";
-import chalk from "chalk";
 
 (async () => {
   const date = format(new Date(), "yyyy-MM-dd");
@@ -75,65 +67,6 @@ import chalk from "chalk";
   // Additionally save the JSON files to the employers/employees directory at the top level.
   await employeePool.save(`employees/e2e-${date}.json`);
   await employerPool.save(`employers/e2e-${date}.json`);
-
-  const envs: Environment[] = [
-    "test",
-    "stage",
-    "training",
-    "performance",
-    "uat",
-    "cps-preview",
-  ];
-
-  const DORUploadRequest = transform(envs.length, async (env: Environment) => {
-    // Important - because we need to fetch configuration for the environment we're importing into,
-    // we use configFactory() to generate a new config() function specific to the environment. If we
-    // use our normal config() here, it will only return settings for the environment we're currently
-    // looking at.
-    const envConfig = configFactory(env).get;
-    const infra = InfraClient.create(envConfig);
-    try {
-      await infra.uploadDORFiles([
-        storage.dorFile("DORDFMLEMP"),
-        storage.dorFile("DORDFML"),
-      ]);
-      await infra.runDorEtl();
-    } catch (e) {
-      console.log(`${env.toUpperCase()} - failed to load EE's/ER's`);
-      console.error(e);
-    }
-    const authManager = AuthManager.create(envConfig);
-
-    const leaveAdminVerifications = transform(3, async (employer: Employer) => {
-      try {
-        if (employer.withholdings.some((val) => val === 0)) return;
-        const quarter = formatISO(endOfQuarter(subQuarters(new Date(), 1)), {
-          representation: "date",
-        });
-        const { username, password } = getLeaveAdminCredentials(employer.fein);
-        await authManager.registerLeaveAdmin(username, password, employer.fein);
-        console.log(
-          `${chalk.blue(env.toUpperCase())} -  ${username} registered`
-        );
-        await authManager.verifyLeaveAdmin(
-          username,
-          password,
-          employer.withholdings.pop() as number,
-          quarter
-        );
-        console.log(`${chalk.blue(env.toUpperCase())} -  ${username} verified`);
-      } catch (e) {
-        console.error(
-          `${env.toUpperCase()} - Failed to register and verify employer ${
-            employer.fein
-          }\n${e.message}`
-        );
-      }
-    });
-    for await (const _ of leaveAdminVerifications([...employerPool])) continue;
-  });
-
-  for await (const _ of DORUploadRequest(envs)) continue;
 })().catch((e) => {
   console.error(e);
   process.exit(1);

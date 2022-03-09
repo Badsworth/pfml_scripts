@@ -22,6 +22,7 @@ from massgov.pfml.db.models.employees import (
     State,
 )
 from massgov.pfml.db.models.factories import (
+    AbsencePeriodFactory,
     AddressFactory,
     ClaimFactory,
     EmployeeFactory,
@@ -29,18 +30,24 @@ from massgov.pfml.db.models.factories import (
     EmployerFactory,
     ExperianAddressPairFactory,
     ImportLogFactory,
+    OrganizationUnitFactory,
     PaymentFactory,
     PubEftFactory,
     TaxIdentifierFactory,
 )
-from massgov.pfml.db.models.payments import FineosWritebackDetails
 from massgov.pfml.delegated_payments.mock.mock_util import MockData, generate_routing_nbr_from_ssn
-from massgov.pfml.types import TaxId
+from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
+    stage_payment_fineos_writeback,
+)
 
 fake = faker.Faker()
 fake.seed_instance(2394)
 
 KWARG_VALUE_NOT_SET = "KWARG_VALUE_NOT_SET"
+
+
+def random_unique_int(min=1, max=999_999_999):
+    return fake.unique.random_int(min=min, max=max)
 
 
 # TODO consider adding the following
@@ -65,6 +72,7 @@ class DelegatedPaymentFactory(MockData):
         add_pub_eft: bool = True,
         add_payment: bool = True,
         add_import_log: bool = True,
+        add_single_absence_period: bool = False,
         **kwargs: Any,
     ):
         super().__init__(generate_defaults, **kwargs)
@@ -86,6 +94,7 @@ class DelegatedPaymentFactory(MockData):
         self.add_pub_eft = add_pub_eft
         self.add_payment = add_payment
         self.add_import_log = add_import_log
+        self.add_single_absence_period = add_single_absence_period
 
         # employee
         self.fineos_customer_number = self.get_value("fineos_customer_number", None)
@@ -97,7 +106,7 @@ class DelegatedPaymentFactory(MockData):
             "fineos_employee_first_name", KWARG_VALUE_NOT_SET
         )
         self.set_optional_kwargs(
-            self.employee_optional_kwargs, "fineos_employee_first_name", fineos_employee_first_name,
+            self.employee_optional_kwargs, "fineos_employee_first_name", fineos_employee_first_name
         )
 
         fineos_employee_last_name = self.get_value("fineos_employee_last_name", KWARG_VALUE_NOT_SET)
@@ -105,10 +114,17 @@ class DelegatedPaymentFactory(MockData):
             self.employee_optional_kwargs, "fineos_employee_last_name", fineos_employee_last_name
         )
 
-        # pub eft defaults
-        self.ssn = TaxId(
-            self.get_value("ssn", str(fake.unique.random_int(min=100_000_000, max=200_000_000)))
+        # employer
+        self.employer_customer_num = self.get_value(
+            "employer_customer_num", str(fake.unique.random_int(min=1, max=1_000_000))
         )
+        self.employer_exempt_family = self.get_value("employer_exempt_family", False)
+        self.employer_exempt_medical = self.get_value("employer_exempt_medical", False)
+        self.employer_exempt_commence_date = self.get_value("employer_exempt_commence_date", None)
+        self.employer_exempt_cease_date = self.get_value("employer_exempt_cease_date", None)
+
+        # pub eft defaults
+        self.ssn = self.get_value("ssn", str(random_unique_int(min=100_000_000, max=200_000_000)))
         self.pub_individual_id = self.get_value("pub_individual_id", None)
         self.prenote_state = self.get_value("prenote_state", PrenoteState.PENDING_WITH_PUB)
         self.routing_nbr = self.get_value(
@@ -120,9 +136,22 @@ class DelegatedPaymentFactory(MockData):
 
         # claim defaults
         self.claim_type = self.get_value("claim_type", ClaimType.FAMILY_LEAVE)
-        self.fineos_absence_id = self.get_value("fineos_absence_id", str(fake.unique.random_int()))
+        self.fineos_absence_id = self.get_value(
+            "fineos_absence_id", f"NTN-{random_unique_int()}-ABS-01"
+        )
         self.is_id_proofed = self.get_value("is_id_proofed", True)
         self.fineos_absence_status_id = self.get_value("fineos_absence_status_id", None)
+        self.absence_period_start_date = self.get_value(
+            "absence_period_start_date", date(2021, 1, 7)
+        )
+        self.absence_period_end_date = self.get_value("absence_period_end_date", None)
+        self.organization_unit_name = self.get_value("organization_unit_name", None)
+        self.organization_unit = self.get_value("organization_unit", None)
+
+        # Absence period defaults
+        self.fineos_leave_request_id = self.get_value(
+            "fineos_leave_request_id", random_unique_int()
+        )
 
         # payment defaults
         self.payment_optional_kwargs: Dict[str, Any] = (
@@ -158,6 +187,9 @@ class DelegatedPaymentFactory(MockData):
         )
         self.exclude_from_payment_status = self.get_value("exclude_from_payment_status", None)
 
+        # Only set this for legacy payments
+        self.disb_check_eft_issue_date = self.get_value("disb_check_eft_issue_date", None)
+
     # only set if value was passed in constructor through kwarg
     # else defer to lazy factory initialization
     def set_optional_kwargs(self, kwargs_map, key, value):
@@ -179,11 +211,28 @@ class DelegatedPaymentFactory(MockData):
             )
 
             if self.add_address:
-                self.employee.addresses = [
+                self.employee.employee_addresses = [
                     EmployeeAddress(employee=self.employee, address=self.get_or_create_address())
                 ]
 
         return self.employee
+
+    def get_or_create_employer(self):
+        if self.employer is None and self.add_employer:
+            self.employer = EmployerFactory.create(
+                fineos_employer_id=self.employer_customer_num,
+                family_exemption=self.employer_exempt_family,
+                medical_exemption=self.employer_exempt_medical,
+                exemption_commence_date=self.employer_exempt_commence_date,
+                exemption_cease_date=self.employer_exempt_cease_date,
+            )
+            # Only adds organization unit if there is an employer on this claim
+            if self.organization_unit_name is not None:
+                self.organization_unit = OrganizationUnitFactory.create(
+                    name=self.organization_unit_name, employer=self.employer
+                )
+
+        return self.employer
 
     def get_or_create_pub_eft(self):
         if not self.add_pub_eft or self.pub_eft is not None:
@@ -228,8 +277,7 @@ class DelegatedPaymentFactory(MockData):
     def get_or_create_claim(self):
         self.get_or_create_employee()
 
-        if self.employer is None and self.add_employer:
-            self.employer = EmployerFactory.create()
+        self.get_or_create_employer()
 
         if self.claim is None and self.add_claim:
             self.claim = ClaimFactory.create(
@@ -240,7 +288,14 @@ class DelegatedPaymentFactory(MockData):
                 is_id_proofed=self.is_id_proofed,
                 employee_id=self.employee.employee_id if self.employee else None,
                 fineos_absence_status_id=self.fineos_absence_status_id,
+                absence_period_start_date=self.absence_period_start_date,
+                absence_period_end_date=self.absence_period_end_date,
+                organization_unit=self.organization_unit,
             )
+
+        # Will add an absence period with length equal to claim
+        if self.add_single_absence_period:
+            self.create_absence_period()
 
         return self.claim
 
@@ -281,11 +336,21 @@ class DelegatedPaymentFactory(MockData):
                 "fineos_extraction_date": self.fineos_extraction_date,
                 "fineos_extract_import_log_id": self.fineos_extract_import_log_id,
                 "exclude_from_payment_status": self.exclude_from_payment_status,
+                "disb_check_eft_issue_date": self.disb_check_eft_issue_date,
+                "fineos_leave_request_id": self.fineos_leave_request_id,
             }
             | self.payment_optional_kwargs
             | overrides
         )
         return PaymentFactory.create(**args)
+
+    def _create_state_call(self, payment, payment_end_state):
+        state_log_util.create_finished_state_log(
+            payment,
+            payment_end_state,
+            state_log_util.build_outcome(self.payment_end_state_message),
+            self.db_session,
+        )
 
     def get_or_create_payment(self):
         if self.payment or not self.add_payment:
@@ -293,6 +358,8 @@ class DelegatedPaymentFactory(MockData):
 
         self.get_or_create_import_log()
         self.get_or_create_claim()
+
+        self.get_or_create_import_log()
 
         if self.add_address and self.experian_address_pair is None:
             self.experian_address_pair = ExperianAddressPairFactory.create(
@@ -307,31 +374,47 @@ class DelegatedPaymentFactory(MockData):
         self.get_or_create_payment()
 
         if self.payment and payment_end_state:
-            state_log_util.create_finished_state_log(
-                self.payment,
-                payment_end_state,
-                state_log_util.build_outcome(self.payment_end_state_message),
-                self.db_session,
-            )
+            self._create_state_call(self.payment, payment_end_state)
 
         return self.payment
 
-    def get_or_create_payment_with_writeback(self, writeback_transaction_status):
-        self.get_or_create_payment_with_state(State.DELEGATED_ADD_TO_FINEOS_WRITEBACK)
+    def get_or_create_payment_with_writeback(
+        self, writeback_transaction_status, writeback_sent_at=None
+    ):
+        self.get_or_create_payment()
 
         if self.payment and writeback_transaction_status:
-            writeback_details = FineosWritebackDetails(
+            writeback_details = stage_payment_fineos_writeback(
                 payment=self.payment,
-                transaction_status_id=writeback_transaction_status.transaction_status_id,
+                writeback_transaction_status=writeback_transaction_status,
+                db_session=self.db_session,
             )
-            self.db_session.add(writeback_details)
+            if writeback_sent_at:
+                # Move the state
+                state_log_util.create_finished_state_log(
+                    associated_model=self.payment,
+                    end_state=State.DELEGATED_FINEOS_WRITEBACK_SENT,
+                    outcome=state_log_util.build_outcome("Fake writeback send"),
+                    db_session=self.db_session,
+                )
+                # Set the end time
+                writeback_details.writeback_sent_at = writeback_sent_at
+
             return writeback_details
 
     def create_related_payment(
-        self, weeks_later=0, amount=None, payment_transaction_type_id=None, import_log_id=None
+        self,
+        weeks_later=0,
+        amount=None,
+        payment_transaction_type_id=None,
+        import_log_id=None,
+        payment_end_state=None,
+        writeback_transaction_status=None,
+        fineos_extraction_date=None,
+        writeback_sent_at=None,
     ):
-        """ Roughly mimic creating another payment. Uses the original payment as a base
-            with only the specified values + C/I values updated.
+        """Roughly mimic creating another payment. Uses the original payment as a base
+        with only the specified values + C/I values updated.
         """
         self.get_or_create_payment()
 
@@ -341,6 +424,9 @@ class DelegatedPaymentFactory(MockData):
             params = {
                 "period_start_date": self.payment.period_start_date + delta,  # type: ignore
                 "period_end_date": self.payment.period_end_date + delta,  # type: ignore
+                "fineos_extraction_date": fineos_extraction_date
+                if fineos_extraction_date
+                else self.fineos_extraction_date,
                 "amount": amount if amount is not None else self.payment.amount,
                 "payment_transaction_type_id": payment_transaction_type_id
                 if payment_transaction_type_id is not None
@@ -350,11 +436,33 @@ class DelegatedPaymentFactory(MockData):
                 else self.payment.fineos_extract_import_log_id,
             }
 
-            return self._payment_factory_call(**params)
+            new_payment = self._payment_factory_call(**params)
+            if payment_end_state:
+                self._create_state_call(new_payment, payment_end_state)
+
+            if writeback_transaction_status:
+                writeback_details = stage_payment_fineos_writeback(
+                    payment=new_payment,
+                    writeback_transaction_status=writeback_transaction_status,
+                    db_session=self.db_session,
+                )
+                if writeback_sent_at:
+                    # Move the state
+                    state_log_util.create_finished_state_log(
+                        associated_model=new_payment,
+                        end_state=State.DELEGATED_FINEOS_WRITEBACK_SENT,
+                        outcome=state_log_util.build_outcome("Fake writeback send"),
+                        db_session=self.db_session,
+                    )
+                    # Set the end time
+                    writeback_details.writeback_sent_at = writeback_sent_at
+            return new_payment
 
         return None
 
-    def create_cancellation_payment(self, reissuing_payment=None, import_log=None):
+    def create_cancellation_payment(
+        self, reissuing_payment=None, import_log=None, weeks_later=0, fineos_extraction_date=None
+    ):
         self.get_or_create_payment()
 
         payment_to_reissue = reissuing_payment if reissuing_payment is not None else self.payment
@@ -363,14 +471,24 @@ class DelegatedPaymentFactory(MockData):
             import_log = ImportLogFactory.create()
 
         return self.create_related_payment(
+            weeks_later=weeks_later,
             amount=-payment_to_reissue.amount,
             payment_transaction_type_id=PaymentTransactionType.CANCELLATION.payment_transaction_type_id,
             import_log_id=import_log.import_log_id,
+            fineos_extraction_date=fineos_extraction_date,
         )
 
-    def create_reissued_payments(self, reissuing_payment=None, amount=None, import_log=None):
-        """ Create reissued equivalent payments.
-            This will return a cancellation + new payment both with a new import log ID
+    def create_reissued_payments(
+        self,
+        reissuing_payment=None,
+        amount=None,
+        import_log=None,
+        payment_end_state=None,
+        writeback_transaction_status=None,
+        writeback_sent_at=None,
+    ):
+        """Create reissued equivalent payments.
+        This will return a cancellation + new payment both with a new import log ID
         """
         self.get_or_create_payment()
 
@@ -385,9 +503,32 @@ class DelegatedPaymentFactory(MockData):
         successor_payment = self.create_related_payment(
             amount=amount if amount is not None else payment_to_reissue.amount,
             import_log_id=import_log.import_log_id,
+            payment_end_state=payment_end_state,
+            writeback_transaction_status=writeback_transaction_status,
+            writeback_sent_at=writeback_sent_at,
         )
 
         return cancellation_payment, successor_payment
+
+    def create_absence_period(self, **kwargs):
+        claim = self.claim
+
+        if claim:
+            # Below are default params that can be overriden
+            # by the kwargs. Default is to make an absence period
+            # that matches the claim for similar fields
+            params = {
+                "claim": claim,
+                "fineos_leave_request_id": self.fineos_leave_request_id,
+                "absence_period_start_date": claim.absence_period_start_date,
+                "absence_period_end_date": claim.absence_period_end_date,
+                "is_id_proofed": claim.is_id_proofed,
+                "fineos_absence_period_class_id": random_unique_int(),
+                "fineos_absence_period_index_id": random_unique_int(),
+            } | kwargs
+
+            return AbsencePeriodFactory.create(**params)
+        return None
 
     def create_all(self):
         if self.add_pub_eft:
@@ -400,3 +541,6 @@ class DelegatedPaymentFactory(MockData):
             self.get_or_create_claim()
         elif self.add_employee:
             self.get_or_create_employee()
+
+        if self.add_employer:
+            self.get_or_create_employer()

@@ -1,4 +1,15 @@
+import { ValuesOf } from "../../types/common";
+
 /* eslint sort-keys: ["error", "asc"] */
+export const PhoneType = {
+  cell: "Cell",
+  phone: "Phone",
+} as const;
+
+export const MFAPreference = {
+  optOut: "Opt Out",
+  sms: "SMS",
+} as const;
 
 class User {
   auth_id: string;
@@ -6,7 +17,14 @@ class User {
   email_address: string;
   roles: UserRole[] = [];
   user_id: string;
-  mfa_phone_number: string | null = null;
+  mfa_phone_number: {
+    int_code: string | null;
+    phone_number: string | null;
+    phone_type: ValuesOf<typeof PhoneType> | null;
+  } | null = null;
+
+  mfa_delivery_preference: ValuesOf<typeof MFAPreference> | null = null;
+
   user_leave_administrators: UserLeaveAdministrator[] = [];
 
   constructor(attrs: Partial<User>) {
@@ -63,7 +81,7 @@ class User {
 }
 
 export class UserRole {
-  role_description: typeof RoleDescription[keyof typeof RoleDescription];
+  role_description: ValuesOf<typeof RoleDescription>;
   role_id: number;
 
   constructor(attrs: Partial<UserRole>) {
@@ -81,7 +99,7 @@ export const RoleDescription = {
 } as const;
 
 export class UserLeaveAdministrator {
-  employer_dba: string;
+  employer_dba: string | null;
   employer_fein: string;
   employer_id: string;
   has_fineos_registration: boolean;

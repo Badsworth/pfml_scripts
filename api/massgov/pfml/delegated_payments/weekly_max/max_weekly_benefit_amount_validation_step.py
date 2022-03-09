@@ -5,12 +5,15 @@ import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import State
-from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
+from massgov.pfml.db.models.payments import FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_util import (
     PaymentContainer,
     make_payment_log,
 )
 from massgov.pfml.delegated_payments.step import Step
+from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
+    create_payment_finished_state_log_with_writeback,
+)
 from massgov.pfml.delegated_payments.weekly_max.max_weekly_benefit_amount_util import (
     MaxWeeklyBenefitAmountMetrics,
 )
@@ -90,7 +93,9 @@ class MaxWeeklyBenefitAmountValidationStep(Step):
                 logger.info(
                     "Payment %s failed max weekly benefits amount validation rule, adding to error log",
                     make_payment_log(payment_container.payment),
-                    extra=payment_container.get_traceable_details(),
+                    extra=payment_container.get_traceable_details(
+                        state=State.PAYMENT_FAILED_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION
+                    ),
                 )
 
                 additional_outcome_details = {}
@@ -99,34 +104,20 @@ class MaxWeeklyBenefitAmountValidationStep(Step):
                         "maximum_weekly_details"
                     ] = maximum_weekly_full_details_msg
 
-                writeback_details = FineosWritebackDetails(
-                    payment=payment_container.payment,
-                    transaction_status_id=FineosWritebackTransactionStatus.WEEKLY_BENEFITS_AMOUNT_EXCEEDS_850.transaction_status_id,
-                    import_log_id=self.get_import_log_id(),
-                )
-                self.db_session.add(writeback_details)
-                # Create the writeback state
-                state_log_util.create_finished_state_log(
-                    end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
-                    outcome=state_log_util.build_outcome(
-                        maximum_weekly_audit_msg,
-                        validation_container=None,
-                        **additional_outcome_details,
-                    ),
-                    associated_model=payment_container.payment,
-                    db_session=self.db_session,
+                outcome = state_log_util.build_outcome(
+                    maximum_weekly_audit_msg,
+                    validation_container=None,
+                    **additional_outcome_details,
                 )
 
-                # Create the error state
-                state_log_util.create_finished_state_log(
-                    end_state=State.PAYMENT_FAILED_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION,
-                    outcome=state_log_util.build_outcome(
-                        maximum_weekly_audit_msg,
-                        validation_container=None,
-                        **additional_outcome_details,
-                    ),
-                    associated_model=payment_container.payment,
+                create_payment_finished_state_log_with_writeback(
+                    payment=payment_container.payment,
+                    payment_end_state=State.PAYMENT_FAILED_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION,
+                    payment_outcome=outcome,
+                    writeback_transaction_status=FineosWritebackTransactionStatus.WEEKLY_BENEFITS_AMOUNT_EXCEEDS_850,
+                    writeback_outcome=outcome,
                     db_session=self.db_session,
+                    import_log_id=self.get_import_log_id(),
                 )
 
             else:
@@ -135,13 +126,15 @@ class MaxWeeklyBenefitAmountValidationStep(Step):
                 logger.info(
                     "Payment %s passed max weekly benefit amount validation rules",
                     make_payment_log(payment_container.payment),
-                    extra=payment_container.get_traceable_details(),
+                    extra=payment_container.get_traceable_details(
+                        state=State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK
+                    ),
                 )
 
                 state_log_util.create_finished_state_log(
                     end_state=State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK,
                     outcome=state_log_util.build_outcome(
-                        "Completed max weekly benefit amount validation", validation_container=None,
+                        "Completed max weekly benefit amount validation", validation_container=None
                     ),
                     associated_model=payment_container.payment,
                     db_session=self.db_session,

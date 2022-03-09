@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 import pytest
+from dateutil.relativedelta import relativedelta
 
 from massgov.pfml.api.validation.employer_rules import (
     EmployerRequiresVerificationDataException,
@@ -46,7 +47,7 @@ class TestEmployerAddFeinIssue:
     def test_employer_verification_data_too_far_in_past(
         self, initialize_factories_session, employer_with_fineos_id
     ):
-        filing_period = datetime.now() - timedelta(days=-400)
+        filing_period = datetime.now() - relativedelta(years=2)
         EmployerQuarterlyContributionFactory.create(
             employer=employer_with_fineos_id, filing_period=filing_period
         )
@@ -70,16 +71,9 @@ class TestEmployerAddFeinIssue:
             employer=employer_with_fineos_id, filing_period=filing_period
         )
 
-        with pytest.raises(EmployerRequiresVerificationDataException) as exc:
-            validate_employer_being_added(employer_with_fineos_id)
+        issue = validate_employer_being_added(employer_with_fineos_id)
 
-            assert exc.value.errors == [
-                ValidationErrorDetail(
-                    type=IssueType.employer_requires_verification_data,
-                    message="Employer has no verification data",
-                    field="employer_fein",
-                )
-            ]
+        assert issue is None
 
     def test_employer_does_not_exist(self):
         with pytest.raises(ValidationException) as exc:
@@ -87,7 +81,7 @@ class TestEmployerAddFeinIssue:
 
             assert exc.value.errors == [
                 ValidationErrorDetail(
-                    type=IssueType.require_employer, message="Invalid FEIN", field="employer_fein",
+                    type=IssueType.require_employer, message="Invalid FEIN", field="employer_fein"
                 )
             ]
 

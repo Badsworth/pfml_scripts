@@ -6,6 +6,7 @@ import botocore.exceptions
 import faker
 import pytest
 from dateutil.relativedelta import relativedelta
+from freezegun.api import freeze_time
 
 import tests.api
 from massgov.pfml.cognito.exceptions import CognitoUserExistsValidationError
@@ -53,7 +54,7 @@ def test_users_post_claimant(
     valid_claimant_creation_request_body,
 ):
     email_address = valid_claimant_creation_request_body.get("email_address")
-    response = client.post("/v1/users", json=valid_claimant_creation_request_body,)
+    response = client.post("/v1/users", json=valid_claimant_creation_request_body)
     response_body = response.get_json()
 
     # Response includes the user data
@@ -63,9 +64,10 @@ def test_users_post_claimant(
     # User added to DB
     user = test_db_session.query(User).filter(User.email_address == email_address).one_or_none()
     assert user.sub_id is not None
+    assert user.is_worker_user is True
 
     # User added to user pool
-    cognito_users = mock_cognito.list_users(UserPoolId=mock_cognito_user_pool["id"],)
+    cognito_users = mock_cognito.list_users(UserPoolId=mock_cognito_user_pool["id"])
     assert cognito_users["Users"][0]["Username"] == email_address
 
 
@@ -81,7 +83,7 @@ def test_users_post_employer(
     employer_fein = valid_employer_creation_request_body.get("user_leave_administrator").get(
         "employer_fein"
     )
-    response = client.post("/v1/users", json=valid_employer_creation_request_body,)
+    response = client.post("/v1/users", json=valid_employer_creation_request_body)
     response_body = response.get_json()
     response_user = response_body.get("data")
 
@@ -95,6 +97,7 @@ def test_users_post_employer(
     # User added to DB
     user = test_db_session.query(User).filter(User.email_address == email_address).one_or_none()
     assert user.sub_id is not None
+    assert user.is_worker_user is False
 
     # Employer records added to DB
     assert len(user.roles) == 1
@@ -103,7 +106,7 @@ def test_users_post_employer(
     assert user.user_leave_administrators[0].employer_id == employer_for_new_user.employer_id
 
     # User added to user pool
-    cognito_users = mock_cognito.list_users(UserPoolId=mock_cognito_user_pool["id"],)
+    cognito_users = mock_cognito.list_users(UserPoolId=mock_cognito_user_pool["id"])
     assert cognito_users["Users"][0]["Username"] == email_address
 
 
@@ -116,15 +119,12 @@ def test_users_post_openapi_validation(
     body["role"]["role_description"] = "Dog"
     body["user_leave_administrator"]["employer_fein"] = "123123123"  # missing dash
 
-    response = client.post("/v1/users", json=body,)
+    response = client.post("/v1/users", json=body)
     errors = response.get_json().get("errors")
-
-    assert {
-        "field": "email_address",
-        "message": "'not-a-valid-email' is not a 'email'",
-        "rule": "email",
-        "type": "format",
-    } in errors
+    assert (
+        len([err for err in errors if err["type"] == "format" and err["field"] == "email_address"])
+        > 0
+    )
     assert {
         "field": "role.role_description",
         "message": "'Dog' is not one of ['Claimant', 'Employer']",
@@ -147,7 +147,7 @@ def test_users_post_custom_validations(
     body["email_address"] = None
     body["password"] = None
 
-    response = client.post("/v1/users", json=body,)
+    response = client.post("/v1/users", json=body)
     errors = response.get_json().get("errors")
 
     assert {
@@ -155,9 +155,26 @@ def test_users_post_custom_validations(
         "message": "email_address is required",
         "type": "required",
     } in errors
-    assert {"field": "password", "message": "password is required", "type": "required",} in errors
+    assert {"field": "password", "message": "password is required", "type": "required"} in errors
 
     assert len(errors) == 2
+    assert response.status_code == 400
+
+
+def test_users_post_email_validation(
+    client, mock_cognito_user_pool, valid_claimant_creation_request_body
+):
+    body = valid_claimant_creation_request_body
+    body["email_address"] = "invalid@email"
+
+    response = client.post("/v1/users", json=body)
+    errors = response.get_json().get("errors")
+    assert (
+        len([err for err in errors if err["type"] == "format" and err["field"] == "email_address"])
+        > 0
+    )
+
+    assert len(errors) == 1
     assert response.status_code == 400
 
 
@@ -186,7 +203,7 @@ def test_users_post_cognito_user_error(
 
     monkeypatch.setattr(mock_cognito, "sign_up", sign_up)
 
-    response = client.post("/v1/users", json=body,)
+    response = client.post("/v1/users", json=body)
     errors = response.get_json().get("errors")
     user = (
         test_db_session.query(User)
@@ -218,7 +235,7 @@ def test_users_post_cognito_user_exists_error(
 
     monkeypatch.setattr(mock_cognito, "sign_up", sign_up)
 
-    response = client.post("/v1/users", json=valid_claimant_creation_request_body,)
+    response = client.post("/v1/users", json=valid_claimant_creation_request_body)
     errors = response.get_json().get("errors")
 
     assert {
@@ -229,19 +246,17 @@ def test_users_post_cognito_user_exists_error(
     assert response.status_code == 400
 
 
-def test_users_post_employer_required(
-    client, mock_cognito, test_db_session,
-):
+def test_users_post_employer_required(client, mock_cognito, test_db_session):
     # EIN with no Employer record in the DB
     ein = "12-3456789"
     body = {
         "email_address": fake.email(domain="example.com"),
         "password": fake.password(length=12),
         "role": {"role_description": "Employer"},
-        "user_leave_administrator": {"employer_fein": ein,},
+        "user_leave_administrator": {"employer_fein": ein},
     }
 
-    response = client.post("/v1/users", json=body,)
+    response = client.post("/v1/users", json=body)
     errors = response.get_json().get("errors")
 
     assert {
@@ -270,9 +285,7 @@ def test_users_get(client, employer_user, employer_auth_token, test_db_session):
 
     assert response.status_code == 200
     assert response_body.get("data")["user_id"] == str(employer_user.user_id)
-    assert response_body.get("data")["roles"] == [
-        {"role_description": "Employer", "role_id": 3},
-    ]
+    assert response_body.get("data")["roles"] == [{"role_description": "Employer", "role_id": 3}]
     assert response_body.get("data")["user_leave_administrators"] == [
         {
             "employer_dba": employer.employer_dba,
@@ -329,9 +342,7 @@ def test_users_get_current(client, employer_user, employer_auth_token, test_db_s
 
     assert response.status_code == 200
     assert response_body.get("data")["user_id"] == str(employer_user.user_id)
-    assert response_body.get("data")["roles"] == [
-        {"role_description": "Employer", "role_id": 3},
-    ]
+    assert response_body.get("data")["roles"] == [{"role_description": "Employer", "role_id": 3}]
     assert response_body.get("data")["user_leave_administrators"] == [
         {
             "employer_dba": employer.employer_dba,
@@ -342,6 +353,11 @@ def test_users_get_current(client, employer_user, employer_auth_token, test_db_s
             "has_verification_data": False,
         }
     ]
+
+
+def test_users_get_current_no_user_unauthorized(client):
+    response = client.get("/v1/users/current")
+    assert response.status_code == 401
 
 
 def test_users_get_current_with_query_count(
@@ -363,7 +379,7 @@ def test_users_get_current_with_query_count(
         )
         test_db_session.add(link)
     test_db_session.commit()
-    with sqlalchemy_query_counter(test_db_session, expected_query_count=7):
+    with sqlalchemy_query_counter(test_db_session, expected_query_count=8):
         response = client.get(
             "/v1/users/current", headers={"Authorization": f"Bearer {employer_auth_token}"}
         )
@@ -430,7 +446,7 @@ def test_users_convert_employer(client, user, employer_for_new_user, auth_token,
         }
     ]
     assert response_body.get("data")["roles"] == [
-        {"role_description": "Employer", "role_id": Role.EMPLOYER.role_id,}
+        {"role_description": "Employer", "role_id": Role.EMPLOYER.role_id}
     ]
 
     assert len(user.roles) == 1
@@ -538,6 +554,24 @@ def test_users_patch_fineos_forbidden(client, fineos_user, fineos_user_token):
     tests.api.validate_error_response(response, 403)
 
 
+def test_users_patch_mfa_phone_number_validation(client, user, auth_token):
+    body = {"mfa_phone_number": {}}
+
+    response = client.patch(
+        "/v1/users/{}".format(user.user_id),
+        json=body,
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    errors = response.get_json().get("errors")
+
+    assert {
+        "field": "mfa_phone_number.phone_number",
+        "message": "phone_number is required when mfa_phone_number is included in request",
+        "type": "required",
+    } in errors
+    assert response.status_code == 400
+
+
 def test_has_verification_data_flag(client, employer_user, employer_auth_token, test_db_session):
     employer = EmployerFactory.create()
     # yesterday = datetime.today() - relativedelta(days=1)
@@ -561,6 +595,38 @@ def test_has_verification_data_flag(client, employer_user, employer_auth_token, 
         {
             "employer_dba": employer.employer_dba,
             "employer_fein": employer.employer_fein.to_formatted_str(),
+            "employer_id": str(employer.employer_id),
+            "has_fineos_registration": True,
+            "verified": False,
+            "has_verification_data": True,
+        }
+    ]
+
+
+@freeze_time("2021-05-01")
+def test_has_verification_data_flag_future_data(
+    client, employer_user, employer_auth_token, test_db_session
+):
+    employer = EmployerFactory.create()
+    EmployerQuarterlyContributionFactory.create(employer=employer, filing_period="2021-06-01")
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    response = client.get(
+        "/v1/users/{}".format(employer_user.user_id),
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+    )
+    response_body = response.get_json()
+
+    assert response_body.get("data")["user_leave_administrators"] == [
+        {
+            "employer_dba": employer.employer_dba,
+            "employer_fein": employer.employer_fein.to_unformatted_str(),
             "employer_id": str(employer.employer_id),
             "has_fineos_registration": True,
             "verified": False,

@@ -1,18 +1,20 @@
-import ClaimDetail, { Payments } from "../models/ClaimDetail";
 import { ClaimWithdrawnError, ValidationError } from "../errors";
-import { AppErrorsLogic } from "./useAppErrorsLogic";
-import ClaimCollection from "../models/ClaimCollection";
-import ClaimsApi from "../api/ClaimsApi";
+import ClaimsApi, { GetClaimsParams } from "../api/ClaimsApi";
+import ApiResourceCollection from "../models/ApiResourceCollection";
+import Claim from "../models/Claim";
+import ClaimDetail from "../models/ClaimDetail";
+import { ErrorsLogic } from "./useErrorsLogic";
 import PaginationMeta from "../models/PaginationMeta";
+import { PortalFlow } from "./usePortalFlow";
 import { isEqual } from "lodash";
-import { isFeatureEnabled } from "../services/featureFlags";
 import useCollectionState from "./useCollectionState";
 import { useState } from "react";
 
 const useClaimsLogic = ({
-  appErrorsLogic,
+  errorsLogic,
 }: {
-  appErrorsLogic: AppErrorsLogic;
+  errorsLogic: ErrorsLogic;
+  portalFlow: PortalFlow;
 }) => {
   const claimsApi = new ClaimsApi();
 
@@ -20,7 +22,7 @@ const useClaimsLogic = ({
   // Initialized to empty collection, but will eventually store the claims
   // as API calls are made to fetch the user's claims
   const { collection: claims, setCollection: setClaims } = useCollectionState(
-    new ClaimCollection()
+    new ApiResourceCollection<Claim>("fineos_absence_id")
   );
   const [claimDetail, setClaimDetail] = useState<ClaimDetail>();
   const [isLoadingClaims, setIsLoadingClaims] = useState<boolean>();
@@ -31,26 +33,14 @@ const useClaimsLogic = ({
     PaginationMeta | { [key: string]: never }
   >({});
 
-  // Payments data associated with claim
-  const [loadedPaymentsData, setLoadedPaymentsData] = useState<Payments>();
-
-  /**
-   * Check if payments have loaded for claim
-   */
-  const hasLoadedPayments = (absenceId: string) =>
-    loadedPaymentsData?.absence_case_id === absenceId;
-
-  // Track the search and filter params currently applied for the collection of claims
-  const [activeFilters, setActiveFilters] = useState({});
-
-  // Track the order params currently applied for the collection of claims
-  const [activeOrder, setActiveOrder] = useState({});
+  // Track params currently applied for the collection of claims
+  const [activeParams, setActiveParams] = useState({});
 
   /**
    * Empty the claims collection so that it is fetched again from the API
    */
   const clearClaims = () => {
-    setClaims(new ClaimCollection());
+    setClaims(new ApiResourceCollection<Claim>("fineos_absence_id"));
     // Also clear any indication that a page is loaded, so our loadPage method
     // fetches the page from the API
     setPaginationMeta({});
@@ -58,49 +48,29 @@ const useClaimsLogic = ({
 
   /**
    * Load a page of claims for the authenticated user
-   * @param [pageOffset] - Page number to load
-   * @param [filters.claim_status] - Comma-separated list of statuses
    */
-  const loadPage = async (
-    pageOffset: number | string = 1,
-    order: {
-      order_by?: string;
-      order_direction?: "ascending" | "descending";
-    } = {},
-    filters: {
-      claim_status?: string;
-      employer_id?: string;
-      search?: string;
-    } = {}
-  ) => {
+  const loadPage = async (queryParams: GetClaimsParams = {}) => {
     if (isLoadingClaims) return;
 
     // Or have we already loaded this page with the same order and filter params?
     if (
-      paginationMeta.page_offset === Number(pageOffset) &&
-      isEqual(activeFilters, filters) &&
-      isEqual(activeOrder, order)
+      isEqual(activeParams, queryParams) &&
+      paginationMeta.page_offset === Number(queryParams.page_offset)
     ) {
       return;
     }
 
     setIsLoadingClaims(true);
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
-      const { claims, paginationMeta } = await claimsApi.getClaims(
-        pageOffset,
-        order,
-        filters
-      );
-
+      const { claims, paginationMeta } = await claimsApi.getClaims(queryParams);
       setClaims(claims);
-      setActiveFilters(filters);
-      setActiveOrder(order);
+      setActiveParams(queryParams);
       setPaginationMeta(paginationMeta);
       setIsLoadingClaims(false);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 
@@ -113,57 +83,31 @@ const useClaimsLogic = ({
   const loadClaimDetail = async (absenceId: string) => {
     if (isLoadingClaimDetail) return;
 
-    // Have we already loaded this claim?
-    if (claimDetail?.fineos_absence_id === absenceId) {
-      return claimDetail;
-    }
-
-    setIsLoadingClaimDetail(true);
-    appErrorsLogic.clearErrors();
-
-    let loadedClaimDetail;
-    try {
-      const data = await claimsApi.getClaimDetail(absenceId);
-      loadedClaimDetail = data.claimDetail;
-
-      if (
-        isFeatureEnabled("claimantShowPayments") &&
-        loadedClaimDetail.hasApprovedStatus
-      ) {
-        try {
-          const payments = await claimsApi.getPayments(absenceId);
-          loadedClaimDetail.payments = payments.payments;
-          setLoadedPaymentsData({
-            payments: loadedClaimDetail.payments,
-            absence_case_id: absenceId,
-          });
-        } catch (error) {
-          appErrorsLogic.catchError(error);
+    if (claimDetail?.fineos_absence_id !== absenceId) {
+      try {
+        setIsLoadingClaimDetail(true);
+        errorsLogic.clearErrors();
+        const data = await claimsApi.getClaimDetail(absenceId);
+        setClaimDetail(new ClaimDetail(data.claimDetail));
+      } catch (error) {
+        if (
+          error instanceof ValidationError &&
+          error.issues[0].type === "fineos_claim_withdrawn"
+        ) {
+          // The claim was withdrawn -- we'll need to show an error message to the user
+          errorsLogic.catchError(
+            new ClaimWithdrawnError(absenceId, error.issues[0])
+          );
+        } else {
+          errorsLogic.catchError(error);
         }
+      } finally {
+        setIsLoadingClaimDetail(false);
       }
-
-      setClaimDetail(loadedClaimDetail);
-    } catch (error) {
-      if (
-        error instanceof ValidationError &&
-        error.issues[0].type === "fineos_claim_withdrawn"
-      ) {
-        // The claim was withdrawn -- we'll need to show an error message to the user
-        appErrorsLogic.catchError(
-          new ClaimWithdrawnError(absenceId, error.issues[0])
-        );
-      } else {
-        appErrorsLogic.catchError(error);
-      }
-    } finally {
-      setIsLoadingClaimDetail(false);
     }
-
-    return loadedClaimDetail;
   };
 
   return {
-    activeFilters,
     claimDetail,
     claims,
     clearClaims,
@@ -172,7 +116,6 @@ const useClaimsLogic = ({
     loadClaimDetail,
     loadPage,
     paginationMeta,
-    hasLoadedPayments,
   };
 };
 

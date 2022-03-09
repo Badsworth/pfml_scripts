@@ -49,7 +49,9 @@ module "api" {
     "https://mo0nk02mkg.execute-api.us-east-1.amazonaws.com",
     "https://dist3ws941qq9.cloudfront.net",
     "https://paidleave-api-training.mass.gov",
-    "https://paidleave-training.mass.gov"
+    "https://paidleave-training.mass.gov",
+    # Allow requests from the Admin Portal
+    "https://paidleave-admin-training.dfml.eol.mass.gov",
   ]
 
   cognito_user_pool_arn                               = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/us-east-1_gHLjkp4A8"
@@ -70,10 +72,20 @@ module "api" {
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/TRN/dataexports"
   fineos_aws_iam_role_arn                             = null // TODO if needed
   fineos_aws_iam_role_external_id                     = null // TODO if needed
+  pfml_email_address                                  = "PFML_DoNotReply@eol.mass.gov"
+  bounce_forwarding_email_address                     = "PFML_DoNotReply@eol.mass.gov"
+  bounce_forwarding_email_address_arn                 = "arn:aws:ses:us-east-1:498823821309:identity/PFML_DoNotReply@eol.mass.gov"
   service_now_base_url                                = "https://savilinxtrain.servicenowservices.com"
+  admin_portal_base_url                               = "https://paidleave-admin-training.dfml.eol.mass.gov"
   portal_base_url                                     = "https://paidleave-training.mass.gov"
   enable_application_fraud_check                      = "0"
   release_version                                     = var.release_version
 
-  enable_pdf_document_compression = "0"
+  azure_ad_authority_domain = "login.microsoftonline.com"
+  azure_ad_client_id        = "ecc75e15-cd60-4e28-b62f-d1bf80e05d4d"
+  azure_ad_parent_group     = "TSS-SG-PFML_ADMIN_PORTAL_NON_PROD"
+  azure_ad_tenant_id        = "3e861d16-48b7-4a0e-9806-8c04d81b7b2a"
+
+  enable_application_import = "1"
+  enable_employee_endpoints = "1"
 }

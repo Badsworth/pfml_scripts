@@ -15,20 +15,18 @@ import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models import factories
 from massgov.pfml.db.models.employees import (
-    Flow,
     ImportLog,
     PaymentMethod,
     PaymentTransactionType,
     PrenoteState,
-    PubEft,
     PubError,
     PubErrorType,
     ReferenceFile,
     ReferenceFileType,
-    State,
 )
 from massgov.pfml.db.models.factories import PaymentFactory, PubEftFactory, ReferenceFileFactory
 from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
+from massgov.pfml.db.models.state import Flow, State
 from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 from massgov.pfml.delegated_payments.pub import process_nacha_return_step
 from massgov.pfml.delegated_payments.util.ach.reader import (
@@ -39,6 +37,12 @@ from massgov.pfml.delegated_payments.util.ach.reader import (
     TypeCode,
 )
 from massgov.pfml.util.batch.log import LogEntry
+from tests.delegated_payments.pub import (
+    assert_fineos_writeback_status,
+    assert_payment_state,
+    assert_pub_eft_prenote_state,
+    assert_pub_error,
+)
 
 # == Utils ==
 
@@ -150,17 +154,14 @@ def test_add_pub_error(
     )
 
     # error if log entry has not been set (i.e. process has not been run)
-    with pytest.raises(
-        Exception, match="object has no log entry set",
-    ):
+    with pytest.raises(Exception, match="object has no log entry set"):
         step.add_pub_error(PubErrorType.ACH_RETURN, "test", 2, "", 6)
 
     step.log_entry = LogEntry(test_db_session, "Test")
 
     # error if reference file has not been set (i.e. process has not been run)
     with pytest.raises(
-        AttributeError,
-        match="'ProcessNachaReturnFileStep' object has no attribute 'reference_file",
+        AttributeError, match="'ProcessNachaReturnFileStep' object has no attribute 'reference_file"
     ):
         step.add_pub_error(PubErrorType.ACH_RETURN, "test", 2, "", 6)
 
@@ -806,48 +807,4 @@ def test_process_nacha_return_file_step_full(
 
     assert pub_error_count[PubErrorType.ACH_SUCCESS_WITH_NOTIFICATION.pub_error_type_id] == (
         expected_metrics["payment_complete_with_change_count"]
-    )
-
-
-# == Assertion Helpers ==
-
-
-def assert_pub_error(db_session, pub_error_type, message):
-    pub_errors = db_session.query(PubError).all()
-    assert len(pub_errors) == 1
-
-    pub_error = pub_errors[0]
-    assert pub_error.pub_error_type_id == pub_error_type.pub_error_type_id
-    assert pub_error.message == message
-
-
-def assert_pub_eft_prenote_state(db_session, pub_eft_id, prenote_state):
-    assert (
-        db_session.query(PubEft)
-        .filter(
-            PubEft.pub_eft_id == pub_eft_id,
-            PubEft.prenote_state_id == prenote_state.prenote_state_id,
-        )
-        .one_or_none()
-    )
-
-
-def assert_payment_state(payment, flow, end_state, db_session):
-    state_log = massgov.pfml.api.util.state_log_util.get_latest_state_log_in_flow(
-        payment, flow, db_session
-    )
-
-    assert state_log
-    assert state_log.end_state_id == end_state.state_id
-
-
-def assert_fineos_writeback_status(payment, transaction_status, db_session):
-    assert (
-        db_session.query(FineosWritebackDetails)
-        .filter(
-            FineosWritebackDetails.payment_id == payment.payment_id,
-            FineosWritebackDetails.transaction_status_id
-            == transaction_status.transaction_status_id,
-        )
-        .one_or_none()
     )

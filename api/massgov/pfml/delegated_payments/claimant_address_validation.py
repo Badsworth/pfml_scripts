@@ -8,6 +8,7 @@ from sqlalchemy.sql.functions import func
 
 import massgov.pfml.delegated_payments.delegated_config as payments_config
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
+import massgov.pfml.delegated_payments.irs_1099.pfml_1099_util as pfml_1099_util
 import massgov.pfml.experian.address_validate_soap.client as soap_api
 import massgov.pfml.experian.address_validate_soap.models as sm
 import massgov.pfml.util.files as file_util
@@ -15,13 +16,16 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
     Address,
     AddressType,
+    Claim,
     Employee,
     ExperianAddressPair,
-    GeoState,
+    Payment,
     ReferenceFile,
     ReferenceFileType,
+    StateLog,
 )
-from massgov.pfml.db.models.payments import FineosExtractEmployeeFeed
+from massgov.pfml.db.models.geo import GeoState
+from massgov.pfml.db.models.payments import FineosExtractEmployeeFeed, MmarsPaymentData
 from massgov.pfml.delegated_payments.address_validation import _get_experian_soap_client
 from massgov.pfml.delegated_payments.step import Step
 from massgov.pfml.experian.address_validate_soap.layouts import Layout
@@ -61,6 +65,7 @@ class Constants:
     CLAIMANT_ADDRESS_VALIDATION_FILENAME_FORMAT = (
         f"%Y-%m-%d-%H-%M-%S-{CLAIMANT_ADDRESS_VALIDATION_FILENAME}"
     )
+
     CLAIMANT_ADDRESS_VALIDATION_FIELDS = [
         CUSTOMER_NUMBER,
         FIRST_NAME,
@@ -80,6 +85,9 @@ class Constants:
 
 
 class ClaimantAddressValidationStep(Step):
+
+    validation_container: payments_util.ValidationContainer
+
     class Metrics(str, enum.Enum):
         EXPERIAN_SEARCH_EXCEPTION_COUNT = "experian_search_exception_count"
         INVALID_EXPERIAN_FORMAT = "invalid_experian_format"
@@ -101,8 +109,54 @@ class ClaimantAddressValidationStep(Step):
     # Query the database table and get latest customer records
     def get_fineos_employee_feed(self) -> List[Any]:
         employee_feed_data = [Any]
+
+        year = pfml_1099_util.get_tax_year()
+
         try:
-            subquery = self.db_session.query(
+
+            # SELECT *
+            # FROM (
+            #   SELECT FINEOS_EXTRACT_EMPLOYEE_FEED.*,
+            #       RANK() OVER (
+            #           PARTITION BY FINEOS_EXTRACT_EMPLOYEE_FEED.CUSTOMERNO
+            #           ORDER BY FINEOS_EXTRACT_EMPLOYEE_FEED.FINEOS_EXTRACT_IMPORT_LOG_ID DESC,
+            #                   FINEOS_EXTRACT_EMPLOYEE_FEED.EFFECTIVEFROM DESC,
+            #                   FINEOS_EXTRACT_EMPLOYEE_FEED.EFFECTIVETO DESC,
+            #                   FINEOS_EXTRACT_EMPLOYEE_FEED.CREATED_AT DESC
+            #       ) AS R
+            # FROM FINEOS_EXTRACT_EMPLOYEE_FEED) AS EF
+            # INNER JOIN EMPLOYEE E ON E.FINEOS_CUSTOMER_NUMBER = EF.CUSTOMERNO
+            # WHERE EF.R = 1
+            # AND E.EMPLOYEE_ID IN (
+            #   SELECT E.EMPLOYEE_ID
+            #   FROM MMARS_PAYMENT_DATA MPD
+            #   INNER JOIN EMPLOYEE E ON MPD.VENDOR_CUSTOMER_CODE = E.CTR_VENDOR_CUSTOMER_CODE
+            #   UNION ALL
+            #   SELECT E.EMPLOYEE_ID
+            #   FROM EMPLOYEE E
+            #   INNER JOIN CLAIM CL ON CL.EMPLOYEE_ID = E.EMPLOYEE_ID
+            #   INNER JOIN PAYMENT P ON P.CLAIM_ID = CL.CLAIM_ID
+            #   INNER JOIN STATE_LOG SL ON P.PAYMENT_ID = SL.PAYMENT_ID
+            #   AND SL.END_STATE_ID IN (137, 139)
+            #   AND DATE_PART('YEAR', SL.ENDED_AT) = 2021)
+            mmars_employees = self.db_session.query(Employee.employee_id).join(
+                MmarsPaymentData,
+                Employee.ctr_vendor_customer_code == MmarsPaymentData.vendor_customer_code,
+            )
+            pub_employees = (
+                self.db_session.query(Employee.employee_id)
+                .join(Claim)
+                .join(Payment)
+                .join(StateLog)
+                .filter(
+                    StateLog.end_state_id.in_(payments_util.Constants.PAYMENT_SENT_STATE_IDS),
+                    func.extract("YEAR", StateLog.ended_at) == year,
+                )
+            )
+
+            employees = mmars_employees.union_all(pub_employees)
+
+            employee_subquery = self.db_session.query(
                 FineosExtractEmployeeFeed,
                 func.rank()
                 .over(
@@ -116,9 +170,13 @@ class ClaimantAddressValidationStep(Step):
                 )
                 .label("R"),
             ).subquery()
-            logger.debug("Subquery for employee feed %s", subquery)
-            employee_feed_data = list(self.db_session.query(subquery).filter(subquery.c.R == 1))
-            logger.debug(employee_feed_data)
+
+            employee_feed_data = list(
+                self.db_session.query(employee_subquery)
+                .join(Employee, employee_subquery.c.customerno == Employee.fineos_customer_number)
+                .filter(employee_subquery.c.R == 1)
+                .filter(Employee.employee_id.in_(employees))
+            )
 
         except Exception:
             self.db_session.rollback()
@@ -165,10 +223,12 @@ class ClaimantAddressValidationStep(Step):
                         employee, employee_feed_address_data, self.db_session
                     )
                     if address_pair and address_pair.experian_address is not None:
-                        logger.debug("Address has been previously validated")
                         self.increment(self.Metrics.PREVIOUSLY_VALIDATED_MATCH_COUNT)
                     # Does it have all the address lines
                     elif not self._does_address_have_all_parts(employee_feed_address_data):
+                        logger.info(
+                            "Address missing parts for customer %s", f_employee_data.customerno
+                        )
                         self.increment(self.Metrics.ADDRESS_MISSING_COMPONENT_COUNT)
                         result = self._outcome_for_search_result(
                             None,
@@ -181,7 +241,6 @@ class ClaimantAddressValidationStep(Step):
                         addressResults.append(result.get("experian_result"))
                     else:
                         if not address_pair:
-                            logger.debug("Address is new or updated")
                             address_pair = ExperianAddressPair(
                                 fineos_address=employee_feed_address_data
                             )
@@ -213,18 +272,7 @@ class ClaimantAddressValidationStep(Step):
 
     # Constructs an address object from the FineosExtractEmployeeFeed address lines
     def construct_address_data(self, employee_data: FineosExtractEmployeeFeed) -> Address:
-        # logger.info("Constructing an address object from fineos employee address lines")
-        employee_feed_data_address = Address(
-            address_id=uuid.uuid4(),
-            address_line_one=employee_data.address1,
-            address_line_two=employee_data.address2 if employee_data.address2 else None,
-            city=employee_data.address4,
-            geo_state_id=GeoState.get_id(employee_data.address6)
-            if employee_data.address6
-            else None,
-            zip_code=employee_data.postcode,
-            address_type_id=AddressType.MAILING.address_type_id,
-        )
+        employee_feed_data_address = self._validate_incoming_address(employee_data)
         return employee_feed_data_address
 
     """Calls experian using SOAP call to validate address
@@ -316,6 +364,7 @@ class ClaimantAddressValidationStep(Step):
     Returns a boolean value, True is all lines exist, False if missing"""
 
     def _does_address_have_all_parts(self, address: Address) -> bool:
+
         if (
             not address.address_line_one
             or not address.city
@@ -339,9 +388,7 @@ class ClaimantAddressValidationStep(Step):
         first_name: str,
         last_name: str,
     ) -> Dict[str, Any]:
-        verify_level = (
-            result.verify_level.value if result and result.verify_level else Constants.UNKNOWN
-        )
+        verify_level = result.verify_level.value if result and result.verify_level else msg
         outcome: Dict[str, Any] = self._build_experian_outcome(
             customer_no, first_name, last_name, msg, address, verify_level
         )
@@ -394,7 +441,7 @@ class ClaimantAddressValidationStep(Step):
                 ),
                 Constants.MESSAGE_KEY: confidence,
                 # Constants.MESSAGE_KEY: msg,
-            },
+            }
         }
         return exp_outcome
 
@@ -419,19 +466,34 @@ class ClaimantAddressValidationStep(Step):
         file_name = now.strftime(Constants.CLAIMANT_ADDRESS_VALIDATION_FILENAME_FORMAT)
         address_report_source_path = s3_config.pfml_error_reports_archive_path
         dfml_sharepoint_outgoing_path = s3_config.dfml_report_outbound_path
-        address_report_source_path = payments_util.build_archive_path(
+        address_report_source_path = os.path.join(
             address_report_source_path,
             payments_util.Constants.S3_OUTBOUND_SENT_DIR,
             now.strftime("%Y-%m-%d"),
         )
+        logger.info("Path name sent to create file is %s", address_report_source_path)
         address_report_csv_path = self.create_address_report(
             addr_reports, file_name, address_report_source_path
         )
-        logger.debug("File path is %s", address_report_csv_path)
-        outgoing_s3_path = os.path.join(
-            dfml_sharepoint_outgoing_path, Constants.CLAIMANT_ADDRESS_VALIDATION_FILENAME
-        )
-        file_util.copy_file(str(address_report_csv_path), outgoing_s3_path)
+        logger.info("Path returned after create file is %s", address_report_csv_path)
+        file_name_path = address_report_csv_path.name
+        logger.info("File name from path is %s", file_name_path)
+        file_source_path = os.path.join(address_report_source_path, file_name_path)
+        logger.info("Source file path is %s", file_source_path)
+        out_file_name = Constants.CLAIMANT_ADDRESS_VALIDATION_FILENAME + ".csv"
+        outgoing_s3_path = os.path.join(dfml_sharepoint_outgoing_path, out_file_name)
+        logger.info("Destination file path is %s", outgoing_s3_path)
+        if file_util.is_s3_path(outgoing_s3_path):
+            if file_util.is_s3_path(file_source_path):
+                file_util.copy_file(str(file_source_path), outgoing_s3_path)
+            else:
+                file_util.upload_to_s3(str(file_source_path), outgoing_s3_path)
+        else:
+            if not file_util.is_s3_path(file_source_path):
+                file_util.copy_file(str(file_source_path), outgoing_s3_path)
+            else:
+                file_util.download_from_s3(str(file_source_path), outgoing_s3_path)
+
         logger.info("claimant address validation report file added")
         return ReferenceFile(
             file_location=os.path.join(address_report_source_path, file_name),
@@ -476,3 +538,54 @@ class ClaimantAddressValidationStep(Step):
             search=self.address_to_experian_suggestion_text_format(address),
             layout=Layout.StateMA,
         )
+
+    def _validate_incoming_address(self, employee_data: FineosExtractEmployeeFeed) -> Address:
+        address_required = True
+        c_value = employee_data.c
+        i_value = employee_data.i
+        self.validation_container = payments_util.ValidationContainer(
+            str(f"C={c_value},I={i_value}")
+        )
+        address_line_one = payments_util.validate_db_input(
+            "address1", employee_data, self.validation_container, address_required
+        )
+        address_line_two = payments_util.validate_db_input(
+            "address2", employee_data, self.validation_container, False
+        )
+        city = payments_util.validate_db_input(
+            "address4", employee_data, self.validation_container, address_required
+        )
+
+        state = payments_util.validate_db_input(
+            "address6",
+            employee_data,
+            self.validation_container,
+            address_required,
+            custom_validator_func=payments_util.lookup_validator(GeoState),
+        )
+
+        zip_code = payments_util.validate_db_input(
+            "postcode",
+            employee_data,
+            self.validation_container,
+            address_required,
+            min_length=5,
+            max_length=10,
+            custom_validator_func=payments_util.zip_code_validator,
+        )
+        if self.validation_container.has_validation_issues():
+            logger.error(
+                "Address validation issues for employee %s", employee_data.employee_feed_id
+            )
+            logger.error(self.validation_container.validation_issues)
+        empty_string = ""
+        employee_address = Address(
+            address_id=uuid.uuid4(),
+            address_line_one=address_line_one if address_line_one else empty_string,
+            address_line_two=address_line_two if address_line_two else empty_string,
+            city=city if city else empty_string,
+            geo_state_id=GeoState.get_id(state) if state else empty_string,
+            zip_code=zip_code if zip_code else empty_string,
+            address_type_id=AddressType.MAILING.address_type_id,
+        )
+        return employee_address

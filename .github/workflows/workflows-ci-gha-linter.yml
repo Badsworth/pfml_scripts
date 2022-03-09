@@ -19,7 +19,8 @@ jobs:
         shell: bash
       - name: actionlint checker
         # We are disabling the shellcheck (-shellcheck=) from running for the moment.
-        # Ignore usages of run_attempt for the moment - this is new and an issue has been raised:
-        # https://github.com/rhysd/actionlint/issues/57
-        run: ${{ steps.get_actionlint.outputs.executable }} -color --ignore='property "run_attempt" is not defined' -shellcheck=
+        # Also ignoring two errors pertaining to reusable workflows, which will be resolved by these upstream PRs:
+        #   https://github.com/rhysd/actionlint/pull/107
+        #   https://github.com/rhysd/actionlint/pull/106
+        run: ${{ steps.get_actionlint.outputs.executable }} -color --ignore "reusable workflow call .* is not following the format" --ignore 'property "github_token" is not defined in object type' -shellcheck=
         shell: bash

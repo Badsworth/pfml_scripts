@@ -1,5 +1,6 @@
 import { ApplicationLeaveDetails, ApplicationRequestBody } from "./api";
 import * as scenarios from "./scenarios";
+import * as lstScenarios from "./scenarios/lst";
 import {
   EmployerBenefit,
   PreviousLeave,
@@ -15,6 +16,13 @@ export type FeatureFlags = {
   employerShowDashboardSearch: boolean;
   claimantShowTaxWithholding: boolean;
   claimantShowStatusPage?: boolean;
+  claimantShowPayments: boolean;
+  claimantShowOrganizationUnits: boolean;
+  claimantShowMFA?: boolean;
+  employerShowMultiLeave: boolean;
+  claimantShowPaymentsPhaseTwo: boolean;
+  channelSwitching: boolean;
+  employerShowMultiLeaveDashboard: boolean;
 };
 
 export type Credentials = {
@@ -68,6 +76,7 @@ export type SubjectOptions =
 
 export type ScenarioSpecs = typeof scenarios;
 export type Scenarios = keyof ScenarioSpecs;
+export type LSTScenarios = keyof typeof lstScenarios;
 
 export type PersonalIdentificationDetails = {
   id_number_type: "Social Security Number" | "ID" | "ITIN";
@@ -114,7 +123,7 @@ export type OtherTasks =
   | "Review and Decision Cancel Time Submitted"
   | "Employee Reported Other Leave"
   | "Employee Reported Other Income"
-  | "Future or overlapping Absence Request exists"
+  | "Overlapping Absence Request Exists"
   | "Confirm Employment"
   | "Manual Intervention required to Approve Payments"
   | "Absence Paid Leave Payments Failure"
@@ -123,9 +132,18 @@ export type OtherTasks =
   | "Review Appeal "
   | "Schedule Hearing"
   | "Send Decision Notice"
-  | "Conduct Hearing";
+  | "Conduct Hearing"
+  | "Employer Reimbursement"
+  | "SOM Autopay After Appeal Reminder"
+  | "DO NOT USE Autopay After Appeal Reminder"
+  | "Employer Reimbursement Adjustment"
+  | "Print and Mail Correspondence";
 /**Tasks avalable in fineos */
 export type FineosTasks = DocumentReviewTasks | ERTasks | OtherTasks;
+
+export type FineosCloseTaskStep =
+  | "Reimbursement Approved"
+  | "Reimbursement Denied";
 
 export type ClaimStatus =
   | "Adjudication"
@@ -217,4 +235,7 @@ export type Environment =
   | "training"
   | "performance"
   | "uat"
-  | "cps-preview";
+  | "cps-preview"
+  | "long"
+  | "trn2"
+  | "breakfix";

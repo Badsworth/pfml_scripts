@@ -2,7 +2,7 @@
 
 exports[`Table renders children within a table 1`] = `
 <table
-  class="usa-table usa-table--borderless c-table"
+  class="usa-table usa-table--borderless"
 >
   <caption>
     Test table

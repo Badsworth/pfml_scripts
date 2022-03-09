@@ -18,7 +18,7 @@ depends_on = None
 def upgrade():
     # Remove old index
     op.drop_index(
-        op.f("dia_reduction_payment_unique_payment_data_idx"), table_name="dia_reduction_payment",
+        op.f("dia_reduction_payment_unique_payment_data_idx"), table_name="dia_reduction_payment"
     )
 
     op.add_column("dia_reduction_payment", sa.Column("termination_date", sa.Date(), nullable=True))
@@ -50,7 +50,7 @@ def upgrade():
 
 def downgrade():
     op.drop_index(
-        op.f("dia_reduction_payment_unique_payment_data_idx"), table_name="dia_reduction_payment",
+        op.f("dia_reduction_payment_unique_payment_data_idx"), table_name="dia_reduction_payment"
     )
 
     op.drop_column("dia_reduction_payment", "termination_date")

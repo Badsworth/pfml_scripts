@@ -6,13 +6,24 @@
  * the flow.
  * @see docs/portal/development.md
  */
-import claimant, { guards as claimantGuards } from "./claimant";
+import claimant, {
+  ClaimantFlowContext,
+  guards as claimantGuards,
+} from "./claimant";
+import employer, {
+  EmployerFlowContext,
+  guards as employerGuards,
+} from "./employer";
 import auth from "./auth";
-import employer from "./employer";
 import routes from "../routes";
+import user from "./user";
 
-export const guards = {
+export type FlowContext = ClaimantFlowContext & EmployerFlowContext;
+type GuardFn = (context: FlowContext) => boolean;
+
+export const guards: { [guardName: string]: GuardFn } = {
   ...claimantGuards,
+  ...employerGuards,
 };
 
 export default {
@@ -22,6 +33,7 @@ export default {
     ...auth.states,
     ...claimant.states,
     ...employer.states,
+    ...user.states,
   },
   context: {},
 };

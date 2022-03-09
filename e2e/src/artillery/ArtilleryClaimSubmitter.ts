@@ -5,6 +5,13 @@ import { ApplicationSubmissionResponse } from "../types";
 import { splitClaimToParts } from "../util/common";
 import { getAuthManager } from "../util/common";
 import winston from "winston";
+import {
+  getPayments,
+  RequestOptions,
+  getClaimsByFineos_absence_id,
+  getApplicationsByApplication_idDocuments,
+} from "../api";
+import assert from "assert";
 
 class ArtilleryClaimSubmitter extends PortalSubmitter {
   constructor(authenticator: AuthenticationManager, apiBaseUrl: string) {
@@ -39,6 +46,15 @@ class ArtilleryClaimSubmitter extends PortalSubmitter {
     logger?.debug("Attempting to upload Documents", {
       fineos_absence_id,
     });
+    const withoutExtension = (filepath: string) => {
+      const [filename] = filepath.split("/").slice(-1);
+      return filename.slice(0, -4);
+    };
+    // removes .pdf extension from filename to only include filesize
+    const [first, second] = claim.documents
+      .map((files) => files.name as string)
+      .map(withoutExtension);
+    logger?.info(`Uploading ${first} and ${second} file sizes`);
     await this.uploadDocuments(application_id, claim.documents, options);
     logger?.debug("Document upload complete!", {
       fineos_absence_id,
@@ -49,6 +65,11 @@ class ArtilleryClaimSubmitter extends PortalSubmitter {
     await this.uploadPaymentPreference(
       application_id,
       claim.paymentPreference,
+      options
+    );
+    await this.submitTaxPreference(
+      application_id,
+      { is_withholding_tax: claim.is_withholding_tax },
       options
     );
     logger?.debug("Attempting to complete Application (Final Submit)", {
@@ -75,6 +96,19 @@ class ArtilleryClaimSubmitter extends PortalSubmitter {
       logger?.debug("Employer Response complete!", {
         fineos_absence_id,
       });
+      /*
+       * This Section is to mimic api calls when
+       * hitting the payments status page. We want to
+       * make these calls x3 for each claim
+       * submission to create extra traffic to status page.
+       */
+      await this.mimicPaymentStatusPage(
+        3, // number of extra calls
+        fineos_absence_id,
+        application_id,
+        options,
+        logger
+      );
       logger?.debug("Full Submittal and ER complete w/o errors!", {
         fineos_absence_id,
       });
@@ -85,6 +119,58 @@ class ArtilleryClaimSubmitter extends PortalSubmitter {
       first_name: first_name,
       last_name: last_name,
     };
+  }
+
+  private async mimicPaymentStatusPage(
+    calls: number,
+    fineos_absence_id: string,
+    application_id: string,
+    options?: RequestOptions,
+    logger?: winston.Logger
+  ): Promise<void> {
+    for (let i = 0; i < calls; i++) {
+      await this.getPaymentsData(fineos_absence_id, options, logger);
+      await this.getClaimData(fineos_absence_id, options, logger);
+      await this.getDocuments(application_id, options, logger);
+    }
+    logger?.info("Payment Status Page Check Complete");
+  }
+
+  private async getPaymentsData(
+    absence_case_id: string,
+    options?: RequestOptions,
+    logger?: winston.Logger
+  ): Promise<void> {
+    const res = await getPayments({ absence_case_id }, options);
+    assert.strictEqual(res.data.status_code, 200);
+    assert.strictEqual(typeof res.data.data?.payments, typeof []);
+    logger?.debug("Payment Data Check Complete");
+  }
+
+  private async getClaimData(
+    fineos_absence_id: string,
+    options?: RequestOptions,
+    logger?: winston.Logger
+  ): Promise<void> {
+    const res = await getClaimsByFineos_absence_id(
+      { fineos_absence_id },
+      options
+    );
+    assert.strictEqual(res.data.status_code, 200);
+    logger?.debug("Claim Data Check Complete");
+  }
+
+  private async getDocuments(
+    application_id: string,
+    options?: RequestOptions,
+    logger?: winston.Logger
+  ): Promise<void> {
+    const res = await getApplicationsByApplication_idDocuments(
+      { application_id },
+      options
+    );
+    assert.strictEqual(res.data.status_code, 200);
+    logger?.debug("Document Check Complete");
   }
 }
 

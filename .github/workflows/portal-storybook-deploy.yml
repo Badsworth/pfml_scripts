@@ -14,13 +14,14 @@ on:
       - "!portal/tests/**"
 
 env:
-  nodeVersion: 15.x
+  nodeVersion: 16.x
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   terraformVersion: 0.14.7
-  deploys_channel: "C01HEAJPE76" #mass-pfml-deploys-shared
   terraformBaseDir: ./infra/portal/environments/
   # Map branch name to environment name. This is used to set the portal_env variable below in combination with git refs.
   refs/heads/main: test
+  portal_env: test
+  workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
 jobs:
   deploy:
@@ -63,12 +64,57 @@ jobs:
           aws s3 sync $OUTPUT_DIR s3://$BUCKET_NAME/ --exclude "*.html" --cache-control max-age=31536000,public &&
           aws s3 sync $OUTPUT_DIR s3://$BUCKET_NAME/ --exclude "*" --include "*.html" --cache-control s-maxage=86400,max-age=0,must-revalidate
 
-  slackbot-if-failed:
+  invalidate-cloudfront:
+    name: Invalidate Cloudfront Cache
+    runs-on: ubuntu-latest
+    needs: deploy
+    env:
+      TF_CLI_ARGS: '-lock-timeout=120s'
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-duration-seconds: 3600
+          role-to-assume: ci-run-deploys
+
+      - uses: hashicorp/setup-terraform@v1.2.1
+        with:
+          terraform_version: ${{ env.terraformVersion }}
+          terraform_wrapper: true
+
+      - name: Terraform Init
+        id: terraform_init
+        run: terraform init
+        working-directory: ${{ env.terraformBaseDir }}${{ env.portal_env }}
+
+      - name: Terraform Output
+        id: terraform
+        run: terraform output -json
+        working-directory: ${{ env.terraformBaseDir }}${{ env.portal_env }}
+        env:
+          TF_CLI_ARGS: ''
+
+      - name: Invalidate old Cloudfront cache
+        env:
+          TF_OUTPUT: ${{ steps.terraform.outputs.stdout }}
+        run: |
+          DISTRIBUTION_ID=$(echo $TF_OUTPUT | jq -r '.storybook_cloudfront_distribution_id.value')
+          aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
+
+  post-to-teams:
     needs: deploy
     if: failure()
-    name: Post to Slack if deploy failed
+    name: Post to Teams if deploy failed
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -78,20 +124,21 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
-      - name: Pull slackbot API token from SSM
+      - name: Pull teams uri from SSM
         uses: "marvinpinto/action-inject-ssm-secrets@latest"
         with:
-          ssm_parameter: "/admin/common/nava-slackbot-api-key"
-          env_variable_name: "slackbot_token"
+          ssm_parameter: "/admin/common/teams-deploy-uri"
+          env_variable_name: "teams_uri"
 
-      - name: Post to Slack
+      - name: Post to Teams
         run: |
-          SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
-          -H 'Content-Type: application/json;charset=utf-8' \
+          RESPONSE=$(curl -fsLS -X POST ${{ env.TEAMS_URI }} \
+          --header 'Content-Type: application/json' \
           --data '{
-            "channel": "${{ env.deploys_channel }}",
-            "attachments": [{
-              "text": "📚 Storybook deploy #${{ github.run_number }} failed.\n<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Please see build logs.>",
-              "color": "danger"
-            }]
-          }' https://slack.com/api/chat.postMessage)
+            "@type": "MessageCard",
+            "themeColor": "FF0000",
+            "title": "Failed to deploy Storybook",
+            "text": "📚 Storybook deploy #${{ github.run_number }} failed: ${{ env.workflow_self_link }}",
+            "sections": [{}]
+            }'
+          )

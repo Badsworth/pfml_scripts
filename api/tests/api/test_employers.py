@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from freezegun import freeze_time
 
-from massgov.pfml.db.models.employees import EmployerQuarterlyContribution, UserLeaveAdministrator
+from massgov.pfml.db.models.employees import UserLeaveAdministrator
 from massgov.pfml.db.models.factories import EmployerFactory, EmployerQuarterlyContributionFactory
 from massgov.pfml.types import Fein
 
@@ -131,31 +131,26 @@ def test_employers_receive_409_if_duplicate_fein(
 
 
 @freeze_time("2021-05-01")
-def test_employers_receive_200_and_most_recent_date_from_get_withholding_dates(
+def test_employers_receive_200_and_most_recent_historical_date_from_get_withholding_dates(
     client, employer_user, employer_auth_token, test_db_session
 ):
     employer = EmployerFactory.create()
-
-    employer_contribution_row_1 = EmployerQuarterlyContribution(
-        employer_id=employer.employer_id,
+    EmployerQuarterlyContributionFactory.create(
+        employer=employer,
         filing_period=date(2020, 6, 30),
-        pfm_account_id="12345678912345",
         employer_total_pfml_contribution=Decimal("15234.58"),
-        dor_received_date=datetime.now(),
-        dor_updated_date=datetime.now(),
     )
-    employer_contribution_row_2 = EmployerQuarterlyContribution(
-        employer_id=employer.employer_id,
+    EmployerQuarterlyContributionFactory.create(
+        employer=employer,
         filing_period=date(2020, 3, 31),
-        pfm_account_id="12345678912345",
         employer_total_pfml_contribution=Decimal("15234.58"),
-        dor_received_date=datetime.now(),
-        dor_updated_date=datetime.now(),
     )
-    test_db_session.add(employer_contribution_row_1)
-    test_db_session.add(employer_contribution_row_2)
-    test_db_session.commit()
-
+    EmployerQuarterlyContributionFactory.create(
+        employer=employer,
+        # Future date! Shouldn't be returned when there's historical data
+        filing_period=date(2021, 9, 30),
+        employer_total_pfml_contribution=Decimal("15234.58"),
+    )
     link = UserLeaveAdministrator(
         user_id=employer_user.user_id,
         employer_id=employer.employer_id,
@@ -174,10 +169,111 @@ def test_employers_receive_200_and_most_recent_date_from_get_withholding_dates(
     assert response_data["filing_period"] == "2020-06-30"
 
 
+@freeze_time("2021-05-01")
+def test_employers_receive_future_withholding_if_no_past_withholding(
+    client, employer_user, employer_auth_token, test_db_session
+):
+    employer = EmployerFactory.create()
+    EmployerQuarterlyContributionFactory.create(
+        employer=employer,
+        employer_total_pfml_contribution=Decimal("15234.58"),
+        filing_period=date(2021, 9, 30),
+    )
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    response = client.get(
+        f"/v1/employers/withholding/{employer.employer_id}",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+    )
+    response_data = response.get_json()["data"]
+
+    assert response.status_code == 200
+    assert response_data["filing_period"] == "2021-09-30"
+
+
+@freeze_time("2021-05-01")
+def test_employers_receive_future_withholding_if_0_amount_past_withholding(
+    client, employer_user, employer_auth_token, test_db_session
+):
+    employer = EmployerFactory.create()
+    EmployerQuarterlyContributionFactory.create(
+        # Within past year, but 0 amount
+        employer=employer,
+        employer_total_pfml_contribution=0,
+        filing_period=date(2020, 6, 30),
+    )
+    EmployerQuarterlyContributionFactory.create(
+        employer=employer,
+        # Future non-zero amount
+        employer_total_pfml_contribution=Decimal("15234.58"),
+        filing_period=date(2021, 9, 30),
+    )
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    response = client.get(
+        f"/v1/employers/withholding/{employer.employer_id}",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+    )
+    response_data = response.get_json()["data"]
+
+    assert response.status_code == 200
+    assert response_data["filing_period"] == "2021-09-30"
+
+
+@freeze_time("2021-05-01")
+def test_employers_receive_future_withholding_if_old_past_withholding(
+    client, employer_user, employer_auth_token, test_db_session
+):
+    employer = EmployerFactory.create()
+    EmployerQuarterlyContributionFactory.create(
+        # Non-zero amount, but over a year ago
+        employer=employer,
+        employer_total_pfml_contribution=Decimal("15234.58"),
+        filing_period=date(2020, 1, 30),
+    )
+    EmployerQuarterlyContributionFactory.create(
+        employer=employer,
+        # Future non-zero amount
+        employer_total_pfml_contribution=Decimal("15234.58"),
+        filing_period=date(2021, 9, 30),
+    )
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id,
+        employer_id=employer.employer_id,
+        fineos_web_id="fake-fineos-web-id",
+    )
+    test_db_session.add(link)
+    test_db_session.commit()
+
+    response = client.get(
+        f"/v1/employers/withholding/{employer.employer_id}",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+    )
+    response_data = response.get_json()["data"]
+
+    assert response.status_code == 200
+    assert response_data["filing_period"] == "2021-09-30"
+
+
 def test_employers_receive_402_for_no_contributions(
     client, employer_user, employer_auth_token, test_db_session
 ):
     employer = EmployerFactory.create()
+
+    # Create other contributions to confirm we're limiting the check to the target employer
+    EmployerQuarterlyContributionFactory.create(employer=EmployerFactory.create())
 
     link = UserLeaveAdministrator(
         user_id=employer_user.user_id,
@@ -194,6 +290,7 @@ def test_employers_receive_402_for_no_contributions(
     assert response.status_code == 402
 
 
+@freeze_time("2021-05-01")
 def test_employers_receive_402_for_old_contributions(
     client, employer_user, employer_auth_token, test_db_session
 ):

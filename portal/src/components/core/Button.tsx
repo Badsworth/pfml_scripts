@@ -28,7 +28,7 @@ function Button({ type = "button", ...props }: ButtonProps) {
   const children = showLoading ? (
     <React.Fragment>
       <span className="position-absolute width-full height-full left-0 top-1">
-        <Spinner small aria-valuetext="loading" />
+        <Spinner small aria-label="loading" />
       </span>
       <span className="opacity-0">{props.children}</span>
     </React.Fragment>

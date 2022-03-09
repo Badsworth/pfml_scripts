@@ -117,9 +117,7 @@ def setup_db_for_state_log(associated_class, additional_params=None):
 
 
 # Utility method for creating state logs
-def setup_state_log(
-    associated_class, end_states, test_db_session, additional_params=None,
-):
+def setup_state_log(associated_class, end_states, test_db_session, additional_params=None):
     associated_model = setup_db_for_state_log(associated_class, additional_params)
 
     state_logs = []

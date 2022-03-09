@@ -7,11 +7,11 @@ https://designsystem.digital.gov/documentation/settings/#typography
 https://designsystem.digital.gov/design-tokens/typesetting/font-family/
 --------------------------------------------------------------------------------
 */
+@use "sass:math";
 
 /* Mayflower SCSS prefix url references to assets such as fonts and images with $assets-path.
  Set $assets-path to form the correct url references in your project to the parent folder of the fonts/ folder, based on the location of the compiled css.
 */
-
 @use "~@massds/mayflower-assets/scss/00-base/_fonts.scss";
 
 $theme-typeface-tokens: (
@@ -38,7 +38,7 @@ $theme-font-weight-bold: 550;
 // Set base font size to match Mayflower's so type sizes in components
 // like the header match what is displayed on Mass.gov
 $theme-respect-user-font-size: false;
-$theme-root-font-size: 16px / 1.2;
+$theme-root-font-size: math.div(16px, 1.2);
 
 // Customize sizes used for type size tokens
 // https://designsystem.digital.gov/design-tokens/typesetting/font-size/

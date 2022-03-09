@@ -2,8 +2,10 @@ import Heading from "./Heading";
 import React from "react";
 import classnames from "classnames";
 import isBlank from "../../utils/isBlank";
+import useUniqueId from "../../hooks/useUniqueId";
 
 interface AlertProps {
+  "aria-label"?: string;
   className?: string;
   children: React.ReactNode;
   noIcon?: boolean;
@@ -48,13 +50,29 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
       props.className
     );
 
+    const hasHeading = !isBlank(props.heading);
+    const headingId = useUniqueId("alert-heading");
+
+    const ariaProps = {
+      "aria-labelledby":
+        hasHeading && isBlank(props["aria-label"]) ? headingId : undefined,
+      "aria-label": props["aria-label"],
+    };
+
     return (
-      <div className={classes} role={role} ref={ref} tabIndex={-1}>
+      <div
+        className={classes}
+        ref={ref}
+        role={role}
+        tabIndex={-1}
+        {...ariaProps}
+      >
         <div className="usa-alert__body">
-          {!isBlank(props.heading) && (
+          {hasHeading && (
             <Heading
               level={headingLevel}
               className="usa-alert__heading"
+              id={headingId}
               size={props.headingSize}
             >
               {props.heading}

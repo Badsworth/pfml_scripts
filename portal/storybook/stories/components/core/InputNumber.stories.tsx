@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import InputNumber from "src/components/core/InputNumber";
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 
 export default {
   title: "Core Components/Forms/InputNumber",

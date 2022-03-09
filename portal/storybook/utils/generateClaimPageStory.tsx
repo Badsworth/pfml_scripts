@@ -1,14 +1,11 @@
-import { chain, find, first, get, map, upperFirst } from "lodash";
-
-import AppErrorInfo from "src/models/AppErrorInfo";
-import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
+import { chain, get, upperFirst } from "lodash";
 import BenefitsApplication from "src/models/BenefitsApplication";
 import React from "react";
 import User from "../../src/models/User";
-import { createMockBenefitsApplication } from "tests/test-utils/createMockBenefitsApplication";
+import { ValidationError } from "src/errors";
+import { createMockBenefitsApplication } from "lib/mock-helpers/createMockBenefitsApplication";
 import englishLocale from "src/locales/app/en-US";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
-import { useTranslation } from "src/locales/i18n";
 
 /**
  * Generates the config and story components for a claims page.
@@ -103,8 +100,7 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
   }
 
   // Just take the first claim in the list of claims as the defaultClaim
-  // @ts-expect-error ts-migrate(2532) FIXME: Object is possibly 'undefined'.
-  const defaultClaim = first(Object.entries(claims))[0];
+  const defaultClaim = Object.keys(claims)[0];
 
   // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
   const DefaultStory = (args) => {
@@ -112,21 +108,19 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
     const claim = claims[args.claim || defaultClaim];
     // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
     const user = new User();
-    const { t } = useTranslation();
-    const appErrors = new AppErrorInfoCollection(
+    const issues =
       // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'displayStr' implicitly has an 'any' typ... Remove this comment to see the full error message
       errorDisplayStrs.map((displayStr) => {
-        const errorInfo = find(possibleErrors, { displayStr });
-        const { field, i18nKey } = errorInfo;
-        return new AppErrorInfo({
-          message: t(i18nKey),
-          name: "ValidationError",
-          field,
-        });
-      })
-    );
+        const errorInfo = possibleErrors.find(
+          // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'error' implicitly has an 'any'
+          (error) => error.displayStr === displayStr
+        );
+        return { ...errorInfo, namespace: "applications" };
+      });
 
-    const appLogic = useMockableAppLogic({ appErrors });
+    const appLogic = useMockableAppLogic({
+      errors: [new ValidationError(issues)],
+    });
 
     return (
       <Component
@@ -153,7 +147,8 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
     errors: {
       control: {
         type: "check",
-        options: map(possibleErrors, "displayStr"),
+        // @ts-expect-error FIXME: err is `any`
+        options: possibleErrors.map((error) => error.displayStr),
       },
     },
   };
@@ -208,7 +203,6 @@ function getPossibleErrorsForField(field, translation) {
     return {
       displayStr: `${claimFieldKey}: ${type}`,
       field,
-      i18nKey: `errors.applications.${claimFieldKey}.${type}`,
       type,
     };
   });

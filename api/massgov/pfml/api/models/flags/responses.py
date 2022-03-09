@@ -10,3 +10,9 @@ class FlagResponse(PydanticBaseModel):
     end: Optional[datetime]
     options: Optional[dict]
     enabled: bool
+
+
+class FlagLogResponse(FlagResponse):
+    first_name: str
+    last_name: str
+    updated_at: datetime

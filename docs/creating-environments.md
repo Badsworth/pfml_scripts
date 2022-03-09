@@ -3,6 +3,11 @@
 Full E2E process (SOP): https://lwd.atlassian.net/wiki/spaces/DD/pages/1549860868/SOP+New+Environment+Build
 
 ---
+# Lessons Learned during last deployment
+
+https://lwd.atlassian.net/wiki/spaces/DD/pages/2192572902/Long+and+Trn2+Environments+Lessons+Learned
+
+---
 
 The easiest way to set up resources in a new environment is using the templates in [/bin/bootstrap-env/](../bin/bootstrap-env).
 
@@ -13,7 +18,7 @@ The easiest way to set up resources in a new environment is using the templates 
    - environment_shorthand
    - smartronix\_environment\_tags
 
-   You do not need to update domains, api_domains, or cert_domains at this time.
+   Domains, api_domains, or cert_domains do not need to be updated unless there are new domains. Please check with Chris Griffith or tech lead to confirm.   
 
    For smartronix\_environment\_tags, reach out to Ron Lovell, Karen Grant, Andy Rodriguez, and Chris Griffith and ask what the new tag should be based on the environment name. They will kick off the Smartronix CAMS infra-monitoring harness for the new environment as well as start any manual DBA steps for the database.
    
@@ -21,7 +26,7 @@ The easiest way to set up resources in a new environment is using the templates 
 
 2. The S3 bucket for holding tfstate files must be created first in [infra/pfml-aws/s3.tf](../infra/pfml-aws/s3.tf). Run `terraform apply`. This may require admin permissions. As well as the replica bucket in LWD account.
 
-1. Send a request to EOTSS (Roy Mounier, cc. Chris Griffith) to update the NonProd Admin role to include `arn:aws:s3:::*-pfml-NEW_ENV*` and `arn:aws:s3:::*-pfml-NEW_ENV-*/*` in the S3 permissions. If Roy is out, create a Service Now request.
+3. Send a request to EOTSS (Roy Mounier, cc. Chris Griffith) to update the NonProd Admin role to include `arn:aws:s3:::*-pfml-NEW_ENV*` and `arn:aws:s3:::*-pfml-NEW_ENV-*/*` in the S3 permissions. If Roy is out, create a Service Now request.
 
   - Search for "AWS Role Access Request/Adjustment"
   - Select "Cloud Engineer" if needed by the form.
@@ -29,7 +34,7 @@ The easiest way to set up resources in a new environment is using the templates 
   - Select "No" for "Member of Cloud Operations Team."
   - In the justification, request the following: "Request for the PFML Account (498823821309). The Nonprod-Admin role should allow access to read from new S3 buckets created for the NEW_ENV environment that is being stood up."
 
-1. After that, individual terraform components (`env-shared`, `api`, `ecs-tasks`, or `portal`) may be set up. We'll use this pattern:
+4. After that, individual terraform components (`env-shared`, `api`, `ecs-tasks`, or `portal`) may be set up. We'll use this pattern:
 
    ```
    pfml$ bin/bootstrap-env/bootstrap-env.sh <new-env> <component>
@@ -50,27 +55,29 @@ The easiest way to set up resources in a new environment is using the templates 
 
    The command above creates a new directory: `infra/env-shared/environments/NEW_ENV`
    
-1. From the new directory, update variables in `main.tf` and run:
+2. From the new directory, update variables in `main.tf` and run:
 
    ```
    terraform init
    ```
 
-1. Create the environment:
+3. Create the environment:
 
-     ```sh
+     ```
      terraform plan
      ```
 
-     ```sh
+     ```
      terraform apply
      ```
-     
+   *** you might run into some permission issue on creating IAM roles. In this case, please reach out an engineer with admin permission.    
+
+
 ### 2.1 Create the API
 
-1. Manually create `/service/pfml-api-dor-import/NEW_ENV/gpg_decryption_key` in Parameter Store. Copy the value from TEST and use a SecureString on the Advanced Tier.
+1. Manually create `/service/pfml-api-dor-import/NEW_ENV/gpg_decryption_key` in AWS Systems Manager Parameter Store. Copy the value from TEST and use a SecureString on the Advanced Tier.
 
-1. Setup the rest of the secrets in Parameter Store by running ./bin/bootstrap-env/copy-parameters.sh NEW_ENV
+2. Setup the rest of the secrets in Parameter Store by running ./bin/bootstrap-env/copy-parameters.sh NEW_ENV
 
    <details>
    <summary>Known and accounted for at time of writing:</summary>
@@ -102,7 +109,7 @@ The easiest way to set up resources in a new environment is using the templates 
    ```
    </details>
 
-1. Add the new environment to `api/newrelic.ini` to set up New Relic APM:
+3. Add the new environment to `api/newrelic.ini` to set up New Relic APM:
 
    ```toml
    [newrelic:NEW_ENV]
@@ -110,7 +117,7 @@ The easiest way to set up resources in a new environment is using the templates 
    monitor_mode = true
    ```
 
-1. Generate the terraform environment folder: 
+4. Generate the terraform environment folder: 
 
    ```
    pfml$ bin/bootstrap-env/bootstrap-env.sh NEW_ENV api
@@ -118,24 +125,33 @@ The easiest way to set up resources in a new environment is using the templates 
 
    The command above creates a new directory: `infra/api/environments/NEW_ENV`
    
-1. From the new directory, update variables in `main.tf`, namely:
+5. From the new directory, update variables in `main.tf`, namely:
 
    - nlb\_port: same port as specified in the API gateway.
    - cors\_origins: set this to be the execute-api URL from API gateway for now. [API\_GATEWAY\_URL]
    - rmv\_client\_certificate\_arn: Retrieve the secretsmanager ARN from AWS secrets manager or from the copy-parameters script output.
 
-3. Run:
+6. Run:
 
    ```
    terraform init
    ```
 
-1. Create the environment, providing an initial application version to deploy. Since this requires a version that is built and pushed to ECR, it's easiest to use the latest version that was [deployed in TEST](https://github.com/EOLWD/pfml/deployments/activity_log?environment=API+%28test%29). This is a Docker image tag that is equivalent to a commit hash.
+7. Create the environment, providing an initial application version to deploy. Since this requires a version that is built and pushed to ECR, it's easiest to use the latest version that was [deployed in TEST](https://github.com/EOLWD/pfml/deployments/activity_log?environment=API+%28test%29). This is a Docker image tag that is equivalent to a commit hash.
 
-     ```sh
+     ```
      $ terraform apply \
      -var='service_docker_tag=82043ae1e04621251fb9e7896176b38c884f027e'
      ```
+   *** you might run into some permission issue on creating IAM roles. In this case, please reach out to an engineer with admin permission.    
+
+8. You need to ask Database team to create password(db-password-readonly) for readonly(pfml_svc_readonly) user and create corresponding entries in AWS SSM Parameter Store.  
+
+9. If the new environment is based on a new domain other than "eol.mass.gov", you have to update CORS origin in file `infra/api/environments/NEW_ENV/main.tf` with corrct domains.
+
+   ```
+   cors_origins = ["https://paidleave-NEW_ENV.NEW_DOMAIN"
+   ```
      
 Note that the API will not be working until database migrations are run.
 
@@ -159,7 +175,7 @@ Note that the API will not be working until database migrations are run.
    ![image](https://user-images.githubusercontent.com/91554519/142467618-0fee729d-5435-40c7-9306-1635567e59b4.png)
    
    
-1. Create a PR and run a deployment of this branch to the new environment. See [./deployment.md](deployment.md). This should automatically:
+2. Create a PR and run a deployment of this branch to the new environment. See [./deployment.md](deployment.md). This should automatically:
 
    - Initialize and apply the ECS tasks terraform.
    - Run database migrations.
@@ -177,6 +193,9 @@ Note that the API will not be working until database migrations are run.
      $ terraform apply \
      -var='service_docker_tag=82043ae1e04621251fb9e7896176b38c884f027e'
      ```
+   *** you might run into some permission issue on creating IAM roles. In this case, please reach out to an engineer with admin permission.
+
+
 ### 2.3 API pre-work
  1.Need to update the bootstrap script to omit these and add some others:
    - ecs-tasks/main.tf:
@@ -197,13 +216,13 @@ Note that the API will not be working until database migrations are run.
    ```
 
    The command above creates a new directory: `infra/portal/environments/NEW_ENV `
-1. From the new directory, run:
+2. From the new directory, run:
 
    ```
    terraform init
    ```
 
-1. Create the environment, providing a specific `cloudfront_origin_path` since nothing will be deployed yet. You can use a blank path for now:
+3. Create the environment, providing a specific `cloudfront_origin_path` since nothing will be deployed yet. You can use a blank path for now:
 
      ```sh
      terraform plan -var='cloudfront_origin_path='
@@ -212,14 +231,15 @@ Note that the API will not be working until database migrations are run.
      ```sh
      terraform apply -var='cloudfront_origin_path='
      ```
-     
-1. Sync the cognito secrets to parameter store: 
+   *** you might run into some permission issue on creating IAM roles. In this case, please reach out to an engineer with admin permission.
+
+4. Sync the cognito secrets to parameter store: 
 
    ```sh
    bin/bootstrap-env/sync-cognito-variables.sh $NEW_ENV
    ```
 
-1. Update infra/api/environments/NEW_ENV/main.tf and infra/ecs-tasks/environments/NEW_ENV/main.tf to include the cognito variables as output from the previous script.
+5. Update infra/api/environments/NEW_ENV/main.tf and infra/ecs-tasks/environments/NEW_ENV/main.tf to include the cognito variables as output from the previous script.
 
    ```
    cognito_user_pool_arn = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/$pool_id"
@@ -228,7 +248,7 @@ Note that the API will not be working until database migrations are run.
    cognito_user_pool_keys_url = "https://cognito-idp.us-east-1.amazonaws.com/$pool_id/.well-known/jwks.json"
    ```
 
-1. Follow [additional steps for new Portal environments](portal/creating-environments.md).
+6. Follow [additional steps for new Portal environments](portal/creating-environments.md).
 
 ### Configuring Cognito
 
@@ -239,10 +259,10 @@ In production, we block high-risk login attempts. This can also be configured fo
 Our Terraform scripts enable Advanced Security. however at the time of writing, [Terraform didn't support more granular configuration of the Advanced Security settings](https://github.com/hashicorp/terraform-provider-aws/issues/7007), so there are some manual steps needed:
 
 1. Log into the AWS Console and navigate to the Cognito User Pool for this environment.
-1. Click "Advanced Security" in the sidebar
-1. [Configure the adaptive authentication behavior](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pool-settings-advanced-security.html#cognito-user-pool-configure-advanced-security).
-1. On the same page in AWS customize the email notification messages by copy-and-pasting the HTML email templates from [`infra/portal/templates/emails`](../infra/portal/templates/emails/).
-1. Ensure the email FROM address is `"NEWENV-SHORTHAND_Department of Family and Medical Leave" \<PFML_DoNotReply@eol.mass.gov\>"`.
+2. Click "Advanced Security" in the sidebar
+3. [Configure the adaptive authentication behavior](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pool-settings-advanced-security.html#cognito-user-pool-configure-advanced-security).
+4. On the same page in AWS customize the email notification messages by copy-and-pasting the HTML email templates from [`infra/portal/templates/emails`](../infra/portal/templates/emails/).
+5. Ensure the email FROM address is `"NEWENV-SHORTHAND_Department of Family and Medical Leave" \<PFML_DoNotReply@eol.mass.gov\>"`.
 
 ## 4. Integrating with FINEOS
 
@@ -254,8 +274,8 @@ Our Terraform scripts enable Advanced Security. however at the time of writing, 
    ./bin/run-ecs-task/run-task.sh NEW_ENV db-create-fineos-user FIRST_NAME.LAST_NAME
    ```
    
-1. Create a file locally with the Cognito FINEOS app client ID and secret. You can view this data by going to AWS Console > AWS Cognito > User Pools > [[ select the environment's user pool ]] > App Clients. Look for the `fineos-pfml-{env}` client.
-1. Send it to FINEOS over interchange, then delete the file from your local computer. Also send the following details:
+2. Create a file locally with the Cognito FINEOS app client ID and secret. You can view this data by going to AWS Console > AWS Cognito > User Pools > [[ select the environment's user pool ]] > App Clients. Look for the `fineos-pfml-{env}` client.
+3. Send it to FINEOS over interchange, then delete the file from your local computer. Also send the following details:
 
   - Auth URL: (e.g. https://paidleave-api-cps-preview.eol.mass.gov/api/v1/oauth2/token)
   - Integration URLs (e.g. https://paidleave-api-cps-preview.eol.mass.gov/api/v1/rmv-check, https://paidleave-api-cps-preview.eol.mass.gov/api/v1/financial-eligibility)
@@ -263,13 +283,19 @@ Our Terraform scripts enable Advanced Security. however at the time of writing, 
   - VPC ID (Should be nonprod IP: VPC-EOLWD-PFML-NonProd, vpc-097793bd468be1c65, 10.203.224.0/22)
   - VPC S3 Endpoint ID (Should be nonprod endpoint: vpce-057c4dd758ba5ccb1)
 
+*** Some engineers in Fineos side might not have access to Interchange (https://ics.mass.gov/DynIC/) platform. You need to ask them to create account on that platform. It is a self service. Engineers can also reach out to Chris Griffith on the details.  
+
 ### Configure FINEOS credentials for PFML
 
 1. FINEOS should send a file to us with an oauth client ID and secret. If not, ping Howard Teasley and Darnel.
-1. The client ID should be configured in **both**:
+2. The client ID should be configured in **both**:
    - infra/api/environments/NEW\_ENV/main.tf and 
    - infra/ecs-tasks/environments/NEW\_ENV/main.tf.
-1. The client secret value should be updated in parameter store (`/service/pfml-api/NEW_ENV/fineos_oauth2_client_secret`).
+3. The client secret value should be updated in parameter store (`/service/pfml-api/NEW_ENV/fineos_oauth2_client_secret`).
+4. Add `portal_base_url = "https://paidleave-NEW_ENV.(dfml).eol.mass.gov"` to infra/api/environments/NEW_ENV/main.tf file. 
+
+   *** Attention ***
+   The configuration values provided by Fineos team for the new environments might vary. Therefore, please double check with Fineos team on the configurations values. ***hint*** You can also check the configuration values of the other environments to compare and confirm.
 
 Verify the following details with FINEOS:
 - Will SSO be enabled? (If so, we need to configure the FINEOS user as OASIS instead of CONTENT)
@@ -279,8 +305,16 @@ Verify the following details with FINEOS:
 ## 4. Update CI and Monitoring
 
 1. Add the new environment to the [CI build matrix](/.github/workflows/infra-validate.yml) so it can be validated when it's changed.
-1. Add the environment to the [monitoring module](/infra/monitoring/alarms.tf) to create API and Portal alarms that are linked to PagerDuty.
+2. Add the new environment to the [monitoring module](/infra/monitoring/alarms.tf) to create API and Portal alarms that are linked to PagerDuty.
+3. Add the new environment to the NewRelic Dashboard by updating `EnvironmentsTable.js` file in e2e folder.
+4. Add the new environment to the `makefile` in API by adding the release branch `deploy/api/NEW_ENV`
+5. Add the new environment to the `makefile` in Portal by adding the release branch `deploy/portal/NEW_ENV`
+6. Reach out to e2e team to update their test script with new environment.
 
+## 5. Update feature_flags files
+
+1. Add `NEW_ENV.yaml` file to `/pflm/feature_flags/` folder in rool level and corresponding content. 
+2. Make sure that correspoing feature flag s3 bucket is created for the new environment. 
 
 ## Setting up Custom Domains
 
@@ -303,7 +337,7 @@ If we expect FINEOS to call the PFML API, you'll need a custom mass.gov domain f
        Velluto, Christopher (EOTSS) <christopher.velluto@mass.gov>; 
        Cole, William (EOTSS) <william.cole@mass.gov>
        
-   cc: Yeh, Kevin (DFML) <Kevin.Yeh@mass.gov>
+   cc: Taschetti, Jamie (DFML) <jamie.taschetti@mass.gov>
         
    Hi all,
 
@@ -318,6 +352,7 @@ If we expect FINEOS to call the PFML API, you'll need a custom mass.gov domain f
 
    Thanks.
    ```
+*** As described above, this domain might change. Please confirm with Tech leads and Chris Griffth
 
 3. Once EOTSS has approved the certificate, update the domains, api_domains, and cert_domains map in the following file:
 

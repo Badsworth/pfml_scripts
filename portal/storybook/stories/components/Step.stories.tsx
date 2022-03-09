@@ -1,9 +1,9 @@
-import { Props } from "storybook/types";
+import { Props } from "types/common";
 import React from "react";
 import Step from "src/components/Step";
 
 export default {
-  title: "Components/StepList/Step",
+  title: "Features/Applications/StepList/Step",
   component: Step,
 };
 

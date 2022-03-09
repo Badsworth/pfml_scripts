@@ -1,6 +1,6 @@
 import logging  # noqa: B1
 import os
-from datetime import datetime
+from datetime import date, datetime
 
 import boto3
 import faker
@@ -13,8 +13,7 @@ import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
     BankAccountType,
-    Country,
-    GeoState,
+    ClaimType,
     ImportLog,
     PaymentCheck,
     PrenoteState,
@@ -22,6 +21,7 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
 )
 from massgov.pfml.db.models.factories import (
+    AbsencePeriodFactory,
     AddressFactory,
     ClaimFactory,
     EmployeeFactory,
@@ -32,14 +32,19 @@ from massgov.pfml.db.models.factories import (
     PubEftFactory,
     ReferenceFileFactory,
 )
+from massgov.pfml.db.models.geo import Country, GeoState
 from massgov.pfml.db.models.payments import FineosExtractVpei, PaymentLog
 from massgov.pfml.delegated_payments.delegated_payments_util import (
     find_existing_address_pair,
     find_existing_eft,
+    get_earliest_absence_period_for_payment_leave_request,
+    get_earliest_matching_payment,
+    is_employer_exempt_for_payment,
     is_same_address,
     is_same_eft,
     move_reference_file,
 )
+from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 from massgov.pfml.util.datetime import get_now_us_eastern
 from tests.delegated_payments.conftest import upload_file_to_s3
 
@@ -57,10 +62,8 @@ PAYMENT_EXTRACT_FILENAMES = [
     "VBI_REQUESTEDABSENCE.csv",
 ]
 
-CLAIMANT_EXTRACT_FILENAMES = [
-    "Employee_feed.csv",
-    "VBI_REQUESTEDABSENCE_SOM.csv",
-]
+CLAIMANT_EXTRACT_FILENAMES = ["Employee_feed.csv", "VBI_REQUESTEDABSENCE_SOM.csv"]
+REQUEST_1099_DATA_EXTRACT_FILENAMES = ["VBI_1099DATA_SOM.csv"]
 
 
 @pytest.fixture
@@ -69,17 +72,13 @@ def set_source_path(tmp_path, mock_fineos_s3_bucket):
     test_file = tmp_path / file_name
     test_file.write_text("test, data, rowOne\ntest, data, rowTwo")
 
-    upload_file_to_s3(
-        test_file, mock_fineos_s3_bucket, f"DT2/dataexports/{file_name}",
-    )
+    upload_file_to_s3(test_file, mock_fineos_s3_bucket, f"DT2/dataexports/{file_name}")
 
     file_name = "2020-12-21-11-30-00-expected_file_two.csv"
     test_file = tmp_path / file_name
     test_file.write_text("test, data, rowOne\ntest, data, rowTwo")
 
-    upload_file_to_s3(
-        test_file, mock_fineos_s3_bucket, f"DT2/dataexports/{file_name}",
-    )
+    upload_file_to_s3(test_file, mock_fineos_s3_bucket, f"DT2/dataexports/{file_name}")
 
 
 def create_test_reference_file(test_db_session, mock_s3_bucket):
@@ -170,6 +169,12 @@ def test_get_date_group_folder_name():
             "2020-12-01-11-30-00", ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
         )
         == "2020-12-01-11-30-00-claimant-extract"
+    )
+    assert (
+        payments_util.get_date_group_folder_name(
+            "2022-01-01-11-30-00", ReferenceFileType.FINEOS_1099_DATA_EXTRACT
+        )
+        == "2022-01-01-11-30-00-1099-extract"
     )
 
 
@@ -266,7 +271,7 @@ def test_copy_fineos_data_to_archival_bucket(
     make_s3_file(mock_fineos_s3_bucket, "DT2/vpeiclaimdetails.csv", "vpeiclaimdetails.csv")
     make_s3_file(mock_fineos_s3_bucket, "IDT/dataexports/vpeiclaimdetails.csv", "small.csv")
     copied_file_mapping_by_date = payments_util.copy_fineos_data_to_archival_bucket(
-        test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_PAYMENT_EXTRACT,
+        test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
     )
 
     received_s3_prefix = f"s3://{mock_s3_bucket}/cps/inbound/received/"
@@ -330,7 +335,7 @@ def test_copy_fineos_data_to_archival_bucket_skip_old_payment(
 
     # Actually run the command
     copied_file_mapping_by_date = payments_util.copy_fineos_data_to_archival_bucket(
-        test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_PAYMENT_EXTRACT,
+        test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
     )
 
     # Verify there is a skipped file
@@ -405,7 +410,7 @@ def test_copy_fineos_data_to_archival_bucket_skip_old_claimant_Extract(
 
     # Actually run the command
     copied_file_mapping_by_date = payments_util.copy_fineos_data_to_archival_bucket(
-        test_db_session, CLAIMANT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_CLAIMANT_EXTRACT,
+        test_db_session, CLAIMANT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
     )
 
     received_s3_prefix = f"s3://{mock_s3_bucket}/cps/inbound/received/"
@@ -445,7 +450,7 @@ def test_copy_fineos_data_to_archival_bucket_skip_top_level(
 
     # Actually run the command
     copied_file_mapping_by_date = payments_util.copy_fineos_data_to_archival_bucket(
-        test_db_session, CLAIMANT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_CLAIMANT_EXTRACT,
+        test_db_session, CLAIMANT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
     )
 
     # Files should be empty
@@ -472,7 +477,7 @@ def test_copy_fineos_data_to_archival_bucket_duplicate_suffix_error(
         match=f"Error while copying fineos extracts - duplicate files found for vpei.csv: s3://test_bucket/cps/inbound/received/{date_prefix}-ANOTHER-vpei.csv and s3://fineos_bucket/DT2/dataexports/{date_prefix}-vpei.csv",
     ):
         payments_util.copy_fineos_data_to_archival_bucket(
-            test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_PAYMENT_EXTRACT,
+            test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
         )
 
 
@@ -492,7 +497,7 @@ def test_copy_fineos_data_to_archival_bucket_missing_file_error(
         match=f"Error while copying fineos extracts - The following expected files were not found {date_prefix}-vpeiclaimdetails.csv,{date_prefix}-vpeipaymentdetails.csv",
     ):
         payments_util.copy_fineos_data_to_archival_bucket(
-            test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_PAYMENT_EXTRACT,
+            test_db_session, PAYMENT_EXTRACT_FILENAMES, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
         )
 
 
@@ -506,9 +511,7 @@ def test_group_s3_files_by_date(mock_s3_bucket, set_exporter_env_vars):
     ]:
         # Add the 3 expected files
         make_s3_file(mock_s3_bucket, f"{prefix}vpei.csv", "vpei.csv")
-        make_s3_file(
-            mock_s3_bucket, f"{prefix}vpeipaymentdetails.csv", "vpeipaymentdetails.csv",
-        )
+        make_s3_file(mock_s3_bucket, f"{prefix}vpeipaymentdetails.csv", "vpeipaymentdetails.csv")
         make_s3_file(mock_s3_bucket, f"{prefix}vpeiclaimdetails.csv", "vpeiclaimdetails.csv")
         # Add some other random files to the same folder
         make_s3_file(mock_s3_bucket, f"{prefix}somethingelse.csv", "small.csv")
@@ -943,15 +946,24 @@ def test_get_fineos_max_history_date_bad_string(monkeypatch):
         payments_util.get_fineos_max_history_date(ReferenceFileType.FINEOS_PAYMENT_EXTRACT)
 
 
-def test_create_staging_table_instance(test_db_session, initialize_factories_session):
-    """ We test if an extra column is provided to given staging data model, an instance of data
-    model is created, excluding the extra column. The extra column is logged as warning.
+def test_create_staging_table_instance(test_db_session, initialize_factories_session, caplog):
+    """We test if an extra column is provided to given staging data model, an instance of data
+    model is created, excluding the extra columns. The extra columns that aren't in
+    ignore_properties are logged as a warning.
     """
 
+    caplog.set_level(logging.INFO)  # noqa: B1
+
     ref_file = ReferenceFileFactory.create()
-    vpei_data = {"addressline6": "test", "addressline7": "test", "addressline8": "test"}
+    vpei_data = {
+        "addressline6": "test",
+        "addressline7": "test",
+        "addressline8": "test",  # no matching column in FineosExtractVpei
+        "addressline9": "test",  # no matching column in FineosExtractVpei
+    }
+
     vpei_instance = payments_util.create_staging_table_instance(
-        vpei_data, FineosExtractVpei, ref_file, None
+        vpei_data, FineosExtractVpei, ref_file, None, ignore_properties=["addressline9"]
     )
     test_db_session.add(vpei_instance)
     test_db_session.commit()
@@ -963,6 +975,15 @@ def test_create_staging_table_instance(test_db_session, initialize_factories_ses
     )
 
     assert len(employee) == 1
+
+    warnings = 0
+    for record in caplog.records:
+        if record.msg == "Unconfigured columns in FINEOS extract after first record.":
+            assert "addressline8" in record.fields
+            assert "addressline9" not in record.fields
+            warnings += 1
+
+    assert warnings == 1
 
 
 def test_create_payment_log(test_db_session, initialize_factories_session):
@@ -1046,3 +1067,381 @@ def test_create_success_file(mock_s3_bucket, monkeypatch):
     files = file_util.list_files(archive_folder_path, recursive=True)
     assert len(files) == 1
     assert files[0] == "processed/2021-08-01/2021-08-02-00-15-00-example-process.SUCCESS"
+
+
+def test_copy_fineos_data_to_archival_bucket_skip_old_1099_Extract(
+    test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars, monkeypatch
+):
+    # Monkey path the max history date
+    monkeypatch.setenv("fineos_1099_data_extract_max_history_date", "2022-01-04")
+
+    # Add 2 top level files: should be processed
+    expected_timestamp_1 = "2022-01-05-11-30-00"
+    s3_prefix = "DT2/dataexports/"
+    upload_timestamped_s3_files(
+        mock_fineos_s3_bucket, s3_prefix, expected_timestamp_1, REQUEST_1099_DATA_EXTRACT_FILENAMES
+    )
+
+    # Add 2 files in a date folder: should be processed
+    expected_timestamp_2 = "2022-01-07-11-30-00"
+    s3_prefix = f"DT2/dataexports/{expected_timestamp_2}/"
+    upload_timestamped_s3_files(
+        mock_fineos_s3_bucket, s3_prefix, expected_timestamp_2, REQUEST_1099_DATA_EXTRACT_FILENAMES
+    )
+
+    # Add 2 files in a date folder: should NOT be processed
+    not_expected_timestamp_1 = "2022-01-01-11-30-00"
+    s3_prefix = f"DT2/dataexports/{not_expected_timestamp_1}/"
+    upload_timestamped_s3_files(
+        mock_fineos_s3_bucket,
+        s3_prefix,
+        not_expected_timestamp_1,
+        REQUEST_1099_DATA_EXTRACT_FILENAMES,
+    )
+
+    # Actually run the command
+    copied_file_mapping_by_date = payments_util.copy_fineos_data_to_archival_bucket(
+        test_db_session,
+        REQUEST_1099_DATA_EXTRACT_FILENAMES,
+        ReferenceFileType.FINEOS_1099_DATA_EXTRACT,
+    )
+
+    received_s3_prefix = f"s3://{mock_s3_bucket}/cps/inbound/received/"
+
+    # 2022-01-05 files should be there
+    assert_copied_file_mapping_by_date_matches(
+        copied_file_mapping_by_date,
+        expected_timestamp_1,
+        received_s3_prefix,
+        REQUEST_1099_DATA_EXTRACT_FILENAMES,
+    )
+
+    # 2022-01-07 files should be there
+    assert_copied_file_mapping_by_date_matches(
+        copied_file_mapping_by_date,
+        expected_timestamp_2,
+        received_s3_prefix,
+        REQUEST_1099_DATA_EXTRACT_FILENAMES,
+    )
+
+    # 2022-01-01 files should NOT be there
+    assert copied_file_mapping_by_date.get(not_expected_timestamp_1) is None
+
+
+def test_copy_fineos_data_to_archival_bucket_no_files_copied(
+    test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars, monkeypatch
+):
+    # Monkey path the max history date
+    monkeypatch.setenv("fineos_1099_data_extract_max_history_date", "2022-01-04")
+
+    # Add 3 top level files: should not be processed
+    expected_timestamp_1 = "2022-01-03-11-30-00"
+    s3_prefix = "DT2/dataexports/"
+    upload_timestamped_s3_files(
+        mock_fineos_s3_bucket, s3_prefix, expected_timestamp_1, REQUEST_1099_DATA_EXTRACT_FILENAMES
+    )
+
+    # Actually run the command
+    copied_file_mapping_by_date = payments_util.copy_fineos_data_to_archival_bucket(
+        test_db_session,
+        REQUEST_1099_DATA_EXTRACT_FILENAMES,
+        ReferenceFileType.FINEOS_1099_DATA_EXTRACT,
+    )
+
+    # Files should be empty
+    assert copied_file_mapping_by_date == {}
+
+
+def test_copy_fineos_data_to_archival_bucket_duplicate_1099_file_error(
+    test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars, monkeypatch
+):
+    # Monkey path the max history date
+    monkeypatch.setenv("fineos_1099_data_extract_max_history_date", "2022-01-04")
+
+    date_prefix = "2022-01-04-11-30-00"
+    s3_prefix = "DT2/dataexports/"
+
+    upload_timestamped_s3_files(
+        mock_fineos_s3_bucket, s3_prefix, date_prefix, REQUEST_1099_DATA_EXTRACT_FILENAMES
+    )
+    make_s3_file(
+        mock_fineos_s3_bucket,
+        f"{s3_prefix}{date_prefix}-ANOTHER-VBI_1099DATA_SOM.csv",
+        "VBI_1099DATA_SOM.csv",
+    )
+
+    with pytest.raises(
+        Exception,
+        match=f"Error while copying fineos extracts - duplicate files found for VBI_1099DATA_SOM.csv: s3://test_bucket/cps/inbound/received/{date_prefix}-ANOTHER-VBI_1099DATA_SOM.csv and s3://fineos_bucket/DT2/dataexports/{date_prefix}-VBI_1099DATA_SOM.csv",
+    ):
+        payments_util.copy_fineos_data_to_archival_bucket(
+            test_db_session,
+            REQUEST_1099_DATA_EXTRACT_FILENAMES,
+            ReferenceFileType.FINEOS_1099_DATA_EXTRACT,
+        )
+
+
+@pytest.mark.parametrize(
+    "employer_exempt_family, employer_exempt_medical, absence_period_start_date, claim_type, expected_result",
+    (
+        # No exemptions
+        (False, False, date(2022, 1, 15), ClaimType.MEDICAL_LEAVE, False),
+        # Exemption is for other leave type
+        (True, False, date(2022, 1, 15), ClaimType.MEDICAL_LEAVE, False),
+        # Exemption is for other leave type
+        (False, True, date(2022, 1, 15), ClaimType.FAMILY_LEAVE, False),
+        # Date is before exemption start
+        (True, True, date(2021, 12, 15), ClaimType.FAMILY_LEAVE, False),
+        # Date is after exemption end
+        (True, True, date(2022, 2, 15), ClaimType.FAMILY_LEAVE, False),
+        # Employer exempt for family leave
+        (True, False, date(2022, 1, 15), ClaimType.FAMILY_LEAVE, True),
+        # Employer exempt for medical leave
+        (False, True, date(2022, 1, 15), ClaimType.MEDICAL_LEAVE, True),
+        # Verifying dates are inclusive
+        (True, True, date(2022, 1, 1), ClaimType.MEDICAL_LEAVE, True),
+        (True, True, date(2022, 1, 31), ClaimType.MEDICAL_LEAVE, True),
+    ),
+)
+def test_is_employer_exempt_for_payment(
+    employer_exempt_family,
+    employer_exempt_medical,
+    absence_period_start_date,
+    claim_type,
+    expected_result,
+    initialize_factories_session,
+    test_db_session,
+):
+    payment = DelegatedPaymentFactory(
+        test_db_session,
+        # Payment
+        is_adhoc_payment=False,
+        # Claim
+        claim_type=claim_type,
+        absence_period_start_date=absence_period_start_date,
+        # Employer
+        employer_exempt_commence_date=date(2022, 1, 1),
+        employer_exempt_cease_date=date(2022, 1, 31),
+        employer_exempt_family=employer_exempt_family,
+        employer_exempt_medical=employer_exempt_medical,
+    ).get_or_create_payment()
+
+    assert (
+        is_employer_exempt_for_payment(payment, payment.claim, payment.claim.employer)
+        is expected_result
+    )
+
+    # Show that adhoc payments always return false from check
+    adhoc_payment = DelegatedPaymentFactory(
+        test_db_session,
+        # Payment
+        is_adhoc_payment=True,
+        # Claim
+        claim_type=claim_type,
+        absence_period_start_date=absence_period_start_date,
+        # Employer
+        employer_exempt_commence_date=date(2022, 1, 1),
+        employer_exempt_cease_date=date(2022, 1, 31),
+        employer_exempt_family=employer_exempt_family,
+        employer_exempt_medical=employer_exempt_medical,
+    ).get_or_create_payment()
+
+    assert (
+        is_employer_exempt_for_payment(
+            adhoc_payment, adhoc_payment.claim, adhoc_payment.claim.employer
+        )
+        is False
+    )
+
+
+def test_get_earliest_absence_period_for_payment_leave_request(
+    initialize_factories_session, test_db_session
+):
+    # This test simply implements the example given in the relevant method
+    claim = ClaimFactory.create()
+
+    # Paid Leave 0 (not connected to any payments - occurs before)
+    AbsencePeriodFactory.create(
+        claim=claim,
+        absence_period_start_date=date(2021, 12, 1),
+        absence_period_end_date=date(2021, 12, 28),
+        fineos_leave_request_id=0,
+    )
+    # Paid Leave 1
+    fineos_leave_request_id_1 = 1
+    ## Absence Period A
+    absence_period_a = AbsencePeriodFactory.create(
+        claim=claim,
+        absence_period_start_date=date(2022, 1, 1),
+        absence_period_end_date=date(2022, 1, 28),
+        fineos_leave_request_id=fineos_leave_request_id_1,
+    )
+    ### Payment I
+    payment_1 = PaymentFactory.create(
+        claim=claim,
+        fineos_leave_request_id=fineos_leave_request_id_1,
+        period_start_date=date(2022, 1, 1),
+        period_end_date=date(2022, 1, 7),
+    )
+    ### Payment II
+    payment_2 = PaymentFactory.create(
+        claim=claim,
+        fineos_leave_request_id=fineos_leave_request_id_1,
+        period_start_date=date(2022, 1, 8),
+        period_end_date=date(2022, 1, 14),
+    )
+    ## Absence Period B
+    AbsencePeriodFactory.create(
+        claim=claim,
+        absence_period_start_date=date(2022, 2, 1),
+        absence_period_end_date=date(2022, 2, 28),
+        fineos_leave_request_id=fineos_leave_request_id_1,
+    )
+    ### Payment III
+    payment_3 = PaymentFactory.create(
+        claim=claim,
+        fineos_leave_request_id=fineos_leave_request_id_1,
+        period_start_date=date(2022, 2, 1),
+        period_end_date=date(2022, 2, 7),
+    )
+    ### Payment IV
+    payment_4 = PaymentFactory.create(
+        claim=claim,
+        fineos_leave_request_id=fineos_leave_request_id_1,
+        period_start_date=date(2022, 2, 8),
+        period_end_date=date(2022, 2, 14),
+    )
+
+    # Paid Leave 2
+    fineos_leave_request_id_2 = 2
+    ## Absence Period C
+    absence_period_c = AbsencePeriodFactory.create(
+        claim=claim,
+        absence_period_start_date=date(2022, 3, 1),
+        absence_period_end_date=date(2022, 3, 28),
+        fineos_leave_request_id=fineos_leave_request_id_2,
+    )
+    ### Payment V
+    payment_5 = PaymentFactory.create(
+        claim=claim,
+        fineos_leave_request_id=fineos_leave_request_id_2,
+        period_start_date=date(2022, 3, 1),
+        period_end_date=date(2022, 3, 7),
+    )
+    ### Payment VI
+    payment_6 = PaymentFactory.create(
+        claim=claim,
+        fineos_leave_request_id=fineos_leave_request_id_2,
+        period_start_date=date(2022, 3, 8),
+        period_end_date=date(2022, 3, 14),
+    )
+    ## Absence Period D
+    AbsencePeriodFactory.create(
+        claim=claim,
+        absence_period_start_date=date(2022, 4, 1),
+        absence_period_end_date=date(2022, 4, 28),
+        fineos_leave_request_id=fineos_leave_request_id_2,
+    )
+    ### Payment VII
+    payment_7 = PaymentFactory.create(
+        claim=claim,
+        fineos_leave_request_id=fineos_leave_request_id_2,
+        period_start_date=date(2022, 4, 1),
+        period_end_date=date(2022, 4, 7),
+    )
+    ## Absence Period E
+    AbsencePeriodFactory.create(
+        claim=claim,
+        absence_period_start_date=date(2022, 5, 1),
+        absence_period_end_date=date(2022, 5, 28),
+        fineos_leave_request_id=fineos_leave_request_id_2,
+    )
+    ### Payment VIII
+    payment_8 = PaymentFactory.create(
+        claim=claim,
+        fineos_leave_request_id=fineos_leave_request_id_2,
+        period_start_date=date(2022, 5, 1),
+        period_end_date=date(2022, 5, 7),
+    )
+
+    # Paid Leave 3 (Occurs after, no payments associated)
+    AbsencePeriodFactory.create(
+        claim=claim,
+        absence_period_start_date=date(2023, 1, 1),
+        absence_period_end_date=date(2023, 1, 28),
+        fineos_leave_request_id=3,
+    )
+
+    for payment in [payment_1, payment_2, payment_3, payment_4]:
+        absence_period = get_earliest_absence_period_for_payment_leave_request(
+            test_db_session, payment
+        )
+        assert absence_period.absence_period_id == absence_period_a.absence_period_id
+
+    for payment in [payment_5, payment_6, payment_7, payment_8]:
+        absence_period = get_earliest_absence_period_for_payment_leave_request(
+            test_db_session, payment
+        )
+        assert absence_period.absence_period_id == absence_period_c.absence_period_id
+
+
+def test_get_earliest_matching_payment(initialize_factories_session, test_db_session):
+    # Test ensures that we are retrieving the payment
+    # with the oldest created_at matching C/I values
+    fineos_pei_c_value = "1234"
+    fineos_pei_i_value = "5678"
+    payment_factory = DelegatedPaymentFactory(
+        test_db_session,
+        fineos_pei_c_value=fineos_pei_c_value,
+        fineos_pei_i_value=fineos_pei_i_value,
+    )
+    earliest_payment = payment_factory.get_or_create_payment()
+
+    # Create a series of related payments
+
+    for i in range(10):
+        new_payment = payment_factory.create_related_payment(weeks_later=i + 1)
+        assert new_payment.fineos_pei_c_value == earliest_payment.fineos_pei_c_value
+        assert new_payment.fineos_pei_i_value == earliest_payment.fineos_pei_i_value
+
+    earliest_matching_payment = get_earliest_matching_payment(
+        test_db_session, fineos_pei_c_value, fineos_pei_i_value
+    )
+
+    assert earliest_matching_payment.payment_id == earliest_payment.payment_id
+
+
+def test_get_earliest_matching_payment__no_previous_payments(
+    initialize_factories_session, test_db_session
+):
+    fineos_pei_c_value = "1234"
+    fineos_pei_i_value = "5678"
+
+    earliest_matching_payment = get_earliest_matching_payment(
+        test_db_session, fineos_pei_c_value, fineos_pei_i_value
+    )
+
+    assert earliest_matching_payment is None
+
+
+def test_get_unconfigured_fineos_columns():
+    expected_columns = {"addressline6": "test", "addressline7": "test"}
+
+    unconfigured_columns = payments_util.get_unconfigured_fineos_columns(
+        expected_columns, FineosExtractVpei
+    )
+
+    assert len(unconfigured_columns) == 0
+
+    extra_columns = {
+        "addressline6": "test",
+        "addressline7": "test",
+        "addressline8": "test",  # no matching column in FineosExtractVpei
+        "addressline9": "test",  # no matching column in FineosExtractVpei
+    }
+
+    unconfigured_columns = payments_util.get_unconfigured_fineos_columns(
+        extra_columns, FineosExtractVpei
+    )
+
+    assert unconfigured_columns == ["addressline8", "addressline9"]

@@ -2,17 +2,19 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, List, Optional
 
+from massgov.pfml.db.models.absences import AbsencePeriodType
 from massgov.pfml.db.models.employees import (
     BankAccountType,
+    LkAbsencePeriodType,
     LkBankAccountType,
     LkPaymentMethod,
     LkPaymentTransactionType,
     PaymentMethod,
     PaymentTransactionType,
 )
-from massgov.pfml.delegated_payments.audit.delegated_payment_rejects import (
-    AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS,
-    AUDIT_SKIPPED_NOTE_TO_WRITEBACK_STATUS,
+from massgov.pfml.db.models.payments import (
+    AUDIT_REJECT_NOTE_TO_WRITEBACK_TRANSACTION_STATUS,
+    AUDIT_SKIPPED_NOTE_TO_WRITEBACK_TRANSACTION_STATUS,
 )
 from massgov.pfml.delegated_payments.pub.check_return import PaidStatus
 
@@ -26,6 +28,9 @@ class ScenarioName(Enum):
     )
     UNKNOWN_LEAVE_REQUEST_DECISION = "UNKNOWN_LEAVE_REQUEST_DECISION"
     IN_REVIEW_LEAVE_REQUEST_DECISION = "IN_REVIEW_LEAVE_REQUEST_DECISION"
+    IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION = (
+        "IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION"
+    )
 
     HAPPY_PATH_FAMILY_CHECK_PRENOTED = "HAPPY_PATH_FAMILY_CHECK_PRENOTED"
 
@@ -40,6 +45,9 @@ class ScenarioName(Enum):
     HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH = "HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH"
     HAPPY_PATH_DUA_ADDITIONAL_INCOME = "HAPPY_PATH_DUA_ADDITIONAL_INCOME"
     HAPPY_PATH_DIA_ADDITIONAL_INCOME = "HAPPY_PATH_DIA_ADDITIONAL_INCOME"
+    HAPPY_PATH_MAX_LEAVE_DURATION_EXCEEDED = "HAPPY_PATH_MAX_LEAVE_DURATION_EXCEEDED"
+    HAPPY_PATH_PAYMENT_DATE_MISMATCH = "HAPPY_PATH_PAYMENT_DATE_MISMATCH"
+    HAPPY_PATH_PAYMENT_PREAPPROVED = "HAPPY_PATH_PAYMENT_PREAPPROVED"
 
     # Non-Standard Payments
     ZERO_DOLLAR_PAYMENT = "ZERO_DOLLAR_PAYMENT"
@@ -100,6 +108,8 @@ class ScenarioName(Enum):
     PUB_ACH_MEDICAL_RETURN = "PUB_ACH_MEDICAL_RETURN"
     PUB_ACH_MEDICAL_NOTIFICATION = "PUB_ACH_MEDICAL_NOTIFICATION"
 
+    PUB_ACH_MANUAL_REJECT = "PUB_ACH_MANUAL_REJECT"
+
     PUB_CHECK_FAMILY_RETURN_VOID = "PUB_CHECK_FAMILY_RETURN_VOID"
     PUB_CHECK_FAMILY_RETURN_STALE = "PUB_CHECK_FAMILY_RETURN_STALE"
     PUB_CHECK_FAMILY_RETURN_STOP = "PUB_CHECK_FAMILY_RETURN_STOP"
@@ -107,6 +117,24 @@ class ScenarioName(Enum):
     PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND = (
         "PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND"
     )
+
+    # Tax withholding payments
+    HAPPY_PATH_TAX_WITHHOLDING = "HAPPY_PATH_TAX_WITHHOLDING"
+    TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN = (
+        "TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN"
+    )
+
+    HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK = (
+        "HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK"
+    )
+
+    TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED = "TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED"
+
+    TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT = "TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT"
+
+    TAX_WITHHOLDING_AUDIT_SKIPPED_THEN_ACCEPTED = "TAX_WITHHOLDING_AUDIT_SKIPPED_THEN_ACCEPTED"
+
+    TAX_WITHHOLDING_CANCELLATION_PAYMENT = "TAX_WITHHOLDING_CANCELLATION_PAYMENT"
 
 
 @dataclass
@@ -153,6 +181,13 @@ class ScenarioDescriptor:
     dor_fineos_name_mismatch: bool = False
     dua_additional_income: bool = False
     dia_additional_income: bool = False
+    payment_date_mismatch: bool = False
+
+    # Payment date mismatch processor fails this check otherwise.
+    has_absence_period: bool = True
+    absence_period_type: LkAbsencePeriodType = AbsencePeriodType.CONTINUOUS
+
+    max_leave_duration_exceeded: bool = False
 
     is_audit_rejected: bool = False
     is_audit_skipped: bool = False
@@ -166,6 +201,7 @@ class ScenarioDescriptor:
 
     include_claim_details: bool = True
 
+    # is_create_employee : bool = True
     # ACH Returns
     # https://lwd.atlassian.net/wiki/spaces/API/pages/1333364105/PUB+ACH+Return+File+Format
 
@@ -189,10 +225,21 @@ class ScenarioDescriptor:
 
     pub_check_return_invalid_check_number: bool = False
 
+    is_tax_withholding_records_exists: bool = False
+    is_duplicate_tax_withholding_records_exists: bool = False
+    is_tax_withholding_record_without_primary_payment: bool = False
+
+    # Preapproval
+    has_past_payments: bool = False
+
+    # Manual rejects
+    manual_pub_reject_response: bool = False
+    manual_pub_reject_notes: str = "Manual Failure Test"
+
 
 SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     ScenarioDescriptor(
-        scenario_name=ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED, claim_type="Employee",
+        scenario_name=ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED, claim_type="Employee"
     ),
     ScenarioDescriptor(scenario_name=ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED),
     ScenarioDescriptor(
@@ -231,7 +278,7 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         prenoted=False,
     ),
     ScenarioDescriptor(
-        scenario_name=ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED, create_payment=False,
+        scenario_name=ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED, create_payment=False
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.CLAIM_NOT_ID_PROOFED,
@@ -258,27 +305,31 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         employee_in_payment_extract_missing_in_db=True,
     ),
     ScenarioDescriptor(
-        scenario_name=ScenarioName.UNKNOWN_LEAVE_REQUEST_DECISION, leave_request_decision="Pending",
+        scenario_name=ScenarioName.UNKNOWN_LEAVE_REQUEST_DECISION, leave_request_decision="Pending"
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.IN_REVIEW_LEAVE_REQUEST_DECISION,
         leave_request_decision="In Review",
     ),
     ScenarioDescriptor(
-        scenario_name=ScenarioName.REJECTED_LEAVE_REQUEST_DECISION,
-        leave_request_decision="Rejected",
+        scenario_name=ScenarioName.IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION,
+        leave_request_decision="In Review",
+        is_adhoc_payment=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.REJECTED_LEAVE_REQUEST_DECISION, leave_request_decision="Denied"
     ),
     ScenarioDescriptor(scenario_name=ScenarioName.AUDIT_REJECTED, is_audit_rejected=True),
     ScenarioDescriptor(
         scenario_name=ScenarioName.AUDIT_REJECTED_WITH_NOTE,
         is_audit_rejected=True,
-        audit_response_note=list(AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS.keys())[0],
+        audit_response_note=list(AUDIT_REJECT_NOTE_TO_WRITEBACK_TRANSACTION_STATUS.keys())[0],
     ),
     ScenarioDescriptor(scenario_name=ScenarioName.AUDIT_SKIPPED, is_audit_skipped=True),
     ScenarioDescriptor(
         scenario_name=ScenarioName.AUDIT_SKIPPED_WITH_NOTE,
         is_audit_skipped=True,
-        audit_response_note=list(AUDIT_SKIPPED_NOTE_TO_WRITEBACK_STATUS.keys())[0],
+        audit_response_note=list(AUDIT_SKIPPED_NOTE_TO_WRITEBACK_TRANSACTION_STATUS.keys())[0],
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.PUB_ACH_PRENOTE_RETURN,
@@ -330,8 +381,10 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
-        claim_type="Employee",
         pub_ach_response_change_notification=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_ACH_MANUAL_REJECT, manual_pub_reject_response=True
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
@@ -378,7 +431,7 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         pub_check_return_invalid_check_number=True,
     ),
     ScenarioDescriptor(
-        scenario_name=ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE, claim_missing_employee=True,
+        scenario_name=ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE, claim_missing_employee=True
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
@@ -386,14 +439,59 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         claim_extract_employee_identifier_unknown=True,
     ),
     ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
+        is_tax_withholding_records_exists=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+        payment_method=PaymentMethod.CHECK,
+        is_tax_withholding_records_exists=True,
+        fineos_extract_address_valid=False,
+        pub_check_response=False,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
+        is_tax_withholding_records_exists=True,
+        payment_method=PaymentMethod.CHECK,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED,
+        is_tax_withholding_records_exists=True,
+        existing_eft_account=False,
+        prenoted=False,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT,
+        is_tax_withholding_record_without_primary_payment=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.TAX_WITHHOLDING_CANCELLATION_PAYMENT,
+        is_tax_withholding_records_exists=True,
+        payment_transaction_type=PaymentTransactionType.CANCELLATION,
+    ),
+    ScenarioDescriptor(
         scenario_name=ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
         dor_fineos_name_mismatch=True,
     ),
     ScenarioDescriptor(
-        scenario_name=ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME, dua_additional_income=True,
+        scenario_name=ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME, dua_additional_income=True
     ),
     ScenarioDescriptor(
-        scenario_name=ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME, dia_additional_income=True,
+        scenario_name=ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME, dia_additional_income=True
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_MAX_LEAVE_DURATION_EXCEEDED,
+        max_leave_duration_exceeded=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH,
+        payment_date_mismatch=True,
+        is_adhoc_payment=False,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED,
+        has_past_payments=True,
+        payment_method=PaymentMethod.CHECK,
     ),
 ]
 
@@ -444,6 +542,13 @@ DELAYED_SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         scenario_name=ScenarioName.SECOND_PAYMENT_FOR_PERIOD_OVER_CAP,
         payment_close_to_cap=True,
         has_additional_payment_in_period=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.TAX_WITHHOLDING_AUDIT_SKIPPED_THEN_ACCEPTED,
+        is_audit_skipped=True,
+        is_audit_approved_delayed=True,
+        has_additional_payment_in_period=True,
+        is_tax_withholding_records_exists=True,
     ),
 ]
 

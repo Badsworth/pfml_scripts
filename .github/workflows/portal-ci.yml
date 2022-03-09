@@ -19,7 +19,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  nodeVersion: 15.x
+  nodeVersion: 16.x
   deploys_channel: "C01HEAJPE76" #mass-pfml-deploys-shared
   working-dir: ./portal
   cache-package-lock: ./portal/package-lock.json
@@ -46,7 +46,6 @@ jobs:
       - name: format-check
         run: npm run format-check
         working-directory: ${{ env.working-dir }}
-
       - name: if format-check fails
         if: ${{ failure() }}
         run: echo "::warning file=portal/package.json,line=1,col=1::Make sure you have the latest version of Prettier setup locally. You can also trigger Prettier by commenting on the PR with '/gh portal format' as the body."
@@ -76,7 +75,8 @@ jobs:
         run: npm run ts:check
         working-directory: ${{ env.working-dir }}
 
-  test:
+  test-src:
+    name: Test src
     runs-on: ubuntu-latest
 
     steps:
@@ -93,8 +93,8 @@ jobs:
         run: npm ci --audit false
         working-directory: ${{ env.working-dir }}
 
-      - name: test
-        run: npm run test:ci
+      - name: test (src)
+        run: npm run test:ci:src
         working-directory: ${{ env.working-dir }}
 
       - name: Coveralls
@@ -104,9 +104,31 @@ jobs:
           path-to-lcov: "./portal/coverage/lcov.info"
           base-path: "./portal"
 
+  test-storybook:
+    name: Test stories
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          cache: "npm"
+          cache-dependency-path: ${{ env.cache-package-lock }}
+          node-version: ${{ env.nodeVersion }}
+
+      - name: install
+        run: npm ci --audit false
+        working-directory: ${{ env.working-dir }}
+
+      - name: test (storybook)
+        run: npm run test:ci:storybook
+        working-directory: ${{ env.working-dir }}
+
   get-test-state:
     name: Finalize test state
-    needs: [lint, type-check, test]
+    needs: [lint, type-check, test-src, test-storybook]
     if: always() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
@@ -119,8 +141,8 @@ jobs:
         id: test-state
         run: echo "::set-output name=test-state::${{ env.WORKFLOW_CONCLUSION }}"
 
-  post-to-slack:
-    name: post failures to slack
+  post-to-teams:
+    name: post failures to teams
     needs: [get-test-state]
     if: always() && (needs.get-test-state.outputs.test-state == 'failure' || needs.get-test-state.outputs.test-state == 'timed_out')
     runs-on: ubuntu-latest
@@ -136,20 +158,20 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
-      - name: Pull slackbot API token from SSM
+      - name: Pull teams uri from SSM
         uses: "marvinpinto/action-inject-ssm-secrets@latest"
         with:
-          ssm_parameter: "/admin/common/nava-slackbot-api-key"
-          env_variable_name: "slackbot_token"
+          ssm_parameter: "/admin/common/teams-deploy-uri"
+          env_variable_name: "teams_uri"
 
-      - name: Post to Slack
+      - name: Post to Teams
         run: |
-          SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
-          -H 'Content-Type: application/json;charset=utf-8' \
-          --data '{
-            "channel": "${{ env.deploys_channel }}",
-            "attachments": [{
-              "title": "Portal tests failed in main (<${{ env.workflow_self_link }}|build logs>)",
-              "color": "danger"
-            }]
-          }' https://slack.com/api/chat.postMessage)
+          RESPONSE=$(curl -fsLS -X POST ${{ env.TEAMS_URI }} \
+          --header 'Content-Type: application/json' \
+          --data '{   
+            "@type": "MessageCard",
+            "themeColor": "2986CC",
+            "title": "Portal Tests Failed",
+            "text": "Portal tests failed in main [build logs](${{ env.workflow_self_link }})"
+            }'
+          )

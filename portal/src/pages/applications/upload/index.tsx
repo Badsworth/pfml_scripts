@@ -1,14 +1,13 @@
 import React, { useEffect } from "react";
 import { TFunction, useTranslation } from "react-i18next";
-import { AbsencePeriod } from "../../../models/ClaimDetail";
-import AppErrorInfo from "../../../models/AppErrorInfo";
-import AppErrorInfoCollection from "../../../models/AppErrorInfoCollection";
+import { AbsencePeriod } from "../../../models/AbsencePeriod";
 import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
 import InputChoiceGroup from "../../../components/core/InputChoiceGroup";
 import LeaveReason from "../../../models/LeaveReason";
 import QuestionPage from "../../../components/QuestionPage";
 import Spinner from "../../../components/core/Spinner";
+import { ValidationError } from "../../../errors";
 import tracker from "../../../services/tracker";
 import useFormState from "../../../hooks/useFormState";
 import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
@@ -50,7 +49,7 @@ export const UploadDocsOptions = (props: Props) => {
   }, [absence_id]);
 
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });
@@ -60,7 +59,7 @@ export const UploadDocsOptions = (props: Props) => {
     : [];
 
   // we should still display content if there are exclusively DocumentsLoadErrors.
-  const hasNonDocumentsLoadError = appLogic.appErrors.items.some(
+  const hasNonDocumentsLoadError = appLogic.errors.some(
     (error) => error.name !== "DocumentsLoadError"
   );
   if (hasNonDocumentsLoadError) {
@@ -70,25 +69,25 @@ export const UploadDocsOptions = (props: Props) => {
   if (isLoadingClaimDetail || !claimDetail)
     return (
       <div className="margin-top-8 text-center">
-        <Spinner
-          aria-valuetext={t("pages.claimsStatus.loadingClaimDetailLabel")}
-        />
+        <Spinner aria-label={t("pages.claimsStatus.loadingClaimDetailLabel")} />
       </div>
     );
 
   const handleSave = async () => {
     if (!upload_docs_options) {
-      const appErrorInfo = new AppErrorInfo({
-        field: "upload_docs_options",
-        message: t("errors.applications.upload_docs_options.required"),
-        type: "required",
-      });
+      const error = new ValidationError([
+        {
+          field: "upload_docs_options",
+          type: "required",
+          namespace: "applications",
+        },
+      ]);
 
-      appLogic.setAppErrors(new AppErrorInfoCollection([appErrorInfo]));
+      appLogic.setErrors([error]);
 
       tracker.trackEvent("ValidationError", {
-        issueField: appErrorInfo.field || "",
-        issueType: appErrorInfo.type || "",
+        issueField: error.issues[0].field ?? "",
+        issueType: error.issues[0].type ?? "",
       });
 
       return;

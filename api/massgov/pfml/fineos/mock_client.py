@@ -9,12 +9,12 @@ import base64
 import copy
 import datetime
 import pathlib
-import typing
 from decimal import Decimal
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, Iterable, List, Optional, Tuple, Union
 
 import faker
 import requests
+from requests.models import Response
 
 import massgov.pfml.util.logging
 import massgov.pfml.util.logging.wrapper
@@ -24,11 +24,17 @@ from massgov.pfml.util.converters.json_to_obj import set_empty_dates_to_none
 
 from ..db.models.applications import PhoneType
 from . import client, exception, fineos_client, models
+from .mock.eform import MOCK_CUSTOMER_EFORMS, MOCK_EFORMS
+from .mock.field import fake_customer_no
+from .models.customer_api import ChangeRequestPeriod, ChangeRequestReason
+from .models.customer_api import EForm as CustomerEForm
+from .models.customer_api import LeavePeriodChangeRequest
+from .models.group_client_api import EForm
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 # Capture calls for unit testing.
-_capture: typing.Optional[typing.List] = None
+_capture: Optional[List] = None
 
 MOCK_DOCUMENT_DATA = {
     "caseId": "",
@@ -215,14 +221,101 @@ def mock_customer_info():
     }
 
 
+def mock_customer_details():
+    # Similar to mock_customer_info, The FINEOS response includes more fields than this
+    return {
+        "firstName": "Samantha",
+        "lastName": "Jorgenson",
+        "secondName": "",
+        "initials": "",
+        "dateOfBirth": "1996-01-11",
+        "idNumber": "123121232",
+        "gender": "Neutral",
+        "customerAddress": {
+            "address": {
+                "addressLine1": "37 Mather Drive",
+                "addressLine2": "#22",
+                "addressLine3": "",
+                "addressLine4": "Amherst",
+                "addressLine5": "",
+                "addressLine6": "MA",
+                "addressLine7": "",
+                "postCode": "01003",
+                "country": "USA",
+            }
+        },
+        "classExtensionInformation": [
+            {"name": "MassachusettsID", "stringValue": "123456789"},
+            {"name": "OutOfStateID", "stringValue": "123"},
+        ],
+    }
+
+
+def mock_customer_contact_details():
+    # Mocks FINEOS response for customer contact details
+    # This includes all the FINEOS fields from this endpoint
+    return {
+        "phoneNumbers": [
+            {
+                "id": 0,
+                "preferred": False,
+                "phoneNumberType": "Cell",
+                "intCode": "1",
+                "areaCode": "123",
+                "telephoneNo": "4567890",
+            },
+            {
+                "id": 1,
+                "preferred": True,
+                "phoneNumberType": "Cell",
+                "intCode": "1",
+                "areaCode": "321",
+                "telephoneNo": "4567890",
+            },
+        ],
+        "emailAddresses": [
+            {"id": 0, "preferred": False, "emailAddress": "testemail1@test.com"},
+            {"id": 1, "preferred": True, "emailAddress": "testemail2@test.com"},
+        ],
+        "preferredContactMethod": 1,
+    }
+
+
 class MockFINEOSClient(client.AbstractFINEOSClient):
     """Mock FINEOS API client that returns fake responses."""
 
+    def __init__(
+        self,
+        mock_eforms: Iterable[EForm] = MOCK_EFORMS,
+        mock_customer_eforms: Iterable[CustomerEForm] = MOCK_CUSTOMER_EFORMS,
+    ):
+        self.mock_eforms = mock_eforms
+        self.mock_eform_map = {eform.eformId: eform for eform in mock_eforms}
+        self.mock_customer_eforms = mock_customer_eforms
+        self.mock_customer_eform_map = {eform.eformId: eform for eform in mock_customer_eforms}
+
     def read_employer(self, employer_fein: Fein) -> models.OCOrganisation:
-        _capture_call("read_employer", None, employer_fein=employer_fein)
+        _capture_call("read_employer", None, employer_fein=employer_fein.to_unformatted_str())
 
         if employer_fein == Fein("999999999"):
             raise exception.FINEOSEntityNotFound("Employer not found.")
+
+        organisationUnits = None
+        if employer_fein == "999999998":
+            organisationUnits = models.OCOrganisationUnit(
+                OrganisationUnit=[
+                    models.OCOrganisationUnitItem(OID="PE:00001:0000000001", Name="OrgUnitOne"),
+                    models.OCOrganisationUnitItem(OID="PE:00001:0000000002", Name="OrgUnitTwo"),
+                ]
+            )
+
+        if employer_fein == "999999997":
+            organisationUnits = models.OCOrganisationUnit(
+                OrganisationUnit=[
+                    models.OCOrganisationUnitItem(OID="PE:00002:0000000001", Name="OrgUnitThree"),
+                    models.OCOrganisationUnitItem(OID="PE:00002:0000000002", Name="OrgUnitFour"),
+                ]
+            )
 
         return models.OCOrganisation(
             OCOrganisation=[
@@ -230,6 +323,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
                     CustomerNo="999",
                     CorporateTaxNumber=employer_fein.to_unformatted_str(),
                     Name="Foo",
+                    organisationUnits=organisationUnits,
                 )
             ]
         )
@@ -240,8 +334,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         if employer_fein == Fein("999999999"):
             raise exception.FINEOSEntityNotFound("Employer not found.")
         else:
-            # TODO: Match the FINEOS employer id format
-            return employer_fein.to_unformatted_str() + "1000"
+            return str(fake_customer_no(employer_fein.to_unformatted_str()))
 
     def register_api_user(self, employee_registration: models.EmployeeRegistration) -> None:
         _capture_call("register_api_user", None, employee_registration=employee_registration)
@@ -274,8 +367,9 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
             phoneNumbers=[
                 models.customer_api.PhoneNumber(
                     id=1,
-                    intCode=None,
-                    telephoneNo=None,
+                    intCode=1,
+                    areaCode=321,
+                    telephoneNo=4567890,
                     phoneNumberType=PhoneType.PHONE.phone_type_description,
                 )
             ]
@@ -328,7 +422,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         )
         return notification_case_summary
 
-    def get_absences(self, user_id: str) -> typing.List[models.customer_api.AbsenceCaseSummary]:
+    def get_absences(self, user_id: str) -> List[models.customer_api.AbsenceCaseSummary]:
         return [models.customer_api.AbsenceCaseSummary()]
 
     def get_absence(self, user_id: str, absence_id: str) -> models.customer_api.AbsenceDetails:
@@ -371,7 +465,10 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         hrsWorkedPerWeek = 37 if customer_id == "1000" else 37.5
         return [
             models.customer_api.ReadCustomerOccupation(
-                occupationId=12345, hoursWorkedPerWeek=hrsWorkedPerWeek, workPatternBasis="Unknown"
+                occupationId=12345,
+                hoursWorkedPerWeek=hrsWorkedPerWeek,
+                workPatternBasis="Unknown",
+                employmentStatus="Active",
             )
         ]
 
@@ -421,16 +518,48 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     def get_eform_summary(
         self, user_id: str, absence_id: str
     ) -> List[models.group_client_api.EFormSummary]:
+        _capture_call("get_eform_summary", user_id, absence_id=absence_id)
         return [
             models.group_client_api.EFormSummary(
-                eformId=12345, eformType="Mocked Other Leave EForm"
+                eformId=eform.eformId,
+                eformTypeId="PE-11212-%010i" % eform.eformId,
+                effectiveDateFrom=None,
+                effectiveDateTo=None,
+                eformType=eform.eformType,
             )
+            for eform in self.mock_eforms
+        ]
+
+    def customer_get_eform_summary(
+        self, user_id: str, absence_id: str
+    ) -> List[models.customer_api.EFormSummary]:
+        _capture_call("customer_get_eform_summary", user_id, absence_id=absence_id)
+        return [
+            models.customer_api.EFormSummary(
+                eformId=eform.eformId,
+                eformTypeId="PE-11212-%010i" % eform.eformId,
+                effectiveDateFrom=None,
+                effectiveDateTo=None,
+                eformType=eform.eformType,
+            )
+            for eform in self.mock_customer_eforms
         ]
 
     def get_eform(
         self, user_id: str, absence_id: str, eform_id: int
     ) -> models.group_client_api.EForm:
-        return models.group_client_api.EForm(eformId=12345, eformAttributes=[])
+        _capture_call("get_eform", user_id, absence_id=absence_id, eform_id=eform_id)
+        if eform_id in self.mock_eform_map:
+            return self.mock_eform_map[eform_id]
+        raise exception.FINEOSForbidden("get_eform", 200, 403, "Permission denied")
+
+    def customer_get_eform(
+        self, user_id: str, absence_id: str, eform_id: int
+    ) -> models.customer_api.EForm:
+        _capture_call("customer_get_eform", user_id, absence_id=absence_id, eform_id=eform_id)
+        if eform_id in self.mock_customer_eform_map:
+            return self.mock_customer_eform_map[eform_id]
+        raise exception.FINEOSForbidden("get_eform", 200, 403, "Permission denied")
 
     def create_eform(self, user_id: str, absence_id: str, eform: EFormBody) -> None:
         _capture_call("create_eform", user_id, eform=eform, absence_id=absence_id)
@@ -443,6 +572,40 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     ) -> List[models.customer_api.ReadCustomerOccupation]:
         _capture_call("get_case_occupations", user_id, case_id=case_id)
         return [models.customer_api.ReadCustomerOccupation(occupationId=12345)]
+
+    def get_payment_preferences(
+        self, user_id: str
+    ) -> List[models.customer_api.PaymentPreferenceResponse]:
+        _capture_call("get_payment_preferences", user_id)
+        return [
+            models.customer_api.PaymentPreferenceResponse(
+                paymentMethod="Elec Funds Transfer",
+                paymentPreferenceId="85622",
+                isDefault=True,
+                accountDetails=models.customer_api.AccountDetails(
+                    accountNo="1234565555",
+                    accountName="Constance Griffin",
+                    routingNumber="011222333",
+                    accountType="Checking",
+                ),
+                chequeDetails=models.customer_api.ChequeDetails(
+                    nameToPrintOnCheck="Connie Griffin"
+                ),
+                customerAddress=models.customer_api.CustomerAddress(
+                    address=models.customer_api.Address(
+                        addressLine1="44324 Nayeli Stream",
+                        addressLine2="",
+                        addressLine3="",
+                        addressLine4="New Monserrateberg",
+                        addressLine5="",
+                        addressLine6="IN",
+                        addressLine7="",
+                        postCode="22516-6101",
+                        country="USA",
+                    )
+                ),
+            )
+        ]
 
     def add_payment_preference(
         self, user_id: str, payment_preference: models.customer_api.NewPaymentPreference
@@ -462,6 +625,8 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         occupation_id: int,
         employment_status: Optional[str],
         hours_worked_per_week: Optional[Decimal],
+        fineos_org_unit_id: Optional[str],
+        worksite_id: Optional[str],
     ) -> None:
         _capture_call(
             "update_occupation",
@@ -469,6 +634,8 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
             employment_status=employment_status,
             hours_worked_per_week=hours_worked_per_week,
             occupation_id=occupation_id,
+            fineos_org_unit_id=fineos_org_unit_id,
+            worksite_id=worksite_id,
         )
 
     def upload_document(
@@ -483,6 +650,30 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     ) -> models.customer_api.Document:
         _capture_call(
             "upload_document",
+            user_id,
+            absence_id=absence_id,
+            document_type=document_type,
+            file_content=file_content,
+            file_name=file_name,
+            content_type=content_type,
+            description=description,
+        )
+
+        document = mock_document(absence_id, document_type, file_name, description)
+        return models.customer_api.Document.parse_obj(document)
+
+    def upload_document_multipart(
+        self,
+        user_id: str,
+        absence_id: str,
+        document_type: str,
+        file_content: bytes,
+        file_name: str,
+        content_type: str,
+        description: str,
+    ) -> models.customer_api.Document:
+        _capture_call(
+            "upload_document_multipart",
             user_id,
             absence_id=absence_id,
             document_type=document_type,
@@ -511,11 +702,12 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
             models.group_client_api.ManagedRequirementDetails.parse_obj(
                 {
                     "managedReqId": 123,
-                    "category": "Fake Category",
+                    "category": "Employer Confirmation",
                     "type": "Employer Confirmation of Leave Data",
                     "followUpDate": datetime.date(2021, 2, 1),
                     "documentReceived": True,
                     "creator": "Fake Creator",
+                    "status": "Open",
                     "subjectPartyName": "Fake Name",
                     "sourceOfInfoPartyName": "Fake Sourcee",
                     "creationDate": datetime.date(2020, 1, 1),
@@ -524,12 +716,13 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
             ),
             models.group_client_api.ManagedRequirementDetails.parse_obj(
                 {
-                    "managedReqId": 123,
-                    "category": "Fake Category",
-                    "type": "Fake Type",
+                    "managedReqId": 124,
+                    "category": "Employer Confirmation",
+                    "type": "Employer Confirmation of Leave Data",
                     "followUpDate": datetime.date(2021, 2, 1),
                     "documentReceived": True,
                     "creator": "Fake Creator",
+                    "status": "Complete",
                     "subjectPartyName": "Fake Name",
                     "sourceOfInfoPartyName": "Fake Sourcee",
                     "creationDate": datetime.date(2020, 1, 1),
@@ -558,6 +751,12 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
                 "military exigency form",
                 "pending application withdrawn",
                 "appeal acknowledgment",
+                "maximum weekly benefit change notice",
+                "benefit amount change notice",
+                "leave allotment change notice",
+                "approved time cancelled",
+                "change request approved",
+                "change request denied",
             ]
 
             allowed_documents = [
@@ -629,10 +828,17 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         )
 
     def get_week_based_work_pattern(
-        self, user_id: str, occupation_id: Union[str, int],
+        self, user_id: str, occupation_id: Union[str, int]
     ) -> models.customer_api.WeekBasedWorkPattern:
         _capture_call("get_week_based_work_pattern", user_id, occupation_id=occupation_id)
-        return models.customer_api.WeekBasedWorkPattern(workPatternType="Fixed", workPatternDays=[])
+        return models.customer_api.WeekBasedWorkPattern(
+            workPatternType="Fixed",
+            workPatternDays=[
+                models.customer_api.WorkPatternDay(
+                    dayOfWeek="Monday", weekNumber=12, hours=4, minutes=5
+                )
+            ],
+        )
 
     def add_week_based_work_pattern(
         self,
@@ -666,7 +872,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         self,
         employer_create_or_update: models.CreateOrUpdateEmployer,
         existing_organization: Optional[models.OCOrganisationItem] = None,
-    ) -> typing.Tuple[str, int]:
+    ) -> Tuple[str, int]:
         _capture_call(
             "create_or_update_employer",
             None,
@@ -686,7 +892,23 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
 
         return (
             employer_create_or_update.fineos_customer_nbr,
-            int(employer_create_or_update.employer_fein) + 44000000,
+            fake_customer_no(employer_create_or_update.employer_fein),
+        )
+
+    def create_or_update_leave_period_change_request(
+        self,
+        fineos_web_id: str,
+        absence_id: str,
+        change_request: models.customer_api.LeavePeriodChangeRequest,
+    ) -> models.customer_api.LeavePeriodChangeRequest:
+        return LeavePeriodChangeRequest(
+            reason=ChangeRequestReason(fullId=0, name="Employee Requested Removal"),
+            changeRequestPeriods=[
+                ChangeRequestPeriod(
+                    startDate=datetime.date(2022, 2, 14), endDate=datetime.date(2022, 2, 15)
+                )
+            ],
+            additionalNotes="Withdrawal",
         )
 
     def create_or_update_leave_admin(
@@ -698,7 +920,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     def update_reflexive_questions(
         self,
         user_id: str,
-        absence_id: typing.Optional[str],
+        absence_id: Optional[str],
         additional_information: models.customer_api.AdditionalInformation,
     ) -> None:
         _capture_call(
@@ -726,6 +948,12 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
             absence_id=absence_id,
             is_withholding_tax=is_withholding_tax,
         )
+
+    def upload_document_to_dms(self, file_name: str, file: bytes, data: Any) -> Response:
+        _capture_call("upload_document_to_dms", None)
+
+        response = Response()
+        return response
 
 
 massgov.pfml.util.logging.wrapper.log_all_method_calls(MockFINEOSClient, logger)

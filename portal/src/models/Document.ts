@@ -2,7 +2,8 @@
 /**
  * @file Document (AKA File) model and enum values
  */
-import LeaveReason from "./LeaveReason";
+import LeaveReason, { LeaveReasonType } from "./LeaveReason";
+import { ValuesOf } from "../../types/common";
 
 const CertificationType = {
   certificationForm: "Certification Form",
@@ -18,16 +19,22 @@ const CertificationType = {
 export const OtherDocumentType = {
   appealAcknowledgment: "Appeal Acknowledgment",
   approvalNotice: "Approval Notice",
+  approvedTimeCancelled: "Approved Time Cancelled",
+  benefitAmountChangeNotice: "Benefit Amount Change Notice",
+  changeRequestApproved: "Change Request Approved",
+  changeRequestDenied: "Change Request Denied",
   denialNotice: "Denial Notice",
   identityVerification: "Identification Proof",
+  leaveAllotmentChangeNotice: "Leave Allotment Change Notice",
+  maximumWeeklyBenefitChangeNotice: "Maximum Weekly Benefit Change Notice",
   medicalCertification: "State managed Paid Leave Confirmation",
   requestForInfoNotice: "Request for more Information",
   withdrawalNotice: "Pending Application Withdrawn",
 } as const;
 
 export type DocumentTypeEnum =
-  | typeof CertificationType[keyof typeof CertificationType]
-  | typeof OtherDocumentType[keyof typeof OtherDocumentType];
+  | ValuesOf<typeof CertificationType>
+  | ValuesOf<typeof OtherDocumentType>;
 
 /**
  * Enums for Document `document_type` field.  In the `certification` object, `certificationForm` is only used for uploads of certification forms; the API then sets the plan
@@ -63,6 +70,77 @@ export interface ClaimDocument {
   document_type: DocumentTypeEnum;
   fineos_document_id: string;
   name: string | null;
+}
+
+/**
+ * Get only documents associated with a given Application
+ */
+export function filterByApplication(
+  items: Array<BenefitsApplicationDocument | ClaimDocument>,
+  application_id: string
+) {
+  return items.filter((item) => {
+    return (
+      isBenefitsApplicationDocument(item) &&
+      item.application_id === application_id
+    );
+  });
+}
+
+/**
+ * Get certification documents based on application leave reason
+ */
+export function findDocumentsByLeaveReason<
+  T extends BenefitsApplicationDocument | ClaimDocument
+>(documents: T[], leaveReason?: LeaveReasonType): T[] {
+  // TODO (CP-2029): Remove the medicalCertification type from this array when it becomes obsolete
+  const documentFilters: Array<
+    typeof DocumentType.certification[keyof typeof DocumentType.certification]
+  > = [DocumentType.certification.medicalCertification];
+
+  if (leaveReason) {
+    documentFilters.push(DocumentType.certification[leaveReason]);
+  }
+  return findDocumentsByTypes(documents, documentFilters);
+}
+
+/**
+ * Get only documents associated with a given selection of document_types
+ */
+export function findDocumentsByTypes<
+  T extends BenefitsApplicationDocument | ClaimDocument
+>(documents: T[], document_types: DocumentTypeEnum[]): T[] {
+  const lowerCaseDocumentTypes = document_types.map((documentType) =>
+    documentType.toLowerCase()
+  );
+
+  return documents.filter((document) => {
+    // Ignore casing differences by comparing lowercased enums
+    return lowerCaseDocumentTypes.includes(
+      document.document_type.toLowerCase()
+    );
+  });
+}
+
+/**
+ * Get only documents that are legal notices.
+ */
+export function getLegalNotices(
+  documents: Array<BenefitsApplicationDocument | ClaimDocument>
+) {
+  return findDocumentsByTypes(documents, [
+    DocumentType.appealAcknowledgment,
+    DocumentType.approvalNotice,
+    DocumentType.denialNotice,
+    DocumentType.requestForInfoNotice,
+    DocumentType.withdrawalNotice,
+    DocumentType.maximumWeeklyBenefitChangeNotice,
+    DocumentType.benefitAmountChangeNotice,
+    DocumentType.leaveAllotmentChangeNotice,
+    DocumentType.approvedTimeCancelled,
+    DocumentType.changeRequestApproved,
+    DocumentType.changeRequestDenied,
+  ]);
 }
 
 export function isBenefitsApplicationDocument(

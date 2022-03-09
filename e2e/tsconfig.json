@@ -28,10 +28,7 @@
     "jsx": "react",
     "noImplicitThis": false,
     "outDir": "./dist",
-    "baseUrl": "src",
-    "paths": {
-      "JSONStream": ["../types/JSONStream"]
-    }
+    "baseUrl": "src"
   },
   "include": ["src/**/*.ts", "cypress/**/*.ts", "*.ts"],
   "exclude": ["scripts/*", "data/*"]

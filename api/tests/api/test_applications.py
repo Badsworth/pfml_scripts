@@ -1,6 +1,6 @@
 import copy
 from datetime import date, datetime
-from typing import Optional
+from typing import Dict, Optional
 from unittest import mock
 
 import factory.random
@@ -10,6 +10,7 @@ from freezegun import freeze_time
 from sqlalchemy import inspect
 
 import massgov.pfml.fineos
+import massgov.pfml.fineos.mock.field
 import massgov.pfml.fineos.mock_client
 import massgov.pfml.fineos.models
 import massgov.pfml.util.datetime as datetime_util
@@ -17,6 +18,7 @@ import tests.api
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
 from massgov.pfml.api.models.applications.responses import ApplicationStatus
 from massgov.pfml.api.services.fineos_actions import LeaveNotificationReason
+from massgov.pfml.api.util.paginate.paginator import DEFAULT_PAGE_SIZE
 from massgov.pfml.api.validation.exceptions import IssueRule, IssueType
 from massgov.pfml.db.models.applications import (
     Application,
@@ -26,17 +28,26 @@ from massgov.pfml.db.models.applications import (
     DocumentType,
     EmploymentStatus,
     FINEOSWebIdExt,
+    IntermittentLeavePeriod,
     LeaveReason,
     LeaveReasonQualifier,
     NoClaimTypeForAbsenceType,
     Phone,
+    ReducedScheduleLeavePeriod,
     RelationshipQualifier,
     RelationshipToCaregiver,
     WorkPattern,
     WorkPatternDay,
     WorkPatternType,
 )
-from massgov.pfml.db.models.employees import Address, Gender, GeoState, PaymentMethod, TaxIdentifier
+from massgov.pfml.db.models.employees import (
+    Address,
+    BankAccountType,
+    Claim,
+    Gender,
+    PaymentMethod,
+    TaxIdentifier,
+)
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,
@@ -59,6 +70,7 @@ from massgov.pfml.db.models.factories import (
     WagesAndContributionsFactory,
     WorkPatternFixedFactory,
 )
+from massgov.pfml.db.models.geo import GeoState
 from massgov.pfml.fineos.client import AbstractFINEOSClient
 from massgov.pfml.fineos.exception import (
     FINEOSClientError,
@@ -67,8 +79,16 @@ from massgov.pfml.fineos.exception import (
     FINEOSFatalUnavailable,
 )
 from massgov.pfml.fineos.factory import FINEOSClientConfig
+from massgov.pfml.fineos.models.customer_api.spec import (
+    AbsenceDetails,
+    AbsencePeriod,
+    EpisodicLeavePeriodDetail,
+    ReadCustomerOccupation,
+    ReportedReducedScheduleLeavePeriod,
+    TimeOffLeavePeriod,
+)
 from massgov.pfml.types import Fein, TaxId
-from massgov.pfml.util.paginate.paginator import DEFAULT_PAGE_SIZE
+from massgov.pfml.util.strings import format_tax_identifier
 
 
 def sqlalchemy_object_as_dict(obj):
@@ -77,7 +97,7 @@ def sqlalchemy_object_as_dict(obj):
 
 def test_applications_get_invalid_uuid(client, user, auth_token):
     response = client.get(
-        "/v1/applications/undefined", headers={"Authorization": f"Bearer {auth_token}"},
+        "/v1/applications/undefined", headers={"Authorization": f"Bearer {auth_token}"}
     )
 
     response_body = response.get_json()
@@ -100,8 +120,14 @@ def test_applications_get_invalid(client, user, auth_token):
 
 
 @freeze_time("2020-01-01")
-def test_applications_get_valid(client, user, auth_token):
-    application = ApplicationFactory.create(user=user, updated_at=datetime_util.utcnow())
+def test_applications_get_incomplete(client, user, auth_token):
+    application = ApplicationFactory.create(
+        user=user,
+        submitted_time=None,
+        updated_at=datetime_util.utcnow(),
+        # Cause at least one validation error to be present
+        first_name=None,
+    )
 
     response = client.get(
         "/v1/applications/{}".format(application.application_id),
@@ -109,12 +135,34 @@ def test_applications_get_valid(client, user, auth_token):
     )
 
     assert response.status_code == 200
+    assert len(response.get_json().get("warnings")) > 0
+
     response_body = response.get_json().get("data")
 
     assert response_body.get("employer_fein") is not None
     assert response_body.get("application_id") == str(application.application_id)
     assert response_body.get("updated_at") == "2020-01-01T00:00:00+00:00"
     assert response_body.get("status") == ApplicationStatus.Started.value
+
+
+def test_applications_get_incomplete_submitted(client, user, auth_token):
+    application = ApplicationFactory.create(
+        user=user,
+        updated_at=datetime_util.utcnow(),
+        # Put the application in a state where it is submitted
+        submitted_time=datetime_util.utcnow(),
+        # Simulate a validation error for pre-submission application
+        first_name=None,
+    )
+
+    response = client.get(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 200
+    # No warning about the first_name missing, because the application is submitted
+    assert len(response.get_json().get("warnings")) == 0
 
 
 def test_applications_unauthorized_get(client, user, auth_token):
@@ -157,7 +205,7 @@ def test_applications_get_partially_displays_fin_acct_num(
 ):
     application = ApplicationFactory.create(user=user)
     application.payment_preference = ApplicationPaymentPreference(
-        account_number="123456789", routing_number="000987654",
+        account_number="123456789", routing_number="000987654"
     )
 
     test_db_session.commit()
@@ -201,6 +249,45 @@ def test_applications_get_with_payment_preference(client, user, auth_token, test
     assert payment_preference["payment_method"] == PaymentMethod.ACH.payment_method_description
 
 
+def test_applications_get_split_from_application_id(client, user, auth_token, test_db_session):
+    # split_from_application_id is an optional field and defaults to None
+    application = ApplicationFactory.create(user=user)
+    test_db_session.commit()
+
+    response = client.get(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    assert response_body.get("split_from_application_id") is None
+
+    # when split_from_application_id is provided, it should also be returned
+    split_application = ApplicationFactory.create(
+        user=user, split_from_application_id=application.application_id
+    )
+    test_db_session.commit()
+    test_db_session.refresh(application)
+
+    response = client.get(
+        "/v1/applications/{}".format(split_application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    assert response.status_code == 200
+    response_body = response.get_json().get("data")
+    assert response_body.get("split_from_application_id") == str(application.application_id)
+
+    # the original request should now provide a split_into_application_id
+    response = client.get(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    assert response.status_code == 200
+    response_body = response.get_json().get("data")
+    assert response_body.get("split_into_application_id") == str(split_application.application_id)
+
+
 def test_applications_get_all_for_user(client, user, auth_token):
     applications = sorted(
         [ApplicationFactory.create(user=user), ApplicationFactory.create(user=user)],
@@ -210,7 +297,6 @@ def test_applications_get_all_for_user(client, user, auth_token):
     unassociated_application = ApplicationFactory.create()
 
     response = client.get("/v1/applications", headers={"Authorization": f"Bearer {auth_token}"})
-    print(response.get_json())
     assert response.status_code == 200
 
     response_data = response.get_json().get("data")
@@ -264,6 +350,540 @@ def test_applications_get_all_pagination_limit_double(client, user, auth_token):
     for (application, app_response) in zip(applications, response_data):
         assert str(application.application_id) == app_response["application_id"]
         assert application.nickname == app_response["application_nickname"]
+
+
+class TestApplicationsImport:
+    @pytest.fixture
+    def valid_request_body(self, claim: Claim) -> Dict[str, str]:
+        return {
+            "absence_case_id": claim.fineos_absence_id,
+            "tax_identifier": format_tax_identifier(claim.employee_tax_identifier),
+        }
+
+    @pytest.fixture(autouse=True)
+    def enable_user_mfa(self, user) -> None:
+        user.mfa_delivery_preference_id = 1
+        user.mfa_phone_number = "+13214567890"
+
+    @pytest.fixture(autouse=True)
+    def mock_cognito_user_mfa_status(self, mock_cognito, monkeypatch) -> None:
+        def admin_get_user(Username: str = None, UserPoolId: str = None):
+            return {
+                "Username": Username,
+                "UserAttributes": [{"Name": "phone_number_verified", "Value": "true"}],
+            }
+
+        monkeypatch.setattr(mock_cognito, "admin_get_user", admin_get_user)
+
+    def test_applications_import(
+        self, client, test_db_session, auth_token, claim, valid_request_body
+    ):
+        absence_case_id = claim.fineos_absence_id
+        assert test_db_session.query(Application).one_or_none() is None
+
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
+
+        response_body = response.get_json().get("data")
+        assert response.status_code == 201
+        assert response_body.get("fineos_absence_id") == absence_case_id
+
+        imported_application = (
+            test_db_session.query(Application).filter(Application.claim_id == claim.claim_id).one()
+        )
+
+        assert imported_application.tax_identifier_id == claim.employee.tax_identifier_id
+        assert imported_application.employer_fein == claim.employer_fein
+        assert imported_application.imported_from_fineos_at is not None
+
+    def test_applications_import_application_for_claim_already_exists(
+        self, client, user, auth_token, claim, valid_request_body
+    ):
+        ApplicationFactory.create(user=user, claim=claim)
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
+        response_body = response.get_json()
+        assert response.status_code == 403
+        assert response_body["message"] == "An application already exists for this claim."
+        assert response_body["errors"][0]["type"] == "duplicate"
+        assert response_body["errors"][0]["field"] == "absence_case_id"
+
+    def test_applications_import_mfa_not_verified(
+        self,
+        client,
+        test_db_session,
+        auth_token,
+        claim,
+        valid_request_body,
+        monkeypatch,
+        mock_cognito,
+    ):
+        def admin_get_user(Username: str = None, UserPoolId: str = None):
+            return {
+                "Username": Username,
+                "UserAttributes": [{"Name": "phone_number_verified", "Value": "false"}],
+            }
+
+        monkeypatch.setattr(mock_cognito, "admin_get_user", admin_get_user)
+
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
+        assert response.status_code == 400
+        assert response.get_json().get("errors") == [
+            {
+                "field": "mfa_delivery_preference",
+                "message": "User has not opted into MFA delivery preferences",
+                "type": "required",
+            }
+        ]
+
+    def test_applications_import_application_for_claim_already_exists_diff_account(
+        self, client, user_with_mfa, auth_token, claim, valid_request_body
+    ):
+        ApplicationFactory.create(user=user_with_mfa, claim=claim)
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
+        response_body = response.get_json()
+        assert response.status_code == 403
+        assert (
+            response_body["message"]
+            == "An application linked to a different account already exists for this claim."
+        )
+        assert response_body["errors"][0]["type"] == "exists"
+        assert response_body["errors"][0]["field"] == "absence_case_id"
+
+    def test_applications_import_missing_required_fields(self, client, auth_token, claim):
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json={"absence_case_id": None, "tax_identifier": None},
+        )
+
+        assert response.status_code == 400
+        assert response.get_json().get("errors") == [
+            {
+                "field": "absence_case_id",
+                "message": "absence_case_id is required",
+                "type": "required",
+            },
+            {
+                "field": "tax_identifier",
+                "message": "tax_identifier is required",
+                "type": "required",
+            },
+        ]
+
+    def test_applications_import_claim_not_found(self, client, auth_token, test_db_session):
+        absence_case_id = "NTN-111-ABS-01"
+
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json={
+                "absence_case_id": absence_case_id,
+                "tax_identifier": format_tax_identifier("123456789"),
+            },
+        )
+
+        assert response.status_code == 400
+        assert response.get_json().get("errors") == [
+            {
+                "message": "Code 1: An issue occurred while trying to import the application.",
+                "type": "incorrect",
+            }
+        ]
+        assert test_db_session.query(Application).one_or_none() is None
+
+    def test_applications_import_claim_without_employee_tax_identification(
+        self, client, auth_token, test_db_session, claim
+    ):
+        claim.employee.tax_identifier_id = None
+        claim.employee.tax_identifier = None
+        test_db_session.commit()
+
+        absence_case_id = claim.fineos_absence_id
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json={
+                "absence_case_id": absence_case_id,
+                "tax_identifier": format_tax_identifier("123456789"),
+            },
+        )
+
+        assert response.status_code == 409
+        assert response.get_json()["message"] == "Claim data incomplete for application import."
+        assert test_db_session.query(Application).one_or_none() is None
+
+    def test_applications_import_claim_without_employer(
+        self, client, auth_token, test_db_session, claim
+    ):
+        claim.employer_id = None
+        claim.employer = None
+        test_db_session.commit()
+
+        absence_case_id = claim.fineos_absence_id
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json={
+                "absence_case_id": absence_case_id,
+                "tax_identifier": format_tax_identifier(claim.employee_tax_identifier),
+            },
+        )
+        assert response.status_code == 409
+        assert response.get_json()["message"] == "Claim data incomplete for application import."
+        assert test_db_session.query(Application).one_or_none() is None
+
+    def test_applications_import_unauthenticated_post(self, client, test_db_session):
+        absence_case_id = "NTN-111-ABS-01"
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {''}"},
+            json={"absence_case_id": absence_case_id},
+        )
+        tests.api.validate_error_response(response, 401)
+        assert test_db_session.query(Application).one_or_none() is None
+
+    @mock.patch("massgov.pfml.api.applications.app.current_user")
+    def test_applications_import_unauthorized_post(
+        self, mock_current_user, client, employer_user, employer_auth_token, test_db_session
+    ):
+        mock_current_user.return_value = employer_user
+        test_db_session.commit()
+        absence_case_id = "NTN-111-ABS-01"
+        # Employer cannot access this endpoint
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json={"absence_case_id": absence_case_id},
+        )
+        assert response.status_code == 403
+        assert "don't have the permission to access" in response.get_json()["message"]
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.read_customer_details")
+    def test_applications_import_has_customer_details(
+        self,
+        mock_read_customer_details,
+        client,
+        test_db_session,
+        auth_token,
+        claim,
+        valid_request_body,
+    ):
+        customer_details_json = massgov.pfml.fineos.mock_client.mock_customer_details()
+        customer_details = massgov.pfml.fineos.models.customer_api.Customer.parse_obj(
+            customer_details_json
+        )
+        mock_read_customer_details.return_value = customer_details
+
+        client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
+
+        imported_application = (
+            test_db_session.query(Application).filter(Application.claim_id == claim.claim_id).one()
+        )
+
+        assert imported_application.first_name == "Samantha"
+        assert imported_application.last_name == "Jorgenson"
+        assert imported_application.date_of_birth == date(1996, 1, 11)
+        assert imported_application.mass_id == "123456789"
+        assert imported_application.has_state_id is True
+        assert imported_application.gender_id == Gender.NONBINARY.gender_id
+        assert imported_application.residential_address.address_line_one == "37 Mather Drive"
+        assert imported_application.residential_address.address_line_two == "#22"
+        assert imported_application.residential_address.city == "Amherst"
+        assert imported_application.residential_address.geo_state_id == GeoState.MA.geo_state_id
+        assert imported_application.residential_address.zip_code == "01003"
+
+    def test_applications_import_has_payment_preferences(
+        self, client, test_db_session, auth_token, claim, valid_request_body
+    ):
+        client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
+
+        imported_application = (
+            test_db_session.query(Application).filter(Application.claim_id == claim.claim_id).one()
+        )
+
+        assert imported_application.has_submitted_payment_preference is True
+        assert (
+            imported_application.payment_preference.payment_method_id
+            == PaymentMethod.ACH.payment_method_id
+        )
+        assert imported_application.payment_preference.account_number == "1234565555"
+        assert imported_application.payment_preference.routing_number == "011222333"
+        assert (
+            imported_application.payment_preference.bank_account_type_id
+            == BankAccountType.CHECKING.bank_account_type_id
+        )
+        assert imported_application.has_mailing_address is True
+
+    @mock.patch(
+        "massgov.pfml.fineos.mock_client.MockFINEOSClient.get_customer_occupations_customer_api"
+    )
+    def test_applications_import_occupation(
+        self, mock_get_occupation, client, auth_token, test_db_session, claim, valid_request_body
+    ):
+        fineos_occupation = ReadCustomerOccupation(employmentStatus="Active", hoursWorkedPerWeek=40)
+        mock_get_occupation.return_value = [fineos_occupation]
+
+        assert test_db_session.query(Application).one_or_none() is None
+
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
+        assert response.status_code == 201
+        imported_application = (
+            test_db_session.query(Application).filter(Application.claim_id == claim.claim_id).one()
+        )
+        assert (
+            imported_application.employment_status.fineos_label
+            == fineos_occupation.employmentStatus
+        )
+        assert imported_application.hours_worked_per_week == fineos_occupation.hoursWorkedPerWeek
+
+    @mock.patch(
+        "massgov.pfml.fineos.mock_client.MockFINEOSClient.get_customer_occupations_customer_api"
+    )
+    def test_applications_import_occupation_invalid_employment_status(
+        self, mock_get_occupation, client, auth_token, test_db_session, valid_request_body
+    ):
+        fineos_occupation = ReadCustomerOccupation(
+            employmentStatus="Invalid", hoursWorkedPerWeek=40
+        )
+        mock_get_occupation.return_value = [fineos_occupation]
+
+        assert test_db_session.query(Application).one_or_none() is None
+
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
+        assert response.status_code == 400
+        assert test_db_session.query(Application).one_or_none() is None
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_payment_preferences")
+    def test_applications_import_succeeds_without_payment_preferences(
+        self,
+        mock_get_payment_preferences,
+        client,
+        test_db_session,
+        auth_token,
+        claim,
+        valid_request_body,
+    ):
+        mock_get_payment_preferences.return_value = None
+
+        client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
+
+        imported_application = (
+            test_db_session.query(Application).filter(Application.claim_id == claim.claim_id).one()
+        )
+
+        assert imported_application.has_submitted_payment_preference is False
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.read_customer_contact_details")
+    def test_applications_import_has_customer_contact_details(
+        self,
+        mock_read_customer_contact_details,
+        client,
+        test_db_session,
+        auth_token,
+        claim,
+        valid_request_body,
+    ):
+        customer_contact_details_json = (
+            massgov.pfml.fineos.mock_client.mock_customer_contact_details()
+        )
+        customer_contact_details = massgov.pfml.fineos.models.customer_api.ContactDetails.parse_obj(
+            customer_contact_details_json
+        )
+
+        mock_read_customer_contact_details.return_value = customer_contact_details
+
+        client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
+
+        imported_application = (
+            test_db_session.query(Application).filter(Application.claim_id == claim.claim_id).one()
+        )
+
+        assert imported_application.phone.phone_number == "+13214567890"
+        assert imported_application.phone.phone_type_id == 1
+
+    @pytest.fixture
+    def absence_details(self):
+        return AbsenceDetails(
+            creationDate=datetime(2020, 10, 10),
+            notificationDate=date(2020, 10, 20),
+            reportedTimeOff=[
+                TimeOffLeavePeriod(
+                    startDate=date(2021, 1, 1),
+                    endDate=date(2021, 2, 9),
+                    status="known",
+                    lastDayWorked=date(2020, 12, 30),
+                    expectedReturnToWorkDate=date(2021, 2, 11),
+                    startDateFullDay=True,
+                    startDateOffHours=1,
+                    startDateOffMinutes=5,
+                    endDateOffHours=4,
+                    endDateOffMinutes=0,
+                    endDateFullDay=True,
+                )
+            ],
+            absencePeriods=[
+                AbsencePeriod(
+                    id="PL-14449-0000002237",
+                    reason="Pregnancy/Maternity",
+                    reasonQualifier1="Foster Care",
+                    reasonQualifier2="",
+                    startDate=date(2021, 1, 29),
+                    endDate=date(2021, 1, 30),
+                    absenceType="Episodic",
+                    episodicLeavePeriodDetail=EpisodicLeavePeriodDetail(
+                        frequency=5,
+                        frequencyInterval=5,
+                        frequencyIntervalBasis="Days",
+                        duration=10,
+                        durationBasis="Days",
+                    ),
+                    requestStatus="Pending",
+                )
+            ],
+            reportedReducedSchedule=[
+                ReportedReducedScheduleLeavePeriod(
+                    startDate=date(2021, 1, 29),
+                    endDate=date(2021, 3, 29),
+                    sundayOffMinutes=10,
+                    mondayOffMinutes=15,
+                    tuesdayOffMinutes=20,
+                    wednesdayOffMinutes=40,
+                    thursdayOffMinutes=45,
+                    fridayOffMinutes=25,
+                    saturdayOffMinutes=12,
+                )
+            ],
+        )
+
+    @pytest.fixture
+    def absence_details_invalid(self, absence_details):
+        absence_details_invalid = absence_details.copy(deep=True)
+        absence_details_invalid.absencePeriods[0].reason = "Invalid"
+        return absence_details_invalid
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")
+    def test_applications_import_with_absence_period(
+        self,
+        mock_get_absence,
+        client,
+        user,
+        auth_token,
+        test_db_session,
+        claim,
+        absence_details,
+        valid_request_body,
+    ):
+        mock_get_absence.return_value = absence_details
+
+        assert test_db_session.query(Application).one_or_none() is None
+        assert test_db_session.query(ContinuousLeavePeriod).one_or_none() is None
+        assert test_db_session.query(IntermittentLeavePeriod).one_or_none() is None
+        assert test_db_session.query(ReducedScheduleLeavePeriod).one_or_none() is None
+
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
+
+        assert response.status_code == 201
+
+        imported_application = (
+            test_db_session.query(Application).filter(Application.claim_id == claim.claim_id).one()
+        )
+
+        continuous_leave = test_db_session.query(ContinuousLeavePeriod).all()
+        intermittent_leave = test_db_session.query(IntermittentLeavePeriod).all()
+        reduced_leave = test_db_session.query(ReducedScheduleLeavePeriod).all()
+
+        assert len(continuous_leave) == 1
+        assert continuous_leave[0].application_id == imported_application.application_id
+
+        assert len(intermittent_leave) == 1
+        assert intermittent_leave[0].application_id == imported_application.application_id
+
+        assert len(reduced_leave) == 1
+        assert reduced_leave[0].application_id == imported_application.application_id
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")
+    def test_applications_import_with_absence_period_invalid(
+        self,
+        mock_get_absence,
+        client,
+        user,
+        auth_token,
+        claim,
+        absence_details_invalid,
+        valid_request_body,
+    ):
+        mock_get_absence.return_value = absence_details_invalid
+
+        response = client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
+
+        assert response.status_code == 400
+
+    def test_applications_import_has_previous_and_concurrent_leave_data(
+        self, client, test_db_session, auth_token, claim, valid_request_body
+    ):
+        client.post(
+            "/v1/applications/import",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json=valid_request_body,
+        )
+        imported_application = (
+            test_db_session.query(Application).filter(Application.claim_id == claim.claim_id).one()
+        )
+
+        assert imported_application.has_previous_leaves_other_reason is True
+        assert imported_application.has_previous_leaves_same_reason is False
+        assert imported_application.has_concurrent_leave is True
+        assert imported_application.concurrent_leave is not None
+        assert type(imported_application.concurrent_leave) == ConcurrentLeave
+        assert len(imported_application.previous_leaves_other_reason) == 1
+        assert len(imported_application.previous_leaves_same_reason) == 0
 
 
 def test_applications_post_start_app(client, user, auth_token, test_db_session):
@@ -432,7 +1052,7 @@ def test_application_patch_masking(client, user, auth_token, test_db_session):
             "child_placement_date": "2021-05-13",
             "caring_leave_metadata": {"family_member_date_of_birth": "2021-01-01"},
         },
-        "phone": {"int_code": "1", "phone_number": "240-487-9945", "phone_type": "Cell",},
+        "phone": {"int_code": "1", "phone_number": "240-487-9945", "phone_type": "Cell"},
     }
 
     response = client.patch(
@@ -487,7 +1107,7 @@ def test_application_patch_masked_inputs_ignored(client, user, auth_token, test_
     application.child_birth_date = date(2021, 9, 21)
     application.child_placement_date = date(2021, 5, 13)
     application.payment_preference = ApplicationPaymentPreference(
-        routing_number="000000000", account_number="123456789",
+        routing_number="000000000", account_number="123456789"
     )
     application.mailing_address = Address(
         address_line_one="123 Foo St.",
@@ -612,7 +1232,7 @@ def test_application_patch_masked_mismatch_fields(client, user, auth_token, test
             "line_2": "*******",
             "zip": "55555-****",
         },
-        "phone": {"int_code": "1", "phone_number": "***-***-1234", "phone_type": "Cell",},
+        "phone": {"int_code": "1", "phone_number": "***-***-1234", "phone_type": "Cell"},
     }
 
     response = client.patch(
@@ -737,7 +1357,7 @@ def test_application_patch_mailing_address(client, user, auth_token, test_db_ses
     update_request_body_dob = {"date_of_birth": "1970-01-01"}
 
     # patching a partial update of the mailing address (zip code only)
-    update_request_body = {"mailing_address": {"zip": "12345",}}
+    update_request_body = {"mailing_address": {"zip": "12345"}}
 
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
@@ -836,7 +1456,7 @@ def test_application_patch_residential_address(client, user, auth_token, test_db
     assert application.residential_address.address_line_one == "123 Bar St."
 
     # patching a partial update of the residential address (zip code only)
-    update_request_body = {"residential_address": {"zip": "12345",}}
+    update_request_body = {"residential_address": {"zip": "12345"}}
 
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
@@ -1243,7 +1863,7 @@ def test_application_patch_has_future_child_date(client, user, auth_token, test_
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={"leave_details": {"has_future_child_date": True,}},
+        json={"leave_details": {"has_future_child_date": True}},
     )
     assert response.status_code == 200
     response_body = response.get_json()
@@ -1672,7 +2292,7 @@ def test_application_patch_remove_work_pattern_days(client, user, auth_token, te
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={"work_pattern": {"work_pattern_type": "Variable", "work_pattern_days": None,}},
+        json={"work_pattern": {"work_pattern_type": "Variable", "work_pattern_days": None}},
     )
 
     assert response.status_code == 200
@@ -1753,7 +2373,7 @@ def test_application_patch_has_employer_benefits(client, user, auth_token, test_
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={"has_employer_benefits": True,},
+        json={"has_employer_benefits": True},
     )
 
     assert response.status_code == 200
@@ -1841,7 +2461,7 @@ def test_application_patch_add_empty_employer_benefits(client, user, auth_token,
                     "benefit_start_date": None,
                     "benefit_amount_dollars": None,
                     "benefit_amount_frequency": None,
-                },
+                }
             ]
         },
     )
@@ -1886,7 +2506,7 @@ def test_application_patch_replace_existing_employer_benefits(
                     "benefit_start_date": "2021-01-10",
                     "benefit_amount_dollars": 400,
                     "benefit_amount_frequency": "Per Month",
-                },
+                }
             ]
         },
     )
@@ -1950,7 +2570,7 @@ def test_application_patch_has_other_incomes(client, user, auth_token, test_db_s
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={"has_other_incomes": True,},
+        json={"has_other_incomes": True},
     )
 
     assert response.status_code == 200
@@ -1973,7 +2593,7 @@ def test_application_patch_add_other_incomes(client, user, auth_token, test_db_s
                     "income_start_date": "2021-01-10",
                     "income_amount_dollars": 800,
                     "income_amount_frequency": "Per Month",
-                },
+                }
             ]
         },
     )
@@ -1997,7 +2617,7 @@ def test_application_patch_add_empty_array_for_other_incomes(
 ):
     application = ApplicationFactory.create(user=user)
 
-    incomes = [OtherIncomeFactory.create(application_id=application.application_id,)]
+    incomes = [OtherIncomeFactory.create(application_id=application.application_id)]
     application.other_incomes = incomes
 
     test_db_session.add(application)
@@ -2017,7 +2637,7 @@ def test_application_patch_add_empty_array_for_other_incomes(
 def test_application_patch_add_empty_other_income(client, user, auth_token, test_db_session):
     application = ApplicationFactory.create(user=user)
 
-    incomes = [OtherIncomeFactory.create(application_id=application.application_id,)]
+    incomes = [OtherIncomeFactory.create(application_id=application.application_id)]
     application.other_incomes = incomes
 
     test_db_session.add(application)
@@ -2035,7 +2655,7 @@ def test_application_patch_add_empty_other_income(client, user, auth_token, test
                     "income_start_date": None,
                     "income_amount_dollars": None,
                     "income_amount_frequency": None,
-                },
+                }
             ]
         },
     )
@@ -2060,7 +2680,7 @@ def test_application_patch_replace_existing_other_incomes(
 ):
     application = ApplicationFactory.create(user=user)
 
-    incomes = OtherIncomeFactory.create_batch(size=2, application_id=application.application_id,)
+    incomes = OtherIncomeFactory.create_batch(size=2, application_id=application.application_id)
 
     application.other_incomes = incomes
     test_db_session.add(application)
@@ -2079,7 +2699,7 @@ def test_application_patch_replace_existing_other_incomes(
                     "income_start_date": "2021-01-10",
                     "income_amount_dollars": 400,
                     "income_amount_frequency": "Per Month",
-                },
+                }
             ]
         },
     )
@@ -2105,7 +2725,7 @@ def test_application_patch_other_income_exceed_limit(client, user, auth_token, t
     application = ApplicationFactory.create(user=user)
     limit = 6
 
-    incomes = OtherIncomeFactory.create_batch(size=5, application_id=application.application_id,)
+    incomes = OtherIncomeFactory.create_batch(size=5, application_id=application.application_id)
     application.other_incomes = incomes
     test_db_session.add(application)
     test_db_session.commit()
@@ -2221,7 +2841,7 @@ def test_application_patch_concurrent_leave_is_optional(client, user, auth_token
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={"has_concurrent_leave": False,},
+        json={"has_concurrent_leave": False},
     )
 
     assert response.status_code == 200
@@ -2243,7 +2863,7 @@ def test_application_patch_concurrent_leave_validate_is_not_present(
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={"has_concurrent_leave": True,},
+        json={"has_concurrent_leave": True},
     )
 
     assert response.status_code == 200
@@ -2266,7 +2886,7 @@ def test_application_patch_concurrent_leave_validate_is_present(
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={"has_concurrent_leave": True,},
+        json={"has_concurrent_leave": True},
     )
 
     assert response.status_code == 200
@@ -2298,7 +2918,7 @@ def test_application_patch_concurrent_leave_validate_is_present_but_flag_is_fals
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={"has_concurrent_leave": False,},
+        json={"has_concurrent_leave": False},
     )
 
     assert response.status_code == 200
@@ -2323,7 +2943,7 @@ def test_application_patch_has_previous_leaves(client, user, auth_token, test_db
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={"has_previous_leaves_other_reason": True, "has_previous_leaves_same_reason": True,},
+        json={"has_previous_leaves_other_reason": True, "has_previous_leaves_same_reason": True},
     )
 
     assert response.status_code == 200
@@ -2374,10 +2994,7 @@ def test_application_patch_add_previous_leaves(client, user, auth_token, test_db
         0
     ].get("previous_leave_id")
 
-    for previous_leave in [
-        previous_leaves_other_reason[0],
-        previous_leaves_same_reason[0],
-    ]:
+    for previous_leave in [previous_leaves_other_reason[0], previous_leaves_same_reason[0]]:
         assert previous_leave.get("is_for_current_employer") is True
         assert previous_leave.get("leave_start_date") == "2021-01-01"
         assert previous_leave.get("leave_end_date") == "2021-05-01"
@@ -2394,10 +3011,10 @@ def test_application_patch_add_empty_array_for_previous_leaves(
     application = ApplicationFactory.create(user=user)
 
     application.previous_leaves_other_reason = [
-        PreviousLeaveOtherReasonFactory.create(application_id=application.application_id,)
+        PreviousLeaveOtherReasonFactory.create(application_id=application.application_id)
     ]
     application.previous_leaves_same_reason = [
-        PreviousLeaveSameReasonFactory.create(application_id=application.application_id,)
+        PreviousLeaveSameReasonFactory.create(application_id=application.application_id)
     ]
 
     test_db_session.add(application)
@@ -2406,7 +3023,7 @@ def test_application_patch_add_empty_array_for_previous_leaves(
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={"previous_leaves_other_reason": [], "previous_leaves_same_reason": [],},
+        json={"previous_leaves_other_reason": [], "previous_leaves_same_reason": []},
     )
     test_db_session.refresh(application)
 
@@ -2419,10 +3036,10 @@ def test_application_patch_add_empty_previous_leaves(client, user, auth_token, t
     application = ApplicationFactory.create(user=user)
 
     application.previous_leaves_other_reason = [
-        PreviousLeaveOtherReasonFactory.create(application_id=application.application_id,)
+        PreviousLeaveOtherReasonFactory.create(application_id=application.application_id)
     ]
     application.previous_leaves_same_reason = [
-        PreviousLeaveSameReasonFactory.create(application_id=application.application_id,)
+        PreviousLeaveSameReasonFactory.create(application_id=application.application_id)
     ]
     test_db_session.add(application)
     test_db_session.commit()
@@ -2439,7 +3056,7 @@ def test_application_patch_add_empty_previous_leaves(client, user, auth_token, t
                     "leave_reason": None,
                     "worked_per_week_minutes": None,
                     "leave_minutes": None,
-                },
+                }
             ],
             "previous_leaves_same_reason": [
                 {
@@ -2449,7 +3066,7 @@ def test_application_patch_add_empty_previous_leaves(client, user, auth_token, t
                     "leave_reason": None,
                     "worked_per_week_minutes": None,
                     "leave_minutes": None,
-                },
+                }
             ],
         },
     )
@@ -2476,10 +3093,10 @@ def test_application_patch_replace_existing_previous_leave_same_reason(
     application = ApplicationFactory.create(user=user)
 
     application.previous_leaves_other_reason = PreviousLeaveOtherReasonFactory.create_batch(
-        size=2, application_id=application.application_id,
+        size=2, application_id=application.application_id
     )
     application.previous_leaves_same_reason = PreviousLeaveSameReasonFactory.create_batch(
-        size=2, application_id=application.application_id,
+        size=2, application_id=application.application_id
     )
     test_db_session.add(application)
     test_db_session.commit()
@@ -2496,7 +3113,7 @@ def test_application_patch_replace_existing_previous_leave_same_reason(
                     "worked_per_week_minutes": 20,
                     "leave_minutes": 10,
                 }
-            ],
+            ]
         },
     )
 
@@ -2526,10 +3143,10 @@ def test_application_patch_replace_existing_previous_leave_other_reason(
     application = ApplicationFactory.create(user=user)
 
     application.previous_leaves_other_reason = PreviousLeaveOtherReasonFactory.create_batch(
-        size=2, application_id=application.application_id,
+        size=2, application_id=application.application_id
     )
     application.previous_leaves_same_reason = PreviousLeaveSameReasonFactory.create_batch(
-        size=2, application_id=application.application_id,
+        size=2, application_id=application.application_id
     )
     test_db_session.add(application)
     test_db_session.commit()
@@ -2547,7 +3164,7 @@ def test_application_patch_replace_existing_previous_leave_other_reason(
                     "worked_per_week_minutes": 20,
                     "leave_minutes": 10,
                 }
-            ],
+            ]
         },
     )
 
@@ -2577,10 +3194,10 @@ def test_application_patch_delete_existing_previous_leave_same_reason(
     application = ApplicationFactory.create(user=user)
 
     application.previous_leaves_other_reason = PreviousLeaveOtherReasonFactory.create_batch(
-        size=2, application_id=application.application_id,
+        size=2, application_id=application.application_id
     )
     application.previous_leaves_same_reason = PreviousLeaveSameReasonFactory.create_batch(
-        size=2, application_id=application.application_id,
+        size=2, application_id=application.application_id
     )
     test_db_session.add(application)
     test_db_session.commit()
@@ -2588,7 +3205,7 @@ def test_application_patch_delete_existing_previous_leave_same_reason(
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={"previous_leaves_same_reason": None,},
+        json={"previous_leaves_same_reason": None},
     )
 
     test_db_session.refresh(application)
@@ -2609,10 +3226,10 @@ def test_application_patch_delete_existing_previous_leave_other_reason(
     application = ApplicationFactory.create(user=user)
 
     application.previous_leaves_other_reason = PreviousLeaveOtherReasonFactory.create_batch(
-        size=2, application_id=application.application_id,
+        size=2, application_id=application.application_id
     )
     application.previous_leaves_same_reason = PreviousLeaveSameReasonFactory.create_batch(
-        size=2, application_id=application.application_id,
+        size=2, application_id=application.application_id
     )
     test_db_session.add(application)
     test_db_session.commit()
@@ -2620,7 +3237,7 @@ def test_application_patch_delete_existing_previous_leave_other_reason(
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {auth_token}"},
-        json={"previous_leaves_other_reason": None,},
+        json={"previous_leaves_other_reason": None},
     )
 
     test_db_session.refresh(application)
@@ -2640,10 +3257,10 @@ def test_application_patch_previous_leave_exceed_limit(client, user, auth_token,
     limit = 6
 
     application.previous_leaves_other_reason = PreviousLeaveOtherReasonFactory.create_batch(
-        size=2, application_id=application.application_id,
+        size=2, application_id=application.application_id
     )
     application.previous_leaves_same_reason = PreviousLeaveSameReasonFactory.create_batch(
-        size=2, application_id=application.application_id,
+        size=2, application_id=application.application_id
     )
 
     test_db_session.add(application)
@@ -3030,7 +3647,7 @@ def test_application_patch_state_invalid(client, user, auth_token, state_string)
                 "field": "mailing_address.state",
                 "message": f"'{state_string}' is not a valid state",
                 "type": "invalid",
-            },
+            }
         ],
     )
 
@@ -3053,9 +3670,7 @@ def test_application_patch_fein_not_found(client, user, auth_token):
     # includes an EIN that doesn't match an Employer record
     application = ApplicationFactory.create(user=user)
 
-    update_request_body = {
-        "employer_fein": "99-9999999",
-    }
+    update_request_body = {"employer_fein": "99-9999999"}
 
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
@@ -3162,13 +3777,14 @@ def test_application_patch_failure_after_absence_case_creation(
         headers={"Authorization": f"Bearer {auth_token}"},
         json={},
     )
-
+    message = "Application {} could not be updated. Application already submitted on {}".format(
+        application.application_id, datetime_util.utcnow().strftime("%x")
+    )
     tests.api.validate_error_response(
         response,
         403,
-        message="Application {} could not be updated. Application already submitted on {}".format(
-            application.application_id, datetime_util.utcnow().strftime("%x")
-        ),
+        message=message,
+        errors=[{"type": "exists", "field": "claim", "message": message}],
     )
 
 
@@ -3359,7 +3975,11 @@ def test_application_post_submit_app_already_submitted(client, user, auth_token,
                 "employee_registration": massgov.pfml.fineos.models.EmployeeRegistration(
                     user_id=fineos_user_id,
                     customer_number=None,
-                    employer_id=f"{application.employer_fein.to_unformatted_str()}1000",
+                    employer_id=str(
+                        massgov.pfml.fineos.mock.field.fake_customer_no(
+                            application.employer_fein.to_unformatted_str()
+                        )
+                    ),
                     date_of_birth=date(1753, 1, 1),
                     email=None,
                     first_name=None,
@@ -3368,7 +3988,7 @@ def test_application_post_submit_app_already_submitted(client, user, auth_token,
                 )
             },
         ),
-        ("complete_intake", fineos_user_id, {"notification_case_id": "NTN-1989"},),
+        ("complete_intake", fineos_user_id, {"notification_case_id": "NTN-1989"}),
     ]
 
 
@@ -3557,7 +4177,7 @@ def test_application_post_submit_app_ssn_not_found(client, user, auth_token, tes
     employer = EmployerFactory.create()
     tax_identifier = TaxIdentifierFactory.create(tax_identifier=TaxId("999999999"))
     application = ApplicationFactory.create(
-        user=user, tax_identifier=tax_identifier, employer_fein=employer.employer_fein,
+        user=user, tax_identifier=tax_identifier, employer_fein=employer.employer_fein
     )
 
     test_db_session.commit()
@@ -3637,7 +4257,7 @@ def test_application_post_submit_existing_work_pattern(
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
 
-    assert capture[1] == (
+    assert capture[3] == (
         "update_week_based_work_pattern",
         fineos_user_id,
         {
@@ -3729,19 +4349,24 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
     # This is generated randomly and changes each time.
     fineos_user_id = capture[2][1]
     assert capture == [
-        ("find_employer", None, {"employer_fein": application.employer_fein}),
+        ("read_employer", None, {"employer_fein": application.employer_fein}),
         (
             "register_api_user",
             None,
             {
                 "employee_registration": massgov.pfml.fineos.models.EmployeeRegistration(
                     user_id=fineos_user_id,
-                    employer_id=f"{application.employer_fein.to_unformatted_str()}1000",
+                    employer_id=str(
+                        massgov.pfml.fineos.mock.field.fake_customer_no(
+                            application.employer_fein.to_unformatted_str()
+                        )
+                    ),
                     date_of_birth=date(1753, 1, 1),
                     national_insurance_no=application.tax_identifier.tax_identifier.to_unformatted_str(),
                 )
             },
         ),
+        ("update_customer_contact_details", fineos_user_id, {}),
         (
             "update_customer_details",
             fineos_user_id,
@@ -3760,7 +4385,7 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                             addressLine6=application.residential_address.geo_state.geo_state_description,
                             postCode=application.residential_address.zip_code,
                             country="USA",
-                        ),
+                        )
                     ),
                     gender="Female",
                     classExtensionInformation=[
@@ -3822,8 +4447,10 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
             None,
             {
                 "employment_status": "Terminated",
+                "fineos_org_unit_id": None,
                 "hours_worked_per_week": 70,
                 "occupation_id": 12345,
+                "worksite_id": None,
             },
         ),
         (
@@ -3863,14 +4490,23 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                 "contact_details": massgov.pfml.fineos.models.customer_api.ContactDetails(
                     phoneNumbers=[
                         massgov.pfml.fineos.models.customer_api.PhoneNumber(
-                            id=111,
+                            id=1,
                             preferred=None,
+                            phoneNumberType="Phone",
+                            intCode="1",
+                            areaCode="321",
+                            telephoneNo="4567890",
+                            classExtensionInformation=None,
+                        ),
+                        massgov.pfml.fineos.models.customer_api.PhoneNumber(
+                            id=111,
+                            preferred=True,
                             phoneNumberType="Cell",
                             intCode="1",
                             areaCode="240",
                             telephoneNo="4879945",
                             classExtensionInformation=None,
-                        )
+                        ),
                     ],
                     emailAddresses=[
                         massgov.pfml.fineos.models.customer_api.EmailAddress(
@@ -3934,7 +4570,7 @@ def test_application_post_submit_to_fineos_intermittent_leave(
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
 
-    assert capture[6][2]["absence_case"].episodicLeavePeriods == [
+    assert capture[7][2]["absence_case"].episodicLeavePeriods == [
         massgov.pfml.fineos.models.customer_api.EpisodicLeavePeriod(
             startDate=date(2021, 1, 1),
             endDate=date(2021, 3, 2),
@@ -3998,7 +4634,7 @@ def test_application_post_submit_to_fineos_reduced_schedule_leave(
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
 
-    assert capture[6][2]["absence_case"].reducedScheduleLeavePeriods == [
+    assert capture[7][2]["absence_case"].reducedScheduleLeavePeriods == [
         massgov.pfml.fineos.models.customer_api.ReducedScheduleLeavePeriod(
             startDate=date(2021, 1, 1),
             endDate=date(2021, 2, 9),
@@ -4057,7 +4693,7 @@ def test_application_post_submit_to_fineos_bonding_adoption(
     assert response.status_code == 201
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
-    captured_absence_case = capture[6][2]["absence_case"]
+    captured_absence_case = capture[7][2]["absence_case"]
 
     assert captured_absence_case.reason == LeaveReason.CHILD_BONDING.leave_reason_description
     assert (
@@ -4114,7 +4750,7 @@ def test_application_post_submit_to_fineos_bonding_foster(
     assert response.status_code == 201
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
-    captured_absence_case = capture[6][2]["absence_case"]
+    captured_absence_case = capture[7][2]["absence_case"]
 
     assert captured_absence_case.reason == LeaveReason.CHILD_BONDING.leave_reason_description
     assert (
@@ -4170,7 +4806,7 @@ def test_application_post_submit_to_fineos_bonding_newborn(
     assert response.status_code == 201
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
-    captured_absence_case = capture[6][2]["absence_case"]
+    captured_absence_case = capture[7][2]["absence_case"]
 
     assert captured_absence_case.reason == LeaveReason.CHILD_BONDING.leave_reason_description
     assert (
@@ -4223,7 +4859,7 @@ def test_application_post_submit_to_fineos_medical(client, user, auth_token, tes
     assert response.status_code == 201
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
-    captured_absence_case = capture[6][2]["absence_case"]
+    captured_absence_case = capture[7][2]["absence_case"]
 
     # Maps to FINEOS:
     # Reason = Serious Health Condition - Employee
@@ -4280,7 +4916,7 @@ def test_application_post_submit_to_fineos_pregnant_true(client, user, auth_toke
     assert response.status_code == 201
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
-    captured_absence_case = capture[6][2]["absence_case"]
+    captured_absence_case = capture[7][2]["absence_case"]
 
     # Maps to FINEOS:
     # Reason = Pregnancy/Maternity
@@ -4330,7 +4966,7 @@ def test_application_post_submit_to_fineos_pregnant(client, user, auth_token, te
     assert response.status_code == 201
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
-    captured_absence_case = capture[6][2]["absence_case"]
+    captured_absence_case = capture[7][2]["absence_case"]
 
     # Maps to FINEOS:
     # Reason = Pregnancy/Maternity
@@ -4556,7 +5192,7 @@ def test_application_post_submit_to_fineos_caring_leave(client, user, auth_token
     )
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
-    captured_absence_case = capture[6][2]["absence_case"]
+    captured_absence_case = capture[7][2]["absence_case"]
 
     assert response.status_code == 201
     assert (
@@ -4600,6 +5236,14 @@ def test_application_post_complete_app(client, user, auth_token, test_db_session
         ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
     ]
     application.has_continuous_leave_periods = True
+    application.is_withholding_tax = True
+    application.has_submitted_payment_preference = True
+    application.leave_reason_id = LeaveReason.PREGNANCY_MATERNITY.leave_reason_id
+    DocumentFactory.create(
+        user_id=user.user_id,
+        application_id=application.application_id,
+        document_type_id=DocumentType.DRIVERS_LICENSE_MASS.document_type_id,
+    )
 
     test_db_session.commit()
 
@@ -4640,6 +5284,14 @@ def test_application_post_complete_app_without_other_leave_fields(
         ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
     ]
     application.has_continuous_leave_periods = True
+    application.is_withholding_tax = True
+    application.has_submitted_payment_preference = True
+    application.leave_reason_id = LeaveReason.PREGNANCY_MATERNITY.leave_reason_id
+    DocumentFactory.create(
+        user_id=user.user_id,
+        application_id=application.application_id,
+        document_type_id=DocumentType.DRIVERS_LICENSE_MASS.document_type_id,
+    )
 
     test_db_session.commit()
 
@@ -4676,6 +5328,14 @@ def test_application_complete_mark_document_received_fineos(
         )
     ]
     application.has_continuous_leave_periods = True
+    application.is_withholding_tax = True
+    application.has_submitted_payment_preference = True
+    application.leave_reason_id = LeaveReason.PREGNANCY_MATERNITY.leave_reason_id
+    DocumentFactory.create(
+        user_id=user.user_id,
+        application_id=application.application_id,
+        document_type_id=DocumentType.DRIVERS_LICENSE_MASS.document_type_id,
+    )
 
     test_db_session.add(application)
 
@@ -4714,11 +5374,7 @@ def test_application_complete_mark_document_received_fineos(
     test_db_session.refresh(application)
     assert application.completed_time
 
-    client_function_calls = (
-        "find_employer",
-        "register_api_user",
-        "mark_document_as_received",
-    )
+    client_function_calls = ("find_employer", "register_api_user", "mark_document_as_received")
     for i in range(len(capture)):
         assert capture[i][0] == client_function_calls[i]
 
@@ -4743,9 +5399,7 @@ def test_application_patch_null_benefits(
     application = ApplicationFactory.create(user=user, updated_at=datetime.now())
     EmployerBenefitFactory.create(application_id=application.application_id)
 
-    update_request_body = {
-        "employer_benefits": None,
-    }
+    update_request_body = {"employer_benefits": None}
 
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
@@ -4804,9 +5458,7 @@ def test_application_patch_benefits_empty_arrays(
     application = ApplicationFactory.create(user=user, updated_at=datetime.now())
     EmployerBenefitFactory.create(application_id=application.application_id)
 
-    update_request_body = {
-        "employer_benefits": [],
-    }
+    update_request_body = {"employer_benefits": []}
 
     response = client.patch(
         "/v1/applications/{}".format(application.application_id),
@@ -4984,6 +5636,105 @@ def test_application_post_submit_app_creates_claim(client, user, auth_token, tes
     assert submitted_application.claim.claim_type_id == 2
 
 
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.read_customer_contact_details")
+def test_submit_app_does_not_remove_fineos_phone_numbers(
+    mock_read_customer_contact_details, client, user, auth_token, test_db_session
+):
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
+    )
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
+
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
+    ]
+    application.date_of_birth = date(1997, 6, 6)
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.hours_worked_per_week = 70
+    application.has_continuous_leave_periods = True
+    application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
+
+    customer_contact_details_json = massgov.pfml.fineos.mock_client.mock_customer_contact_details()
+    customer_contact_details = massgov.pfml.fineos.models.customer_api.ContactDetails.parse_obj(
+        customer_contact_details_json
+    )
+    mock_read_customer_contact_details.return_value = customer_contact_details
+
+    # This customer has two phone numbers in FINEOS before application submission
+    assert len(customer_contact_details.phoneNumbers) == 2
+    assert application.phone.fineos_phone_id is None
+
+    test_db_session.commit()
+    massgov.pfml.fineos.mock_client.start_capture()
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    assert response.status_code == 201
+
+    capture = massgov.pfml.fineos.mock_client.get_capture()
+    contactDetails = capture[7][2]["contact_details"]
+    # This customer now has three phone numbers in FINEOS
+    assert len(contactDetails.phoneNumbers) == 3
+    assert application.phone.fineos_phone_id is not None
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.read_customer_contact_details")
+def test_submit_app_does_not_create_duplicate_fineos_phone_numbers(
+    mock_read_customer_contact_details, client, user, auth_token, test_db_session
+):
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
+    )
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
+
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
+    ]
+    application.date_of_birth = date(1997, 6, 6)
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.hours_worked_per_week = 70
+    application.has_continuous_leave_periods = True
+    application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
+    application.phone = Phone(phone_number="+12401112222", phone_type_id=1)
+
+    customer_contact_details_json = massgov.pfml.fineos.mock_client.mock_customer_contact_details()
+    customer_contact_details = massgov.pfml.fineos.models.customer_api.ContactDetails.parse_obj(
+        customer_contact_details_json
+    )
+    mock_read_customer_contact_details.return_value = customer_contact_details
+    # match the value in application.phone.phone_number:
+    customer_contact_details.phoneNumbers[0] = massgov.pfml.fineos.models.customer_api.PhoneNumber(
+        phoneNumberType="Phone",
+        intCode="1",
+        areaCode="240",
+        telephoneNo="1112222",
+        classExtensionInformation=None,
+    )
+
+    # This customer has two phone numbers in FINEOS before application submission
+    assert len(customer_contact_details.phoneNumbers) == 2
+
+    test_db_session.commit()
+    massgov.pfml.fineos.mock_client.start_capture()
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    assert response.status_code == 201
+
+    capture = massgov.pfml.fineos.mock_client.get_capture()
+    contactDetails = capture[7][2]["contact_details"]
+    # This customer still has two phone numbers because the new one matched an existing one
+    assert len(contactDetails.phoneNumbers) == 2
+
+
 def test_submit_app_with_leave_reason_id_not_in_map(client, user, auth_token, test_db_session):
     with pytest.raises(NoClaimTypeForAbsenceType):
         new_leave_reason = LeaveReasonFactory.create(
@@ -5154,7 +5905,7 @@ def test_application_patch_caring_leave_metadata_change_leave_reason(
     client, user, auth_token, test_db_session
 ):
     application = ApplicationFactory.create(
-        user=user, phone=None, leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id,
+        user=user, phone=None, leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id
     )
     assert application.caring_leave_metadata is None
 
@@ -5189,7 +5940,7 @@ def test_application_patch_caring_leave_metadata_family_member_date_of_birth_val
     client, user, auth_token, test_db_session
 ):
     application = ApplicationFactory.create(
-        user=user, phone=None, leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id,
+        user=user, phone=None, leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id
     )
 
     # use an invalid date of birth - more than 150 years in the past
@@ -5227,7 +5978,7 @@ def test_application_patch_caring_leave_metadata_family_member_future_date_of_bi
     client, user, auth_token, test_db_session
 ):
     application = ApplicationFactory.create(
-        user=user, phone=None, leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id,
+        user=user, phone=None, leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id
     )
 
     # use an invalid date of birth - more than 7 months in the future

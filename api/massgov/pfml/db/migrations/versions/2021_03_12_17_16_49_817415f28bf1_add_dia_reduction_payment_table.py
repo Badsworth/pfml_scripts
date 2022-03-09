@@ -48,9 +48,9 @@ def upgrade():
         sa.Column("dia_reduction_payment_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("reference_file_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.ForeignKeyConstraint(
-            ["dia_reduction_payment_id"], ["dia_reduction_payment.dia_reduction_payment_id"],
+            ["dia_reduction_payment_id"], ["dia_reduction_payment.dia_reduction_payment_id"]
         ),
-        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"],),
+        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"]),
         sa.PrimaryKeyConstraint("dia_reduction_payment_id", "reference_file_id"),
     )
 

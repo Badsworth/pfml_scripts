@@ -227,6 +227,44 @@ module "export_leave_admins_created_scheduler" {
 }
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Runs daily at 7am EST (8am EDT) (12pm UTC)
+# Run execute-sql daily to export a report to S3 of applications that have completed part 3 but aren't ID proofed
+module "export_psd_report_scheduler" {
+  source     = "../../modules/ecs_task_scheduler"
+  is_enabled = true
+
+  task_name                            = "export-psd-report"
+  schedule_expression_standard         = "cron(0 13 * * ? *)"
+  schedule_expression_daylight_savings = "cron(0 12 * * ? *)"
+  environment_name                     = var.environment_name
+
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
+
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["execute-sql"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["execute-sql"].family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_role              = aws_iam_role.task_execute_sql_task_role.arn
+
+  input = <<DOC
+  {
+  "containerOverrides": [
+          {
+            "name": "execute-sql",
+            "command": [
+              "execute-sql",
+              "--s3_output=dfml-reports/applications_passed_part_3",
+              "--s3_bucket=massgov-pfml-${var.environment_name}-reports",
+              "select claim_id, fineos_absence_id, updated_at FROM claim where claim_id in (select claim_id from application where completed_time is not null and completed_time > CURRENT_DATE - 1) and (is_id_proofed = false or is_id_proofed is null)"
+            ]
+          }
+        ]
+  }
+  DOC
+}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Run cps-errors daily at 9am EST (10am EDT) (2pm UTC)
 # This needs to run after fineos-bucket-tool
 module "cps_errors_crawler_scheduler" {
@@ -383,12 +421,54 @@ module "weekend-pub-payments-process-fineos" {
         "name": "pub-payments-process-fineos",
         "command": [
           "pub-payments-process-fineos",
-          "--steps consume-fineos-claimant claimant-extract"
+          "--steps", "consume-fineos-claimant", "claimant-extract", "consume_fineos_1099_request","do_1099_data_extract"
         ]
       }
     ]
   }
   JSON
+}
+
+# Run fineos-import-la-units task prior to pub-payments-process-fineos
+# 10PM EST
+module "fineos-import-la-units" {
+  source     = "../../modules/ecs_task_scheduler"
+  is_enabled = true
+
+  task_name                            = "fineos-import-la-units"
+  schedule_expression_standard         = "cron(0 3 ? * MON-FRI *)"
+  schedule_expression_daylight_savings = "cron(0 2 ? * MON-FRI *)"
+  environment_name                     = var.environment_name
+
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
+
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["fineos-import-la-units"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["fineos-import-la-units"].family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_role              = aws_iam_role.fineos_import_la_org_units_task_role.arn
+}
+
+# Run fineos-import-la-units task prior to pub-payments-process-fineos
+# Weekends only - 5AM EST - keeping consistent with weekend-pub-payments-process-fineos to avoid DB maintenance
+module "weekend-fineos-import-la-units" {
+  source     = "../../modules/ecs_task_scheduler"
+  is_enabled = true
+
+  task_name                            = "weekend-fineos-import-la-units"
+  schedule_expression_standard         = "cron(0 10 ? * SAT-SUN *)"
+  schedule_expression_daylight_savings = "cron(0 9 ? * SAT-SUN *)"
+  environment_name                     = var.environment_name
+
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
+
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["fineos-import-la-units"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["fineos-import-la-units"].family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_role              = aws_iam_role.fineos_import_la_org_units_task_role.arn
 }
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -450,6 +530,27 @@ module "pub-payments-process-snapshot" {
   ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["pub-payments-process-snapshot"].family
   ecs_task_executor_role     = aws_iam_role.task_executor.arn
   ecs_task_role              = aws_iam_role.pub_payments_process_fineos_task_role.arn
+}
+
+
+module "pub-payments-copy-audit-report-scheduler" {
+  source     = "../../modules/ecs_task_scheduler"
+  is_enabled = var.enable_pub_payments_copy_audit_report_schedule
+
+  task_name = "pub-payments-copy-audit-report"
+  # Every day at 4am ET (9am UTC)
+  schedule_expression_standard         = "cron(0 9 ? * MON-FRI *)"
+  schedule_expression_daylight_savings = "cron(0 8 ? * MON-FRI *)"
+  environment_name                     = var.environment_name
+
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
+
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["pub-payments-copy-audit-report"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["pub-payments-copy-audit-report"].family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_role              = aws_iam_role.pub_payments_copy_audit_report_task_role.arn
 }
 
 # TODO uncomment when ready

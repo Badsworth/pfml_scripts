@@ -6,7 +6,7 @@ import type { ConfigFunction } from "../../src/config";
  * @param cb callback to be passed into .within() clause inside this function.
  */
 export function inFieldsetLabelled(
-  fieldsetLabel: string,
+  fieldsetLabel: string | RegExp,
   cb: (subject: JQuery<HTMLFieldSetElement>) => void
 ): void {
   cy.contains("fieldset", fieldsetLabel).within(cb);

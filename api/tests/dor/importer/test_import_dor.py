@@ -21,18 +21,18 @@ import massgov.pfml.dor.importer.paths
 import massgov.pfml.dor.mock.generate as generator
 import massgov.pfml.util.batch.log
 from massgov.pfml.db.models.employees import (
+    Address,
     AddressType,
-    Country,
     Employee,
     EmployeePushToFineosQueue,
     Employer,
     EmployerPushToFineosQueue,
     EmployerQuarterlyContribution,
-    GeoState,
     WagesAndContributions,
     WagesAndContributionsHistory,
 )
 from massgov.pfml.db.models.factories import EmployerQuarterlyContributionFactory
+from massgov.pfml.db.models.geo import Country, GeoState
 from massgov.pfml.dor.importer.import_dor import (
     PROCESSED_FOLDER,
     RECEIVED_FOLDER,
@@ -426,7 +426,7 @@ def test_employer_invalid_fein(test_db_session):
     report, report_log_entry = get_new_import_report(test_db_session)
     import_dor.import_employers(
         test_db_session,
-        [employer_data_invalid_type, employer_data_invalid_length,],
+        [employer_data_invalid_type, employer_data_invalid_length],
         report,
         report_log_entry.import_log_id,
     )
@@ -687,7 +687,7 @@ def test_employee_wage_data_create(test_db_session, dor_employer_lookups):
     )
 
     persisted_wage_info = dor_persistence_util.get_wages_and_contributions_by_employee_id_and_filling_period(
-        test_db_session, employee_id, employer_id, employee_wage_data_payload["filing_period"],
+        test_db_session, employee_id, employer_id, employee_wage_data_payload["filing_period"]
     )
 
     assert persisted_wage_info is not None
@@ -1014,7 +1014,7 @@ def test_parse_employer_file(test_fs_path):
 ## == full import ==
 
 
-@pytest.mark.timeout(20)
+@pytest.mark.timeout(60)
 def test_e2e_parse_and_persist(test_db_session, dor_employer_lookups):
     # generate files for import
     employer_count = 100
@@ -1046,10 +1046,10 @@ def test_e2e_parse_and_persist(test_db_session, dor_employer_lookups):
     # import
     import_batches = [
         massgov.pfml.dor.importer.paths.ImportBatch(
-            upload_date="20200805", employer_file=employer_file_path, employee_file="",
+            upload_date="20200805", employer_file=employer_file_path, employee_file=""
         ),
         massgov.pfml.dor.importer.paths.ImportBatch(
-            upload_date="20200805", employer_file="", employee_file=employee_file_path,
+            upload_date="20200805", employer_file="", employee_file=employee_file_path
         ),
     ]
 
@@ -1065,6 +1065,72 @@ def test_e2e_parse_and_persist(test_db_session, dor_employer_lookups):
     assert report_two.created_wages_and_contributions_count == wages_contributions_count
 
     assert report_two.created_employer_quarters_count == len(employee_a_lines)
+
+
+@pytest.mark.timeout(60)
+def test_e2e_parse_and_persist_empty_dba_city(test_db_session, dor_employer_lookups):
+    # generate files for import
+    employer_count = 100
+
+    employer_file_path = get_temp_file_path()
+    employee_file_path = get_temp_file_path()
+
+    employer_file = open(employer_file_path, "w")
+    employee_file = open(employee_file_path, "w")
+
+    generator.generate(
+        employer_count, employer_file, employee_file, set_empty_dba=True, set_empty_city=True
+    )
+    employer_file.close()
+    employee_file.close()
+
+    employer_lines = open(employer_file_path, "r").readlines()
+    assert len(employer_lines) == employer_count
+
+    employee_lines = open(employee_file_path, "r").readlines()
+    employee_a_lines = tuple(filter(lambda s: s.startswith("A"), employee_lines))
+    employee_b_lines = tuple(filter(lambda s: s.startswith("B"), employee_lines))
+
+    # Test scenario where already created tax ID will pass.
+    dor_persistence_util.create_tax_id(test_db_session, "250000001")
+
+    assert len(employee_a_lines) == employer_count * 4
+    wages_contributions_count = len(employee_b_lines)
+    assert wages_contributions_count >= employer_count
+
+    # import
+    import_batches = [
+        massgov.pfml.dor.importer.paths.ImportBatch(
+            upload_date="20200805", employer_file=employer_file_path, employee_file=""
+        ),
+        massgov.pfml.dor.importer.paths.ImportBatch(
+            upload_date="20200805", employer_file="", employee_file=employee_file_path
+        ),
+    ]
+
+    reports = import_dor.process_import_batches(
+        import_batches=import_batches, decrypt_files=False, optional_db_session=test_db_session
+    )
+
+    report_one = reports[0]
+    assert report_one.created_employers_count == employer_count
+
+    report_two = reports[1]
+    assert report_two.created_employees_count >= employer_count
+    assert report_two.created_wages_and_contributions_count == wages_contributions_count
+
+    assert report_two.created_employer_quarters_count == len(employee_a_lines)
+
+    # all employers came in as "" dba, check to make sure the first one is None (they all will be)
+    employer_in_db = test_db_session.query(Employer).first()
+    assert employer_in_db.employer_dba is None
+
+    first_address_in_db = test_db_session.query(Address).first()
+    assert first_address_in_db.city is None
+
+    # make sure every address was created
+    address_count = test_db_session.query(Address).count()
+    assert address_count == employer_count
 
 
 @pytest.mark.timeout(25)

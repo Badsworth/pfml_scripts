@@ -1,0 +1,159 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PreviousLeavesIntro renders the page 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Other leave, benefits, and income
+    </h1>
+    <h2
+      class="font-heading-lg text-bold"
+    >
+      Tell us about your previous leave.
+    </h2>
+    <h3
+      class="font-heading-sm text-bold"
+    >
+      <svg
+        aria-hidden="true"
+        class="usa-icon usa-icon--size-3 text-secondary text-middle margin-right-1 margin-top-neg-05"
+        focusable="false"
+        role="img"
+      >
+        <use
+          xlink:href="/img/sprite.svg#check"
+        />
+      </svg>
+      You’ll need to report previous leave you have taken between January 1, 2021 and January 1, 2022:
+    </h3>
+    <div
+      class="margin-left-4"
+    >
+      <ul
+        class="usa-list"
+      >
+        <li>
+          Any previous leave (paid or unpaid) for the same reason that you are applying for paid leave now
+        </li>
+        <li>
+          Any previous leave for a different qualifying reason
+        </li>
+      </ul>
+      <details
+        class="c-details"
+      >
+        <summary
+          class="margin-bottom-2 text-primary text-underline font-ui-xs"
+        >
+          What is a qualifying reason?
+        </summary>
+        <div
+          class="margin-bottom-2"
+        >
+          <p>
+            A qualifying reason is the cause or event that makes you unable to work and eligible for Paid Family and Medical Leave benefits.
+          </p>
+          <p>
+            Qualifying reasons include:
+          </p>
+          <ul
+            class="usa-list"
+          >
+            <li>
+              Bonding with your child during the first 12 months after birth, adoption, or placement
+            </li>
+            <li>
+              Caring for a family member with a serious health condition as certified by a health care provider, including illness, injury, or pregnancy
+            </li>
+            <li>
+              Managing affairs while a family member is on active duty
+            </li>
+            <li>
+              Caring for a family member who was injured serving in the armed forces
+            </li>
+            <li>
+              Caring for your own serious health condition as certified by a health care provider, including illness, injury, or pregnancy
+            </li>
+          </ul>
+        </div>
+      </details>
+    </div>
+    <h3
+      class="font-heading-sm text-bold"
+    >
+      <svg
+        aria-hidden="true"
+        class="usa-icon usa-icon--size-3 text-error text-middle margin-right-1 margin-top-neg-05"
+        focusable="false"
+        role="img"
+      >
+        <use
+          xlink:href="/img/sprite.svg#close"
+        />
+      </svg>
+      You don’t need to report:
+    </h3>
+    <div
+      class="margin-left-4"
+    >
+      <ul
+        class="usa-list"
+      >
+        <li>
+          Leave that was taken through Massachusetts’ PFML program
+        </li>
+        <li>
+          Leave that was taken outside of your current benefit year
+        </li>
+        <li>
+          Family leave to care for a family member before July 1, 2021
+        </li>
+      </ul>
+      <details
+        class="c-details"
+      >
+        <summary
+          class="margin-bottom-2 text-primary text-underline font-ui-xs"
+        >
+          What is a benefit year?
+        </summary>
+        <div
+          class="margin-bottom-2"
+        >
+          <p>
+            The benefit year is a period of 52 weeks that starts on the Sunday before when you first miss work for a qualifying reason. You are entitled to up to 20 weeks of medical leave, 12 weeks of family leave, or 26 weeks for a combination of both during a single benefit year.
+          </p>
+          <p>
+            You can submit an application for leave that crosses into a new benefit year. We will review the request as if it is two separate applications. The Department's determination for one application may be different from its determination for the other.
+          </p>
+          <p>
+            Example: The first time you took leave for a qualifying reason began on Thursday, April 1, 2021. The benefit year began on the Sunday before, which is March 28, 2021. The benefit year lasts 52 weeks and ends on Saturday, which is March 26, 2022.
+          </p>
+          <ul
+            class="usa-list"
+          >
+            <li>
+              Your example first day of leave: 4/1/2021
+            </li>
+            <li>
+              Your example benefit year: 3/28/2021 to 3/26/2022
+            </li>
+          </ul>
+        </div>
+      </details>
+    </div>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Save and continue
+    </button>
+  </form>
+</div>
+`;

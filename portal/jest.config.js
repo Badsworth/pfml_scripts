@@ -28,15 +28,11 @@ module.exports = {
     "^tests(.*)$": "<rootDir>/tests$1",
   },
   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
+  snapshotFormat: {
+    printBasicPrototype: false,
+  },
   testEnvironment: "jsdom",
-  testPathIgnorePatterns: [
-    "<rootDir>/.next/",
-    "<rootDir>/node_modules/",
-    "<rootDir>/config",
-    "<rootDir>/tests/lib/",
-    "<rootDir>/tests/test-utils/",
-  ],
-  testRegex: "(/(tests)/.*|(\\.|/)(test|spec))\\.[jt]sx?$",
+  testRegex: "tests/.*test.[jt]sx?$",
   transform: {
     // `next/babel` is required for our React tests to work
     // https://nextjs.org/docs/advanced-features/customizing-babel-config
@@ -45,7 +41,8 @@ module.exports = {
   transformIgnorePatterns: [
     // Some assets are ECMAScript Modules, which need transformed
     // in our test environment. Those modules need listed here:
-    "node_modules/(?!(entity-decode)/)",
+    // https://stackoverflow.com/questions/69075510/jest-tests-failing-on-d3-import
+    "node_modules/(?!d3|d3-array|delaunator|entity-decode|internmap|mermaid|robust-predicates/)",
   ],
   coverageThreshold: {
     global: {

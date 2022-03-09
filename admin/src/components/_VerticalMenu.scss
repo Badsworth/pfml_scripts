@@ -2,13 +2,19 @@
   position: relative;
 }
 
-.vertical-menu__icon {
+.vertical-menu-trigger {
   background: none;
   border: none;
   cursor: pointer;
   font-size: 1.14em;
   position: relative;
   vertical-align: middle;
+}
+
+.vertical-menu-trigger__icon {
+  color: $Color-GraniteGray-600;
+  display: block;
+  width: 1.5em;
 }
 
 .vertical-menu__dropdown {

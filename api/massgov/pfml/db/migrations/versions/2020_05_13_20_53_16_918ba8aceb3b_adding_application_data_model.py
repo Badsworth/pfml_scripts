@@ -80,22 +80,22 @@ def upgrade():
         sa.Column("submitted_time", sa.DateTime(), nullable=True),
         sa.Column("fineos_absence_id", sa.Text(), nullable=True),
         sa.Column("fineos_notification_case_id", sa.Text(), nullable=True),
-        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"],),
-        sa.ForeignKeyConstraint(["employer_id"], ["employer.employer_id"],),
+        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"]),
+        sa.ForeignKeyConstraint(["employer_id"], ["employer.employer_id"]),
         sa.ForeignKeyConstraint(
-            ["employer_notification_method"], ["lk_notification_method.notification_method"],
+            ["employer_notification_method"], ["lk_notification_method.notification_method"]
         ),
-        sa.ForeignKeyConstraint(["leave_reason"], ["lk_leave_reason.leave_reason"],),
+        sa.ForeignKeyConstraint(["leave_reason"], ["lk_leave_reason.leave_reason"]),
         sa.ForeignKeyConstraint(
-            ["leave_reason_qualifier"], ["lk_leave_reason_qualifier.leave_reason_qualifier"],
+            ["leave_reason_qualifier"], ["lk_leave_reason_qualifier.leave_reason_qualifier"]
         ),
-        sa.ForeignKeyConstraint(["leave_type"], ["lk_leave_type.leave_type"],),
-        sa.ForeignKeyConstraint(["occupation_type"], ["lk_occupation.occupation_type"],),
+        sa.ForeignKeyConstraint(["leave_type"], ["lk_leave_type.leave_type"]),
+        sa.ForeignKeyConstraint(["occupation_type"], ["lk_occupation.occupation_type"]),
         sa.ForeignKeyConstraint(
-            ["relationship_to_caregiver"], ["lk_relationship_to_caregiver.relationship"],
+            ["relationship_to_caregiver"], ["lk_relationship_to_caregiver.relationship"]
         ),
-        sa.ForeignKeyConstraint(["status"], ["lk_status.status_type"],),
-        sa.ForeignKeyConstraint(["user_id"], ["user.user_id"],),
+        sa.ForeignKeyConstraint(["status"], ["lk_status.status_type"]),
+        sa.ForeignKeyConstraint(["user_id"], ["user.user_id"]),
         sa.PrimaryKeyConstraint("application_id"),
     )
     op.create_table(
@@ -110,8 +110,8 @@ def upgrade():
         sa.Column("routing_number", sa.Text(), nullable=True),
         sa.Column("type_of_account", sa.Text(), nullable=True),
         sa.Column("name_in_check", sa.Text(), nullable=True),
-        sa.ForeignKeyConstraint(["application_id"], ["application.application_id"],),
-        sa.ForeignKeyConstraint(["payment_type"], ["lk_payment_type.payment_type"],),
+        sa.ForeignKeyConstraint(["application_id"], ["application.application_id"]),
+        sa.ForeignKeyConstraint(["payment_type"], ["lk_payment_type.payment_type"]),
         sa.PrimaryKeyConstraint("payment_pref_id"),
     )
     op.create_table(
@@ -129,8 +129,8 @@ def upgrade():
         sa.Column("end_date_full_day", sa.Boolean(), nullable=True),
         sa.Column("end_date_off_hours", sa.Integer(), nullable=True),
         sa.Column("end_date_off_minutes", sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(["application_id"], ["application.application_id"],),
-        sa.ForeignKeyConstraint(["status"], ["lk_status.status_type"],),
+        sa.ForeignKeyConstraint(["application_id"], ["application.application_id"]),
+        sa.ForeignKeyConstraint(["status"], ["lk_status.status_type"]),
         sa.PrimaryKeyConstraint("leave_period_id"),
     )
     op.create_table(
@@ -144,7 +144,7 @@ def upgrade():
         sa.Column("frequency_interval_basis", sa.Text(), nullable=True),
         sa.Column("duration", sa.Integer(), nullable=True),
         sa.Column("duration_basis", sa.Text(), nullable=True),
-        sa.ForeignKeyConstraint(["application_id"], ["application.application_id"],),
+        sa.ForeignKeyConstraint(["application_id"], ["application.application_id"]),
         sa.PrimaryKeyConstraint("leave_period_id"),
     )
     op.create_table(
@@ -168,8 +168,8 @@ def upgrade():
         sa.Column("tuesday_off_minutes", sa.Integer(), nullable=True),
         sa.Column("wednesday_off_hours", sa.Integer(), nullable=True),
         sa.Column("wednesday_off_minutes", sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(["application_id"], ["application.application_id"],),
-        sa.ForeignKeyConstraint(["status"], ["lk_status.status_type"],),
+        sa.ForeignKeyConstraint(["application_id"], ["application.application_id"]),
+        sa.ForeignKeyConstraint(["status"], ["lk_status.status_type"]),
         sa.PrimaryKeyConstraint("leave_period_id"),
     )
     # ### end Alembic commands ###

@@ -36,7 +36,7 @@ def upgrade():
         sa.Column("fineos_id", sa.Text(), nullable=True),
         sa.Column("name", sa.Text(), nullable=False),
         sa.Column("employer_id", postgresql.UUID(as_uuid=True), nullable=True),
-        sa.ForeignKeyConstraint(["employer_id"], ["employer.employer_id"],),
+        sa.ForeignKeyConstraint(["employer_id"], ["employer.employer_id"]),
         sa.PrimaryKeyConstraint("organization_unit_id"),
         sa.UniqueConstraint("fineos_id"),
         sa.UniqueConstraint("name"),
@@ -63,7 +63,7 @@ def upgrade():
         sa.Column("dba", sa.Text(), nullable=True),
         sa.Column("organization_unit_id", postgresql.UUID(as_uuid=True), nullable=True),
         sa.ForeignKeyConstraint(
-            ["organization_unit_id"], ["organization_unit.organization_unit_id"],
+            ["organization_unit_id"], ["organization_unit.organization_unit_id"]
         ),
         sa.PrimaryKeyConstraint("dua_reporting_unit_id"),
         sa.UniqueConstraint("dua_id"),

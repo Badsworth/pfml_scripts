@@ -14,6 +14,8 @@ The API Gateway, which receives public requests and securely routes it to the pr
 
 ## Key Components
 
+TBD
+
 ### RDS Database
 
 An RDS database is created in the provided database subnets in [rds.tf](./template/rds.tf). Note that once created, future configuration and administrative actions are managed by the Smartronix Managed Services DB administrators.

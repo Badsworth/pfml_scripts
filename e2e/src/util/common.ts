@@ -95,6 +95,7 @@ export function splitClaimToParts(
     {
       leave_details: {
         reason: leave_details?.reason,
+        caring_leave_metadata: leave_details?.caring_leave_metadata,
         reason_qualifier: leave_details?.reason_qualifier,
       },
     },

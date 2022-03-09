@@ -31,7 +31,7 @@ class Occupation(str, LookupEnum):
     health_care = "Health Care"
 
 
-class EligibilityEmploymentStatus(str):
+class EligibilityEmploymentStatus(str, LookupEnum):
     employed = "Employed"
     unemployed = "Unemployed"
     self_employed = "Self-Employed"
@@ -69,9 +69,14 @@ class LeaveReason(str, LookupEnum):
 
 class LeaveReasonQualifier(str, LookupEnum):
     newborn = "Newborn"
+    serious_health_condition = "Serious Health Condition"
+    # This reason qualifier is not currently being used. See API-389 & PR #1280.
+    work_related_accident_injury = "Work Related Accident/Injury"
     adoption = "Adoption"
     foster_care = "Foster Care"
-    serious_health_condition = "Serious Health Condition"
+    not_work_related = "Not Work Related"
+    sickness = "Sickness"
+    postnatal_disability = "Postnatal Disability"
 
 
 class RelationshipToCaregiver(str, LookupEnum):
@@ -102,6 +107,18 @@ class NotificationMethod(str, LookupEnum):
     in_person = "In Person"
     by_telephone = "By Telephone"
     other = "Other"
+
+
+class OrganizationUnitSelection(str, Enum):
+    not_listed = "not_listed"
+    not_selected = "not_selected"
+
+
+class OrganizationUnit(PydanticBaseModel):
+    organization_unit_id: Optional[UUID4]
+    employer_id: Optional[UUID4]
+    fineos_id: Optional[str]
+    name: Optional[str]
 
 
 class ReducedScheduleLeavePeriods(PydanticBaseModel):
@@ -346,6 +363,12 @@ class DocumentType(str, LookupEnum):
     military_exigency_form = "Military exigency form"
     withdrawal_notice = "Pending Application Withdrawn"
     appeal_acknowledgment = "Appeal Acknowledgment"
+    maximum_weekly_benefit_change_notice = "Maximum Weekly Benefit Change Notice"
+    benefit_amount_change_notice = "Benefit Amount Change Notice"
+    leave_allotment_change_notice = "Leave Allotment Change Notice"
+    approved_time_cancelled = "Approved Time Cancelled"
+    change_request_approved = "Change Request Approved"
+    change_request_denied = "Change Request Denied"
 
 
 class ContentType(str, LookupEnum):

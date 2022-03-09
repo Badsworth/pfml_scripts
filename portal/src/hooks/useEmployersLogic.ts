@@ -1,29 +1,29 @@
-import { get, isNil } from "lodash";
 import { useMemo, useState } from "react";
-import { AppErrorsLogic } from "./useAppErrorsLogic";
+import ApiResourceCollection from "../models/ApiResourceCollection";
 import { ClaimDocument } from "../models/Document";
 import { ClaimsLogic } from "./useClaimsLogic";
-import DocumentCollection from "../models/DocumentCollection";
 import EmployerClaim from "../models/EmployerClaim";
 import EmployersApi from "../api/EmployersApi";
+import { ErrorsLogic } from "./useErrorsLogic";
 import { LeaveAdminForbiddenError } from "../errors";
 import { PortalFlow } from "./usePortalFlow";
 import { UsersLogic } from "./useUsersLogic";
+import { get } from "lodash";
 
 const useEmployersLogic = ({
-  appErrorsLogic,
+  errorsLogic,
   clearClaims,
   portalFlow,
   setUser,
 }: {
-  appErrorsLogic: AppErrorsLogic;
+  errorsLogic: ErrorsLogic;
   clearClaims: ClaimsLogic["clearClaims"];
   portalFlow: PortalFlow;
   setUser: UsersLogic["setUser"];
 }) => {
   const [claim, setEmployerClaim] = useState<EmployerClaim | null>(null);
   const [claimDocumentsMap, setClaimDocumentsMap] = useState<
-    Map<string, DocumentCollection>
+    Map<string, ApiResourceCollection<ClaimDocument>>
   >(new Map());
   const employersApi = useMemo(() => new EmployersApi(), []);
 
@@ -31,7 +31,7 @@ const useEmployersLogic = ({
    * Associate employer FEIN with logged in user
    */
   const addEmployer = async (data: { employer_fein: string }, next: string) => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
       const employer = await employersApi.addEmployer(data);
@@ -40,7 +40,7 @@ const useEmployersLogic = ({
       setUser(undefined);
       portalFlow.goToNextPage({}, params);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 
@@ -49,7 +49,7 @@ const useEmployersLogic = ({
    */
   const loadClaim = async (absenceId: string) => {
     if (claim && claim.fineos_absence_id === absenceId) return;
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
       const { claim } = await employersApi.getClaim(absenceId);
@@ -62,8 +62,8 @@ const useEmployersLogic = ({
         "responseData.has_verification_data"
       );
 
-      if (!isNil(employer_id) && !isNil(has_verification_data)) {
-        appErrorsLogic.catchError(
+      if (employer_id && typeof has_verification_data === "boolean") {
+        errorsLogic.catchError(
           new LeaveAdminForbiddenError(
             employer_id,
             has_verification_data,
@@ -71,7 +71,7 @@ const useEmployersLogic = ({
           )
         );
       } else {
-        appErrorsLogic.catchError(error);
+        errorsLogic.catchError(error);
       }
     }
   };
@@ -81,7 +81,7 @@ const useEmployersLogic = ({
    */
   const loadDocuments = async (absenceId: string) => {
     if (claimDocumentsMap.has(absenceId)) return;
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
       const { documents } = await employersApi.getDocuments(absenceId);
@@ -90,7 +90,7 @@ const useEmployersLogic = ({
 
       setClaimDocumentsMap(loadedClaimDocumentsMap);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 
@@ -101,7 +101,7 @@ const useEmployersLogic = ({
     try {
       return await employersApi.getWithholding(employerId);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 
@@ -112,11 +112,11 @@ const useEmployersLogic = ({
     document: ClaimDocument,
     absenceId: string
   ) => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
     try {
       return await employersApi.downloadDocument(absenceId, document);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 
@@ -127,7 +127,7 @@ const useEmployersLogic = ({
     absenceId: string,
     data: { [key: string]: unknown }
   ) => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
       await employersApi.submitClaimReview(absenceId, data);
@@ -141,7 +141,7 @@ const useEmployersLogic = ({
       const params = { absence_id: absenceId };
       portalFlow.goToNextPage({}, params);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 
@@ -156,7 +156,7 @@ const useEmployersLogic = ({
     },
     next?: string
   ) => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
       const { user } = await employersApi.submitWithholding(data);
@@ -165,7 +165,7 @@ const useEmployersLogic = ({
       setUser(user);
       portalFlow.goToNextPage({}, params);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 

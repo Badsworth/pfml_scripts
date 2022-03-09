@@ -2,7 +2,13 @@ import { Environment } from "./../../src/types";
 import dataDirectory from "../../src/generation/DataDirectory";
 import EmployerPool from "../../src/generation/Employer";
 import EmployeePool from "../../src/generation/Employee";
-import { format, subDays } from "date-fns";
+import {
+  endOfQuarter,
+  format,
+  formatISO,
+  subDays,
+  subQuarters,
+} from "date-fns";
 import InfraClient from "../../src/InfraClient";
 import config from "../../src/config";
 import fs from "fs";
@@ -11,6 +17,8 @@ import os from "os";
 import DOR from "../../src/generation/writers/DOR";
 import { Fineos, ClaimantPage } from "../../src/submission/fineos.pages";
 import { jest, describe, beforeAll, afterAll, test } from "@jest/globals";
+import { generateCredentials } from "../../src/util/credentials";
+import { getAuthManager } from "../../src/util/common";
 
 const envs: Environment[] = [
   "test",
@@ -19,12 +27,15 @@ const envs: Environment[] = [
   "performance",
   "uat",
   "cps-preview",
+  "breakfix",
+  "long",
+  "trn2",
 ];
 // wait for 20 minutes to complete dor processing
 jest.setTimeout(1000 * 60 * 20);
 
 /**
- * @group nightly
+ * @group morning
  */
 describe("dor_upload", () => {
   let tempDir: string;
@@ -81,8 +92,9 @@ describe("dor_upload", () => {
     await storage.prepare();
     const infra = InfraClient.create(config);
 
-    const employerPool = EmployerPool.generate(1, {});
-    employerPool.pick().fein = employerFeinAsDate();
+    const employerPool = EmployerPool.generate(1, {
+      fein: employerFeinAsDate(),
+    });
     await employerPool.save(storage.employers);
 
     const employeePool = EmployeePool.generate(1, employerPool, {});
@@ -107,4 +119,41 @@ describe("dor_upload", () => {
       throw e;
     }
   });
+
+  test("Register and verify leave admin", async () => {
+    const authenticator = getAuthManager();
+
+    const storage = dataDirectory(`dor_upload_test`, tempDir);
+    await storage.prepare();
+    const employerPool = await EmployerPool.load(storage.employers);
+
+    const employer = employerPool.pick();
+
+    const fein = employer.fein;
+    const withholding_amount =
+      employer.withholdings[employer.withholdings.length - 1];
+    const quarter = formatISO(endOfQuarter(subQuarters(new Date(), 1)), {
+      representation: "date",
+    });
+
+    const { username, password } = generateCredentials();
+
+    try {
+      await authenticator.registerLeaveAdmin(username, password, fein);
+    } catch (err) {
+      // since we're generating random creds each run, it'd be pretty
+      // surprising if we got a repeat email error. regardless, we don't
+      // want to fail the whole test if it does happen
+      if (err.code !== "UsernameExistsException") {
+        throw err;
+      }
+    }
+
+    await authenticator.verifyLeaveAdmin(
+      username,
+      password,
+      withholding_amount,
+      quarter
+    );
+  }, 90000);
 });
