@@ -35,6 +35,7 @@ import { createRouteWithQuery } from "../../../utils/routeWithParams";
 import findKeyByValue from "../../../utils/findKeyByValue";
 import formatDate from "../../../utils/formatDate";
 import hasDocumentsLoadError from "../../../utils/hasDocumentsLoadError";
+import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
 
@@ -234,7 +235,10 @@ export const Status = ({
 
   return (
     <React.Fragment>
-      <HolidayAlert holidaysLogic={holidays} />
+      {isFeatureEnabled("showHolidayAlert") &&
+        isFeatureEnabled("claimantShowPaymentsPhaseThree") && (
+          <HolidayAlert holidaysLogic={holidays} />
+        )}
       {uploaded_document_type && (
         <Alert
           heading={t("pages.claimsStatus.uploadSuccessHeading", {

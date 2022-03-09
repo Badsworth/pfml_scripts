@@ -51,6 +51,7 @@ from massgov.pfml.api.validation.exceptions import (
     ValidationErrorDetail,
 )
 from massgov.pfml.db.models.absences import AbsenceStatus
+from massgov.pfml.db.models.employees import ChangeRequest as change_request_db_model
 from massgov.pfml.db.models.employees import (
     Claim,
     Employer,
@@ -823,30 +824,17 @@ def post_change_request(fineos_absence_id: str) -> flask.Response:
         )
         return error.to_api_response()
 
-    if issues := claim_rules.get_change_request_issues(change_request, claim):
-        return response_util.error_response(
-            status_code=BadRequest,
-            message="Invalid change request body",
-            errors=issues,
-            data={},
-        ).to_api_response()
+    db_change_request = add_change_request_to_db(change_request, claim.claim_id)
 
-    # Post change request to FINEOS - https://lwd.atlassian.net/browse/PORTAL-1710
-    submitted_time = utcnow()
-    add_change_request_to_db(change_request, claim.claim_id, submitted_time)
+    issues = claim_rules.get_change_request_issues(db_change_request, claim)
 
-    response_data = ChangeRequestResponse(
-        fineos_absence_id=fineos_absence_id,
-        change_request_type=change_request.change_request_type,
-        start_date=change_request.start_date,
-        end_date=change_request.end_date,
-        submitted_time=submitted_time,
-    )
+    response_data = ChangeRequestResponse.from_orm(db_change_request)
 
     return response_util.success_response(
         message="Successfully posted change request",
         data=response_data.dict(),
         status_code=201,
+        warnings=issues,
     ).to_api_response()
 
 
@@ -876,5 +864,51 @@ def get_change_requests(fineos_absence_id: str) -> flask.Response:
     return response_util.success_response(
         message="Successfully retrieved change requests",
         data={"absence_case_id": fineos_absence_id, "change_requests": change_requests_dict},
+        status_code=200,
+    ).to_api_response()
+
+
+def submit_change_request(change_request_id: str) -> flask.Response:
+    with app.db_session() as db_session:
+        change_request = get_or_404(db_session, change_request_db_model, UUID(change_request_id))
+
+    if issues := claim_rules.get_change_request_issues(change_request, change_request.claim):
+        return response_util.error_response(
+            status_code=BadRequest,
+            message="Invalid change request",
+            errors=issues,
+            data={},
+        ).to_api_response()
+
+    # TODO: Post change request to FINEOS - https://lwd.atlassian.net/browse/PORTAL-1710
+    change_request.submitted_time = utcnow()
+
+    response_data = ChangeRequestResponse.from_orm(change_request)
+
+    return response_util.success_response(
+        message="Successfully submitted Change Request to FINEOS",
+        data=response_data.dict(),
+        status_code=200,
+    ).to_api_response()
+
+
+def delete_change_request(change_request_id: str) -> flask.Response:
+    with app.db_session() as db_session:
+        change_request = get_or_404(db_session, change_request_db_model, UUID(change_request_id))
+
+        if change_request.submitted_time is not None:
+            error = response_util.error_response(
+                BadRequest,
+                "Cannot delete a submitted request",
+                data={},
+                errors=[],
+            )
+            return error.to_api_response()
+
+        db_session.delete(change_request)
+
+    return response_util.success_response(
+        message="Successfully deleted change request",
+        data={},
         status_code=200,
     ).to_api_response()

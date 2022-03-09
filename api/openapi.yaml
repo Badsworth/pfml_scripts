@@ -513,7 +513,7 @@ paths:
 
   /change-request:
     post:
-      summary: Submit a change request to FINEOS
+      summary: Create a change request record
       operationId: massgov.pfml.api.claims.post_change_request
       tags:
         - ChangeRequest
@@ -580,6 +580,67 @@ paths:
                             nullable: false
                           change_requests:
                               $ref: "#/components/schemas/ChangeRequestsResponse"
+                              
+  /change-request/{change_request_id}/submit:
+    post:
+      summary: Submit a completed change request to FINEOS
+      operationId: massgov.pfml.api.claims.submit_change_request
+      tags:
+        - ChangeRequest
+      parameters:
+        - name: change_request_id
+          in: path
+          schema:
+            type: string
+            format: uuid
+          description: ID of Change Request to submit
+          required: true
+      responses:
+        "200":
+          description: A successful request returns a 200
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessfulResponse'
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/ChangeRequestResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "400":
+          description: An unsuccessful request returns a 400 status code if one or more errors occurred.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /change-request/{change_request_id}:
+    delete:
+      summary: Delete an in-progress ChangeRequest
+      operationId: massgov.pfml.api.claims.delete_change_request
+      tags:
+        - ChangeRequest
+      parameters:
+        - name: change_request_id
+          in: path
+          schema:
+            type: string
+            format: uuid
+            example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
+          description: ID of the change request to delete
+          required: true
+      responses:
+        "200":
+          description: Change Request successfully deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessfulResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"   
 
   /payments:
     get:
@@ -1384,6 +1445,7 @@ paths:
                     date: '2021-12-25'
         "400":
           $ref: "#/components/responses/BadRequest"
+
 
   /admin/authorize:
     get:
@@ -3088,6 +3150,7 @@ components:
           example: "Newborn"
         reason_qualifier_two:
           type: string
+          nullable: true
         period_type:
           type: string
           enum:
@@ -3418,6 +3481,7 @@ components:
         content_type:
           type: string
           example: "image/png"
+          nullable: true
         fineos_document_id:
           type: string
           example: "1234"
@@ -3432,7 +3496,6 @@ components:
         - application_id
         - created_at
         - document_type
-        - content_type
         - fineos_document_id
         - name
         - description
@@ -4324,6 +4387,14 @@ components:
         current:
           type: boolean
           example: false
+        end_date_within:
+          type: array
+          items:
+            type: string
+            format: date
+          minItems: 2
+          maxItems: 2
+          example: ['2020-12-12','2021-01-10']
     
     BenefitYearsSearchRequest:
       type: object

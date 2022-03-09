@@ -647,7 +647,66 @@ describe("Status", () => {
   });
 
   describe("holiday alert", () => {
+    it("doesn't show the holiday alert when there are holidays, but the claimantShowPaymentsPhaseThree feature flag is off", () => {
+      process.env.featureFlags = JSON.stringify({
+        showHolidayAlert: true,
+        claimantShowPaymentsPhaseThree: false,
+      });
+
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper(
+            { ...defaultClaimDetail },
+            [], // documents, default
+            [], // errors, default
+            jest.fn(), // loadClaimDetailMock, default
+            defaultPayments, // payments, default
+            true, // approval notice, default
+            true, // loaded documents, default
+            defaultHolidays // holidays, default
+          ),
+        },
+        props
+      );
+      expect(
+        screen.queryByText(defaultHolidayAlertText)
+      ).not.toBeInTheDocument();
+    });
+
+    it("doesn't show the holiday alert when there are holidays, but the showHolidayAlert feature flag is off", () => {
+      process.env.featureFlags = JSON.stringify({
+        showHolidayAlert: false,
+        claimantShowPaymentsPhaseThree: true,
+      });
+
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper(
+            { ...defaultClaimDetail },
+            [], // documents, default
+            [], // errors, default
+            jest.fn(), // loadClaimDetailMock, default
+            defaultPayments, // payments, default
+            true, // approval notice, default
+            true, // loaded documents, default
+            defaultHolidays // holidays, default
+          ),
+        },
+        props
+      );
+      expect(
+        screen.queryByText(defaultHolidayAlertText)
+      ).not.toBeInTheDocument();
+    });
+
     it("doesn't show the holiday alert when there are no holidays", () => {
+      process.env.featureFlags = JSON.stringify({
+        showHolidayAlert: true,
+        claimantShowPaymentsPhaseThree: true,
+      });
+
       renderPage(
         Status,
         {
@@ -670,6 +729,11 @@ describe("Status", () => {
     });
 
     it("shows the holiday alert when there are holidays", () => {
+      process.env.featureFlags = JSON.stringify({
+        showHolidayAlert: true,
+        claimantShowPaymentsPhaseThree: true,
+      });
+
       renderPage(
         Status,
         {

@@ -2,11 +2,7 @@ from datetime import date
 
 import pytest
 
-from massgov.pfml.api.models.claims.common import (
-    ChangeRequest,
-    ChangeRequestType,
-    EmployerClaimReview,
-)
+from massgov.pfml.api.models.claims.common import EmployerClaimReview
 from massgov.pfml.api.models.common import EmployerBenefit, PreviousLeave
 from massgov.pfml.api.validation.claim_rules import (
     get_change_request_issues,
@@ -16,8 +12,12 @@ from massgov.pfml.api.validation.claim_rules import (
     get_previous_leaves_issues,
 )
 from massgov.pfml.api.validation.exceptions import IssueType
-from massgov.pfml.db.models.employees import AbsencePeriod
-from massgov.pfml.db.models.factories import AbsencePeriodFactory, ClaimFactory
+from massgov.pfml.db.models.employees import AbsencePeriod, ChangeRequestType
+from massgov.pfml.db.models.factories import (
+    AbsencePeriodFactory,
+    ChangeRequestFactory,
+    ClaimFactory,
+)
 
 
 @pytest.fixture
@@ -162,20 +162,28 @@ def setup_factories(initialize_factories_session):
 
 @pytest.fixture
 def modification_change_request():
-    return ChangeRequest(change_request_type=ChangeRequestType.MODIFICATION, end_date="2020-03-01")
+    return ChangeRequestFactory.create(
+        change_request_type_id=ChangeRequestType.MODIFICATION.change_request_type_id,
+        start_date=None,
+        end_date=date(2020, 3, 1),
+    )
 
 
 @pytest.fixture
 def withdrawal_change_request():
-    return ChangeRequest(change_request_type=ChangeRequestType.WITHDRAWAL)
+    return ChangeRequestFactory.create(
+        change_request_type_id=ChangeRequestType.WITHDRAWAL.change_request_type_id,
+        start_date=None,
+        end_date=None,
+    )
 
 
 @pytest.fixture
 def mtb_change_request():
-    return ChangeRequest(
-        change_request_type=ChangeRequestType.MEDICAL_TO_BONDING,
-        start_date="2020-02-01",
-        end_date="2020-03-01",
+    return ChangeRequestFactory.create(
+        change_request_type_id=ChangeRequestType.MEDICAL_TO_BONDING.change_request_type_id,
+        start_date=date(2020, 2, 1),
+        end_date=date(2020, 3, 1),
     )
 
 

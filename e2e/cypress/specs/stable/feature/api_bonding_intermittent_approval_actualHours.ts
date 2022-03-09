@@ -2,6 +2,7 @@ import { fineos, portal, email, fineosPages } from "../../../actions";
 import { Submission } from "../../../../src/types";
 import { waitForAjaxComplete } from "../../../actions/fineos";
 import { addDays, formatISO, startOfWeek, subDays } from "date-fns";
+import { config } from "../../../actions/common";
 
 describe("Report of intermittent leave hours notification", () => {
   after(() => {
@@ -34,18 +35,21 @@ describe("Report of intermittent leave hours notification", () => {
           fineos.getClaimStatus().then((status) => {
             if (status === "Approved") return;
             claimPage.shouldHaveStatus("Eligibility", "Met");
-            claimPage
-              .adjudicate((adjudication) => {
-                adjudication
-                  .evidence((evidence) => {
-                    claim.documents.forEach(({ document_type }) =>
-                      evidence.receive(document_type)
-                    );
-                  })
-                  .certificationPeriods((certPeriods) => certPeriods.prefill())
-                  .acceptLeavePlan();
-              })
-              .approve("Completed");
+            claimPage.adjudicate((adjudication) => {
+              adjudication
+                .evidence((evidence) => {
+                  claim.documents.forEach(({ document_type }) =>
+                    evidence.receive(document_type)
+                  );
+                })
+                .certificationPeriods((certPeriods) => certPeriods.prefill())
+                .acceptLeavePlan();
+            });
+            if (config("HAS_APRIL_UPGRADE") === "true") {
+              claimPage.approve("Completed", true);
+            } else {
+              claimPage.approve("Completed", false);
+            }
             claimPage.triggerNotice("Designation Notice");
             waitForAjaxComplete();
           });

@@ -772,6 +772,7 @@ class ChangeRequest(Base, TimestampMixin):
     claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True, nullable=False)
     start_date = Column(Date)
     end_date = Column(Date)
+    documents_submitted_at = Column(TIMESTAMP(timezone=True))
     submitted_time = Column(TIMESTAMP(timezone=True))
 
     change_request_type_instance = relationship(LkChangeRequestType)

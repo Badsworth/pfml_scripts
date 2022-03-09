@@ -3,6 +3,7 @@ import { fineos, fineosPages, portal } from "../../actions";
 import { Submission } from "../../../src/types";
 import { addMonths, addDays, format } from "date-fns";
 import { extractLeavePeriod } from "../../../src/util/claims";
+import { config } from "../../actions/common";
 
 // @note: this test is very similar to api_pregnancy_continuous+reduced_approval+denial_correctExtensionClaimantStatus.ts
 // It doesn't include the denial of the extension request as the other test covers this functionality.
@@ -69,20 +70,23 @@ describe("Submit medical pre-birth application via the web portal", () => {
           );
           claimPage.triggerNotice("Preliminary Designation");
           fineos.onTab("Absence Hub");
-          claimPage
-            .adjudicate((adjudication) => {
-              adjudication
-                .evidence((evidence) => {
-                  // Receive all of the claim documentation.
-                  claim.documents.forEach((document) => {
-                    evidence.receive(document.document_type);
-                  });
-                })
-                .certificationPeriods((cert) => cert.prefill())
-                .acceptLeavePlan();
-            })
-            .approve()
-            .triggerNotice("Designation Notice");
+          claimPage.adjudicate((adjudication) => {
+            adjudication
+              .evidence((evidence) => {
+                // Receive all of the claim documentation.
+                claim.documents.forEach((document) => {
+                  evidence.receive(document.document_type);
+                });
+              })
+              .certificationPeriods((cert) => cert.prefill())
+              .acceptLeavePlan();
+          });
+          if (config("HAS_APRIL_UPGRADE") === "true") {
+            claimPage.approve("Approved", true);
+          } else {
+            claimPage.approve("Approved", false);
+          }
+          claimPage.triggerNotice("Designation Notice");
         });
       });
     }

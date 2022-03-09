@@ -2,6 +2,7 @@ import { fineos, fineosPages, portal } from "../../../actions";
 import { Submission } from "../../../../src/types";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { getDocumentReviewTaskName } from "../../../../src/util/documents";
+import { config } from "../../../actions/common";
 
 describe("Submit caring application via the web portal: Adjudication Approval & payment checking", () => {
   const submissionTest =
@@ -55,7 +56,7 @@ describe("Submit caring application via the web portal: Adjudication Approval & 
       fineos.before();
       cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
         cy.unstash<DehydratedClaim>("claim").then((claim) => {
-          fineosPages.ClaimPage.visit(fineos_absence_id)
+          const claimPage = fineosPages.ClaimPage.visit(fineos_absence_id)
             .tasks((tasks) => {
               claim.documents.forEach((doc) =>
                 tasks.assertTaskExists(
@@ -74,8 +75,12 @@ describe("Submit caring application via the web portal: Adjudication Approval & 
                 )
                 .certificationPeriods((certPreiods) => certPreiods.prefill())
                 .acceptLeavePlan();
-            })
-            .approve();
+            });
+          if (config("HAS_APRIL_UPGRADE") === "true") {
+            claimPage.approve("Approved", true);
+          } else {
+            claimPage.approve("Approved", false);
+          }
         });
       });
     }

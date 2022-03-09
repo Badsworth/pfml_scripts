@@ -2737,6 +2737,14 @@ const pages: {
     tablePaymentStatus_Check: "Check mailed on {{sentDate}}",
     tablePaymentStatus_Delayed:
       "See <delays-accordion-link>what may cause a delayed or cancelled payment</delays-accordion-link>.",
+    "tablePaymentStatus_Delayed_Address Validation Error":
+      "This payment is delayed due to an error with your provided mailing address. Call <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> to resolve this issue.",
+    "tablePaymentStatus_Delayed_Bank Processing Error":
+      "$t(pages.payments.tablePaymentStatus_Delayed_Banking_Error)",
+    tablePaymentStatus_Delayed_Banking_Error:
+      "This payment has been rejected by your bank. Call <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> to resolve this issue.",
+    "tablePaymentStatus_Delayed_EFT Account Information Error":
+      "$t(pages.payments.tablePaymentStatus_Delayed_Banking_Error)",
     tablePaymentStatus_Pending:
       "Your payment will be sent by {{paymentMethod}} between {{payPeriod}}.",
     "tablePaymentStatus_Sent to bank":

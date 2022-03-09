@@ -60,7 +60,12 @@ describe("Create a new caring leave claim in FINEOS and Suppress Correspondence 
             );
             adjudication.acceptLeavePlan();
           });
-          claimPage.approve("Approved").triggerNotice("Designation Notice");
+          if (config("HAS_APRIL_UPGRADE") === "true") {
+            claimPage.approve("Approved", true);
+          } else {
+            claimPage.approve("Approved", false);
+          }
+          claimPage.triggerNotice("Designation Notice");
         });
       });
     });

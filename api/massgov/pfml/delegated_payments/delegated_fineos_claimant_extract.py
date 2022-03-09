@@ -134,6 +134,17 @@ class AbsencePeriodContainer:
             )
         )
 
+    def get_log_extra(self) -> Dict[str, Any]:
+        return {
+            "absence_period_class_id": self.class_id,
+            "absence_period_index_id": self.index_id,
+            "absence_period_start_date": self.start_date.isoformat() if self.start_date else None,
+            "absence_period_end_date": self.end_date.isoformat() if self.end_date else None,
+            "fineos_leave_request_id": self.leave_request_id,
+            "absence_period_type": self.raw_absence_period_type,
+            "leave_request_decision": self.raw_leave_request_decision,
+        }
+
 
 class ClaimantData:
     """
@@ -542,6 +553,8 @@ class ClaimantData:
         return {
             "absence_case_id": self.absence_case_id,
             "fineos_customer_number": self.fineos_customer_number,
+            "absence_start_date": self.absence_start_date,
+            "absence_end_date": self.absence_end_date,
         }
 
 
@@ -947,7 +960,10 @@ class ClaimantExtractStep(Step):
         self, absence_period_info: AbsencePeriodContainer, claim: Claim, claimant_data: ClaimantData
     ) -> Optional[AbsencePeriod]:
 
-        log_attributes = claimant_data.get_traceable_details()
+        log_attributes: Dict[str, Any] = {
+            **claimant_data.get_traceable_details(),
+            **absence_period_info.get_log_extra(),
+        }
 
         # Add / update entry on absence period table
         logger.info("Updating Absence Period Table", extra=log_attributes)
@@ -969,8 +985,6 @@ class ClaimantExtractStep(Step):
                     **log_attributes,
                     "claim.claim_id": claim.claim_id,
                     "db_absence_period.claim_id": db_absence_period.claim_id,
-                    "absence_period_class_id": absence_period_info.class_id,
-                    "absence_period_index_id": absence_period_info.index_id,
                 },
             )
 
@@ -982,6 +996,7 @@ class ClaimantExtractStep(Step):
             return None
 
         if db_absence_period is None:
+            logger.info("Absence period not found, creating it", extra=log_attributes)
             db_absence_period = AbsencePeriod()
             db_absence_period.claim_id = claim.claim_id
             db_absence_period.fineos_absence_period_class_id = absence_period_info.class_id

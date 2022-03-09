@@ -23,6 +23,52 @@ from .common import XMLType as XML
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
+class FineosExtractVbiTaskReportSom(Base, TimestampMixin):
+    __tablename__ = "fineos_extract_vbi_task_report_som"
+    vbi_task_report_som_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
+    taskid = Column(Text)
+    tasktableid = Column(Text)
+    departmenttableid = Column(Text)
+    departmentid = Column(Text)
+    roletableid = Column(Text)
+    roleid = Column(Text)
+    usertableid = Column(Text)
+    userid = Column(Text)
+    worktypetableid = Column(Text)
+    worktypeid = Column(Text)
+    deptname = Column(Text)
+    username = Column(Text)
+    userloginid = Column(Text)
+    subjectreference = Column(Text)
+    taskcreator = Column(Text)
+    taskowner = Column(Text)
+    creationdate = Column(Text)
+    startdate = Column(Text)
+    closeddate = Column(Text)
+    calculatedsla = Column(Text)
+    hourstocomplete = Column(Text)
+    exceededworktime = Column(Text)
+    targetdate = Column(Text)
+    onholduntildate = Column(Text)
+    status = Column(Text)
+    tasktypename = Column(Text)
+    casetype = Column(Text)
+    notificationnumber = Column(Text)
+    casenumber = Column(Text, index=True)
+
+    reference_file_id = Column(
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
+    )
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+    reference_file = relationship(ReferenceFile)
+
+    Index("ix_vbi_task_report_som_casenumber_reference_file_id", casenumber, reference_file_id)
+
+
 class FineosExtractVpei(Base, TimestampMixin):
     __tablename__ = "fineos_extract_vpei"
 

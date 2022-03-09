@@ -1,6 +1,7 @@
 import { fineos, fineosPages, email, portal } from "../../../actions";
 import { Submission } from "../../../../src/types";
 import { getClaimantCredentials } from "../../../config";
+import { config } from "../../../actions/common";
 
 describe("Change request approval (notifications/notices)", () => {
   after(() => {
@@ -37,7 +38,11 @@ describe("Change request approval (notifications/notices)", () => {
               .certificationPeriods((cert) => cert.prefill())
               .acceptLeavePlan();
           });
-          claimPage.approve();
+          if (config("HAS_APRIL_UPGRADE") === "true") {
+            claimPage.approve("Approved", true);
+          } else {
+            claimPage.approve("Approved", false);
+          }
           claimPage.triggerNotice("Designation Notice");
         });
       });

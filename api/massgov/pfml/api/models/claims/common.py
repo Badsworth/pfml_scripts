@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 from enum import Enum
 from typing import List, Optional
@@ -83,12 +83,11 @@ class ChangeRequest(PydanticBaseModel):
     end_date: Optional[date]
 
     def to_db_model(
-        self, change_type: LkChangeRequestType, claim_id: UUID4, submitted_time: datetime
+        self, change_type: LkChangeRequestType, claim_id: UUID4
     ) -> change_request_db_model:
         return change_request_db_model(
             claim_id=claim_id,
             change_request_type_instance=change_type,
             start_date=self.start_date,
             end_date=self.end_date,
-            submitted_time=submitted_time,
         )

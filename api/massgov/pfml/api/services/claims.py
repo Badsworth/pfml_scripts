@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Dict, List
 from uuid import UUID
 
@@ -83,7 +82,7 @@ def get_change_requests_from_db(
 
 
 def add_change_request_to_db(
-    change_request: api_models.ChangeRequest, claim_id: UUID, submitted_time: datetime
+    change_request: api_models.ChangeRequest, claim_id: UUID
 ) -> db_models.ChangeRequest:
     with app.db_session() as db_session:
         change_request_type = db_lookups.by_value(
@@ -91,6 +90,6 @@ def add_change_request_to_db(
         )
         # needed for linter
         assert isinstance(change_request_type, db_models.LkChangeRequestType)
-        db_request = change_request.to_db_model(change_request_type, claim_id, submitted_time)
+        db_request = change_request.to_db_model(change_request_type, claim_id)
         db_session.add(db_request)
         return db_request

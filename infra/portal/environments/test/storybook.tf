@@ -3,6 +3,16 @@
 # which provide tooling for our UI component library and documentation
 #
 
+locals {
+  domain      = "paidleave-storybook-test.dfml.eol.mass.gov"
+  cert_domain = "paidleave-storybook-test.dfml.eol.mass.gov"
+}
+
+data "aws_acm_certificate" "paidleave_storybook_test" {
+  domain   = local.domain
+  statuses = ["ISSUED"]
+}
+
 resource "aws_s3_bucket" "storybook" {
   bucket = "massgov-${local.app_name}-${local.environment_name}-storybook-builds"
   acl    = "private"
@@ -98,6 +108,7 @@ resource "aws_cloudfront_distribution" "storybook_web_distribution" {
   is_ipv6_enabled     = true
   http_version        = "http2"
   default_root_object = "index.html"
+  aliases             = local.domain == null ? null : [local.domain]
   price_class         = "PriceClass_100"
   retain_on_delete    = true
   # Terraform will exit as soon as it’s made all the updates
@@ -130,15 +141,16 @@ resource "aws_cloudfront_distribution" "storybook_web_distribution" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true
+    acm_certificate_arn            = local.cert_domain == null ? null : data.aws_acm_certificate.paidleave_storybook_test.arn
+    cloudfront_default_certificate = (local.cert_domain == null)
 
     # SNI is recommended
     # Associates alternate domain names with an IP address for each edge location
     # See: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cnames-https-dedicated-ip-or-sni.html
-    # ssl_support_method = "sni-only"
+    ssl_support_method = "sni-only"
 
     # If we're using cloudfront_default_certificate, TLSv1 must be specified.
-    minimum_protocol_version = "TLSv1"
+    minimum_protocol_version = local.cert_domain == null ? "TLSv1" : "TLSv1.2_2019"
   }
 
   restrictions {

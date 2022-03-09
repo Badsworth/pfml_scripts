@@ -122,6 +122,18 @@ class AzureGroup(LookupTable):
         "68800ca3-9f10-48e9-9e41-b62de7a48dfb",
         PROD.azure_group_id,
     )
+    PROD_DEV = LkAzureGroup(
+        9, "TSS-SG-PFML_ADMIN_PORTAL_PROD_DEV (reserved)", "9", PROD.azure_group_id
+    )
+    PROD_CONTACT_CENTER = LkAzureGroup(
+        10, "TSS-SG-PFML_ADMIN_PORTAL_PROD_CONTACT_CENTER (reserved)", "10", PROD.azure_group_id
+    )
+    PROD_SERVICE_DESK = LkAzureGroup(
+        11, "TSS-SG-PFML_ADMIN_PORTAL_PROD_SERVICE_DESK (reserved)", "11", PROD.azure_group_id
+    )
+    PROD_DFML_OPS = LkAzureGroup(
+        12, "TSS-SG-PFML_ADMIN_PORTAL_PROD_DFML_OPS (reserved)", "12", PROD.azure_group_id
+    )
 
 
 class AzurePermission(LookupTable):

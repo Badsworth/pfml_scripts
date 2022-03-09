@@ -24,6 +24,7 @@ from massgov.pfml.db.models.absences import AbsencePeriodType, AbsenceStatus
 from massgov.pfml.db.models.applications import FINEOSWebIdExt
 from massgov.pfml.db.models.employees import (
     AbsencePeriod,
+    ChangeRequest,
     Claim,
     LeaveRequestDecision,
     LkManagedRequirementStatus,
@@ -39,6 +40,7 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.db.models.factories import (
     AbsencePeriodFactory,
     ApplicationFactory,
+    ChangeRequestFactory,
     ClaimFactory,
     EmployeeFactory,
     EmployeeWithFineosNumberFactory,
@@ -4085,6 +4087,7 @@ class TestGetClaimsEndpoint:
         def claim_no_absence_period(self, employer, employee):
             return ClaimFactory.create(employer=employer, employee=employee, claim_type_id=1)
 
+        ## Note testing w/ None absence_reason_qualifier_two to test field nullability
         @pytest.fixture()
         def absence_periods(self, claim):
             start = date.today() + timedelta(days=5)
@@ -4092,7 +4095,10 @@ class TestGetClaimsEndpoint:
             for _ in range(5):
                 end = start + timedelta(days=10)
                 period = AbsencePeriodFactory.create(
-                    claim=claim, absence_period_start_date=start, absence_period_end_date=end
+                    claim=claim,
+                    absence_period_start_date=start,
+                    absence_period_end_date=end,
+                    absence_reason_qualifier_two_id=None,
                 )
                 periods.append(period)
                 start = start + timedelta(days=20)
@@ -6000,8 +6006,6 @@ class TestPostChangeRequest:
         assert response_body.get("fineos_absence_id") == claim.fineos_absence_id
         assert response_body.get("start_date") == request_body["start_date"]
         assert response_body.get("end_date") == request_body["end_date"]
-        assert response_body.get("end_date") == request_body["end_date"]
-        assert response_body.get("submitted_time") == str(submitted_time.isoformat())
 
     @mock.patch("massgov.pfml.api.claims.claim_rules.get_change_request_issues", return_value=[])
     @mock.patch("massgov.pfml.api.claims.get_claim_from_db", return_value=None)
@@ -6016,23 +6020,9 @@ class TestPostChangeRequest:
         assert response.status_code == 404
         assert response.get_json()["message"] == "Claim does not exist for given absence ID"
 
-    @mock.patch("massgov.pfml.api.claims.get_claim_from_db")
-    def test_validation_issues(self, mock_get_claim, auth_token, claim, client, request_body):
-        claim.absence_period_start_date = date(2021, 1, 1)
-        claim.fineos_absence_status_id = 1
-        mock_get_claim.return_value = claim
-        del request_body["end_date"]
-        response = client.post(
-            "/v1/change-request?fineos_absence_id={}".format(claim.fineos_absence_id),
-            headers={"Authorization": f"Bearer {auth_token}"},
-            json=request_body,
-        )
-        assert response.status_code == 400
-        assert response.get_json()["message"] == "Invalid change request body"
-
 
 class TestGetChangeRequests:
-    @mock.patch("massgov.pfml.api.services.claims.get_change_requests_from_db")
+    @mock.patch("massgov.pfml.api.claims.get_change_requests_from_db")
     def test_successful_get_request(
         self, mock_get_change_requests_from_db, claim, change_request, client, auth_token, user
     ):
@@ -6048,7 +6038,7 @@ class TestGetChangeRequests:
         assert len(response_body["data"]["change_requests"]) == 1
         assert response_body["message"] == "Successfully retrieved change requests"
 
-    @mock.patch("massgov.pfml.api.services.claims.get_change_requests_from_db")
+    @mock.patch("massgov.pfml.api.claims.get_change_requests_from_db")
     def test_successful_get_request_no_change_requests(
         self, mock_get_change_requests_from_db, claim, client, auth_token, user
     ):
@@ -6080,3 +6070,90 @@ class TestGetChangeRequests:
         )
 
         assert response.status_code == 401
+
+
+class TestSubmitChangeRequest:
+    @mock.patch("massgov.pfml.api.claims.get_or_404")
+    @mock.patch("massgov.pfml.api.claims.claim_rules.get_change_request_issues", return_value=[])
+    def test_successful_call(
+        self, mock_get_issues, mock_get_or_404, auth_token, change_request, client
+    ):
+        mock_get_or_404.return_value = change_request
+        response = client.post(
+            "/v1/change-request/5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32/submit",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert change_request.submitted_time is not None
+        assert response.status_code == 200
+
+    @mock.patch("massgov.pfml.api.claims.get_or_404")
+    @mock.patch("massgov.pfml.api.claims.claim_rules.get_change_request_issues")
+    def test_validation_issues(
+        self, mock_get_issues, mock_get_or_404, auth_token, change_request, client
+    ):
+        mock_get_or_404.return_value = change_request
+        mock_get_issues.return_value = [
+            ValidationErrorDetail(
+                message="start_date required",
+                type="required",
+                field="start_date",
+            )
+        ]
+        response = client.post(
+            "/v1/change-request/5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32/submit",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert response.status_code == 400
+        assert response.get_json()["message"] == "Invalid change request"
+
+    def test_missing_claim(self, auth_token, claim, client):
+        response = client.post(
+            "/v1/change-request/5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32/submit",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert response.status_code == 404
+        assert (
+            response.get_json()["message"]
+            == "Could not find ChangeRequest with ID 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32"
+        )
+
+
+class TestDeleteChangeRequest:
+    def test_success(self, client, auth_token, test_db_session):
+        change_request = ChangeRequestFactory.create()
+        response = client.delete(
+            f"/v1/change-request/{change_request.change_request_id}",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert response.status_code == 200
+        response_body = response.get_json()
+        assert response_body["message"] == "Successfully deleted change request"
+
+        db_entry = (
+            test_db_session.query(ChangeRequest)
+            .filter(ChangeRequest.change_request_id == change_request.change_request_id)
+            .one_or_none()
+        )
+        assert db_entry is None
+
+    def test_missing_change_request(self, client, auth_token):
+        response = client.delete(
+            "/v1/change-request/009fa369-291b-403f-a85a-15e938c26f2f",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert response.status_code == 404
+        response_body = response.get_json()
+        assert (
+            response_body["message"]
+            == "Could not find ChangeRequest with ID 009fa369-291b-403f-a85a-15e938c26f2f"
+        )
+
+    def test_error_on_submitted_change_request(self, client, auth_token):
+        change_request = ChangeRequestFactory.create(submitted_time=datetime_util.utcnow())
+        response = client.delete(
+            f"/v1/change-request/{change_request.change_request_id}",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert response.status_code == 400
+        response_body = response.get_json()
+        assert response_body["message"] == "Cannot delete a submitted request"

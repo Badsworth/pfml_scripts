@@ -200,7 +200,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
         class="usa-accordion__heading margin-y-2"
       >
         <button
-          aria-controls="accordion43"
+          aria-controls="accordion40"
           aria-expanded="false"
           class="usa-accordion__button"
           type="button"
@@ -210,9 +210,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       </h2>
       <div
         class="usa-accordion__content usa-prose"
-        data-testid="accordion43"
+        data-testid="accordion40"
         hidden=""
-        id="accordion43"
+        id="accordion40"
       >
         <strong>
           What may cause a delayed payment
@@ -278,7 +278,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       class="usa-accordion__heading margin-y-2"
     >
       <button
-        aria-controls="accordion44"
+        aria-controls="accordion41"
         aria-expanded="false"
         class="usa-accordion__button"
         type="button"
@@ -288,9 +288,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
     </h2>
     <div
       class="usa-accordion__content usa-prose"
-      data-testid="accordion44"
+      data-testid="accordion41"
       hidden=""
-      id="accordion44"
+      id="accordion41"
     >
       <p>
         To see your maximum weekly benefit amount, view your approval notice in the 
@@ -339,7 +339,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       class="usa-accordion__heading margin-y-2"
     >
       <button
-        aria-controls="accordion45"
+        aria-controls="accordion42"
         aria-expanded="false"
         class="usa-accordion__button"
         type="button"
@@ -349,9 +349,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
     </h2>
     <div
       class="usa-accordion__content usa-prose"
-      data-testid="accordion45"
+      data-testid="accordion42"
       hidden=""
-      id="accordion45"
+      id="accordion42"
     >
       <p>
         To make changes to your payment method or banking information, call the Contact Center at 

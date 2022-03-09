@@ -15,8 +15,10 @@ import User from "src/models/User";
 import { createAbsencePeriod } from "lib/mock-helpers/createAbsencePeriod";
 import { createMockPayment } from "lib/mock-helpers/createMockPayment";
 import dayjs from "dayjs";
+import dayjsBusinessTime from "dayjs-business-time";
 import { generateNotice } from "storybook/utils/generateNotice";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
+dayjs.extend(dayjsBusinessTime);
 
 const PAYMENT_OPTIONS = {
   REGULAR: "Regular payments",
@@ -27,6 +29,7 @@ const PAYMENT_OPTIONS = {
 const STATIC_DATES = {
   absence_period_start_date: dayjs("2021-05-01"),
   absence_period_end_date: dayjs("2021-07-01"),
+  current_date: dayjs(),
 };
 
 const APPROVAL_TIME = {
@@ -39,6 +42,12 @@ const APPROVAL_TIME = {
 const PAYMENT_METHOD = {
   CHECK: "Check",
   ELEC_FUNDS_TRANSFER: "Direct deposit",
+};
+
+const TRANSACTION_DATE = {
+  AFTER_TWO_DAYS: "After two business days",
+  AFTER_FIVE_DAYS: "After five business days",
+  SAME_DAY: "Same day",
 };
 
 const mappedApprovalDate: { [key: string]: string } = {
@@ -56,6 +65,16 @@ const mappedApprovalDate: { [key: string]: string } = {
     .format("YYYY-MM-DD"),
 };
 
+const mappedTransactionDate: { [key: string]: string } = {
+  "After two business days": STATIC_DATES.current_date
+    .addBusinessDays(2)
+    .format("YYYY-MM-DD"),
+  "After five business days": STATIC_DATES.current_date
+    .addBusinessDays(5)
+    .format("YYYY-MM-DD"),
+  "Same day": STATIC_DATES.current_date.format("YYYY-MM-DD"),
+};
+
 export default {
   title: "Pages/Applications/Status/Payments",
   component: Payments,
@@ -65,6 +84,7 @@ export default {
     "Leave type": leaveTypes[0],
     "Approval time": APPROVAL_TIME.AFTER_FOURTEEN_DAYS,
     "Payment method": PAYMENT_METHOD.CHECK,
+    "Transaction date": TRANSACTION_DATE.SAME_DAY,
     "Show holiday alert": false,
   },
   argTypes: {
@@ -102,6 +122,12 @@ export default {
         options: leaveTypes,
       },
     },
+    "Transaction date": {
+      control: {
+        type: "radio",
+        options: Object.values(TRANSACTION_DATE),
+      },
+    },
     "Show holiday alert": {
       control: {
         type: "boolean",
@@ -117,6 +143,7 @@ export const DefaultStory = (
     "Leave type": AbsencePeriodTypes;
     "Approval time": keyof typeof APPROVAL_TIME;
     "Payment method": keyof typeof PAYMENT_METHOD;
+    "Transaction date": keyof typeof TRANSACTION_DATE;
     "Show holiday alert": boolean;
   }
 ) => {
@@ -132,6 +159,8 @@ export const DefaultStory = (
         {
           payment_method: args["Payment method"],
           status: "Sent to bank",
+          writeback_transaction_status: "Paid",
+          transaction_date: mappedTransactionDate[args["Transaction date"]],
         },
         false,
         firstPaymentStartDate.subtract(-7, "day").format("YYYY-MM-DD")
@@ -150,6 +179,8 @@ export const DefaultStory = (
           sent_to_bank_date: null,
           payment_method: args["Payment method"],
           status: "Delayed",
+          transaction_date: mappedTransactionDate[args["Transaction date"]],
+          writeback_transaction_status: "Bank Processing Error",
         },
         false,
         firstPaymentStartDate.subtract(-21, "day").format("YYYY-MM-DD")

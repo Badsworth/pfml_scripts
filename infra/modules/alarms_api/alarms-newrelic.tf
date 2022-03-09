@@ -124,11 +124,7 @@ resource "newrelic_nrql_alert_condition" "api_error_rate" {
     # (e.g. late night) from triggering the alarm and waking people up.
     #
     # Ignore the following triaged errors until they are resolved:
-    # - mark_document_as_received 422 (PSD-842)
     # - mark_document_as_received 500 (PSD-1456)
-    # - get_customer_info 403 (PSD-1122)
-    # - document_upload 502 (PSD-1595)
-    # - document_upload 403 (PSD-1800)
     # - download_document_as_leave_admin 502 (PSD-1738)
     # - FINEOSFatalUnavailable (Should be ignored entirely in https://github.com/EOLWD/pfml/pull/3516)
     #
@@ -144,12 +140,9 @@ resource "newrelic_nrql_alert_condition" "api_error_rate" {
     query             = <<-NRQL
       SELECT filter(
         count(error.message),
-        WHERE NOT error.message LIKE '(mark_document_as_recieved) expected 200, but got 422%'
-        AND NOT error.message LIKE '(mark_document_as_recieved) FINEOSFatalResponseError: 500%'
-        AND NOT error.message LIKE '(get_customer_info) expected 200, but got 403%'
-        AND NOT error.message LIKE '(upload_documents) FINEOSFatalResponseError: 502%'
-        AND NOT error.message LIKE '(upload_documents) expected 200, but got 403%'
+        WHERE NOT error.message LIKE '(mark_document_as_recieved) FINEOSFatalResponseError: 500%'
         AND NOT error.message LIKE '(download_document_as_leave_admin) FINEOSFatalResponseError: 502%'
+        AND NOT error.message LIKE 'Response Validation Error%'
         AND NOT error.class = 'massgov.pfml.fineos.exception:FINEOSFatalUnavailable'
       ) * 100 * clamp_max(floor(uniqueCount(current_user.user_id) / 10), 1) / uniqueCount(traceId)
       FROM Transaction, TransactionError

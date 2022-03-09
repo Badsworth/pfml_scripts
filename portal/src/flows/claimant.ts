@@ -34,7 +34,6 @@ import { fields as familyMemberRelationshipFields } from "../pages/applications/
 import { fields as genderFields } from "../pages/applications/gender";
 import { get } from "lodash";
 import { fields as intermittentFrequencyFields } from "../pages/applications/intermittent-frequency";
-import { isFeatureEnabled } from "../services/featureFlags";
 import { fields as leavePeriodContinuousFields } from "../pages/applications/leave-period-continuous";
 import { fields as leavePeriodIntermittentFields } from "../pages/applications/leave-period-intermittent";
 import { fields as leavePeriodReducedScheduleFields } from "../pages/applications/leave-period-reduced-schedule";
@@ -81,7 +80,6 @@ export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
   isBondingLeave: ({ claim }) => claim?.isBondingLeave === true,
   // TODO (PFMLPB-3195): Remove isFeatureEnabled check once feature flag is obsolete
   hasEmployerWithDepartments: ({ claim }) =>
-    isFeatureEnabled("claimantShowOrganizationUnits") &&
     get(claim, "employment_status") === EmploymentStatus.employed &&
     get(claim, "employer_organization_units", []).length > 0,
   isEmployed: ({ claim }) =>

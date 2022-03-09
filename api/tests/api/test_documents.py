@@ -8,6 +8,7 @@ import pytest
 import massgov.pfml.fineos.mock_client
 from massgov.pfml.api.app import get_app_config
 from massgov.pfml.api.models.applications.common import ContentType as AllowedContentTypes
+from massgov.pfml.api.models.applications.responses import DocumentResponse
 from massgov.pfml.db.models.applications import DocumentType, LeaveReason
 from massgov.pfml.db.models.factories import ApplicationFactory, ClaimFactory, DocumentFactory
 from massgov.pfml.fineos import fineos_client, models
@@ -778,6 +779,34 @@ def test_documents_get(client, consented_user, consented_user_token, test_db_ses
     assert response_data["description"] == "Mock File"
     assert response_data["user_id"] == str(consented_user.user_id)
     assert response_data["created_at"] is not None
+
+
+@mock.patch(
+    "massgov.pfml.api.services.fineos_actions.fineos_document_response_to_document_response"
+)
+def test_documents_get_missing_content_type(
+    mock_get_documents, client, consented_user, consented_user_token
+):
+    claim = ClaimFactory.create(
+        fineos_notification_id="NTN-111", fineos_absence_id="NTN-111-ABS-01"
+    )
+    application = ApplicationFactory.create(user=consented_user, claim=claim)
+    mock_get_documents.return_value = DocumentResponse(
+        user_id=str(consented_user.user_id),
+        application_id=str(application.application_id),
+        created_at="2021-01-01",
+        document_type="Approval Notice",
+        fineos_document_id="3011",
+        name="test.pdf",
+        description="Mock File",
+    )
+
+    response = client.get(
+        "/v1/applications/{}/documents".format(application.application_id),
+        headers={"Authorization": f"Bearer {consented_user_token}"},
+    ).get_json()
+
+    assert response["status_code"] == 200
 
 
 def test_documents_get_date_created(
