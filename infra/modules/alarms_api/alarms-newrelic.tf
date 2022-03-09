@@ -140,7 +140,7 @@ resource "newrelic_nrql_alert_condition" "api_error_rate" {
     query             = <<-NRQL
       SELECT filter(
         count(error.message),
-        AND NOT error.message LIKE '(mark_document_as_recieved) FINEOSFatalResponseError: 500%'
+        WHERE NOT error.message LIKE '(mark_document_as_recieved) FINEOSFatalResponseError: 500%'
         AND NOT error.message LIKE '(download_document_as_leave_admin) FINEOSFatalResponseError: 502%'
         AND NOT error.message LIKE 'Response Validation Error%'
         AND NOT error.class = 'massgov.pfml.fineos.exception:FINEOSFatalUnavailable'
