@@ -9,6 +9,7 @@ import { BenefitsApplicationDocument } from "src/models/Document";
 import ClaimDetail from "src/models/ClaimDetail";
 import { Payments } from "src/pages/applications/status/payments";
 import React from "react";
+import { Story } from "@storybook/react";
 import User from "src/models/User";
 import { createAbsencePeriod } from "lib/mock-helpers/createAbsencePeriod";
 import { createMockPayment } from "lib/mock-helpers/createMockPayment";
@@ -30,7 +31,7 @@ const transactionDateOptions: {
 };
 
 export default {
-  title: "Pages/Applications/Status/Payment Delays",
+  title: "Pages/Applications/Status/Payment Statuses",
   component: Payments,
   argTypes: {
     "Payment Status": {
@@ -52,13 +53,15 @@ export default {
   },
 };
 
-const Template = (args: {
+interface StoryProps {
   "Payment Status": PaymentStatus;
   "Writeback Status": WritebackTransactionStatus;
   "Transaction Date": string;
-}) => {
+}
+
+const Template: Story<StoryProps> = (args) => {
   const paymentStatus = args["Payment Status"];
-  const writebackStatus: WritebackTransactionStatus = args["Writeback Status"];
+  const writebackStatus = args["Writeback Status"];
   const transactionDate =
     transactionDateOptions[args["Transaction Date"]].format("YYYY-MM-DD");
 
@@ -85,7 +88,7 @@ const Template = (args: {
     absence_periods: [defaultAbsencePeriod],
   };
 
-  const delayedPayment = createMockPayment(
+  const payment = createMockPayment(
     {
       sent_to_bank_date: transactionDate,
       payment_method: "Check",
@@ -125,7 +128,7 @@ const Template = (args: {
       loadPayments: () => new Promise(() => {}),
       loadedPaymentsData: new Payment({
         absence_case_id: absenceId,
-        payments: [delayedPayment],
+        payments: [payment],
       }),
       hasLoadedPayments: () => true,
       isLoadingPayments: false,
