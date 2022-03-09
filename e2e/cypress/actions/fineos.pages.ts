@@ -252,7 +252,7 @@ export class ClaimPage {
 
   approve(
     status: "Approved" | "Completed" = "Approved",
-    upgrade: boolean
+    upgrade: boolean | null | undefined = false
   ): this {
     // This button turns out to be unclickable without force, because selecting
     // it seems to scroll it out of view. Force works around that.
