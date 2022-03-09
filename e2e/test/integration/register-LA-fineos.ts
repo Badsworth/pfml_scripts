@@ -21,6 +21,7 @@ import { ClaimGenerator } from "../../src/generation/Claim";
 import { ScenarioSpecification } from "../../src/generation/Scenario";
 import { Credentials } from "../../src/types";
 import { Employer } from "../../src/generation/Employer";
+import { MHAP1_OLB_ER } from "../../src/scenarios/cypress";
 
 let authenticator: AuthenticationManager;
 let leave_admin_creds_1: Credentials;
@@ -151,16 +152,11 @@ describe("Series of test that verifies LAs are properly registered in Fineos", (
   test("Submit Claim and confirm the right LA can access the review page", async () => {
     const employeePool = await getEmployeePool();
     const submitter = getPortalSubmitter();
+    // @note: Testing of overpayments requires using MHAP1_OLB_ER in this integration test to produce test data
     const RLAF_test: ScenarioSpecification = {
       employee: { mass_id: true, wages: "eligible", fein: employer.fein },
       claim: {
-        label: "MHAP1",
-        shortClaim: true,
-        reason: "Serious Health Condition - Employee",
-        docs: {
-          HCP: {},
-          MASSID: {},
-        },
+        ...MHAP1_OLB_ER.claim,
       },
     };
     const ER_options: EmployerClaimRequestBody = {
@@ -176,6 +172,7 @@ describe("Series of test that verifies LAs are properly registered in Fineos", (
       RLAF_test.claim
     );
     const res = await submitter.submit(claim, getClaimantCredentials());
+    console.log(res.fineos_absence_id);
     console.log("API submission completed successfully");
 
     try {
