@@ -24,6 +24,7 @@ from massgov.pfml.db.models.absences import AbsencePeriodType, AbsenceStatus
 from massgov.pfml.db.models.applications import FINEOSWebIdExt
 from massgov.pfml.db.models.employees import (
     AbsencePeriod,
+    ChangeRequest,
     Claim,
     LeaveRequestDecision,
     LkManagedRequirementStatus,
@@ -39,6 +40,7 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.db.models.factories import (
     AbsencePeriodFactory,
     ApplicationFactory,
+    ChangeRequestFactory,
     ClaimFactory,
     EmployeeFactory,
     EmployeeWithFineosNumberFactory,
@@ -6110,3 +6112,44 @@ class TestSubmitChangeRequest:
             response.get_json()["message"]
             == "Could not find ChangeRequest with ID 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32"
         )
+
+
+class TestDeleteChangeRequest:
+    def test_success(self, client, auth_token, test_db_session):
+        change_request = ChangeRequestFactory.create()
+        response = client.delete(
+            f"/v1/change-request/{change_request.change_request_id}",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert response.status_code == 200
+        response_body = response.get_json()
+        assert response_body["message"] == "Successfully deleted change request"
+
+        db_entry = (
+            test_db_session.query(ChangeRequest)
+            .filter(ChangeRequest.change_request_id == change_request.change_request_id)
+            .one_or_none()
+        )
+        assert db_entry is None
+
+    def test_missing_change_request(self, client, auth_token):
+        response = client.delete(
+            "/v1/change-request/009fa369-291b-403f-a85a-15e938c26f2f",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert response.status_code == 404
+        response_body = response.get_json()
+        assert (
+            response_body["message"]
+            == "Could not find ChangeRequest with ID 009fa369-291b-403f-a85a-15e938c26f2f"
+        )
+
+    def test_error_on_submitted_change_request(self, client, auth_token):
+        change_request = ChangeRequestFactory.create(submitted_time=datetime_util.utcnow())
+        response = client.delete(
+            f"/v1/change-request/{change_request.change_request_id}",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert response.status_code == 400
+        response_body = response.get_json()
+        assert response_body["message"] == "Cannot delete a submitted request"
