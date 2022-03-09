@@ -179,7 +179,6 @@ def set_user_mfa(email: str, mfa_enabled: bool, cognito_auth_token: str) -> None
         )
     except Exception as error:
         log_attr = {"mfa_enabled": mfa_enabled}
-        # todo: update these error cases
         if isinstance(error, ClientError) and "InvalidParameterException" in str(error.__class__):
             logger.error(
                 "Error updating MFA preference in Cognito - Invalid parameter in request",
@@ -188,7 +187,7 @@ def set_user_mfa(email: str, mfa_enabled: bool, cognito_auth_token: str) -> None
             )
         elif isinstance(error, ClientError) and "UserNotFoundException" in str(error.__class__):
             logger.error(
-                "Error updating MFA preference in Cognito - User not found with email",
+                "Error updating MFA preference in Cognito - User not found",
                 exc_info=error,
                 extra=log_attr,
             )

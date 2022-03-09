@@ -3,7 +3,6 @@ import {
   setMFAPreference,
   updateMFAPhoneNumber,
 } from "src/services/mfa";
-import { isFeatureEnabled } from "../services/featureFlags";
 import routes, { isApplicationsRoute, isEmployersRoute } from "../routes";
 import { useMemo, useState } from "react";
 import { AppErrorsLogic } from "./useAppErrorsLogic";
@@ -11,6 +10,7 @@ import { PortalFlow } from "./usePortalFlow";
 import RolesApi from "../api/RolesApi";
 import User from "../models/User";
 import UsersApi from "../api/UsersApi";
+import { isFeatureEnabled } from "../services/featureFlags";
 
 /**
  * Hook that defines user state
@@ -50,10 +50,12 @@ const useUsersLogic = ({
       const { user } = await usersApi.updateUser(user_id, patchData);
 
       // Update Cognito unless the API will be doing that synchronization
-      // todo: will this break any metrics?
-      if (!isFeatureEnabled("claimantSyncCognitoPreferences")) {
-        if (mfa_delivery_preference)
-          await setMFAPreference(mfa_delivery_preference);
+      // todo (PORTAL-1828): Remove claimantSyncCognitoPreferences feature flag
+      if (
+        mfa_delivery_preference &&
+        !isFeatureEnabled("claimantSyncCognitoPreferences")
+      ) {
+        await setMFAPreference(mfa_delivery_preference);
       }
       if (mfa_phone_number?.phone_number)
         await updateMFAPhoneNumber(mfa_phone_number.phone_number);
