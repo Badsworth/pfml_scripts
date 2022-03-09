@@ -3,6 +3,7 @@ import {
   PaymentStatus,
   WritebackTransactionStatus,
 } from "src/models/Payment";
+import dayjs, { Dayjs } from "dayjs";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { BenefitsApplicationDocument } from "src/models/Document";
 import ClaimDetail from "src/models/ClaimDetail";
@@ -11,13 +12,14 @@ import React from "react";
 import User from "src/models/User";
 import { createAbsencePeriod } from "lib/mock-helpers/createAbsencePeriod";
 import { createMockPayment } from "lib/mock-helpers/createMockPayment";
-import dayjs from "dayjs";
 import dayjsBusinessTime from "dayjs-business-time";
 import { generateNotice } from "storybook/utils/generateNotice";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 dayjs.extend(dayjsBusinessTime);
 
-const transactionDateOptions = {
+const transactionDateOptions: {
+  [dateOptionLabel: string]: Dayjs;
+} = {
   Today: dayjs(),
   Yesterday: dayjs().subtractBusinessDays(1),
   "2 Business Days Ago": dayjs().subtractBusinessDays(2),
@@ -51,11 +53,11 @@ export default {
 };
 
 const Template = (args: {
-  "Payment Status": string;
-  "Writeback Status": string;
+  "Payment Status": PaymentStatus;
+  "Writeback Status": WritebackTransactionStatus;
   "Transaction Date": string;
 }) => {
-  const paymentStatus: PaymentStatus = args["Payment Status"];
+  const paymentStatus = args["Payment Status"];
   const writebackStatus: WritebackTransactionStatus = args["Writeback Status"];
   const transactionDate =
     transactionDateOptions[args["Transaction Date"]].format("YYYY-MM-DD");
@@ -146,6 +148,7 @@ const Template = (args: {
 export const Delay = Template.bind({});
 // Hide some default controls that we don't use
 Delay.parameters = { controls: { exclude: ["user", "appLogic", "query"] } };
+// Set default parameters
 Delay.args = {
   "Payment Status": "Delayed",
   "Transaction Date": "Today",
