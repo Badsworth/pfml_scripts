@@ -4087,6 +4087,7 @@ class TestGetClaimsEndpoint:
         def claim_no_absence_period(self, employer, employee):
             return ClaimFactory.create(employer=employer, employee=employee, claim_type_id=1)
 
+        ## Note testing w/ None absence_reason_qualifier_two to test field nullability
         @pytest.fixture()
         def absence_periods(self, claim):
             start = date.today() + timedelta(days=5)
@@ -4094,7 +4095,10 @@ class TestGetClaimsEndpoint:
             for _ in range(5):
                 end = start + timedelta(days=10)
                 period = AbsencePeriodFactory.create(
-                    claim=claim, absence_period_start_date=start, absence_period_end_date=end
+                    claim=claim,
+                    absence_period_start_date=start,
+                    absence_period_end_date=end,
+                    absence_reason_qualifier_two_id=None,
                 )
                 periods.append(period)
                 start = start + timedelta(days=20)

@@ -3148,6 +3148,7 @@ components:
           example: "Newborn"
         reason_qualifier_two:
           type: string
+          nullable: true
         period_type:
           type: string
           enum:
@@ -3478,6 +3479,7 @@ components:
         content_type:
           type: string
           example: "image/png"
+          nullable: true
         fineos_document_id:
           type: string
           example: "1234"
@@ -3492,7 +3494,6 @@ components:
         - application_id
         - created_at
         - document_type
-        - content_type
         - fineos_document_id
         - name
         - description
