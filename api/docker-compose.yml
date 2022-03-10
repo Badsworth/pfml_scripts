@@ -19,7 +19,7 @@ services:
   mass-pfml-db:
     image: postgres:12.4-alpine
     container_name: "mass-pfml-db"
-    # platform: linux/amd64 # Fix running on Apple silicon 
+    platform: linux/amd64 # Fix running on Apple silicon 
     ports:
       - "5432:5432"
     # Docs for options to the postgres server command:
@@ -47,7 +47,7 @@ services:
     init: true
     links:
       - mass-pfml-db
-    # platform: linux/amd64 # Fix running on Apple silicon 
+    platform: linux/amd64 # Fix running on Apple silicon 
     ports:
       - "1550:1550"
     environment:
