@@ -576,26 +576,90 @@ module "pub-payments-copy-audit-report-scheduler" {
 #   ecs_task_role              = aws_iam_role.fineos_import_iaww_task_role.arn
 # }
 
-# Run 1099-form-generator at <Every 3 hours Mon-Fri>
+# The task will stage data, generate, and merge (not upload) 1099 corrections
+# Run 1099-form-generator every week on Friday at 1pm
 # Defined in /pfml/infra/ecs_tasks/template/tasks_1099.tf
-# module "pub-payments-process-1099-form-generator" {
-#   source     = "../../modules/ecs_task_scheduler"
-#   is_enabled = true
+module "process-1099-generate" {
+  source     = "../../modules/ecs_task_scheduler"
+  is_enabled = true
 
-#   task_name           = "1099-form-generator"
-#   schedule_expression_standard = "cron(0 3 ? * MON-FRI *)"
-#   schedule_expression_daylight_savings = "cron(0 2 ? * MON-FRI *)"
-#   environment_name    = var.environment_name
+  task_name           = "1099-generate"
+  schedule_expression_standard         = "cron(0 18 ? * 6 *)"
+  schedule_expression_daylight_savings = "cron(0 17 ? * 6 *)"
+  environment_name    = var.environment_name
 
-#   cluster_arn        = data.aws_ecs_cluster.cluster.arn
-#   app_subnet_ids     = var.app_subnet_ids
-#   security_group_ids = [aws_security_group.tasks.id]
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
 
-#   ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks_1099.arn
-#   ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks_1099.family
-#   ecs_task_executor_role     = aws_iam_role.task_executor.arn
-#   ecs_task_role              = aws_iam_role.pub_payments_process_fineos_task_role.arn
-# }
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks_1099.arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks_1099.family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_role              = aws_iam_role.pub_payments_process_fineos_task_role.arn
+
+  input = <<JSON
+  {
+    "containerOverrides": [
+      {
+        "name": "pub-payments-process-1099-documents",
+        "command": [
+          "pub-payments-process-1099-documents",
+          "--steps", "audit-batch", "populate-mmars-payments", "populate-payments", "populate-refunds", "populate-1099", "generate-1099-documents", "merge-1099-documents"
+        ],
+        "environment": [
+          {"name": "ENABLE_GENERATE_1099_PDF", "value": "1"},
+          {"name": "GENERATE_1099_MAX_FILES", "value": "100000"},
+          {"name": "ENABLE_MERGE_1099_PDF", "value": "1"},
+          {"name": "IRS_1099_CORRECTION_IND", "value" : "1" },
+          {"name": "IRS_1099_TAX_YEAR", "value" : "2021" }
+        ]        
+      }
+    ]
+  }
+  JSON  
+}
+
+# The task will upload 1099 corrections
+# Run 1099-form-generator (upload) every week on Friday at 4pm
+# Defined in /pfml/infra/ecs_tasks/template/tasks_1099.tf
+module "process-1099-upload" {
+  source     = "../../modules/ecs_task_scheduler"
+  is_enabled = true
+
+  task_name           = "1099-upload"
+  schedule_expression_standard         = "cron(0 21 ? * 6 *)"
+  schedule_expression_daylight_savings = "cron(0 20 ? * 6 *)"
+  environment_name    = var.environment_name
+
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
+
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks_1099.arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks_1099.family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  ecs_task_role              = aws_iam_role.pub_payments_process_fineos_task_role.arn
+
+  input = <<JSON
+  {
+    "containerOverrides": [
+      {
+        "name": "pub-payments-process-1099-documents",
+        "command": [
+          "pub-payments-process-1099-documents",
+          "--steps", "upload-1099-documents"
+        ],
+        "environment": [
+          {"name": "ENABLE_UPLOAD_1099_PDF", "value": "1"},
+          {"name": "UPLOAD_MAX_FILES_TO_FINEOS", "value": "1000"},
+          {"name": "IRS_1099_CORRECTION_IND", "value" : "1" },
+          {"name": "IRS_1099_TAX_YEAR", "value" : "2021" }
+        ]        
+      }
+    ]
+  }
+  JSON  
+}
 
 # TODO uncomment if this is ever to be scheduled.  Adjust schedule_expression accordingly
 # Run pub-claimant-address-validation at <schedule is TBD>
