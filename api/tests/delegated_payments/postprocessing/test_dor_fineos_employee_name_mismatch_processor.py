@@ -1,5 +1,8 @@
+from typing import Optional
+
 import pytest
 
+from massgov.pfml.db.models.employees import PaymentTransactionType
 from massgov.pfml.db.models.factories import ClaimFactory, EmployeeFactory, PaymentFactory
 from massgov.pfml.db.models.payments import PaymentAuditReportDetails
 from massgov.pfml.delegated_payments.postprocessing.dor_fineos_employee_name_mismatch_processor import (
@@ -29,13 +32,22 @@ def dor_fineos_employee_name_mismatch_processor(payment_post_processing_step):
 
 
 # TODO use delegate payments factory PUB-277
-def create_payment_with_name(dor_first_name, dor_last_name, fineos_first_name, fineos_last_name):
+def create_payment_with_name(
+    dor_first_name,
+    dor_last_name,
+    fineos_first_name,
+    fineos_last_name,
+    payment_transaction_type_id: Optional[
+        int
+    ] = PaymentTransactionType.STANDARD.payment_transaction_type_id,
+):
     employee = EmployeeFactory.create(first_name=dor_first_name, last_name=dor_last_name)
     claim = ClaimFactory.create(employee=employee)
     payment = PaymentFactory.create(
         claim=claim,
         fineos_employee_first_name=fineos_first_name,
         fineos_employee_last_name=fineos_last_name,
+        payment_transaction_type_id=payment_transaction_type_id,
     )
     return payment
 
@@ -101,6 +113,17 @@ def test_processor_mixed(
     assert _get_audit_report_details(payment, local_test_db_session) is None
     # Minor mispelling
     payment = create_payment_with_name("Javier", "Valdes-Garcia", "Javier", "Valdez-Garcia")
+    dor_fineos_employee_name_mismatch_processor.process(payment)
+    assert _get_audit_report_details(payment, local_test_db_session) is None
+
+    # Employer Reimbursement Payment
+    payment = create_payment_with_name(
+        "Javier",
+        "Valdes-Garcia",
+        "J",
+        "Garcia",
+        payment_transaction_type_id=PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id,
+    )
     dor_fineos_employee_name_mismatch_processor.process(payment)
     assert _get_audit_report_details(payment, local_test_db_session) is None
 

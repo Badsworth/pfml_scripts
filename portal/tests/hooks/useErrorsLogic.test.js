@@ -3,7 +3,6 @@ import {
   DocumentsUploadError,
   ForbiddenError,
   InternalServerError,
-  LeaveAdminForbiddenError,
   NetworkError,
   ValidationError,
 } from "../../src/errors";
@@ -73,7 +72,7 @@ describe("useErrorsLogic", () => {
     });
   });
 
-  it("For ValidationErrors, tracks each issue in New Relic", () => {
+  it("tracks each issue when error includes issues array", () => {
     const issues = [
       {
         field: "tax_identifier",
@@ -104,119 +103,6 @@ describe("useErrorsLogic", () => {
       issueRule: "",
       issueType: "required",
     });
-  });
-
-  it("When LeaveAdminForbiddenError is thrown and has_verification_data is true, we track event", () => {
-    const { result } = renderHook(() => {
-      const portalFlow = usePortalFlow();
-      portalFlow.pathWithParams = "/foo?bar=true";
-      return useErrorsLogic({ portalFlow });
-    });
-
-    act(() => {
-      result.current.catchError(
-        new LeaveAdminForbiddenError(
-          "some-employer-id",
-          true,
-          "User is not Verified"
-        )
-      );
-    });
-
-    expect(tracker.trackEvent).toHaveBeenCalledWith(
-      "LeaveAdminForbiddenError",
-      {
-        errorMessage: "User is not Verified",
-        errorName: "LeaveAdminForbiddenError",
-        employerId: "some-employer-id",
-        hasVerificationData: "true",
-      }
-    );
-  });
-
-  it("When LeaveAdminForbiddenError is thrown and has_verification_data is true, we redirect to verify contributions page", () => {
-    let goToSpy;
-    const { result } = renderHook(() => {
-      const portalFlow = usePortalFlow();
-      goToSpy = jest.spyOn(portalFlow, "goTo");
-      portalFlow.pathWithParams = "/foo?bar=true";
-      return useErrorsLogic({ portalFlow });
-    });
-
-    act(() => {
-      result.current.catchError(
-        new LeaveAdminForbiddenError(
-          "some-employer-id",
-          true,
-          "User is not Verified"
-        )
-      );
-    });
-
-    expect(goToSpy).toHaveBeenCalledWith(
-      "/employers/organizations/verify-contributions",
-      {
-        employer_id: "some-employer-id",
-        next: "/foo?bar=true",
-      },
-      { redirect: true }
-    );
-  });
-
-  it("When LeaveAdminForbiddenError is thrown and has_verification_data is false, we track the event", () => {
-    const { result } = renderHook(() => {
-      const portalFlow = usePortalFlow();
-      portalFlow.pathWithParams = "/foo?bar=true";
-      return useErrorsLogic({ portalFlow });
-    });
-
-    act(() => {
-      result.current.catchError(
-        new LeaveAdminForbiddenError(
-          "some-employer-id",
-          false,
-          "User is not Verified"
-        )
-      );
-    });
-
-    expect(tracker.trackEvent).toHaveBeenCalledWith(
-      "LeaveAdminForbiddenError",
-      {
-        errorMessage: "User is not Verified",
-        errorName: "LeaveAdminForbiddenError",
-        employerId: "some-employer-id",
-        hasVerificationData: "false",
-      }
-    );
-  });
-
-  it("When LeaveAdminForbiddenError is thrown and has_verification_data is false, we redirect to cannot verify page", () => {
-    let goToSpy;
-    const { result } = renderHook(() => {
-      const portalFlow = usePortalFlow();
-      goToSpy = jest.spyOn(portalFlow, "goTo");
-      portalFlow.pathWithParams = "/foo?bar=true";
-      return useErrorsLogic({ portalFlow });
-    });
-
-    act(() => {
-      result.current.catchError(
-        new LeaveAdminForbiddenError(
-          "some-employer-id",
-          false,
-          "User is not Verified"
-        )
-      );
-    });
-
-    expect(goToSpy).toHaveBeenCalledWith(
-      "/employers/organizations/cannot-verify",
-      {
-        employer_id: "some-employer-id",
-      },
-      { redirect: true }
-    );
   });
 
   it("when multiple errors are caught, we can log and track them properly", () => {
