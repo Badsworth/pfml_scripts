@@ -856,18 +856,12 @@ class MmarsPaymentData(Base, TimestampMixin):
     )
 
     claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True, nullable=True)
-    employee_id = Column(
-        PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True, nullable=True
-    )
-    payment_i_value = Column(Text)
-
-    claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True, nullable=True)
-    claim = relationship(Claim)
+    claim = cast(Claim, relationship(Claim))
 
     employee_id = Column(
         PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True, nullable=True
     )
-    employee = relationship(Employee)
+    employee = cast(Employee, relationship(Employee))
     payment_i_value = Column(Text)
 
 
