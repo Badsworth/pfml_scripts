@@ -3666,7 +3666,7 @@ class TestGetClaimsEndpoint:
         for claim in response_body["data"]:
             assert (
                 claim["employer"]["employer_fein"]
-                == other_employer.employer_fein.to_unformatted_str()
+                == other_employer.employer_fein.to_formatted_str()
             )
 
         # POST /claims/search
@@ -3683,7 +3683,7 @@ class TestGetClaimsEndpoint:
         for claim in response_body["data"]:
             assert (
                 claim["employer"]["employer_fein"]
-                == other_employer.employer_fein.to_unformatted_str()
+                == other_employer.employer_fein.to_formatted_str()
             )
 
     def test_get_claims_no_employee(
