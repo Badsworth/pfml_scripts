@@ -2,6 +2,7 @@ from datetime import date
 
 import pytest
 
+import massgov.pfml.util.datetime as datetime_util
 from massgov.pfml.api.models.claims.common import EmployerClaimReview
 from massgov.pfml.api.models.common import EmployerBenefit, PreviousLeave
 from massgov.pfml.api.validation.claim_rules import (
@@ -166,6 +167,7 @@ def modification_change_request():
         change_request_type_id=ChangeRequestType.MODIFICATION.change_request_type_id,
         start_date=None,
         end_date=date(2020, 3, 1),
+        documents_submitted_at=datetime_util.utcnow(),
     )
 
 
@@ -236,6 +238,13 @@ class TestGetChangeRequestIssues:
                 "Claim must have at least one approved absence period to submit a change request"
                 in resp[0].message
             )
+
+        def test_missing_documents(self, modification_change_request, claim):
+            modification_change_request.documents_submitted_at = None
+            resp = get_change_request_issues(modification_change_request, claim)
+            assert resp[0].type == IssueType.required
+            assert resp[0].field == "change_request.documents_submitted_at"
+            assert "Supporting documents must be submitted for this request type" in resp[0].message
 
     class TestChangeRequestTypeWithdrawal:
         # Test rules specific to the Withdrawal type

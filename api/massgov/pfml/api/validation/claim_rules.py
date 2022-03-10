@@ -229,6 +229,14 @@ def get_modification_issues(
                 field="end_date",
             )
         )
+    if not change_request.documents_submitted_at:
+        error_list.append(
+            ValidationErrorDetail(
+                message="Supporting documents must be submitted for this request type",
+                type=IssueType.required,
+                field="change_request.documents_submitted_at",
+            )
+        )
     error_list.extend(has_approved_absence_period(claim))
     return error_list
 

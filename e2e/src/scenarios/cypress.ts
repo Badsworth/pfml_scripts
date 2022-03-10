@@ -460,6 +460,24 @@ export const BHAP1_OLB: ScenarioSpecification = {
   },
 };
 
+export const MHAP1_OLB_ER: ScenarioSpecification = {
+  employee: { wages: 30000, mass_id: true },
+  claim: {
+    label: "MHAP1_OLB_ER",
+    reason: "Serious Health Condition - Employee",
+    // Create a leave in progress, so we can check adjustments for both made and future payments.
+    leave_dates: [subWeeks(mostRecentSunday, 3), addWeeks(mostRecentSunday, 1)],
+    docs: {
+      MASSID: {},
+      HCP: {},
+    },
+    employerResponse: {
+      employer_decision: "Approve",
+      hours_worked_per_week: 40,
+    },
+  },
+};
+
 const midweek = addDays(mostRecentSunday, 3);
 export const CPS_MID_WK: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },

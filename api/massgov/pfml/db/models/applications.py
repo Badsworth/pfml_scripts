@@ -464,6 +464,13 @@ class Application(Base, TimestampMixin):
     def split_into_application_id(self):
         return self.split_into_application.application_id if self.split_into_application else None  # type: ignore
 
+    @hybrid_property
+    def fineos_absence_id(self) -> Optional[str]:
+        if not self.claim:
+            return None
+
+        return self.claim.fineos_absence_id
+
 
 class CaringLeaveMetadata(Base, TimestampMixin):
     __tablename__ = "caring_leave_metadata"
