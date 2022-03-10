@@ -301,7 +301,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
             raise exception.FINEOSEntityNotFound("Employer not found.")
 
         organisationUnits = None
-        if employer_fein == "999999998":
+        if employer_fein == Fein("999999998"):
             organisationUnits = models.OCOrganisationUnit(
                 OrganisationUnit=[
                     models.OCOrganisationUnitItem(OID="PE:00001:0000000001", Name="OrgUnitOne"),
@@ -309,7 +309,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
                 ]
             )
 
-        if employer_fein == "999999997":
+        if employer_fein == Fein("999999997"):
             organisationUnits = models.OCOrganisationUnit(
                 OrganisationUnit=[
                     models.OCOrganisationUnitItem(OID="PE:00002:0000000001", Name="OrgUnitThree"),
