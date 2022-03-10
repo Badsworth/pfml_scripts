@@ -90,21 +90,27 @@ class TestUpdateUser:
             == "User"
         )
 
-    @mock.patch("massgov.pfml.api.services.users.handle_mfa_disabled_by_admin")
-    def test_admin_disable_mfa_audit_trail(
-        self, mock_handle_mfa_disabled_by_admin, user_with_mfa, test_db_session, auth_token
+    @mock.patch("massgov.pfml.api.services.users.handle_mfa_disabled")
+    @mock.patch("massgov.pfml.api.services.users.handle_mfa_enabled")
+    def test_updating_mfa_preference_syncs_to_cognito(
+        self,
+        mock_handle_mfa_enabled,
+        mock_handle_mfa_disabled,
+        user_with_mfa,
+        test_db_session,
+        auth_token,
     ):
-        # todo: add test to verify other side-effects of this call
-        admin_disable_mfa(test_db_session, user_with_mfa)
+        # disable MFA
+        update_request = UserUpdateRequest(mfa_delivery_preference="Opt Out")
+        update_user(test_db_session, user_with_mfa, update_request, True, auth_token)
 
-        test_db_session.commit()
-        test_db_session.refresh(user_with_mfa)
+        mock_handle_mfa_disabled.assert_called_once_with(user_with_mfa, mock.ANY, True, auth_token)
 
-        assert user_with_mfa.mfa_delivery_preference_updated_by_id == 2
-        assert (
-            user_with_mfa.mfa_delivery_preference_updated_by.mfa_delivery_preference_updated_by_description
-            == "Admin"
-        )
+        # enable MFA
+        update_request = UserUpdateRequest(mfa_delivery_preference="SMS")
+        update_user(test_db_session, user_with_mfa, update_request, True, auth_token)
+
+        mock_handle_mfa_enabled.assert_called_once_with(user_with_mfa, auth_token)
 
     @mock.patch("massgov.pfml.api.services.users._update_mfa_preference_audit_trail")
     def test_audit_trail_not_updated_if_mfa_preference_isnt_updated(
@@ -151,3 +157,42 @@ class TestUpdateUser:
         update_user(test_db_session, user, update_request, False, auth_token)
 
         mock_handle_mfa_disabled.assert_not_called()
+
+
+class TestAdminDisableMfa:
+    @mock.patch("massgov.pfml.api.services.users.handle_mfa_disabled_by_admin")
+    def test_admin_disable_mfa_sets_mfa_preference(
+        self, mock_handle_mfa_disabled_by_admin, user_with_mfa, test_db_session, auth_token
+    ):
+        admin_disable_mfa(test_db_session, user_with_mfa)
+
+        test_db_session.commit()
+        test_db_session.refresh(user_with_mfa)
+
+        assert user_with_mfa.mfa_delivery_preference_id == 2
+        assert (
+            user_with_mfa.mfa_delivery_preference.mfa_delivery_preference_description == "Opt Out"
+        )
+
+    @mock.patch("massgov.pfml.api.services.users.handle_mfa_disabled_by_admin")
+    def test_admin_disable_mfa_syncs_to_cognito(
+        self, mock_handle_mfa_disabled_by_admin, user_with_mfa, test_db_session, auth_token
+    ):
+        admin_disable_mfa(test_db_session, user_with_mfa)
+
+        mock_handle_mfa_disabled_by_admin.assert_called_once_with(user_with_mfa, mock.ANY)
+
+    @mock.patch("massgov.pfml.api.services.users.handle_mfa_disabled_by_admin")
+    def test_admin_disable_mfa_audit_trail(
+        self, mock_handle_mfa_disabled_by_admin, user_with_mfa, test_db_session, auth_token
+    ):
+        admin_disable_mfa(test_db_session, user_with_mfa)
+
+        test_db_session.commit()
+        test_db_session.refresh(user_with_mfa)
+
+        assert user_with_mfa.mfa_delivery_preference_updated_by_id == 2
+        assert (
+            user_with_mfa.mfa_delivery_preference_updated_by.mfa_delivery_preference_updated_by_description
+            == "Admin"
+        )

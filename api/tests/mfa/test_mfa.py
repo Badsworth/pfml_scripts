@@ -37,6 +37,10 @@ class TestHandleMfaEnabled:
 class TestHandleMfaDisabled:
     mock_logger = get_mock_logger()
 
+    @pytest.fixture
+    def last_enabled_at(self):
+        return datetime(2022, 1, 2, 0, 0, 0, tzinfo=timezone.utc)
+
     @pytest.fixture(autouse=True)
     def with_env_vars(self, monkeypatch):
         monkeypatch.setenv("BOUNCE_FORWARDING_EMAIL_ADDRESS_ARN", "bounce_arn")
@@ -49,18 +53,16 @@ class TestHandleMfaDisabled:
 
     @mock.patch("massgov.pfml.mfa.set_user_mfa")
     @mock.patch("massgov.pfml.mfa.send_templated_email")
-    def test_success(self, mock_send_email, mock_set_user_mfa, with_env_vars, user, auth_token):
-        last_enabled_at = datetime(2022, 1, 2, 0, 0, 0, tzinfo=timezone.utc)
-
+    def test_success(
+        self, mock_send_email, mock_set_user_mfa, with_env_vars, user, last_enabled_at, auth_token
+    ):
         mfa_actions.handle_mfa_disabled(user, last_enabled_at, True, auth_token)
 
         mock_set_user_mfa.assert_any_call(user.email_address, False, auth_token)
 
     @mock.patch("massgov.pfml.mfa.send_templated_email")
     @mock.patch("massgov.pfml.mfa.logger", mock_logger)
-    def test_logging(self, mock_send_email, user, auth_token):
-        last_enabled_at = datetime(2022, 1, 2, 0, 0, 0, tzinfo=timezone.utc)
-
+    def test_logging(self, mock_send_email, user, last_enabled_at, auth_token):
         mfa_actions.handle_mfa_disabled(user, last_enabled_at, False, auth_token)
 
         self.mock_logger.info.assert_any_call(
@@ -80,7 +82,7 @@ class TestHandleMfaDisabled:
     @mock.patch("massgov.pfml.mfa.set_user_mfa")
     @mock.patch("massgov.pfml.mfa.send_templated_email")
     @mock.patch("massgov.pfml.mfa.logger", mock_logger)
-    def test_with_no_last_enabled_at(self, mock_set_user_mfa, mock_send_email, user, auth_token):
+    def test_with_no_last_enabled_at(self, mock_send_email, mock_set_user_mfa, user, auth_token):
         mfa_actions.handle_mfa_disabled(user, None, True, auth_token)
 
         self.mock_logger.error.assert_any_call(
@@ -88,9 +90,7 @@ class TestHandleMfaDisabled:
         )
 
     @mock.patch("massgov.pfml.mfa.send_templated_email")
-    def test_email(self, mock_send_email, user, auth_token):
-        last_enabled_at = datetime(2022, 1, 2, 0, 0, 0, tzinfo=timezone.utc)
-
+    def test_email(self, mock_send_email, user, last_enabled_at, auth_token):
         mfa_actions.handle_mfa_disabled(user, last_enabled_at, False, auth_token)
 
         mock_send_email.assert_called_once_with(
@@ -104,17 +104,18 @@ class TestHandleMfaDisabled:
         assert mock_send_email.call_args.args[0].to_addresses == ["claimant@mock.nava.com"]
         assert mock_send_email.call_args.args[5] == {"phone_number_last_four": "3075"}
 
+    @mock.patch("massgov.pfml.mfa.set_user_mfa")
     @mock.patch("massgov.pfml.mfa.send_templated_email")
     @mock.patch("massgov.pfml.mfa.logger", mock_logger)
-    def test_does_not_send_email_when_sending_emails_is_disabled(
-        self, mock_send_email, user, auth_token, monkeypatch
+    def test_does_not_send_email_or_sync_to_cognito_when_aws_integration_is_disabled(
+        self, mock_send_email, mock_set_user_mfa, user, last_enabled_at, auth_token, monkeypatch
     ):
         monkeypatch.setenv("DISABLE_SENDING_EMAILS", "1")
-        last_enabled_at = datetime(2022, 1, 2, 0, 0, 0, tzinfo=timezone.utc)
 
         mfa_actions.handle_mfa_disabled(user, last_enabled_at, True, auth_token)
 
         mock_send_email.assert_not_called()
+        mock_set_user_mfa.assert_not_called()
         self.mock_logger.info.assert_any_call(
             "Skipping updating Cognito or sending an MFA disabled notification email",
             extra={
@@ -125,26 +126,45 @@ class TestHandleMfaDisabled:
             },
         )
 
+    @mock.patch("massgov.pfml.mfa.set_user_mfa")
     @mock.patch("massgov.pfml.mfa.send_templated_email")
-    def test_sends_email_when_email_sending_is_enabled(
-        self, mock_send_email, user, auth_token, monkeypatch
+    def test_sends_email_and_syncs_to_cognito_when_aws_integration_is_enabled(
+        self, mock_send_email, mock_set_user_mfa, user, auth_token, last_enabled_at, monkeypatch
     ):
         monkeypatch.setenv("DISABLE_SENDING_EMAILS", "0")
-        last_enabled_at = datetime(2022, 1, 2, 0, 0, 0, tzinfo=timezone.utc)
 
-        mfa_actions.handle_mfa_disabled(user, last_enabled_at, False, auth_token)
+        mfa_actions.handle_mfa_disabled(user, last_enabled_at, True, auth_token)
 
         mock_send_email.assert_called()
+        mock_set_user_mfa.assert_called()
 
+    @mock.patch("massgov.pfml.mfa.set_user_mfa")
     @mock.patch("massgov.pfml.mfa.send_templated_email")
-    @mock.patch("massgov.pfml.mfa.logger", mock_logger)
-    def test_sends_email_when_environment_is_not_local(
-        self, mock_send_email, user, auth_token, monkeypatch
+    def test_sends_email_and_syncs_to_cognito_when_environment_is_not_local(
+        self, mock_send_email, mock_set_user_mfa, user, auth_token, last_enabled_at, monkeypatch
     ):
         monkeypatch.setenv("ENVIRONMENT", "prod")
         monkeypatch.setenv("DISABLE_SENDING_EMAILS", "1")
-        last_enabled_at = datetime(2022, 1, 2, 0, 0, 0, tzinfo=timezone.utc)
 
-        mfa_actions.handle_mfa_disabled(user, last_enabled_at, False, auth_token)
+        mfa_actions.handle_mfa_disabled(user, last_enabled_at, True, auth_token)
 
         mock_send_email.assert_called()
+        mock_set_user_mfa.assert_called()
+
+    @mock.patch("massgov.pfml.mfa.set_user_mfa")
+    @mock.patch("massgov.pfml.mfa.send_templated_email")
+    def test_sync_to_cognito(
+        self, mock_send_email, mock_set_user_mfa, user, last_enabled_at, auth_token
+    ):
+        mfa_actions.handle_mfa_disabled(user, last_enabled_at, True, auth_token)
+
+        mock_set_user_mfa.assert_called_once_with(user.email_address, False, auth_token)
+
+    @mock.patch("massgov.pfml.mfa.set_user_mfa")
+    @mock.patch("massgov.pfml.mfa.send_templated_email")
+    def test_does_not_sync_to_cognito(
+        self, mock_send_email, mock_set_user_mfa, user, last_enabled_at, auth_token
+    ):
+        mfa_actions.handle_mfa_disabled(user, last_enabled_at, False, auth_token)
+
+        mock_set_user_mfa.assert_not_called()

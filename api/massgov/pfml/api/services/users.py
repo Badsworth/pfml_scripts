@@ -74,9 +74,11 @@ def _update_mfa_preference(
     }
     logger.info("MFA updated for user", extra=log_attributes)
 
+    print("about to choose")
     if value == "Opt Out" and existing_mfa_preference is not None:
         handle_mfa_disabled(user, last_updated_at, sync_cognito_preferences, cognito_auth_token)
     elif value == "SMS" and sync_cognito_preferences:
+        print("calling mfa enabled")
         handle_mfa_enabled(user, cognito_auth_token)
 
 
@@ -92,13 +94,12 @@ def _update_mfa_preference_audit_trail(db_session: db.Session, user: User, updat
         mfa_updated_by = db_lookups.by_value(db_session, LkMFADeliveryPreferenceUpdatedBy, "User")
 
     mfa_updated_by = cast(LkMFADeliveryPreferenceUpdatedBy, mfa_updated_by)
-
     user.mfa_delivery_preference_updated_by = mfa_updated_by
 
 
 def admin_disable_mfa(db_session: db.Session, user: User,) -> None:
     """API administrator action for disabling MFA on a user's account. This is used to unlock users who have
-    been locked out of their account due to MFA but should be used carefully, only after a user has had their
+    been locked out of their account due to MFA but should be used carefully and only after a user has had their
     identity verified"""
     existing_mfa_preference = user.mfa_preference_description()
     if MFADeliveryPreference.OPT_OUT.mfa_delivery_preference_description == existing_mfa_preference:
