@@ -135,7 +135,6 @@ def set_employee_occupation_from_demographic_data(
         # Employer records (which all correctly have 9 digit FEINs) pad the left
         # with zero
         employer_fein = row.employer_fein.zfill(9)
-        print(employer_fein)
 
         log_attributes = {
             "employee_fineos_customer_number": fineos_customer_number,
