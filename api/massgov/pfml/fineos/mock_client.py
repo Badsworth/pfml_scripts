@@ -334,7 +334,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         if employer_fein == Fein("999999999"):
             raise exception.FINEOSEntityNotFound("Employer not found.")
         else:
-            return str(fake_customer_no(employer_fein.to_unformatted_str()))
+            return str(fake_customer_no(employer_fein))
 
     def register_api_user(self, employee_registration: models.EmployeeRegistration) -> None:
         _capture_call("register_api_user", None, employee_registration=employee_registration)

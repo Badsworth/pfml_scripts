@@ -88,7 +88,6 @@ from massgov.pfml.fineos.models.customer_api.spec import (
     TimeOffLeavePeriod,
 )
 from massgov.pfml.types import Fein, TaxId
-from massgov.pfml.util.strings import format_tax_identifier
 
 
 def sqlalchemy_object_as_dict(obj):
@@ -357,7 +356,7 @@ class TestApplicationsImport:
     def valid_request_body(self, claim: Claim) -> Dict[str, str]:
         return {
             "absence_case_id": claim.fineos_absence_id,
-            "tax_identifier": format_tax_identifier(claim.employee_tax_identifier),
+            "tax_identifier": claim.employee_tax_identifier.to_formatted_str(),
         }
 
     @pytest.fixture(autouse=True)
@@ -396,7 +395,7 @@ class TestApplicationsImport:
         )
 
         assert imported_application.tax_identifier_id == claim.employee.tax_identifier_id
-        assert imported_application.employer_fein == claim.employer_fein
+        assert imported_application.employer_fein == Fein(claim.employer_fein)
         assert imported_application.imported_from_fineos_at is not None
 
     def test_applications_import_application_for_claim_already_exists(
@@ -493,7 +492,7 @@ class TestApplicationsImport:
             headers={"Authorization": f"Bearer {auth_token}"},
             json={
                 "absence_case_id": absence_case_id,
-                "tax_identifier": format_tax_identifier("123456789"),
+                "tax_identifier": TaxId("123456789").to_formatted_str(),
             },
         )
 
@@ -519,7 +518,7 @@ class TestApplicationsImport:
             headers={"Authorization": f"Bearer {auth_token}"},
             json={
                 "absence_case_id": absence_case_id,
-                "tax_identifier": format_tax_identifier("123456789"),
+                "tax_identifier": TaxId("123456789").to_formatted_str(),
             },
         )
 
@@ -540,7 +539,7 @@ class TestApplicationsImport:
             headers={"Authorization": f"Bearer {auth_token}"},
             json={
                 "absence_case_id": absence_case_id,
-                "tax_identifier": format_tax_identifier(claim.employee_tax_identifier),
+                "tax_identifier": claim.employee_tax_identifier.to_formatted_str(),
             },
         )
         assert response.status_code == 409
@@ -4349,7 +4348,7 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
     # This is generated randomly and changes each time.
     fineos_user_id = capture[2][1]
     assert capture == [
-        ("read_employer", None, {"employer_fein": application.employer_fein}),
+        ("read_employer", None, {"employer_fein": application.employer_fein.to_unformatted_str()}),
         (
             "register_api_user",
             None,
@@ -4358,7 +4357,7 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                     user_id=fineos_user_id,
                     employer_id=str(
                         massgov.pfml.fineos.mock.field.fake_customer_no(
-                            application.employer_fein.to_unformatted_str()
+                            application.employer_fein
                         )
                     ),
                     date_of_birth=date(1753, 1, 1),
