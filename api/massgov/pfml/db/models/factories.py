@@ -173,7 +173,7 @@ class EmployerOnlyDORDataFactory(EmployerOnlyRequiredFactory):
 class EmployerFactory(EmployerOnlyDORDataFactory):
     fineos_employer_id = factory.LazyAttribute(
         lambda e: massgov.pfml.fineos.mock.field.fake_customer_no(
-            e.employer_fein.to_unformatted_str()
+            e.employer_fein
         )
     )
 

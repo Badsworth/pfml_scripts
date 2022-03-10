@@ -20,10 +20,12 @@ def test_verification():
 @pytest.fixture()
 def setup_leave_admins(test_verification):
     leave_admin_one = UserLeaveAdministratorFactory.create(
-        employer=EmployerFactory.create(employer_fein=Fein("999999998")), verification=test_verification
+        employer=EmployerFactory.create(employer_fein=Fein("999999998")),
+        verification=test_verification,
     )
     leave_admin_two = UserLeaveAdministratorFactory.create(
-        employer=EmployerFactory.create(employer_fein=Fein("999999997")), verification=test_verification
+        employer=EmployerFactory.create(employer_fein=Fein("999999997")),
+        verification=test_verification,
     )
 
     return leave_admin_one, leave_admin_two
