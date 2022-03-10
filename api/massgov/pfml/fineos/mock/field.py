@@ -6,6 +6,7 @@ from typing import Union
 
 from massgov.pfml.types import Fein
 
+
 def fake_customer_no(fein: Union[Fein, str, int]) -> int:
     if isinstance(fein, Fein):
         return int(fein.to_unformatted_str()) + 44000000
