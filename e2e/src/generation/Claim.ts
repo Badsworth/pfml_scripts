@@ -119,6 +119,7 @@ export interface BaseClaimSpecification {
   /** Makes a claim for an extremely short time period (1 day). */
   shortClaim?: boolean;
   is_withholding_tax?: boolean | null;
+  phone?: Phone | (() => Phone);
 }
 
 type IntermittentLeaveSpec =
@@ -223,7 +224,7 @@ export class ClaimGenerator {
       residential_address: address,
       hours_worked_per_week: this.calculateAverageWeeklyHours(workPattern),
       work_pattern: workPattern,
-      phone: this.generatePhone(),
+      phone: this.generatePhone(spec.phone),
       leave_details: leaveDetails,
       has_continuous_leave_periods:
         (leaveDetails.continuous_leave_periods?.length ?? 0) > 0,
@@ -312,12 +313,20 @@ export class ClaimGenerator {
       zip: faker.address.zipCode(),
     };
   }
-  private static generatePhone(): Phone {
-    return {
-      int_code: "1",
-      phone_number: "844-781-3163",
-      phone_type: "Cell",
-    };
+  private static generatePhone(spec: BaseClaimSpecification["phone"]): Phone {
+    if (spec) {
+      if (typeof spec === "function") {
+        return spec();
+      } else {
+        return spec;
+      }
+    } else {
+      return {
+        int_code: "1",
+        phone_number: "844-781-3163",
+        phone_type: "Cell",
+      };
+    }
   }
   private static generatePaymentPreference(): PaymentPreference {
     return {

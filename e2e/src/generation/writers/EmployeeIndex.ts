@@ -21,6 +21,7 @@ export default class EmployeeIndex {
     last_name: "Last Name",
     fein: "FEIN",
     wages: "Yearly Wages",
+    metadata: "Metadata",
   };
   static async write(
     employees: Iterable<Employee>,
