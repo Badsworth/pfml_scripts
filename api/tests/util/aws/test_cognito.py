@@ -390,7 +390,12 @@ class TestSetUserMFA:
         mock_create_cognito.return_value = mock_cognito
 
         user_not_found = boto3.client("cognito-idp", "us-east-1").exceptions.UserNotFoundException(
-            error_response={"Error": {"Code": "UserNotFoundException", "Message": ":(",}},
+            error_response={
+                "Error": {
+                    "Code": "UserNotFoundException",
+                    "Message": ":(",
+                }
+            },
             operation_name="Foo",
         )
 

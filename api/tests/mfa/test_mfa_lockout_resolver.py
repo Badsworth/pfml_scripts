@@ -115,7 +115,8 @@ class TestMfaLockoutResolver:
 
     @patch("massgov.pfml.mfa.mfa_lockout_resolver.logger", mock_logger)
     @patch(
-        "massgov.pfml.mfa.mfa_lockout_resolver.check_phone_number_opt_out", return_value=True,
+        "massgov.pfml.mfa.mfa_lockout_resolver.check_phone_number_opt_out",
+        return_value=True,
     )
     @patch("massgov.pfml.mfa.mfa_lockout_resolver.opt_in_phone_number")
     def test_sns_opt_out_phone_opted_out(self, mock_phone_opt_out, mock_opt_in, user_with_mfa):

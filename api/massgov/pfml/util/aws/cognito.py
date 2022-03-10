@@ -175,7 +175,10 @@ def set_user_mfa(email: str, mfa_enabled: bool, cognito_auth_token: str) -> None
 
     try:
         cognito_client.set_user_mfa_preference(
-            SMSMfaSettings={"Enabled": mfa_enabled,}, AccessToken=cognito_auth_token
+            SMSMfaSettings={
+                "Enabled": mfa_enabled,
+            },
+            AccessToken=cognito_auth_token,
         )
     except Exception as error:
         log_attr = {"mfa_enabled": mfa_enabled}

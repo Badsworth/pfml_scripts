@@ -197,7 +197,10 @@ def consented_user(initialize_factories_session):
 
 @pytest.fixture
 def user_with_mfa(initialize_factories_session):
-    user = UserFactory.create(mfa_phone_number="+15109283075", mfa_delivery_preference_id=1,)
+    user = UserFactory.create(
+        mfa_phone_number="+15109283075",
+        mfa_delivery_preference_id=1,
+    )
     return user
 
 

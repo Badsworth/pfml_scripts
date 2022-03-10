@@ -28,7 +28,11 @@ def update_user(
 
         if key == "mfa_delivery_preference":
             _update_mfa_preference(
-                db_session, user, value, sync_cognito_preferences, cognito_auth_token,
+                db_session,
+                user,
+                value,
+                sync_cognito_preferences,
+                cognito_auth_token,
             )
             continue
 
@@ -97,7 +101,10 @@ def _update_mfa_preference_audit_trail(db_session: db.Session, user: User, updat
     user.mfa_delivery_preference_updated_by = mfa_updated_by
 
 
-def admin_disable_mfa(db_session: db.Session, user: User,) -> None:
+def admin_disable_mfa(
+    db_session: db.Session,
+    user: User,
+) -> None:
     """API administrator action for disabling MFA on a user's account. This is used to unlock users who have
     been locked out of their account due to MFA but should be used carefully and only after a user has had their
     identity verified"""

@@ -31,7 +31,9 @@ class TestHandleMfaEnabled:
     def test_logging(self, mock_set_user_mfa, user, auth_token):
         mfa_actions.handle_mfa_enabled(user, auth_token)
 
-        self.mock_logger.info.assert_any_call("MFA enabled for user",)
+        self.mock_logger.info.assert_any_call(
+            "MFA enabled for user",
+        )
 
 
 class TestHandleMfaDisabled:
