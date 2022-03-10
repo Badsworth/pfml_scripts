@@ -4356,9 +4356,7 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                 "employee_registration": massgov.pfml.fineos.models.EmployeeRegistration(
                     user_id=fineos_user_id,
                     employer_id=str(
-                        massgov.pfml.fineos.mock.field.fake_customer_no(
-                            application.employer_fein
-                        )
+                        massgov.pfml.fineos.mock.field.fake_customer_no(application.employer_fein)
                     ),
                     date_of_birth=date(1753, 1, 1),
                     national_insurance_no=application.tax_identifier.tax_identifier.to_unformatted_str(),

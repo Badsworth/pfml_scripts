@@ -111,7 +111,9 @@ def test_employer_multiple_wage_rows(initialize_factories_session, monkeypatch, 
         optional_db_session=test_db_session,
     )
 
-    employer = test_db_session.query(Employer).filter(Employer.employer_fein == Fein("123456999")).first()
+    employer = (
+        test_db_session.query(Employer).filter(Employer.employer_fein == Fein("123456999")).first()
+    )
 
     employee = (
         test_db_session.query(Employee)
@@ -130,7 +132,9 @@ def test_employer_multiple_wage_rows(initialize_factories_session, monkeypatch, 
 
     assert len(wages) == 4
 
-    employer = test_db_session.query(Employer).filter(Employer.employer_fein == Fein("123456789")).first()
+    employer = (
+        test_db_session.query(Employer).filter(Employer.employer_fein == Fein("123456789")).first()
+    )
     employer2 = (
         test_db_session.query(Employer).filter(Employer.employer_fein == Fein("123456799")).first()
     )
@@ -189,7 +193,9 @@ def test_update_existing_employer_cease_date(
     decrypter = GpgCrypt(decryption_key, passphrase, test_email)
 
     cease_date = datetime.strptime("1/1/2025", "%m/%d/%Y").date()
-    employer = EmployerFactory.create(employer_fein=Fein("100000001"), exemption_cease_date=cease_date)
+    employer = EmployerFactory.create(
+        employer_fein=Fein("100000001"), exemption_cease_date=cease_date
+    )
 
     employer_file_path = TEST_FOLDER / "importer" / "encryption" / "DORDUADFMLEMP_20211210131901"
     exemption_file_path = TEST_FOLDER / "importer" / "CompaniesReturningToStatePlan.csv"
