@@ -216,7 +216,6 @@ const pipelineP = promisify(pipeline);
       docs,
     };
 
-    delete scenario.employee.metadata;
     return scenario;
   });
 
