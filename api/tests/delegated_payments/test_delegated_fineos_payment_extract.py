@@ -1799,6 +1799,160 @@ def test_process_extract_tax_withholding_payment_types(
 
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
+def test_process_employer_reimbursement_payment_transaction_type(
+    local_test_db_session, local_payment_extract_step, monkeypatch
+):
+    datasets = []
+
+    monkeypatch.setenv("ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS", "1")
+
+    # Create a record for an employer reimbursement with valid payment method check
+    employer_reimbursement_data = FineosPaymentData(
+        event_reason=extractor.AUTO_ALT_EVENT_REASON,
+        event_type=extractor.PAYMENT_OUT_TRANSACTION_TYPE,
+        payee_identifier=extractor.TAX_IDENTIFICATION_NUMBER,
+        payment_method="Check",
+    )
+    add_db_records_from_fineos_data(
+        local_test_db_session, employer_reimbursement_data, add_eft=False
+    )
+    datasets.append(employer_reimbursement_data)
+
+    stage_data(datasets, local_test_db_session)
+
+    # Run the extract process
+    local_payment_extract_step.run()
+
+    # Employer reimbursement should be in PAYMENT_READY_FOR_ADDRESS_VALIDATION whne we enable ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS
+    employer_payment = (
+        local_test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_i_value == employer_reimbursement_data.i_value)
+        .one_or_none()
+    )
+
+    assert len(employer_payment.state_logs) == 1
+    assert set([state_log.end_state_id for state_log in employer_payment.state_logs]) == set(
+        [
+            State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id,
+        ]
+    )
+
+
+@freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
+def test_process_employer_reimbursement_payment_method_is_eft(
+    local_test_db_session, local_payment_extract_step, monkeypatch
+):
+    datasets = []
+
+    monkeypatch.setenv("ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS", "1")
+
+    # Create a record for an employer reimbursement with valid payment method check
+    employer_reimbursement_data = FineosPaymentData(
+        event_reason=extractor.AUTO_ALT_EVENT_REASON,
+        event_type=extractor.PAYMENT_OUT_TRANSACTION_TYPE,
+        payee_identifier=extractor.TAX_IDENTIFICATION_NUMBER,
+        payment_method="Elec Funds Transfer",
+    )
+    add_db_records_from_fineos_data(
+        local_test_db_session, employer_reimbursement_data, add_eft=False
+    )
+    datasets.append(employer_reimbursement_data)
+
+    stage_data(datasets, local_test_db_session)
+
+    # Run the extract process
+    local_payment_extract_step.run()
+
+    employer_payment = (
+        local_test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_i_value == employer_reimbursement_data.i_value)
+        .one_or_none()
+    )
+
+    assert len(employer_payment.state_logs) == 2
+    assert set([state_log.end_state_id for state_log in employer_payment.state_logs]) == set(
+        [
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id,
+            State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id,
+        ]
+    )
+
+
+@freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
+def test_process_extract_data_minimal_viable_employer_reimbursement_payment(
+    local_payment_extract_step, local_test_db_session
+):
+    # Setup enough to make a employer reimbursement payment
+    # This test creates a employer reimbursement with absolutely no data besides the bare
+    # minimum to be viable to create a payment, this is done in order
+    # to test that all of our validations work, and all of the missing data
+    # edge cases are accounted for and handled appropriately.
+
+    # C & I value are the bare minimum to have a payment
+    employer_reimbursement_data = FineosPaymentData(
+        False,
+        c_value="1000",
+        i_value="1",
+        event_reason=extractor.AUTO_ALT_EVENT_REASON,
+        event_type=extractor.PAYMENT_OUT_TRANSACTION_TYPE,
+        payee_identifier=extractor.TAX_IDENTIFICATION_NUMBER,
+        payment_method="Elec Funds Transfer",
+        payment_amount="100.00",
+    )
+    stage_data([employer_reimbursement_data], local_test_db_session)
+    # We deliberately do no DB setup, there will not be any prior employee or claim
+    local_payment_extract_step.run()
+
+    payment = local_test_db_session.query(Payment).one_or_none()
+    assert payment
+    assert payment.vpei_id is not None
+    assert payment.claim is None
+
+    state_log = state_log_util.get_latest_state_log_in_flow(
+        payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+    )
+    assert state_log.end_state_id == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+
+    assert state_log.outcome["message"] == "Error processing payment record"
+    assert state_log.outcome["validation_container"]["record_key"] == "C=1000,I=1"
+    # Not going to exactly match the errors here as there are many
+    # and they may adjust in the future
+
+    assert len(state_log.outcome["validation_container"]["validation_issues"]) >= 8
+
+    validation_issues = state_log.outcome["validation_container"]["validation_issues"]
+    assert validation_issues == [
+        {"reason": "MissingField", "details": "PAYEESOCNUMBE", "field_name": "PAYEESOCNUMBE"},
+        {"reason": "MissingField", "details": "PAYMENTDATE", "field_name": "PAYMENTDATE"},
+        {"reason": "MissingField", "details": "PAYMENTSTARTP", "field_name": "PAYMENTSTARTP"},
+        {"reason": "MissingField", "details": "PAYMENTENDPER", "field_name": "PAYMENTENDPER"},
+        {
+            "reason": "MissingField",
+            "details": "BALANCINGAMOU_MONAMT",
+            "field_name": "BALANCINGAMOU_MONAMT",
+        },
+        {
+            "reason": "MissingField",
+            "details": "BUSINESSNETBE_MONAMT",
+            "field_name": "BUSINESSNETBE_MONAMT",
+        },
+        {
+            "reason": "MissingField",
+            "details": "ABSENCEREASON_COVERAGE",
+            "field_name": "ABSENCEREASON_COVERAGE",
+        },
+        {
+            "reason": "MissingField",
+            "details": "ABSENCE_CASECREATIONDATE",
+            "field_name": "ABSENCE_CASECREATIONDATE",
+        },
+    ]
+
+    # Payment is also added to the PEI writeback error flow
+    validate_pei_writeback_state_for_payment(payment, local_test_db_session, is_invalid=True)
+
+
+@freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_invalid_tax_withholding_payment_types(
     local_test_db_session, local_payment_extract_step
 ):

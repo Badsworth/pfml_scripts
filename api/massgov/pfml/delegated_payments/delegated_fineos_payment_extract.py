@@ -144,6 +144,9 @@ class PaymentData:
     payment_relevant_party: LkPaymentRelevantParty
     is_standard_payment: bool
     is_employee_required: bool
+    is_employer_reimbursement: bool
+    is_employer_reimbursement_enabled: bool
+    is_payment_intended_for_pub: bool
 
     def __init__(
         self,
@@ -230,45 +233,67 @@ class PaymentData:
             == PaymentTransactionType.STANDARD.payment_transaction_type_id
         )
 
+        self.is_employer_reimbursement = (
+            self.payment_transaction_type.payment_transaction_type_id
+            == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+        )
+
+        self.is_employer_reimbursement_enabled = (
+            payments_util.is_employer_reimbursement_payments_enabled()
+        )
+
+        self.is_payment_intended_for_pub = self.is_standard_payment or (
+            self.is_employer_reimbursement and self.is_employer_reimbursement_enabled
+        )
+
         # We only want to check for an employee in certain scenarios
         # Employer Reimbursements will not map to an Employee,
         # and nor will payments associated with tax withholdings
         # We are not checking against transaction type here because
         # cancelled tax withholdings will be "Cancellations" not tax withholdings.
-        self.is_employee_required = (
-            self.payment_transaction_type.payment_transaction_type_id
-            != PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
-            and self.tin != STATE_TAX_WITHHOLDING_TIN
-            and self.tin != FEDERAL_TAX_WITHHOLDING_TIN
-        )
+        if self.is_employer_reimbursement_enabled:
+            self.is_employee_required = (
+                self.tin != STATE_TAX_WITHHOLDING_TIN and self.tin != FEDERAL_TAX_WITHHOLDING_TIN
+            )
+        else:
+            self.is_employee_required = (
+                self.payment_transaction_type.payment_transaction_type_id
+                != PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+                and self.tin != STATE_TAX_WITHHOLDING_TIN
+                and self.tin != FEDERAL_TAX_WITHHOLDING_TIN
+            )
 
         #######################################
         # BEGIN - VALIDATION OF PARAMETERS ALWAYS REQUIRED FOR STANDARD PAYMENTS
         #######################################
 
         # Find the record in the other datasets.
-        if not claim_details and self.is_standard_payment:
+        if not claim_details and self.is_payment_intended_for_pub:
             self.validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISSING_DATASET, "claim_details"
             )
 
         if claim_details:
             self.process_claim_details(claim_details, requested_absence_record, count_incrementer)
-        elif self.is_standard_payment:
+        elif self.is_payment_intended_for_pub:
             # We require the absence case number, if claim details doesn't exist
             # we want to set the validation issue manually here
             self.validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISSING_FIELD, "ABSENCECASENU"
             )
 
+        disallowed_lookup_values = [PaymentMethod.DEBIT.payment_method_description]
+        # Employer reimbursements are check only
+        if self.is_employer_reimbursement:
+            disallowed_lookup_values.append(PaymentMethod.ACH.payment_method_description)
         self.raw_payment_method = payments_util.validate_db_input(
             "PAYMENTMETHOD",
             pei_record,
             self.validation_container,
-            self.is_standard_payment,
+            self.is_payment_intended_for_pub,
             custom_validator_func=payments_util.lookup_validator(
                 PaymentMethod,
-                disallowed_lookup_values=[PaymentMethod.DEBIT.payment_method_description],
+                disallowed_lookup_values=disallowed_lookup_values,
             ),
         )
 
@@ -279,7 +304,7 @@ class PaymentData:
         # Address values are only required if we are paying by check
         address_required = (
             self.raw_payment_method == PaymentMethod.CHECK.payment_method_description
-            and self.is_standard_payment
+            and self.is_payment_intended_for_pub
         )
         self.address_line_one = payments_util.validate_db_input(
             "PAYMENTADD1", pei_record, self.validation_container, address_required
@@ -435,7 +460,7 @@ class PaymentData:
             "LEAVEREQUESTI",
             claim_details,
             self.validation_container,
-            self.is_standard_payment,
+            self.is_payment_intended_for_pub,
             custom_validator_func=payments_util.leave_request_id_validator,
         )
 
@@ -469,7 +494,7 @@ class PaymentData:
                 "LEAVEREQUEST_DECISION",
                 requested_absence,
                 self.validation_container,
-                self.is_standard_payment,
+                self.is_payment_intended_for_pub,
                 custom_validator_func=leave_request_decision_validator_closure(
                     self.is_adhoc_payment()
                 ),
@@ -487,7 +512,7 @@ class PaymentData:
                 custom_validator_func=self.payment_period_date_validator,
             )
 
-        elif self.is_standard_payment:
+        elif self.is_payment_intended_for_pub:
             self.validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISSING_DATASET,
                 f"Payment leave request ID not found in requested absence file: {self.leave_request_id}",
@@ -694,28 +719,19 @@ class PaymentExtractStep(Step):
         # Get the TIN, employee and claim associated with the payment to be made
         employee, claim = None, None
         try:
+            claim = (
+                self.db_session.query(Claim)
+                .filter_by(fineos_absence_id=payment_data.absence_case_number)
+                .one_or_none()
+            )
             # If the employee is required and should be validated, do so
             # Otherwise, we know we aren't going to find an employee, so don't look
             if payment_data.is_employee_required:
-                tax_identifier = (
-                    self.db_session.query(TaxIdentifier)
-                    .filter_by(tax_identifier=payment_data.tin)
-                    .one_or_none()
-                )
-                if not tax_identifier:
-                    self.increment(self.Metrics.TAX_IDENTIFIER_MISSING_IN_DB_COUNT)
-                    payment_data.validation_container.add_validation_issue(
-                        payments_util.ValidationReason.MISSING_IN_DB,
-                        payment_data.tin,
-                        "tax_identifier",
-                    )
-                else:
-                    employee = (
-                        self.db_session.query(Employee)
-                        .filter_by(tax_identifier=tax_identifier)
-                        .one_or_none()
-                    )
-
+                if (
+                    payment_data.is_employer_reimbursement
+                    and payment_data.is_employer_reimbursement_enabled
+                ):
+                    employee = claim.employee if claim is not None else None
                     if not employee:
                         self.increment(self.Metrics.EMPLOYEE_MISSING_IN_DB_COUNT)
                         payment_data.validation_container.add_validation_issue(
@@ -723,12 +739,33 @@ class PaymentExtractStep(Step):
                             payment_data.tin,
                             "employee",
                         )
+                else:
+                    tax_identifier = (
+                        self.db_session.query(TaxIdentifier)
+                        .filter_by(tax_identifier=payment_data.tin)
+                        .one_or_none()
+                    )
+                    if not tax_identifier:
+                        self.increment(self.Metrics.TAX_IDENTIFIER_MISSING_IN_DB_COUNT)
+                        payment_data.validation_container.add_validation_issue(
+                            payments_util.ValidationReason.MISSING_IN_DB,
+                            payment_data.tin,
+                            "tax_identifier",
+                        )
+                    else:
+                        employee = (
+                            self.db_session.query(Employee)
+                            .filter_by(tax_identifier=tax_identifier)
+                            .one_or_none()
+                        )
+                        if not employee:
+                            self.increment(self.Metrics.EMPLOYEE_MISSING_IN_DB_COUNT)
+                            payment_data.validation_container.add_validation_issue(
+                                payments_util.ValidationReason.MISSING_IN_DB,
+                                payment_data.tin,
+                                "employee",
+                            )
 
-            claim = (
-                self.db_session.query(Claim)
-                .filter_by(fineos_absence_id=payment_data.absence_case_number)
-                .one_or_none()
-            )
         except SQLAlchemyError as e:
             logger.exception(
                 "Unexpected error %s with one_or_none when querying for tin/employee/claim",
@@ -740,7 +777,7 @@ class PaymentExtractStep(Step):
         # If we cannot find the claim, we want to error only for standard
         # payments. While we'd like to attach the claim to other payment types
         # it's less of a concern to us.
-        if not claim and payment_data.is_standard_payment:
+        if not claim and payment_data.is_payment_intended_for_pub:
             payment_data.validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISSING_IN_DB,
                 payment_data.absence_case_number,
@@ -761,7 +798,7 @@ class PaymentExtractStep(Step):
                     f"Claim {payment_data.absence_case_number} has not been ID proofed",
                 )
 
-            if payment_data.is_standard_payment and not claim.employer_id:
+            if payment_data.is_payment_intended_for_pub and not claim.employer_id:
                 payment_data.validation_container.add_validation_issue(
                     payments_util.ValidationReason.MISSING_IN_DB,
                     f"Claim {payment_data.absence_case_number} does not have an employer associated with it",
@@ -825,8 +862,10 @@ class PaymentExtractStep(Step):
         self.db_session.add(new_experian_address_pair)
 
         # We also want to make sure the address is linked in the EmployeeAddress table
-        employee_address = EmployeeAddress(employee=employee, address=payment_data_address)
-        self.db_session.add(employee_address)
+        if payment_data.is_standard_payment:
+            employee_address = EmployeeAddress(employee=employee, address=payment_data_address)
+            self.db_session.add(employee_address)
+
         return new_experian_address_pair, True
 
     def create_payment(
@@ -1057,9 +1096,10 @@ class PaymentExtractStep(Step):
         payment_eft, address_pair = None, None
         if employee and not payment_data.validation_container.has_validation_issues():
             # Update the mailing address with values from FINEOS
-            address_pair, has_address_update = self.update_experian_address_pair_fineos_address(
-                payment_data, employee
-            )
+            if payment_data.is_payment_intended_for_pub:
+                address_pair, has_address_update = self.update_experian_address_pair_fineos_address(
+                    payment_data, employee
+                )
 
             # Update the EFT info with values from FINEOS
             payment_eft, has_eft_update = self.update_eft(payment_data, employee)
@@ -1167,11 +1207,15 @@ class PaymentExtractStep(Step):
             payment.payment_transaction_type_id
             == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
         ):
-            end_state = State.DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT
-            message = "Employer reimbursement payment processed"
-            self._manage_pei_writeback_state(
-                payment, FineosWritebackTransactionStatus.PROCESSED, payment_data
-            )
+            if payments_util.is_employer_reimbursement_payments_enabled():
+                end_state = State.PAYMENT_READY_FOR_ADDRESS_VALIDATION
+                message = "Success"
+            else:
+                end_state = State.DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT
+                message = "Employer reimbursement payment processed"
+                self._manage_pei_writeback_state(
+                    payment, FineosWritebackTransactionStatus.PROCESSED, payment_data
+                )
             self.increment(self.Metrics.EMPLOYER_REIMBURSEMENT_COUNT)
 
         # Zero dollar payments are added to the FINEOS writeback + a report
