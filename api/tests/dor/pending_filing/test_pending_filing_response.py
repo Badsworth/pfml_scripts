@@ -27,6 +27,7 @@ from massgov.pfml.dor.pending_filing.pending_filing_response import (
     DFML_PROCESSED_FOLDER,
     DFML_RECEIVED_FOLDER,
 )
+from massgov.pfml.types import Fein, TaxId
 from massgov.pfml.util.csv import CSVSourceWrapper
 from massgov.pfml.util.encryption import GpgCrypt, Utf8Crypt
 
@@ -110,7 +111,7 @@ def test_employer_multiple_wage_rows(initialize_factories_session, monkeypatch, 
         optional_db_session=test_db_session,
     )
 
-    employer = test_db_session.query(Employer).filter(Employer.employer_fein == "123456999").first()
+    employer = test_db_session.query(Employer).filter(Employer.employer_fein == Fein("123456999")).first()
 
     employee = (
         test_db_session.query(Employee)
@@ -129,12 +130,12 @@ def test_employer_multiple_wage_rows(initialize_factories_session, monkeypatch, 
 
     assert len(wages) == 4
 
-    employer = test_db_session.query(Employer).filter(Employer.employer_fein == "123456789").first()
+    employer = test_db_session.query(Employer).filter(Employer.employer_fein == Fein("123456789")).first()
     employer2 = (
-        test_db_session.query(Employer).filter(Employer.employer_fein == "123456799").first()
+        test_db_session.query(Employer).filter(Employer.employer_fein == Fein("123456799")).first()
     )
     employer3 = (
-        test_db_session.query(Employer).filter(Employer.employer_fein == "123456999").first()
+        test_db_session.query(Employer).filter(Employer.employer_fein == Fein("123456999")).first()
     )
 
     assert employer2.family_exemption is True
@@ -188,7 +189,7 @@ def test_update_existing_employer_cease_date(
     decrypter = GpgCrypt(decryption_key, passphrase, test_email)
 
     cease_date = datetime.strptime("1/1/2025", "%m/%d/%Y").date()
-    employer = EmployerFactory.create(employer_fein="100000001", exemption_cease_date=cease_date)
+    employer = EmployerFactory.create(employer_fein=Fein("100000001"), exemption_cease_date=cease_date)
 
     employer_file_path = TEST_FOLDER / "importer" / "encryption" / "DORDUADFMLEMP_20211210131901"
     exemption_file_path = TEST_FOLDER / "importer" / "CompaniesReturningToStatePlan.csv"
@@ -253,8 +254,8 @@ def test_insert_wage_rows_existing_employee(
     exemption_file_path = TEST_FOLDER / "importer" / "CompaniesReturningToStatePlan.csv"
 
     account_key = "123456999"
-    employer = EmployerFactory.create(account_key=account_key, employer_fein="123456999")
-    tax_identifier = TaxIdentifierFactory.create(tax_identifier="111111111")
+    employer = EmployerFactory.create(account_key=account_key, employer_fein=Fein("123456999"))
+    tax_identifier = TaxIdentifierFactory.create(tax_identifier=TaxId("111111111"))
     employee = EmployeeFactory.create(tax_identifier=tax_identifier, email_address="foo@bar.com")
     filing_period = datetime.strptime("9/30/2020", "%m/%d/%Y").date()
     wage_row = WagesAndContributions()

@@ -396,7 +396,7 @@ def get_employer_cease_date(employer: Employer, exemption_data: CSVSourceWrapper
 
     # All employers should be covered in the CSV so a value is guaranteed to be found
     for exemption_info in exemption_data:
-        if exemption_info["FEIN"] == employer.employer_fein:
+        if exemption_info["FEIN"] == employer.employer_fein.to_unformatted_str():
             return datetime.strptime(
                 exemption_info["'Effective date with State'"], "%m/%d/%Y"
             ).date()
@@ -626,7 +626,7 @@ def import_employees(
     db_session: Session,
     employee_info_list: List[ParsedEmployeeLine],
     employee_ssns_to_id_created_in_current_import_run: Dict[str, uuid.UUID],
-    ssn_to_existing_employee_model: Dict[TaxId, Employee],
+    ssn_to_existing_employee_model: Dict[str, Employee],
     report: ImportReport,
     import_log_entry_id: int,
 ) -> None:
@@ -661,7 +661,7 @@ def import_employees(
     for emp in not_found_employee_info_list:
         found = None
         for tax_id in previously_created_tax_ids:
-            if tax_id.tax_identifier == emp["employee_ssn"]:
+            if tax_id.tax_identifier.to_unformatted_str() == emp["employee_ssn"]:
                 found = tax_id
 
         ssn_to_new_employee_id[emp["employee_ssn"]] = uuid_gen()
@@ -689,7 +689,7 @@ def import_employees(
     for ssn in ssn_to_new_employee_id:
         tax_id_is_found = False
         for tax_id in previously_created_tax_ids:
-            if tax_id.tax_identifier == ssn:
+            if tax_id.tax_identifier.to_unformatted_str() == ssn:
                 tax_id_is_found = True
 
         if not tax_id_is_found:
@@ -753,7 +753,7 @@ def import_wage_data(
     wage_info_list: List,
     account_key_to_employer_id_map: Dict[str, uuid.UUID],
     employee_ssns_to_id_created_in_current_import_run: Dict[str, uuid.UUID],
-    ssn_to_existing_employee_model: Dict[TaxId, Employee],
+    ssn_to_existing_employee_model: Dict[str, Employee],
     report: ImportReport,
     import_log_entry_id: int,
 ) -> None:
