@@ -91,8 +91,6 @@ class TestHandleMfaDisabled:
             "MFA disabled, but no last_enabled_at timestamp was available"
         )
 
-        self.mock_logger.info.assert_any_call("MFA disabled for user", extra={"updated_by": "user"})
-
     @mock.patch("massgov.pfml.mfa.send_templated_email")
     def test_email(self, mock_send_email, user, last_enabled_at, auth_token):
         mfa_actions.handle_mfa_disabled(user, last_enabled_at, False, auth_token)
