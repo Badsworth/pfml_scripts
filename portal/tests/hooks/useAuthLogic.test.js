@@ -168,6 +168,7 @@ describe("useAuthLogic", () => {
 
     expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
       issueField: "username",
+      issueNamespace: "auth",
       issueRule: "",
       issueType: "required",
     });
@@ -388,11 +389,13 @@ describe("useAuthLogic", () => {
 
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "username",
+        issueNamespace: "auth",
         issueRule: "",
         issueType: "required",
       });
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "password",
+        issueNamespace: "auth",
         issueRule: "",
         issueType: "required",
       });
@@ -876,6 +879,7 @@ describe("useAuthLogic", () => {
       `);
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "code",
+        issueNamespace: "mfa",
         issueRule: "",
         issueType: "required",
       });
@@ -900,6 +904,7 @@ describe("useAuthLogic", () => {
       `);
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "code",
+        issueNamespace: "mfa",
         issueRule: "",
         issueType: "pattern",
       });
@@ -1308,6 +1313,7 @@ describe("useAuthLogic", () => {
 
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "username",
+        issueNamespace: "auth",
         issueRule: "",
         issueType: "required",
       });
@@ -1429,16 +1435,19 @@ describe("useAuthLogic", () => {
 
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "code",
+        issueNamespace: "mfa",
         issueRule: "",
         issueType: "required",
       });
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "username",
+        issueNamespace: "auth",
         issueRule: "",
         issueType: "required",
       });
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "password",
+        issueNamespace: "auth",
         issueRule: "",
         issueType: "required",
       });
@@ -1736,11 +1745,13 @@ describe("useAuthLogic", () => {
 
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "username",
+        issueNamespace: "auth",
         issueRule: "",
         issueType: "required",
       });
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "code",
+        issueNamespace: "mfa",
         issueRule: "",
         issueType: "required",
       });
@@ -1769,6 +1780,7 @@ describe("useAuthLogic", () => {
 
         expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
           issueField: "code",
+          issueNamespace: "mfa",
           issueRule: "",
           issueType: "pattern",
         });

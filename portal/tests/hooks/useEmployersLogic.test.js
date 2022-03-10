@@ -1,8 +1,4 @@
-import {
-  BadRequestError,
-  ForbiddenError,
-  LeaveAdminForbiddenError,
-} from "../../src/errors";
+import { BadRequestError, ForbiddenError } from "../../src/errors";
 import { act, renderHook } from "@testing-library/react-hooks";
 import {
   addEmployerMock,
@@ -15,6 +11,7 @@ import {
 } from "../../src/api/EmployersApi";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import User from "../../src/models/User";
+import tracker from "../../src/services/tracker";
 import { uniqueId } from "lodash";
 import useEmployersLogic from "../../src/hooks/useEmployersLogic";
 import useErrorsLogic from "../../src/hooks/useErrorsLogic";
@@ -145,8 +142,8 @@ describe("useEmployersLogic", () => {
         expect(errorsLogic.errors[0].name).toEqual("Error");
       });
 
-      it("catches instances of LeaveAdminForbiddenError", async () => {
-        const catchErrorSpy = jest.spyOn(errorsLogic, "catchError");
+      it("redirects to verify contributions page when request fails and includes truthy has_verification_data response field", async () => {
+        const goToSpy = jest.spyOn(portalFlow, "goTo");
         getClaimMock.mockImplementationOnce(() => {
           throw new ForbiddenError(
             {
@@ -161,14 +158,53 @@ describe("useEmployersLogic", () => {
           await employersLogic.loadClaim(absenceId);
         });
 
-        const expectedError = new LeaveAdminForbiddenError(
-          "some-employer-id",
-          true,
-          "User is not Verified"
+        expect(goToSpy).toHaveBeenCalledWith(
+          "/employers/organizations/verify-contributions",
+          {
+            employer_id: "some-employer-id",
+            next: "",
+          },
+          { redirect: true }
         );
-        // first call, first argument
-        expect(catchErrorSpy.mock.calls[0][0]).toEqual(expectedError);
-        expect(errorsLogic.errors.length).toBe(0);
+        expect(tracker.trackEvent).toHaveBeenCalledWith(
+          "LeaveAdminForbiddenError",
+          {
+            employerId: "some-employer-id",
+            hasVerificationData: "true",
+          }
+        );
+      });
+
+      it("redirects to cannot verify page when request fails and includes falsey has_verification_data response field", async () => {
+        const goToSpy = jest.spyOn(portalFlow, "goTo");
+        getClaimMock.mockImplementationOnce(() => {
+          throw new ForbiddenError(
+            {
+              employer_id: "some-employer-id",
+              has_verification_data: false,
+            },
+            "User is not Verified"
+          );
+        });
+
+        await act(async () => {
+          await employersLogic.loadClaim(absenceId);
+        });
+
+        expect(goToSpy).toHaveBeenCalledWith(
+          "/employers/organizations/cannot-verify",
+          {
+            employer_id: "some-employer-id",
+          },
+          { redirect: true }
+        );
+        expect(tracker.trackEvent).toHaveBeenCalledWith(
+          "LeaveAdminForbiddenError",
+          {
+            employerId: "some-employer-id",
+            hasVerificationData: "false",
+          }
+        );
       });
     });
 
