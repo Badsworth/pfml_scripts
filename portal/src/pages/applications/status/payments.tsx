@@ -142,7 +142,7 @@ export const Payments = ({
 
   const shouldShowPaymentsTable = hasPayments || hasWaitingWeek;
 
-  const getPaymentAmount = (
+  const getPaymentAmountOrStatus = (
     status: string,
     amount: number | null,
     writeback_transaction_status: WritebackTransactionStatus,
@@ -319,7 +319,7 @@ export const Payments = ({
                             )}
                           </td>
                           <td data-label={tableColumns[1]}>
-                            {getPaymentAmount(
+                            {getPaymentAmountOrStatus(
                               status,
                               amount,
                               writeback_transaction_status,

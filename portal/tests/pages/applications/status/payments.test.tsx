@@ -601,10 +601,10 @@ describe("Payments", () => {
     const staticTransactionDate = dayjs().format("YYYY-MM-DD");
     // transaction date to be compared with current date, current date
     const transactionDate = {
-      "after five business days": dayjs(staticTransactionDate)
+      "five business days before today": dayjs(staticTransactionDate)
         .subtractBusinessDays(5)
         .format("YYYY-MM-DD"),
-      "after two business days": dayjs(staticTransactionDate)
+      "two business days before today": dayjs(staticTransactionDate)
         .subtractBusinessDays(2)
         .format("YYYY-MM-DD"),
       "same day": staticTransactionDate,
@@ -648,8 +648,9 @@ describe("Payments", () => {
       }
     );
 
-    const [afterFiveDays, ...twoDaysOrSameDay] = transactionDateScenarios;
-    it.each(twoDaysOrSameDay)(
+    const [beforeFiveDays, ...beforeTwoDaysOrSameDay] =
+      transactionDateScenarios;
+    it.each(beforeTwoDaysOrSameDay)(
       "conditional render for delayed display time, current date before or same as delay date:%s ",
       (state) => {
         renderPage(
@@ -698,7 +699,7 @@ describe("Payments", () => {
                     status: "Delayed",
                     sent_to_bank_date: null,
                     writeback_transaction_status: "Address Validation Error",
-                    transaction_date: transactionDate[afterFiveDays],
+                    transaction_date: transactionDate[beforeFiveDays],
                   },
                   true
                 ),
@@ -734,7 +735,7 @@ describe("Payments", () => {
                     sent_to_bank_date: null,
                     writeback_transaction_status: "Bank Processing Error",
                     transaction_date:
-                      transactionDate["after five business days"],
+                      transactionDate["five business days before today"],
                   },
                   true
                 ),

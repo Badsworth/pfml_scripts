@@ -49,8 +49,8 @@ const PAYMENT_METHOD = {
 };
 
 const TRANSACTION_DATE = {
-  AFTER_TWO_DAYS: "After two business days",
-  AFTER_FIVE_DAYS: "After five business days",
+  BEFORE_TWO_DAYS: "Two business days before today",
+  BEFORE_FIVE_DAYS: "Five business days before today",
   SAME_DAY: "Same day",
 };
 
@@ -97,6 +97,7 @@ export default {
       control: {
         type: "radio",
       },
+      description: "Determines whether to show checkback dates in intro text",
       options: [
         PAYMENT_OPTIONS.REGULAR,
         PAYMENT_OPTIONS.RETROACTIVE,
@@ -108,17 +109,22 @@ export default {
         type: "radio",
       },
       options: Object.values(PAYMENT_METHOD),
+      description: "Sets the payment method",
     },
     "Approval time": {
       control: {
         type: "radio",
         options: Object.values(APPROVAL_TIME),
       },
+      description:
+        "Determines which introduction text to display for checkback dates",
     },
     "Delay transaction type": {
       control: {
         type: "radio",
       },
+      description:
+        "Effects the delay time to display (dependent on transaction date) and delay messages",
       options: Object.values(DELAY_TRANSACTION_TYPE),
     },
     "Leave scenario": {
@@ -126,23 +132,29 @@ export default {
         type: "radio",
         options: Object.keys(leaveScenarioMap),
       },
+      description: "Effects the intro text for timing on receiving payments",
     },
     "Leave type": {
       control: {
         type: "radio",
         options: leaveTypes,
       },
+      description:
+        "Determines if an information alert is shown for Medical (pregnancy) and Bonding (newborn) conditions",
     },
     "Transaction date": {
       control: {
         type: "radio",
         options: Object.values(TRANSACTION_DATE),
       },
+      description:
+        "Determines if we should display the delay status and message based on the transaction date relative to the current date",
     },
     "Show holiday alert": {
       control: {
         type: "boolean",
       },
+      description: "Displays the holiday alert",
     },
   },
 };
