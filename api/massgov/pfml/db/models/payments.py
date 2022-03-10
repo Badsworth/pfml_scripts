@@ -856,18 +856,12 @@ class MmarsPaymentData(Base, TimestampMixin):
     )
 
     claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True, nullable=True)
-    employee_id = Column(
-        PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True, nullable=True
-    )
-    payment_i_value = Column(Text)
-
-    claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True, nullable=True)
-    claim = relationship(Claim)
+    claim = cast(Optional[Claim], relationship(Claim))
 
     employee_id = Column(
         PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True, nullable=True
     )
-    employee = relationship(Employee)
+    employee = cast(Optional[Employee], relationship(Employee))
     payment_i_value = Column(Text)
 
 
@@ -923,7 +917,10 @@ class FineosWritebackDetails(Base, TimestampMixin):
         nullable=False,
     )
     import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
-    writeback_sent_at = Column(TIMESTAMP(timezone=True), nullable=True,)
+    writeback_sent_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=True,
+    )
 
     payment = relationship(Payment, back_populates="fineos_writeback_details")
     transaction_status = relationship("LkFineosWritebackTransactionStatus")
@@ -933,7 +930,9 @@ class FineosWritebackDetails(Base, TimestampMixin):
 # Because of how the app is loaded, we need
 # to define this here, after both classes are registered
 Payment.fineos_writeback_details = relationship(  # type: ignore
-    FineosWritebackDetails, back_populates="payment", order_by="FineosWritebackDetails.created_at",
+    FineosWritebackDetails,
+    back_populates="payment",
+    order_by="FineosWritebackDetails.created_at",
 )
 
 
@@ -1123,13 +1122,22 @@ class PaymentAuditReportType(LookupTable):
     )
 
     DEPRECATED_MAX_WEEKLY_BENEFITS = LkPaymentAuditReportType(
-        1, "Deprecated - Max Weekly Benefits", AuditReportAction.REJECTED, None,
+        1,
+        "Deprecated - Max Weekly Benefits",
+        AuditReportAction.REJECTED,
+        None,
     )
     DEPRECATED_DUA_DIA_REDUCTION = LkPaymentAuditReportType(
-        2, "Deprecated - DUA DIA Reduction (Deprecated)", AuditReportAction.INFORMATIONAL, None,
+        2,
+        "Deprecated - DUA DIA Reduction (Deprecated)",
+        AuditReportAction.INFORMATIONAL,
+        None,
     )
     DEPRECATED_LEAVE_PLAN_IN_REVIEW = LkPaymentAuditReportType(
-        3, "Deprecated - Leave Plan In Review", AuditReportAction.SKIPPED, None,
+        3,
+        "Deprecated - Leave Plan In Review",
+        AuditReportAction.SKIPPED,
+        None,
     )
     DOR_FINEOS_NAME_MISMATCH = LkPaymentAuditReportType(
         4,
@@ -1150,7 +1158,10 @@ class PaymentAuditReportType(LookupTable):
         "dia_additional_income_details",
     )
     PAYMENT_DATE_MISMATCH = LkPaymentAuditReportType(
-        7, "Payment Date Mismatch", AuditReportAction.REJECTED, "payment_date_mismatch_details",
+        7,
+        "Payment Date Mismatch",
+        AuditReportAction.REJECTED,
+        "payment_date_mismatch_details",
     )
     EXCEEDS_26_WEEKS_TOTAL_LEAVE = LkPaymentAuditReportType(
         8,
@@ -1172,7 +1183,10 @@ class PaymentAuditReportDetails(Base, TimestampMixin):
         nullable=False,
     )
     details = Column(JSON, nullable=False)
-    added_to_audit_report_at = Column(TIMESTAMP(timezone=True), nullable=True,)
+    added_to_audit_report_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=True,
+    )
     import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
 
     payment = relationship(Payment)
@@ -1186,7 +1200,9 @@ class LkWithholdingType(Base):
     withholding_type_description = Column(Text, nullable=False)
 
     def __init__(
-        self, withholding_type_id, withholding_type_description,
+        self,
+        withholding_type_id,
+        withholding_type_description,
     ):
         self.withholding_type_id = withholding_type_id
         self.withholding_type_description = withholding_type_description
