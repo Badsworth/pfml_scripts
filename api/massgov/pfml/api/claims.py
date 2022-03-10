@@ -890,3 +890,25 @@ def submit_change_request(change_request_id: str) -> flask.Response:
         data=response_data.dict(),
         status_code=200,
     ).to_api_response()
+
+
+def delete_change_request(change_request_id: str) -> flask.Response:
+    with app.db_session() as db_session:
+        change_request = get_or_404(db_session, change_request_db_model, UUID(change_request_id))
+
+        if change_request.submitted_time is not None:
+            error = response_util.error_response(
+                BadRequest,
+                "Cannot delete a submitted request",
+                data={},
+                errors=[],
+            )
+            return error.to_api_response()
+
+        db_session.delete(change_request)
+
+    return response_util.success_response(
+        message="Successfully deleted change request",
+        data={},
+        status_code=200,
+    ).to_api_response()

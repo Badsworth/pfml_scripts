@@ -1,13 +1,12 @@
+import { Payment, WritebackTransactionStatus } from "src/models/Payment";
 import createMockClaimDetail, {
   leaveScenarioMap,
   leaveTypes,
   requestTypes,
 } from "lib/mock-helpers/createMockClaimDetail";
-
 import { AbsencePeriodTypes } from "src/models/AbsencePeriod";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { BenefitsApplicationDocument } from "src/models/Document";
-import { Payment } from "src/models/Payment";
 import { Payments } from "src/pages/applications/status/payments";
 import { Props } from "types/common";
 import React from "react";
@@ -39,14 +38,19 @@ const APPROVAL_TIME = {
   RETROACTIVE: "Retroactive",
 };
 
+const DELAY_TRANSACTION_TYPE: { [key: string]: WritebackTransactionStatus } = {
+  ADDRESS_VALIDATION_ERROR: "Address Validation Error",
+  BANK_PROCESSING_ERROR: "Bank Processing Error",
+};
+
 const PAYMENT_METHOD = {
   CHECK: "Check",
   ELEC_FUNDS_TRANSFER: "Direct deposit",
 };
 
 const TRANSACTION_DATE = {
-  AFTER_TWO_DAYS: "After two business days",
-  AFTER_FIVE_DAYS: "After five business days",
+  BEFORE_TWO_DAYS: "Two business days before today",
+  BEFORE_FIVE_DAYS: "Five business days before today",
   SAME_DAY: "Same day",
 };
 
@@ -67,10 +71,10 @@ const mappedApprovalDate: { [key: string]: string } = {
 
 const mappedTransactionDate: { [key: string]: string } = {
   "After two business days": STATIC_DATES.current_date
-    .addBusinessDays(2)
+    .subtractBusinessDays(2)
     .format("YYYY-MM-DD"),
   "After five business days": STATIC_DATES.current_date
-    .addBusinessDays(5)
+    .subtractBusinessDays(5)
     .format("YYYY-MM-DD"),
   "Same day": STATIC_DATES.current_date.format("YYYY-MM-DD"),
 };
@@ -83,6 +87,7 @@ export default {
     "Leave scenario": Object.keys(leaveScenarioMap)[0],
     "Leave type": leaveTypes[0],
     "Approval time": APPROVAL_TIME.AFTER_FOURTEEN_DAYS,
+    "Delay transaction type": DELAY_TRANSACTION_TYPE.ADDRESS_VALIDATION_ERROR,
     "Payment method": PAYMENT_METHOD.CHECK,
     "Transaction date": TRANSACTION_DATE.SAME_DAY,
     "Show holiday alert": false,
@@ -92,6 +97,7 @@ export default {
       control: {
         type: "radio",
       },
+      description: "Determines whether to show checkback dates in intro text",
       options: [
         PAYMENT_OPTIONS.REGULAR,
         PAYMENT_OPTIONS.RETROACTIVE,
@@ -103,35 +109,52 @@ export default {
         type: "radio",
       },
       options: Object.values(PAYMENT_METHOD),
+      description: "Sets the payment method",
     },
     "Approval time": {
       control: {
         type: "radio",
         options: Object.values(APPROVAL_TIME),
       },
+      description:
+        "Determines which introduction text to display for checkback dates",
+    },
+    "Delay transaction type": {
+      control: {
+        type: "radio",
+      },
+      description:
+        "Effects the delay time to display (dependent on transaction date) and delay messages",
+      options: Object.values(DELAY_TRANSACTION_TYPE),
     },
     "Leave scenario": {
       control: {
         type: "radio",
         options: Object.keys(leaveScenarioMap),
       },
+      description: "Effects the intro text for timing on receiving payments",
     },
     "Leave type": {
       control: {
         type: "radio",
         options: leaveTypes,
       },
+      description:
+        "Determines if an information alert is shown for Medical (pregnancy) and Bonding (newborn) conditions",
     },
     "Transaction date": {
       control: {
         type: "radio",
         options: Object.values(TRANSACTION_DATE),
       },
+      description:
+        "Determines if we should display the delay status and message based on the transaction date relative to the current date",
     },
     "Show holiday alert": {
       control: {
         type: "boolean",
       },
+      description: "Displays the holiday alert",
     },
   },
 };
@@ -142,6 +165,7 @@ export const DefaultStory = (
     "Leave scenario": keyof typeof leaveScenarioMap;
     "Leave type": AbsencePeriodTypes;
     "Approval time": keyof typeof APPROVAL_TIME;
+    "Delay transaction type": WritebackTransactionStatus;
     "Payment method": keyof typeof PAYMENT_METHOD;
     "Transaction date": keyof typeof TRANSACTION_DATE;
     "Show holiday alert": boolean;
@@ -180,7 +204,7 @@ export const DefaultStory = (
           payment_method: args["Payment method"],
           status: "Delayed",
           transaction_date: mappedTransactionDate[args["Transaction date"]],
-          writeback_transaction_status: "Bank Processing Error",
+          writeback_transaction_status: args["Delay transaction type"],
         },
         false,
         firstPaymentStartDate.subtract(-21, "day").format("YYYY-MM-DD")

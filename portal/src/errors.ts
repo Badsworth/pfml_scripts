@@ -246,24 +246,3 @@ export class ValidationError extends BasePortalError {
     this.name = "ValidationError";
   }
 }
-
-/**
- * An error was encountered because the current user is not verified.
- */
-export class LeaveAdminForbiddenError extends ForbiddenError {
-  employer_id: string;
-  has_verification_data: boolean;
-  message: string;
-
-  constructor(
-    employer_id: string,
-    has_verification_data: boolean,
-    message: string
-  ) {
-    super(message);
-    this.employer_id = employer_id;
-    this.has_verification_data = has_verification_data;
-    this.message = message;
-    this.name = "LeaveAdminForbiddenError";
-  }
-}

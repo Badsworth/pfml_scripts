@@ -43,6 +43,11 @@ def tax_id_2():
 
 
 @pytest.fixture
+def tax_id_3():
+    return TaxIdentifierFactory.create(tax_identifier="624105612")
+
+
+@pytest.fixture
 def employee(tax_id):
     return EmployeeFactory.create(tax_identifier=tax_id)
 
@@ -50,6 +55,11 @@ def employee(tax_id):
 @pytest.fixture
 def employee_2(tax_id_2):
     return EmployeeFactory.create(tax_identifier=tax_id_2)
+
+
+@pytest.fixture
+def employee_3(tax_id_3):
+    return EmployeeFactory.create(tax_identifier=tax_id_3)
 
 
 @pytest.fixture
@@ -889,6 +899,95 @@ def test_benefit_year_search_current_year_at_edge_start_and_end(
         assert_benefit_year_search_response(response, expected_benefit_years)
 
 
+def test_benefit_years_search_end_date_within(
+    client,
+    test_db_session,
+    initialize_factories_session,
+    tax_id,
+    auth_token,
+    user,
+    employee,
+):
+    ApplicationFactory.create(user=user, tax_identifier=tax_id)
+
+    by_1 = BenefitYear(
+        start_date=date(2018, 12, 30),
+        end_date=date(2019, 12, 28),
+        employee_id=employee.employee_id,
+        total_wages=Decimal(0),
+    )
+    by_2 = BenefitYear(
+        start_date=date(2019, 12, 29),
+        end_date=date(2020, 12, 26),
+        employee_id=employee.employee_id,
+        total_wages=Decimal(0),
+    )
+    test_db_session.add(by_1)
+    test_db_session.add(by_2)
+    test_db_session.commit()
+
+    by_1_response = {
+        "benefit_year_end_date": date(2019, 12, 28).strftime("%Y-%m-%d"),
+        "benefit_year_start_date": date(2018, 12, 30).strftime("%Y-%m-%d"),
+        "employee_id": employee.employee_id.__str__(),
+        "current_benefit_year": False,
+    }
+
+    by_2_response = {
+        "benefit_year_end_date": date(2020, 12, 26).strftime("%Y-%m-%d"),
+        "benefit_year_start_date": date(2019, 12, 29).strftime("%Y-%m-%d"),
+        "employee_id": employee.employee_id.__str__(),
+        "current_benefit_year": False,
+    }
+
+    # end date for by_2 is within the provided date range
+    response = client.post(
+        "/v1/benefit-years/search",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"terms": {"end_date_within": ["2020-12-20", "2021-01-05"]}},
+    )
+    assert_benefit_year_search_response(response, [by_2_response])
+
+    # end date for by_1 is within the provided date range
+
+    response = client.post(
+        "/v1/benefit-years/search",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"terms": {"end_date_within": ["2019-12-20", "2020-01-05"]}},
+    )
+    assert_benefit_year_search_response(response, [by_1_response])
+
+    # neither benefit year's end date is within the provided date range
+    response = client.post(
+        "/v1/benefit-years/search",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"terms": {"end_date_within": ["2021-01-20", "2021-03-05"]}},
+    )
+    assert_benefit_year_search_response(response, [])
+
+    # testing invalid inputs for end_date_within
+    response = client.post(
+        "/v1/benefit-years/search",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"terms": {"end_date_within": ["2021-01-20"]}},
+    )
+    assert response.status_code == 400
+
+    response = client.post(
+        "/v1/benefit-years/search",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"terms": {"end_date_within": ["2021-01-20", "2021-03-05", "2021-04-20"]}},
+    )
+    assert response.status_code == 400
+
+    response = client.post(
+        "/v1/benefit-years/search",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"terms": {"end_date_within": ["20210120", "20210305"]}},
+    )
+    assert response.status_code == 400
+
+
 def test_benefit_year_search_current(
     client,
     test_db_session,
@@ -994,6 +1093,124 @@ def test_benefit_year_search_current(
         },
     ]
     assert_benefit_year_search_response(response_current_false, expected_response_currrent_false)
+
+
+@freeze_time("2020-09-13")
+def test_benefit_year_search_by_employee_id(
+    client,
+    test_db_session,
+    initialize_factories_session,
+    tax_id,
+    auth_token,
+    user,
+    employee,
+    tax_id_2,
+    employee_2,
+    tax_id_3,
+    employee_3,
+):
+    # Create two applications for the same user but associated with different employees
+    ApplicationFactory.create(user=user, tax_identifier=tax_id)
+    ApplicationFactory.create(user=user, tax_identifier=tax_id_2)
+    # Create one application for employee 3
+    ApplicationFactory.create(tax_identifier=tax_id_3)
+    # Create four benefit years, two associated with employee_1
+    # one associated with employee_2 and one with employee_3
+    employee_1_by_1 = BenefitYear(
+        start_date=date(2018, 12, 30),
+        end_date=date(2019, 12, 28),
+        employee_id=employee.employee_id,
+        total_wages=Decimal(0),
+    )
+    employee_1_by_2 = BenefitYear(
+        start_date=date(2019, 12, 29),
+        end_date=date(2020, 12, 26),
+        employee_id=employee.employee_id,
+        total_wages=Decimal(0),
+    )
+    employee_2_by_1 = BenefitYear(
+        start_date=date(2019, 12, 29),
+        end_date=date(2020, 12, 26),
+        employee_id=employee_2.employee_id,
+        total_wages=Decimal(0),
+    )
+    employee_3_by_1 = BenefitYear(
+        start_date=date(2019, 12, 29),
+        end_date=date(2020, 12, 26),
+        employee_id=employee_3.employee_id,
+        total_wages=Decimal(0),
+    )
+    test_db_session.add(employee_1_by_1)
+    test_db_session.add(employee_1_by_2)
+    test_db_session.add(employee_2_by_1)
+    test_db_session.add(employee_3_by_1)
+    test_db_session.commit()
+
+    employee_1_by_1_response = {
+        "benefit_year_end_date": date(2019, 12, 28).strftime("%Y-%m-%d"),
+        "benefit_year_start_date": date(2018, 12, 30).strftime("%Y-%m-%d"),
+        "employee_id": employee.employee_id.__str__(),
+        "current_benefit_year": False,
+    }
+    employee_1_by_2_response = {
+        "benefit_year_end_date": date(2020, 12, 26).strftime("%Y-%m-%d"),
+        "benefit_year_start_date": date(2019, 12, 29).strftime("%Y-%m-%d"),
+        "employee_id": employee.employee_id.__str__(),
+        "current_benefit_year": True,
+    }
+    employee_2_by_1_response = {
+        "benefit_year_end_date": date(2020, 12, 26).strftime("%Y-%m-%d"),
+        "benefit_year_start_date": date(2019, 12, 29).strftime("%Y-%m-%d"),
+        "employee_id": employee_2.employee_id.__str__(),
+        "current_benefit_year": True,
+    }
+
+    # search with no filter for employee id
+    response = client.post(
+        "/v1/benefit-years/search",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"terms": {}},
+    )
+    # should continue to return all benefit_years the current user is authorized to view.
+    expected_response = [
+        employee_1_by_1_response,
+        employee_1_by_2_response,
+        employee_2_by_1_response,
+    ]
+    assert_benefit_year_search_response(response, expected_response)
+
+    # search with filter for only employee 1 in the request body
+    terms = {"employee_id": employee.employee_id}
+
+    response = client.post(
+        "/v1/benefit-years/search",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"terms": terms},
+    )
+    assert_benefit_year_search_response(
+        response, [employee_1_by_1_response, employee_1_by_2_response]
+    )
+
+    # search with filter for only employee 2 in the request body
+    terms = {"employee_id": employee_2.employee_id}
+
+    response = client.post(
+        "/v1/benefit-years/search",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"terms": terms},
+    )
+    assert_benefit_year_search_response(response, [employee_2_by_1_response])
+
+    # search with filter for only employee 3 in the request body returns no data since
+    # employee 3 is not associated with the current user
+    terms = {"employee_id": employee_3.employee_id}
+
+    response = client.post(
+        "/v1/benefit-years/search",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"terms": terms},
+    )
+    assert_benefit_year_search_response(response, [])
 
 
 def assert_benefit_year_search_response(response, expected_benefit_years):

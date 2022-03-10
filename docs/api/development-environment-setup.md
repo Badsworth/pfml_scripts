@@ -95,7 +95,7 @@ For example:
 
 To setup a development environment outside of Docker, you'll need to install a few things.
 
-1. Install Python 3.9.7
+1. Install Python 3.9.
    [pyenv](https://github.com/pyenv/pyenv#installation) is one popular option for installing Python,
    or [asdf](https://asdf-vm.com/).
 2. After installing and activating the right version of Python, install

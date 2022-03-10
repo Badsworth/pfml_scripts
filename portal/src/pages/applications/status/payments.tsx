@@ -142,10 +142,23 @@ export const Payments = ({
 
   const shouldShowPaymentsTable = hasPayments || hasWaitingWeek;
 
-  const getPaymentAmount = (status: string, amount: number | null) => {
+  const getPaymentAmountOrStatus = (
+    status: string,
+    amount: number | null,
+    writeback_transaction_status: WritebackTransactionStatus,
+    transaction_date: string | null
+  ) => {
     if (status === "Sent to bank") {
       return t("pages.payments.tableAmountSent", { amount });
-    } else if (status === "Pending") {
+    } else if (
+      status === "Pending" ||
+      (status === "Delayed" &&
+        transaction_date &&
+        !isAfterDelayProcessingTime(
+          writeback_transaction_status,
+          transaction_date
+        ))
+    ) {
       return "Processing";
     }
     return status;
@@ -306,7 +319,12 @@ export const Payments = ({
                             )}
                           </td>
                           <td data-label={tableColumns[1]}>
-                            {getPaymentAmount(status, amount)}
+                            {getPaymentAmountOrStatus(
+                              status,
+                              amount,
+                              writeback_transaction_status,
+                              transaction_date
+                            )}
                           </td>
                           <td data-label={tableColumns[2]}>
                             <Trans

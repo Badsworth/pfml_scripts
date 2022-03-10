@@ -36,6 +36,7 @@ from massgov.pfml.db.models.payments import (
     Pfml1099Withholding,
     WithholdingType,
 )
+from massgov.pfml.util.datetime import get_now_us_eastern
 
 
 class Constants:
@@ -1894,7 +1895,6 @@ def get_1099_records_to_file(db_session: db.Session) -> List[Pfml1099]:
             func.rank()
             .over(
                 order_by=[
-                    # Pfml1099.employee_id.desc(),
                     Pfml1099Batch.batch_run_date.desc(),
                     Pfml1099.created_at.desc(),
                 ],
@@ -1912,3 +1912,10 @@ def get_1099_records_to_file(db_session: db.Session) -> List[Pfml1099]:
         len(irs_1099_records),
     )
     return irs_1099_records
+
+
+def update_submission_date(db_session: db.Session, batch_id: UUID) -> None:
+
+    db_session.query(Pfml1099).filter(
+        Pfml1099.pfml_1099_batch_id == batch_id,
+    ).update({Pfml1099.irs_submission_date: get_now_us_eastern()})

@@ -818,16 +818,6 @@ def get_or_register_employee_fineos_web_id(
     return register_employee(fineos, tax_identifier, employer_fein, db_session)
 
 
-def get_fineos_absence_id_from_application(application: Application) -> str:
-    if application.claim is None:
-        raise ValueError("Missing claim")
-
-    if application.claim.fineos_absence_id is None:
-        raise ValueError("Missing absence id")
-
-    return application.claim.fineos_absence_id
-
-
 def build_bonding_date_reflexive_question(
     application: Application,
 ) -> massgov.pfml.fineos.models.customer_api.AdditionalInformation:
@@ -1096,7 +1086,39 @@ def upload_document(
     fineos = massgov.pfml.fineos.create_client()
 
     fineos_web_id = get_or_register_employee_fineos_web_id(fineos, application, db_session)
-    absence_id = get_fineos_absence_id_from_application(application)
+
+    absence_id = application.fineos_absence_id
+    if absence_id is None:
+        raise ValueError("Missing absence id")
+
+    if with_multipart:
+        upload_fn = fineos.upload_document_multipart
+    else:
+        upload_fn = fineos.upload_document
+
+    fineos_document = upload_fn(
+        fineos_web_id, absence_id, document_type, file_content, file_name, content_type, description
+    )
+    return fineos_document
+
+
+def upload_document_with_claim(
+    claim: Claim,
+    document_type: str,
+    file_content: bytes,
+    file_name: str,
+    content_type: str,
+    description: str,
+    db_session: massgov.pfml.db.Session,
+    with_multipart: bool = False,
+) -> massgov.pfml.fineos.models.customer_api.Document:
+    fineos = massgov.pfml.fineos.create_client()
+
+    fineos_web_id = register_employee_with_claim(fineos, db_session, claim)
+
+    absence_id = claim.fineos_absence_id
+    if absence_id is None:
+        raise ValueError("Missing absence id")
 
     if with_multipart:
         upload_fn = fineos.upload_document_multipart
@@ -1139,7 +1161,10 @@ def get_documents(
     fineos = massgov.pfml.fineos.create_client()
 
     fineos_web_id = get_or_register_employee_fineos_web_id(fineos, application, db_session)
-    absence_id = get_fineos_absence_id_from_application(application)
+
+    absence_id = application.fineos_absence_id
+    if absence_id is None:
+        raise ValueError("Missing absence id")
 
     fineos_documents = fineos.get_documents(fineos_web_id, absence_id)
     document_responses = list(
@@ -1218,7 +1243,10 @@ def download_document(
     fineos = massgov.pfml.fineos.create_client()
 
     fineos_web_id = get_or_register_employee_fineos_web_id(fineos, application, db_session)
-    absence_id = get_fineos_absence_id_from_application(application)
+
+    absence_id = application.fineos_absence_id
+    if absence_id is None:
+        raise ValueError("Missing absence id")
 
     if not document_type or document_type.lower() in SUB_CASE_DOC_TYPES:
         fineos_documents = fineos.get_documents(fineos_web_id, absence_id)
@@ -1467,7 +1495,11 @@ def create_eform(
 ) -> None:
     fineos = massgov.pfml.fineos.create_client()
     fineos_web_id = get_or_register_employee_fineos_web_id(fineos, application, db_session)
-    fineos_absence_id = get_fineos_absence_id_from_application(application)
+
+    fineos_absence_id = application.fineos_absence_id
+    if fineos_absence_id is None:
+        raise ValueError("Missing absence id")
+
     fineos.customer_create_eform(fineos_web_id, fineos_absence_id, eform)
 
 
@@ -1533,7 +1565,11 @@ def send_tax_withholding_preference(
 ) -> None:
     if not fineos_client:
         fineos_client = massgov.pfml.fineos.create_client()
-    absence_id = get_fineos_absence_id_from_application(application)
+
+    absence_id = application.fineos_absence_id
+    if absence_id is None:
+        raise ValueError("Missing absence id")
+
     absence_id = absence_id.rstrip()
     fineos_client.send_tax_withholding_preference(absence_id, is_withholding_tax)
 

@@ -1,7 +1,6 @@
 from typing import Dict, List, Optional, Tuple, Union
 from uuid import UUID
 
-import newrelic.agent
 from sqlalchemy.orm.session import Session
 
 import massgov
@@ -38,18 +37,6 @@ def split_fineos_absence_period_id(id: str) -> Tuple[int, int]:
         )
         raise ValidationException(errors=[validation_error], message=message, data={})
     return int(period_ids[1]), int(period_ids[2])
-
-
-def split_fineos_leave_request_id(id: str, log_attributes: Dict) -> int:
-    period_ids = id.split("-")
-    if len(period_ids) != 3 or not period_ids[2].isdigit():
-        message = f"Invalid fineos leave request id format, leave request id: {id}"
-        logger.error(message, extra={"fineos_leave_request_id": id, **log_attributes})
-        validation_error = ValidationErrorDetail(
-            message=message, type=IssueType.value_error, field="id/periodReference"
-        )
-        raise ValidationException(errors=[validation_error], message=message, data={})
-    return int(period_ids[2])
 
 
 def get_absence_period_by_claim_id_and_fineos_ids(
@@ -129,10 +116,6 @@ def parse_fineos_period_leave_request(
     db_absence_period.leave_request_decision_id = LeaveRequestDecision.get_id(
         leave_request.decisionStatus
     )
-    if leave_request.id:
-        db_absence_period.fineos_leave_request_id = split_fineos_leave_request_id(
-            leave_request.id, log_attributes
-        )
     return db_absence_period
 
 
@@ -217,13 +200,6 @@ def convert_fineos_absence_period_to_claim_response_absence_period(
     absence_period.reason_qualifier_one = leave_request.qualifier1
     absence_period.reason_qualifier_two = leave_request.qualifier2
     absence_period.request_decision = leave_request.decisionStatus
-    if leave_request.id:
-        try:
-            absence_period.fineos_leave_request_id = split_fineos_leave_request_id(
-                leave_request.id, log_attributes
-            )
-        except ValidationException:
-            newrelic.agent.notice_error(attributes=log_attributes)
     return absence_period
 
 

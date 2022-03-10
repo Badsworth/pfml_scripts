@@ -3,7 +3,7 @@ from typing import List
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging
-from massgov.pfml.db.models.employees import State
+from massgov.pfml.db.models.employees import PaymentTransactionType, State
 from massgov.pfml.delegated_payments.postprocessing.dor_fineos_employee_name_mismatch_processor import (
     DORFineosEmployeeNameMismatchProcessor,
 )
@@ -99,11 +99,20 @@ class PaymentPostProcessingStep(Step):
                 ),
             )
 
-            # We simply add info for the audit report here without erroring
+            if (
+                payment_container.payment.payment_transaction_type_id
+                == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+            ):
+                # Set the state to process this payment in related payment step
+                end_state = State.EMPLOYER_REIMBURSEMENT_READY_FOR_PROCESSING
+            else:
+                end_state = State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
+
             state_log_util.create_finished_state_log(
-                end_state=State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
+                end_state=end_state,
                 outcome=state_log_util.build_outcome(
-                    "Completed post processing", validation_container=None
+                    "Completed post processing",
+                    validation_container=None,
                 ),
                 associated_model=payment_container.payment,
                 db_session=self.db_session,

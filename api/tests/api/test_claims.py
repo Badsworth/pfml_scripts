@@ -24,6 +24,7 @@ from massgov.pfml.db.models.absences import AbsencePeriodType, AbsenceStatus
 from massgov.pfml.db.models.applications import FINEOSWebIdExt
 from massgov.pfml.db.models.employees import (
     AbsencePeriod,
+    ChangeRequest,
     Claim,
     LeaveRequestDecision,
     LkManagedRequirementStatus,
@@ -39,6 +40,7 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.db.models.factories import (
     AbsencePeriodFactory,
     ApplicationFactory,
+    ChangeRequestFactory,
     ClaimFactory,
     EmployeeFactory,
     EmployeeWithFineosNumberFactory,
@@ -51,7 +53,6 @@ from massgov.pfml.db.models.factories import (
 )
 from massgov.pfml.db.queries.absence_periods import (
     split_fineos_absence_period_id,
-    split_fineos_leave_request_id,
     upsert_absence_period_from_fineos_period,
 )
 from massgov.pfml.db.queries.get_claims_query import ActionRequiredStatusFilter
@@ -904,13 +905,6 @@ class TestGetClaimReview:
         return PeriodDecisions.parse_obj(absence_details)
 
     @pytest.fixture
-    def mock_absence_details_invalid_leave_request_id(self, absence_details_data):
-        absence_details = absence_details_data.copy()
-        absence_details["decisions"][0]["period"]["leaveRequest"]["id"] = "PL0000100001"
-        absence_details["decisions"][1]["period"]["leaveRequest"]["id"] = "PL-00001-one"
-        return PeriodDecisions.parse_obj(absence_details)
-
-    @pytest.fixture
     def employer(self):
         return EmployerFactory.create(employer_fein="112222222")
 
@@ -1061,26 +1055,6 @@ class TestGetClaimReview:
         self._assert_no_absence_period_data_for_claim(test_db_session, claim)
 
     @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence_period_decisions")
-    def test_employer_get_claim_review_creates_absence_period_invalid_leave_request_id(
-        self,
-        mock_get_absence,
-        test_db_session,
-        client,
-        employer_auth_token,
-        mock_absence_details_invalid_leave_request_id,
-        claim,
-    ):
-        self._assert_no_absence_period_data_for_claim(test_db_session, claim)
-        mock_get_absence.return_value = mock_absence_details_invalid_leave_request_id
-        response = client.get(
-            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
-            headers={"Authorization": f"Bearer {employer_auth_token}"},
-        )
-
-        assert response.status_code == 400
-        self._assert_no_absence_period_data_for_claim(test_db_session, claim)
-
-    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence_period_decisions")
     def test_employer_get_claim_returns_absence_periods_from_fineos(
         self, mock_get_absence, client, employer_auth_token, mock_absence_details_create, claim
     ):
@@ -1095,8 +1069,7 @@ class TestGetClaimReview:
         periods = [decision.period for decision in mock_absence_details_create.decisions]
         for fineos_period_data, absence_data in zip(periods, absence_periods):
             class_id, index_id = split_fineos_absence_period_id(fineos_period_data.periodReference)
-            leave_request_id = split_fineos_leave_request_id(fineos_period_data.leaveRequest.id, {})
-            assert leave_request_id == absence_data["fineos_leave_request_id"]
+            assert absence_data["fineos_leave_request_id"] is None
             assert (
                 absence_data["period_type"]
                 == AbsencePeriodType.CONTINUOUS.absence_period_type_description
@@ -4085,6 +4058,7 @@ class TestGetClaimsEndpoint:
         def claim_no_absence_period(self, employer, employee):
             return ClaimFactory.create(employer=employer, employee=employee, claim_type_id=1)
 
+        ## Note testing w/ None absence_reason_qualifier_two to test field nullability
         @pytest.fixture()
         def absence_periods(self, claim):
             start = date.today() + timedelta(days=5)
@@ -4092,7 +4066,10 @@ class TestGetClaimsEndpoint:
             for _ in range(5):
                 end = start + timedelta(days=10)
                 period = AbsencePeriodFactory.create(
-                    claim=claim, absence_period_start_date=start, absence_period_end_date=end
+                    claim=claim,
+                    absence_period_start_date=start,
+                    absence_period_end_date=end,
+                    absence_reason_qualifier_two_id=None,
                 )
                 periods.append(period)
                 start = start + timedelta(days=20)
@@ -6110,3 +6087,44 @@ class TestSubmitChangeRequest:
             response.get_json()["message"]
             == "Could not find ChangeRequest with ID 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32"
         )
+
+
+class TestDeleteChangeRequest:
+    def test_success(self, client, auth_token, test_db_session):
+        change_request = ChangeRequestFactory.create()
+        response = client.delete(
+            f"/v1/change-request/{change_request.change_request_id}",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert response.status_code == 200
+        response_body = response.get_json()
+        assert response_body["message"] == "Successfully deleted change request"
+
+        db_entry = (
+            test_db_session.query(ChangeRequest)
+            .filter(ChangeRequest.change_request_id == change_request.change_request_id)
+            .one_or_none()
+        )
+        assert db_entry is None
+
+    def test_missing_change_request(self, client, auth_token):
+        response = client.delete(
+            "/v1/change-request/009fa369-291b-403f-a85a-15e938c26f2f",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert response.status_code == 404
+        response_body = response.get_json()
+        assert (
+            response_body["message"]
+            == "Could not find ChangeRequest with ID 009fa369-291b-403f-a85a-15e938c26f2f"
+        )
+
+    def test_error_on_submitted_change_request(self, client, auth_token):
+        change_request = ChangeRequestFactory.create(submitted_time=datetime_util.utcnow())
+        response = client.delete(
+            f"/v1/change-request/{change_request.change_request_id}",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert response.status_code == 400
+        response_body = response.get_json()
+        assert response_body["message"] == "Cannot delete a submitted request"

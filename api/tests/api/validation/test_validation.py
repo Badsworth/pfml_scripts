@@ -119,6 +119,33 @@ def validate_invalid_response(response, url, message, field_prefix=""):
     assert interests_errors[1]["rule"]
 
 
+def test_log_validation_error_aggregated_field(caplog):
+    caplog.set_level(logging.INFO)  # noqa: B1
+
+    exception = ValidationException(
+        [
+            ValidationErrorDetail(
+                rule=IssueRule.conditional,
+                type=IssueType.value_error,
+                field="data.5.absence_periods.12.reason_qualifier_two",
+                message="something something",
+            )
+        ],
+        "Response Validation Error",
+        {},
+    )
+
+    log_validation_error(exception, exception.errors[0])
+
+    assert [(r.funcName, r.levelname, r.message) for r in caplog.records] == [
+        (
+            "log_and_capture_exception",
+            "ERROR",
+            "Response Validation Error (field: data.<NUM>.absence_periods.<NUM>.reason_qualifier_two, type: value_error, rule: conditional)",
+        )
+    ]
+
+
 def test_log_validation_error_unexpected_exception_handling(caplog):
     caplog.set_level(logging.INFO)  # noqa: B1
 

@@ -45,7 +45,7 @@ describeIf(
           if (config("HAS_APRIL_UPGRADE") === "true") {
             claimPage.approve("Completed", true);
           } else {
-            claimPage.approve("Completed", false);
+            claimPage.approve();
           }
           claimPage.triggerNotice("Designation Notice");
         });

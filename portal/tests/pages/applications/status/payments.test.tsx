@@ -19,6 +19,7 @@ import dayjs from "dayjs";
 import dayjsBusinessTime from "dayjs-business-time";
 import routes from "../../../../src/routes";
 import { screen } from "@testing-library/react";
+
 dayjs.extend(dayjsBusinessTime);
 
 const createApprovalNotice = (approvalDate: string) => {
@@ -598,22 +599,23 @@ describe("Payments", () => {
     });
 
     const staticTransactionDate = dayjs().format("YYYY-MM-DD");
+    // transaction date to be compared with current date, current date
     const transactionDate = {
-      "after two business days": dayjs(staticTransactionDate)
-        .addBusinessDays(2)
+      "five business days before today": dayjs(staticTransactionDate)
+        .subtractBusinessDays(5)
         .format("YYYY-MM-DD"),
-      "after five business days": dayjs(staticTransactionDate)
-        .addBusinessDays(5)
+      "two business days before today": dayjs(staticTransactionDate)
+        .subtractBusinessDays(2)
         .format("YYYY-MM-DD"),
       "same day": staticTransactionDate,
     };
 
-    const transactionDateScenarios = Object.keys(transactionDate) as Array<
-      keyof typeof transactionDate
-    >;
+    const transactionDateScenarios = Object.keys(
+      transactionDate
+    ).sort() as Array<keyof typeof transactionDate>;
 
     it.each(transactionDateScenarios)(
-      "conditional render for delay %s ",
+      "conditional render for delays with immediate display time %s: ",
       (state) => {
         renderPage(
           Payments,
@@ -646,6 +648,76 @@ describe("Payments", () => {
       }
     );
 
+    const [beforeFiveDays, ...beforeTwoDaysOrSameDay] =
+      transactionDateScenarios;
+    it.each(beforeTwoDaysOrSameDay)(
+      "conditional render for delayed display time, current date before or same as delay date:%s ",
+      (state) => {
+        renderPage(
+          Payments,
+          {
+            addCustomSetup: setupHelper({
+              payments: {
+                absence_case_id: "NTN-12345-ABS-01",
+                payments: [
+                  createMockPayment(
+                    {
+                      status: "Delayed",
+                      sent_to_bank_date: null,
+                      writeback_transaction_status: "Address Validation Error",
+                      transaction_date: transactionDate[state],
+                    },
+                    true
+                  ),
+                ],
+              },
+            }),
+          },
+          props
+        );
+
+        const addressDelayReasonText =
+          "This payment is delayed due to an error with your provided mailing address.";
+        expect(
+          screen.queryByText(addressDelayReasonText, { exact: false })
+        ).not.toBeInTheDocument();
+        expect(screen.queryByText("Delayed")).not.toBeInTheDocument();
+        expect(screen.queryByText("Processing")).toBeInTheDocument();
+      }
+    );
+
+    it("conditional render for delayed display time, current date after delay date", () => {
+      renderPage(
+        Payments,
+        {
+          addCustomSetup: setupHelper({
+            payments: {
+              absence_case_id: "NTN-12345-ABS-01",
+              payments: [
+                createMockPayment(
+                  {
+                    status: "Delayed",
+                    sent_to_bank_date: null,
+                    writeback_transaction_status: "Address Validation Error",
+                    transaction_date: transactionDate[beforeFiveDays],
+                  },
+                  true
+                ),
+              ],
+            },
+          }),
+        },
+        props
+      );
+      const addressDelayReasonText =
+        "This payment is delayed due to an error with your provided mailing address.";
+      expect(
+        screen.queryByText(addressDelayReasonText, { exact: false })
+      ).toBeInTheDocument();
+      expect(screen.queryByText("Delayed")).toBeInTheDocument();
+      expect(screen.queryByText("Processing")).not.toBeInTheDocument();
+    });
+
     it("will not display updated delay text if claimantShowPaymentsPhaseThree feature flag is false", () => {
       process.env.featureFlags = JSON.stringify({
         claimantShowPaymentsPhaseThree: false,
@@ -663,7 +735,7 @@ describe("Payments", () => {
                     sent_to_bank_date: null,
                     writeback_transaction_status: "Bank Processing Error",
                     transaction_date:
-                      transactionDate["after five business days"],
+                      transactionDate["five business days before today"],
                   },
                   true
                 ),

@@ -82,30 +82,32 @@ class Generate1099IRSfilingStep(Step):
     def _generate_1099_irs_filing(self) -> None:
         logger.info("1099 Documents - Generate 1099.org file to be transmitted to IRS")
         pfml_1099 = pfml_1099_util.get_1099_records_to_file(self.db_session)
-        if pfml_1099_util.is_test_file() == "T":
-            pfml_1099 = pfml_1099[:11]
-        self.total_b_record = len(pfml_1099)
-        logger.info("Total b records are, %s", self.total_b_record)
-        t_template = self._create_t_template()
-        t_entries = self._load_t_rec_data(t_template)
-        a_template = self._create_a_template()
-        a_entries = self._load_a_rec_data(a_template)
-        entries = t_entries + a_entries
-        b_template = self._create_b_template()
-        b_entries = self._load_b_rec_data(b_template, pfml_1099)
-        for b_records in b_entries:
-            entries = entries + b_records
-        c_template = self._create_c_template()
-        ctl_total, st_tax, fed_tax = self._get_totals(pfml_1099)
-        c_entries = self._load_c_rec_data(c_template, ctl_total)
-        k_template = self._create_k_template()
-        k_entries = self._load_k_rec_data(k_template, ctl_total, st_tax, fed_tax)
-        f_template = self._create_f_template()
-        f_entries = self._load_f_rec_data(f_template)
-        entries += c_entries + k_entries + f_entries
-        logger.info("Completed irs file data mapping")
-        self._create_irs_file(entries)
-        self.db_session.commit()
+        if len(pfml_1099) > 0:
+            if pfml_1099_util.is_test_file() == "T":
+                pfml_1099 = pfml_1099[:11]
+            self.total_b_record = len(pfml_1099)
+            logger.info("Total b records are, %s", self.total_b_record)
+            t_template = self._create_t_template()
+            t_entries = self._load_t_rec_data(t_template)
+            a_template = self._create_a_template()
+            a_entries = self._load_a_rec_data(a_template)
+            entries = t_entries + a_entries
+            b_template = self._create_b_template()
+            b_entries = self._load_b_rec_data(b_template, pfml_1099)
+            for b_records in b_entries:
+                entries = entries + b_records
+            c_template = self._create_c_template()
+            ctl_total, st_tax, fed_tax = self._get_totals(pfml_1099)
+            c_entries = self._load_c_rec_data(c_template, ctl_total)
+            k_template = self._create_k_template()
+            k_entries = self._load_k_rec_data(k_template, ctl_total, st_tax, fed_tax)
+            f_template = self._create_f_template()
+            f_entries = self._load_f_rec_data(f_template)
+            entries += c_entries + k_entries + f_entries
+            logger.info("Completed irs file data mapping")
+            self._create_irs_file(entries)
+            pfml_1099_util.update_submission_date(self.db_session, pfml_1099[0].pfml_1099_batch_id)
+            self.db_session.commit()
 
     def _create_t_template(self) -> str:
         temp = (
@@ -286,7 +288,6 @@ class Generate1099IRSfilingStep(Step):
                 FE_IND=Constants.BLANK_SPACE,
                 PAYEE_NM1=self._get_full_name(records.first_name, records.last_name, "PAYEE_NM1"),
                 PAYEE_NM2=self._get_full_name(records.first_name, records.last_name, "PAYEE_NM2"),
-                # B40=Constants.BLANK_SPACE,
                 PAYEE_ADDRESS=records.address_line_1.upper(),
                 B40_1=Constants.BLANK_SPACE,
                 PAYEE_CTY=records.city.upper(),
@@ -304,7 +305,6 @@ class Generate1099IRSfilingStep(Step):
                 ST_TAX=self._format_amount_fields(records.state_tax_withholdings),
                 LOCAL_TAX=self._format_amount_fields(records.federal_tax_withholdings),
                 CSF_CD=Constants.COMBINED_ST_FED_CD,
-                # B2_1=Constants.BLANK_SPACE,
             )
             b_record = template_str.format_map(b_dict)
             b_seq = b_seq + 1
@@ -350,7 +350,6 @@ class Generate1099IRSfilingStep(Step):
             FED_TAX=fed_tax,
             B4=Constants.BLANK_SPACE,
             CSF_CD=Constants.COMBINED_ST_FED_CD,
-            # B2=Constants.BLANK_SPACE,
         )
         k_record = template_str.format_map(k_dict)
         self.seq_number += 1
