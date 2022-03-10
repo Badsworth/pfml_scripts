@@ -892,7 +892,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
 
         return (
             employer_create_or_update.fineos_customer_nbr,
-            fake_customer_no(employer_create_or_update.employer_fein),
+            fake_customer_no(employer_create_or_update.employer_fein.to_unformatted_str()),
         )
 
     def create_or_update_leave_period_change_request(

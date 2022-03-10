@@ -163,7 +163,7 @@ def register_employee(
         employer_id=employer_id,
         first_name=None,
         last_name=None,
-        national_insurance_no=employee_ssn.to_unformatted_str(),
+        national_insurance_no=employee_ssn,
     )
 
     fineos.register_api_user(employee_registration)

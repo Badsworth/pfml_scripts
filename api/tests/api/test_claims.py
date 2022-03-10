@@ -68,7 +68,7 @@ from massgov.pfml.fineos.models.group_client_api import (
     ManagedRequirementDetails,
     PeriodDecisions,
 )
-from massgov.pfml.types import Fein
+from massgov.pfml.types import Fein, TaxId
 from massgov.pfml.util.pydantic.types import FEINFormattedStr
 
 
@@ -906,7 +906,7 @@ class TestGetClaimReview:
 
     @pytest.fixture
     def employer(self):
-        return EmployerFactory.create(employer_fein="112222222")
+        return EmployerFactory.create(employer_fein=Fein("112222222"))
 
     @pytest.fixture
     def claim(self, test_db_session, employer_user, employer, test_verification):
@@ -1927,11 +1927,11 @@ class TestGetClaimEndpoint:
 
     @pytest.fixture
     def employer(self):
-        return EmployerFactory.create(employer_fein="112222222")
+        return EmployerFactory.create(employer_fein=Fein("112222222"))
 
     @pytest.fixture
     def employee(self):
-        tax_identifier = TaxIdentifierFactory.create(tax_identifier="123456789")
+        tax_identifier = TaxIdentifierFactory.create(tax_identifier=TaxId("123456789"))
         return EmployeeFactory.create(tax_identifier_id=tax_identifier.tax_identifier_id)
 
     @pytest.fixture
@@ -2011,8 +2011,8 @@ class TestGetClaimEndpoint:
     def test_get_claim_employee_different_fineos_names(
         self, caplog, client, auth_token, user, test_db_session
     ):
-        employer = EmployerFactory.create(employer_fein="813648030")
-        tax_identifier = TaxIdentifierFactory.create(tax_identifier="587777091")
+        employer = EmployerFactory.create(employer_fein=Fein("813648030"))
+        tax_identifier = TaxIdentifierFactory.create(tax_identifier=TaxId("587777091"))
         employee = EmployeeFactory.create(
             tax_identifier_id=tax_identifier.tax_identifier_id,
             first_name="Foo",
@@ -2055,8 +2055,8 @@ class TestGetClaimEndpoint:
     def test_get_claim_employee_no_fineos_names(
         self, caplog, client, auth_token, user, test_db_session
     ):
-        employer = EmployerFactory.create(employer_fein="813648030")
-        tax_identifier = TaxIdentifierFactory.create(tax_identifier="587777091")
+        employer = EmployerFactory.create(employer_fein=Fein("813648030"))
+        tax_identifier = TaxIdentifierFactory.create(tax_identifier=TaxId("587777091"))
         employee = EmployeeFactory.create(
             tax_identifier_id=tax_identifier.tax_identifier_id,
             first_name="Foo",
@@ -2099,8 +2099,8 @@ class TestGetClaimEndpoint:
     def test_get_claim_user_has_access_as_claimant(
         self, caplog, client, auth_token, user, test_db_session
     ):
-        employer = EmployerFactory.create(employer_fein="813648030")
-        tax_identifier = TaxIdentifierFactory.create(tax_identifier="587777091")
+        employer = EmployerFactory.create(employer_fein=Fein("813648030"))
+        tax_identifier = TaxIdentifierFactory.create(tax_identifier=TaxId("587777091"))
         employee = EmployeeFactory.create(tax_identifier_id=tax_identifier.tax_identifier_id)
         fineos_web_id_ext = FINEOSWebIdExt()
         fineos_web_id_ext.employee_tax_identifier = employee.tax_identifier.tax_identifier
@@ -2128,8 +2128,8 @@ class TestGetClaimEndpoint:
         assert_detailed_claim_response_equal_to_claim_query(claim_data, claim)
 
     def test_get_claim_with_leave_periods(self, caplog, client, auth_token, user, test_db_session):
-        employer = EmployerFactory.create(employer_fein="813648030")
-        tax_identifier = TaxIdentifierFactory.create(tax_identifier="587777091")
+        employer = EmployerFactory.create(employer_fein=Fein("813648030"))
+        tax_identifier = TaxIdentifierFactory.create(tax_identifier=TaxId("587777091"))
         employee = EmployeeFactory.create(tax_identifier_id=tax_identifier.tax_identifier_id)
         fineos_web_id_ext = FINEOSWebIdExt()
         fineos_web_id_ext.employee_tax_identifier = employee.tax_identifier.tax_identifier
@@ -2206,8 +2206,8 @@ class TestGetClaimEndpoint:
         assert error_msg in caplog.text
 
     def test_get_claim_with_managed_requirements(self, client, auth_token, user, test_db_session):
-        employer = EmployerFactory.create(employer_fein="813648030")
-        tax_identifier = TaxIdentifierFactory.create(tax_identifier="587777091")
+        employer = EmployerFactory.create(employer_fein=Fein("813648030"))
+        tax_identifier = TaxIdentifierFactory.create(tax_identifier=TaxId("587777091"))
         employee = EmployeeFactory.create(tax_identifier_id=tax_identifier.tax_identifier_id)
 
         fineos_web_id_ext = FINEOSWebIdExt()
@@ -3251,9 +3251,9 @@ class TestGetClaimsEndpoint:
         assert len(response_body["data"]) == 10
         for claim in response_body["data"]:
             assert (
-                claim["employer"]["employer_fein"] == employer.employer_fein.to_unformatted_str()
+                claim["employer"]["employer_fein"] == employer.employer_fein.to_formatted_str()
                 or claim["employer"]["employer_fein"]
-                == other_employer.employer_fein.to_unformatted_str()
+                == other_employer.employer_fein.to_formatted_str()
             )
 
         # POST /claims/search
@@ -3269,9 +3269,9 @@ class TestGetClaimsEndpoint:
         assert len(response_body1["data"]) == 10
         for claim in response_body1["data"]:
             assert (
-                claim["employer"]["employer_fein"] == employer.employer_fein.to_unformatted_str()
+                claim["employer"]["employer_fein"] == employer.employer_fein.to_formatted_str()
                 or claim["employer"]["employer_fein"]
-                == other_employer.employer_fein.to_unformatted_str()
+                == other_employer.employer_fein.to_formatted_str()
             )
 
     def test_get_claims_for_employee_id_as_employer(
@@ -5452,7 +5452,7 @@ class TestEmployerWithOrgUnitsAccess:
 
     @pytest.fixture()
     def employer(self):
-        employer = EmployerFactory.create(employer_fein="112222222")
+        employer = EmployerFactory.create(employer_fein=Fein("112222222"))
         return employer
 
     @pytest.fixture()
