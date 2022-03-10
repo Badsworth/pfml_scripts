@@ -26,6 +26,7 @@ from massgov.pfml.dua.demographics import (
     load_demographics_file,
     set_employee_occupation_from_demographic_data,
 )
+from massgov.pfml.types import Fein
 from massgov.pfml.util.batch.log import LogEntry
 
 from .helpers import get_mock_reference_file
@@ -256,7 +257,7 @@ def test_set_employee_demographics_duplicate_employee_fineos_customer_numbers(
             gender_code="M",
             occupation_code=5191,
             occupation_description="Packaging and Filling Machine Operators and Tenders",
-            employer_fein=employer.employer_fein,
+            employer_fein=employer.employer_fein.to_unformatted_str(),
             employer_reporting_unit_number=reporting_unit_with_org_unit.dua_id,
         )
 
@@ -266,7 +267,7 @@ def test_set_employee_demographics_duplicate_employee_fineos_customer_numbers(
             gender_code="M",
             occupation_code=5191,
             occupation_description="Packaging and Filling Machine Operators and Tenders",
-            employer_fein=employer.employer_fein,
+            employer_fein=employer.employer_fein.to_unformatted_str(),
             employer_reporting_unit_number=reporting_unit_with_org_unit.dua_id,
         )
 
@@ -508,7 +509,7 @@ def test_set_employee_occupation_from_demographics_data_short_feins(
     test_db_session, initialize_factories_session
 ):
     with LogEntry(test_db_session, "test log entry") as log_entry:
-        employer_one = EmployerFactory(employer_fein="012345678")
+        employer_one = EmployerFactory(employer_fein=Fein("012345678"))
 
         org_unit_one = OrganizationUnitFactory(employer=employer_one)
 
@@ -522,7 +523,7 @@ def test_set_employee_occupation_from_demographics_data_short_feins(
 
         dua_employee_demographic_data = DuaEmployeeDemographicsFactory(
             fineos_customer_number=employee.fineos_customer_number,
-            employer_fein=employer_one.employer_fein.strip("0"),
+            employer_fein=employer_one.employer_fein.to_unformatted_str().strip("0"),
             employer_reporting_unit_number=reporting_unit_one.dua_id,
         )
 
@@ -577,7 +578,7 @@ def test_set_employee_occupation_from_demographics_data_mismatched_employer_caug
         # connected to employer_two in the DB
         DuaEmployeeDemographicsFactory(
             fineos_customer_number=employee.fineos_customer_number,
-            employer_fein=employer_one.employer_fein,
+            employer_fein=employer_one.employer_fein.to_unformatted_str(),
             employer_reporting_unit_number=reporting_unit_two.dua_id,
         )
 
