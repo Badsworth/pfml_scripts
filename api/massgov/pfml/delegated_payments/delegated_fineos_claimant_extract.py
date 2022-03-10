@@ -475,11 +475,7 @@ class ClaimantData:
         # Shouldn't be possible, but making the linter happy
         if employee_feed_record:
             self.employee_tax_identifier = payments_util.validate_db_input(
-                "NATINSNO",
-                employee_feed_record,
-                self.validation_container,
-                True,
-                custom_validator_func=payments_util.tin_validator,
+                "NATINSNO", employee_feed_record, self.validation_container, True
             )
 
             self.date_of_birth = payments_util.validate_db_input(
