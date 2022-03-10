@@ -132,7 +132,9 @@ def _format_employers_for_outbound(employers: List[Employer]) -> List[Dict[str, 
         formatted_employers.append(
             {
                 Constants.employer_id_key: fineos_employer_id,
-                Constants.employer_ein_key: employer.employer_fein.to_unformatted_str().replace("-", ""),
+                Constants.employer_ein_key: employer.employer_fein.to_unformatted_str().replace(
+                    "-", ""
+                ),
             }
         )
     return formatted_employers

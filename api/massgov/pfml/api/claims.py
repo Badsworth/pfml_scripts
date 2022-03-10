@@ -618,7 +618,8 @@ def _process_claims_request(claim_request: ClaimSearchRequest, method_name: str)
                 verified_employers = [
                     employer
                     for employer in employers_list
-                    if employer.employer_fein.to_unformatted_str() not in CLAIMS_DASHBOARD_BLOCKED_FEINS
+                    if employer.employer_fein.to_unformatted_str()
+                    not in CLAIMS_DASHBOARD_BLOCKED_FEINS
                     and current_user.verified_employer(employer)
                 ]
 
