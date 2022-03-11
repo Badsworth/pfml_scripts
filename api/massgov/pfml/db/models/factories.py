@@ -62,6 +62,7 @@ Session = scoped_session(lambda: get_db_session(), scopefunc=lambda: get_db_sess
 
 class Generators:
     AccountKey = factory.Sequence(lambda n: "%011d" % n)
+    EmailAddress = factory.Sequence(lambda n: f"example-{n}@example.com")
     Tin = factory.LazyFunction(lambda: fake.ssn().replace("-", ""))
     Fein = Tin
     Money = factory.LazyFunction(lambda: Decimal(round(random.uniform(0, 50000), 2)))
@@ -108,7 +109,7 @@ class AzureUserFactory(factory.Factory):
     sub_id = factory.Faker("uuid4")
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
-    email_address = factory.Faker("email")
+    email_address = Generators.EmailAddress
     groups = fake.pylist(3, True, "uuid4")
     permissions = fake.pylist(10, True, "int")
 
@@ -119,7 +120,7 @@ class UserFactory(BaseFactory):
 
     user_id = Generators.UuidObj
     sub_id = factory.Faker("uuid4")
-    email_address = factory.Faker("email")
+    email_address = Generators.EmailAddress
 
     @factory.post_generation
     def roles(self, create, extracted, **kwargs):
