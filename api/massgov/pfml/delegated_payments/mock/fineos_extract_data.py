@@ -635,13 +635,13 @@ def generate_payment_extract_files(
                 withholding_payment.zip_code = mock_address["zip"]
 
                 if item == 0:
-                    withholding_payment.tin = "SITPAYEE001"
+                    withholding_payment.tin = "123456789"
                     withholding_payment.payment_amount = "22.00"
                     withholding_payment.i_value = scenario_data.tax_withholding_payment_i_values[
                         item
                     ]
                 if item == 1:
-                    withholding_payment.tin = "FITAMOUNTPAYEE001"
+                    withholding_payment.tin = "123456780"
                     withholding_payment.payment_amount = "35.00"
                     withholding_payment.i_value = scenario_data.tax_withholding_payment_i_values[
                         item
