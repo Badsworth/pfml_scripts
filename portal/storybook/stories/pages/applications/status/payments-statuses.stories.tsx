@@ -26,6 +26,8 @@ const transactionDateOptions: {
   "2 Business Days Ago": dayjs().subtractBusinessDays(2),
   "3 Business Days Ago": dayjs().subtractBusinessDays(3),
   "4 Business Days Ago": dayjs().subtractBusinessDays(4),
+  "5 Business Days Ago": dayjs().subtractBusinessDays(5),
+  "6 Business Days Ago": dayjs().subtractBusinessDays(6),
   "7 Business Days Ago": dayjs().subtractBusinessDays(7),
   "14 Business Days Ago": dayjs().subtractBusinessDays(14),
 };
@@ -145,9 +147,29 @@ Delay.argTypes = {
   },
   "Writeback Status": {
     options: [
+      // Always shows processing message
+      "None",
+      // processingMessage then addressErrorMessage on 2nd day after transaction
       "Address Validation Error",
+      // Always show bankRejectionMessage
       "Bank Processing Error",
       "EFT Account Information Error",
+      // Always shows processing message
+      "Payment System Error",
+      "Pending Payment Audit",
+      "Leave Plan in Review",
+      "Pending Audit Error",
+      // Always  show genericDelayMessage
+      "Leave Plan In Review",
+      "Exempt Employer",
+      "InvalidPayment NameMismatch",
+      // Processing message then genericDelayMessage on 3rd day after transaction
+      "DIA Additional Income",
+      "DUA Additional Income",
+      "SelfReported Additional Income",
+      "InvalidPayment PayAdjustment",
+      // Processing message then genericDelayMessage on 5th day after transaction
+      "Max Weekly Benefits Exceeded",
     ],
     control: { type: "select" },
   },
