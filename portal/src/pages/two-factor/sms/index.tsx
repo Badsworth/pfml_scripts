@@ -46,11 +46,14 @@ export const IndexSMS = (props: IndexSMSProps) => {
       return;
     }
 
-    if (formState.enterMFASetupFlow) {
+    if (formState.enterMFASetupFlow === true) {
       tracker.trackEvent("User entered MFA setup flow");
       await appLogic.portalFlow.goToPageFor("EDIT_MFA_PHONE");
     } else {
-      tracker.trackEvent("User opted out of MFA");
+      tracker.trackEvent("User opted out of MFA", {
+        selectedOption: formState.enterMFASetupFlow.toString(),
+      });
+
       await appLogic.users.updateUser(props.user.user_id, {
         mfa_delivery_preference: "Opt Out",
       });
@@ -83,6 +86,11 @@ export const IndexSMS = (props: IndexSMSProps) => {
             checked: get(formState, "enterMFASetupFlow") === false,
             label: t("pages.authTwoFactorSmsIndex.optOut"),
             value: "false",
+          },
+          {
+            checked: get(formState, "enterMFASetupFlow") === "no_sms_phone",
+            label: t("pages.authTwoFactorSmsIndex.optOutNoSms"),
+            value: "no_sms_phone",
           },
         ]}
         type="radio"

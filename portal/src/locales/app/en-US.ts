@@ -1078,12 +1078,13 @@ const pages: {
     title: "Confirm your phone number",
   },
   authTwoFactorSmsIndex: {
-    hint: "<p>This is an optional step to make your account more secure. In the future, you’ll also be able to access sensitive information like tax documents (when available) once you set this up.</p><p>If you select Yes, we’ll ask for a phone number that can receive text messages (SMS). To protect your security, we'll send you a 6-digit code to verify it's really you. You’ll need to enter the code in order to log in to your account.</p><p>If you select No, you can add a phone number later by going to the Settings page.</p>",
-    optIn: "Yes, I want to add a phone number for verifying logins.",
-    optOut: "No, I do not want to add a phone number for verifying logins.",
+    hint: "<p>This optional step makes your account more secure. This will also allow you to access sensitive information like tax documents (when available).</p><p>If you select Yes, we’ll ask for a phone number that can receive text messages (SMS). When you log in to your account, we’ll send a 6-digit code you’ll need to enter to verify it’s really you.</p><p>You can add or change your phone number later by going to the Settings page.</p>",
+    optIn: "Yes, I want to add a phone number for additional security.",
+    optOut: "No, I do not want to add a phone number.",
+    optOutNoSms: "I do not have a phone that can receive text messages.",
     saveButton: "$t(shared.saveAndContinue)",
     title:
-      "Do you want to add a cell phone number to verify it's you when you log in to your account?",
+      "Do you want to add a cell phone number to verify it's you when you log in?",
   },
   authTwoFactorSmsSetup: {
     lead: "Enter a number that can receive text messages and that you'll have consistent access to. We’ll send a 6-digit code by text message (SMS) to confirm your phone number.",
