@@ -19,14 +19,14 @@ const previousLeave = new PreviousLeave({
 });
 const onChange = jest.fn();
 const onRemove = jest.fn();
-const appErrors = [];
+const errors = [];
 
 const renderAmendedLeave = () => {
   return render(
     <table>
       <tbody>
         <AmendablePreviousLeave
-          appErrors={appErrors}
+          errors={errors}
           isAddedByLeaveAdmin={false}
           onChange={onChange}
           onRemove={onRemove}
@@ -43,7 +43,7 @@ const renderAddedLeave = () => {
     <table>
       <tbody>
         <AmendablePreviousLeave
-          appErrors={appErrors}
+          errors={errors}
           isAddedByLeaveAdmin
           onChange={onChange}
           onRemove={onRemove}

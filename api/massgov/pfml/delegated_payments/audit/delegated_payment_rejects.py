@@ -33,6 +33,7 @@ from massgov.pfml.delegated_payments.step import Step
 from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
     create_payment_finished_state_log_with_writeback,
 )
+from massgov.pfml.util.strings import remove_unicode_replacement_char
 
 logger = logging.get_logger(__name__)
 
@@ -227,6 +228,7 @@ class PaymentRejectsStep(Step):
                     state=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.state),
                     zip=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.zip),
                     is_address_verified=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.is_address_verified),
+                    employer_name=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.employer_name),
                     payment_preference=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.payment_preference),
                     scheduled_payment_date=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.scheduled_payment_date
@@ -334,7 +336,7 @@ class PaymentRejectsStep(Step):
         # logic works as expected. This char represents an unknown unicode
         # character.
         if rejected_notes:
-            rejected_notes = rejected_notes.replace("\ufffd", " ")
+            rejected_notes = remove_unicode_replacement_char(rejected_notes)
 
         if payment_state_log is None:
             self.increment(self.Metrics.PAYMENT_STATE_LOG_MISSING_COUNT)
@@ -352,7 +354,6 @@ class PaymentRejectsStep(Step):
 
         if is_rejected_payment:
             self.increment(self.Metrics.REJECTED_PAYMENT_COUNT)
-            print("Step: " + str(payment.payment_transaction_type_id))
             transaction_type_id = (
                 payment.payment_transaction_type_id
                 if payment.payment_transaction_type_id is not None
@@ -686,7 +687,7 @@ class PaymentRejectsStep(Step):
 
         # parse the rejects file
         payment_rejects_rows: List[PaymentAuditCSV] = self.parse_payment_rejects_file(
-            payment_rejects_file_path,
+            payment_rejects_file_path
         )
         parsed_rows_count = len(payment_rejects_rows)
         self.set_metrics({self.Metrics.PARSED_ROWS_COUNT: parsed_rows_count})

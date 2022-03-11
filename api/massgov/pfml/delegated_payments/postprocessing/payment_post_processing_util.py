@@ -19,6 +19,7 @@ from massgov.pfml.db.models.employees import (
     State,
     StateLog,
 )
+from massgov.pfml.db.models.state import LkState
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -42,6 +43,14 @@ class PostProcessingMetrics(str, enum.Enum):
     # Metrics specific to the in review processor
     PAYMENT_LEAVE_PLAN_IN_REVIEW_COUNT = "payment_leave_plan_in_review"
 
+    # Fineos leave duration
+    PAYMENT_LEAVE_DURATION_THRESHOLD_EXCEEDED_COUNT = (
+        "payment_leave_duration_threshold_exceeded_count"
+    )
+    PAYMENT_LEAVE_DURATION_PASS_COUNT = "payment_leave_duration_pass_count"
+    PAYMENT_LEAVE_DURATION_MISSING_BENEFIT_YEAR_COUNT = (
+        "payment_leave_duration_missing_benefit_year_count"
+    )
     # Payment dates mismatch
     PAYMENT_DATE_MISSING_REQUIRED_DATA_COUNT = "payment_date_missing_required_data_count"
     PAYMENT_DATE_MISMATCH_COUNT = "payment_date_mismatch_count"
@@ -89,11 +98,11 @@ class PaymentContainer:
         return self._get_sort_key() < other._get_sort_key()
 
     def get_traceable_details(
-        self, add_validation_issues: bool = False
+        self, add_validation_issues: bool = False, state: Optional[LkState] = None
     ) -> Dict[str, Optional[Any]]:
         # For logging purposes, this returns useful, traceable details
 
-        details = payments_util.get_traceable_payment_details(self.payment)
+        details = payments_util.get_traceable_payment_details(self.payment, state)
 
         # This is just the reason codes, the details of the validation
         # container can potentially contain PII which we do not want to log.

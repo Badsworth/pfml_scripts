@@ -1,4 +1,5 @@
 import { CommonProps } from "../hooks/usePopup";
+import { XIcon } from "@heroicons/react/solid";
 
 export type Props<T = unknown> = {
   title: string;
@@ -17,7 +18,9 @@ function SlideOut<T>(props: Props<T>): JSX.Element {
             type="button"
             onClick={close}
             aria-label={`Close ${title} window`}
-          ></button>
+          >
+            <XIcon className="slide-out__btn-close-icon" />
+          </button>
         </div>
         <div className="slide-out__body" data-testid="slideout-body">
           {typeof children === "function" ? children(data) : children}

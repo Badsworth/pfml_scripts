@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 import { cloneDeep, set } from "lodash";
 import Address from "src/models/Address";
-import AppErrorInfo from "src/models/AppErrorInfo";
 import FieldsetAddress from "src/components/FieldsetAddress";
 import { Props } from "types/common";
+import { ValidationError } from "src/errors";
 
 export default {
   title: "Components/Forms/FieldsetAddress",
   component: FieldsetAddress,
   args: {
-    appErrors: [],
+    errors: [],
     label: "What's your address?",
     hint: "Enter it as it appears on your ID card",
     name: "address",
@@ -46,29 +46,35 @@ export const WithErrors = () => {
   };
 
   // Setup error states
-  const appErrors = [
-    new AppErrorInfo({
-      field: "address.line_1",
-      message: "Address is required",
-    }),
-    new AppErrorInfo({
-      field: "address.city",
-      message: "City is required",
-    }),
-    new AppErrorInfo({
-      field: "address.state",
-      message: "State is required",
-    }),
-    new AppErrorInfo({
-      field: "address.zip",
-      message: "ZIP is required",
-    }),
+  const errors = [
+    new ValidationError([
+      {
+        field: "address.line_1",
+        type: "required",
+        namespace: "applications",
+      },
+      {
+        field: "address.city",
+        type: "required",
+        namespace: "applications",
+      },
+      {
+        field: "address.state",
+        type: "required",
+        namespace: "applications",
+      },
+      {
+        field: "address.zip",
+        type: "required",
+        namespace: "applications",
+      },
+    ]),
   ];
 
   return (
     <form className="usa-form">
       <FieldsetAddress
-        appErrors={appErrors}
+        errors={errors}
         label="What's your address?"
         hint="Enter it as it appears on your ID card"
         name="address"

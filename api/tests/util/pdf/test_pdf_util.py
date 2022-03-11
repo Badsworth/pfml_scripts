@@ -64,9 +64,7 @@ def test_compress_pdf_timeout(test_pdf_path):
 @mock.patch("massgov.pfml.util.pdf.subprocess.run")
 def test_compress_pdf_fails_on_subprocess_fail(mock_run, pdf_doc_string):
     mock_proc = mock.Mock()
-    mock_proc.configure_mock(
-        **{"returncode": 1, "stderr": PROCESS_ERROR,}
-    )
+    mock_proc.configure_mock(**{"returncode": 1, "stderr": PROCESS_ERROR})
     mock_run.return_value = mock_proc
 
     with tempfile.SpooledTemporaryFile(mode="xb") as input_pdf, tempfile.SpooledTemporaryFile(
@@ -82,9 +80,7 @@ def test_compress_pdf_fails_on_subprocess_fail(mock_run, pdf_doc_string):
 @mock.patch("massgov.pfml.util.pdf.subprocess.run")
 def test_compress_pdf_fails_on_larger_output(mock_run, pdf_doc_string):
     mock_proc = mock.Mock()
-    mock_proc.configure_mock(
-        **{"returncode": 0, "stdout": pdf_doc_string, "stderr": "",}
-    )
+    mock_proc.configure_mock(**{"returncode": 0, "stdout": pdf_doc_string, "stderr": ""})
     mock_run.return_value = mock_proc
 
     with tempfile.SpooledTemporaryFile(mode="xb") as input_pdf, tempfile.SpooledTemporaryFile(

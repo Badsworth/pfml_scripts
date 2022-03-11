@@ -62,11 +62,13 @@ export const ChecklistAlerts = ({ submitted }: ChecklistAlertsProps) => {
 export const Checklist = (props: ChecklistProps) => {
   const { t } = useTranslation();
   const { appLogic, claim, documents, isLoadingDocuments, query } = props;
-  const { appErrors } = appLogic;
-  const otherLeaveStartDate = formatDate(claim.otherLeaveStartDate).full();
+  const { errors } = appLogic;
+  const otherLeaveStartDate = formatDate(
+    claim.computed_start_dates.other_reason
+  ).full();
 
   const hasLoadingDocumentsError = hasDocumentsLoadError(
-    appErrors,
+    errors,
     claim.application_id
   );
 

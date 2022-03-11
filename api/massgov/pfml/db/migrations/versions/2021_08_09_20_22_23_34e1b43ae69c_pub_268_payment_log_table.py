@@ -36,8 +36,8 @@ def upgrade():
         sa.Column("payment_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("import_log_id", sa.Integer(), nullable=True),
         sa.Column("details", sa.JSON(), nullable=True),
-        sa.ForeignKeyConstraint(["import_log_id"], ["import_log.import_log_id"],),
-        sa.ForeignKeyConstraint(["payment_id"], ["payment.payment_id"],),
+        sa.ForeignKeyConstraint(["import_log_id"], ["import_log.import_log_id"]),
+        sa.ForeignKeyConstraint(["payment_id"], ["payment.payment_id"]),
         sa.PrimaryKeyConstraint("payment_log_id"),
     )
     op.create_index(

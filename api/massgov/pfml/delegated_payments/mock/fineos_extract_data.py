@@ -209,7 +209,7 @@ class FineosPaymentData(MockData):
 
         # Payment method values (used for payment and employee files)
         self.address_1 = self.get_value(
-            "address_1", f"{fake.building_number()} {fake.street_name()} {fake.street_suffix()}",
+            "address_1", f"{fake.building_number()} {fake.street_name()} {fake.street_suffix()}"
         )
         self.payment_address_1 = self.get_value("payment_address_1", self.address_1)
         self.address_2 = self.get_value("address_2", "")
@@ -370,9 +370,7 @@ class FineosIAWWData(MockData):
     Parameters can be overriden by specifying them as kwargs
     """
 
-    def __init__(
-        self, **kwargs,
-    ):
+    def __init__(self, **kwargs):
         super().__init__(true, **kwargs)
         self.kwargs = kwargs
 
@@ -649,6 +647,37 @@ def generate_payment_extract_files(
                         item
                     ]
                 fineos_payments_dataset.append(withholding_payment)
+
+        # TODO Need to refactor
+        if (
+            scenario_descriptor.is_employer_reimbursement_records_exists
+            and scenario_data.employer_reimbursement_payment_i_values
+        ):
+            for item in range(1):
+                employer_reimbursement_payment = copy.deepcopy(fineos_payments_data)
+                employer_reimbursement_payment.event_reason = "Automatic Alternate Payment"
+                employer_reimbursement_payment.payee_identifier = "Tax Identification Number"
+                if scenario_descriptor.is_employer_reimbursement_fineos_extract_address_valid:
+                    mock_address = MATCH_ADDRESS
+                else:
+                    mock_address = NO_MATCH_ADDRESS
+                employer_reimbursement_payment.payment_address_1 = mock_address["line_1"]
+                employer_reimbursement_payment.payment_address_2 = mock_address["line_2"]
+                employer_reimbursement_payment.city = mock_address["city"]
+                employer_reimbursement_payment.state = mock_address["state"]
+                employer_reimbursement_payment.zip_code = mock_address["zip"]
+
+                if item == 0:
+                    employer_reimbursement_payment.payment_amount = "300.00"
+                    employer_reimbursement_payment.i_value = (
+                        scenario_data.employer_reimbursement_payment_i_values[item]
+                    )
+                # if item == 1:
+                #     employer_reimbursement_payment.payment_amount = "350.00"
+                #     employer_reimbursement_payment.i_value = scenario_data.employer_reimbursement_payment_i_values[
+                #         item
+                #     ]
+                fineos_payments_dataset.append(employer_reimbursement_payment)
         fineos_payments_dataset.append(fineos_payments_data)
 
     # create the files

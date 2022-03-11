@@ -55,6 +55,8 @@ function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
     claimantShowPaymentsPhaseTwo: true,
     claimantShowMFA: config("MFA_ENABLED") === "true",
     employerShowMultiLeave: true,
+    channelSwitching: config("HAS_CHANNEL_SWITCHING") === "true",
+    employerShowMultiLeaveDashboard: true,
   };
   cy.setCookie("_ff", JSON.stringify({ ...defaults, ...flags }), { log: true });
 }
@@ -869,15 +871,21 @@ export function checkConcurrentLeave(startDate: string, endDate: string): void {
   });
 }
 
-export function visitActionRequiredERFormPage(fineosAbsenceId: string): void {
-  cy.visit(
-    `/employers/applications/new-application/?absence_id=${fineosAbsenceId}`
-  );
-  cy.contains("Are you the right person to respond to this application?", {
-    timeout: 20000,
-  });
-  cy.contains("label", "Yes").click();
-  cy.contains("Agree and submit").click();
+export function visitActionRequiredERFormPage(
+  fineosAbsenceId: string,
+  useDashboardReviewButton?: boolean
+): void {
+  if (useDashboardReviewButton) {
+    cy.contains("th[data-label='Employee (Application ID)']", fineosAbsenceId)
+      .parent()
+      .within(() => {
+        cy.contains("Review Application").click();
+      });
+  } else {
+    cy.visit(
+      `/employers/applications/new-application/?absence_id=${fineosAbsenceId}`
+    );
+  }
   cy.contains("span", fineosAbsenceId);
 }
 
@@ -1120,7 +1128,13 @@ export function addOrganization(fein: string, withholding: number): void {
  * Assertion for error message when adding employer with zero contributions.
  */
 export function assertZeroWithholdings(): void {
-  cy.contains("Employer has no verification data", { timeout: 30000 });
+  // @BC: Error banner update
+  // previous: "Employer has no verification data" (portal/v60.0-rc1 and below)
+  // updated: "not made any paid leave contributions" (portal/v60.0-rc2)
+  cy.contains(
+    /(Employer has no verification data)|(not made any paid leave contributions)/,
+    { timeout: 30000 }
+  );
 }
 export type ClaimantStatus =
   | "Approved"
@@ -1914,7 +1928,12 @@ export function filterLADashboardBy(filters: FilterOptions): void {
   cy.findByText("Apply filters").should("not.be.disabled").click();
   cy.get('span[role="progressbar"]').should("be.visible");
   cy.wait("@dashboardClaimQueries");
-  cy.contains("table", "Employer ID number").should("be.visible");
+  // @BC: Table columns have been updated
+  // previous: "Employer ID number" (portal/v59.0-rc1 and below)
+  // updated: "Organization (FEIN)" (portal/v59.0-rc2)
+  cy.contains("table", /(Employer ID number)|(Organization \(FEIN\))/).should(
+    "be.visible"
+  );
 }
 /**Looks if dashboard is empty */
 function checkDashboardIsEmpty() {
@@ -2019,12 +2038,14 @@ const leaveReasonHeadings: Readonly<
   "Care for a Family Member":
     /(Leave to )?care for a family member( schedule)?/i,
   "Military Exigency Family": "Active duty",
+  "Pregnancy/Maternity": "Medical leave for pregnancy or birth",
 } as const;
 
 type LeaveStatus = {
   leave: keyof typeof leaveReasonHeadings;
   status: ClaimantStatus;
   leavePeriods?: [string, string];
+  leavePeriodType?: "Continuous" | "Intermittent" | "Reduced";
 };
 
 export function claimantAssertClaimStatus(leaves: LeaveStatus[]): void {
@@ -2192,9 +2213,16 @@ export function completeFlowMFA(number: string): void {
     });
 }
 
-export function enableMFA(): void {
+export function acceptMFA(): void {
   cy.contains(
     "Yes, I want to add a phone number for verifying logins."
+  ).click();
+  cy.contains("button", "Save and continue").click();
+}
+
+export function declineMFA(): void {
+  cy.contains(
+    "No, I do not want to add a phone number for verifying logins."
   ).click();
   cy.contains("button", "Save and continue").click();
 }
@@ -2208,10 +2236,19 @@ export function loginMFA(credentials: Credentials, number: string): void {
     cy.task("mfaVerification", { timeSent, number }).then((code) => {
       cy.findByLabelText("6-digit code").type(code);
       cy.contains("button", "Submit").click();
-      cy.url({ timeout: 30000 }).should("contain", "get-ready");
+      cy.url({ timeout: 30000 }).should("contain", "applications");
       assertLoggedIn();
     });
   });
+}
+
+export function enableMFA(number: string): void {
+  cy.contains("a", "Settings").click();
+  cy.findByText("Additional login verification is not enabled")
+    .parent()
+    .next()
+    .click();
+  completeFlowMFA(number);
 }
 
 export function disableMFA(): void {
@@ -2265,5 +2302,62 @@ export function assertPaymentCheckBackDate(date: Date) {
         `Check back on (${dateFormatPrevious}|${dateFormatUpdated}) to see when you can expect your first payment.`
       )
     );
+  });
+}
+
+export function resumeFineosApplication(ssn: string, absenceCaseId: string) {
+  cy.location("pathname", { timeout: 30000 }).should(
+    "include",
+    "/applications/get-ready/"
+  );
+  cy.contains("Did you start an application by phone?").click();
+  cy.get("a[href$='/applications/import-claim/']").click();
+  cy.get("input[name='tax_identifier']").clear().type(ssn);
+  cy.get("input[name='absence_case_id']").clear().type(absenceCaseId);
+  cy.contains("button[type='submit']", "Add application").click();
+}
+
+export function assertClaimImportError(errorMessage: string) {
+  cy.contains("h2", "An error occurred")
+    .next()
+    .should("have.text", errorMessage);
+}
+
+export function assertClaimImportSuccess(absenceCaseId: string) {
+  cy.contains(
+    "div.usa-alert",
+    `Application ${absenceCaseId} has been added to your account.`
+  );
+}
+
+/**
+ * Asserts for claim statuses within the leave admin dashboard
+ * @param leaves - LeaveStatus[]
+ * @example leaveAdminAssertClaimStatusFromDashboard([{}])
+ */
+export function leaveAdminAssertClaimStatusFromDashboard(
+  leaves: LeaveStatus[]
+) {
+  cy.get("table tbody").within(() => {
+    for (const { leave, status, leavePeriods, leavePeriodType } of leaves) {
+      if (leavePeriods) {
+        const formatStart = format(new Date(leavePeriods[0]), "M/d/yyyy");
+        const formatEnd = format(new Date(leavePeriods[1]), "M/d/yyyy");
+        cy.contains(
+          "td[data-label='Leave details']",
+          `${formatStart} to ${formatEnd}`
+        );
+      }
+      if (leavePeriodType) {
+        cy.contains("td[data-label='Leave details']", leavePeriodType);
+      }
+      cy.contains("td[data-label='Leave details']", status);
+      const leaveReason = leaveReasonHeadings[leave];
+      if (!leaveReason)
+        throw Error(
+          `Leave reason "${leave}" property is undefined in Object "leaveReasonHeadings"`
+        );
+      cy.contains("td[data-label='Leave details']", leaveReason);
+    }
   });
 }

@@ -8,7 +8,6 @@ import withEmployerClaim, {
   WithEmployerClaimProps,
 } from "../../../hoc/withEmployerClaim";
 import Alert from "../../../components/core/Alert";
-import AppErrorInfo from "../../../models/AppErrorInfo";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/core/Button";
 import CaringLeaveQuestion from "src/features/employer-review/CaringLeaveQuestion";
@@ -30,6 +29,7 @@ import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import WeeklyHoursWorkedRow from "../../../features/employer-review/WeeklyHoursWorkedRow";
 import { findDocumentsByLeaveReason } from "../../../models/Document";
+import findErrorMessageForField from "../../../utils/findErrorMessageForField";
 import formatDate from "../../../utils/formatDate";
 import { getSoonestReviewableFollowUpDate } from "../../../models/ManagedRequirement";
 import isBlank from "../../../utils/isBlank";
@@ -44,7 +44,7 @@ import { useTranslation } from "../../../locales/i18n";
 export const Review = (props: WithEmployerClaimProps) => {
   const { appLogic, claim } = props;
   const {
-    appErrors,
+    errors,
     employers: { claimDocumentsMap, downloadDocument, loadDocuments },
   } = appLogic;
   const { t } = useTranslation();
@@ -94,7 +94,7 @@ export const Review = (props: WithEmployerClaimProps) => {
   });
 
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });
@@ -385,8 +385,6 @@ export const Review = (props: WithEmployerClaimProps) => {
     }
   };
 
-  const otherLeaveStartDate = formatDate(claim.otherLeaveStartDate).full();
-
   return (
     <div className="maxw-desktop-lg">
       <BackButton />
@@ -434,7 +432,7 @@ export const Review = (props: WithEmployerClaimProps) => {
       >
         <EmployeeInformation claim={claim} />
         <WeeklyHoursWorkedRow
-          appErrors={appErrors}
+          errors={errors}
           clearField={clearField}
           getField={getField}
           getFunctionalInputProps={getFunctionalInputProps}
@@ -449,8 +447,8 @@ export const Review = (props: WithEmployerClaimProps) => {
 
         {isCaringLeave && (
           <CaringLeaveQuestion
-            errorMsg={AppErrorInfo.fieldErrorMessage(
-              appErrors,
+            errorMsg={findErrorMessageForField(
+              errors,
               "relationship_inaccurate_reason"
             )}
             believeRelationshipAccurate={formState.believeRelationshipAccurate}
@@ -499,17 +497,17 @@ export const Review = (props: WithEmployerClaimProps) => {
               </div>
             </div>
             <PreviousLeaves
-              appErrors={appErrors}
+              errors={errors}
+              claim={claim}
               previousLeaves={formState.previousLeaves}
               addedPreviousLeaves={formState.addedPreviousLeaves}
               onAdd={handlePreviousLeaveAdd}
               onChange={handlePreviousLeavesChange}
               onRemove={handlePreviousLeaveRemove}
               shouldShowV2={shouldShowV2}
-              otherLeaveStartDate={otherLeaveStartDate}
             />
             <ConcurrentLeave
-              appErrors={appErrors}
+              errors={errors}
               addedConcurrentLeave={formState.addedConcurrentLeave}
               claim={claim}
               concurrentLeave={formState.concurrentLeave}
@@ -520,7 +518,7 @@ export const Review = (props: WithEmployerClaimProps) => {
           </React.Fragment>
         )}
         <EmployerBenefits
-          appErrors={appErrors}
+          errors={errors}
           employerBenefits={formState.employerBenefits}
           addedBenefits={formState.addedBenefits}
           onAdd={handleBenefitInputAdd}

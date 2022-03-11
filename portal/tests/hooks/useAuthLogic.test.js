@@ -3,8 +3,8 @@ import { Auth } from "@aws-amplify/auth";
 import UsersApi from "../../src/api/UsersApi";
 import routes from "../../src/routes";
 import tracker from "../../src/services/tracker";
-import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import useAuthLogic from "../../src/hooks/useAuthLogic";
+import useErrorsLogic from "../../src/hooks/useErrorsLogic";
 import usePortalFlow from "../../src/hooks/usePortalFlow";
 
 jest.mock("@aws-amplify/auth");
@@ -20,13 +20,13 @@ function mockPortalFlow() {
 }
 
 describe("useAuthLogic", () => {
-  let appErrors,
-    appErrorsLogic,
-    ein,
+  let ein,
+    errors,
+    errorsLogic,
     password,
     portalFlow,
     render,
-    setAppErrors,
+    setErrors,
     username,
     verificationCode;
 
@@ -39,10 +39,10 @@ describe("useAuthLogic", () => {
     render = (customPortalFlow) => {
       return renderHook(() => {
         portalFlow = customPortalFlow || usePortalFlow();
-        appErrorsLogic = useAppErrorsLogic({ portalFlow });
-        ({ appErrors, setAppErrors } = appErrorsLogic);
+        errorsLogic = useErrorsLogic({ portalFlow });
+        ({ errors, setErrors } = errorsLogic);
         return useAuthLogic({
-          appErrorsLogic,
+          errorsLogic,
           portalFlow,
         });
       });
@@ -95,9 +95,9 @@ describe("useAuthLogic", () => {
   it("For forgotPassword, does not change page when Cognito request fails", async () => {
     const portalFlow = mockPortalFlow();
     const { result } = renderHook(() => {
-      appErrorsLogic = useAppErrorsLogic({ portalFlow });
+      errorsLogic = useErrorsLogic({ portalFlow });
       return useAuthLogic({
-        appErrorsLogic,
+        errorsLogic,
         portalFlow,
       });
     });
@@ -155,13 +155,20 @@ describe("useAuthLogic", () => {
     act(() => {
       result.current.resendForgotPasswordCode(username);
     });
-    expect(appErrors).toHaveLength(1);
-    expect(appErrors[0].message).toMatchInlineSnapshot(
-      `"Enter your email address"`
-    );
+    expect(errors).toHaveLength(1);
+    expect(errors[0].issues).toMatchInlineSnapshot(`
+      [
+        {
+          "field": "username",
+          "namespace": "auth",
+          "type": "required",
+        },
+      ]
+    `);
 
     expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
       issueField: "username",
+      issueNamespace: "auth",
       issueRule: "",
       issueType: "required",
     });
@@ -184,8 +191,15 @@ describe("useAuthLogic", () => {
     act(() => {
       result.current.resendForgotPasswordCode(username);
     });
-    expect(appErrors).toHaveLength(1);
-    expect(appErrors[0].message).toMatchInlineSnapshot(`"Incorrect email"`);
+    expect(errors).toHaveLength(1);
+    expect(errors[0].issues).toMatchInlineSnapshot(`
+      [
+        {
+          "namespace": "auth",
+          "type": "userNotFound",
+        },
+      ]
+    `);
   });
 
   it("For resendForgotPasswordCode, sets app errors when Auth.forgotPassword throws InvalidParameterException", () => {
@@ -204,10 +218,15 @@ describe("useAuthLogic", () => {
     act(() => {
       result.current.resendForgotPasswordCode(username);
     });
-    expect(appErrors).toHaveLength(1);
-    expect(appErrors[0].message).toMatchInlineSnapshot(
-      `"Enter all required information"`
-    );
+    expect(errors).toHaveLength(1);
+    expect(errors[0].issues).toMatchInlineSnapshot(`
+      [
+        {
+          "namespace": "auth",
+          "type": "invalidParametersFallback",
+        },
+      ]
+    `);
   });
 
   it("For resendForgotPasswordCode, sets app errors when Auth.forgotPassword throws NotAuthorizedException due to security reasons", () => {
@@ -225,10 +244,15 @@ describe("useAuthLogic", () => {
     act(() => {
       result.current.resendForgotPasswordCode(username);
     });
-    expect(appErrors).toHaveLength(1);
-    expect(appErrors[0].message).toMatchInlineSnapshot(
-      `"Your authentication attempt has been blocked due to suspicious activity. We sent you an email to confirm your identity. Check your email and then follow the instructions to try again. If this continues to occur, call the Contact Center at (833) 344‑7365."`
-    );
+    expect(errors).toHaveLength(1);
+    expect(errors[0].issues).toMatchInlineSnapshot(`
+      [
+        {
+          "namespace": "auth",
+          "type": "attemptBlocked_forgotPassword",
+        },
+      ]
+    `);
   });
 
   it("For resendForgotPasswordCode, sets app errors when Auth.forgotPassword throws LimitExceededException due to too many forget password requests", () => {
@@ -246,10 +270,15 @@ describe("useAuthLogic", () => {
     act(() => {
       result.current.resendForgotPasswordCode(username);
     });
-    expect(appErrors).toHaveLength(1);
-    expect(appErrors[0].message).toMatchInlineSnapshot(
-      `"Your account is temporarily locked because of too many forget password requests. Wait 15 minutes before trying again."`
-    );
+    expect(errors).toHaveLength(1);
+    expect(errors[0].issues).toMatchInlineSnapshot(`
+      [
+        {
+          "namespace": "auth",
+          "type": "attemptsLimitExceeded_forgotPassword",
+        },
+      ]
+    `);
   });
 
   it("For resendForgotPasswordCode, sets system error message when Auth.forgotPassword throws unanticipated error", () => {
@@ -261,10 +290,8 @@ describe("useAuthLogic", () => {
     act(() => {
       result.current.resendForgotPasswordCode(username);
     });
-    expect(appErrors).toHaveLength(1);
-    expect(appErrors[0].message).toMatchInlineSnapshot(
-      `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
-    );
+    expect(errors).toHaveLength(1);
+    expect(errors[0].issues).toHaveLength(0);
   });
 
   it("For resendForgotPasswordCode, tracks Cognito request errors", async () => {
@@ -288,10 +315,10 @@ describe("useAuthLogic", () => {
   it("For resendForgotPasswordCode,clears existing errors", async () => {
     const { result } = render();
     await act(async () => {
-      appErrors = [{ message: "Pre-existing error" }];
+      errors = [{ message: "Pre-existing error" }];
       await result.current.resendForgotPasswordCode(username);
     });
-    expect(appErrors).toHaveLength(0);
+    expect(errors).toHaveLength(0);
   });
 
   describe("login", () => {
@@ -344,21 +371,31 @@ describe("useAuthLogic", () => {
       await act(async () => {
         await result.current.login();
       });
-      expect(appErrors).toHaveLength(2);
-      expect(appErrors.map((e) => e.message)).toMatchInlineSnapshot(`
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
         [
-          "Enter your email address",
-          "Enter your password",
+          {
+            "field": "username",
+            "namespace": "auth",
+            "type": "required",
+          },
+          {
+            "field": "password",
+            "namespace": "auth",
+            "type": "required",
+          },
         ]
       `);
 
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "username",
+        issueNamespace: "auth",
         issueRule: "",
         issueType: "required",
       });
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "password",
+        issueNamespace: "auth",
         issueRule: "",
         issueType: "required",
       });
@@ -381,10 +418,15 @@ describe("useAuthLogic", () => {
       await act(async () => {
         await result.current.login(username, password);
       });
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
-        `"Incorrect email or password"`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "namespace": "auth",
+            "type": "incorrectEmailOrPassword",
+          },
+        ]
+      `);
     });
 
     it("sets app errors when Auth.signIn throws InvalidParameterException", async () => {
@@ -403,10 +445,15 @@ describe("useAuthLogic", () => {
       await act(async () => {
         await result.current.login(username, password);
       });
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
-        `"Enter all required information"`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "namespace": "auth",
+            "type": "invalidParametersFallback",
+          },
+        ]
+      `);
     });
 
     it("sets app errors when Auth.signIn throws NotAuthorizedException due to security reasons", async () => {
@@ -424,10 +471,15 @@ describe("useAuthLogic", () => {
       await act(async () => {
         await result.current.login(username, password);
       });
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
-        `"Your log in attempt was blocked due to suspicious activity. You will need to reset your password to continue. We’ve also sent you an email to confirm your identity."`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "namespace": "auth",
+            "type": "attemptBlocked_login",
+          },
+        ]
+      `);
     });
 
     it("sets app errors when Auth.signIn throws NotAuthorizedException due to incorrect username or password", async () => {
@@ -445,10 +497,15 @@ describe("useAuthLogic", () => {
       await act(async () => {
         await result.current.login(username, password);
       });
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
-        `"Incorrect email or password"`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "namespace": "auth",
+            "type": "incorrectEmailOrPassword",
+          },
+        ]
+      `);
     });
 
     it("sets app errors when Auth.signIn throws NotAuthorizedException due to too many failed login attempts", async () => {
@@ -466,10 +523,15 @@ describe("useAuthLogic", () => {
       await act(async () => {
         await result.current.login(username, password);
       });
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
-        `"Your account is temporarily locked because of too many failed login attempts. Wait 15 minutes before trying again."`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "namespace": "auth",
+            "type": "attemptsLimitExceeded_login",
+          },
+        ]
+      `);
     });
 
     it("sets app errors and tracks event when Auth.signIn throws NotAuthorizedException with unexpected message", async () => {
@@ -491,10 +553,15 @@ describe("useAuthLogic", () => {
         await result.current.login(username, password);
       });
 
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
-        `"This message wasn't expected by Portal code and is the error from Cognito."`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "message": "This message wasn't expected by Portal code and is the error from Cognito.",
+            "namespace": "auth",
+          },
+        ]
+      `);
       expect(tracker.trackEvent).toHaveBeenLastCalledWith(
         "AuthError",
         expect.objectContaining({ errorMessage: cognitoError.message })
@@ -518,10 +585,15 @@ describe("useAuthLogic", () => {
       await act(async () => {
         await result.current.login(username, password);
       });
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
-        `"Enter all required information"`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "namespace": "auth",
+            "type": "invalidParametersFallback",
+          },
+        ]
+      `);
     });
 
     it("sets system error message when Auth.signIn throws unanticipated error", async () => {
@@ -534,10 +606,8 @@ describe("useAuthLogic", () => {
         await result.current.login(username, password);
       });
       await waitFor(() => {
-        expect(appErrors).toHaveLength(1);
-        expect(appErrors[0].message).toMatchInlineSnapshot(
-          `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
-        );
+        expect(errors).toHaveLength(1);
+        expect(errors[0].issues).toHaveLength(0);
       });
     });
 
@@ -563,11 +633,11 @@ describe("useAuthLogic", () => {
       const { result, waitFor } = render();
 
       await act(async () => {
-        appErrors = [{ message: "Pre-existing error" }];
+        errors = [{ message: "Pre-existing error" }];
         await result.current.login(username, password);
       });
       await waitFor(() => {
-        expect(appErrors).toHaveLength(0);
+        expect(errors).toHaveLength(0);
       });
     });
 
@@ -640,10 +710,16 @@ describe("useAuthLogic", () => {
         await result.current.login(username, password);
       });
       await waitFor(() => {
-        expect(appErrors).toHaveLength(1);
-        expect(appErrors[0].message).toMatchInlineSnapshot(
-          `"Your password must be reset before you can log in again. Click the \\"Forgot your password?\\" link below to reset your password."`
-        );
+        expect(errors).toHaveLength(1);
+        expect(errors[0].issues).toMatchInlineSnapshot(`
+          [
+            {
+              "field": "password",
+              "namespace": "auth",
+              "type": "resetRequiredException",
+            },
+          ]
+        `);
       });
     });
 
@@ -791,14 +867,19 @@ describe("useAuthLogic", () => {
         await result.current.verifyMFACodeAndLogin("", next);
       });
 
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors.map((e) => e.message)).toMatchInlineSnapshot(`
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
         [
-          "Enter the 6-digit code sent to your phone number",
+          {
+            "field": "code",
+            "namespace": "mfa",
+            "type": "required",
+          },
         ]
       `);
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "code",
+        issueNamespace: "mfa",
         issueRule: "",
         issueType: "required",
       });
@@ -811,14 +892,19 @@ describe("useAuthLogic", () => {
         await result.current.verifyMFACodeAndLogin("aaaa", next);
       });
 
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors.map((e) => e.message)).toMatchInlineSnapshot(`
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
         [
-          "Enter the 6-digit code sent to your phone number and ensure it does not include any punctuation.",
+          {
+            "field": "code",
+            "namespace": "mfa",
+            "type": "pattern",
+          },
         ]
       `);
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "code",
+        issueNamespace: "mfa",
         issueRule: "",
         issueType: "pattern",
       });
@@ -848,10 +934,16 @@ describe("useAuthLogic", () => {
         await result.current.verifyMFACodeAndLogin(verificationCode, next);
       });
 
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
-        `"The security code you entered is invalid. Make sure the code matches the security code we texted to you."`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "field": "code",
+            "namespace": "auth",
+            "type": "invalidMFACode",
+          },
+        ]
+      `);
     });
 
     it("throws an attempts exceeded error when throttles login", async () => {
@@ -870,10 +962,16 @@ describe("useAuthLogic", () => {
         await result.current.verifyMFACodeAndLogin(verificationCode, next);
       });
 
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
-        `"Your account is temporarily locked because of too many failed verification attempts. Wait 15 minutes before trying again."`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "field": "code",
+            "namespace": "auth",
+            "type": "attemptsExceeded",
+          },
+        ]
+      `);
     });
 
     it("tracks request", async () => {
@@ -1202,13 +1300,20 @@ describe("useAuthLogic", () => {
       act(() => {
         result.current.resendVerifyAccountCode(username);
       });
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
-        `"Enter your email address"`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "field": "username",
+            "namespace": "auth",
+            "type": "required",
+          },
+        ]
+      `);
 
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "username",
+        issueNamespace: "auth",
         issueRule: "",
         issueType: "required",
       });
@@ -1225,10 +1330,8 @@ describe("useAuthLogic", () => {
       act(() => {
         result.current.resendVerifyAccountCode(username);
       });
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
-        `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toHaveLength(0);
     });
 
     it("tracks Cognito request errors", async () => {
@@ -1253,10 +1356,10 @@ describe("useAuthLogic", () => {
       const { result } = render();
 
       act(() => {
-        setAppErrors([{ message: "Pre-existing error" }]);
+        setErrors([{ message: "Pre-existing error" }]);
         result.current.resendVerifyAccountCode(username);
       });
-      expect(appErrors).toHaveLength(0);
+      expect(errors).toHaveLength(0);
     });
   });
 
@@ -1309,27 +1412,42 @@ describe("useAuthLogic", () => {
         result.current.resetPassword();
       });
 
-      expect(appErrors).toHaveLength(3);
-      expect(appErrors.map((e) => e.message)).toMatchInlineSnapshot(`
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
         [
-          "Enter the 6-digit code sent to your email",
-          "Enter your email address",
-          "Enter your password",
+          {
+            "field": "code",
+            "namespace": "mfa",
+            "type": "required",
+          },
+          {
+            "field": "username",
+            "namespace": "auth",
+            "type": "required",
+          },
+          {
+            "field": "password",
+            "namespace": "auth",
+            "type": "required",
+          },
         ]
       `);
 
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "code",
+        issueNamespace: "mfa",
         issueRule: "",
         issueType: "required",
       });
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "username",
+        issueNamespace: "auth",
         issueRule: "",
         issueType: "required",
       });
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "password",
+        issueNamespace: "auth",
         issueRule: "",
         issueType: "required",
       });
@@ -1353,10 +1471,16 @@ describe("useAuthLogic", () => {
         result.current.resetPassword(username, verificationCode, password);
       });
 
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
-        `"Invalid verification code. Make sure the code matches the code emailed to you."`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "field": "code",
+            "namespace": "auth",
+            "type": "mismatchException",
+          },
+        ]
+      `);
     });
 
     it("sets app errors when ExpiredCodeException is thrown", () => {
@@ -1375,10 +1499,16 @@ describe("useAuthLogic", () => {
         result.current.resetPassword(username, verificationCode, password);
       });
 
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
-        `"Your verification code has expired or has already been used."`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "field": "code",
+            "namespace": "auth",
+            "type": "expired",
+          },
+        ]
+      `);
     });
 
     it("sets app errors when InvalidParameterException is thrown", () => {
@@ -1398,10 +1528,15 @@ describe("useAuthLogic", () => {
         result.current.resetPassword(username, verificationCode, password);
       });
 
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
-        `"Check the requirements and try again. Ensure all required information is entered and the password meets the requirements."`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "namespace": "auth",
+            "type": "invalidParametersIncludingMaybePassword",
+          },
+        ]
+      `);
     });
 
     it("sets app errors when InvalidPasswordException is thrown due to non-conforming password", () => {
@@ -1420,10 +1555,16 @@ describe("useAuthLogic", () => {
         result.current.resetPassword(username, verificationCode, password);
       });
 
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
-        `"Your password does not meet the requirements. Please check the requirements and try again."`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "field": "password",
+            "namespace": "auth",
+            "type": "invalid",
+          },
+        ]
+      `);
     });
 
     it("sets app errors when InvalidPasswordException is thrown due to insecure password", () => {
@@ -1442,10 +1583,16 @@ describe("useAuthLogic", () => {
         result.current.resetPassword(username, verificationCode, password);
       });
 
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
-        `"Choose a different password. Avoid commonly used passwords and avoid using the same password on multiple websites."`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "field": "password",
+            "namespace": "auth",
+            "type": "insecure",
+          },
+        ]
+      `);
     });
 
     it("sets app errors when UserNotConfirmedException is thrown", () => {
@@ -1464,10 +1611,15 @@ describe("useAuthLogic", () => {
         result.current.resetPassword(username, verificationCode, password);
       });
 
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
-        `"Confirm your account by following the instructions in the verification email sent to your inbox."`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "namespace": "auth",
+            "type": "userNotConfirmed",
+          },
+        ]
+      `);
     });
 
     it("sets app errors when UserNotFoundException is thrown", () => {
@@ -1486,8 +1638,15 @@ describe("useAuthLogic", () => {
         result.current.resetPassword(username, verificationCode, password);
       });
 
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(`"Incorrect email"`);
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "namespace": "auth",
+            "type": "userNotFound",
+          },
+        ]
+      `);
     });
 
     it("tracks Cognito request errors", async () => {
@@ -1516,10 +1675,10 @@ describe("useAuthLogic", () => {
       const { result } = render();
 
       act(() => {
-        setAppErrors([{ message: "Pre-existing error" }]);
+        setErrors([{ message: "Pre-existing error" }]);
         result.current.resetPassword(username, verificationCode, password);
       });
-      expect(appErrors).toHaveLength(0);
+      expect(errors).toHaveLength(0);
     });
   });
 
@@ -1568,21 +1727,31 @@ describe("useAuthLogic", () => {
         result.current.verifyAccount(username, verificationCode);
       });
 
-      expect(appErrors).toHaveLength(2);
-      expect(appErrors.map((e) => e.message)).toMatchInlineSnapshot(`
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
         [
-          "Enter the 6-digit code sent to your email",
-          "Enter your email address",
+          {
+            "field": "code",
+            "namespace": "mfa",
+            "type": "required",
+          },
+          {
+            "field": "username",
+            "namespace": "auth",
+            "type": "required",
+          },
         ]
       `);
 
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "username",
+        issueNamespace: "auth",
         issueRule: "",
         issueType: "required",
       });
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "code",
+        issueNamespace: "mfa",
         issueRule: "",
         issueType: "required",
       });
@@ -1604,13 +1773,14 @@ describe("useAuthLogic", () => {
         act(() => {
           result.current.verifyAccount(username, code);
         });
-        expect(appErrors).toHaveLength(1);
-        expect(appErrors[0].message).toEqual(
-          "Enter the 6-digit code sent to your email and ensure it does not include any punctuation."
-        );
+        expect(errors).toHaveLength(1);
+        expect(errors[0].issues).toEqual([
+          { field: "code", type: "pattern", namespace: "mfa" },
+        ]);
 
         expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
           issueField: "code",
+          issueNamespace: "mfa",
           issueRule: "",
           issueType: "pattern",
         });
@@ -1634,10 +1804,16 @@ describe("useAuthLogic", () => {
       act(() => {
         result.current.verifyAccount(username, verificationCode);
       });
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
-        `"Invalid verification code. Make sure the code matches the code emailed to you."`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "field": "code",
+            "namespace": "auth",
+            "type": "mismatchException",
+          },
+        ]
+      `);
     });
 
     it("sets app errors when verification code has expired", () => {
@@ -1655,10 +1831,16 @@ describe("useAuthLogic", () => {
       act(() => {
         result.current.verifyAccount(username, verificationCode);
       });
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
-        `"Your verification code has expired or has already been used."`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toMatchInlineSnapshot(`
+        [
+          {
+            "field": "code",
+            "namespace": "auth",
+            "type": "expired",
+          },
+        ]
+      `);
     });
 
     it("redirects to the login page when account is already verified", async () => {
@@ -1706,7 +1888,7 @@ describe("useAuthLogic", () => {
         };
       });
 
-      expect.assertions(cognitoErrors.length * 2);
+      expect.assertions(cognitoErrors.length);
 
       for (const cognitoError of cognitoErrors) {
         jest.spyOn(Auth, "confirmSignUp").mockImplementationOnce(() => {
@@ -1718,10 +1900,7 @@ describe("useAuthLogic", () => {
         act(() => {
           result.current.verifyAccount(username, verificationCode);
         });
-        expect(appErrors).toHaveLength(1);
-        expect(appErrors[0].message).toMatchInlineSnapshot(
-          `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
-        );
+        expect(errors).toHaveLength(1);
       }
     });
 
@@ -1734,10 +1913,8 @@ describe("useAuthLogic", () => {
       act(() => {
         result.current.verifyAccount(username, verificationCode);
       });
-      expect(appErrors).toHaveLength(1);
-      expect(appErrors[0].message).toMatchInlineSnapshot(
-        `"Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
-      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].issues).toHaveLength(0);
     });
 
     it("tracks Cognito request errors", async () => {
@@ -1762,10 +1939,10 @@ describe("useAuthLogic", () => {
       const { result } = render();
 
       act(() => {
-        setAppErrors([{ message: "Pre-existing error" }]);
+        setErrors([{ message: "Pre-existing error" }]);
         result.current.verifyAccount(username, verificationCode);
       });
-      expect(appErrors).toHaveLength(0);
+      expect(errors).toHaveLength(0);
     });
 
     it("routes to login page with account verified message", async () => {

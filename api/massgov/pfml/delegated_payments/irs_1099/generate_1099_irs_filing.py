@@ -12,7 +12,6 @@ import massgov.pfml.delegated_payments.irs_1099.pfml_1099_util as pfml_1099_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import ReferenceFile, ReferenceFileType
-from massgov.pfml.db.models.payments import Pfml1099
 from massgov.pfml.delegated_payments.step import Step
 from massgov.pfml.util.datetime import get_now_us_eastern
 
@@ -82,21 +81,8 @@ class Generate1099IRSfilingStep(Step):
 
     def _generate_1099_irs_filing(self) -> None:
         logger.info("1099 Documents - Generate 1099.org file to be transmitted to IRS")
-
-        recent_batch_id = pfml_1099_util.get_current_1099_batch(self.db_session)
-        if recent_batch_id is None:
-            logger.error("No current batch exists.")
-        else:
-            try:
-                logger.info("recent_batch_id %s", recent_batch_id.pfml_1099_batch_id)
-                pfml_1099 = list(
-                    self.db_session.query(Pfml1099).filter(
-                        Pfml1099.pfml_1099_batch_id == recent_batch_id.pfml_1099_batch_id
-                    )
-                )
-            except Exception:
-                logger.exception("Error accessing 1099 data")
-                raise
+        pfml_1099 = pfml_1099_util.get_1099_records_to_file(self.db_session)
+        if len(pfml_1099) > 0:
             if pfml_1099_util.is_test_file() == "T":
                 pfml_1099 = pfml_1099[:11]
             self.total_b_record = len(pfml_1099)
@@ -120,6 +106,7 @@ class Generate1099IRSfilingStep(Step):
             entries += c_entries + k_entries + f_entries
             logger.info("Completed irs file data mapping")
             self._create_irs_file(entries)
+            pfml_1099_util.update_submission_date(self.db_session, pfml_1099[0].pfml_1099_batch_id)
             self.db_session.commit()
 
     def _create_t_template(self) -> str:
@@ -268,6 +255,7 @@ class Generate1099IRSfilingStep(Step):
         b_seq = self.seq_number + 1
         logger.info("B sequence starts at %s", b_seq)
         for records in tax_data:
+
             b_dict = dict(
                 B_REC_TYPE=Constants.B_REC_TYPE,
                 TAX_YEAR=pfml_1099_util.get_tax_year(),
@@ -300,7 +288,6 @@ class Generate1099IRSfilingStep(Step):
                 FE_IND=Constants.BLANK_SPACE,
                 PAYEE_NM1=self._get_full_name(records.first_name, records.last_name, "PAYEE_NM1"),
                 PAYEE_NM2=self._get_full_name(records.first_name, records.last_name, "PAYEE_NM2"),
-                # B40=Constants.BLANK_SPACE,
                 PAYEE_ADDRESS=records.address_line_1.upper(),
                 B40_1=Constants.BLANK_SPACE,
                 PAYEE_CTY=records.city.upper(),
@@ -318,7 +305,6 @@ class Generate1099IRSfilingStep(Step):
                 ST_TAX=self._format_amount_fields(records.state_tax_withholdings),
                 LOCAL_TAX=self._format_amount_fields(records.federal_tax_withholdings),
                 CSF_CD=Constants.COMBINED_ST_FED_CD,
-                # B2_1=Constants.BLANK_SPACE,
             )
             b_record = template_str.format_map(b_dict)
             b_seq = b_seq + 1
@@ -364,7 +350,6 @@ class Generate1099IRSfilingStep(Step):
             FED_TAX=fed_tax,
             B4=Constants.BLANK_SPACE,
             CSF_CD=Constants.COMBINED_ST_FED_CD,
-            # B2=Constants.BLANK_SPACE,
         )
         k_record = template_str.format_map(k_dict)
         self.seq_number += 1
@@ -425,7 +410,6 @@ class Generate1099IRSfilingStep(Step):
                 last_name = last_name_list[0].rstrip() + last_name_list[1]
         else:
             last_name = lname
-        logger.debug("Last name 4 chars is %s", last_name[0:4])
         last_name_four = last_name[0:4].upper()
         return last_name_four
 

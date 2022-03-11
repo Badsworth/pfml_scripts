@@ -17,7 +17,7 @@ from massgov.pfml.api.validation.exceptions import PaymentRequired, ValidationEr
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
 if TYPE_CHECKING:
-    from massgov.pfml.util.paginate.paginator import Page, PaginationAPIContext
+    from massgov.pfml.api.util.paginate.paginator import Page, PaginationAPIContext
 
 
 # == response data structures ==

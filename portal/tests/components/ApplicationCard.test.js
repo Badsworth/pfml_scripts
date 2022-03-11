@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
-import AppErrorInfo from "../../src/models/AppErrorInfo";
 import { ApplicationCard } from "../../src/components/ApplicationCard";
 import { DocumentType } from "../../src/models/Document";
+import { DocumentsLoadError } from "../../src/errors";
 import { MockBenefitsApplicationBuilder } from "../test-utils";
 import React from "react";
 import User from "../../src/models/User";
@@ -62,7 +62,7 @@ describe("ApplicationCard", () => {
     render(<ApplicationCardWithAppLogic claim={claim} />);
 
     expect(
-      screen.getByRole("heading", { level: 3 }).textContent
+      screen.getByRole("heading", { level: 2 }).textContent
     ).toMatchInlineSnapshot(`"Leave to bond with a child"`);
   });
 
@@ -125,19 +125,12 @@ describe("ApplicationCard", () => {
 
   it("does not show a spinner if there is a document load error", () => {
     const claim = new MockBenefitsApplicationBuilder().submitted().create();
-    const appErrors = [
-      new AppErrorInfo({
-        name: "DocumentsLoadError",
-        meta: {
-          application_id: "mock_application_id",
-        },
-      }),
-    ];
+    const errors = [new DocumentsLoadError("mock_application_id")];
 
     render(
       <ApplicationCardWithAppLogic
         addAppLogicMocks={(appLogic) => {
-          appLogic.appErrors = appErrors;
+          appLogic.errors = errors;
         }}
         claim={claim}
         documents={[]}

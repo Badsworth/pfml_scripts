@@ -6,10 +6,10 @@ import {
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
-import AppErrorInfo from "../../models/AppErrorInfo";
 import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
+import { ValidationError } from "../../errors";
 import { get } from "lodash";
 import tracker from "../../services/tracker";
 import useFormState from "../../hooks/useFormState";
@@ -50,19 +50,21 @@ export const UploadDocsOptions = (props: WithBenefitsApplicationProps) => {
       ? contentContext[leaveReason][reasonQualifier]
       : get(contentContext, leaveReason, "");
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!upload_docs_options) {
-      const appErrorInfo = new AppErrorInfo({
-        field: "upload_docs_options",
-        message: t("errors.applications.upload_docs_options.required"),
-        type: "required",
-      });
+      const error = new ValidationError([
+        {
+          field: "upload_docs_options",
+          type: "required",
+          namespace: "applications",
+        },
+      ]);
 
-      await appLogic.setAppErrors([appErrorInfo]);
+      appLogic.setErrors([error]);
 
       tracker.trackEvent("ValidationError", {
-        issueField: appErrorInfo.field || "",
-        issueType: appErrorInfo.type || "",
+        issueField: error.issues[0].field ?? "",
+        issueType: error.issues[0].type ?? "",
       });
 
       return Promise.resolve();
@@ -72,7 +74,8 @@ export const UploadDocsOptions = (props: WithBenefitsApplicationProps) => {
       upload_docs_options === UploadType.certification
         ? undefined
         : upload_docs_options === UploadType.mass_id;
-    return appLogic.portalFlow.goToNextPage(
+
+    appLogic.portalFlow.goToNextPage(
       { claim },
       {
         claim_id: claim.application_id,
@@ -84,10 +87,12 @@ export const UploadDocsOptions = (props: WithBenefitsApplicationProps) => {
       },
       upload_docs_options
     );
+
+    return Promise.resolve();
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });

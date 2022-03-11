@@ -8,18 +8,18 @@ Confluence page for guidance on how to pick up tickets, when to deploy, which en
 ## Local Development Guidelines
 
 For practical instructions on getting set up locally, see the repo [README](../README.md).
-Below are guidelines (not strict rules) for working once you're ready. Use your best judgement or consult your feel engineers to follow the spirit of the guidelines and know when it makes sense to deviate on a case by case basis.
+Below are guidelines (not strict rules) for working once you're ready. Use your best judgement or consult your fellow engineers to follow the spirit of the guidelines and know when it makes sense to deviate on a case by case basis.
 
 We follow [trunk-based development](https://trunkbaseddevelopment.com/), which means:
 
 - Make small changes in [short-lived feature branches](https://trunkbaseddevelopment.com/short-lived-feature-branches/) and merge to `main` frequently.
 - Maintain a high test coverage in an automated test suite that runs on every pull request before merging.
 - Utilize [feature flags](https://trunkbaseddevelopment.com/feature-flags/) to control the release of larger features.
-- Keep each component (Portal, Admin Portal, and API) in a releasable state on its own.
+- Keep each component (Portal, Admin Portal, API, Busines Intelligence Platform, and Infrastructure) in a releasable state on its own.
 
 ### Keep system components separately releasable
 
-- Treat the Claimant/Leave Admin Portal, the Admin Portal, and the API, as separate system components that are deployed separately. Components should always be releasable, in any order or at the same time. Avoid hard dependencies on changes to other components that are not already in production.
+- Treat the Claimant/Leave Admin Portal, the Admin Portal, the API, the Business Intelligence Platform, and Infrastructure for each, as separate system components that are deployed separately. Components should always be releasable, in any order or at the same time. Avoid hard dependencies on changes to other components that are not already in production.
 - Treat each change you merge to `main` as _immediately_ deployable to production. Do not merge changes that depend on subsequent changes you plan to make, even if you plan to make those changes shortly. Use feature flags or other techniques to make changes deployable (see section below on feature flags).
 - Avoid changing more than one component in a single pull request, unless it's simpler and low risk to do so. In general, changes that depend on changes in other components should be planned ahead accordingly.
 

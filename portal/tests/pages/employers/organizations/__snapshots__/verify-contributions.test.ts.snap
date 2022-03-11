@@ -48,7 +48,7 @@ exports[`VerifyContributions renders the page 1`] = `
     <div
       class="margin-bottom-2"
     >
-      Log into 
+      Log in to 
       <a
         href="https://mtc.dor.state.ma.us/mtc/_/"
         rel="noreferrer noopener"

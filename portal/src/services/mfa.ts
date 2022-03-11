@@ -34,7 +34,10 @@ export const sendMFAConfirmationCode = async () => {
     tracker.markFetchRequestEnd();
   } catch (error) {
     if (isCognitoError(error)) {
-      const issue = { type: "attemptsLimitExceeded_updatePhone" };
+      const issue = {
+        type: "attemptsLimitExceeded_updatePhone",
+        namespace: "auth",
+      };
       const cognitoError = new CognitoAuthError(error, issue);
       throw cognitoError;
     }
@@ -116,8 +119,9 @@ export const getMfaValidationErrors = (phoneNumber: string | null) => {
     const issue = {
       field: "mfa_phone_number.phone_number",
       type: "international_number",
+      namespace: "users",
     };
-    throw new ValidationError([issue], "users");
+    throw new ValidationError([issue]);
   }
 };
 

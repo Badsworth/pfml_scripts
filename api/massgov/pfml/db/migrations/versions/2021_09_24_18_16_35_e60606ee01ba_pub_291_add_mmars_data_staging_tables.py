@@ -164,7 +164,7 @@ def upgrade():
         sa.Column("doc_last_modified_on", sa.TIMESTAMP(), nullable=True),
         sa.Column("NoFilter", sa.Text(), nullable=True),
         sa.Column("payment_id", postgresql.UUID(as_uuid=True), nullable=True),
-        sa.ForeignKeyConstraint(["payment_id"], ["payment.payment_id"],),
+        sa.ForeignKeyConstraint(["payment_id"], ["payment.payment_id"]),
         sa.PrimaryKeyConstraint("mmars_payment_data_id"),
     )
     op.create_index(
@@ -214,7 +214,7 @@ def upgrade():
         sa.Column("fiscal_year", sa.Integer(), nullable=True),
         sa.Column("closing_classification_code", sa.Text(), nullable=True),
         sa.Column("payment_id", postgresql.UUID(as_uuid=True), nullable=True),
-        sa.ForeignKeyConstraint(["payment_id"], ["payment.payment_id"],),
+        sa.ForeignKeyConstraint(["payment_id"], ["payment.payment_id"]),
         sa.PrimaryKeyConstraint("mmars_payment_refunds_id"),
     )
     op.create_index(

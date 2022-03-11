@@ -8,6 +8,11 @@ import {
   getLegalNotices,
 } from "../../../models/Document";
 import React, { useEffect } from "react";
+import {
+  getInfoAlertContext,
+  paymentStatusViewHelper,
+  showPaymentsTab,
+} from "./payments";
 import withUser, { WithUserProps } from "../../../hoc/withUser";
 
 import { AbsencePeriod } from "../../../models/AbsencePeriod";
@@ -17,9 +22,11 @@ import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
 import ButtonLink from "../../../components/ButtonLink";
 import Heading from "../../../components/core/Heading";
+import HolidayAlert from "../../../components/status/HolidayAlert";
 import LeaveReason from "../../../models/LeaveReason";
 import LegalNoticeList from "../../../components/LegalNoticeList";
 import PageNotFound from "../../../components/PageNotFound";
+import { Payment } from "src/models/Payment";
 import Spinner from "../../../components/core/Spinner";
 import StatusNavigationTabs from "../../../components/status/StatusNavigationTabs";
 import Title from "../../../components/core/Title";
@@ -46,13 +53,15 @@ export const Status = ({
 }) => {
   const { t } = useTranslation();
   const {
-    claims: { claimDetail, isLoadingClaimDetail, loadClaimDetail },
+    claims: { claimDetail, loadClaimDetail, isLoadingClaimDetail },
     documents: {
       documents: allClaimDocuments,
       download: downloadDocument,
       hasLoadedClaimDocuments,
       loadAll: loadAllClaimDocuments,
     },
+    holidays,
+    payments: { loadPayments, loadedPaymentsData },
   } = appLogic;
   const { absence_case_id, absence_id, uploaded_document_type } = query;
   const application_id = claimDetail?.application_id;
@@ -61,13 +70,14 @@ export const Status = ({
     claimDetail?.application_id || ""
   );
   const hasDocumentsError = hasDocumentsLoadError(
-    appLogic.appErrors,
+    appLogic.errors,
     claimDetail?.application_id || ""
   );
 
   useEffect(() => {
     if (absenceId) {
       loadClaimDetail(absenceId);
+      loadPayments(absenceId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [absenceId]);
@@ -99,7 +109,7 @@ export const Status = ({
   if (!isAbsenceCaseId) return <PageNotFound />;
 
   // only hide page content if there is an error that's not DocumentsLoadError.
-  const hasNonDocumentsLoadError: boolean = appLogic.appErrors.some(
+  const hasNonDocumentsLoadError: boolean = appLogic.errors.some(
     (error) => error.name !== "DocumentsLoadError"
   );
   if (hasNonDocumentsLoadError) {
@@ -123,22 +133,26 @@ export const Status = ({
   const absenceDetails = AbsencePeriod.groupByReason(
     claimDetail.absence_periods
   );
-  const hasPendingStatus = claimDetail?.hasPendingStatus;
-
-  const hasInReviewStatus = claimDetail?.hasInReviewStatus;
-
-  const hasProjectedStatus = claimDetail?.hasProjectedStatus;
-
-  const hasApprovedStatus = claimDetail?.hasApprovedStatus;
 
   const documentsForApplication = filterByApplication(
     allClaimDocuments.items,
     claimDetail.application_id
   );
 
-  const approvalNotice = findDocumentsByTypes(documentsForApplication, [
-    DocumentType.approvalNotice,
-  ])[0];
+  const helper = paymentStatusViewHelper(
+    claimDetail,
+    allClaimDocuments,
+    loadedPaymentsData || new Payment()
+  );
+
+  const {
+    hasApprovedStatus,
+    hasPendingStatus,
+    hasInReviewStatus,
+    hasProjectedStatus,
+  } = helper;
+
+  const infoAlertContext = getInfoAlertContext(helper);
 
   const viewYourNotices = () => {
     const legalNotices = getLegalNotices(documentsForApplication);
@@ -214,39 +228,17 @@ export const Status = ({
     );
   };
 
-  const getInfoAlertContext = (absenceDetails: {
-    [key: string]: AbsencePeriod[];
-  }) => {
-    const hasBondingReason = LeaveReason.bonding in absenceDetails;
-    const hasPregnancyReason = LeaveReason.pregnancy in absenceDetails;
-    const hasNewBorn = claimDetail.absence_periods.some(
-      (absenceItem) =>
-        (absenceItem.reason_qualifier_one ||
-          absenceItem.reason_qualifier_two) === "Newborn"
-    );
-    if (hasBondingReason && !hasPregnancyReason && hasNewBorn) {
-      return "bonding";
-    }
-
-    if (hasPregnancyReason && !hasBondingReason) {
-      return "pregnancy";
-    }
-
-    return "";
-  };
-
-  const infoAlertContext = getInfoAlertContext(absenceDetails);
   const [firstAbsenceDetail] = Object.keys(absenceDetails);
 
-  // Determines if phase two payment features are displayed
-  const showPhaseTwoFeatures =
-    isFeatureEnabled("claimantShowPaymentsPhaseTwo") && hasApprovedStatus;
-
   // Determines if payment tab is displayed
-  const isPaymentsTab = Boolean(approvalNotice) && showPhaseTwoFeatures;
+  const isPaymentsTab = showPaymentsTab(helper);
 
   return (
     <React.Fragment>
+      {isFeatureEnabled("showHolidayAlert") &&
+        isFeatureEnabled("claimantShowPaymentsPhaseThree") && (
+          <HolidayAlert holidaysLogic={holidays} />
+        )}
       {uploaded_document_type && (
         <Alert
           heading={t("pages.claimsStatus.uploadSuccessHeading", {
@@ -652,7 +644,7 @@ export const Timeline = ({
         components={{
           "timeline-link": (
             <a
-              href={routes.external.massgov.timeline}
+              href={routes.external.massgov.approvalTimeline}
               rel="noopener noreferrer"
               target="_blank"
             />

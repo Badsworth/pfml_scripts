@@ -95,19 +95,108 @@ For example:
 
 To setup a development environment outside of Docker, you'll need to install a few things.
 
-1. Install at least Python 3.9.
+1. Install Python 3.9.
    [pyenv](https://github.com/pyenv/pyenv#installation) is one popular option for installing Python,
    or [asdf](https://asdf-vm.com/).
 2. After installing and activating the right version of Python, install
    [poetry](https://python-poetry.org/docs/#installation).
-3. Set `RUN_CMD_OPT` to `NATIVE` in your development environment.
-4. Run `make deps` to install Python dependencies and development tooling.
+3. Run `poetry config virtualenvs.in-project true` so that the project dependencies are installed inside the project at `pfml/api/.venv`.
+4. Set `RUN_CMD_OPT` to `NATIVE` in your development environment.
+5. If you are using an M1 mac, you will need to install postgres as well: `brew install postgresql` (The psycopg2-binary is built from source on M1 macs which requires the postgres executable to be present)
+6. Run `make deps` to install Python dependencies and development tooling.
 
 You should now be able to run developer tooling natively, like linting.
 
 To run the application you'll need some environment variables set. You can largely copy-paste the env vars
 in `docker-compose.yml` to your native environment. `DB_HOST` should be changed to `localhost`. You can then start up
 just the PostgreSQL database via Docker with `make start-db` and then the API server with `make run-native`.
+
+## IDE Configuration
+
+If the IDE of your choice does not appear below, refer to the VS Code instructions for hints on what needs to get configured.
+
+### VSCode
+
+Make sure that you have completed the native development setup first.  These instructions also assume that root workspace is `pfml` and not `pfml/api`.
+
+1. Set the python interpreter to the python binary installed in the virtual environment
+2. Create `pfml/api/.env` file. **The variables here are sourced from docker-compose.yml.  The primary difference is that the DB_HOST=localhost.**
+3. Update the workspace settings at to `pfml/.vscode/settings.json`.  Make sure to update the mypy.configFile to the correct path
+
+```text
+# pfml/api/.env
+ENVIRONMENT=local
+DB_HOST=localhost
+DB_NAME=pfml
+DB_ADMIN_USERNAME=pfml
+DB_ADMIN_PASSWORD=secret123
+DB_USERNAME=pfml_api
+DB_PASSWORD=secret123
+DB_NESSUS_PASSWORD=nessussecret123
+CORS_ORIGINS=http://localhost:3000,http://localhost:3001
+COGNITO_USER_POOL_KEYS_URL=file://./jwks.json
+COGNITO_USER_POOL_ID=us-east-1_HpL4XslLg
+COGNITO_USER_POOL_CLIENT_ID=10rjcp71r8bnk4459c67bn18t8
+DASHBOARD_PASSWORD=secret123
+LOGGING_LEVEL=massgov.pfml.fineos.fineos_client=DEBUG,massgov.pfml.servicenow.client=DEBUG
+ENABLE_EMPLOYEE_ENDPOINTS=1
+FOLDER_PATH=dor_mock
+FINEOS_FOLDER_PATH=fineos_mock
+RMV_API_BEHAVIOR=fully_mocked
+RMV_CHECK_MOCK_SUCCESS=1
+ENABLE_MOCK_SERVICE_NOW_CLIENT=1
+ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS=0
+PORTAL_BASE_URL=https://paidleave.mass.gov
+ENABLE_APPLICATION_FRAUD_CHECK=0
+ENABLE_DOCUMENT_MULTIPART_UPLOAD=0
+AGENCY_REDUCTIONS_EMAIL_ADDRESS=EOL-DL-DFML-Agency-Reductions@mass.gov
+DFML_PROJECT_MANAGER_EMAIL_ADDRESS=
+DISABLE_SENDING_EMAILS=1
+PFML_EMAIL_ADDRESS=PFML_DoNotReply@eol.mass.gov
+BOUNCE_FORWARDING_EMAIL_ADDRESS=PFML_DoNotReply@eol.mass.gov
+PDF_API_HOST=https://mass-pfml-pdf-api
+ENABLE_GENERATE_1099_PDF=1
+GENERATE_1099_MAX_FILES=1000
+ENABLE_MERGE_1099_PDF=1
+ENABLE_UPLOAD_1099_PDF=1
+ENABLE_APPLICATION_IMPORT=1
+UPLOAD_MAX_FILES_TO_FINEOS=10
+TEST_FILE_GENERATION_1099=0
+IRS_1099_CORRECTION_IND=0
+IRS_1099_TAX_YEAR=2021
+MOVEIT_SFTP_URI=sftp://foo@mass-pfml-sftp:22
+SFTP_URI=sftp://foo@mass-pfml-sftp:22
+```
+
+```json
+{
+  // pfml/.vscode/settings.json
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
+  "python.linting.mypyEnabled": true,
+  "python.linting.pycodestyleEnabled": false,
+  "python.linting.enabled": true,
+  "python.testing.pytestArgs": [
+    "api/tests"
+  ],
+  "python.envFile": "${workspaceFolder}/api/.env",
+  "python.formatting.provider": "black",
+  "mypy.configFile": "/Users/{path to pfml project}/pfml/api/pyproject.toml",
+  "python.linting.flake8Args": [
+    "--config=${workspaceFolder}/api/setup.cfg"
+  ],
+  "python.linting.mypyArgs": [
+    "--exclude=\"api/tests/"
+  ],
+  "python.analysis.extraPaths": ["${workspaceFolder}/api"], // Setting is only required if your workspace is the entire PFML repo
+  "[python]": {
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": true
+    }
+  },
+}
+
+```
 
 ## Environment Configuration
 

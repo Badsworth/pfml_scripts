@@ -48,7 +48,7 @@ class UserLeaveAdminResponse(PydanticBaseModel):
 
 
 class UserResponse(PydanticBaseModel):
-    """Response object for a given User result """
+    """Response object for a given User result"""
 
     user_id: UUID4
     auth_id: str = Field(alias="sub_id")
@@ -113,7 +113,7 @@ class AdminTokenResponse(PydanticBaseModel):
 
 
 class AdminUserResponse(PydanticBaseModel):
-    """Response object for a given AzureUser object """
+    """Response object for a given AzureUser object"""
 
     sub_id: str
     first_name: Optional[str]

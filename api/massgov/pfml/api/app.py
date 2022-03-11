@@ -55,10 +55,10 @@ def create_app(
 
     options = {"swagger_url": "/docs"}
 
-    validator_map = get_custom_validator_map()
-
     app = connexion.FlaskApp(__name__, specification_dir=get_project_root_dir(), options=options)
     add_error_handlers_to_app(app)
+
+    validator_map = get_custom_validator_map(config.enable_response_validation)
 
     app.add_api(
         openapi_filenames()[0],
@@ -98,6 +98,7 @@ def create_app(
     def push_db():
         g.db = db_session_factory
         g.start_time = time.monotonic()
+        g.connexion_flask_app = app
         massgov.pfml.util.logging.access.access_log_start(flask.request)
         newrelic.agent.add_custom_parameter(
             "api_release_version", os.environ.get("RELEASE_VERSION")

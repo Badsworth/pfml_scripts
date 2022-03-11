@@ -119,7 +119,7 @@ class FineosExtractStep(Step):
         self.active_extract_data_date_str = None
 
     def get_import_type(self) -> str:
-        """ Use the reference file type description for an import log type distinction """
+        """Use the reference file type description for an import log type distinction"""
         return self.extract_config.reference_file_type.reference_file_type_description
 
     def run_step(self) -> None:
@@ -282,17 +282,38 @@ class FineosExtractStep(Step):
                 extract_data.reference_file.reference_file_id,
                 self.get_import_log_id(),
             )
-            for i, record in enumerate(records):
-                # Verify that the expected columns are present
-                if i == 0:
-                    payments_util.validate_columns_present(record, extract)
 
+            unconfigured_columns = []
+
+            for i, record in enumerate(records):
                 lower_key_record = make_keys_lowercase(record)
+
+                if i == 0:
+                    # Verify that the expected columns are present
+                    payments_util.validate_columns_present(lower_key_record, extract)
+
+                    # Check if there are any fields that don't have a matching
+                    # column in the table model
+                    unconfigured_columns = payments_util.get_unconfigured_fineos_columns(
+                        lower_key_record, extract.table
+                    )
+                    if len(unconfigured_columns) > 0:
+                        logger.warning(
+                            "Unconfigured columns in FINEOS extract.",
+                            extra={
+                                "extract.table.__name__": extract.table.__name__,
+                                "fields": ",".join(unconfigured_columns),
+                            },
+                        )
+
                 staging_table_instance = payments_util.create_staging_table_instance(
                     lower_key_record,
                     extract.table,
                     extract_data.reference_file,
                     self.get_import_log_id(),
+                    # These were already logged when we checked the first record earlier,
+                    # so we don't need to log them again.
+                    ignore_properties=unconfigured_columns,
                 )
                 self.db_session.add(staging_table_instance)
                 self.increment(self.Metrics.RECORDS_PROCESSED_COUNT)

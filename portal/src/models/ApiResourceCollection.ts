@@ -8,7 +8,7 @@ export interface ApiResource {
  * Readonly generic class representing a collection of a specific data model. Methods
  * return new instances of the collection rather than modifying the original collection.
  * @example const c = new ApiResourceCollection<Document>("document_id", [{ document_id: "123", name: "example" }]);
- *          c.addItem({ document_id: "456", name: "example2" });
+ *          c.setItem({ document_id: "456", name: "example2" });
  */
 class ApiResourceCollection<TApiResource extends ApiResource> {
   idKey: keyof TApiResource;
@@ -56,22 +56,6 @@ class ApiResourceCollection<TApiResource extends ApiResource> {
   }
 
   /**
-   * TODO (PORTAL-265): Remove in favor of setItem.
-   * @deprecated The method should not be used for new code. Use `setItem` instead.
-   */
-  addItem(item: TApiResource): ApiResourceCollection<TApiResource> {
-    return this.setItem(item);
-  }
-
-  /**
-   * TODO (PORTAL-265): Remove in favor of setItem.
-   * @deprecated The method should not be used for new code. Use `setItem` instead.
-   */
-  updateItem(item: TApiResource): ApiResourceCollection<TApiResource> {
-    return this.setItem(item);
-  }
-
-  /**
    * Add or update items in the collection. Returns a new collection with the
    * items included. Does not modify the original collection.
    */
@@ -84,22 +68,6 @@ class ApiResourceCollection<TApiResource extends ApiResource> {
       this.idKey,
       this._arrayFromMap(updatedMap)
     );
-  }
-
-  /**
-   * TODO (PORTAL-265): Remove in favor of setItems.
-   * @deprecated The method should not be used for new code. Use `setItems` instead.
-   */
-  addItems(items: TApiResource[]): ApiResourceCollection<TApiResource> {
-    return this.setItems(items);
-  }
-
-  /**
-   * TODO (PORTAL-265): Remove in favor of setItems.
-   * @deprecated The method should not be used for new code. Use `setItems` instead.
-   */
-  updateItems(items: TApiResource[]): ApiResourceCollection<TApiResource> {
-    return this.setItems(items);
   }
 
   /**

@@ -210,7 +210,7 @@ def test_notification_post_employee(client, test_db_session, fineos_user_token, 
     body = copy.deepcopy(leave_admin_body)
     body["claimant_info"]["customer_id"] = employee.fineos_customer_number
     response = client.post(
-        "/v1/notifications", headers={"Authorization": f"Bearer {fineos_user_token}"}, json=body,
+        "/v1/notifications", headers={"Authorization": f"Bearer {fineos_user_token}"}, json=body
     )
     assert response.status_code == 201
     claim_record = (
@@ -232,7 +232,7 @@ def test_notifications_update_claims_employee(client, test_db_session, fineos_us
     test_db_session.add(existing_claim)
     test_db_session.commit()
     response = client.post(
-        "/v1/notifications", headers={"Authorization": f"Bearer {fineos_user_token}"}, json=body,
+        "/v1/notifications", headers={"Authorization": f"Bearer {fineos_user_token}"}, json=body
     )
     assert response.status_code == 201
     claim_record = (
@@ -367,7 +367,7 @@ class TestNotificationAbsencePeriod:
         db_periods = (
             test_db_session.query(AbsencePeriod)
             .join(Claim)
-            .filter(Claim.claim_id == claim.claim_id,)
+            .filter(Claim.claim_id == claim.claim_id)
             .all()
         )
         assert len(db_periods) == 0
@@ -702,7 +702,7 @@ class TestNotificationManagedRequirement:
 
     @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
     def test_notification_managed_requirement_create_failure(
-        self, mock_get_req, client, test_db_session, fineos_user_token, fineos_managed_requirement,
+        self, mock_get_req, client, test_db_session, fineos_user_token, fineos_managed_requirement
     ):
         fineos_managed_requirement.followUpDate = "Bad Date"
         mock_get_req.return_value = [fineos_managed_requirement]
@@ -717,7 +717,7 @@ class TestNotificationManagedRequirement:
 
     @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
     def test_notification_managed_requirement_update_failure_status(
-        self, mock_get_req, client, test_db_session, fineos_user_token, fineos_managed_requirement,
+        self, mock_get_req, client, test_db_session, fineos_user_token, fineos_managed_requirement
     ):
         fineos_managed_requirement.followUpDate = "Bad Date"
         mock_get_req.return_value = [fineos_managed_requirement]
@@ -751,9 +751,7 @@ class TestNotificationManagedRequirement:
         fineos_managed_requirement.status = ManagedRequirementStatus.get_description(2)
 
         response = client.post(
-            "/v1/notifications",
-            headers={"Authorization": f"Bearer {fineos_user_token}"},
-            json=body,
+            "/v1/notifications", headers={"Authorization": f"Bearer {fineos_user_token}"}, json=body
         )
         assert response.status_code == 201
         managed_requirement = get_managed_requirement_by_fineos_managed_requirement_id(
@@ -844,3 +842,21 @@ class TestNotificationManagedRequirement:
             )
 
             self._assert_managed_requirement_data(claim, managed_requirement, man_req["fineos_obj"])
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
+    def test_alternate_recipient_type_no_rollback_or_exception(
+        self, mock_api, client, fineos_user_token, claim, caplog
+    ):
+        json = claimant_body
+        json["recipient_type"] = "Claimant"
+        client.post(
+            "/v1/notifications", headers={"Authorization": f"Bearer {fineos_user_token}"}, json=json
+        )
+        assert (
+            "Failed to handle the claim's managed requirements in notification call."
+            not in caplog.text
+        )
+        assert (
+            "UnboundLocalError: local variable 'fineos_requirements' referenced before assignment"
+            not in caplog.text
+        )

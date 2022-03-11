@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 /**
  * Format the given date as an internationalized, human-readable string
  */
-export default function formatDate(isoDate: string | null) {
+export default function formatDate(isoDate?: string | null) {
   return {
     full: () => {
       if (!isoDate) return "";

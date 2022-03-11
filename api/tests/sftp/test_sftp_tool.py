@@ -9,9 +9,7 @@ SFTP_DEST_PATH = "sftp://dest/from"
 
 
 @pytest.fixture
-def create_mock_sftp_files(
-    monkeypatch, mock_sftp_client, setup_mock_sftp_client,
-):
+def create_mock_sftp_files(monkeypatch, mock_sftp_client, setup_mock_sftp_client):
     monkeypatch.setenv("SFTP_URI", "sftp://sftp_uri")
     monkeypatch.setenv("SFTP_SSH_KEY", "abcd1234")
     test_file_path = os.path.join(os.path.dirname(__file__), "test_files")
@@ -60,9 +58,7 @@ def test_copy_one_s3_to_s3_unsupported(mock_sftp_client):
 
 def test_copy_dir_s3_to_s3_unsupported(mock_sftp_client):
     with pytest.raises(RuntimeError, match="Unsupported feature: Copying/moving from s3 to s3"):
-        run_tool(
-            mock_sftp_client, ["--copy_dir", "s3://from", "--to_dir", "s3://to"],
-        )
+        run_tool(mock_sftp_client, ["--copy_dir", "s3://from", "--to_dir", "s3://to"])
 
 
 def test_rename_one_sftp(mock_sftp_client, create_mock_sftp_files):
@@ -128,9 +124,7 @@ def test_copy_dir_sftp_to_s3(mock_sftp_client, mock_s3_bucket, create_mock_sftp_
     s3_path = f"s3://{mock_s3_bucket}"
     to_path = f"{s3_path}/target"
 
-    run_tool(
-        mock_sftp_client, ["--copy_dir", SFTP_DEST_PATH, "--to_dir", to_path],
-    )
+    run_tool(mock_sftp_client, ["--copy_dir", SFTP_DEST_PATH, "--to_dir", to_path])
 
     s3_files = file_util.list_files(to_path)
     assert len(s3_files) == 1
@@ -141,9 +135,7 @@ def test_copy_dir_s3_to_sftp(mock_sftp_client, mock_s3_bucket, create_mock_s3_fi
     s3_path = f"s3://{mock_s3_bucket}"
     to_path = "sftp://target"
 
-    run_tool(
-        mock_sftp_client, ["--copy_dir", s3_path, "--to_dir", to_path],
-    )
+    run_tool(mock_sftp_client, ["--copy_dir", s3_path, "--to_dir", to_path])
 
     _, files2 = run_tool(mock_sftp_client, ["--list", to_path])
     assert len(files2) == 1

@@ -73,8 +73,7 @@ def split_sftp_url(path):
 def get_s3_client(
     bucket_name: str, boto_session: Optional[boto3.Session] = None
 ) -> botocore.client.BaseClient:
-    """Returns the appropriate S3 client for a given bucket
-    """
+    """Returns the appropriate S3 client for a given bucket"""
     if boto_session:
         return boto_session.client("s3")
     elif bucket_name.startswith(FINEOS_BUCKET_PREFIX):

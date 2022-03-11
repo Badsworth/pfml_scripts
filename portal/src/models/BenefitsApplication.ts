@@ -23,7 +23,6 @@ class BenefitsApplication extends BaseBenefitsApplication {
   fineos_absence_id: string | null = null;
   organization_unit_id: string | null = null;
   organization_unit_selection: "not_listed" | "not_selected" | null = null;
-  created_at: string;
 
   first_name: string | null = null;
   middle_name: string | null = null;
@@ -57,6 +56,11 @@ class BenefitsApplication extends BaseBenefitsApplication {
   work_pattern: Partial<WorkPattern> | null = null;
 
   employment_status: ValuesOf<typeof EmploymentStatus> | null = null;
+
+  computed_start_dates: {
+    other_reason?: string | null;
+    same_reason?: string | null;
+  };
 
   leave_details: {
     continuous_leave_periods: ContinuousLeavePeriod[];
@@ -95,23 +99,6 @@ class BenefitsApplication extends BaseBenefitsApplication {
     super();
     // Recursively merge with the defaults
     merge(this, attrs);
-  }
-
-  /**
-   * Returns all claims with an "Started" or "Submitted" status
-   */
-  static inProgress(applications: BenefitsApplication[]) {
-    return applications.filter(
-      (item) => item.status !== BenefitsApplicationStatus.completed
-    );
-  }
-
-  /**
-   * Returns all claims that have completed all parts of
-   * the progressive application
-   */
-  static completed(applications: BenefitsApplication[]) {
-    return applications.filter((item) => item.isCompleted);
   }
 
   /**
@@ -178,6 +165,44 @@ class BenefitsApplication extends BaseBenefitsApplication {
           .map((o) => o.organization_unit_id)
           .includes(o.organization_unit_id)
     );
+  }
+
+  /**
+   * Returns earliest start date across all leave periods
+   */
+  get leaveStartDate() {
+    const periods = [
+      get(this, "leave_details.continuous_leave_periods"),
+      get(this, "leave_details.intermittent_leave_periods"),
+      get(this, "leave_details.reduced_schedule_leave_periods"),
+    ].flat();
+
+    const startDates: string[] = compact(periods)
+      .map((period) => period.start_date)
+      .sort();
+
+    if (!startDates.length) return null;
+
+    return startDates[0];
+  }
+
+  /**
+   * Returns latest end date across all leave periods
+   */
+  get leaveEndDate() {
+    const periods = [
+      get(this, "leave_details.continuous_leave_periods"),
+      get(this, "leave_details.intermittent_leave_periods"),
+      get(this, "leave_details.reduced_schedule_leave_periods"),
+    ].flat();
+
+    const endDates: string[] = compact(periods)
+      .map((period) => period.end_date)
+      .sort();
+
+    if (!endDates.length) return null;
+
+    return endDates[endDates.length - 1];
   }
 }
 

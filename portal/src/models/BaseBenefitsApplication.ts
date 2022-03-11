@@ -1,8 +1,6 @@
 import { compact, get } from "lodash";
 import LeaveReason from "./LeaveReason";
-import dayjs from "dayjs";
 import formatDateRange from "../utils/formatDateRange";
-import tracker from "../services/tracker";
 
 export interface BaseLeavePeriod {
   start_date: string | null;
@@ -99,76 +97,6 @@ abstract class BaseBenefitsApplication {
     return compact([this.first_name, this.middle_name, this.last_name]).join(
       " "
     );
-  }
-
-  /**
-   * Returns earliest start date across all leave periods
-   */
-  get leaveStartDate() {
-    const periods = [
-      get(this, "leave_details.continuous_leave_periods"),
-      get(this, "leave_details.intermittent_leave_periods"),
-      get(this, "leave_details.reduced_schedule_leave_periods"),
-    ].flat();
-
-    const startDates: string[] = compact(periods)
-      .map((period) => period.start_date)
-      .sort();
-
-    if (!startDates.length) return null;
-
-    return startDates[0];
-  }
-
-  /**
-   * Returns latest end date across all leave periods
-   */
-  get leaveEndDate() {
-    const periods = [
-      get(this, "leave_details.continuous_leave_periods"),
-      get(this, "leave_details.intermittent_leave_periods"),
-      get(this, "leave_details.reduced_schedule_leave_periods"),
-    ].flat();
-
-    const endDates: string[] = compact(periods)
-      .map((period) => period.end_date)
-      .sort();
-
-    if (!endDates.length) return null;
-
-    return endDates[endDates.length - 1];
-  }
-
-  /**
-   * Returns a date a year before the start date (or Jan 1, 2021)
-   */
-  get otherLeaveStartDate(): string {
-    const programLaunchIsoDate = "2021-01-01";
-    if (!this.leaveStartDate) {
-      return programLaunchIsoDate;
-    }
-
-    try {
-      const startDate = dayjs(this.leaveStartDate);
-      if (!startDate.isValid()) {
-        throw new Error(`Invalid date: ${this.leaveStartDate}`);
-      }
-
-      const startingSunday = startDate.startOf("week");
-      const yearBeforeStartingSundayIsoDate = startingSunday
-        .subtract(364, "days")
-        .format("YYYY-MM-DD"); // Don't use toISOString() because it adds a timezone offset
-
-      // If calculated date is earlier, return the program start date
-      if (yearBeforeStartingSundayIsoDate < programLaunchIsoDate) {
-        return programLaunchIsoDate;
-      }
-
-      return yearBeforeStartingSundayIsoDate;
-    } catch (error) {
-      tracker.noticeError(error);
-      return programLaunchIsoDate;
-    }
   }
 }
 

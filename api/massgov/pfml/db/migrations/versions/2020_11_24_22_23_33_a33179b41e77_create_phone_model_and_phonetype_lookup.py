@@ -30,7 +30,7 @@ def upgrade():
         sa.Column("phone_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("phone_number", sa.Text(), nullable=True),
         sa.Column("phone_type_id", sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(["phone_type_id"], ["lk_phone_type.phone_type_id"],),
+        sa.ForeignKeyConstraint(["phone_type_id"], ["lk_phone_type.phone_type_id"]),
         sa.PrimaryKeyConstraint("phone_id"),
     )
     op.add_column(

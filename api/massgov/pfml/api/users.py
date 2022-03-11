@@ -87,9 +87,7 @@ def users_post():
                 data={},
             ).to_api_response()
         data = UserResponse.from_orm(user).dict()
-    logger.info(
-        "users_post success - account created", extra={"is_employer": str(is_employer)},
-    )
+    logger.info("users_post success - account created", extra={"is_employer": str(is_employer)})
 
     return response_util.success_response(
         data=data,
@@ -104,7 +102,7 @@ def users_get(user_id):
         data = UserResponse.from_orm(u).dict()
     ensure(READ, u)
     return response_util.success_response(
-        message="Successfully retrieved user", data=data,
+        message="Successfully retrieved user", data=data
     ).to_api_response()
 
 
@@ -160,7 +158,7 @@ def users_convert_employer(user_id):
     )
 
     return response_util.success_response(
-        message="Successfully converted user", status_code=201, data=data,
+        message="Successfully converted user", status_code=201, data=data
     ).to_api_response()
 
 
@@ -172,7 +170,7 @@ def users_current_get():
     data = UserResponse.from_orm(current_user).dict()
 
     return response_util.success_response(
-        message="Successfully retrieved current user", data=data,
+        message="Successfully retrieved current user", data=data
     ).to_api_response()
 
 
@@ -199,5 +197,5 @@ def users_patch(user_id):
     data = UserResponse.from_orm(updated_user).dict()
 
     return response_util.success_response(
-        message="Successfully updated user", data=data,
+        message="Successfully updated user", data=data
     ).to_api_response()

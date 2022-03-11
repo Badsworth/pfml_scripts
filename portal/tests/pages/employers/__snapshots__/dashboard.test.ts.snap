@@ -341,7 +341,9 @@ exports[`Employer dashboard renders the page with expected content and paginatio
       </div>
     </details>
   </section>
-  <section>
+  <section
+    class="margin-top-2"
+  >
     <div
       class="bg-base-lightest padding-x-3 padding-top-1px padding-bottom-2"
     >

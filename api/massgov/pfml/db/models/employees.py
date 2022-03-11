@@ -178,6 +178,16 @@ class LkPrenoteState(Base):
         self.prenote_state_description = prenote_state_description
 
 
+class LkPaymentRelevantParty(Base):
+    __tablename__ = "lk_payment_relevant_party"
+    payment_relevant_party_id = Column(Integer, primary_key=True, autoincrement=True)
+    payment_relevant_party_description = Column(Text, nullable=False)
+
+    def __init__(self, payment_relevant_party_id, payment_relevant_party_description):
+        self.payment_relevant_party_id = payment_relevant_party_id
+        self.payment_relevant_party_description = payment_relevant_party_description
+
+
 class LkPaymentTransactionType(Base):
     __tablename__ = "lk_payment_transaction_type"
     payment_transaction_type_id = Column(Integer, primary_key=True, autoincrement=True)
@@ -315,7 +325,7 @@ class HealthCareProvider(Base, TimestampMixin):
 class OrganizationUnit(Base, TimestampMixin):
     __tablename__ = "organization_unit"
     __table_args__ = (
-        UniqueConstraint("name", "employer_id", name="uix_organization_unit_name_employer_id",),
+        UniqueConstraint("name", "employer_id", name="uix_organization_unit_name_employer_id"),
     )
     organization_unit_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     fineos_id = Column(Text, nullable=True, unique=True)
@@ -600,7 +610,7 @@ class Employee(Base, TimestampMixin):
     __tablename__ = "employee"
     employee_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     tax_identifier_id = Column(
-        PostgreSQLUUID, ForeignKey("tax_identifier.tax_identifier_id"), index=True, unique=True,
+        PostgreSQLUUID, ForeignKey("tax_identifier.tax_identifier_id"), index=True, unique=True
     )
     title_id = Column(Integer, ForeignKey("lk_title.title_id"))
     first_name = Column(Text, nullable=False, index=True)
@@ -706,7 +716,7 @@ class Employee(Base, TimestampMixin):
                 DuaEmployeeDemographics,
                 DuaReportingUnit.dua_id == DuaEmployeeDemographics.employer_reporting_unit_number,
             )
-            .filter(DuaEmployeeDemographics.fineos_customer_number == self.fineos_customer_number,)
+            .filter(DuaEmployeeDemographics.fineos_customer_number == self.fineos_customer_number)
             .filter(
                 OrganizationUnit.fineos_id is not None,
                 DuaReportingUnit.organization_unit_id is not None,
@@ -748,6 +758,10 @@ class LkChangeRequestType(Base):
         self.change_request_type_id = change_request_type_id
         self.change_request_type_description = change_request_type_description
 
+    @typed_hybrid_property
+    def description(self) -> str:
+        return self.change_request_type_description
+
 
 class ChangeRequest(Base, TimestampMixin):
     __tablename__ = "change_request"
@@ -758,10 +772,15 @@ class ChangeRequest(Base, TimestampMixin):
     claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True, nullable=False)
     start_date = Column(Date)
     end_date = Column(Date)
+    documents_submitted_at = Column(TIMESTAMP(timezone=True))
     submitted_time = Column(TIMESTAMP(timezone=True))
 
     change_request_type_instance = relationship(LkChangeRequestType)
     claim = relationship("Claim", back_populates="change_request")
+
+    @typed_hybrid_property
+    def type(self) -> str:
+        return self.change_request_type_instance.description
 
 
 class Claim(Base, TimestampMixin):
@@ -796,7 +815,7 @@ class Claim(Base, TimestampMixin):
         relationship("ManagedRequirement", back_populates="claim"),
     )
     absence_periods = cast(
-        Optional[List["AbsencePeriod"]], relationship("AbsencePeriod", back_populates="claim"),
+        Optional[List["AbsencePeriod"]], relationship("AbsencePeriod", back_populates="claim")
     )
     organization_unit = relationship(OrganizationUnit)
     change_request = relationship("ChangeRequest", back_populates="claim")
@@ -950,6 +969,15 @@ class BenefitYear(Base, TimestampMixin):
 
     total_wages = Column(Numeric(asdecimal=True))
 
+    @typed_hybrid_property
+    def current_benefit_year(self) -> bool:
+        today = date.today()
+        return today >= self.start_date and today <= self.end_date
+
+    @current_benefit_year.expression
+    def current_benefit_year(cls) -> bool:  # noqa: B902
+        return func.now().between(cls.start_date, cls.end_date)
+
     contributions = cast(
         List["BenefitYearContribution"],
         relationship("BenefitYearContribution", cascade="all, delete-orphan"),
@@ -994,6 +1022,9 @@ class Payment(Base, TimestampMixin):
     employee_id = Column(PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True)
     payment_transaction_type_id = Column(
         Integer, ForeignKey("lk_payment_transaction_type.payment_transaction_type_id")
+    )
+    payment_relevant_party_id = Column(
+        Integer, ForeignKey("lk_payment_relevant_party.payment_relevant_party_id")
     )
     period_start_date = Column(Date)
     period_end_date = Column(Date)
@@ -1046,6 +1077,7 @@ class Payment(Base, TimestampMixin):
     employee = relationship("Employee")
     claim_type = relationship(LkClaimType)
     payment_transaction_type = relationship(LkPaymentTransactionType)
+    payment_relevant_party = relationship(LkPaymentRelevantParty)
     disb_method = relationship(LkPaymentMethod, foreign_keys=disb_method_id)
     pub_eft = relationship(PubEft)
     experian_address_pair = relationship(ExperianAddressPair, foreign_keys=experian_address_pair_id)
@@ -1064,6 +1096,13 @@ class PaymentDetails(Base, TimestampMixin):
     __tablename__ = "payment_details"
     payment_details_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     payment_id = Column(PostgreSQLUUID, ForeignKey(Payment.payment_id), nullable=False, index=True)
+
+    payment_details_c_value = Column(Text, index=True)
+    payment_details_i_value = Column(Text, index=True)
+
+    vpei_payment_details_id = Column(
+        PostgreSQLUUID, ForeignKey("fineos_extract_vpei_payment_details.vpei_payment_details_id")
+    )
 
     period_start_date = Column(Date)
     period_end_date = Column(Date)
@@ -1169,9 +1208,7 @@ class EmployerAddress(Base, TimestampMixin):
 class HealthCareProviderAddress(Base, TimestampMixin):
     __tablename__ = "link_health_care_provider_address"
     health_care_provider_id = Column(
-        PostgreSQLUUID,
-        ForeignKey("health_care_provider.health_care_provider_id"),
-        primary_key=True,
+        PostgreSQLUUID, ForeignKey("health_care_provider.health_care_provider_id"), primary_key=True
     )
     address_id = Column(PostgreSQLUUID, ForeignKey("address.address_id"), primary_key=True)
 
@@ -1304,7 +1341,7 @@ class UserLeaveAdministratorOrgUnit(Base, TimestampMixin):
         primary_key=True,
     )
     organization_unit_id = Column(
-        PostgreSQLUUID, ForeignKey("organization_unit.organization_unit_id"), primary_key=True,
+        PostgreSQLUUID, ForeignKey("organization_unit.organization_unit_id"), primary_key=True
     )
 
     organization_unit = relationship(OrganizationUnit)
@@ -1548,9 +1585,7 @@ class PaymentReferenceFile(Base, TimestampMixin):
         PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), primary_key=True
     )
     ctr_document_identifier_id = Column(
-        PostgreSQLUUID,
-        ForeignKey("ctr_document_identifier.ctr_document_identifier_id"),
-        index=True,
+        PostgreSQLUUID, ForeignKey("ctr_document_identifier.ctr_document_identifier_id"), index=True
     )
 
     payment = relationship("Payment", back_populates="reference_files")
@@ -1567,9 +1602,7 @@ class EmployeeReferenceFile(Base, TimestampMixin):
         PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), primary_key=True
     )
     ctr_document_identifier_id = Column(
-        PostgreSQLUUID,
-        ForeignKey("ctr_document_identifier.ctr_document_identifier_id"),
-        index=True,
+        PostgreSQLUUID, ForeignKey("ctr_document_identifier.ctr_document_identifier_id"), index=True
     )
 
     employee = relationship("Employee", back_populates="reference_files")
@@ -1629,7 +1662,7 @@ class StateLog(Base, TimestampMixin):
     associated_type = Column(Text, index=True)
 
     import_log_id = Column(
-        Integer, ForeignKey("import_log.import_log_id"), index=True, nullable=True,
+        Integer, ForeignKey("import_log.import_log_id"), index=True, nullable=True
     )
     end_state = cast("Optional[LkState]", relationship(LkState, foreign_keys=[end_state_id]))
     payment = relationship("Payment", back_populates="state_logs")
@@ -1768,6 +1801,11 @@ class PubErrorType(LookupTable):
     CHECK_PAYMENT_LINE_ERROR = LkPubErrorType(6, "Check payment line error")
     CHECK_PAYMENT_ERROR = LkPubErrorType(7, "Check payment error")
     CHECK_PAYMENT_FAILED = LkPubErrorType(8, "Check payment failed")
+
+    MANUAL_PUB_REJECT_LINE_ERROR = LkPubErrorType(9, "Invalid manual PUB reject line")
+    MANUAL_PUB_REJECT_ERROR = LkPubErrorType(10, "Manual PUB reject error processing")
+    MANUAL_PUB_REJECT_EFT_PROCESSED = LkPubErrorType(11, "Manual PUB reject EFT processed")
+    MANUAL_PUB_REJECT_PAYMENT_PROCESSED = LkPubErrorType(12, "Manual PUB reject payment processed")
 
 
 class AddressType(LookupTable):
@@ -1914,6 +1952,17 @@ class SharedPaymentConstants:
     PAID_STATE_IDS = frozenset([state.state_id for state in PAID_STATES])
 
 
+class PaymentRelevantParty(LookupTable):
+    model = LkPaymentRelevantParty
+    column_names = ("payment_relevant_party_id", "payment_relevant_party_description")
+
+    UNKNOWN = LkPaymentRelevantParty(1, "Unknown")
+    CLAIMANT = LkPaymentRelevantParty(2, "Claimant")
+    STATE_TAX = LkPaymentRelevantParty(3, "State tax withholding")
+    FEDERAL_TAX = LkPaymentRelevantParty(4, "Federal tax withholding")
+    REIMBURSED_EMPLOYER = LkPaymentRelevantParty(5, "Reimbursed employer")
+
+
 class PaymentTransactionType(LookupTable):
     model = LkPaymentTransactionType
     column_names = ("payment_transaction_type_id", "payment_transaction_type_description")
@@ -2019,6 +2068,8 @@ class ReferenceFileType(LookupTable):
     DUA_EMPLOYER_FILE = LkReferenceFileType(39, "DUA employer", 1)
     DUA_EMPLOYER_UNIT_FILE = LkReferenceFileType(40, "DUA employer unit", 1)
 
+    MANUAL_PUB_REJECT_FILE = LkReferenceFileType(41, "Manual PUB Reject File", 1)
+
 
 class Title(LookupTable):
     model = LkTitle
@@ -2091,6 +2142,7 @@ def sync_lookup_tables(db_session):
     ReferenceFileType.sync_to_database(db_session)
     Title.sync_to_database(db_session)
     ReferenceFileType.sync_to_database(db_session)
+    PaymentRelevantParty.sync_to_database(db_session)
     PaymentTransactionType.sync_to_database(db_session)
     PaymentCheckStatus.sync_to_database(db_session)
     PrenoteState.sync_to_database(db_session)

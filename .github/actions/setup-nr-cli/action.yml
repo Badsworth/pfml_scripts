@@ -29,6 +29,11 @@ runs:
       with:
         ssm_parameter: "/admin/pfml-api/newrelic-insert-api-key"
         env_variable_name: "NEW_RELIC_INSIGHTS_INSERT_KEY"
+    - name: Pull the newrelic license key from parameter store
+      uses: "marvinpinto/action-inject-ssm-secrets@latest"
+      with:
+        ssm_parameter: "/service/pfml-api/common/newrelic-license-key"
+        env_variable_name: "NEW_RELIC_LICENSE_KEY"
     - name: "Set account ID"
       run: echo "NEW_RELIC_ACCOUNT_ID=2837112" >> $GITHUB_ENV
       shell: bash

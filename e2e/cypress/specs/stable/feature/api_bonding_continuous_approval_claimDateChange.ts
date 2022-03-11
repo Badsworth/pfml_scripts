@@ -3,6 +3,7 @@ import { Submission } from "../../../../src/types";
 import { extractLeavePeriod } from "../../../../src/util/claims";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { format, addDays } from "date-fns";
+import { config } from "../../../actions/common";
 
 describe("Claim date change", () => {
   after(() => {
@@ -44,7 +45,12 @@ describe("Claim date change", () => {
           task.close("Bonding Certification Review");
           task.close("ID Review");
         });
-        claimPage.approve();
+
+        if (config("HAS_APRIL_UPGRADE") === "true") {
+          claimPage.approve("Approved", true);
+        } else {
+          claimPage.approve("Approved", false);
+        }
       });
     });
   });
@@ -64,29 +70,60 @@ describe("Claim date change", () => {
                 `Date change request: Move to ${startDate} - ${endDate}`
               );
             });
-            claimPage.reviewClaim();
-            const claimReviewed =
-              fineosPages.ClaimPage.visit(fineos_absence_id);
-            claimReviewed.adjudicate((adjudication) => {
-              adjudication.editPlanDecision("Undecided");
-              adjudication.certificationPeriods((certificationPeriods) =>
-                certificationPeriods.remove()
+            if (config("HAS_APRIL_UPGRADE") === "true") {
+              claimPage.reviewClaim(true);
+              const claimReviewed =
+                fineosPages.ClaimPage.visit(fineos_absence_id);
+              claimReviewed.adjudicateUpgrade((adjudication) => {
+                // These steps might need to be updated after FINEOS demo (3/10/22) of the changes from in Review
+                // process going on in the background. SOP might be updated if so this will need to be updated.
+                adjudication.certificationPeriods((certificationPeriods) =>
+                  certificationPeriods.remove()
+                );
+                adjudication.requestInformation((requestInformation) =>
+                  requestInformation.editRequestDates(startDate, endDate)
+                );
+                adjudication.certificationPeriods((certificationPeriods) =>
+                  certificationPeriods.prefill()
+                );
+              });
+              claimReviewed.shouldHaveStatus("PlanDecision", "Undecided");
+              claimReviewed.outstandingRequirements(
+                (outstandingRequirements) => {
+                  outstandingRequirements.add();
+                }
               );
-              adjudication.requestInformation((requestInformation) =>
-                requestInformation.editRequestDates(startDate, endDate)
+              claimReviewed.tasks((task) => {
+                task.close("Approved Leave Start Date Change");
+                task.add("Update Paid Leave Case");
+              });
+            } else {
+              claimPage.reviewClaim(false);
+              const claimReviewed =
+                fineosPages.ClaimPage.visit(fineos_absence_id);
+              claimReviewed.adjudicate((adjudication) => {
+                adjudication.editPlanDecision("Undecided");
+                adjudication.certificationPeriods((certificationPeriods) =>
+                  certificationPeriods.remove()
+                );
+                adjudication.requestInformation((requestInformation) =>
+                  requestInformation.editRequestDates(startDate, endDate)
+                );
+                adjudication.certificationPeriods((certificationPeriods) =>
+                  certificationPeriods.prefill()
+                );
+              });
+              claimReviewed.shouldHaveStatus("PlanDecision", "Undecided");
+              claimReviewed.outstandingRequirements(
+                (outstandingRequirements) => {
+                  outstandingRequirements.add();
+                }
               );
-              adjudication.certificationPeriods((certificationPeriods) =>
-                certificationPeriods.prefill()
-              );
-            });
-            claimReviewed.shouldHaveStatus("PlanDecision", "Undecided");
-            claimReviewed.outstandingRequirements((outstandingRequirements) => {
-              outstandingRequirements.add();
-            });
-            claimReviewed.tasks((task) => {
-              task.close("Approved Leave Start Date Change");
-              task.add("Update Paid Leave Case");
-            });
+              claimReviewed.tasks((task) => {
+                task.close("Approved Leave Start Date Change");
+                task.add("Update Paid Leave Case");
+              });
+            }
           }
         );
       });
@@ -104,12 +141,6 @@ describe("Claim date change", () => {
           portal.selectClaimFromEmployerDashboard(fineos_absence_id);
           cy.url().should("not.include", "dashboard");
           cy.contains(`${claim.first_name} ${claim.last_name}`);
-          // Check by url if we can review the claim
-          cy.contains(
-            "Are you the right person to respond to this application?"
-          );
-          cy.contains("Yes").click();
-          cy.contains("Agree and submit").click();
           if (!claim.leave_details.reason)
             throw TypeError("Claim missing leave reason");
           portal.leaveAdminAssertClaimStatus([

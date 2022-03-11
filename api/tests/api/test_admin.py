@@ -1,7 +1,8 @@
+from unittest.mock import patch
+
 from flask import g
 from jose import jwt
 from jose.constants import ALGORITHMS
-from mock import patch
 
 from massgov.pfml.api.admin import SERVICE_UNAVAILABLE_MESSAGE
 from massgov.pfml.db.models.azure import AzureGroup, AzureGroupPermission, AzurePermission
@@ -157,11 +158,7 @@ def test_admin_token_service_unavailable(mock_build, client):
 
 @patch("massgov.pfml.api.admin.build_access_token")
 def test_admin_token_success(mock_build, client):
-    mock_build.return_value = {
-        "access_token": "test",
-        "refresh_token": "test",
-        "id_token": "test",
-    }
+    mock_build.return_value = {"access_token": "test", "refresh_token": "test", "id_token": "test"}
     post_body = {
         "auth_uri_res": FAKE_AUTH_URI_RESPONSE,
         "auth_code_res": {"code": "test", "session_state": "test", "state": "test"},
@@ -216,7 +213,7 @@ def test_admin_no_permissions(client, app, mock_azure, auth_claims_unit, azure_a
 
 
 def test_admin_users_cognito(client, app, mock_azure, auth_token):
-    response = client.get("/v1/admin/users", headers={"Authorization": f"Bearer {auth_token}"},)
+    response = client.get("/v1/admin/users", headers={"Authorization": f"Bearer {auth_token}"})
     assert response.status_code == 401
 
 
@@ -240,16 +237,14 @@ def test_admin_users_success(
         algorithm=ALGORITHMS.RS256,
         headers={"kid": azure_auth_private_key.get("kid")},
     )
-    UserFactory.create_batch(50)
+    UserFactory.create_batch(25)
     with app.app.test_request_context("/v1/admin/users"):
         response = client.get(
             "/v1/admin/users?page_size=10", headers={"Authorization": f"Bearer {encoded}"}
         )
         assert response.status_code == 200
         assert g.azure_user.sub_id == "foo"
-        assert g.azure_user.permissions == [
-            AzurePermission.USER_READ.azure_permission_id,
-        ]
+        assert g.azure_user.permissions == [AzurePermission.USER_READ.azure_permission_id]
         response_json = response.get_json()
         data = response_json.get("data")
         paging = response_json.get("meta").get("paging")
@@ -258,8 +253,8 @@ def test_admin_users_success(
         assert paging.get("order_direction") == "descending"
         assert paging.get("page_offset") == 1
         assert paging.get("page_size") == 10
-        assert paging.get("total_pages") == 5
-        assert paging.get("total_records") == 50
+        assert paging.get("total_pages") == 3
+        assert paging.get("total_records") == 25
         assert len(data) == 10
 
 
@@ -295,9 +290,7 @@ def test_admin_users_email_address_filter(
         )
         assert response.status_code == 200
         assert g.azure_user.sub_id == "foo"
-        assert g.azure_user.permissions == [
-            AzurePermission.USER_READ.azure_permission_id,
-        ]
+        assert g.azure_user.permissions == [AzurePermission.USER_READ.azure_permission_id]
         response_json = response.get_json()
         data = response_json.get("data")
         paging = response_json.get("meta").get("paging")

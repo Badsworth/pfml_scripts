@@ -3,6 +3,7 @@ import PreviousLeave, {
   PreviousLeaveType,
 } from "../../../src/models/PreviousLeave";
 import { render, screen } from "@testing-library/react";
+import { MockEmployerClaimBuilder } from "lib/mock-helpers/mock-model-builder";
 import PreviousLeaves from "../../../src/features/employer-review/PreviousLeaves";
 import React from "react";
 import { times } from "lodash";
@@ -32,13 +33,13 @@ describe("PreviousLeaves", () => {
 
   const defaultProps = {
     addedPreviousLeaves: [],
-    appErrors: [],
+    errors: [],
+    claim: new MockEmployerClaimBuilder().completed().create(),
     onAdd,
     onChange,
     onRemove,
     previousLeaves: generatePreviousLeaves(),
     shouldShowV2: true,
-    otherLeaveStartDate: "March 15, 2021",
   };
 
   const queryAmendmentFormHeader = () =>
@@ -48,6 +49,19 @@ describe("PreviousLeaves", () => {
     it("shows a row for each leave", () => {
       const { container } = render(<PreviousLeaves {...defaultProps} />);
       expect(container).toMatchSnapshot();
+    });
+
+    it("shows both other reason and same reason dates when they're different", () => {
+      const claim = new MockEmployerClaimBuilder().completed().create();
+      claim.computed_start_dates = {
+        other_reason: "2021-01-01",
+        same_reason: "2021-07-15",
+      };
+
+      render(<PreviousLeaves {...defaultProps} claim={claim} />);
+
+      expect(screen.getByText(/January 1/)).toBeInTheDocument();
+      expect(screen.getByText(/July 15/)).toBeInTheDocument();
     });
 
     it("allows for making amendments", () => {

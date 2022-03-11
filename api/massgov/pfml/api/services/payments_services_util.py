@@ -346,7 +346,8 @@ def get_writeback_details(
 # This needs to be defined after the above methods
 # so that it can reference those methods directly
 WRITEBACK_SCENARIOS: Dict[
-    Optional[LkFineosWritebackTransactionStatus], Callable[[PaymentContainer], PaymentScenarioData],
+    Optional[LkFineosWritebackTransactionStatus],
+    Callable[[PaymentContainer], PaymentScenarioData],
 ] = {
     # This is a mapping from writeback status
     # to methods defined above which handle
@@ -366,6 +367,7 @@ WRITEBACK_SCENARIOS: Dict[
     WritebackStatus.DUA_ADDITIONAL_INCOME: reduction,
     WritebackStatus.DIA_ADDITIONAL_INCOME: reduction,
     WritebackStatus.DEPRECATED_TOTAL_BENEFITS_OVER_CAP: reduction,
+    WritebackStatus.LEAVE_DURATION_MAX_EXCEEDED: reduction,
     WritebackStatus.WEEKLY_BENEFITS_AMOUNT_EXCEEDS_850: reduction,
     WritebackStatus.SELF_REPORTED_ADDITIONAL_INCOME: reduction,
     WritebackStatus.DATA_ISSUE_IN_SYSTEM: delayed,
@@ -373,6 +375,7 @@ WRITEBACK_SCENARIOS: Dict[
     WritebackStatus.PRENOTE_ERROR: delayed,
     WritebackStatus.ADDRESS_VALIDATION_ERROR: delayed,
     WritebackStatus.BANK_PROCESSING_ERROR: delayed,
+    WritebackStatus.INVALID_ROUTING_NUMBER: delayed,
     WritebackStatus.VOID_CHECK: delayed,
     WritebackStatus.STOP_CHECK: delayed,
     WritebackStatus.STALE_CHECK: delayed,

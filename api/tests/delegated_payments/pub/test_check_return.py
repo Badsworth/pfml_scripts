@@ -138,7 +138,7 @@ def test_check_reader_invalid_lines():
             issued_date=datetime.date(2021, 3, 25),
             paid_date=None,
             amount=decimal.Decimal("400.75"),
-        ),
+        )
     ]
     assert line_errors == [
         check_return.CheckParseLineError(

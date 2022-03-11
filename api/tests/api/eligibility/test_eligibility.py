@@ -907,7 +907,7 @@ def test_retrieve_financial_eligibility_multiple_employers(
         [E1, [6000, 6000, 6000, 6000, 8000, 8000]],
         [E2, [1, 1, 1, 1, 1, 1]],
         [E3, [2, 2, 2, 2, 2, 2]],
-        [E4, [],],  # No wage data
+        [E4, []],  # No wage data
         [E5, [3, 3, 3, 3, 3, 3]],
         [E6, []],
         [E7, [0, 0, 0, 0, 0, 0]],  # No non-zero wage data,

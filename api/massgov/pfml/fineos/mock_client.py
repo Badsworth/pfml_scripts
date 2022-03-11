@@ -25,7 +25,9 @@ from ..db.models.applications import PhoneType
 from . import client, exception, fineos_client, models
 from .mock.eform import MOCK_CUSTOMER_EFORMS, MOCK_EFORMS
 from .mock.field import fake_customer_no
+from .models.customer_api import ChangeRequestPeriod, ChangeRequestReason
 from .models.customer_api import EForm as CustomerEForm
+from .models.customer_api import LeavePeriodChangeRequest
 from .models.group_client_api import EForm
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -239,7 +241,7 @@ def mock_customer_details():
                 "addressLine7": "",
                 "postCode": "01003",
                 "country": "USA",
-            },
+            }
         },
         "classExtensionInformation": [
             {"name": "MassachusettsID", "stringValue": "123456789"},
@@ -301,16 +303,16 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         if employer_fein == "999999998":
             organisationUnits = models.OCOrganisationUnit(
                 OrganisationUnit=[
-                    models.OCOrganisationUnitItem(OID="PE:00001:0000000001", Name="OrgUnitOne",),
-                    models.OCOrganisationUnitItem(OID="PE:00001:0000000002", Name="OrgUnitTwo",),
+                    models.OCOrganisationUnitItem(OID="PE:00001:0000000001", Name="OrgUnitOne"),
+                    models.OCOrganisationUnitItem(OID="PE:00001:0000000002", Name="OrgUnitTwo"),
                 ]
             )
 
         if employer_fein == "999999997":
             organisationUnits = models.OCOrganisationUnit(
                 OrganisationUnit=[
-                    models.OCOrganisationUnitItem(OID="PE:00002:0000000001", Name="OrgUnitThree",),
-                    models.OCOrganisationUnitItem(OID="PE:00002:0000000002", Name="OrgUnitFour",),
+                    models.OCOrganisationUnitItem(OID="PE:00002:0000000001", Name="OrgUnitThree"),
+                    models.OCOrganisationUnitItem(OID="PE:00002:0000000002", Name="OrgUnitFour"),
                 ]
             )
 
@@ -825,7 +827,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         )
 
     def get_week_based_work_pattern(
-        self, user_id: str, occupation_id: Union[str, int],
+        self, user_id: str, occupation_id: Union[str, int]
     ) -> models.customer_api.WeekBasedWorkPattern:
         _capture_call("get_week_based_work_pattern", user_id, occupation_id=occupation_id)
         return models.customer_api.WeekBasedWorkPattern(
@@ -890,6 +892,22 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         return (
             employer_create_or_update.fineos_customer_nbr,
             fake_customer_no(employer_create_or_update.employer_fein),
+        )
+
+    def create_or_update_leave_period_change_request(
+        self,
+        fineos_web_id: str,
+        absence_id: str,
+        change_request: models.customer_api.LeavePeriodChangeRequest,
+    ) -> models.customer_api.LeavePeriodChangeRequest:
+        return LeavePeriodChangeRequest(
+            reason=ChangeRequestReason(fullId=0, name="Employee Requested Removal"),
+            changeRequestPeriods=[
+                ChangeRequestPeriod(
+                    startDate=datetime.date(2022, 2, 14), endDate=datetime.date(2022, 2, 15)
+                )
+            ],
+            additionalNotes="Withdrawal",
         )
 
     def create_or_update_leave_admin(

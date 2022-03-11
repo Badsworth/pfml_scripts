@@ -2,6 +2,7 @@ import {
   BenefitsApplicationDocument,
   DocumentType,
 } from "../../../src/models/Document";
+import { DocumentsLoadError, ValidationError } from "../../../src/errors";
 import {
   MockBenefitsApplicationBuilder,
   makeFile,
@@ -9,10 +10,8 @@ import {
 } from "../../test-utils";
 import { act, screen, waitFor } from "@testing-library/react";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
-import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import { AppLogic } from "../../../src/hooks/useAppLogic";
 import UploadCertification from "../../../src/pages/applications/upload-certification";
-import { ValidationError } from "../../../src/errors";
 import { createMockBenefitsApplicationDocument } from "../../../lib/mock-helpers/createMockDocument";
 import { setupBenefitsApplications } from "../../test-utils/helpers";
 import userEvent from "@testing-library/user-event";
@@ -37,7 +36,7 @@ const setup = (
         setupBenefitsApplications(appLogic, [claim]);
         if (cb) cb(appLogic);
         appLogic.portalFlow.goToNextPage = goToNextPage;
-        appLogic._appErrorsLogic.catchError = catchError;
+        appLogic._errorsLogic.catchError = catchError;
         appLogic.documents.attach = attach;
       },
     },
@@ -114,17 +113,15 @@ describe("UploadCertification", () => {
       await waitFor(() => {
         expect(goToNextPage).not.toHaveBeenCalled();
         expect(catchError).toHaveBeenCalledWith(
-          new ValidationError(
-            [
-              {
-                field: "file",
-                message:
-                  "Client requires at least one file before sending request",
-                type: "required",
-              },
-            ],
-            "documents"
-          )
+          new ValidationError([
+            {
+              field: "file",
+              message:
+                "Client requires at least one file before sending request",
+              type: "required",
+              namespace: "documents",
+            },
+          ])
         );
       });
     });
@@ -301,12 +298,7 @@ describe("UploadCertification", () => {
 
   it("renders alert when there is an error loading documents", () => {
     const cb = (appLogic: AppLogic) => {
-      appLogic.appErrors = [
-        new AppErrorInfo({
-          meta: { application_id: "mock_application_id" },
-          name: "DocumentsLoadError",
-        }),
-      ];
+      appLogic.errors = [new DocumentsLoadError("mock_application_id")];
     };
     setup(undefined, undefined, cb);
     expect(

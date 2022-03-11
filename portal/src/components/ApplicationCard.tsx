@@ -41,7 +41,7 @@ const ManageDocumentSection = ({ claim }: ManageDocumentSectionProps) => {
 
   return (
     <div className="border-top border-base-lighter">
-      <Heading className="padding-y-3" level="4">
+      <Heading className="padding-y-3" level="3" size="4">
         {t("components.applicationCard.otherActions")}
       </Heading>
       <ButtonLink
@@ -90,10 +90,7 @@ const LegalNoticeSection = (props: LegalNoticeSectionProps) => {
 
   const shouldShowSpinner =
     isLoadingClaimDocuments(props.claim.application_id) &&
-    !hasDocumentsLoadError(
-      props.appLogic.appErrors,
-      props.claim.application_id
-    );
+    !hasDocumentsLoadError(props.appLogic.errors, props.claim.application_id);
 
   if (!showNotices) return null;
 
@@ -228,7 +225,7 @@ export const ApplicationCard = (props: ApplicationCardProps) => {
             </p>
           </Alert>
         )}
-        <Heading level="3" size="2">
+        <Heading level="2">
           {t("components.applicationCard.heading", {
             context:
               findKeyByValue(LeaveReason, claim.leave_details?.reason) ??

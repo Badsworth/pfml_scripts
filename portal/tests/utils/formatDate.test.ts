@@ -15,7 +15,6 @@ describe("formatDate", () => {
     });
 
     it("return empty string when date is invalid", () => {
-      // @ts-expect-error Intentionally testing invalid types
       const date1 = formatDate().full();
       const date2 = formatDate("this is not a date").full();
       const date3 = formatDate(null).full();
@@ -34,7 +33,6 @@ describe("formatDate", () => {
     });
 
     it("return empty string when date is invalid", () => {
-      // @ts-expect-error Intentionally testing invalid types
       const date1 = formatDate().short();
       const date2 = formatDate("this is not a date").short();
       const date3 = formatDate(null).short();

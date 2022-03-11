@@ -98,7 +98,9 @@ class DelegatedPaymentFactory(MockData):
 
         # employee
         self.fineos_customer_number = self.get_value("fineos_customer_number", None)
-        self.employee_optional_kwargs: Dict[str, Any] = (
+        self.employee_optional_kwargs: Dict[
+            str, Any
+        ] = (
             {}
         )  # only set if value was passed in constructor, else defer to lazy factory initialization
 
@@ -106,7 +108,7 @@ class DelegatedPaymentFactory(MockData):
             "fineos_employee_first_name", KWARG_VALUE_NOT_SET
         )
         self.set_optional_kwargs(
-            self.employee_optional_kwargs, "fineos_employee_first_name", fineos_employee_first_name,
+            self.employee_optional_kwargs, "fineos_employee_first_name", fineos_employee_first_name
         )
 
         fineos_employee_last_name = self.get_value("fineos_employee_last_name", KWARG_VALUE_NOT_SET)
@@ -142,6 +144,7 @@ class DelegatedPaymentFactory(MockData):
         self.absence_period_start_date = self.get_value(
             "absence_period_start_date", date(2021, 1, 7)
         )
+        self.absence_period_end_date = self.get_value("absence_period_end_date", None)
         self.organization_unit_name = self.get_value("organization_unit_name", None)
         self.organization_unit = self.get_value("organization_unit", None)
 
@@ -151,7 +154,9 @@ class DelegatedPaymentFactory(MockData):
         )
 
         # payment defaults
-        self.payment_optional_kwargs: Dict[str, Any] = (
+        self.payment_optional_kwargs: Dict[
+            str, Any
+        ] = (
             {}
         )  # only set if value was passed in constructor, else defer to lazy factory initialization
 
@@ -226,7 +231,7 @@ class DelegatedPaymentFactory(MockData):
             # Only adds organization unit if there is an employer on this claim
             if self.organization_unit_name is not None:
                 self.organization_unit = OrganizationUnitFactory.create(
-                    name=self.organization_unit_name, employer=self.employer,
+                    name=self.organization_unit_name, employer=self.employer
                 )
 
         return self.employer
@@ -286,6 +291,7 @@ class DelegatedPaymentFactory(MockData):
                 employee_id=self.employee.employee_id if self.employee else None,
                 fineos_absence_status_id=self.fineos_absence_status_id,
                 absence_period_start_date=self.absence_period_start_date,
+                absence_period_end_date=self.absence_period_end_date,
                 organization_unit=self.organization_unit,
             )
 
@@ -409,8 +415,8 @@ class DelegatedPaymentFactory(MockData):
         fineos_extraction_date=None,
         writeback_sent_at=None,
     ):
-        """ Roughly mimic creating another payment. Uses the original payment as a base
-            with only the specified values + C/I values updated.
+        """Roughly mimic creating another payment. Uses the original payment as a base
+        with only the specified values + C/I values updated.
         """
         self.get_or_create_payment()
 
@@ -483,8 +489,8 @@ class DelegatedPaymentFactory(MockData):
         writeback_transaction_status=None,
         writeback_sent_at=None,
     ):
-        """ Create reissued equivalent payments.
-            This will return a cancellation + new payment both with a new import log ID
+        """Create reissued equivalent payments.
+        This will return a cancellation + new payment both with a new import log ID
         """
         self.get_or_create_payment()
 

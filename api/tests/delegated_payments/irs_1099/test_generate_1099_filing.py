@@ -7,7 +7,7 @@ import pytest
 
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
-from massgov.pfml.db.models.factories import Pfml1099BatchFactory, Pfml1099Factory
+from massgov.pfml.db.models.factories import Pfml1099Factory
 from massgov.pfml.delegated_payments.irs_1099.generate_1099_irs_filing import (
     Generate1099IRSfilingStep,
 )
@@ -18,7 +18,7 @@ fake = faker.Faker()
 
 @pytest.fixture
 def generate_1099_step(
-    local_initialize_factories_session, local_test_db_session, local_test_db_other_session,
+    local_initialize_factories_session, local_test_db_session, local_test_db_other_session
 ):
     return Generate1099IRSfilingStep(
         db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
@@ -34,7 +34,7 @@ def create_pfml_1099():
 
 
 def test_create_irs_file(
-    generate_1099_step: Generate1099IRSfilingStep, tmp_path, monkeypatch, local_test_db_session,
+    generate_1099_step: Generate1099IRSfilingStep, tmp_path, monkeypatch, local_test_db_session
 ):
     # set environment variables
     archive_folder_path = str(tmp_path / "reports")
@@ -190,14 +190,13 @@ def test_get_totals(generate_1099_step: Generate1099IRSfilingStep, create_pfml_1
     assert expected_fed == fed_tax
 
 
-def test_get_pfml_batch_as_empty(
-    local_test_db_session, generate_1099_step: Generate1099IRSfilingStep
+def test_generate_1099_irs_filing(
+    local_test_db_session, generate_1099_step: Generate1099IRSfilingStep, create_pfml_1099
 ):
 
-    current_batch = Pfml1099BatchFactory.build()
     mock.patch(
-        "massgov.pfml.delegated_payments.irs_1099.pfml_1099_util.get_current_1099_batch",
-        return_value=current_batch,
+        "massgov.pfml.delegated_payments.irs_1099.pfml_1099_util.get_1099_records_to_file",
+        return_value=create_pfml_1099,
     )
     generate_1099_step.run_step()
 

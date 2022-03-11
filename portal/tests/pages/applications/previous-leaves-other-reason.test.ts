@@ -47,7 +47,10 @@ describe("PreviousLeavesOtherReason", () => {
 
   it("sets previous_leaves_other_reason to null when has_previous_leaves_other_reason changes to false", async () => {
     const { updateSpy } = setup(
-      new MockBenefitsApplicationBuilder().previousLeavesOtherReason().create()
+      new MockBenefitsApplicationBuilder()
+        .continuous()
+        .previousLeavesOtherReason()
+        .create()
     );
 
     userEvent.click(screen.getByRole("radio", { name: /No/i }));

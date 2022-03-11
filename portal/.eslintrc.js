@@ -23,7 +23,7 @@ module.exports = {
     "plugin:you-dont-need-lodash-underscore/all",
   ],
   plugins: ["jest", "jsdoc", "lodash", "todo-plz", "jsx-a11y", "react-hooks"],
-  parser: "babel-eslint",
+  parser: "@babel/eslint-parser",
   parserOptions: {
     ecmaVersion: 2018,
     sourceType: "module",

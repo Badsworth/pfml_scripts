@@ -5,7 +5,6 @@ import {
   mockAuth,
   mockFetch,
 } from "../test-utils";
-import AppErrorInfo from "../../src/models/AppErrorInfo";
 import ClaimDetail from "../../src/models/ClaimDetail";
 import useAppLogic from "../../src/hooks/useAppLogic";
 
@@ -157,6 +156,11 @@ describe("useClaimsLogic", () => {
         await appLogic.current.claims.loadPage();
         expect(global.fetch).toHaveBeenCalled();
 
+        // this should make an API request since page offset is different from paginationMeta
+        mockPaginatedFetch();
+        await appLogic.current.claims.loadPage({ page_offset: 2 });
+        expect(global.fetch).toHaveBeenCalled();
+
         // this should make an API request since the filters changed
         mockPaginatedFetch();
         await appLogic.current.claims.loadPage({
@@ -195,7 +199,7 @@ describe("useClaimsLogic", () => {
       const { appLogic } = setup();
 
       act(() => {
-        appLogic.current.setAppErrors([new AppErrorInfo()]);
+        appLogic.current.setErrors([new Error()]);
       });
 
       await act(async () => {
@@ -203,7 +207,7 @@ describe("useClaimsLogic", () => {
         await appLogic.current.claims.loadPage({ page_offset: 1 });
       });
 
-      expect(appLogic.current.appErrors).toHaveLength(0);
+      expect(appLogic.current.errors).toHaveLength(0);
     });
 
     it("catches exceptions thrown from the API module", async () => {
@@ -218,7 +222,7 @@ describe("useClaimsLogic", () => {
         await appLogic.current.claims.loadPage({ page_offset: 1 });
       });
 
-      expect(appLogic.current.appErrors[0].name).toEqual("BadRequestError");
+      expect(appLogic.current.errors[0].name).toEqual("BadRequestError");
     });
   });
 
@@ -298,14 +302,14 @@ describe("useClaimsLogic", () => {
       const { appLogic } = setup();
 
       act(() => {
-        appLogic.current.setAppErrors([new AppErrorInfo()]);
+        appLogic.current.setErrors([new Error()]);
       });
 
       await act(async () => {
         await appLogic.current.claims.loadClaimDetail("absence_id_1");
       });
 
-      expect(appLogic.current.appErrors).toHaveLength(0);
+      expect(appLogic.current.errors).toHaveLength(0);
     });
 
     it("triggers a ClaimWithdrawnError if the absence case has been withdrawn", async () => {
@@ -334,8 +338,8 @@ describe("useClaimsLogic", () => {
       });
 
       expect(claimDetail).toBeUndefined();
-      expect(appLogic.current.appErrors).toHaveLength(1);
-      expect(appLogic.current.appErrors[0].name).toEqual("ClaimWithdrawnError");
+      expect(appLogic.current.errors).toHaveLength(1);
+      expect(appLogic.current.errors[0].name).toEqual("ClaimWithdrawnError");
       expect(appLogic.current.claims.isLoadingClaimDetail).toBe(false);
     });
   });

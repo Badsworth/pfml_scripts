@@ -1,3 +1,4 @@
+import logging  # noqa: B1
 import os
 from datetime import datetime
 from unittest import mock
@@ -40,38 +41,51 @@ earlier_date_str = "2020-07-01-12-00-00"
 date_str = "2020-08-01-12-00-00"
 
 
-def create_malformed_file(extract, date_of_extract, folder_path):
-    bad_content_line_one = "Some,Other,Column,Names"
-    bad_content_line_two = "1,2,3,4"
-    bad_content = "\n".join([bad_content_line_one, bad_content_line_two])
+def create_malformed_file(extract, date_of_extract, folder_path, malformed_content=None):
+    if malformed_content is None:
+        malformed_content_line_one = "Some,Other,Column,Names"
+        malformed_content_line_two = "1,2,3,4"
+        malformed_content = "\n".join([malformed_content_line_one, malformed_content_line_two])
 
     date_prefix = date_of_extract.strftime("%Y-%m-%d-%H-%M-%S-")
 
     file_name = os.path.join(folder_path, f"{date_prefix}{extract.file_name}")
     with file_util.write_file(file_name) as outfile:
-        outfile.write(bad_content)
+        outfile.write(malformed_content)
 
 
 def upload_fineos_payment_data(
-    mock_fineos_s3_bucket, fineos_dataset, timestamp=date_str, malformed_extract=None
+    mock_fineos_s3_bucket,
+    fineos_dataset,
+    timestamp=date_str,
+    malformed_extract=None,
+    malformed_content=None,
 ):
     folder_path = os.path.join(f"s3://{mock_fineos_s3_bucket}", "DT2/dataexports/")
     date_of_extract = datetime.strptime(timestamp, "%Y-%m-%d-%H-%M-%S")
     create_fineos_payment_extract_files(fineos_dataset, folder_path, date_of_extract)
 
     if malformed_extract:
-        create_malformed_file(malformed_extract, date_of_extract, folder_path)
+        create_malformed_file(
+            malformed_extract, date_of_extract, folder_path, malformed_content=malformed_content
+        )
 
 
 def upload_fineos_claimant_data(
-    mock_fineos_s3_bucket, fineos_dataset, timestamp=date_str, malformed_extract=None
+    mock_fineos_s3_bucket,
+    fineos_dataset,
+    timestamp=date_str,
+    malformed_extract=None,
+    malformed_content=None,
 ):
     folder_path = os.path.join(f"s3://{mock_fineos_s3_bucket}", "DT2/dataexports/")
     date_of_extract = datetime.strptime(timestamp, "%Y-%m-%d-%H-%M-%S")
     create_fineos_claimant_extract_files(fineos_dataset, folder_path, date_of_extract)
 
     if malformed_extract:
-        create_malformed_file(malformed_extract, date_of_extract, folder_path)
+        create_malformed_file(
+            malformed_extract, date_of_extract, folder_path, malformed_content=malformed_content
+        )
 
 
 def validate_records(records, table, index_key, local_test_db_session):
@@ -664,3 +678,59 @@ def test_run_with_malformed_payment_data(
             extract_config=PAYMENT_EXTRACT_CONFIG,
         )
         fineos_extract_step.run()
+
+
+# Test that if there are extra columns in the extract file,
+# we log those only once if they're in the header row
+def test_log_unconfigured_on_first_record(
+    mock_s3_bucket,
+    mock_fineos_s3_bucket,
+    set_exporter_env_vars,
+    local_test_db_session,
+    local_test_db_other_session,
+    monkeypatch,
+    caplog,
+):
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
+    monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
+
+    # We add one unexpected column in the header, and we plant it, plus yet
+    # another unexpected column, in two of the records. The first should only
+    # be logged once. The second should be logged twice: once for each time
+    # it shows up in a record.
+    malformed_extract = payments_util.FineosExtractConstants.CLAIM_DETAILS
+    malformed_content = (
+        "PECLASSID,PEINDEXID,ABSENCECASENU,LEAVEREQUESTI,EXTRACOL\n"
+        + "1,2,3,4,5\n"
+        + "1,2,3,4,5,6\n"
+        + "1,2,3,4,5,6"
+    )
+
+    payment_data = [FineosPaymentData()]
+    upload_fineos_payment_data(
+        mock_fineos_s3_bucket,
+        payment_data,
+        malformed_extract=malformed_extract,
+        malformed_content=malformed_content,
+    )
+
+    fineos_extract_step = FineosExtractStep(
+        db_session=local_test_db_session,
+        log_entry_db_session=local_test_db_other_session,
+        extract_config=PAYMENT_EXTRACT_CONFIG,
+    )
+
+    caplog.set_level(logging.INFO)  # noqa: B1
+    fineos_extract_step.run()
+
+    first_record_warnings = 0
+    after_first_warnings = 0
+    for record in caplog.records:
+        if record.msg == "Unconfigured columns in FINEOS extract.":
+            first_record_warnings += 1
+
+        if record.msg == "Unconfigured columns in FINEOS extract after first record.":
+            after_first_warnings += 1
+
+    assert first_record_warnings == 1
+    assert after_first_warnings == 2

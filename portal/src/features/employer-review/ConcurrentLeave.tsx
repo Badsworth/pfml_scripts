@@ -1,6 +1,5 @@
 import AddButton from "./AddButton";
 import AmendableConcurrentLeave from "./AmendableConcurrentLeave";
-import AppErrorInfo from "../../models/AppErrorInfo";
 import ConcurrentLeaveModel from "../../models/ConcurrentLeave";
 import EmployerClaim from "../../models/EmployerClaim";
 import Heading from "../../components/core/Heading";
@@ -13,7 +12,7 @@ import { useTranslation } from "../../locales/i18n";
 
 interface ConcurrentLeaveProps {
   addedConcurrentLeave?: ConcurrentLeaveModel;
-  appErrors: AppErrorInfo[];
+  errors: Error[];
   claim: EmployerClaim;
   concurrentLeave?: ConcurrentLeaveModel;
   onAdd: React.MouseEventHandler<HTMLButtonElement>;
@@ -33,7 +32,7 @@ const ConcurrentLeave = (props: ConcurrentLeaveProps) => {
   const { t } = useTranslation();
   const {
     addedConcurrentLeave,
-    appErrors,
+    errors,
     claim,
     concurrentLeave,
     onAdd,
@@ -75,7 +74,7 @@ const ConcurrentLeave = (props: ConcurrentLeaveProps) => {
         <tbody>
           {concurrentLeave ? (
             <AmendableConcurrentLeave
-              appErrors={appErrors}
+              errors={errors}
               concurrentLeave={concurrentLeave}
               isAddedByLeaveAdmin={false}
               onChange={onChange}
@@ -89,7 +88,7 @@ const ConcurrentLeave = (props: ConcurrentLeaveProps) => {
           )}
           {addedConcurrentLeave && !concurrentLeave && (
             <AmendableConcurrentLeave
-              appErrors={appErrors}
+              errors={errors}
               concurrentLeave={addedConcurrentLeave}
               isAddedByLeaveAdmin
               onChange={onChange}

@@ -69,9 +69,14 @@ class LeaveReason(str, LookupEnum):
 
 class LeaveReasonQualifier(str, LookupEnum):
     newborn = "Newborn"
+    serious_health_condition = "Serious Health Condition"
+    # This reason qualifier is not currently being used. See API-389 & PR #1280.
+    work_related_accident_injury = "Work Related Accident/Injury"
     adoption = "Adoption"
     foster_care = "Foster Care"
-    serious_health_condition = "Serious Health Condition"
+    not_work_related = "Not Work Related"
+    sickness = "Sickness"
+    postnatal_disability = "Postnatal Disability"
 
 
 class RelationshipToCaregiver(str, LookupEnum):

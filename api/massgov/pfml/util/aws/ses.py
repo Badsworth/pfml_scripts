@@ -42,7 +42,7 @@ class EmailRecipient(BaseModel):
     def check_to_addresses_format(cls, emails):  # noqa: B902
         if len(emails) == 0:
             validation_error = ValidationErrorDetail(
-                message="Have to provide at least one valid email address", type=IssueType.required,
+                message="Have to provide at least one valid email address", type=IssueType.required
             )
             raise ValidationException(
                 errors=[validation_error], message="Email validation error", data={}
@@ -62,7 +62,7 @@ class EmailRecipient(BaseModel):
         try:
             validate_email(email, check_deliverability=False)
         except EmailNotValidError as e:
-            validation_error = ValidationErrorDetail(message=f"{e}", type=IssueType.pattern,)
+            validation_error = ValidationErrorDetail(message=f"{e}", type=IssueType.pattern)
             raise ValidationException(
                 errors=[validation_error], message="Email validation error", data={}
             )
@@ -107,7 +107,7 @@ def send_email(
         response = aws_ses.send_raw_email(
             Source=msg["From"],
             Destinations=destinations,
-            RawMessage={"Data": msg.as_string(),},
+            RawMessage={"Data": msg.as_string()},
             ReturnPathArn=bounce_forwarding_email_address_arn,
         )
 
@@ -155,9 +155,7 @@ def send_templated_email(
         template_data = {}
 
     # Ensure no empty destinations are included.
-    destinations: Dict[str, List[str]] = {
-        "ToAddresses": list(filter(None, recipient.to_addresses)),
-    }
+    destinations: Dict[str, List[str]] = {"ToAddresses": list(filter(None, recipient.to_addresses))}
 
     try:
         response = aws_ses.send_templated_email(
@@ -173,12 +171,10 @@ def send_templated_email(
             error.__class__
         ):
             logger.error(
-                "Error sending templated email in SES - Template does not exist", exc_info=error,
+                "Error sending templated email in SES - Template does not exist", exc_info=error
             )
         elif isinstance(error, ClientError) and "MessageRejected" in str(error.__class__):
-            logger.error(
-                "Error sending templated email in SES - Message rejected", exc_info=error,
-            )
+            logger.error("Error sending templated email in SES - Message rejected", exc_info=error)
         else:
             logger.error("Error sending templated email in SES", exc_info=error)
 

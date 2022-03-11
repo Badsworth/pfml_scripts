@@ -1,18 +1,20 @@
 import AddButton from "./AddButton";
 import AmendablePreviousLeave from "./AmendablePreviousLeave";
-import AppErrorInfo from "../../models/AppErrorInfo";
 import Details from "../../components/core/Details";
+import EmployerClaim from "../../models/EmployerClaim";
 import Heading from "../../components/core/Heading";
 import PreviousLeave from "../../models/PreviousLeave";
 import React from "react";
 import Table from "../../components/core/Table";
 import { Trans } from "react-i18next";
+import formatDate from "../../utils/formatDate";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
 interface PreviousLeavesProps {
   addedPreviousLeaves: PreviousLeave[];
-  appErrors: AppErrorInfo[];
+  errors: Error[];
+  claim: EmployerClaim;
   onAdd: React.MouseEventHandler<HTMLButtonElement>;
   onChange: (
     arg: PreviousLeave | { [key: string]: unknown },
@@ -21,7 +23,6 @@ interface PreviousLeavesProps {
   onRemove: (arg: PreviousLeave) => void;
   previousLeaves: PreviousLeave[];
   shouldShowV2: boolean;
-  otherLeaveStartDate: string;
 }
 
 /**
@@ -33,13 +34,13 @@ const PreviousLeaves = (props: PreviousLeavesProps) => {
   const { t } = useTranslation();
   const {
     addedPreviousLeaves,
-    appErrors,
+    errors,
+    claim,
     onAdd,
     onChange,
     onRemove,
     previousLeaves,
     shouldShowV2,
-    otherLeaveStartDate,
   } = props;
   const limit = 4;
 
@@ -48,21 +49,24 @@ const PreviousLeaves = (props: PreviousLeavesProps) => {
       <Heading level="3">
         {t("components.employersPreviousLeaves.header")}
       </Heading>
-      <p>
-        <Trans
-          i18nKey="components.employersPreviousLeaves.explanation"
-          components={{
-            "calculate-reductions-link": (
-              <a
-                href={routes.external.massgov.calculateReductions}
-                target="_blank"
-                rel="noopener"
-              />
-            ),
-          }}
-          values={{ otherLeaveStartDate }}
-        />
-      </p>
+      <Trans
+        i18nKey="components.employersPreviousLeaves.explanation"
+        tOptions={{
+          context:
+            claim.computed_start_dates.other_reason ===
+            claim.computed_start_dates.same_reason
+              ? undefined
+              : "differentDates",
+        }}
+        values={{
+          other_reason_date: formatDate(
+            claim.computed_start_dates.other_reason
+          ).full(),
+          same_reason_date: formatDate(
+            claim.computed_start_dates.same_reason
+          ).full(),
+        }}
+      />
       <Details
         label={t(
           "components.employersPreviousLeaves.qualifyingReasonDetailsLabel"
@@ -138,7 +142,7 @@ const PreviousLeaves = (props: PreviousLeavesProps) => {
             <React.Fragment>
               {previousLeaves.map((previousLeave) => (
                 <AmendablePreviousLeave
-                  appErrors={appErrors}
+                  errors={errors}
                   isAddedByLeaveAdmin={false}
                   key={previousLeave.previous_leave_id}
                   onChange={onChange}
@@ -158,7 +162,7 @@ const PreviousLeaves = (props: PreviousLeavesProps) => {
           {shouldShowV2 &&
             addedPreviousLeaves.map((addedLeave) => (
               <AmendablePreviousLeave
-                appErrors={appErrors}
+                errors={errors}
                 isAddedByLeaveAdmin
                 key={addedLeave.previous_leave_id}
                 onChange={onChange}

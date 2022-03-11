@@ -1,4 +1,7 @@
 import { Payment, PaymentDetail } from "../../src/models/Payment";
+import dayjs from "dayjs";
+import dayjsBusinessTime from "dayjs-business-time";
+dayjs.extend(dayjsBusinessTime);
 
 describe("creates payments", () => {
   it("to be initialized as an empty array", () => {

@@ -46,6 +46,7 @@ declare namespace Cypress {
     // Declare our custom tasks.
     stashLog(key: string, value: string | null | undefined): null;
     dependsOnPreviousPass(dependencies?: Mocha.Test[]): null;
+    tryCount(): Chainable<number>;
     task<T extends Scenarios>(
       event: "generateClaim",
       arg: T | { scenario: T; employeePoolFileName: string }

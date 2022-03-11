@@ -36,9 +36,7 @@ class AzureClientConfig:
     redirect_uri: str
     scopes: list[str]
 
-    def __init__(
-        self, azure_settings: AzureSettings,
-    ):
+    def __init__(self, azure_settings: AzureSettings):
         self.azure_settings = azure_settings
         self.authority_domain = self.azure_settings.authority_domain
         self.client_id = self.azure_settings.client_id

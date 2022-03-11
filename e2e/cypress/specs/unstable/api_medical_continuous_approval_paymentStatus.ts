@@ -60,7 +60,12 @@ describe("Create a new caring leave claim in FINEOS and Suppress Correspondence 
             );
             adjudication.acceptLeavePlan();
           });
-          claimPage.approve("Approved").triggerNotice("Designation Notice");
+          if (config("HAS_APRIL_UPGRADE") === "true") {
+            claimPage.approve("Approved", true);
+          } else {
+            claimPage.approve("Approved", false);
+          }
+          claimPage.triggerNotice("Designation Notice");
         });
       });
     });
@@ -186,9 +191,19 @@ describe("Create a new caring leave claim in FINEOS and Suppress Correspondence 
           false
         );
         portal.viewPaymentStatus();
-        portal.assertPaymentCheckBackDate(
-          addBusinessDays(new Date(response.updated_at), 3)
-        );
+        // portal/v58.0-rc2 contains updates to push back the "Check back date"
+        if (
+          config("ENVIRONMENT") === "stage" ||
+          config("ENVIRONMENT") === "test"
+        ) {
+          portal.assertPaymentCheckBackDate(
+            addBusinessDays(new Date(response.updated_at), 5)
+          );
+        } else {
+          portal.assertPaymentCheckBackDate(
+            addBusinessDays(new Date(response.updated_at), 3)
+          );
+        }
       });
     });
   });

@@ -2,7 +2,7 @@ import re
 from typing import List
 
 import massgov.pfml.util.logging
-from massgov.pfml.db.models.employees import Employee, Payment
+from massgov.pfml.db.models.employees import Employee, Payment, PaymentTransactionType
 from massgov.pfml.db.models.payments import PaymentAuditReportType
 from massgov.pfml.delegated_payments.abstract_step_processor import AbstractStepProcessor
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
@@ -33,6 +33,12 @@ class DORFineosEmployeeNameMismatchProcessor(AbstractStepProcessor):
 
     def process(self, payment: Payment) -> None:
         self.lines = []
+
+        if (
+            payment.payment_transaction_type_id
+            != PaymentTransactionType.STANDARD.payment_transaction_type_id
+        ):
+            return None
         if not payment.claim or not payment.claim.employee:
             return None
 

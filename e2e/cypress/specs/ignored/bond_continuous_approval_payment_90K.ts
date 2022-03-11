@@ -1,6 +1,7 @@
 import { fineos, fineosPages, portal } from "../../actions";
 import { Submission } from "../../../src/types";
 import { assertValidClaim } from "../../../src/util/typeUtils";
+import { config } from "../../actions/common";
 
 describe("Submit bonding application via the web portal: Adjudication Approval & payment checking", () => {
   const submissionTest =
@@ -73,7 +74,11 @@ describe("Submit bonding application via the web portal: Adjudication Approval &
           claimPage.shouldHaveStatus("Availability", "Time Available");
           claimPage.shouldHaveStatus("Restriction", "Passed");
           claimPage.shouldHaveStatus("PlanDecision", "Accepted");
-          claimPage.approve();
+          if (config("HAS_APRIL_UPGRADE") === "true") {
+            claimPage.approve("Approved", true);
+          } else {
+            claimPage.approve("Approved", false);
+          }
         });
       });
     }

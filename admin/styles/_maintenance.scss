@@ -3,7 +3,7 @@
   border-radius: $Border-Radius;
   box-shadow: $Box-Shadow;
   margin-bottom: 2.43em;
-  padding: 1.43em 1.71em;
+  padding: 1.18em 1.75em;
 }
 
 .maintenance-info {
@@ -13,12 +13,12 @@
 
 .maintenance-info__title {
   color: $Color-RevolutionGray;
-  display: inline;
+  display: inline-block;
   font-size: 1.14em;
   font-weight: 400;
-  line-height: 1.71;
-  margin-bottom: 0.4em;
-  margin-right: 0.4em;
+  line-height: 1.71em;
+  margin-bottom: 0.18em;
+  margin-right: 0.6em;
 }
 
 .maintenance-info__text {
@@ -26,11 +26,15 @@
   flex: 1 1 auto;
 }
 
+.maintenance-info__body {
+  line-height: 1.36em;
+}
+
 .maintenance-configure {
   background: #fff;
   border-radius: $Border-Radius;
   box-shadow: $Box-Shadow;
-  padding: 1.43em 1.71em;
+  padding: 1.43em 0;
 }
 
 .maintenance-configure__container {
@@ -72,17 +76,27 @@
 }
 
 .maintenance-configure__description {
-  margin-bottom: 2em;
+  border-bottom: solid 1px $Color-GraniteGray-50;
+  margin-bottom: 1.63em;
+  padding: 0 1.71em 1.35em;
 }
 
 .maintenance-configure__error {
   color: $Color-ErrorRed;
 }
 
+.maintenance-configure__form {
+  padding: 0 1.71em;
+}
+
 .maintenance-configure__fieldset {
   border: none;
   margin: 1.5em 0 0;
   padding-left: 0;
+}
+
+.maintenance-configure__fieldset:last-child {
+  padding-right: 0;
 }
 
 .maintenance-configure__fieldset--advanced {
@@ -106,50 +120,20 @@
   margin-bottom: 0;
 }
 
-.maintenance-configure__advanced {
-  margin-bottom: 3.3em;
-}
-
-
 .maintenance-configure__calendar-icon {
   color: $Color-GraniteGray-300;
-  font-size: 1.214em;
+  cursor: text;
   margin: 0 1.214em;
   position: absolute;
   right: -5px;
-  top: 11px;
-}
-
-.maintenance-configure__calendar-icon::before {
-  @include IconFontProps;
-  content: $IconCalendar;
+  top: 9px;
+  width: 1.4em;
 }
 
 .maintenance-configure__page-routes {
   margin-top: 0;
   padding-left: 1.214em;
 }
-
-.maintenance-configure__show-advanced-icon {
-  display: inline-block;
-  font-size: 0.571em;
-  line-height: 1em;
-  margin: 0 1.214em;
-}
-
-.maintenance-configure__show-advanced-icon--closed {
-  transform: rotate(-90deg);
-}
-
-.maintenance-configure__show-advanced-icon--open {
-  transform: rotate(90deg);
-}
-
-.maintenance-configure__show-advanced-icon::before {
-  @include IconFontProps;
-  content: $IconArrow1;
-}
-
 
 .maintenance-status {
   background: $Color-BayBlue-50;
@@ -158,7 +142,7 @@
   color: $Color-RevolutionGray;
   font-size: 1em;
   line-height: 1.33;
-  margin-top: 1.45em;
+  margin-top: 1.1em;
 }
 
 .maintenance-status__row {

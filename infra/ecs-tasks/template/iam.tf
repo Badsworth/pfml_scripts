@@ -4,10 +4,6 @@ locals {
   ssm_arn_prefix = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/service"
 }
 
-data "aws_kms_alias" "pfml_api_config_secrets" {
-  name = var.environment_name == "prod" ? "alias/pfml-api-prod-config-secrets" : "alias/pfml-api-non-prod-config-secrets"
-}
-
 data "aws_iam_policy_document" "ecs_tasks_assume_role_policy" {
   statement {
     actions = [
@@ -95,16 +91,6 @@ data "aws_iam_policy_document" "task_executor" {
       "${local.ssm_arn_prefix}/${local.app_name}/common"
     ]
   }
-
-  statement {
-    actions = [
-      "kms:DescribeKey",
-      "kms:Decrypt",
-    ]
-    resources = [
-      data.aws_kms_alias.pfml_api_config_secrets.arn
-    ]
-  }
 }
 
 # Link access policies to the ECS task execution role.
@@ -135,7 +121,9 @@ data "aws_iam_policy_document" "task_sql_export_s3_policy_doc" {
       "arn:aws:s3:::massgov-pfml-${var.environment_name}-execute-sql-export",
       "arn:aws:s3:::massgov-pfml-${var.environment_name}-execute-sql-export/*",
       "arn:aws:s3:::massgov-pfml-${var.environment_name}-business-intelligence-tool/api_db/accounts_created",
-      "arn:aws:s3:::massgov-pfml-${var.environment_name}-business-intelligence-tool/api_db/accounts_created/*"
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-business-intelligence-tool/api_db/accounts_created/*",
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-reports",
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-reports/*"
     ]
   }
 }
@@ -1180,6 +1168,7 @@ data "aws_iam_policy_document" "reductions_workflow_task_role_extras" {
 
     resources = ["*"]
   }
+
 }
 
 resource "aws_iam_role" "reductions_workflow_execution_role" {

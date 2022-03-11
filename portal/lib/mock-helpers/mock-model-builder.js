@@ -32,6 +32,7 @@ import Address from "../../src/models/Address";
 import ConcurrentLeave from "../../src/models/ConcurrentLeave";
 import EmployerClaim from "../../src/models/EmployerClaim";
 import LeaveReason from "../../src/models/LeaveReason";
+import createAbsencePeriod from "./createAbsencePeriod";
 import dayjs from "dayjs";
 import { set } from "lodash";
 
@@ -89,6 +90,10 @@ export class BaseMockBenefitsApplicationBuilder {
         )
       )
     );
+    set(this.claimAttrs, "computed_start_dates", {
+      other_reason: "2021-01-01",
+      same_reason: "2021-01-01",
+    });
     return this;
   }
 
@@ -112,6 +117,10 @@ export class BaseMockBenefitsApplicationBuilder {
         )
       )
     );
+    set(this.claimAttrs, "computed_start_dates", {
+      other_reason: "2021-01-01",
+      same_reason: "2021-01-01",
+    });
     return this;
   }
 
@@ -130,6 +139,10 @@ export class BaseMockBenefitsApplicationBuilder {
         )
       )
     );
+    set(this.claimAttrs, "computed_start_dates", {
+      other_reason: "2021-01-01",
+      same_reason: "2021-01-01",
+    });
     return this;
   }
 
@@ -271,6 +284,10 @@ export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder
     // Defaults, can be overridden by calling instance methods
     this.claimAttrs = {
       absence_periods: [],
+      computed_start_dates: {
+        other_reason: "2021-02-01",
+        same_reason: "2021-02-01",
+      },
       employer_dba: "Work Inc.",
       employer_id: "dda903f-f093f-ff900",
       first_name: "Jane",
@@ -287,14 +304,68 @@ export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder
   /**
    * @returns {MockEmployerClaimBuilder}
    */
+  continuousAbsencePeriod() {
+    set(this.claimAttrs, "absence_periods", [
+      ...this.claimAttrs.absence_periods,
+      createAbsencePeriod({
+        absence_period_end_date: "2022-04-01",
+        absence_period_start_date: "2022-01-01",
+        period_type: "Continuous",
+        reason: LeaveReason.medical,
+        request_decision: "Pending",
+      }),
+    ]);
+    return this;
+  }
+
+  /**
+   * @returns {MockEmployerClaimBuilder}
+   */
+  reducedScheduleAbsencePeriod() {
+    set(this.claimAttrs, "absence_periods", [
+      ...this.claimAttrs.absence_periods,
+      createAbsencePeriod({
+        absence_period_end_date: "2022-07-01",
+        absence_period_start_date: "2022-05-01",
+        period_type: "Reduced Schedule",
+        reason: LeaveReason.medical,
+        request_decision: "Pending",
+      }),
+    ]);
+    return this;
+  }
+
+  /**
+   * @returns {MockEmployerClaimBuilder}
+   */
+  intermittentAbsencePeriod() {
+    set(this.claimAttrs, "absence_periods", [
+      ...this.claimAttrs.absence_periods,
+      createAbsencePeriod({
+        absence_period_end_date: "2022-07-01",
+        absence_period_start_date: "2022-02-01",
+        period_type: "Intermittent",
+        reason: LeaveReason.medical,
+        request_decision: "Pending",
+      }),
+    ]);
+    return this;
+  }
+
+  /**
+   * @returns {MockEmployerClaimBuilder}
+   */
   completed(isIntermittent = false) {
     this.employed();
     this.address();
     if (isIntermittent) {
       this.intermittent();
+      this.intermittentAbsencePeriod();
     } else {
       this.continuous();
       this.reducedSchedule();
+      this.continuousAbsencePeriod();
+      this.reducedScheduleAbsencePeriod();
     }
     this.employerBenefit();
     set(this.claimAttrs, "leave_details.reason", LeaveReason.medical);
@@ -410,6 +481,7 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
     this.claimAttrs = {
       application_id: "mock_application_id",
       status: BenefitsApplicationStatus.started,
+      computed_start_dates: {},
     };
   }
 

@@ -8,8 +8,6 @@ import { useTranslation } from "../locales/i18n";
 
 export interface ApiParams {
   page_offset?: string;
-  order_by?: "absence_status" | "created_at" | "employee";
-  order_direction?: "ascending" | "descending";
 }
 export interface WithBenefitsApplicationsProps extends WithUserProps {
   claims: ApiResourceCollection<BenefitsApplication>;

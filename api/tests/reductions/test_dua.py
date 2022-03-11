@@ -43,9 +43,7 @@ EXPECTED_DUA_PAYMENT_CSV_FILE_HEADERS = list(
     dua.Constants.DUA_PAYMENT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP.keys()
 )
 
-DUA_PAYMENT_LIST_ENCODERS: csv_util.Encoders = {
-    date: lambda d: d.strftime("%Y%m%d"),
-}
+DUA_PAYMENT_LIST_ENCODERS: csv_util.Encoders = {date: lambda d: d.strftime("%Y%m%d")}
 
 
 def _dua_csv_filename() -> str:
@@ -76,7 +74,7 @@ def _create_other_reference_file(dir: str) -> ReferenceFile:
     reference_file_type_id = random.choice(other_file_types_expected_in_same_s3_directory)
 
     return ReferenceFileFactory(
-        file_location=file_location, reference_file_type_id=reference_file_type_id,
+        file_location=file_location, reference_file_type_id=reference_file_type_id
     )
 
 
@@ -128,7 +126,7 @@ def _get_loaded_reference_file_in_s3(
 
 @pytest.mark.parametrize(
     "pending_ref_file_count",
-    ((0), (1), (random.randint(2, 10)),),
+    ((0), (1), (random.randint(2, 10))),
     ids=["no_file", "one_file", "many_files"],
 )
 def test_get_pending_dua_payment_reference_files(
@@ -694,7 +692,7 @@ def test_format_claimants_for_dua_claimant_list_null_fineos_customer_number_id()
     ),
 )
 def test_create_list_of_claimants_uploads_csv_to_s3_and_adds_state_log(
-    initialize_factories_session, test_db_session, mock_s3_bucket, monkeypatch, claims_count,
+    initialize_factories_session, test_db_session, mock_s3_bucket, monkeypatch, claims_count
 ):
     # Set up environment variables.
     s3_bucket_uri = "s3://" + mock_s3_bucket
@@ -989,7 +987,7 @@ def test_generate_reduction_payment_report_information_with_payments(
 
 
 def test_create_report_new_dua_payments_to_dfml(
-    initialize_factories_session, monkeypatch, mock_s3_bucket, test_db_session,
+    initialize_factories_session, monkeypatch, mock_s3_bucket, test_db_session
 ):
     s3_bucket_uri = "s3://" + mock_s3_bucket
     dest_dir = "reductions/dfml/outbound"

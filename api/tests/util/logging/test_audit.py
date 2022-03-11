@@ -24,7 +24,7 @@ def test_audit_hook(caplog):
     )
 
     assert [(r.funcName, r.levelname, r.message) for r in caplog.records] == [
-        ("audit_log", "AUDIT", "open ('/dev/null', None, 123000)"),
+        ("audit_log", "AUDIT", "open ('/dev/null', None, 123000)")
     ]
 
 

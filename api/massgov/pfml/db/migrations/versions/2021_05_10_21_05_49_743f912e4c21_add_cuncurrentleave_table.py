@@ -25,7 +25,7 @@ def upgrade():
         sa.Column("is_for_current_employer", sa.Boolean(), nullable=True),
         sa.Column("leave_start_date", sa.Date(), nullable=True),
         sa.Column("leave_end_date", sa.Date(), nullable=True),
-        sa.ForeignKeyConstraint(["application_id"], ["application.application_id"],),
+        sa.ForeignKeyConstraint(["application_id"], ["application.application_id"]),
         sa.PrimaryKeyConstraint("concurrent_leave_id"),
     )
     op.create_index(

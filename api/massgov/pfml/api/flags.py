@@ -9,7 +9,7 @@ from massgov.pfml.util import feature_gate
 
 def flag_get(name):
     response = response_util.success_response(
-        data={}, message=f"Successfully retrieved flag {name}",
+        data={}, message=f"Successfully retrieved flag {name}"
     ).to_api_response()
     response.headers["Cache-Control"] = "max-age=300"
     return response

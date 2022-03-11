@@ -230,12 +230,12 @@ def copy_dir(
 
     # get list of all files in source prefix
     source_files = massgov.pfml.util.files.list_files(
-        path=source, recursive=recursive, boto_session=boto_source,
+        path=source, recursive=recursive, boto_session=boto_source
     )
 
     # get list of all files in dest prefix
     dest_files = massgov.pfml.util.files.list_files(
-        path=dest, recursive=recursive, boto_session=boto_dest,
+        path=dest, recursive=recursive, boto_session=boto_dest
     )
 
     # get list of all files in the provided S3 archival path, or empty list if no prefix was given

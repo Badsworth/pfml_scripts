@@ -99,6 +99,7 @@ class Constants:
     FILE_NAME_PUB_POSITIVE_PAY = "EOLWD-DFML-POSITIVE-PAY"
     FILE_NAME_PAYMENT_AUDIT_REPORT = "Payment-Audit-Report"
     FILE_NAME_RAW_PUB_ACH_FILE = "ACD9T136-DFML"
+    FILE_NAME_MANUAL_PUB_REJECT = "manual-pub-reject"
 
     REQUESTED_ABSENCE_SOM_FILE_NAME = "VBI_REQUESTEDABSENCE_SOM.csv"
     EMPLOYEE_FEED_FILE_NAME = "Employee_feed.csv"
@@ -132,6 +133,7 @@ class Constants:
             State.FEDERAL_WITHHOLDING_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
             State.STATE_WITHHOLDING_ERROR_RESTARTABLE,
             State.FEDERAL_WITHHOLDING_ERROR_RESTARTABLE,
+            State.DELEGATED_PAYMENT_CASCADED_ERROR_RESTARTABLE,
         ]
     )
     RESTARTABLE_PAYMENT_STATE_IDS = frozenset(
@@ -246,7 +248,7 @@ class FineosExtractConstants:
     VBI_1099DATA_SOM = FineosExtract(
         file_name="VBI_1099DATA_SOM.csv",
         table=FineosExtractVbi1099DataSom,
-        field_names=["FIRSTNAMES", "LASTNAME", "CUSTOMERNO", "PACKEDDATA", "DOCUMENTTYPE", "C",],
+        field_names=["FIRSTNAMES", "LASTNAME", "CUSTOMERNO", "PACKEDDATA", "DOCUMENTTYPE", "C"],
     )
     VPEI = FineosExtract(
         file_name="vpei.csv",
@@ -427,7 +429,7 @@ class FineosExtractConstants:
     VBI_LEAVE_PLAN_REQUESTED_ABSENCE = FineosExtract(
         file_name="VBI_LEAVEPLANREQUESTEDABSENCE.csv",
         table=FineosExtractVbiLeavePlanRequestedAbsence,
-        field_names=["SELECTEDPLAN_CLASSID", "SELECTEDPLAN_INDEXID", "LEAVEREQUEST_ID",],
+        field_names=["SELECTEDPLAN_CLASSID", "SELECTEDPLAN_INDEXID", "LEAVEREQUEST_ID"],
     )
 
     PAID_LEAVE_INSTRUCTION = FineosExtract(
@@ -473,9 +475,7 @@ IAWW_EXTRACT_FILES = [
 ]
 IAWW_EXTRACT_FILES_NAMES = [extract_file.file_name for extract_file in IAWW_EXTRACT_FILES]
 
-REQUEST_1099_EXTRACT_FILES = [
-    FineosExtractConstants.VBI_1099DATA_SOM,
-]
+REQUEST_1099_EXTRACT_FILES = [FineosExtractConstants.VBI_1099DATA_SOM]
 
 REQUEST_1099_EXTRACT_FILES_NAMES = [
     extract_file.file_name for extract_file in REQUEST_1099_EXTRACT_FILES
@@ -537,7 +537,7 @@ class ValidationContainer:
     validation_issues: List[ValidationIssue] = field(default_factory=list)
 
     def add_validation_issue(
-        self, reason: ValidationReason, details: Optional[str], field_name: Optional[str] = None,
+        self, reason: ValidationReason, details: Optional[str], field_name: Optional[str] = None
     ) -> None:
         self.validation_issues.append(ValidationIssue(reason, details, field_name))
 
@@ -633,7 +633,7 @@ def routing_number_validator(routing_number: str) -> Optional[ValidationReason]:
     return None
 
 
-def leave_request_id_validator(leave_request_id: str,) -> Optional[ValidationReason]:
+def leave_request_id_validator(leave_request_id: str) -> Optional[ValidationReason]:
     parsed_leave_request_id = str_to_int(leave_request_id)
     if parsed_leave_request_id is None:
         return ValidationReason.INVALID_TYPE
@@ -662,7 +662,7 @@ def validate_db_input(
         value = None  # Effectively treating "" and "Unknown" the same
 
     if required and not value:
-        errors.add_validation_issue(ValidationReason.MISSING_FIELD, key)
+        errors.add_validation_issue(ValidationReason.MISSING_FIELD, key, field_name=key)
         return None
 
     validation_issues = []
@@ -708,8 +708,8 @@ def get_date_group_folder_name(date_group: str, reference_file_type: LkReference
     ):  # TODO remove when lookup descriptions are non nullable
         return ""
 
-    reference_file_type_folder_postfix = reference_file_type.reference_file_type_description.lower().replace(
-        " ", "-"
+    reference_file_type_folder_postfix = (
+        reference_file_type.reference_file_type_description.lower().replace(" ", "-")
     )
 
     date_group_folder = f"{date_group}-{reference_file_type_folder_postfix}"
@@ -1085,7 +1085,7 @@ def get_mapped_claim_type(claim_type_str: str) -> LkClaimType:
 def move_reference_file(
     db_session: db.Session, ref_file: ReferenceFile, src_dir: str, dest_dir: str
 ) -> None:
-    """ Moves a ReferenceFile
+    """Moves a ReferenceFile
 
     Renames the actual S3 file (copies and deletes) and updates the reference_file.file_location
     """
@@ -1148,32 +1148,38 @@ def create_staging_table_instance(
     db_cls: ExtractTable,
     ref_file: ReferenceFile,
     fineos_extract_import_log_id: Optional[int],
+    ignore_properties: Optional[List[Any]] = None,
 ) -> base.Base:
-    """ We check if keys from data have a matching class property in staging model db_cls, if data contains
-    properties not yet included in cls, we log a warning. We return an instance of cls, with matching properties
-    from data and cls.
+    """We return an instance of cls, with matching properties from data and cls. If there are any
+    properties from the data that don't have a match in staging model db_cls, we discard them and log it.
     Eg:
         class VbiRequestedAbsenceSom(Base):
             __tablename__ = "a"
             absence_casenumber = Column(Text)
             absence_casestatus = Column(Text)
-            new_column = Column(Text)
 
         data = {'absence_casenumber': '123', 'absence_casestatus': 'active','new_column': 'testtest'}
 
         We will return an instance of class VbiRequestedAbsenceSom, with properties absence_casenumber and
-        absence_casestatus. We will log a warning stating property new_column is not included in model
-        class VbiRequestedAbsenceSom.
+        absence_casestatus. If new_column is not in ignore_properties, we will log a warning stating
+        property new_column is not included in model class VbiRequestedAbsenceSom.
     """
-    lower_data = make_keys_lowercase(data)
-    # check if extracted data types match our db model properties
-    known_properties = set(get_attribute_names(db_cls))
-    extracted_properties = set(lower_data.keys())
-    difference = [prop for prop in extracted_properties if prop not in known_properties]
+    ignore_properties = [] if ignore_properties is None else ignore_properties
 
-    if len(difference) > 0:
-        logger.warning(f"{db_cls.__name__} does not include properties: {','.join(difference)}")
-        [lower_data.pop(diff) for diff in difference]
+    lower_data = make_keys_lowercase(data)
+
+    # discard any properties (if they're even present) that we've been told to ignore
+    [lower_data.pop(prop) for prop in ignore_properties if prop in lower_data]
+
+    # check if extracted data types match our db model properties
+    # if there are extra properties, log them
+    unconfigured_columns = get_unconfigured_fineos_columns(lower_data, db_cls)
+    if len(unconfigured_columns) > 0:
+        logger.warning(
+            "Unconfigured columns in FINEOS extract after first record.",
+            extra={"db_cls.__name__": db_cls.__name__, "fields": ",".join(unconfigured_columns)},
+        )
+    [lower_data.pop(column) for column in unconfigured_columns]
 
     return db_cls(
         **lower_data,
@@ -1232,11 +1238,17 @@ def get_traceable_payment_details(
         "fineos_employer_id": employer.fineos_employer_id if employer else None,
         # Misc
         "current_state": state.state_description if state else None,
+        "relevant_party": payment.payment_relevant_party.payment_relevant_party_description
+        if payment.payment_relevant_party
+        else None,
     }
 
 
 def get_traceable_pub_eft_details(
-    pub_eft: PubEft, employee: Employee, payment: Optional[Payment] = None
+    pub_eft: PubEft,
+    employee: Optional[Employee] = None,
+    payment: Optional[Payment] = None,
+    state: Optional[LkState] = None,
 ) -> Dict[str, Any]:
     # For logging purposes, this returns useful, traceable details
     # about an EFT record and related fields
@@ -1253,8 +1265,11 @@ def get_traceable_pub_eft_details(
     details["pub_eft_prenote_state"] = (
         pub_eft.prenote_state.prenote_state_description if pub_eft.prenote_state else None
     )
-    details["employee_id"] = employee.employee_id
-    details["fineos_customer_number"] = employee.fineos_customer_number
+    if employee:
+        details["employee_id"] = employee.employee_id
+        details["fineos_customer_number"] = employee.fineos_customer_number
+
+    details["current_state"] = state.state_description if state else None
 
     return details
 
@@ -1374,7 +1389,7 @@ def validate_columns_present(record: Dict[str, Any], fineos_extract: FineosExtra
     missing_columns = []
 
     for required_column in fineos_extract.field_names:
-        if required_column not in record:
+        if required_column.lower() not in record:
             missing_columns.append(required_column)
 
     if len(missing_columns) > 0:
@@ -1382,6 +1397,12 @@ def validate_columns_present(record: Dict[str, Any], fineos_extract: FineosExtra
             "FINEOS extract %s is missing required fields: %s - found only %s"
             % (fineos_extract.file_name, missing_columns, list(record.keys()))
         )
+
+
+def get_unconfigured_fineos_columns(record: Dict[str, Any], db_cls: ExtractTable) -> List[Any]:
+    class_properties = get_attribute_names(db_cls)
+    unconfigured_columns = [column for column in record if column not in class_properties]
+    return unconfigured_columns
 
 
 def is_employer_exempt_for_payment(payment: Payment, claim: Claim, employer: Employer) -> bool:
@@ -1465,6 +1486,7 @@ def get_earliest_absence_period_for_payment_leave_request(
     return (
         db_session.query(AbsencePeriod)
         .filter(AbsencePeriod.fineos_leave_request_id == payment.fineos_leave_request_id)
+        .filter(AbsencePeriod.claim_id == payment.claim_id)
         .order_by(AbsencePeriod.absence_period_start_date.asc())
         .first()
     )

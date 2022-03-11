@@ -2,6 +2,7 @@ import re
 from datetime import date
 from enum import Enum
 from typing import Any, Callable, List, Optional, Set, Type, Union, no_type_check
+from uuid import UUID
 
 from sqlalchemy import Column, and_, asc, desc, func, or_
 from sqlalchemy.orm import contains_eager
@@ -9,6 +10,12 @@ from sqlalchemy.sql.elements import UnaryExpression
 from sqlalchemy.sql.selectable import Alias
 
 from massgov.pfml import db
+from massgov.pfml.api.util.paginate.paginator import (
+    OrderDirection,
+    Page,
+    PaginationAPIContext,
+    page_for_api_context,
+)
 from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.applications import Application
 from massgov.pfml.db.models.base import Base
@@ -22,12 +29,6 @@ from massgov.pfml.db.models.employees import (
     ManagedRequirementStatus,
     ManagedRequirementType,
     User,
-)
-from massgov.pfml.util.paginate.paginator import (
-    OrderDirection,
-    Page,
-    PaginationAPIContext,
-    page_for_api_context,
 )
 
 
@@ -82,7 +83,7 @@ class GetClaimsQuery:
         else:
             self.query = self.query.join(model, isouter=isouter)
 
-    def add_employers_filter(self, employers: list[Employer], user: User) -> None:
+    def add_leave_admin_filter(self, employers: list[Employer], user: User) -> None:
         employers_without_units = [
             e.employer_id for e in employers if not e.uses_organization_units
         ]
@@ -93,7 +94,7 @@ class GetClaimsQuery:
         )
 
         employers_without_units_filter = and_(
-            Claim.employer_id.in_(employers_without_units), Claim.organization_unit_id.is_(None),
+            Claim.employer_id.in_(employers_without_units), Claim.organization_unit_id.is_(None)
         )
         employers_with_units_filter = and_(
             Claim.employer_id.in_(employers_with_units),
@@ -113,7 +114,10 @@ class GetClaimsQuery:
             or_(employers_without_units_filter, employers_with_units_or_claims_notified_filter)
         )
 
-    def add_employees_filter(self, employee_ids: Set[str]) -> None:
+    def add_employers_filter(self, employer_ids: Set[UUID]) -> None:
+        self.query = self.query.filter(Claim.employer_id.in_(employer_ids))
+
+    def add_employees_filter(self, employee_ids: Set[UUID]) -> None:
         self.query = self.query.filter(Claim.employee_id.in_(employee_ids))
 
     def add_user_owns_claim_filter(self, current_user: User) -> None:

@@ -52,7 +52,7 @@ def test_report_generation(
         employee = EmployeeFactory.create(first_name=first_name, last_name=last_name)
 
         state_log_util.create_finished_state_log(
-            employee, pre_note_state, state_log_util.build_outcome("test"), test_db_session,
+            employee, pre_note_state, state_log_util.build_outcome("test"), test_db_session
         )
 
         return employee

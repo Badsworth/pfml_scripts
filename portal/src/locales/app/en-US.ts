@@ -26,7 +26,7 @@ const chars: { [key: string]: string } = {
 // since the format of these mirror the field path, which could possibly be more
 // than three levels deep (e.g `errors.claim.leave_details.start_date.required`).
 const errors = {
-  applicationImport: {
+  applicationImports: {
     absence_case_id: {
       duplicate: "You already have access.",
       exists:
@@ -644,10 +644,6 @@ const errors = {
     },
     contains_v1_and_v2_eforms:
       "<h3>Call the Contact Center to review this application</h3><p>We can’t display this application for review online. To review this application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p><p><strong>What you will need to know when you call the agent:</strong></p><ul><li>The employee’s name and application ID. You can find these on the Dashboard, or in the email we sent to tell you that you can review this application.</li><li>The error code for this error: <strong>V-12</strong>.</li></ul><strong>Why you are seeing this error:</strong> Your employee told us about some other leave and benefits they are receiving in addition to paid leave from PFML. This information was added to their application recently. In some cases, when an employee who submitted an application before July 15th then adds other leave and benefits information later, it can cause this error.<p>This is a rare error that will not happen with new applications.</p>",
-    ein: {
-      employer_verification_data_required:
-        "$t(shared.ein.employer_verification_data_required)",
-    },
     employer_benefits: {
       benefit_end_date: {
         format: "End date must include a valid month, day, and year.",
@@ -661,8 +657,8 @@ const errors = {
     employer_fein: {
       duplicate:
         "The employer ID you entered is already associated with your account.",
-      employer_verification_data_required:
-        "$t(shared.ein.employer_verification_data_required)",
+      employer_requires_verification_data:
+        "Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications. <file-a-return-link>Learn more about filing returns and sending contributions</file-a-return-link>.",
       pattern:
         "Enter your 9-digit Employer Identification Number in the correct format.",
       require_contributing_employer:
@@ -704,7 +700,8 @@ const errors = {
   users: {
     email_address: {
       exists: "$t(shared.auth.emailError_exists)",
-      format: "Enter a valid email address",
+      format:
+        "Enter an email address in the correct format, like name@example.com",
       required: "$t(shared.auth.emailError_required)",
     },
     mfa_phone_number: {
@@ -812,6 +809,7 @@ const shared: {
     leaveMinutesLabel: "What was the total number of hours you took off?",
     leaveStartDateLabel: "What was the first day of this leave?",
     limitMessage: "You can only add up to {{limit}} leaves",
+    minimumDateHint: "This date must be on or after {{minimumDate}}.",
     removeButton: "Remove this previous leave",
     sectionHint:
       "Enter details about each period of leave taken between {{previousLeaveStartDate}} and {{leaveStartDate}}. A leave period begins on the day you first went on leave and ends on the last day of leave. If you were on leave intermittently, your leave period begins on the first day you went on leave and ends on the very last day.<br/><br/>You don't need to tell us about previous leave you’ve taken through Massachusetts’ PFML program.",
@@ -831,8 +829,7 @@ const shared: {
       "The date your leave ended must include a valid month, day, and year.",
     leaveEndDate_invalidDateRange:
       "The date your leave ends must be on or after the date your leave began.",
-    leaveEndDate_minimum:
-      "Only enter previous leaves taken on or after January 1, 2021.",
+    leaveEndDate_minimum: "Only enter previous leaves with a valid start date.",
     leaveEndDate_required: "Enter the date your leave ended.",
     leaveMinutes_maximum: "The hours entered are more than the possible hours.",
     leaveMinutes_required: "Enter the hours you took off work for your leave.",
@@ -840,7 +837,7 @@ const shared: {
     leaveStartDate_format:
       "The date your leave began must include a valid month, day, and year.",
     leaveStartDate_minimum:
-      "Only enter previous leaves taken on or after January 1, 2021.",
+      "Only enter previous leaves with a valid start date.",
     leaveStartDate_required: "Enter the date your leave began.",
     workedPerWeekMinutes_maximum:
       "The hours entered are more than the possible hours.",
@@ -885,10 +882,6 @@ const shared: {
     "An error was encountered while checking your application for documents. If this continues to happen, call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
   documentsUploadError:
     "We encountered an error when uploading your file. Try uploading your file again. If this continues to happen, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
-  ein: {
-    employer_verification_data_required:
-      "Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications. <file-a-return-link>Learn more about filing returns and sending contributions</file-a-return-link>.",
-  },
   employerBenefitEntryPrefix: "Benefit",
   employerBenefitType_familyOrMedicalLeave: "Family or medical leave insurance",
   employerBenefitType_paidLeave: "Accrued paid leave",
@@ -1001,19 +994,20 @@ const pages: {
   },
   applications: {
     addApplication: "$t(shared.addApplication)",
+    can_submit_application_across_benefit_year:
+      "You can submit an application for leave that crosses into a new benefit year. We will review the request as two separate applications. $t(pages.applications.claimsApprovalProcess)",
     claimsApprovalProcess:
       "Learn more about the <approval-process-link>application review and approval process</approval-process-link>.",
     createApplicationHeading: "Create a new application",
     getReadyLink: "Start a new application",
-    inProgressHeading: "In-progress applications",
-    noClaims: "You don’t have any applications yet.",
     startByPhoneDescription: "$t(shared.startByPhoneDescription)",
     startByPhoneLabel: "$t(shared.startByPhoneLabel)",
-    submittedHeading: "Submitted applications",
     title: "Your applications",
     uploadSuccessHeading: "You successfully submitted your documents",
     uploadSuccessMessage:
       "Our Contact Center staff will review your documents for {{absence_id}}.",
+    your_benefit_year:
+      "Your current <benefit-year-guide-link>benefit year</benefit-year-guide-link> is {{startDate}} to {{endDate}}. Most Massachusetts employees are eligible for up to 26 weeks of combined family and medical leave per benefit year.",
   },
   authCreateAccount: {
     alertBody:
@@ -1044,7 +1038,7 @@ const pages: {
   },
   authLogin: {
     accountVerified:
-      "Thanks for verifying your email address. You may now log into your account.",
+      "Thanks for verifying your email address. You may now log in to your account.",
     accountVerifiedHeading: "Email successfully verified",
     createClaimantAccount:
       "<strong>Need to apply for paid leave? <create-account-link>Create an account</create-account-link></strong>",
@@ -1084,12 +1078,13 @@ const pages: {
     title: "Confirm your phone number",
   },
   authTwoFactorSmsIndex: {
-    hint: "<p>This is an optional step to make your account more secure. In the future, you’ll also be able to access sensitive information like tax documents (when available) once you set this up.</p><p>If you select Yes, we’ll ask for a phone number that can receive text messages (SMS). To protect your security, we'll send you a 6-digit code to verify it's really you. You’ll need to enter the code in order to log in to your account.</p><p>If you select No, you can add a phone number later by going to the Settings page.</p>",
-    optIn: "Yes, I want to add a phone number for verifying logins.",
-    optOut: "No, I do not want to add a phone number for verifying logins.",
+    hint: "<p>This optional step makes your account more secure. This will also allow you to access sensitive information like tax documents (when available).</p><p>If you select Yes, we’ll ask for a phone number that can receive text messages (SMS). When you log in to your account, we’ll send a 6-digit code you’ll need to enter to verify it’s really you.</p><p>You can add or change your phone number later by going to the Settings page.</p>",
+    optIn: "Yes, I want to add a phone number for additional security.",
+    optOut: "No, I do not want to add a phone number.",
+    optOutNoSms: "I do not have a phone that can receive text messages.",
     saveButton: "$t(shared.saveAndContinue)",
     title:
-      "Do you want to add a cell phone number to verify it's you when you log in to your account?",
+      "Do you want to add a cell phone number to verify it's you when you log in?",
   },
   authTwoFactorSmsSetup: {
     lead: "Enter a number that can receive text messages and that you'll have consistent access to. We’ll send a 6-digit code by text message (SMS) to confirm your phone number.",
@@ -1605,12 +1600,18 @@ const pages: {
     title: "$t(shared.claimsEmploymentInfoTitle)",
   },
   claimsOrganizationUnit: {
-    choiceNotListed: "My department is not listed",
+    choiceNo: "$t(shared.choiceNo)",
     choiceNotSure: "I'm not sure",
-    comboBoxLabel: "Select a department",
+    choiceYes: "$t(shared.choiceYes)",
+    comboBoxLabel: "Select your department",
+    confirmHint:
+      "Based on what you’ve entered, our records show you work at <strong>{{organization_unit}}</strong>. Is this the department where you are applying to take leave?",
+    confirmSectionLabel: "Confirm your department",
+    failureWarning:
+      "Failure to select the right department will delay your application.",
     followupInfo:
-      "We will follow up with you after you apply to make sure the right department reviews your application.",
-    sectionLabel: "Which department are you applying to take leave from?",
+      "Our team will check their records to find your department. If there is no match, someone from the Contact Center will follow up with you after you apply to make sure the right department reviews your application.",
+    sectionLabel: "Select the department where you are applying to take leave",
   },
   claimsOtherIncomes: {
     choiceNo: "$t(shared.choiceNo)",
@@ -1749,6 +1750,7 @@ const pages: {
       "$t(shared.claimsPreviousLeaveDetails.isForCurrentEmployerHint)",
     isForCurrentEmployerLabel:
       "$t(shared.claimsPreviousLeaveDetails.isForCurrentEmployerLabel)",
+    leaveEndDateHint: "$t(shared.claimsPreviousLeaveDetails.minimumDateHint)",
     leaveEndDateLabel:
       "$t(shared.claimsPreviousLeaveDetails.leaveEndDateLabel)",
     leaveMinutesHint: "$t(shared.claimsPreviousLeaveDetails.leaveMinutesHint)",
@@ -1765,6 +1767,7 @@ const pages: {
     leaveReasonHint:
       "If you didn’t take leave for one of these reasons, go back to the previous screen and select No.",
     leaveReasonLabel: "Why did you need to take this leave?",
+    leaveStartDateHint: "$t(shared.claimsPreviousLeaveDetails.minimumDateHint)",
     leaveStartDateLabel:
       "$t(shared.claimsPreviousLeaveDetails.leaveStartDateLabel)",
     limitMessage: "$t(shared.claimsPreviousLeaveDetails.limitMessage)",
@@ -1802,11 +1805,13 @@ const pages: {
       "$t(shared.claimsPreviousLeaveDetails.isForCurrentEmployerHint)",
     isForCurrentEmployerLabel:
       "$t(shared.claimsPreviousLeaveDetails.isForCurrentEmployerLabel)",
+    leaveEndDateHint: "$t(shared.claimsPreviousLeaveDetails.minimumDateHint)",
     leaveEndDateLabel:
       "$t(shared.claimsPreviousLeaveDetails.leaveEndDateLabel)",
     leaveMinutesHint: "$t(shared.claimsPreviousLeaveDetails.leaveMinutesHint)",
     leaveMinutesLabel:
       "$t(shared.claimsPreviousLeaveDetails.leaveMinutesLabel)",
+    leaveStartDateHint: "$t(shared.claimsPreviousLeaveDetails.minimumDateHint)",
     leaveStartDateLabel:
       "$t(shared.claimsPreviousLeaveDetails.leaveStartDateLabel)",
     limitMessage: "$t(shared.claimsPreviousLeaveDetails.limitMessage)",
@@ -2439,6 +2444,7 @@ const pages: {
   },
   employersClaimsStatus: {
     applicationIdLabel: "Application ID",
+    lead: "No action is required of you. You can view this page at any time to download notices, see decisions, or access the leave details for this application. Your employee has the right to appeal decisions under Massachusetts regulations (<dfml-regulations-link>458 CMR 2.14</dfml-regulations-link>).",
     lead_decision:
       "A decision has been made for this application. No action is required of you, but you can download a copy of the decision notice for details. Your employee has the right to appeal this decision under Massachusetts regulations (<dfml-regulations-link>458 CMR 2.14</dfml-regulations-link>).",
     lead_pending:
@@ -2587,7 +2593,7 @@ const pages: {
     companyNameLabel: "<strong>Organization:</strong> {{company}}",
     detailsLabel: "Where to find your paid leave contributions",
     detailsList:
-      "Log into <mass-tax-connect-link>MassTaxConnect</mass-tax-connect-link> or contact your payroll department to complete these steps:<ol><li>On the <strong>Summary</strong> page, scroll down to the <strong>Paid Family and Medical Leave</strong> section on the left. In the <strong>Account</strong> portion, select <strong>Returns</strong>.</li><li>Choose <strong>the last period</strong> for which a return has been <strong>received</strong>. For example, if you sent your contributions for 3-31-2021, and the return has been processed and designated as ‘received’, you can use the amount from that period to verify your account. If you have not yet sent your contributions or it is still being processed, use the amount from the most recent period for which you filed that has been processed.</li><li>Go into the return. Click <strong>View or Amend Return</strong>. Then select <strong>Next</strong> at the bottom. Look to <strong>line 6</strong> and you will find the <strong>Total Contributions Due</strong>.</li><li>Copy the <strong>Total Contributions Due</strong> amount for verification.</li></ol>If you have any questions about your paid leave contributions, please contact the Department of Revenue at <dor-phone-link><strong>$t(shared.departmentOfRevenuePhoneNumber)</strong></dor-phone-link> from 9am-4pm ET.",
+      "Log in to <mass-tax-connect-link>MassTaxConnect</mass-tax-connect-link> or contact your payroll department to complete these steps:<ol><li>On the <strong>Summary</strong> page, scroll down to the <strong>Paid Family and Medical Leave</strong> section on the left. In the <strong>Account</strong> portion, select <strong>Returns</strong>.</li><li>Choose <strong>the last period</strong> for which a return has been <strong>received</strong>. For example, if you sent your contributions for 3-31-2021, and the return has been processed and designated as ‘received’, you can use the amount from that period to verify your account. If you have not yet sent your contributions or it is still being processed, use the amount from the most recent period for which you filed that has been processed.</li><li>Go into the return. Click <strong>View or Amend Return</strong>. Then select <strong>Next</strong> at the bottom. Look to <strong>line 6</strong> and you will find the <strong>Total Contributions Due</strong>.</li><li>Copy the <strong>Total Contributions Due</strong> amount for verification.</li></ol>If you have any questions about your paid leave contributions, please contact the Department of Revenue at <dor-phone-link><strong>$t(shared.departmentOfRevenuePhoneNumber)</strong></dor-phone-link> from 9am-4pm ET.",
     employerIdNumberLabel: "<strong>Employer ID number (EIN):</strong> {{ein}}",
     haveAnAccount: "Have an account? <log-in-link>Log in</log-in-link>",
     lead: "We need more information to verify your identity. We require every employer to verify recent <mass-tax-connect-link>MassTaxConnect</mass-tax-connect-link> data when creating an account. This helps protect your employees and your organization's information.",
@@ -2612,7 +2618,7 @@ const pages: {
       "We require every employer to verify paid leave contributions when creating an account. You need to <your-organizations-link>complete this process</your-organizations-link> to review applications from your team.",
     verificationAlertTitle: "Verify your account to continue",
     viewApplicationsBody:
-      "When you log into your account you can now use the <dashboard-link>dashboard</dashboard-link> to see all the applications submitted by employees from your organization.",
+      "When you log in to your account you can now use the <dashboard-link>dashboard</dashboard-link> to see all the applications submitted by employees from your organization.",
     viewApplicationsTitle: "View all applications",
     viewFormsBody:
       "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the <healthcare-provider-form-link>$t(shared.certificationFormMedical) form</healthcare-provider-form-link> during the review process. For leave to care for a family member you can download the <caregiver-certification-form-link>Certification to Care for a Family Member</caregiver-certification-form-link> during the review process. ",
@@ -2671,7 +2677,7 @@ const pages: {
     employerCreateAccountButton: "Create an employer account",
     employerHeading: "Employers",
     seoTitle:
-      "Create or Log into your account for Massachusetts Paid Family and Medical Leave",
+      "Create or Log in to your account for Massachusetts Paid Family and Medical Leave",
     title:
       "People who work in Massachusetts can now apply for Paid Family and Medical Leave. Learn more about this <mass-paid-leave-link>new paid leave program</mass-paid-leave-link>.",
   },
@@ -2732,6 +2738,14 @@ const pages: {
     tablePaymentStatus_Check: "Check mailed on {{sentDate}}",
     tablePaymentStatus_Delayed:
       "See <delays-accordion-link>what may cause a delayed or cancelled payment</delays-accordion-link>.",
+    "tablePaymentStatus_Delayed_Address Validation Error":
+      "This payment is delayed due to an error with your provided mailing address. Call <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> to resolve this issue.",
+    "tablePaymentStatus_Delayed_Bank Processing Error":
+      "$t(pages.payments.tablePaymentStatus_Delayed_Banking_Error)",
+    tablePaymentStatus_Delayed_Banking_Error:
+      "This payment has been rejected by your bank. Call <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> to resolve this issue.",
+    "tablePaymentStatus_Delayed_EFT Account Information Error":
+      "$t(pages.payments.tablePaymentStatus_Delayed_Banking_Error)",
     tablePaymentStatus_Pending:
       "Your payment will be sent by {{paymentMethod}} between {{payPeriod}}.",
     "tablePaymentStatus_Sent to bank":
@@ -3099,7 +3113,9 @@ const components: {
     addButton: "$t(shared.claimsPreviousLeaveDetails.addButton)",
     dateRangeLabel: "Date range",
     explanation:
-      "Your employee has listed leave they have taken for qualified reasons. Only leave since {{otherLeaveStartDate}} is included. This includes both paid leave (for example: paid vacation or sick days) and unpaid leave (for example: FMLA leave). When possible, verify that this previous leave was for reasons that qualify for paid leave under PFML.",
+      "<p>Verify the accuracy of your employee’s qualified leave dates. Any qualifying reason should only be reported if it was taken after {{other_reason_date}}.</p><p>This includes both paid leave (for example: paid vacation or sick days) and unpaid leave (for example: FMLA leave).</p>",
+    explanation_differentDates:
+      "<p>Verify the accuracy of your employee’s qualified leave dates. Leave to care for a family member should only be reported if it was taken after {{same_reason_date}}. Any other qualifying reason should only be reported if it was taken after {{other_reason_date}}. </p><p>This includes both paid leave (for example: paid vacation or sick days) and unpaid leave (for example: FMLA leave).</p>",
     header: "Previous leave",
     leaveTypeLabel: "Leave type",
     qualifyingReasonContent:
@@ -3189,6 +3205,10 @@ const components: {
     appTitle: "Paid Family and Medical Leave",
     settingsLinkText: "Settings",
     skipToContent: "Skip to main content",
+  },
+  holidayAlert: {
+    alertText:
+      "Due to the upcoming holiday, payments may be delayed by one business day.",
   },
   inputPassword: {
     toggleLabel: "Show password",

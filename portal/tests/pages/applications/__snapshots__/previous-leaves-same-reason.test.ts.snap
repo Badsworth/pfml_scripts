@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`PreviousLeavesSameReason renders fieldset 1`] = `
+exports[`PreviousLeavesSameReason renders legend and hint with computed dates 1`] = `
 <fieldset
   class="usa-fieldset margin-top-3 usa-form-group"
 >
@@ -10,7 +10,7 @@ exports[`PreviousLeavesSameReason renders fieldset 1`] = `
     <h2
       class="font-heading-lg text-bold"
     >
-      Did you take any previous leave between July 1, 2021 and January 1, 2022 for the same reason as you are applying for paid leave now?
+      Did you take any previous leave between January 1, 2021 and January 1, 2022 for the same reason as you are applying for paid leave now?
     </h2>
   </legend>
   <div

@@ -1,7 +1,7 @@
 import { Issue, ValidationError } from "../errors";
 import ApiResourceCollection from "../models/ApiResourceCollection";
-import { AppErrorsLogic } from "./useAppErrorsLogic";
 import Compressor from "compressorjs";
+import { ErrorsLogic } from "./useErrorsLogic";
 import TempFile from "../models/TempFile";
 import bytesToMb from "../utils/bytesToMb";
 import { isFeatureEnabled } from "../services/featureFlags";
@@ -165,6 +165,7 @@ function getIssueForDisallowedFile(
       disallowedFileNames:
         disallowedFile instanceof File ? disallowedFile.name : "",
     }),
+    namespace: "documents",
   };
 }
 
@@ -174,8 +175,8 @@ const useFilesLogic = ({
   clearErrors,
 }: {
   allowedFileTypes?: readonly string[];
-  catchError: AppErrorsLogic["catchError"];
-  clearErrors: AppErrorsLogic["clearErrors"];
+  catchError: ErrorsLogic["catchError"];
+  clearErrors: ErrorsLogic["clearErrors"];
 }) => {
   const {
     collection: files,
@@ -197,8 +198,7 @@ const useFilesLogic = ({
     addFiles(allowedFiles.map((file) => new TempFile({ file })));
 
     if (issues.length > 0) {
-      const i18nPrefix = "files";
-      catchError(new ValidationError(issues, i18nPrefix));
+      catchError(new ValidationError(issues));
     }
   };
 

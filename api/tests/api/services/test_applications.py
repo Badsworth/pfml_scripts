@@ -1,14 +1,17 @@
+import unittest.mock as mock
 from datetime import date, datetime
 
-import mock
 import pytest
 
 import massgov
+from massgov.pfml.api.services.administrator_fineos_actions import EformTypes
 from massgov.pfml.api.services.applications import (
     set_application_absence_and_leave_period,
     set_customer_contact_detail_fields,
     set_customer_detail_fields,
+    set_employer_benefits_from_fineos,
     set_employment_status_and_occupations,
+    set_other_incomes_from_fineos,
     set_other_leaves,
     set_payment_preference_fields,
 )
@@ -27,10 +30,15 @@ from massgov.pfml.db.models.applications import (
 )
 from massgov.pfml.db.models.employees import BankAccountType, Gender, PaymentMethod
 from massgov.pfml.db.models.factories import ApplicationFactory
+from massgov.pfml.fineos.mock.eform import (
+    MOCK_EFORM_EMPLOYER_RESPONSE_V2,
+    MOCK_EFORM_OTHER_INCOME_V1,
+)
 from massgov.pfml.fineos.models.customer_api import EForm, EFormAttribute, ModelEnum
 from massgov.pfml.fineos.models.customer_api.spec import (
     AbsenceDetails,
     AbsencePeriod,
+    EFormSummary,
     EpisodicLeavePeriodDetail,
     ReportedReducedScheduleLeavePeriod,
     TimeOffLeavePeriod,
@@ -442,7 +450,7 @@ def test_set_application_absence_and_leave_period_invalid_leave_reason(
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")
 def test_set_application_absence_and_leave_period_valid_but_unsupported_leave_reason(
-    mock_get_absence, fineos_client, fineos_web_id, absence_case_id, application, absence_details,
+    mock_get_absence, fineos_client, fineos_web_id, absence_case_id, application, absence_details
 ):
     valid_reason = AbsenceReason.MILITARY_CAREGIVER.absence_reason_description
     absence_details.absencePeriods[0].reason = valid_reason
@@ -548,7 +556,7 @@ def test_set_customer_detail_fields_with_blank_mass_id(
     customer_details.classExtensionInformation = [
         massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
             name="MassachusettsID", stringValue=""
-        ),
+        )
     ]
     mock_read_customer_details.return_value = customer_details
     set_customer_detail_fields(fineos_client, fineos_web_id, application, test_db_session)
@@ -660,10 +668,10 @@ def test_set_payment_preference_fields_without_a_default_preference(
 ):
     mock_get_payment_preferences.return_value = [
         massgov.pfml.fineos.models.customer_api.PaymentPreferenceResponse(
-            paymentMethod="Check",
-            paymentPreferenceId="1234",
+            paymentMethod="Elec Funds Transfer",
+            paymentPreferenceId="96166",
             accountDetails=massgov.pfml.fineos.models.customer_api.AccountDetails(
-                accountNo="1234565555",
+                accountNo="0987654321",
                 accountName="Constance Griffin",
                 routingNumber="011222333",
                 accountType="Checking",
@@ -682,11 +690,46 @@ def test_set_payment_preference_fields_without_a_default_preference(
     ]
     set_payment_preference_fields(fineos_client, fineos_web_id, application, test_db_session)
     # takes first payment pref, if none is set to default
+    assert application.payment_preference.account_number == "0987654321"
     assert application.has_submitted_payment_preference is True
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_payment_preferences")
+def test_set_payment_preference_fields_with_check_as_default_preference(
+    mock_get_payment_preferences, fineos_client, fineos_web_id, application, test_db_session
+):
+    mock_get_payment_preferences.return_value = [
+        massgov.pfml.fineos.models.customer_api.PaymentPreferenceResponse(
+            paymentMethod="Check",
+            paymentPreferenceId="96166",
+            isDefault=True,
+            chequeDetails=massgov.pfml.fineos.models.customer_api.ChequeDetails(
+                nameToPrintOnCheck=""
+            ),
+            customerAddress=massgov.pfml.fineos.models.customer_api.CustomerAddress(
+                address=massgov.pfml.fineos.models.customer_api.Address(
+                    addressLine1="1234 SE Elm",
+                    addressLine2="",
+                    addressLine3="",
+                    addressLine4="Amherst",
+                    addressLine5="",
+                    addressLine6="MA",
+                    addressLine7="",
+                    postCode="01002",
+                    country="USA",
+                    classExtensionInformation=[],
+                )
+            ),
+        ),
+    ]
+    set_payment_preference_fields(fineos_client, fineos_web_id, application, test_db_session)
     assert (
         application.payment_preference.payment_method.payment_method_id
         == PaymentMethod.CHECK.payment_method_id
     )
+    assert application.has_submitted_payment_preference is True
+    assert application.has_mailing_address is True
+    assert application.mailing_address.address_line_one == "1234 SE Elm"
 
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_payment_preferences")
@@ -695,7 +738,7 @@ def test_set_payment_preference_fields_with_blank_payment_method(
 ):
     mock_get_payment_preferences.return_value = [
         massgov.pfml.fineos.models.customer_api.PaymentPreferenceResponse(
-            paymentMethod="", paymentPreferenceId="1234", isDefault=True,
+            paymentMethod="", paymentPreferenceId="1234", isDefault=True
         )
     ]
     set_payment_preference_fields(fineos_client, fineos_web_id, application, test_db_session)
@@ -745,6 +788,28 @@ def test_set_customer_contact_detail_fields(
     assert application.phone_id == application.phone.phone_id
 
 
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.read_customer_contact_details")
+def test_set_customer_contact_detail_fields_missing_country_code(
+    mock_read_customer_contact_details, fineos_client, fineos_web_id, application, test_db_session
+):
+    customer_contact_details_json = massgov.pfml.fineos.mock_client.mock_customer_contact_details()
+    # country code missing
+    for phone_num in customer_contact_details_json["phoneNumbers"]:
+        phone_num["intCode"] = None
+    customer_contact_details = massgov.pfml.fineos.models.customer_api.ContactDetails.parse_obj(
+        customer_contact_details_json
+    )
+
+    application.user.mfa_phone_number = "+13214567890"
+    application.user.mfa_delivery_preference_id = 1
+    mock_read_customer_contact_details.return_value = customer_contact_details
+    set_customer_contact_detail_fields(fineos_client, fineos_web_id, application, test_db_session)
+
+    # We still get a match, country code added
+    assert application.phone.phone_number == "+13214567890"
+    assert application.phone_id == application.phone.phone_id
+
+
 def test_set_customer_contact_detail_fields_without_mfa_enabled(
     fineos_client, fineos_web_id, application, test_db_session
 ):
@@ -757,9 +822,8 @@ def test_set_customer_contact_detail_fields_without_mfa_enabled(
 
     assert exc.value.errors == [
         ValidationErrorDetail(
-            type=IssueType.required,
-            message="User has not opted into MFA delivery preferences",
-            field="mfa_delivery_preference",
+            type=IssueType.incorrect,
+            message="Code 3: An issue occurred while trying to import the application.",
         )
     ]
     assert application.phone is None
@@ -778,7 +842,7 @@ def test_set_customer_contact_detail_fields_without_matching_mfa_phone_number(
     assert exc.value.errors == [
         ValidationErrorDetail(
             type=IssueType.incorrect,
-            message="An issue occurred while trying to import the application",
+            message="Code 3: An issue occurred while trying to import the application.",
         )
     ]
 
@@ -874,7 +938,7 @@ def test_set_other_leaves_with_only_concurrent_leave(
             EFormAttribute(
                 name="V2AccruedPLEmployer1",  # is_for_current_employer
                 enumValue=ModelEnum(domainName="PleaseSelectYesNo", instanceValue="Yes"),
-            ),
+            )
         ],
     )
     set_other_leaves(fineos_client, fineos_web_id, application, test_db_session, absence_case_id)
@@ -985,3 +1049,206 @@ def test_set_other_leaves_with_both_types_of_previous_leave(
     assert application.has_previous_leaves_same_reason is True
     assert application.has_concurrent_leave is False
     assert application.concurrent_leave is None
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.customer_get_eform")
+def test_set_employer_benefits_from_fineos_v1(
+    mock_customer_get_eform,
+    fineos_client,
+    fineos_web_id,
+    application,
+    test_db_session,
+    absence_case_id,
+):
+    eform_summaries = [
+        EFormSummary(eformId=211714, eformType=EformTypes.OTHER_INCOME),
+        EFormSummary(eformId=211714, eformType=EformTypes.OTHER_LEAVES),  # should not be parsed
+    ]
+
+    mock_customer_get_eform.return_value = MOCK_EFORM_OTHER_INCOME_V1
+
+    set_employer_benefits_from_fineos(
+        fineos_client,
+        fineos_web_id,
+        application,
+        test_db_session,
+        absence_case_id,
+        eform_summaries=eform_summaries,
+    )
+    assert application.has_employer_benefits is True
+    assert len(application.employer_benefits) == 1
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.customer_get_eform")
+def test_set_employer_benefits_from_fineos_v2(
+    mock_customer_get_eform,
+    fineos_client,
+    fineos_web_id,
+    application,
+    test_db_session,
+    absence_case_id,
+):
+    eform_summaries = [
+        EFormSummary(eformId=211714, eformType=EformTypes.OTHER_INCOME_V2),
+    ]
+
+    mock_customer_get_eform.return_value = MOCK_EFORM_EMPLOYER_RESPONSE_V2
+
+    set_employer_benefits_from_fineos(
+        fineos_client,
+        fineos_web_id,
+        application,
+        test_db_session,
+        absence_case_id,
+        eform_summaries=eform_summaries,
+    )
+    assert application.has_employer_benefits is True
+    assert len(application.employer_benefits) == 1
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.customer_get_eform")
+def test_set_employer_benefits_from_fineos_v2_does_not_insert_duplicate_other_income(
+    mock_customer_get_eform,
+    fineos_client,
+    fineos_web_id,
+    application,
+    test_db_session,
+    absence_case_id,
+):
+    eform_summaries = [
+        EFormSummary(eformId=211714, eformType=EformTypes.OTHER_INCOME_V2),
+    ]
+
+    mock_customer_get_eform.return_value = MOCK_EFORM_EMPLOYER_RESPONSE_V2
+
+    set_employer_benefits_from_fineos(
+        fineos_client,
+        fineos_web_id,
+        application,
+        test_db_session,
+        absence_case_id,
+        eform_summaries=eform_summaries,
+    )
+    set_other_incomes_from_fineos(
+        fineos_client,
+        fineos_web_id,
+        application,
+        test_db_session,
+        absence_case_id,
+        eform_summaries=eform_summaries,
+    )
+    assert application.has_employer_benefits is True
+    assert len(application.employer_benefits) == 1
+    assert application.has_other_incomes is False
+    assert len(application.other_incomes) == 0
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.customer_get_eform")
+def test_set_other_incomes_from_fineos(
+    mock_customer_get_eform,
+    fineos_client,
+    fineos_web_id,
+    application,
+    test_db_session,
+    absence_case_id,
+):
+    eform_summaries = [
+        EFormSummary(eformId=1, eformType=EformTypes.OTHER_INCOME_V2),
+        EFormSummary(eformId=2, eformType=EformTypes.OTHER_INCOME),  # should not be parsed
+        EFormSummary(eformId=3, eformType=EformTypes.OTHER_LEAVES),  # should not be parsed
+    ]
+    mock_customer_get_eform.return_value = EForm(
+        eformId=211714,
+        eformType="Other Income - current version",
+        eformAttributes=[
+            # Minimum info needed to create Previous Leaves, both other and same reason:
+            EFormAttribute(
+                name="V2OtherIncomeNonEmployerBenefitStartDate",
+                dateValue="2021-05-04",
+            ),
+            EFormAttribute(
+                name="V2OtherIncomeNonEmployerBenefitEndDate",
+                dateValue="2021-05-05",
+            ),
+            EFormAttribute(
+                name="V2OtherIncomeNonEmployerBenefitFrequency",
+                enumValue=ModelEnum(domainName="FrequencyEforms", instanceValue="Per Month"),
+            ),
+            EFormAttribute(
+                name="V2OtherIncomeNonEmployerBenefitWRT",
+                enumValue=ModelEnum(
+                    domainName="WageReplacementType2",
+                    instanceValue="Earnings from another employer or through self-employment",
+                ),
+            ),
+            EFormAttribute(
+                name="V2ReceiveWageReplacement",
+                enumValue=ModelEnum(domainName="YesNoI'veApplied", instanceValue="Yes"),
+            ),
+        ],
+    )
+    set_other_incomes_from_fineos(
+        fineos_client,
+        fineos_web_id,
+        application,
+        test_db_session,
+        absence_case_id,
+        eform_summaries=eform_summaries,
+    )
+    assert application.has_other_incomes is True
+    assert len(application.other_incomes) == 1
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.customer_get_eform")
+def test_set_other_incomes_from_fineos_employer_income(
+    mock_customer_get_eform,
+    fineos_client,
+    fineos_web_id,
+    application,
+    test_db_session,
+    absence_case_id,
+):
+    eform_summaries = [
+        EFormSummary(eformId=1, eformType=EformTypes.OTHER_INCOME_V2),
+        EFormSummary(eformId=2, eformType=EformTypes.OTHER_INCOME),  # should not be parsed
+        EFormSummary(eformId=3, eformType=EformTypes.OTHER_LEAVES),  # should not be parsed
+    ]
+    mock_customer_get_eform.return_value = EForm(
+        eformId=211714,
+        eformType="Other Income - current version",
+        eformAttributes=[
+            # Minimum info needed to create Previous Leaves, both other and same reason:
+            EFormAttribute(
+                name="V2OtherIncomeNonEmployerBenefitStartDate",
+                dateValue="2021-05-04",
+            ),
+            EFormAttribute(
+                name="V2OtherIncomeNonEmployerBenefitEndDate",
+                dateValue="2021-05-05",
+            ),
+            EFormAttribute(
+                name="V2OtherIncomeNonEmployerBenefitFrequency",
+                enumValue=ModelEnum(domainName="FrequencyEforms", instanceValue="Per Month"),
+            ),
+            EFormAttribute(
+                name="V2OtherIncomeNonEmployerBenefitWRT",
+                enumValue=ModelEnum(
+                    domainName="WageReplacementType2", instanceValue="Workers Compensation"
+                ),
+            ),
+            EFormAttribute(
+                name="V2ReceiveWageReplacement",
+                enumValue=ModelEnum(domainName="YesNoI'veApplied", instanceValue="Yes"),
+            ),
+        ],
+    )
+    set_other_incomes_from_fineos(
+        fineos_client,
+        fineos_web_id,
+        application,
+        test_db_session,
+        absence_case_id,
+        eform_summaries=eform_summaries,
+    )
+    assert application.has_other_incomes is False
+    assert len(application.other_incomes) == 0

@@ -8,6 +8,7 @@ import {
   BenefitsApplicationDocument,
   DocumentType,
 } from "../../../src/models/Document";
+import { DocumentsLoadError, ValidationError } from "../../../src/errors";
 import EmployerBenefit, {
   EmployerBenefitType,
 } from "../../../src/models/EmployerBenefit";
@@ -28,7 +29,6 @@ import Review, {
 } from "../../../src/pages/applications/review";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
-import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import { LeaveReasonType } from "../../../src/models/LeaveReason";
 import { createMockBenefitsApplicationDocument } from "../../../lib/mock-helpers/createMockDocument";
 import dayjs from "dayjs";
@@ -37,11 +37,11 @@ import { setupBenefitsApplications } from "../../test-utils/helpers";
 import userEvent from "@testing-library/user-event";
 
 const setup = ({
-  appErrors,
+  errors,
   claim = new MockBenefitsApplicationBuilder().part1Complete().create(),
   documents,
 }: {
-  appErrors?: AppErrorInfo[];
+  errors?: Error[];
   claim?: BenefitsApplication;
   documents?: BenefitsApplicationDocument[];
 } = {}) => {
@@ -67,13 +67,13 @@ const setup = ({
           .spyOn(appLogic.documents, "hasLoadedClaimDocuments")
           .mockReturnValue(true);
 
-        if (appErrors) {
-          // Rather than mutating the appErrors, we set them as they would
+        if (errors) {
+          // Rather than mutating the errors, we set them as they would
           // when the API request completes. This fixes an issue where mutating
-          // appLogic.appErrors was causing an infinite loop in our tests.
+          // appLogic.errors was causing an infinite loop in our tests.
           // eslint-disable-next-line react-hooks/rules-of-hooks
           useEffect(() => {
-            appLogic.setAppErrors(appErrors);
+            appLogic.setErrors(errors);
           });
         }
       },
@@ -183,11 +183,13 @@ describe("Review Page", () => {
   });
 
   it("renders a Alert when there are required field errors", () => {
-    const appErrors = [
-      new AppErrorInfo({ type: "required", field: "someField" }),
+    const errors = [
+      new ValidationError([
+        { type: "required", field: "someField", namespace: "applications" },
+      ]),
     ];
 
-    setup({ appErrors });
+    setup({ errors });
 
     expect(
       screen.getByText(/We’ve added some new questions/i).parentNode
@@ -195,16 +197,17 @@ describe("Review Page", () => {
   });
 
   it("does not render a custom Alert when there are required errors not associated to a specific field", () => {
-    const appErrors = [
-      new AppErrorInfo({
-        type: "required",
-        rule: "require_employer_notified",
-        message:
-          "employer_notified must be True if employment_status is Employed",
-      }),
+    const errors = [
+      new ValidationError([
+        {
+          type: "required",
+          rule: "require_employer_notified",
+          namespace: "applications",
+        },
+      ]),
     ];
 
-    setup({ appErrors });
+    setup({ errors });
 
     expect(
       screen.queryByText(/We’ve added some new questions/i)
@@ -215,14 +218,7 @@ describe("Review Page", () => {
     const claim = new MockBenefitsApplicationBuilder().complete().create();
 
     setup({
-      appErrors: [
-        new AppErrorInfo({
-          name: "DocumentsLoadError",
-          meta: {
-            application_id: claim.application_id,
-          },
-        }),
-      ],
+      errors: [new DocumentsLoadError(claim.application_id)],
       claim,
     });
 

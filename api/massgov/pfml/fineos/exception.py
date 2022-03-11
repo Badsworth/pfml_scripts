@@ -15,7 +15,7 @@ class FINEOSClientError(RuntimeError):
 #
 class FINEOSFatalError(FINEOSClientError):
     """Only a cause or status_code is expected. If a cause is provided, it should be
-       a client-side error (client-side timeout.) Otherwise, it indicates a FINEOS response issue.
+    a client-side error (client-side timeout.) Otherwise, it indicates a FINEOS response issue.
     """
 
     cause: Optional[Exception]

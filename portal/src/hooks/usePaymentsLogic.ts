@@ -1,14 +1,9 @@
-import { AppErrorsLogic } from "./useAppErrorsLogic";
+import { ErrorsLogic } from "./useErrorsLogic";
 import { Payment } from "../models/Payment";
 import PaymentsApi from "../api/PaymentsApi";
-import { isFeatureEnabled } from "../services/featureFlags";
 import { useState } from "react";
 
-const usePaymentsLogic = ({
-  appErrorsLogic,
-}: {
-  appErrorsLogic: AppErrorsLogic;
-}) => {
+const usePaymentsLogic = ({ errorsLogic }: { errorsLogic: ErrorsLogic }) => {
   const paymentsApi = new PaymentsApi();
 
   /**
@@ -34,17 +29,15 @@ const usePaymentsLogic = ({
   const loadPayments = async (absenceId: string) => {
     if (isLoadingPayments) return;
 
-    const shouldPaymentsLoad =
-      isFeatureEnabled("claimantShowPaymentsPhaseTwo") &&
-      !hasLoadedPayments(absenceId);
+    const shouldPaymentsLoad = !hasLoadedPayments(absenceId);
     if (shouldPaymentsLoad) {
       setIsLoadingPayments(true);
-      appErrorsLogic.clearErrors();
+      errorsLogic.clearErrors();
       try {
         const { payments } = await paymentsApi.getPayments(absenceId);
         setLoadedPaymentsData(new Payment(payments));
       } catch (error) {
-        appErrorsLogic.catchError(error);
+        errorsLogic.catchError(error);
       } finally {
         setIsLoadingPayments(false);
       }

@@ -11,7 +11,7 @@ export default class BenefitsApplicationsApi extends BaseApi {
     return routes.api.applications;
   }
 
-  get i18nPrefix() {
+  get namespace() {
     return "applications";
   }
 
@@ -34,7 +34,11 @@ export default class BenefitsApplicationsApi extends BaseApi {
     const { data, meta } = await this.request<BenefitsApplication[]>(
       "GET",
       "",
-      { page_offset: pageOffset }
+      {
+        order_by: "created_at",
+        order_direction: "descending",
+        page_offset: pageOffset,
+      }
     );
 
     const claims = data.map((claimData) => new BenefitsApplication(claimData));
@@ -45,24 +49,6 @@ export default class BenefitsApplicationsApi extends BaseApi {
         claims
       ),
       paginationMeta: meta?.paging ?? {},
-    };
-  };
-
-  importClaim = async (postData: {
-    absence_case_id: string | null;
-    tax_identifier: string | null;
-  }) => {
-    const { data } = await this.request<BenefitsApplication>(
-      "POST",
-      "import",
-      postData,
-      {
-        i18nPrefix: "applicationImport",
-      }
-    );
-
-    return {
-      claim: new BenefitsApplication(data),
     };
   };
 

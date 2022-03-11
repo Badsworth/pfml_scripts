@@ -268,7 +268,7 @@ def test_ach_reader_entry_count_wrong():
             name="Emily Schenck",
             line_number=3,
             raw_record=build_rr_from_return(ENTRY_COUNT_WRONG_RETURN, 3),
-        ),
+        )
     ]
     assert ach_reader.get_change_notifications() == []
     assert warnings_summary(ach_reader.get_warnings()) == (
@@ -310,7 +310,7 @@ def test_ach_reader_no_batch_header():
             name="Emily Schenck",
             line_number=2,
             raw_record=build_rr_from_return(NO_BATCH_HEADER_RETURN, 2),
-        ),
+        )
     ]
     assert ach_reader.get_change_notifications() == []
     assert warnings_summary(ach_reader.get_warnings()) == (

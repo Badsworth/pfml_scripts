@@ -120,9 +120,7 @@ def main():
     employer_file.close()
     employee_file.close()
 
-    logger.info(
-        "DONE: output files %s, %s", employer_path, employee_path,
-    )
+    logger.info("DONE: output files %s, %s", employer_path, employee_path)
 
 
 # == main processor ==
@@ -152,7 +150,7 @@ def generate(
         # Generate employers
         employers = tuple(
             generate_employers(
-                chunk + 1, 100, update_mode, fein_base, set_empty_dba, set_empty_city,
+                chunk + 1, 100, update_mode, fein_base, set_empty_dba, set_empty_city
             )
         )
 
@@ -245,7 +243,7 @@ def generate_employers(
     """Generate employer rows"""
     for index in range(employer_count):
         yield generate_single_employer(
-            base_id + index, update_mode, fein_base, set_empty_dba, set_empty_city,
+            base_id + index, update_mode, fein_base, set_empty_dba, set_empty_city
         )
 
 
@@ -442,30 +440,21 @@ def generate_single_employee(
             # Special scenario 2: two quarters, wages $5000 and $10000
             # Financial eligibility: fails 30x rule
             qtr_wages = decimal.Decimal(5000)  # initial quarterly wage
-            quarters = (
-                Quarter(2020, 4),
-                Quarter(2021, 1),
-            )
+            quarters = (Quarter(2020, 4), Quarter(2021, 1))
             wage_change_random_pool = (10000 - 5000,)
 
         elif (employee_generate_id % 100) <= 13:
             # Special scenario 3: two quarters, wages $2000 and $2000
             # Financial eligibility: when 1 employer, not eligible / when 2 employers, eligible
             qtr_wages = decimal.Decimal(2000)  # initial quarterly wage
-            quarters = (
-                Quarter(2020, 4),
-                Quarter(2021, 1),
-            )
+            quarters = (Quarter(2020, 4), Quarter(2021, 1))
             wage_change_random_pool = (0,)
 
         elif (employee_generate_id % 100) <= 15:
             # Special scenario 4: two quarters, wages $5000 and $21000
             # Financial eligibility: eligible in 2021, but not in 2022 (due to 2021 max benefit)
             qtr_wages = decimal.Decimal(5000)  # initial quarterly wage
-            quarters = (
-                Quarter(2021, 3),
-                Quarter(2021, 4),
-            )
+            quarters = (Quarter(2021, 3), Quarter(2021, 4))
             wage_change_random_pool = (21000 - 5000,)
 
         else:

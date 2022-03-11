@@ -1,19 +1,13 @@
-import AppErrorInfo from "../models/AppErrorInfo";
-import { get } from "lodash";
+import { DocumentsLoadError } from "../errors";
 
 /**
  * Check if a DocumentsLoadError related to loading exists for the given application
  */
-const hasDocumentsLoadError = (
-  appErrors: AppErrorInfo[],
-  applicationId: string
-) =>
-  appErrors.some(
+const hasDocumentsLoadError = (errors: Error[], applicationId: string) =>
+  errors.some(
     (error) =>
-      error.name === "DocumentsLoadError" &&
-      get(error, "meta.application_id") === applicationId &&
-      // Error with file_id is from uploading request
-      !get(error, "meta.file_id")
+      error instanceof DocumentsLoadError &&
+      error.application_id === applicationId
   );
 
 export default hasDocumentsLoadError;

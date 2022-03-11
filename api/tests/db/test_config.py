@@ -35,7 +35,7 @@ def test_get_config_fully_specified(delete_db_env_vars, monkeypatch, set_env_to_
     db_config = massgov.pfml.db.config.get_config()
 
     assert db_config == massgov.pfml.db.config.DbConfig(
-        host="foo", name="bar", username="baz", password="qux", schema="quux", port="quuz",
+        host="foo", name="bar", username="baz", password="qux", schema="quux", port="quuz"
     )
 
 

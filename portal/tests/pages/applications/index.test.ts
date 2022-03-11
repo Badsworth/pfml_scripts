@@ -1,10 +1,12 @@
 import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
-import { screen, within } from "@testing-library/react";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { AppLogic } from "../../../src/hooks/useAppLogic";
 import BenefitsApplication from "src/models/BenefitsApplication";
 import Index from "../../../src/pages/applications/index";
+import dayjs from "dayjs";
+import formatDate from "src/utils/formatDate";
 import routes from "../../../src/routes";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 const inProgressClaim = new MockBenefitsApplicationBuilder()
@@ -41,6 +43,55 @@ describe("Applications", () => {
       },
     });
     expect(goToSpy).toHaveBeenCalledWith("/applications/get-ready", {});
+  });
+
+  it("displays benefit year notice when FF is enabled and current benefit year exists", () => {
+    process.env.featureFlags = JSON.stringify({
+      splitClaimsAcrossBY: true,
+    });
+
+    const startDate = new Date();
+    const endDate = dayjs(startDate).add(1, "year");
+
+    renderPage(Index, {
+      pathname: routes.applications.index,
+      addCustomSetup: (appLogicHook) => {
+        setUpHelper(appLogicHook);
+        appLogicHook.benefitYears.loadBenefitYears = jest.fn();
+        appLogicHook.benefitYears.getCurrentBenefitYear = jest
+          .fn()
+          .mockReturnValue({
+            benefit_year_start_date: startDate.toUTCString(),
+            benefit_year_end_date: endDate.toDate().toUTCString(),
+            employee_id: "2a340cf8-6d2a-4f82-a075-73588d003f8f",
+            current_benefit_year: true,
+          });
+      },
+    });
+
+    const byText = new RegExp(
+      `is ${formatDate(startDate.toISOString()).short()} to ${formatDate(
+        endDate.toISOString()
+      ).short()}. Most Massachusetts employees are eligible for up to 26 weeks of combined family and medical leave per benefit year.`
+    );
+    expect(screen.getByText(/Your current/i)).toBeInTheDocument();
+    expect(screen.getByText(byText)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "benefit year" })).toHaveAttribute(
+      "href",
+      "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-overview-and-benefits#getting-paid-and-taxes-on-benefits-"
+    );
+
+    expect(
+      screen.getByRole("link", {
+        name: "application review and approval process",
+      })
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByRole("link", {
+        name: "application review and approval process",
+      })
+    ).toHaveAttribute("href", "https://mass.gov/pfml/application-timeline");
   });
 
   it("displays prompt for channel switching when feature flag is enabled", () => {
@@ -89,7 +140,7 @@ describe("Applications", () => {
     });
   });
 
-  it("user can view their in-progress + submitted applications", () => {
+  it("displays Application Card for each claim", () => {
     renderPage(
       Index,
       {
@@ -101,81 +152,15 @@ describe("Applications", () => {
             new ApiResourceCollection<BenefitsApplication>("application_id", [
               inProgressClaim,
               submittedClaim,
+              completedClaim,
             ]);
         },
       },
       { query: {} }
     );
 
-    expect(
-      screen.getByRole("heading", { level: 3, name: "In-progress application" })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", {
-        level: 3,
-        name: "Leave for an illness or injury",
-      })
-    ).toBeInTheDocument();
-  });
-
-  it("displays completed applications", () => {
-    renderPage(Index, {
-      pathname: routes.applications.index,
-      addCustomSetup: (appLogicHook) => {
-        setUpHelper(appLogicHook);
-        appLogicHook.documents.loadAll = jest.fn();
-        appLogicHook.benefitsApplications.benefitsApplications =
-          new ApiResourceCollection<BenefitsApplication>("application_id", [
-            completedClaim,
-          ]);
-      },
-    });
-
-    expect(screen.getByText(/Submitted applications/)).toBeInTheDocument();
-    expect(screen.getByText(/View your notices/)).toBeInTheDocument();
-  });
-
-  describe("When multiple claims of different statuses exist", () => {
-    beforeEach(() => {
-      renderPage(
-        Index,
-        {
-          pathname: routes.applications.index,
-          addCustomSetup: (appLogicHook) => {
-            setUpHelper(appLogicHook);
-            appLogicHook.documents.loadAll = jest.fn();
-            appLogicHook.benefitsApplications.benefitsApplications =
-              new ApiResourceCollection<BenefitsApplication>("application_id", [
-                inProgressClaim,
-                submittedClaim,
-                completedClaim,
-              ]);
-          },
-        },
-        { query: {} }
-      );
-    });
-
-    it("Displays Application Card for each claim", () => {
-      const applicationCards = screen.getAllByRole("article");
-      expect(applicationCards).toHaveLength(3);
-    });
-
-    it("Displays headers for each section", () => {
-      expect(screen.getByText(/In-progress applications/)).toBeInTheDocument();
-      expect(screen.getByText(/Submitted applications/)).toBeInTheDocument();
-    });
-
-    it("Displays claims in expected order", () => {
-      const [inProgClaim, subClaim, compClaim] = screen.getAllByRole("article");
-      expect(
-        within(inProgClaim).getByText(/In-progress application/)
-      ).toBeInTheDocument();
-      expect(
-        within(subClaim).getByText(/Leave for an illness or injury/)
-      ).toBeInTheDocument();
-      expect(within(compClaim).getByText(/NTN-111-ABS-01/)).toBeInTheDocument();
-    });
+    const applicationCards = screen.getAllByRole("article");
+    expect(applicationCards).toHaveLength(3);
   });
 
   it("only loads documents for each submitted claim once", () => {

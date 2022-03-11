@@ -363,7 +363,7 @@ def test_transform_previous_leaves():
             "name": "V2OtherLeavesPastLeaveEndDate1",
         },
         {
-            "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy",},
+            "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy"},
             "name": "V2QualifyingReason1",
         },
         {
@@ -397,7 +397,7 @@ def test_transform_previous_leaves():
             "name": "V2OtherLeavesPastLeaveEndDate2",
         },
         {
-            "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy",},
+            "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy"},
             "name": "V2QualifyingReason2",
         },
         {

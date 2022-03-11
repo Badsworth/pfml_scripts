@@ -131,9 +131,9 @@ class WageCalculator:
         default: Optional[decimal.Decimal] = None,
         should_round: Optional[bool] = None,
     ) -> decimal.Decimal:
-        """ Get average weekly wage for a specific employer.
-            If not found and no default is supplied, raise KeyError.
-            Round to two decimal places if should_round supplied.
+        """Get average weekly wage for a specific employer.
+        If not found and no default is supplied, raise KeyError.
+        Round to two decimal places if should_round supplied.
         """
         employer_average_weekly_wage = default
         if employer_id in self.employer_average_weekly_wage:

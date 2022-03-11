@@ -43,10 +43,7 @@ class Constants:
     FINEOS_CUSTOMER_NUMBER = "FINEOS Customer ID"
     SSN = "SSN"
 
-    EMPLOYEE_LIST_FIELDS = [
-        FINEOS_CUSTOMER_NUMBER,
-        SSN,
-    ]
+    EMPLOYEE_LIST_FIELDS = [FINEOS_CUSTOMER_NUMBER, SSN]
 
 
 def get_employees_for_outbound(db_session: db.Session) -> List[Employee]:

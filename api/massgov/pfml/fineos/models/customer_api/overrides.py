@@ -27,14 +27,14 @@ class AbsencePeriodStatus(Enum):
 # Optional properties
 class EmailAddress(base.EmailAddress):
     id: Optional[int] = Field(  # type: ignore
-        None, description="The id of the contact method (e.g. phone / mobile / emailAddress) ",
+        None, description="The id of the contact method (e.g. phone / mobile / emailAddress) "
     )
 
 
 # Optional properties
 class PhoneNumber(base.PhoneNumber):
     id: Optional[int] = Field(  # type: ignore
-        None, description="The id of the contact method (e.g. phone / mobile / emailAddress) ",
+        None, description="The id of the contact method (e.g. phone / mobile / emailAddress) "
     )
 
 

@@ -103,7 +103,7 @@ class EmployerInfoForReview(PydanticBaseModel):
 
 
 def _get_leave_details(absence_periods: Dict[str, Dict]) -> LeaveDetails:
-    """ Extracts absence data based on a PeriodDecisions dict and returns a LeaveDetails """
+    """Extracts absence data based on a PeriodDecisions dict and returns a LeaveDetails"""
     leave_details = {}
     leave_details["reason"] = absence_periods["decisions"][0]["period"]["leaveRequest"][
         "reasonName"
@@ -165,7 +165,7 @@ def _get_leave_details(absence_periods: Dict[str, Dict]) -> LeaveDetails:
 
 
 def _get_computed_start_dates(absence_periods: Dict[str, Dict]) -> ComputedStartDates:
-    """ Extracts absence data based on a PeriodDecisions dict and returns ComputedStartDates """
+    """Extracts absence data based on a PeriodDecisions dict and returns ComputedStartDates"""
     if len(absence_periods["decisions"]) == 0 or not absence_periods["decisions"][0]["period"]:
         return ComputedStartDates(other_reason=None, same_reason=None)
 
@@ -233,6 +233,7 @@ def download_document_as_leave_admin(
         {
             "fineos_user_id": fineos_user_id,
             "absence_id": absence_id,
+            "absence_case_id": absence_id,
             "fineos_document_id": fineos_document_id,
         }
     )
@@ -279,7 +280,11 @@ def find_sub_case_id(
     if not case_id:
         logger.warning(
             "Document with that fineos_document_id could not be found",
-            extra={"absence_id": absence_id, "fineos_document_id": fineos_document_id,},
+            extra={
+                "absence_id": absence_id,
+                "absence_case_id": absence_id,
+                "fineos_document_id": fineos_document_id,
+            },
         )
         raise Exception("Document with that fineos_document_id could not be found")
     return case_id
@@ -426,7 +431,7 @@ def _group_by_absence_period_reference(
 
 
 def _parse_absence_period_responses(
-    absence_period_decisions: List[Decision], log_attributes: Dict,
+    absence_period_decisions: List[Decision], log_attributes: Dict
 ) -> List[AbsencePeriodResponse]:
     absence_period_responses = []
 
@@ -457,6 +462,7 @@ def get_claim_as_leave_admin(
     log_attributes = {
         "fineos_user_id": fineos_user_id,
         "absence_id": absence_id,
+        "absence_case_id": absence_id,
         "employer_id": employer.employer_id,
     }
 

@@ -50,12 +50,12 @@ def upgrade():
         sa.Column("is_stored_in_s3", sa.Boolean(), nullable=False),
         sa.Column("name", sa.Text(), nullable=False),
         sa.Column("description", sa.Text(), nullable=False),
-        sa.ForeignKeyConstraint(["content_type_id"], ["lk_content_type.content_type_id"],),
+        sa.ForeignKeyConstraint(["content_type_id"], ["lk_content_type.content_type_id"]),
         sa.ForeignKeyConstraint(
-            ["document_category_id"], ["lk_document_category.document_category_id"],
+            ["document_category_id"], ["lk_document_category.document_category_id"]
         ),
-        sa.ForeignKeyConstraint(["document_type_id"], ["lk_document_type.document_type_id"],),
-        sa.ForeignKeyConstraint(["user_id"], ["user.user_id"],),
+        sa.ForeignKeyConstraint(["document_type_id"], ["lk_document_type.document_type_id"]),
+        sa.ForeignKeyConstraint(["user_id"], ["user.user_id"]),
         sa.PrimaryKeyConstraint("document_id"),
     )
     # ### end Alembic commands ###

@@ -28,6 +28,7 @@ def test_get_application_log_attributes(user, test_db_session, initialize_factor
     log_attributes = get_application_log_attributes(application)
 
     expected_attributes = {
+        "absence_case_id": None,
         "application.absence_case_id": None,
         "application.application_id": str(application.application_id),
         "application.completed_time": None,
@@ -83,6 +84,7 @@ def test_get_application_log_attributes(user, test_db_session, initialize_factor
         "application.updated_at.timestamp": str(application.updated_at.timestamp()),
         "work_pattern.work_pattern_type": None,
         "application.is_withholding_tax": None,
+        "application.split_from_application_id": None,
     }
     assert log_attributes == expected_attributes
 

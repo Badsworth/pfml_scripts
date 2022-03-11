@@ -6,17 +6,21 @@ import {
 import { createAbsencePeriod, renderPage } from "../../../test-utils";
 import { AbsencePeriod } from "../../../../src/models/AbsencePeriod";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
-import AppErrorInfo from "../../../../src/models/AppErrorInfo";
 import { AppLogic } from "../../../../src/hooks/useAppLogic";
 import ClaimDetail from "../../../../src/models/ClaimDetail";
+import { Holiday } from "../../../../src/models/Holiday";
 import LeaveReason from "../../../../src/models/LeaveReason";
+import { NotFoundError } from "../../../../src/errors";
 import { Payment } from "../../../../src/models/Payment";
 import { Payments } from "../../../../src/pages/applications/status/payments";
 import { createMockBenefitsApplicationDocument } from "../../../../lib/mock-helpers/createMockDocument";
 import { createMockPayment } from "lib/mock-helpers/createMockPayment";
 import dayjs from "dayjs";
+import dayjsBusinessTime from "dayjs-business-time";
 import routes from "../../../../src/routes";
 import { screen } from "@testing-library/react";
+
+dayjs.extend(dayjsBusinessTime);
 
 const createApprovalNotice = (approvalDate: string) => {
   return new ApiResourceCollection<BenefitsApplicationDocument>(
@@ -36,6 +40,7 @@ interface SetupOptions {
   goTo?: jest.Mock;
   approvalDate?: string;
   includeApprovalNotice?: boolean;
+  holidays?: Holiday[];
 }
 
 const setupHelper =
@@ -45,6 +50,7 @@ const setupHelper =
     goTo = jest.fn(),
     approvalDate = defaultApprovalDate.format("YYYY-MM-DD"),
     includeApprovalNotice = false,
+    holidays = defaultHolidays,
   }: SetupOptions) =>
   (appLogicHook: AppLogic) => {
     appLogicHook.claims.claimDetail = new ClaimDetail({
@@ -52,9 +58,13 @@ const setupHelper =
       absence_periods,
     });
     appLogicHook.claims.loadClaimDetail = jest.fn();
-    appLogicHook.appErrors = [];
+    appLogicHook.errors = [];
     appLogicHook.documents.loadAll = jest.fn();
     appLogicHook.documents.hasLoadedClaimDocuments = () => true;
+    appLogicHook.holidays.holidays = holidays;
+    appLogicHook.holidays.loadHolidays = jest.fn();
+    appLogicHook.holidays.hasLoadedHolidays = true;
+    appLogicHook.holidays.isLoadingHolidays = false;
     appLogicHook.portalFlow.goTo = goTo;
     if (includeApprovalNotice) {
       appLogicHook.documents.documents = createApprovalNotice(approvalDate);
@@ -87,6 +97,10 @@ const defaultClaimDetailAttributes = {
   absence_periods: [defaultAbsencePeriod],
 };
 
+const defaultHolidays = [{ name: "Memorial Day", date: "2022-05-30" }];
+const defaultHolidayAlertText =
+  "Due to the upcoming holiday, payments may be delayed by one business day.";
+
 const props = {
   query: {
     absence_id: defaultClaimDetailAttributes.fineos_absence_id,
@@ -94,34 +108,7 @@ const props = {
 };
 
 describe("Payments", () => {
-  it("redirects to status page if feature flag is not enabled", () => {
-    process.env.featureFlags = JSON.stringify({
-      claimantShowPaymentsPhaseTwo: false,
-    });
-
-    const goToMock = jest.fn();
-    renderPage(
-      Payments,
-      {
-        // Set includeApprovalNotice, otherwise this test will pass regardless of feature flag value
-        addCustomSetup: setupHelper({
-          goTo: goToMock,
-          includeApprovalNotice: true,
-        }),
-      },
-      props
-    );
-
-    expect(goToMock).toHaveBeenCalledWith(routes.applications.status.claim, {
-      absence_id: props.query.absence_id,
-    });
-  });
-
-  it("redirects to status page if claim does not have an approval notice", () => {
-    process.env.featureFlags = JSON.stringify({
-      claimantShowPaymentsPhaseTwo: true,
-    });
-
+  it("redirects to status page if claim is not approved and has no payments", () => {
     const goToMock = jest.fn();
 
     renderPage(
@@ -129,6 +116,9 @@ describe("Payments", () => {
       {
         // includeApprovalNotice is false by default in setupHelper, passing for clarity
         addCustomSetup: setupHelper({
+          absence_periods: [
+            { ...defaultAbsencePeriod, request_decision: "Pending" },
+          ],
           goTo: goToMock,
           includeApprovalNotice: false,
         }),
@@ -169,7 +159,11 @@ describe("Payments", () => {
       props
     );
 
-    expect(screen.getByRole("region")).toMatchSnapshot();
+    const bondingAlertText =
+      "If you are giving birth, you may also be eligible for paid medical leave";
+    expect(
+      screen.getByText(bondingAlertText, { exact: false })
+    ).toBeInTheDocument();
   });
 
   it("displays info alert if claimant has pregnancy but not bonding claims", () => {
@@ -184,12 +178,17 @@ describe("Payments", () => {
               request_decision: "Approved",
             }),
           ],
+          includeApprovalNotice: true,
         }),
       },
       props
     );
 
-    expect(screen.getByRole("region")).toMatchSnapshot();
+    const pregnancyAlertText =
+      "You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends.";
+    expect(
+      screen.getByText(pregnancyAlertText, { exact: false })
+    ).toBeInTheDocument();
   });
 
   it("does not display info alert if claimant has bonding AND pregnancy claims", () => {
@@ -209,11 +208,61 @@ describe("Payments", () => {
               request_decision: "Approved",
             }),
           ],
+          includeApprovalNotice: true,
         }),
       },
       props
     );
-    expect(screen.queryByRole("region")).not.toBeInTheDocument();
+    const bondingAlertText =
+      "If you are giving birth, you may also be eligible for paid medical leave";
+    const pregnancyAlertText =
+      "You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends.";
+    expect(
+      screen.queryByText(bondingAlertText, { exact: false })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(pregnancyAlertText, { exact: false })
+    ).not.toBeInTheDocument();
+  });
+
+  it("doesn't show the holiday alert when there are holidays, but the claimantShowPaymentsPhaseThree feature flag is off", () => {
+    process.env.featureFlags = JSON.stringify({
+      showHolidayAlert: true,
+      claimantShowPaymentsPhaseThree: false,
+    });
+    renderPage(Payments, { addCustomSetup: setupHelper({}) }, props);
+    expect(screen.queryByText(defaultHolidayAlertText)).not.toBeInTheDocument();
+  });
+
+  it("doesn't show the holiday alert when there are holidays, but the holiday alert feature flag is off", () => {
+    process.env.featureFlags = JSON.stringify({
+      showHolidayAlert: false,
+      claimantShowPaymentsPhaseThree: true,
+    });
+    renderPage(Payments, { addCustomSetup: setupHelper({}) }, props);
+    expect(screen.queryByText(defaultHolidayAlertText)).not.toBeInTheDocument();
+  });
+
+  it("doesn't show the holiday alert when there are no holidays", () => {
+    process.env.featureFlags = JSON.stringify({
+      showHolidayAlert: true,
+      claimantShowPaymentsPhaseThree: true,
+    });
+    renderPage(
+      Payments,
+      { addCustomSetup: setupHelper({ holidays: [] }) },
+      props
+    );
+    expect(screen.queryByText(defaultHolidayAlertText)).not.toBeInTheDocument();
+  });
+
+  it("shows the holiday alert when there are holidays", () => {
+    process.env.featureFlags = JSON.stringify({
+      showHolidayAlert: true,
+      claimantShowPaymentsPhaseThree: true,
+    });
+    renderPage(Payments, { addCustomSetup: setupHelper({}) }, props);
+    expect(screen.queryByText(defaultHolidayAlertText)).toBeInTheDocument();
   });
 
   it("renders the `Your payments` intro content section", () => {
@@ -370,17 +419,15 @@ describe("Payments", () => {
             claimDetail: undefined,
             isLoadingClaimDetail: false,
           },
-          appErrors: [
-            new AppErrorInfo({
-              meta: { application_id: "foo" },
-              key: "AppErrorInfo1",
-              message:
-                "Sorry, we were unable to retrieve what you were looking for. Check that the link you are visiting is correct. If this continues to happen, please log out and try again.",
-              name: "NotFoundError",
-            }),
-          ],
+          errors: [new NotFoundError()],
           documents: {
             loadAll: { loadAllClaimDocuments: jest.fn() },
+          },
+          holidays: {
+            holidays: defaultHolidays,
+            loadHolidays: jest.fn(),
+            hasLoadedHolidays: true,
+            isLoadingHolidays: false,
           },
           payments: {
             loadPayments: jest.fn(),
@@ -397,14 +444,13 @@ describe("Payments", () => {
   });
 
   // TODO(PORTAL-1482): remove test cases for checkback dates
-  describe("Phase 2 Checkback date implementation", () => {
-    beforeEach(() => {
-      process.env.featureFlags = JSON.stringify({
-        claimantShowPaymentsPhaseTwo: true,
-      });
-    });
-
+  describe("Checkback date implementation", () => {
     const approvalDate = {
+      "approved before claim start date": dayjs(
+        defaultAbsencePeriod.absence_period_start_date
+      )
+        .add(-1, "day")
+        .format("YYYY-MM-DD"),
       "approved after fourteenth claim date": dayjs(
         defaultAbsencePeriod.absence_period_start_date
       )
@@ -413,7 +459,7 @@ describe("Payments", () => {
       "approved before fourteenth claim date": dayjs(
         defaultAbsencePeriod.absence_period_start_date
       )
-        .subtract(14, "day")
+        .add(7, "day")
         .format("YYYY-MM-DD"),
       "with retroactive claim date": dayjs(
         defaultAbsencePeriod.absence_period_end_date
@@ -534,9 +580,177 @@ describe("Payments", () => {
         }
       );
 
+      const intermittentUnpaidIntroText =
+        "Your application has an unpaid 7-day waiting period that begins the first day you report taking leave";
+      expect(
+        screen.getByText(intermittentUnpaidIntroText, { exact: false })
+      ).toBeInTheDocument();
       expect(screen.getByTestId("your-payments-intro")).toMatchSnapshot();
       const table = screen.queryByRole("table");
       expect(table).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Phase Three: Status render implementation", () => {
+    beforeEach(() => {
+      process.env.featureFlags = JSON.stringify({
+        claimantShowPaymentsPhaseThree: true,
+      });
+    });
+
+    const staticTransactionDate = dayjs().format("YYYY-MM-DD");
+    // transaction date to be compared with current date, current date
+    const transactionDate = {
+      "five business days before today": dayjs(staticTransactionDate)
+        .subtractBusinessDays(5)
+        .format("YYYY-MM-DD"),
+      "two business days before today": dayjs(staticTransactionDate)
+        .subtractBusinessDays(2)
+        .format("YYYY-MM-DD"),
+      "same day": staticTransactionDate,
+    };
+
+    const transactionDateScenarios = Object.keys(
+      transactionDate
+    ).sort() as Array<keyof typeof transactionDate>;
+
+    it.each(transactionDateScenarios)(
+      "conditional render for delays with immediate display time %s: ",
+      (state) => {
+        renderPage(
+          Payments,
+          {
+            addCustomSetup: setupHelper({
+              payments: {
+                absence_case_id: "NTN-12345-ABS-01",
+                payments: [
+                  createMockPayment(
+                    {
+                      status: "Delayed",
+                      sent_to_bank_date: null,
+                      writeback_transaction_status: "Bank Processing Error",
+                      transaction_date: transactionDate[state],
+                    },
+                    true
+                  ),
+                ],
+              },
+            }),
+          },
+          props
+        );
+
+        const rejectedDelayReasonText =
+          "This payment has been rejected by your bank.";
+        expect(
+          screen.queryByText(rejectedDelayReasonText, { exact: false })
+        ).toBeInTheDocument();
+      }
+    );
+
+    const [beforeFiveDays, ...beforeTwoDaysOrSameDay] =
+      transactionDateScenarios;
+    it.each(beforeTwoDaysOrSameDay)(
+      "conditional render for delayed display time, current date before or same as delay date:%s ",
+      (state) => {
+        renderPage(
+          Payments,
+          {
+            addCustomSetup: setupHelper({
+              payments: {
+                absence_case_id: "NTN-12345-ABS-01",
+                payments: [
+                  createMockPayment(
+                    {
+                      status: "Delayed",
+                      sent_to_bank_date: null,
+                      writeback_transaction_status: "Address Validation Error",
+                      transaction_date: transactionDate[state],
+                    },
+                    true
+                  ),
+                ],
+              },
+            }),
+          },
+          props
+        );
+
+        const addressDelayReasonText =
+          "This payment is delayed due to an error with your provided mailing address.";
+        expect(
+          screen.queryByText(addressDelayReasonText, { exact: false })
+        ).not.toBeInTheDocument();
+        expect(screen.queryByText("Delayed")).not.toBeInTheDocument();
+        expect(screen.queryByText("Processing")).toBeInTheDocument();
+      }
+    );
+
+    it("conditional render for delayed display time, current date after delay date", () => {
+      renderPage(
+        Payments,
+        {
+          addCustomSetup: setupHelper({
+            payments: {
+              absence_case_id: "NTN-12345-ABS-01",
+              payments: [
+                createMockPayment(
+                  {
+                    status: "Delayed",
+                    sent_to_bank_date: null,
+                    writeback_transaction_status: "Address Validation Error",
+                    transaction_date: transactionDate[beforeFiveDays],
+                  },
+                  true
+                ),
+              ],
+            },
+          }),
+        },
+        props
+      );
+      const addressDelayReasonText =
+        "This payment is delayed due to an error with your provided mailing address.";
+      expect(
+        screen.queryByText(addressDelayReasonText, { exact: false })
+      ).toBeInTheDocument();
+      expect(screen.queryByText("Delayed")).toBeInTheDocument();
+      expect(screen.queryByText("Processing")).not.toBeInTheDocument();
+    });
+
+    it("will not display updated delay text if claimantShowPaymentsPhaseThree feature flag is false", () => {
+      process.env.featureFlags = JSON.stringify({
+        claimantShowPaymentsPhaseThree: false,
+      });
+      renderPage(
+        Payments,
+        {
+          addCustomSetup: setupHelper({
+            payments: {
+              absence_case_id: "NTN-12345-ABS-01",
+              payments: [
+                createMockPayment(
+                  {
+                    status: "Delayed",
+                    sent_to_bank_date: null,
+                    writeback_transaction_status: "Bank Processing Error",
+                    transaction_date:
+                      transactionDate["five business days before today"],
+                  },
+                  true
+                ),
+              ],
+            },
+          }),
+        },
+        props
+      );
+
+      const rejectedDelayReasonText =
+        "This payment has been rejected by your bank.";
+      expect(
+        screen.queryByText(rejectedDelayReasonText, { exact: false })
+      ).not.toBeInTheDocument();
     });
   });
 });

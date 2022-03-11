@@ -84,7 +84,7 @@ def test_is_azure_token_true(mock_azure, azure_auth_token_unit):
 def test_is_azure_token_false(mock_azure, auth_claims_unit, azure_auth_private_key):
     # This token is created with an azure private key but lacks the key ID.
     # Therefore, it should not be recognized as an Azure token.
-    token = jwt.encode(auth_claims_unit, azure_auth_private_key, algorithm=ALGORITHMS.RS256,)
+    token = jwt.encode(auth_claims_unit, azure_auth_private_key, algorithm=ALGORITHMS.RS256)
     assert authentication._is_azure_token(token) is False
 
 
@@ -128,7 +128,7 @@ def test_process_azure_token_unauthorized(app, mock_azure, auth_claims_unit, tes
     # The user lacks the NON_PROD group and receives an unauthorized exception.
     decoded_azure_token["groups"] = [AzureGroup.NON_PROD_ADMIN.azure_group_guid]
     with pytest.raises(
-        Unauthorized, match="You do not have the correct group to access the Admin Portal.",
+        Unauthorized, match="You do not have the correct group to access the Admin Portal."
     ):
         with app.app.app_context():
             authentication._process_azure_token(test_db_session, decoded_azure_token)

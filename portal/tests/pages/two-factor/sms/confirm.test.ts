@@ -192,9 +192,10 @@ describe("Two-factor SMS Confirm", () => {
   });
 
   it("displays an error when a user attempts the code too many times", async () => {
-    jest
-      .spyOn(MFAService, "verifyMFAPhoneNumber")
-      .mockRejectedValueOnce({ message: "limit exceeded" });
+    jest.spyOn(MFAService, "verifyMFAPhoneNumber").mockRejectedValueOnce({
+      code: "LimitExceededException",
+      message: "limit exceeded",
+    });
     jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
 
     renderPage(ConfirmSMS, {

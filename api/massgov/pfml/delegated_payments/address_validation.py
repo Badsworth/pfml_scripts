@@ -118,6 +118,11 @@ class AddressValidationStep(Step):
                 message=Constants.MESSAGE_ADDRESS_MISSING_PART,
             )
             self.increment(self.Metrics.ADDRESS_MISSING_COMPONENT_COUNT)
+            logger.info(
+                "Address missing components, skipping Experian call",
+                extra=get_traceable_payment_details(payment, Constants.ERROR_STATE),
+            )
+
             return None
 
         # When we fully switch over to using the SOAP API,
@@ -276,7 +281,7 @@ def _experian_soap_response_for_address(
 
 
 def _outcome_for_search_result(
-    result: Optional[sm.SearchResponse], msg: str, address: Address,
+    result: Optional[sm.SearchResponse], msg: str, address: Address
 ) -> Dict[str, Any]:
 
     verify_level = (

@@ -1,5 +1,5 @@
-import AppErrorInfo from "../models/AppErrorInfo";
 import { FormState } from "./useFormState";
+import findErrorMessageForField from "../utils/findErrorMessageForField";
 import { get } from "lodash";
 import useHandleInputChange from "./useHandleInputChange";
 
@@ -8,11 +8,11 @@ import useHandleInputChange from "./useHandleInputChange";
  * needs in order to display and update state.
  */
 function useFunctionalInputProps({
-  appErrors,
+  errors = [],
   formState,
   updateFields,
 }: {
-  appErrors?: AppErrorInfo[];
+  errors?: Error[];
   formState: FormState["formState"];
   updateFields: FormState["updateFields"];
 }) {
@@ -22,13 +22,10 @@ function useFunctionalInputProps({
     fieldName: string,
     config: { fallbackValue: unknown } = { fallbackValue: "" }
   ) {
-    const errorMsg = appErrors
-      ? AppErrorInfo.fieldErrorMessage(appErrors, fieldName)
-      : undefined;
     const value = get(formState, fieldName);
 
     return {
-      errorMsg: errorMsg || undefined, // undefined prevents the prop from being added to the Component
+      errorMsg: findErrorMessageForField(errors, fieldName),
       name: fieldName,
       onChange: handleInputChange,
       /**

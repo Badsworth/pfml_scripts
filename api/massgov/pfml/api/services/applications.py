@@ -71,6 +71,7 @@ from massgov.pfml.db.models.employees import (
     LkAddressType,
     LkGender,
     MFADeliveryPreference,
+    PaymentMethod,
     User,
 )
 from massgov.pfml.db.models.geo import GeoState
@@ -79,11 +80,16 @@ from massgov.pfml.fineos.models.customer_api import AbsencePeriodStatus, PhoneNu
 from massgov.pfml.fineos.models.customer_api.spec import (
     AbsenceDetails,
     AbsencePeriod,
+    EForm,
+    EFormSummary,
     ReportedReducedScheduleLeavePeriod,
     ReportedTimeOffLeavePeriod,
 )
 from massgov.pfml.fineos.transforms.from_fineos.eforms import (
     TransformConcurrentLeaveFromOtherLeaveEform,
+    TransformEmployerBenefitsFromOtherIncomeEform,
+    TransformOtherIncomeEform,
+    TransformOtherIncomeNonEmployerEform,
     TransformPreviousLeaveFromOtherLeaveEform,
 )
 from massgov.pfml.util.datetime import utcnow
@@ -97,6 +103,7 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 
 LeaveScheduleDB = Union[ContinuousLeavePeriod, IntermittentLeavePeriod, ReducedScheduleLeavePeriod]
 OtherBenefitsDB = Union[EmployerBenefit, OtherIncome, PreviousLeave, ConcurrentLeave]
+EFORM_CACHE = Dict[int, EForm]
 
 
 def process_partially_masked_field(
@@ -160,7 +167,7 @@ def process_fully_masked_field(
 def process_masked_address(
     field_key: str, body: Dict[str, Any], existing_address: Address
 ) -> List[ValidationErrorDetail]:
-    """ Handle masked addresses (mailing or residential) """
+    """Handle masked addresses (mailing or residential)"""
     address = body.get(field_key)
     errors = []
     if address:
@@ -201,7 +208,7 @@ def process_masked_address(
 def process_masked_phone_number(
     field_key: str, body: Dict[str, Any], existing_phone: Phone
 ) -> List[ValidationErrorDetail]:
-    """ Handle masked phone number """
+    """Handle masked phone number"""
     phone = body.get(field_key)
     errors = []
 
@@ -406,13 +413,13 @@ def update_from_request(
 
         if key == "previous_leaves_other_reason":
             set_previous_leaves(
-                db_session, body.previous_leaves_other_reason, application, "other_reason",
+                db_session, body.previous_leaves_other_reason, application, "other_reason"
             )
             continue
 
         if key == "previous_leaves_same_reason":
             set_previous_leaves(
-                db_session, body.previous_leaves_same_reason, application, "same_reason",
+                db_session, body.previous_leaves_same_reason, application, "same_reason"
             )
             continue
 
@@ -472,7 +479,7 @@ def add_or_update_caring_leave_metadata(
 
         if key == "relationship_to_caregiver" and value is not None:
             relationship_to_caregiver_model = db_lookups.by_value(
-                db_session, value.get_lookup_model(), value,
+                db_session, value.get_lookup_model(), value
             )
             if relationship_to_caregiver_model:
                 value = relationship_to_caregiver_model
@@ -772,6 +779,8 @@ def set_employer_benefits(
     application: Application,
 ) -> None:
 
+    benefits: List[EmployerBenefit] = []
+
     if application.employer_benefits:
         delete_application_other_benefits(EmployerBenefit, application, db_session)
 
@@ -795,8 +804,9 @@ def set_employer_benefits(
             new_employer_benefit.benefit_amount_frequency_id = AmountFrequency.get_id(
                 api_employer_benefit.benefit_amount_frequency.value
             )
-
+        benefits.append(new_employer_benefit)
         db_session.add(new_employer_benefit)
+    application.employer_benefits = benefits
 
 
 def set_other_incomes(
@@ -804,7 +814,7 @@ def set_other_incomes(
     api_other_incomes: Optional[List[apps_common_io.OtherIncome]],
     application: Application,
 ) -> None:
-
+    other_incomes: List[OtherIncome] = []
     if application.other_incomes:
         delete_application_other_benefits(OtherIncome, application, db_session)
 
@@ -827,8 +837,9 @@ def set_other_incomes(
             new_other_income.income_amount_frequency_id = AmountFrequency.get_id(
                 api_other_income.income_amount_frequency.value
             )
-
+        other_incomes.append(new_other_income)
         db_session.add(new_other_income)
+    application.other_incomes = other_incomes
 
 
 def set_concurrent_leave(
@@ -891,7 +902,7 @@ def set_previous_leaves(
 
 
 def add_or_update_phone(
-    db_session: db.Session, phone: Optional[common_io.Phone], application: Application,
+    db_session: db.Session, phone: Optional[common_io.Phone], application: Application
 ) -> None:
     if not phone:
         return
@@ -981,7 +992,9 @@ def claim_is_valid_for_application_import(
         )
         if existing_application and existing_application.user_id != user.user_id:
             message = "An application linked to a different account already exists for this claim."
-            validation_error = ValidationErrorDetail(message=message, type=IssueType.exists)
+            validation_error = ValidationErrorDetail(
+                message=message, type=IssueType.exists, field="absence_case_id"
+            )
             logger.info(
                 "applications_import failure - exists_different_account",
                 extra=get_application_log_attributes(existing_application),
@@ -992,7 +1005,9 @@ def claim_is_valid_for_application_import(
 
         if existing_application:
             message = "An application already exists for this claim."
-            validation_error = ValidationErrorDetail(message=message, type=IssueType.duplicate)
+            validation_error = ValidationErrorDetail(
+                message=message, type=IssueType.duplicate, field="absence_case_id"
+            )
             logger.info(
                 "applications_import failure - exists_same_account",
                 extra=get_application_log_attributes(existing_application),
@@ -1004,7 +1019,7 @@ def claim_is_valid_for_application_import(
 
 
 def set_application_fields_from_db_claim(
-    fineos: AbstractFINEOSClient, application: Application, claim: Claim, db_session: db.Session,
+    fineos: AbstractFINEOSClient, application: Application, claim: Claim, db_session: db.Session
 ) -> None:
     """
     Set Application core fields using Claim
@@ -1286,7 +1301,7 @@ def minutes_from_hours_minutes(hours: int, minutes: int) -> int:
 
 
 def set_employment_status_and_occupations(
-    fineos_client: AbstractFINEOSClient, fineos_web_id: str, application: Application,
+    fineos_client: AbstractFINEOSClient, fineos_web_id: str, application: Application
 ) -> None:
     occupations = fineos_client.get_customer_occupations_customer_api(
         fineos_web_id, application.tax_identifier.tax_identifier
@@ -1359,13 +1374,14 @@ def set_payment_preference_fields(
         application.has_submitted_payment_preference = False
         return
 
-    has_submitted_payment_preference = False
     # Take the one with isDefault=True, otherwise take first one
     preference = next(
         (pref for pref in preferences if pref.isDefault and pref.paymentMethod != ""),
         preferences[0],
     )
 
+    payment_preference = None
+    has_submitted_payment_preference = False
     if preference.accountDetails is not None:
         payment_preference = PaymentPreference(
             account_number=preference.accountDetails.accountNo,
@@ -1373,6 +1389,11 @@ def set_payment_preference_fields(
             bank_account_type=preference.accountDetails.accountType,
             payment_method=preference.paymentMethod,
         )
+    elif preference.paymentMethod == PaymentMethod.CHECK.payment_method_description:
+        payment_preference = PaymentPreference(
+            payment_method=preference.paymentMethod,
+        )
+    if payment_preference is not None:
         add_or_update_payment_preference(db_session, payment_preference, application)
         has_submitted_payment_preference = True
     application.has_submitted_payment_preference = has_submitted_payment_preference
@@ -1438,85 +1459,97 @@ def set_customer_contact_detail_fields(
         logger.info("No contact details returned from FINEOS")
         return
 
-    if (
-        application.user.mfa_delivery_preference_id
-        != MFADeliveryPreference.SMS.mfa_delivery_preference_id
-    ):
-        raise ValidationException(
-            errors=[
-                ValidationErrorDetail(
-                    field="mfa_delivery_preference",
-                    type=IssueType.required,
-                    message="User has not opted into MFA delivery preferences",
-                )
-            ]
-        )
+    mfa_phone_number = None
+    for phone_num in contact_details.phoneNumbers:
+        country_code = phone_num.intCode if phone_num.intCode else "1"
+        fineos_phone = f"+{country_code}{phone_num.areaCode}{phone_num.telephoneNo}"
+        if application.user.mfa_phone_number == fineos_phone:
+            mfa_phone_number = fineos_phone
 
-    mfa_phone_number = next(
-        (
-            phone_num
-            for phone_num in contact_details.phoneNumbers
-            if f"+{phone_num.intCode}{phone_num.areaCode}{phone_num.telephoneNo}"
-            == application.user.mfa_phone_number
-        ),
-        None,
+    preferred_phone_number = next(
+        (phone_num for phone_num in contact_details.phoneNumbers if phone_num.preferred),
+        contact_details.phoneNumbers[0],
     )
 
-    if mfa_phone_number is None:
+    if (
+        mfa_phone_number is None
+        or application.user.mfa_delivery_preference_id
+        != MFADeliveryPreference.SMS.mfa_delivery_preference_id
+    ):
         logger.info(
-            "application import failure - phone number mismatch",
-            extra={"absence_case_id": application.claim_id, "user_id": application.user.user_id,},
+            "application import failure - phone number mismatch / no SMS phone available ",
+            extra={
+                "absence_case_id": application.claim.fineos_absence_id
+                if application.claim
+                else None,
+                "mfa_delivery_preference_id": application.user.mfa_delivery_preference_id,
+            },
         )
         raise ValidationException(
             errors=[
                 ValidationErrorDetail(
                     type=IssueType.incorrect,
-                    message="An issue occurred while trying to import the application",
+                    message="Code 3: An issue occurred while trying to import the application.",
                 )
             ]
         )
 
-    phone_number_from_fineos = next(
-        (phone_num for phone_num in contact_details.phoneNumbers if phone_num.preferred),
-        contact_details.phoneNumbers[0],
-    )
-
     # Handles the potential case of a phone number list existing, but phone fields are null
     if not (
-        phone_number_from_fineos.intCode
-        or phone_number_from_fineos.areaCode
-        or phone_number_from_fineos.telephoneNo
+        preferred_phone_number.intCode
+        or preferred_phone_number.areaCode
+        or preferred_phone_number.telephoneNo
     ):
         logger.info(
             "Field missing from FINEOS phoneNumber list",
-            extra={"phoneNumbers": str(phone_number_from_fineos)},
+            extra={"phoneNumbers": str(preferred_phone_number)},
         )
         return
 
-    phone_to_create = create_common_io_phone_from_fineos(phone_number_from_fineos, db_session)
+    phone_to_create = create_common_io_phone_from_fineos(preferred_phone_number, db_session)
     add_or_update_phone(db_session, phone_to_create, application)
 
 
+def customer_get_eform(
+    fineos: AbstractFINEOSClient,
+    fineos_web_id: str,
+    absence_id: str,
+    eform_id: int,
+    eform_cache: EFORM_CACHE,
+) -> EForm:
+    if eform_id in eform_cache:
+        return eform_cache[eform_id]
+    eform = fineos.customer_get_eform(fineos_web_id, absence_id, eform_id)
+    eform_cache[eform_id] = eform
+    return eform
+
+
 def set_other_leaves(
-    fineos: massgov.pfml.fineos.AbstractFINEOSClient,
+    fineos: AbstractFINEOSClient,
     fineos_web_id: str,
     application: Application,
     db_session: db.Session,
     absence_id: str,
+    eform_summaries: Optional[List[EFormSummary]] = None,
+    eform_cache: Optional[EFORM_CACHE] = None,
 ) -> None:
     """
     Retrieve other leaves from FINEOS and set for imported application fields
     """
-    summaries = fineos.customer_get_eform_summary(fineos_web_id, absence_id)
+    if eform_summaries is None:
+        eform_summaries = fineos.customer_get_eform_summary(fineos_web_id, absence_id)
 
-    for summary in summaries:
+    if eform_cache is None:
+        eform_cache = {}
+
+    for summary in eform_summaries:
         if summary.eformType != EformTypes.OTHER_LEAVES:
             continue
 
         previous_leaves: List[common_io.PreviousLeave] = []
         concurrent_leave: Optional[common_io.ConcurrentLeave] = None
 
-        eform = fineos.customer_get_eform(fineos_web_id, absence_id, summary.eformId)
+        eform = customer_get_eform(fineos, fineos_web_id, absence_id, summary.eformId, eform_cache)
 
         concurrent_leave = TransformConcurrentLeaveFromOtherLeaveEform.from_fineos(eform)
         application.has_concurrent_leave = concurrent_leave is not None
@@ -1535,8 +1568,91 @@ def set_other_leaves(
         application.has_previous_leaves_other_reason = len(other_leaves) > 0
         application.has_previous_leaves_same_reason = len(same_leaves) > 0
         set_previous_leaves(
-            db_session, other_leaves, application, "other_reason",
+            db_session,
+            other_leaves,
+            application,
+            "other_reason",
         )
         set_previous_leaves(
-            db_session, same_leaves, application, "same_reason",
+            db_session,
+            same_leaves,
+            application,
+            "same_reason",
         )
+
+
+BENEFITS_EFORM_TYPES = [EformTypes.OTHER_INCOME, EformTypes.OTHER_INCOME_V2]
+
+
+def set_employer_benefits_from_fineos(
+    fineos: AbstractFINEOSClient,
+    fineos_web_id: str,
+    application: Application,
+    db_session: db.Session,
+    absence_id: str,
+    eform_summaries: Optional[List[EFormSummary]] = None,
+    eform_cache: Optional[EFORM_CACHE] = None,
+) -> None:
+    employer_benefits: List[common_io.EmployerBenefit] = []
+    if eform_summaries is None:
+        eform_summaries = fineos.customer_get_eform_summary(fineos_web_id, absence_id)
+
+    if eform_cache is None:
+        eform_cache = {}
+
+    for eform_summary in eform_summaries:
+        if eform_summary.eformType not in BENEFITS_EFORM_TYPES:
+            continue
+
+        eform = customer_get_eform(
+            fineos, fineos_web_id, absence_id, eform_summary.eformId, eform_cache
+        )
+
+        if eform_summary.eformType == EformTypes.OTHER_INCOME:
+            employer_benefits.extend(
+                other_income
+                for other_income in TransformOtherIncomeEform.from_fineos(eform)
+                if other_income.program_type == "Employer"
+            )
+
+        elif eform_summary.eformType == EformTypes.OTHER_INCOME_V2:
+            employer_benefits.extend(
+                TransformEmployerBenefitsFromOtherIncomeEform.from_fineos(eform)
+            )
+    application.has_employer_benefits = len(employer_benefits) > 0
+    set_employer_benefits(db_session, employer_benefits, application)
+
+
+def set_other_incomes_from_fineos(
+    fineos: AbstractFINEOSClient,
+    fineos_web_id: str,
+    application: Application,
+    db_session: db.Session,
+    absence_id: str,
+    eform_summaries: Optional[List[EFormSummary]] = None,
+    eform_cache: Optional[EFORM_CACHE] = None,
+) -> None:
+    other_incomes: List[apps_common_io.OtherIncome] = []
+    if eform_summaries is None:
+        eform_summaries = fineos.customer_get_eform_summary(fineos_web_id, absence_id)
+
+    if eform_cache is None:
+        eform_cache = {}
+
+    for eform_summary in eform_summaries:
+        if eform_summary.eformType != EformTypes.OTHER_INCOME_V2:
+            continue
+
+        eform = customer_get_eform(
+            fineos, fineos_web_id, absence_id, eform_summary.eformId, eform_cache
+        )
+        other_incomes.extend(
+            [
+                income
+                for income in TransformOtherIncomeNonEmployerEform.from_fineos(eform)
+                if income.income_type == apps_common_io.OtherIncomeType.other_employer
+            ]
+        )
+
+    application.has_other_incomes = len(other_incomes) > 0
+    set_other_incomes(db_session, other_incomes, application)

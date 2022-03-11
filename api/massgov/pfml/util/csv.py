@@ -115,7 +115,7 @@ class EncodingDictWriter(csv.DictWriter):
 
 
 class CSVSourceWrapper:
-    """ Simple wrapper for reading dicts out of CSV files """
+    """Simple wrapper for reading dicts out of CSV files"""
 
     def __init__(self, file_path: str, transport_params: Optional[Dict[str, Any]] = None):
         self._file_path = file_path
@@ -125,7 +125,7 @@ class CSVSourceWrapper:
         with smart_open.open(
             self._file_path, "r", transport_params=self._transport_params
         ) as csvfile:
-            dict_reader = csv.DictReader(csvfile, delimiter=",")
+            dict_reader = csv.DictReader(csvfile, delimiter=",", restkey="other_fields")
             for row in dict_reader:
                 yield row
 

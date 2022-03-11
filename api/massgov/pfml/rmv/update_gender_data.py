@@ -18,11 +18,7 @@ from massgov.pfml.util.bg import background_task
 
 logger = logging.get_logger(__name__)
 
-rmv_sex_to_gender = {
-    RMVSex.M: Gender.MAN,
-    RMVSex.F: Gender.WOMAN,
-    RMVSex.X: Gender.NONBINARY,
-}
+rmv_sex_to_gender = {RMVSex.M: Gender.MAN, RMVSex.F: Gender.WOMAN, RMVSex.X: Gender.NONBINARY}
 
 
 @dataclass
@@ -39,10 +35,10 @@ def main():
     """ECS handler function."""
     with db.session_scope(db.init(), close=True) as db_session:
         logger.info(
-            "Getting the list of claimants we want to update with gender data from the RMV API.",
+            "Getting the list of claimants we want to update with gender data from the RMV API."
         )
         claimants_to_scrape = get_claimants_to_scrape(db_session)
-        logger.info("Starting gender data update.",)
+        logger.info("Starting gender data update.")
 
         rmv_mocking_behavior = RMVAPIBehavior(
             str(os.environ.get("RMV_API_BEHAVIOR", RMVAPIBehavior.MOCK.value))
@@ -55,9 +51,7 @@ def main():
         report = update_gender_data(
             db_session, rmv_client, rmv_mocking_behavior, claimants_to_scrape
         )
-        logger.info(
-            "Finished gender data update.", extra={"report": asdict(report)},
-        )
+        logger.info("Finished gender data update.", extra={"report": asdict(report)})
 
 
 def update_gender_data(

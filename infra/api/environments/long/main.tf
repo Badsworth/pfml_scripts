@@ -44,6 +44,8 @@ data "aws_ecs_cluster" "long" {
 module "api" {
   source = "../../template"
 
+  logging_level = "massgov.pfml.fineos.fineos_client=DEBUG"
+
   environment_name = local.environment_name
   # st_use_mock_dor_data    = false
   # st_decrypt_dor_data     = false
@@ -99,6 +101,11 @@ module "api" {
   portal_base_url      = "https://paidleave-long.dfml.eol.mass.gov"
 
   # dor_fineos_etl_schedule_expression               = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour
+
+  azure_ad_authority_domain = "login.microsoftonline.com"
+  azure_ad_client_id        = "ecc75e15-cd60-4e28-b62f-d1bf80e05d4d"
+  azure_ad_parent_group     = "TSS-SG-PFML_ADMIN_PORTAL_NON_PROD"
+  azure_ad_tenant_id        = "3e861d16-48b7-4a0e-9806-8c04d81b7b2a"
 
   enable_document_multipart_upload = "1"
   enable_application_import        = "1"

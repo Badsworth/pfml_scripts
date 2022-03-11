@@ -1,8 +1,4 @@
-import {
-  BadRequestError,
-  ForbiddenError,
-  LeaveAdminForbiddenError,
-} from "../../src/errors";
+import { BadRequestError, ForbiddenError } from "../../src/errors";
 import { act, renderHook } from "@testing-library/react-hooks";
 import {
   addEmployerMock,
@@ -14,11 +10,11 @@ import {
   submitWithholdingMock,
 } from "../../src/api/EmployersApi";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
-import AppErrorInfo from "../../src/models/AppErrorInfo";
 import User from "../../src/models/User";
+import tracker from "../../src/services/tracker";
 import { uniqueId } from "lodash";
-import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import useEmployersLogic from "../../src/hooks/useEmployersLogic";
+import useErrorsLogic from "../../src/hooks/useErrorsLogic";
 import usePortalFlow from "../../src/hooks/usePortalFlow";
 
 jest.mock("../../src/api/EmployersApi");
@@ -27,16 +23,16 @@ jest.mock("../../src/services/tracker");
 describe("useEmployersLogic", () => {
   const absenceId = "mock-fineos-absence-id-1";
   const employerId = "mock-employer-id";
-  let appErrorsLogic, clearClaims, employersLogic, portalFlow, setUser;
+  let clearClaims, employersLogic, errorsLogic, portalFlow, setUser;
 
   function setup() {
     clearClaims = jest.fn();
     setUser = jest.fn();
     renderHook(() => {
       portalFlow = usePortalFlow();
-      appErrorsLogic = useAppErrorsLogic({ portalFlow });
+      errorsLogic = useErrorsLogic({ portalFlow });
       employersLogic = useEmployersLogic({
-        appErrorsLogic,
+        errorsLogic,
         clearClaims,
         portalFlow,
         setUser,
@@ -49,7 +45,7 @@ describe("useEmployersLogic", () => {
   });
 
   afterEach(() => {
-    appErrorsLogic = null;
+    errorsLogic = null;
     employersLogic = null;
     portalFlow = null;
     setUser = null;
@@ -90,19 +86,19 @@ describe("useEmployersLogic", () => {
           await employersLogic.addEmployer({ ein: "" });
         });
 
-        expect(appErrorsLogic.appErrors[0].name).toEqual("Error");
+        expect(errorsLogic.errors[0].name).toEqual("Error");
       });
 
       it("clears prior errors", async () => {
         act(() => {
-          appErrorsLogic.setAppErrors([new AppErrorInfo()]);
+          errorsLogic.setErrors([new Error()]);
         });
 
         await act(async () => {
           await employersLogic.addEmployer(postData);
         });
 
-        expect(appErrorsLogic.appErrors).toHaveLength(0);
+        expect(errorsLogic.errors).toHaveLength(0);
       });
     });
   });
@@ -143,11 +139,11 @@ describe("useEmployersLogic", () => {
           await employersLogic.loadClaim(absenceId);
         });
 
-        expect(appErrorsLogic.appErrors[0].name).toEqual("Error");
+        expect(errorsLogic.errors[0].name).toEqual("Error");
       });
 
-      it("catches instances of LeaveAdminForbiddenError", async () => {
-        const catchErrorSpy = jest.spyOn(appErrorsLogic, "catchError");
+      it("redirects to verify contributions page when request fails and includes truthy has_verification_data response field", async () => {
+        const goToSpy = jest.spyOn(portalFlow, "goTo");
         getClaimMock.mockImplementationOnce(() => {
           throw new ForbiddenError(
             {
@@ -162,27 +158,66 @@ describe("useEmployersLogic", () => {
           await employersLogic.loadClaim(absenceId);
         });
 
-        const expectedError = new LeaveAdminForbiddenError(
-          "some-employer-id",
-          true,
-          "User is not Verified"
+        expect(goToSpy).toHaveBeenCalledWith(
+          "/employers/organizations/verify-contributions",
+          {
+            employer_id: "some-employer-id",
+            next: "",
+          },
+          { redirect: true }
         );
-        // first call, first argument
-        expect(catchErrorSpy.mock.calls[0][0]).toEqual(expectedError);
-        expect(appErrorsLogic.appErrors.length).toBe(0);
+        expect(tracker.trackEvent).toHaveBeenCalledWith(
+          "LeaveAdminForbiddenError",
+          {
+            employerId: "some-employer-id",
+            hasVerificationData: "true",
+          }
+        );
+      });
+
+      it("redirects to cannot verify page when request fails and includes falsey has_verification_data response field", async () => {
+        const goToSpy = jest.spyOn(portalFlow, "goTo");
+        getClaimMock.mockImplementationOnce(() => {
+          throw new ForbiddenError(
+            {
+              employer_id: "some-employer-id",
+              has_verification_data: false,
+            },
+            "User is not Verified"
+          );
+        });
+
+        await act(async () => {
+          await employersLogic.loadClaim(absenceId);
+        });
+
+        expect(goToSpy).toHaveBeenCalledWith(
+          "/employers/organizations/cannot-verify",
+          {
+            employer_id: "some-employer-id",
+          },
+          { redirect: true }
+        );
+        expect(tracker.trackEvent).toHaveBeenCalledWith(
+          "LeaveAdminForbiddenError",
+          {
+            employerId: "some-employer-id",
+            hasVerificationData: "false",
+          }
+        );
       });
     });
 
     it("clears prior errors", async () => {
       act(() => {
-        appErrorsLogic.setAppErrors([new AppErrorInfo()]);
+        errorsLogic.setErrors([new Error()]);
       });
 
       await act(async () => {
         await employersLogic.loadClaim(absenceId);
       });
 
-      expect(appErrorsLogic.appErrors).toHaveLength(0);
+      expect(errorsLogic.errors).toHaveLength(0);
     });
   });
 
@@ -325,19 +360,19 @@ describe("useEmployersLogic", () => {
           await employersLogic.loadDocuments(absenceId);
         });
 
-        expect(appErrorsLogic.appErrors[0].name).toEqual("Error");
+        expect(errorsLogic.errors[0].name).toEqual("Error");
       });
 
       it("clears prior errors", async () => {
         act(() => {
-          appErrorsLogic.setAppErrors([new AppErrorInfo()]);
+          errorsLogic.setErrors([new Error()]);
         });
 
         await act(async () => {
           await employersLogic.loadDocuments(absenceId);
         });
 
-        expect(appErrorsLogic.appErrors).toHaveLength(0);
+        expect(errorsLogic.errors).toHaveLength(0);
       });
     });
   });
@@ -369,7 +404,7 @@ describe("useEmployersLogic", () => {
           await employersLogic.loadWithholding(employerId);
         });
 
-        expect(appErrorsLogic.appErrors[0].name).toEqual("Error");
+        expect(errorsLogic.errors[0].name).toEqual("Error");
       });
     });
   });
@@ -377,7 +412,7 @@ describe("useEmployersLogic", () => {
   describe("downloadDocument", () => {
     it("clears prior errors", async () => {
       act(() => {
-        appErrorsLogic.setAppErrors([new AppErrorInfo()]);
+        errorsLogic.setErrors([new Error()]);
       });
 
       const document = new Document({
@@ -390,7 +425,7 @@ describe("useEmployersLogic", () => {
         await employersLogic.downloadDocument(absenceId, document);
       });
 
-      expect(appErrorsLogic.appErrors).toHaveLength(0);
+      expect(errorsLogic.errors).toHaveLength(0);
     });
 
     it("makes a request to the API", () => {
@@ -432,7 +467,7 @@ describe("useEmployersLogic", () => {
         await employersLogic.downloadDocument();
       });
 
-      expect(appErrorsLogic.appErrors[0].name).toEqual("BadRequestError");
+      expect(errorsLogic.errors[0].name).toEqual("BadRequestError");
     });
   });
 
@@ -481,19 +516,19 @@ describe("useEmployersLogic", () => {
           await employersLogic.submitClaimReview(absenceId, {});
         });
 
-        expect(appErrorsLogic.appErrors[0].name).toEqual("Error");
+        expect(errorsLogic.errors[0].name).toEqual("Error");
       });
 
       it("clears prior errors", async () => {
         act(() => {
-          appErrorsLogic.setAppErrors([new AppErrorInfo()]);
+          errorsLogic.setErrors([new Error()]);
         });
 
         await act(async () => {
           await employersLogic.submitClaimReview(absenceId, patchData);
         });
 
-        expect(appErrorsLogic.appErrors).toHaveLength(0);
+        expect(errorsLogic.errors).toHaveLength(0);
       });
     });
   });
@@ -539,19 +574,19 @@ describe("useEmployersLogic", () => {
           await employersLogic.submitWithholding(absenceId, {});
         });
 
-        expect(appErrorsLogic.appErrors[0].name).toEqual("Error");
+        expect(errorsLogic.errors[0].name).toEqual("Error");
       });
 
       it("clears prior errors", async () => {
         act(() => {
-          appErrorsLogic.setAppErrors([new AppErrorInfo()]);
+          errorsLogic.setErrors([new Error()]);
         });
 
         await act(async () => {
           await employersLogic.submitWithholding(postData);
         });
 
-        expect(appErrorsLogic.appErrors).toHaveLength(0);
+        expect(errorsLogic.errors).toHaveLength(0);
       });
     });
   });

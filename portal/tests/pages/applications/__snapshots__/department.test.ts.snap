@@ -1,6 +1,84 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`DepartmentPage when claimantShowOrganizationUnits feature flag is enabled renders the page 1`] = `
+exports[`DepartmentPage renders the confirmation page 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Employment information
+    </h1>
+    <fieldset
+      class="usa-fieldset margin-top-3 usa-form-group"
+    >
+      <legend
+        class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+      >
+        Confirm your department
+      </legend>
+      <span
+        class="display-block line-height-sans-5 measure-5 usa-intro"
+      >
+        Based on what you’ve entered, our records show you work at 
+        <strong>
+          Department One
+        </strong>
+        . Is this the department where you are applying to take leave?
+      </span>
+      <div
+        class="margin-top-3"
+      >
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice2"
+            name="radioOrgUnit"
+            type="radio"
+            value="department_one"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice2"
+          >
+            Yes
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice3"
+            name="radioOrgUnit"
+            type="radio"
+            value="no"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice3"
+          >
+            No
+          </label>
+        </div>
+      </div>
+    </fieldset>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Save and continue
+    </button>
+  </form>
+</div>
+`;
+
+exports[`DepartmentPage renders the page with a long list 1`] = `
 <div>
   <form
     class="usa-form"
@@ -18,17 +96,20 @@ exports[`DepartmentPage when claimantShowOrganizationUnits feature flag is enabl
       <legend
         class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
       >
-        Which department are you applying to take leave from?
+        Select the department where you are applying to take leave
       </legend>
+      <p>
+        Failure to select the right department will delay your application.
+      </p>
       <div
         class="usa-form-group"
       >
         <label
           class="usa-label text-bold font-heading-xs measure-5"
-          for="Dropdown2"
-          id="Dropdown2-label"
+          for="Dropdown4"
+          id="Dropdown4-label"
         >
-          Select a department
+          Select your department
         </label>
         <div
           class="usa-combo-box"
@@ -39,7 +120,7 @@ exports[`DepartmentPage when claimantShowOrganizationUnits feature flag is enabl
             aria-hidden="true"
             class="usa-select maxw-mobile-lg usa-sr-only usa-combo-box__select"
             id=""
-            name="combobox_org_unit"
+            name="comboOrgUnit"
             tabindex="-1"
           >
             <option
@@ -86,11 +167,6 @@ exports[`DepartmentPage when claimantShowOrganizationUnits feature flag is enabl
               Department Eight
             </option>
             <option
-              value="not_listed"
-            >
-              My department is not listed
-            </option>
-            <option
               value="not_selected"
             >
               I'm not sure
@@ -98,14 +174,14 @@ exports[`DepartmentPage when claimantShowOrganizationUnits feature flag is enabl
           </select>
           <input
             aria-autocomplete="list"
-            aria-describedby="Dropdown2--assistiveHint"
+            aria-describedby="Dropdown4--assistiveHint"
             aria-expanded="false"
-            aria-labelledby="Dropdown2_label Dropdown2_hint Dropdown2_error"
-            aria-owns="Dropdown2--list"
+            aria-labelledby="Dropdown4_label Dropdown4_hint Dropdown4_error"
+            aria-owns="Dropdown4--list"
             autocapitalize="off"
             autocomplete="off"
             class="usa-combo-box__input"
-            id="Dropdown2"
+            id="Dropdown4"
             role="combobox"
             type="text"
           />
@@ -156,10 +232,10 @@ exports[`DepartmentPage when claimantShowOrganizationUnits feature flag is enabl
           
       
           <ul
-            aria-labelledby="Dropdown2-label"
+            aria-labelledby="Dropdown4-label"
             class="usa-combo-box__list"
             hidden=""
-            id="Dropdown2--list"
+            id="Dropdown4--list"
             role="listbox"
             tabindex="-1"
           >
@@ -176,7 +252,7 @@ exports[`DepartmentPage when claimantShowOrganizationUnits feature flag is enabl
       
           <span
             class="usa-sr-only"
-            id="Dropdown2--assistiveHint"
+            id="Dropdown4--assistiveHint"
           >
             
         When autocomplete results are available use up and down arrows to review and enter to select.

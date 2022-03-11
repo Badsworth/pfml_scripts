@@ -24,6 +24,7 @@ async function setup({
   userAttrs?: Partial<User>;
 } = {}) {
   const associateSpy = jest.fn();
+  const invalidateApplicationsCacheSpy = jest.fn();
   const user = new User({
     consented_to_data_sharing: true,
     ...userAttrs,
@@ -39,12 +40,14 @@ async function setup({
           .fn()
           .mockResolvedValueOnce(phone_number_verified);
         appLogic.users.user = user;
-        appLogic.benefitsApplications.associate = associateSpy;
+        appLogic.benefitsApplications.invalidateApplicationsCache =
+          invalidateApplicationsCacheSpy;
+        appLogic.applicationImports.associate = associateSpy;
       },
     });
   });
 
-  return { ...utils, associateSpy };
+  return { ...utils, associateSpy, invalidateApplicationsCacheSpy };
 }
 
 describe("ImportClaim", () => {
@@ -108,8 +111,8 @@ describe("ImportClaim", () => {
     }
   );
 
-  it("associates application when user clicks submit", async () => {
-    const { associateSpy } = await setup();
+  it("invalidates the applications state, and submits data to API when user clicks submit", async () => {
+    const { associateSpy, invalidateApplicationsCacheSpy } = await setup();
 
     userEvent.type(
       screen.getByRole("textbox", { name: /social security/i }),
@@ -126,6 +129,9 @@ describe("ImportClaim", () => {
     expect(
       screen.getByText("Submitting… Do not refresh or go back")
     ).toBeInTheDocument();
+
+    expect(invalidateApplicationsCacheSpy).toHaveBeenCalled();
+
     await waitFor(() => {
       expect(associateSpy).toHaveBeenCalledWith({
         absence_case_id: "NTN-111-ABS-01",

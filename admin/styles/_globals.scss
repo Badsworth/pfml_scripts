@@ -34,7 +34,7 @@ a:focus {
 .page {
   background: #e5e5e5;
   display: grid;
-  grid-template-columns: 15.79em auto;
+  // grid-template-columns: 15.79em auto;
   grid-template-rows: minmax(min-content, max-content) auto;
   height: 100vh;
 }
@@ -79,46 +79,30 @@ input[type='text'] {
   }
 }
 
-input[type='checkbox'] {
-  appearance: none;
-  background: #fff;
-  border: solid 1px $Color-GraniteGray-200;
-  border-radius: $Border-Radius;
-  color: $Color-GraniteGray-200;
-  height: 16px;
-  margin: 0 0.57em 0 0;
-  padding: 0;
-  position: relative;
-  vertical-align: bottom;
-  width: 16px;
-
-  &:checked {
-    background: $Color-BayBlue-50;
-    border-color: $Color-BayBlue-500;
-    color: $Color-BayBlue-500;
-  }
-
-  &:checked::after {
-    @include IconFontProps;
-    content: $IconCheck;
-    font-size: 0.6em;
-    left: 2px;
-    position: absolute;
-    top: 3px;
-  }
-
-  &[disabled]:checked {
-    background: $Color-GraniteGray-50;
-    border-color: $Color-GraniteGray-300;
-    color: $Color-GraniteGray-300;
-  }
-}
-
 input[type='radio'] {
-  height: 1.228em;
+  appearance: none;
+  border: solid 1px $Color-GraniteGray-200;
+  border-radius: 50%;
+  height: 1.143em;
   margin: 0 0.571em 0 0;
   vertical-align: bottom;
-  width: 1.228em;
+  width: 1.143em;
+}
+
+input[type='radio']:checked {
+  align-items: center;
+  border-color: $Color-BayBlue-500;
+  display: inline-flex;
+  justify-content: center;
+}
+
+input[type='radio']:checked::before {
+  background: $Color-BayBlue-500;
+  border-radius: 50%;
+  content: '';
+  display: block;
+  height: 0.714em;
+  width: 0.714em;
 }
 
 legend {

@@ -15,8 +15,7 @@ from .common import PostgreSQLUUID
 
 
 class LkVerificationType(Base):
-    """ Lookup table for types of verifications
-    """
+    """Lookup table for types of verifications"""
 
     __tablename__ = "lk_verification_type"
     verification_type_id = Column(Integer, primary_key=True, autoincrement=True)
@@ -37,8 +36,7 @@ class VerificationType(LookupTable):
 
 
 class Verification(Base, TimestampMixin):
-    """ Stores a record of a Verification that occurred for association with a Role;
-    """
+    """Stores a record of a Verification that occurred for association with a Role;"""
 
     __tablename__ = "verification"
     verification_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)

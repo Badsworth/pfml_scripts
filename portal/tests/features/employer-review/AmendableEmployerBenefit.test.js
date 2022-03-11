@@ -8,7 +8,7 @@ import userEvent from "@testing-library/user-event";
 
 const onChange = jest.fn();
 const onRemove = jest.fn();
-const appErrors = [];
+const errors = [];
 const employerBenefit = new EmployerBenefit({
   benefit_end_date: "2021-03-01",
   benefit_start_date: "2021-02-01",
@@ -19,7 +19,7 @@ const employerBenefit = new EmployerBenefit({
 
 const renderComponent = (customProps) => {
   const props = {
-    appErrors,
+    errors,
     employerBenefit,
     isAddedByLeaveAdmin: true,
     onChange,

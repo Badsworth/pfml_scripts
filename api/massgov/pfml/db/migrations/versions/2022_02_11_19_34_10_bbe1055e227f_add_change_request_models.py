@@ -45,9 +45,9 @@ def upgrade():
         sa.Column("end_date", sa.Date(), nullable=True),
         sa.Column("submitted_time", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(
-            ["change_request_type_id"], ["lk_change_request_type.change_request_type_id"],
+            ["change_request_type_id"], ["lk_change_request_type.change_request_type_id"]
         ),
-        sa.ForeignKeyConstraint(["claim_id"], ["claim.claim_id"],),
+        sa.ForeignKeyConstraint(["claim_id"], ["claim.claim_id"]),
         sa.PrimaryKeyConstraint("change_request_id"),
     )
     op.create_index(

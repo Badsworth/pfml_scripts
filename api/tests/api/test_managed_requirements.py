@@ -71,7 +71,7 @@ class TestManagedRequirementQuery:
     @pytest.fixture
     def claim(self, employer):
         return ClaimFactory.create(
-            employer_id=employer.employer_id, fineos_absence_id=leave_admin_body["absence_case_id"],
+            employer_id=employer.employer_id, fineos_absence_id=leave_admin_body["absence_case_id"]
         )
 
     @pytest.fixture

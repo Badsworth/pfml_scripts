@@ -22,11 +22,7 @@ logger = logging.get_logger(__name__)
 ALL = "ALL"
 CONSUME_FINEOS_IAWW = "consume-fineos-iaww"
 IAWW_EXTRACT = "iaww-extract"
-ALLOWED_VALUES = [
-    ALL,
-    CONSUME_FINEOS_IAWW,
-    IAWW_EXTRACT,
-]
+ALLOWED_VALUES = [ALL, CONSUME_FINEOS_IAWW, IAWW_EXTRACT]
 
 
 class Configuration:

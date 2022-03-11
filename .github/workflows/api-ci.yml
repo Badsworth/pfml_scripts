@@ -57,10 +57,10 @@ jobs:
   # Check for test failures.
   get-test-dirs:
     runs-on: ubuntu-latest
-  
+
     outputs:
       matrix: ${{ steps.get-dirs.outputs.matrix }}
-    
+
     steps:
       - uses: actions/checkout@v2
 
@@ -71,14 +71,14 @@ jobs:
           cd tests/
           TEST_DIRS=$(ls -d */ | cut -f1 -d'/' | grep -v pycache | grep -v helpers | jq -R . | jq -s -c .)
           echo "::set-output name=matrix::$TEST_DIRS"
-          
+
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     if: always()
 
     needs: get-test-dirs
-    
+
     strategy:
       fail-fast: false
       matrix:
@@ -226,7 +226,7 @@ jobs:
         run: |
           RESPONSE=$(curl -fsLS -X POST ${{ env.TEAMS_URI }} \
           --header 'Content-Type: application/json' \
-          --data '{   
+          --data '{
             "@type": "MessageCard",
             "themeColor": "FF0000",
             "title": "API tests failed",

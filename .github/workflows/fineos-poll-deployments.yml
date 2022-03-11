@@ -53,10 +53,9 @@ jobs:
               "target_environment": "${{ matrix.environment }}",
               "cypress_tags": "Deploy,Deploy-Fineos",
               "run_stable": "true",
-              "stable_spec_pattern": "cypress/specs/stable/**",
               "run_unstable": "false",
-              "unstable_spec_pattern": "cypress/specs/unstable/**",
               "run_morning": "false",
-              "morning_spec_pattern": "cypress/specs/morning/**",
+              "run_targeted": "false",
+              "targeted_pattern": "cypress/specs/stable/feature/**",
               "title_override": "${{ format('Fineos Deploy: {0} to {1}', steps.publish-deployments.outputs.version, matrix.environment) }}"
             }
