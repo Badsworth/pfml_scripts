@@ -1421,7 +1421,7 @@ For example:
 </details>
 
 <h3 id="native-developer-setup">Native Developer Setup</h3>
-<p>To setup a development environment outside of Docker, you'll need to install a few things.</p>
+<p>To setup a development environment outside of Docker, you'll need to install a few things. Note that these instructions are for running the <em>application</em> natively, and the database will still run within Docker.</p>
 <ol>
 <li>Install Python 3.9.
    <a href="https://github.com/pyenv/pyenv#installation">pyenv</a> is one popular option for installing Python,
@@ -1434,9 +1434,19 @@ For example:
 <li>Run <code>make deps</code> to install Python dependencies and development tooling.</li>
 </ol>
 <p>You should now be able to run developer tooling natively, like linting.</p>
-<p>To run the application you'll need some environment variables set. You can largely copy-paste the env vars
-in <code>docker-compose.yml</code> to your native environment. <code>DB_HOST</code> should be changed to <code>localhost</code>. You can then start up
-just the PostgreSQL database via Docker with <code>make start-db</code> and then the API server with <code>make run-native</code>.</p>
+<p>To run the application:</p>
+<ol>
+<li>You'll need some environment variables set. You can largely copy-paste the env vars
+   in <code>docker-compose.yml</code> to your native environment. <code>DB_HOST</code> should be changed to <code>localhost</code>.</li>
+<li>Start the database within Docker: <code>make start-db</code></li>
+<li>Start the API server: <code>make run-native</code></li>
+</ol>
+<p><strong>Troubleshooting tips for native setup:</strong></p>
+<p>If you run into <code>sqlalchemy.exc.OperationalError</code> errors when first trying to run natively, make sure you don't have postgres running locally on the same port as the
+postgres in Docker.</p>
+<p>If you installed and ran <code>postgresql</code> via Homebrew, you can stop it by running:</p>
+<div class="highlight"><pre><span></span><code>brew services stop postgresql
+</code></pre></div>
 <h2 id="ide-configuration">IDE Configuration</h2>
 <p>If the IDE of your choice does not appear below, refer to the VS Code instructions for hints on what needs to get configured.</p>
 <h3 id="vscode">VSCode</h3>
