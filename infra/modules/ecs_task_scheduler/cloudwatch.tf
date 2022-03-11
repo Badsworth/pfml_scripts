@@ -21,7 +21,7 @@ resource "aws_cloudwatch_event_target" "task" {
 }
 
 locals {
-  is_daylight_savings = false
+  is_daylight_savings = true
 }
 
 resource "aws_cloudwatch_event_rule" "scheduled_rule" {
