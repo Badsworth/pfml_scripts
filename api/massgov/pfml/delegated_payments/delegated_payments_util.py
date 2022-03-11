@@ -45,6 +45,7 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVpei,
     FineosExtractVpeiClaimDetails,
     FineosExtractVpeiPaymentDetails,
+    FineosExtractVpeiPaymentLine,
     PaymentLog,
 )
 from massgov.pfml.db.models.state import LkState, State
@@ -60,6 +61,7 @@ ExtractTable = Union[
     Type[FineosExtractVpei],
     Type[FineosExtractVpeiClaimDetails],
     Type[FineosExtractVpeiPaymentDetails],
+    Type[FineosExtractVpeiPaymentLine],
     Type[FineosExtractVbiRequestedAbsenceSom],
     Type[FineosExtractEmployeeFeed],
     Type[FineosExtractVbiRequestedAbsence],
@@ -107,6 +109,7 @@ class Constants:
 
     PEI_EXPECTED_FILE_NAME = "vpei.csv"
     PAYMENT_DETAILS_EXPECTED_FILE_NAME = "vpeipaymentdetails.csv"
+    PAYMENT_LINE_EXPECTED_FILE_NAME = "vpeipaymentline.csv"
     CLAIM_DETAILS_EXPECTED_FILE_NAME = "vpeiclaimdetails.csv"
     REQUESTED_ABSENCE_FILE_NAME = "VBI_REQUESTEDABSENCE.csv"
 
@@ -280,12 +283,29 @@ class FineosExtractConstants:
         file_name="vpeipaymentdetails.csv",
         table=FineosExtractVpeiPaymentDetails,
         field_names=[
+            "C",
+            "I",
             "PECLASSID",
             "PEINDEXID",
             "PAYMENTSTARTP",
             "PAYMENTENDPER",
             "BALANCINGAMOU_MONAMT",
             "BUSINESSNETBE_MONAMT",
+        ],
+    )
+
+    PAYMENT_LINE = FineosExtract(
+        file_name="vpeipaymentline.csv",
+        table=FineosExtractVpeiPaymentLine,
+        field_names=[
+            "C",
+            "I",
+            "AMOUNT_MONAMT",
+            "LINETYPE",
+            "PAYMENTDETAILCLASSID",
+            "PAYMENTDETAILINDEXID",
+            "C_PYMNTEIF_PAYMENTLINES",
+            "I_PYMNTEIF_PAYMENTLINES",
         ],
     )
 
@@ -457,6 +477,7 @@ PAYMENT_EXTRACT_FILES = [
     FineosExtractConstants.VPEI,
     FineosExtractConstants.CLAIM_DETAILS,
     FineosExtractConstants.PAYMENT_DETAILS,
+    FineosExtractConstants.PAYMENT_LINE,
 ]
 PAYMENT_EXTRACT_FILE_NAMES = [extract_file.file_name for extract_file in PAYMENT_EXTRACT_FILES]
 
