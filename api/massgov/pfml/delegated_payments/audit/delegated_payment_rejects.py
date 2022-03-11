@@ -76,84 +76,49 @@ ACCEPTED_OUTCOME = state_log_util.build_outcome(
 )
 
 # End States when a payment is rejected
-rejectedstates: Dict[int, LkState] = {}
-rejectedstates[
-    PaymentTransactionType.STANDARD.payment_transaction_type_id
-] = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT
-rejectedstates[
-    PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
-] = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT
-rejectedstates[
-    PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
-] = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT
-rejectedstates[
-    PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
-] = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT
+rejectedstates: Dict[int, LkState] = {
+    PaymentTransactionType.STANDARD.payment_transaction_type_id: State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
+    PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id: State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
+    PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id: State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
+    PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id: ,State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT
+}
 
 # End States when a payment is skipped
-skippedstates: Dict[int, LkState] = {}
-skippedstates[
-    PaymentTransactionType.STANDARD.payment_transaction_type_id
-] = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE
-skippedstates[
-    PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
-] = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE
-skippedstates[
-    PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
-] = State.STATE_WITHHOLDING_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE
-skippedstates[
-    PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
-] = State.FEDERAL_WITHHOLDING_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE
+skippedstates: Dict[int, LkState] = {
+    PaymentTransactionType.STANDARD.payment_transaction_type_id: State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
+    PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id: State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
+    PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id: State.STATE_WITHHOLDING_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
+    PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id: State.FEDERAL_WITHHOLDING_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
+}
 
 # End States when a payment is to be paid
-paystates: Dict[int, LkState] = {}
-paystates[PaymentTransactionType.STANDARD.payment_transaction_type_id] = ACCEPTED_STATE
-paystates[
-    PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
-] = ACCEPTED_STATE
-paystates[
-    PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
-] = State.STATE_WITHHOLDING_SEND_FUNDS
-paystates[
-    PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
-] = State.FEDERAL_WITHHOLDING_SEND_FUNDS
+paystates: Dict[int, LkState] = {
+    PaymentTransactionType.STANDARD.payment_transaction_type_id: ACCEPTED_STATE,
+    PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id: ACCEPTED_STATE,
+    PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id: State.STATE_WITHHOLDING_SEND_FUNDS,
+    PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id: State.FEDERAL_WITHHOLDING_SEND_FUNDS,
+}
 
 # End States for related payments when a payment is rejected
-related_rejectedstates: Dict[int, LkState] = {}
-related_rejectedstates[
-    PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
-] = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT
-related_rejectedstates[
-    PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
-] = State.STATE_WITHHOLDING_ERROR
-related_rejectedstates[
-    PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
-] = State.FEDERAL_WITHHOLDING_ERROR
+related_rejectedstates: Dict[int, LkState] = {
+    PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id: State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
+    PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id: State.STATE_WITHHOLDING_ERROR,
+    PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id: State.FEDERAL_WITHHOLDING_ERROR,
+}
 
 # End States for related payments when a payment is skipped
-related_skippedstates: Dict[int, LkState] = {}
-related_skippedstates[
-    PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
-] = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE
-related_skippedstates[
-    PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
-] = State.STATE_WITHHOLDING_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE
-related_skippedstates[
-    PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
-] = State.FEDERAL_WITHHOLDING_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE
+related_skippedstates: Dict[int, LkState] = {
+    PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id: State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
+    PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id: State.STATE_WITHHOLDING_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
+    PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id: State.FEDERAL_WITHHOLDING_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
+}
 
 # End States for related payments when a payment is to be paid
-related_paystates: Dict[int, LkState] = {}
-related_paystates[
-    PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
-] = ACCEPTED_STATE
-related_paystates[
-    PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
-] = State.STATE_WITHHOLDING_SEND_FUNDS
-related_paystates[
-    PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
-] = State.FEDERAL_WITHHOLDING_SEND_FUNDS
-
+related_paystates: Dict[int, LkState] = {
+    PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id: ACCEPTED_STATE,
+    PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id: State.STATE_WITHHOLDING_SEND_FUNDS,
+    PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id: State.FEDERAL_WITHHOLDING_SEND_FUNDS,
+}
 
 class PaymentRejectsException(Exception):
     """An error during Payment Rejects file processing."""
