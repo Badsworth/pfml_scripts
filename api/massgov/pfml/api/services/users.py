@@ -11,7 +11,12 @@ from massgov.pfml.db.models.employees import (
     MFADeliveryPreference,
     User,
 )
-from massgov.pfml.mfa import MFAUpdatedBy, handle_mfa_disabled, handle_mfa_disabled_by_admin
+from massgov.pfml.mfa import (
+    MFAUpdatedBy,
+    handle_mfa_disabled,
+    handle_mfa_disabled_by_admin,
+    handle_mfa_enabled,
+)
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -20,12 +25,20 @@ def update_user(
     db_session: db.Session,
     user: User,
     update_request: UserUpdateRequest,
+    sync_cognito_preferences: bool,
+    cognito_auth_token: str,
 ) -> User:
     for key in update_request.__fields_set__:
         value = getattr(update_request, key)
 
         if key == "mfa_delivery_preference":
-            _update_mfa_preference(db_session, user, value)
+            _update_mfa_preference(
+                db_session,
+                user,
+                value,
+                sync_cognito_preferences,
+                cognito_auth_token,
+            )
             continue
 
         if key == "mfa_phone_number":
@@ -41,6 +54,8 @@ def _update_mfa_preference(
     db_session: db.Session,
     user: User,
     value: Optional[str],
+    sync_cognito_preferences: bool,
+    cognito_auth_token: str,
 ) -> None:
     existing_mfa_preference = user.mfa_preference_description()
     if value == existing_mfa_preference:
@@ -62,11 +77,16 @@ def _update_mfa_preference(
 
     _update_mfa_preference_audit_trail(db_session, user, updated_by)
 
-    log_attributes = {"mfa_preference": value, "updated_by": updated_by.value}
+    log_attributes = {
+        "mfa_preference": value,
+        "sync_cognito_preferences": sync_cognito_preferences,
+    }
     logger.info("MFA updated for user", extra=log_attributes)
 
     if value == "Opt Out" and existing_mfa_preference is not None:
-        handle_mfa_disabled(user, last_updated_at, updated_by)
+        handle_mfa_disabled(user, last_updated_at, sync_cognito_preferences, cognito_auth_token)
+    elif value == "SMS" and sync_cognito_preferences:
+        handle_mfa_enabled(user, cognito_auth_token)
 
 
 def _update_mfa_preference_audit_trail(

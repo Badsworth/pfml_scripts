@@ -1,4 +1,5 @@
 import connexion
+import flask
 from werkzeug.exceptions import BadRequest
 
 import massgov.pfml.api.app as app
@@ -193,9 +194,17 @@ def users_patch(user_id):
 
         ensure(EDIT, user)
 
-    updated_user = update_user(db_session, user, body)
+    headers = flask.request.headers
+    auth_header = headers.get("Authorization")
+    assert auth_header
+    # todo (PORTAL-1828): Remove X-FF-Sync-Cognito-Preferences feature flag header
+    sync_cognito_preferences = headers.get("X-FF-Sync-Cognito-Preferences", None) == "true"
+    cognito_auth_token = auth_header[7:]
+
+    updated_user = update_user(db_session, user, body, sync_cognito_preferences, cognito_auth_token)
     data = UserResponse.from_orm(updated_user).dict()
 
     return response_util.success_response(
-        message="Successfully updated user", data=data
+        message="Successfully updated user",
+        data=data,
     ).to_api_response()
