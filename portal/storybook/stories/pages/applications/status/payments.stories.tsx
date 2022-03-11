@@ -41,6 +41,8 @@ const APPROVAL_TIME = {
 const DELAY_TRANSACTION_TYPE: { [key: string]: WritebackTransactionStatus } = {
   ADDRESS_VALIDATION_ERROR: "Address Validation Error",
   BANK_PROCESSING_ERROR: "Bank Processing Error",
+  DUA_ADDITIONAL_INCOME: "DUA Additional Income",
+  MAX_WEEKLY_BENEFITS_EXCEEDED: "Max Weekly Benefits Exceeded",
 };
 
 const PAYMENT_METHOD = {
@@ -51,6 +53,7 @@ const PAYMENT_METHOD = {
 const TRANSACTION_DATE = {
   BEFORE_TWO_DAYS: "Two business days before today",
   BEFORE_FIVE_DAYS: "Five business days before today",
+  BEFORE_TEN_DAYS: "Ten business days before today",
   SAME_DAY: "Same day",
 };
 
@@ -70,11 +73,14 @@ const mappedApprovalDate: { [key: string]: string } = {
 };
 
 const mappedTransactionDate: { [key: string]: string } = {
-  "After two business days": STATIC_DATES.current_date
+  "Two business days before today": STATIC_DATES.current_date
     .subtractBusinessDays(2)
     .format("YYYY-MM-DD"),
-  "After five business days": STATIC_DATES.current_date
+  "Five business days before today": STATIC_DATES.current_date
     .subtractBusinessDays(5)
+    .format("YYYY-MM-DD"),
+  "Ten business days before today": STATIC_DATES.current_date
+    .subtractBusinessDays(10)
     .format("YYYY-MM-DD"),
   "Same day": STATIC_DATES.current_date.format("YYYY-MM-DD"),
 };

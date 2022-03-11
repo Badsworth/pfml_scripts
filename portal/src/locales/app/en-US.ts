@@ -2744,8 +2744,18 @@ const pages: {
       "$t(pages.payments.tablePaymentStatus_Delayed_Banking_Error)",
     tablePaymentStatus_Delayed_Banking_Error:
       "This payment has been rejected by your bank. Call <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> to resolve this issue.",
+    tablePaymentStatus_Delayed_Default:
+      "This payment is delayed. See <delays-accordion-link>what may cause a delayed or cancelled payment</delays-accordion-link> for details. Most delays are resolved within 3 to 5 business days. The Contact Center will contact you if they require more information.",
     "tablePaymentStatus_Delayed_EFT Account Information Error":
       "$t(pages.payments.tablePaymentStatus_Delayed_Banking_Error)",
+    "tablePaymentStatus_Delayed_Exempt Employer":
+      "$t(pages.payments.tablePaymentStatus_Delayed_Default)",
+    "tablePaymentStatus_Delayed_InvalidPayment NameMismatch":
+      "$t(pages.payments.tablePaymentStatus_Delayed_Default)",
+    "tablePaymentStatus_Delayed_Leave Plan In Review":
+      "$t(pages.payments.tablePaymentStatus_Delayed_Default)",
+    "tablePaymentStatus_Delayed_Max Weekly Benefits Exceeded":
+      "$t(pages.payments.tablePaymentStatus_Delayed_Default)",
     tablePaymentStatus_Pending:
       "Your payment will be sent by {{paymentMethod}} between {{payPeriod}}.",
     "tablePaymentStatus_Sent to bank":
