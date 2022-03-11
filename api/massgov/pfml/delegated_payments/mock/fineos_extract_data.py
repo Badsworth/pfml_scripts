@@ -647,6 +647,37 @@ def generate_payment_extract_files(
                         item
                     ]
                 fineos_payments_dataset.append(withholding_payment)
+
+        # TODO Need to refactor
+        if (
+            scenario_descriptor.is_employer_reimbursement_records_exists
+            and scenario_data.employer_reimbursement_payment_i_values
+        ):
+            for item in range(1):
+                employer_reimbursement_payment = copy.deepcopy(fineos_payments_data)
+                employer_reimbursement_payment.event_reason = "Automatic Alternate Payment"
+                employer_reimbursement_payment.payee_identifier = "Tax Identification Number"
+                if scenario_descriptor.is_employer_reimbursement_fineos_extract_address_valid:
+                    mock_address = MATCH_ADDRESS
+                else:
+                    mock_address = NO_MATCH_ADDRESS
+                employer_reimbursement_payment.payment_address_1 = mock_address["line_1"]
+                employer_reimbursement_payment.payment_address_2 = mock_address["line_2"]
+                employer_reimbursement_payment.city = mock_address["city"]
+                employer_reimbursement_payment.state = mock_address["state"]
+                employer_reimbursement_payment.zip_code = mock_address["zip"]
+
+                if item == 0:
+                    employer_reimbursement_payment.payment_amount = "300.00"
+                    employer_reimbursement_payment.i_value = (
+                        scenario_data.employer_reimbursement_payment_i_values[item]
+                    )
+                # if item == 1:
+                #     employer_reimbursement_payment.payment_amount = "350.00"
+                #     employer_reimbursement_payment.i_value = scenario_data.employer_reimbursement_payment_i_values[
+                #         item
+                #     ]
+                fineos_payments_dataset.append(employer_reimbursement_payment)
         fineos_payments_dataset.append(fineos_payments_data)
 
     # create the files

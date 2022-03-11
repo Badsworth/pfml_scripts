@@ -470,6 +470,8 @@ def generate_scenario_data(
         state_withholding_amount="",
         federal_withholding_i_value="",
         state_withholding_i_value="",
+        employer_reimbursement_amount="",
+        employer_reimbursement_i_value="",
     )
 
     if scenario_descriptor.audit_report_detail_informational:
