@@ -38,6 +38,8 @@ namespace PfmlPdfApi.Models
         [Required]
         public string Address { get; set; }
 
+        public string Address2 { get; set; }
+
         [Required]
         public string City { get; set; }
 
