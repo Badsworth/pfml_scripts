@@ -31,7 +31,7 @@ const transactionDateOptions: {
 };
 
 export default {
-  title: "Pages/Applications/Status/Payment Statuses",
+  title: "Pages/Applications/Status/Payments/Delay Reasons",
   component: Payments,
 };
 
