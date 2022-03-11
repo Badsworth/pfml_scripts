@@ -362,3 +362,162 @@ def test_withholding_payments_with_non_restartable_primary_payment(
     assert state_log_counts[State.STATE_WITHHOLDING_ERROR.state_description] == 1
 
     assert state_log_counts[State.FEDERAL_WITHHOLDING_ERROR.state_description] == 1
+
+
+def test_employer_reimbursement_payment(
+    related_withholding_payment_step, test_db_session, monkeypatch
+):
+    monkeypatch.setenv("ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS", "1")
+    claim = DelegatedPaymentFactory(test_db_session).get_or_create_claim()
+    import_log = DelegatedPaymentFactory(test_db_session).get_or_create_import_log()
+
+    DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        import_log=import_log,
+        payment_transaction_type=PaymentTransactionType.STANDARD,
+        period_start_date=datetime.date(2021, 3, 17),
+        period_end_date=datetime.date(2021, 3, 24),
+        payment_date=datetime.date(2021, 3, 25),
+        amount=500,
+    ).get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
+    )
+
+    DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        import_log=import_log,
+        payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+        amount=350,
+        period_start_date=datetime.date(2021, 3, 17),
+        period_end_date=datetime.date(2021, 3, 24),
+        payment_date=datetime.date(2021, 3, 25),
+    ).get_or_create_payment_with_state(State.EMPLOYER_REIMBURSEMENT_READY_FOR_PROCESSING)
+
+    test_db_session.commit()
+
+    # Get the counts before running
+    state_log_counts = state_log_util.get_state_counts(test_db_session)
+
+    assert (
+        state_log_counts[State.EMPLOYER_REIMBURSEMENT_READY_FOR_PROCESSING.state_description] == 1
+    )
+
+    assert (
+        state_log_counts[
+            State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_description
+        ]
+        == 1
+    )
+
+    # Run the step
+    related_withholding_payment_step.run()
+
+    # Get the counts after running
+    state_log_counts = state_log_util.get_state_counts(test_db_session)
+
+    assert (
+        state_log_counts[State.EMPLOYER_REIMBURSEMENT_READY_FOR_PROCESSING.state_description] == 1
+    )
+
+    assert (
+        state_log_counts[
+            State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_description
+        ]
+        == 1
+    )
+
+
+def test_employer_reimbursement_payment_without_primary_payment(
+    related_withholding_payment_step, test_db_session, monkeypatch
+):
+    monkeypatch.setenv("ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS", "1")
+    claim = DelegatedPaymentFactory(test_db_session).get_or_create_claim()
+    import_log = DelegatedPaymentFactory(test_db_session).get_or_create_import_log()
+
+    DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        import_log=import_log,
+        payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+        amount=350,
+        period_start_date=datetime.date(2021, 3, 17),
+        period_end_date=datetime.date(2021, 3, 24),
+        payment_date=datetime.date(2021, 3, 25),
+    ).get_or_create_payment_with_state(State.EMPLOYER_REIMBURSEMENT_READY_FOR_PROCESSING)
+
+    test_db_session.commit()
+
+    # Get the counts before running
+    state_log_counts = state_log_util.get_state_counts(test_db_session)
+
+    assert (
+        state_log_counts[State.EMPLOYER_REIMBURSEMENT_READY_FOR_PROCESSING.state_description] == 1
+    )
+
+    # Run the step
+    related_withholding_payment_step.run()
+
+    # Get the counts after running
+    state_log_counts = state_log_util.get_state_counts(test_db_session)
+
+    assert (
+        state_log_counts[
+            State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_description
+        ]
+        == 1
+    )
+
+
+def test_sync_primary_to_related_payments(
+    related_withholding_payment_step, test_db_session, monkeypatch
+):
+    monkeypatch.setenv("ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS", "1")
+    claim = DelegatedPaymentFactory(test_db_session).get_or_create_claim()
+    import_log = DelegatedPaymentFactory(test_db_session).get_or_create_import_log()
+
+    DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        import_log=import_log,
+        payment_transaction_type=PaymentTransactionType.STANDARD,
+        period_start_date=datetime.date(2021, 3, 17),
+        period_end_date=datetime.date(2021, 3, 24),
+        payment_date=datetime.date(2021, 3, 25),
+        amount=500,
+    ).get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
+    )
+
+    DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        import_log=import_log,
+        payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+        amount=350,
+        period_start_date=datetime.date(2021, 3, 17),
+        period_end_date=datetime.date(2021, 3, 24),
+        payment_date=datetime.date(2021, 3, 25),
+    ).get_or_create_payment_with_state(State.PAYMENT_FAILED_ADDRESS_VALIDATION)
+
+    test_db_session.commit()
+
+    # Get the counts before running
+    state_log_counts = state_log_util.get_state_counts(test_db_session)
+    assert (
+        state_log_counts[
+            State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_description
+        ]
+        == 1
+    )
+
+    assert state_log_counts[State.PAYMENT_FAILED_ADDRESS_VALIDATION.state_description] == 1
+    # Run the step
+    related_withholding_payment_step.run()
+
+    # Get the counts after running
+    state_log_counts = state_log_util.get_state_counts(test_db_session)
+    assert state_log_counts[State.DELEGATED_PAYMENT_CASCADED_ERROR.state_description] == 1
+
+    assert state_log_counts[State.PAYMENT_FAILED_ADDRESS_VALIDATION.state_description] == 1
