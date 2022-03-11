@@ -439,12 +439,6 @@ paths:
             Absence Case IDs, in addition to the employees' first, middle, and last names.
             When the string is empty, it is ignored.
           required: false
-        - name: "allow_hrd"
-          in: query
-          schema:
-            type: boolean
-          description: A temporary boolean value used to allow smoke testers to see HRD dashboard
-          required: false
         - name: "is_reviewable"
           in: query
           schema:
@@ -4435,9 +4429,6 @@ components:
             when provided, is used in a fuzzy search against the claims'
             Absence Case IDs, in addition to the employees' first, middle, and last names.
             When the string is empty, it is ignored.
-        allow_hrd:
-          type: boolean
-          description: A temporary boolean value used to allow smoke testers to see HRD dashboard
         is_reviewable:
           type: string
           enum: ["yes", "no"]

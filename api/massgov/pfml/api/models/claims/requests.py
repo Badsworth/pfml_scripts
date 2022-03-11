@@ -17,7 +17,6 @@ class ClaimSearchTerms(PydanticBaseModel):
     employee_ids: Optional[Set[UUID4]] = Field(None, alias="employee_id")
     claim_status: Optional[str]
     search: Optional[str]
-    allow_hrd: Optional[bool]
     is_reviewable: Optional[str]
     request_decision: Optional[str]
 
