@@ -13,6 +13,7 @@ class TaxId:
     _formatted_val: str
 
     def __init__(self, val: str) -> None:
+        print(val)
         if self.REGEX_FORMATTED.match(val):
             self._formatted_val = val
         elif self.REGEX_UNFORMATTED.match(val):

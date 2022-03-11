@@ -93,7 +93,7 @@ class Generate1099DocumentsStep(Step):
         ssn: Optional[str] = pfml_1099_util.get_tax_id(
             self.db_session, str(record.tax_identifier_id)
         )
-        ssn = mask_util.mask_tax_identifier(ssn)
+        ssn = ssn.to_masked_str()
 
         if ssn is None or len(ssn) == 0:
             logger.error("%s has an invalid tax identifier.", str(record.tax_identifier_id))

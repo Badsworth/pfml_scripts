@@ -54,7 +54,7 @@ from massgov.pfml.dor.importer.paths import (
     get_exemption_file_to_process,
     get_pending_filing_files_to_process,
 )
-from massgov.pfml.types import Fein, TaxId
+from massgov.pfml.types import Fein
 from massgov.pfml.util.bg import background_task
 from massgov.pfml.util.config import get_secret_from_env
 from massgov.pfml.util.csv import CSVSourceWrapper

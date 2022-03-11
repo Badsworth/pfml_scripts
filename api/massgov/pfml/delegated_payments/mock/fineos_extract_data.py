@@ -578,7 +578,7 @@ def generate_payment_extract_files(
             event_reason = "Automatic Alternate Payment"
             payee_identifier = "ID"
             amalgamationc = "ScheduledAlternate65424"
-            ssn = "SITPAYEE001"
+            ssn = "123456789"
             payment_amount = "22.00"
 
         fineos_payments_data = FineosPaymentData(
