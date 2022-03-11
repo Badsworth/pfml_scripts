@@ -93,7 +93,7 @@ For example:
 
 ### Native Developer Setup
 
-To setup a development environment outside of Docker, you'll need to install a few things.
+To setup a development environment outside of Docker, you'll need to install a few things. Note that these instructions are for running the _application_ natively, and the database will still run within Docker.
 
 1. Install Python 3.9.
    [pyenv](https://github.com/pyenv/pyenv#installation) is one popular option for installing Python,
@@ -107,9 +107,23 @@ To setup a development environment outside of Docker, you'll need to install a f
 
 You should now be able to run developer tooling natively, like linting.
 
-To run the application you'll need some environment variables set. You can largely copy-paste the env vars
-in `docker-compose.yml` to your native environment. `DB_HOST` should be changed to `localhost`. You can then start up
-just the PostgreSQL database via Docker with `make start-db` and then the API server with `make run-native`.
+To run the application:
+
+1. You'll need some environment variables set. You can largely copy-paste the env vars
+   in `docker-compose.yml` to your native environment. `DB_HOST` should be changed to `localhost`.
+1. Start the database within Docker: `make start-db`
+1. Start the API server: `make run-native`
+
+**Troubleshooting tips for native setup:**
+
+If you run into `sqlalchemy.exc.OperationalError` errors when first trying to run natively, make sure you don't have postgres running locally on the same port as the
+postgres in Docker.
+
+If you installed and ran `postgresql` via Homebrew, you can stop it by running:
+
+```
+brew services stop postgresql
+```
 
 ## IDE Configuration
 
