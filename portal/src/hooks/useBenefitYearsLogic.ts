@@ -1,5 +1,5 @@
+import BenefitYearsApi, { GetBenefitYearParams } from "src/api/BenefitYearsApi";
 import BenefitYear from "src/models/BenefitYear";
-import BenefitYearsApi from "src/api/BenefitYearsApi";
 import { ErrorsLogic } from "./useErrorsLogic";
 import { isFeatureEnabled } from "src/services/featureFlags";
 import { useState } from "react";
@@ -45,10 +45,16 @@ const useBenefitYearsLogic = ({
     return benefitYearsData?.find((by) => by.current_benefit_year);
   };
 
+  const getBenefitYear = async (queryParams: GetBenefitYearParams) => {
+    const benefitYear = await benefitYearApi.getBenefitYears(queryParams)
+    return benefitYear
+  }
+
   return {
     loadBenefitYears,
     hasLoadedBenefitYears,
     getCurrentBenefitYear,
+    getBenefitYear,
   };
 };
 
