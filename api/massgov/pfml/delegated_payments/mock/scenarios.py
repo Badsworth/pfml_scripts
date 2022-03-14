@@ -45,7 +45,9 @@ class ScenarioName(Enum):
     HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH = "HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH"
     HAPPY_PATH_DUA_ADDITIONAL_INCOME = "HAPPY_PATH_DUA_ADDITIONAL_INCOME"
     HAPPY_PATH_DIA_ADDITIONAL_INCOME = "HAPPY_PATH_DIA_ADDITIONAL_INCOME"
+    HAPPY_PATH_MAX_LEAVE_DURATION_EXCEEDED = "HAPPY_PATH_MAX_LEAVE_DURATION_EXCEEDED"
     HAPPY_PATH_PAYMENT_DATE_MISMATCH = "HAPPY_PATH_PAYMENT_DATE_MISMATCH"
+    HAPPY_PATH_PAYMENT_PREAPPROVED = "HAPPY_PATH_PAYMENT_PREAPPROVED"
 
     # Non-Standard Payments
     ZERO_DOLLAR_PAYMENT = "ZERO_DOLLAR_PAYMENT"
@@ -53,7 +55,6 @@ class ScenarioName(Enum):
     OVERPAYMENT_PAYMENT_POSITIVE = "OVERPAYMENT_PAYMENT_POSITIVE"
     OVERPAYMENT_PAYMENT_NEGATIVE = "OVERPAYMENT_PAYMENT_NEGATIVE"
     OVERPAYMENT_MISSING_NON_VPEI_RECORDS = "OVERPAYMENT_MISSING_NON_VPEI_RECORDS"
-    EMPLOYER_REIMBURSEMENT_PAYMENT = "EMPLOYER_REIMBURSEMENT_PAYMENT"
 
     # Prenote
     PRENOTE_WITH_EXISTING_EFT_ACCOUNT = "PRENOTE_WITH_EXISTING_EFT_ACCOUNT"
@@ -106,6 +107,8 @@ class ScenarioName(Enum):
     PUB_ACH_MEDICAL_RETURN = "PUB_ACH_MEDICAL_RETURN"
     PUB_ACH_MEDICAL_NOTIFICATION = "PUB_ACH_MEDICAL_NOTIFICATION"
 
+    PUB_ACH_MANUAL_REJECT = "PUB_ACH_MANUAL_REJECT"
+
     PUB_CHECK_FAMILY_RETURN_VOID = "PUB_CHECK_FAMILY_RETURN_VOID"
     PUB_CHECK_FAMILY_RETURN_STALE = "PUB_CHECK_FAMILY_RETURN_STALE"
     PUB_CHECK_FAMILY_RETURN_STOP = "PUB_CHECK_FAMILY_RETURN_STOP"
@@ -113,6 +116,21 @@ class ScenarioName(Enum):
     PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND = (
         "PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND"
     )
+
+    # Employer Reimbursement Payments
+    EMPLOYER_REIMBURSEMENT_PAYMENT = "EMPLOYER_REIMBURSEMENT_PAYMENT"
+    # EMPLOYER_REIMBURSEMENT_WITH_STANDARD_PAYMENT = "EMPLOYER_REIMBURSEMENT_WITH_STANDARD_PAYMENT"
+    # STANDARD_PAYMENT_WITH_TW_AND_ER = "STANDARD_PAYMENT_WITH_TW_AND_ER"
+    # EMPLOYER_REIMBURSEMENT_PAYMENT_INVALID_ADDRESS = (
+    #     "EMPLOYER_REIMBURSEMENT_PAYMENT_INVALID_ADDRESS"
+    # )
+    # EMPLOYER_REIMBURSEMENT_INVALID_ADDRESS_WITH_VALID_PRIMARY = (
+    #     "EMPLOYER_REIMBURSEMENT_INVALID_ADDRESS_WITH_VALID_PRIMARY"
+    # )
+    # EMPLOYER_REIMBURSEMENT_PAYMENT_WITH_TAX_WITHHOLDING_RECORDS = "EMPLOYER_REIMBURSEMENT_PAYMENT_WITH_TAX_WITHHOLDING_RECORDS"
+    # EMPLOYER_REIMBURSEMENT_PAYMENT_VALID_ADDRESS = "EMPLOYER_REIMBURSEMENT_PAYMENT_VALID_ADDRESS"
+    # EMPLOYER_REIMBURSEMENT_PAYMENT_WITHOUT_TAX_WITHHOLDING_RECORDS = "EMPLOYER_REIMBURSEMENT_PAYMENT_WITHOUT_TAX_WITHHOLDING_RECORDS"
+    # EMPLOYER_REIMBURSEMENT_PAYMENT_WITH_EFT = "EMPLOYER_REIMBURSEMENT_PAYMENT_WITH_EFT"
 
     # Tax withholding payments
     HAPPY_PATH_TAX_WITHHOLDING = "HAPPY_PATH_TAX_WITHHOLDING"
@@ -225,10 +243,21 @@ class ScenarioDescriptor:
     is_duplicate_tax_withholding_records_exists: bool = False
     is_tax_withholding_record_without_primary_payment: bool = False
 
+    # Employer reimbursements
+    is_employer_reimbursement_records_exists: bool = False
+    is_employer_reimbursement_fineos_extract_address_valid: bool = True
+
+    # Preapproval
+    has_past_payments: bool = False
+
+    # Manual rejects
+    manual_pub_reject_response: bool = False
+    manual_pub_reject_notes: str = "Manual Failure Test"
+
 
 SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     ScenarioDescriptor(
-        scenario_name=ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED, claim_type="Employee",
+        scenario_name=ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED, claim_type="Employee"
     ),
     ScenarioDescriptor(scenario_name=ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED),
     ScenarioDescriptor(
@@ -267,7 +296,7 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         prenoted=False,
     ),
     ScenarioDescriptor(
-        scenario_name=ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED, create_payment=False,
+        scenario_name=ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED, create_payment=False
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.CLAIM_NOT_ID_PROOFED,
@@ -294,7 +323,7 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         employee_in_payment_extract_missing_in_db=True,
     ),
     ScenarioDescriptor(
-        scenario_name=ScenarioName.UNKNOWN_LEAVE_REQUEST_DECISION, leave_request_decision="Pending",
+        scenario_name=ScenarioName.UNKNOWN_LEAVE_REQUEST_DECISION, leave_request_decision="Pending"
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.IN_REVIEW_LEAVE_REQUEST_DECISION,
@@ -306,7 +335,7 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         is_adhoc_payment=True,
     ),
     ScenarioDescriptor(
-        scenario_name=ScenarioName.REJECTED_LEAVE_REQUEST_DECISION, leave_request_decision="Denied",
+        scenario_name=ScenarioName.REJECTED_LEAVE_REQUEST_DECISION, leave_request_decision="Denied"
     ),
     ScenarioDescriptor(scenario_name=ScenarioName.AUDIT_REJECTED, is_audit_rejected=True),
     ScenarioDescriptor(
@@ -370,8 +399,10 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
-        claim_type="Employee",
         pub_ach_response_change_notification=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.PUB_ACH_MANUAL_REJECT, manual_pub_reject_response=True
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
@@ -418,13 +449,83 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         pub_check_return_invalid_check_number=True,
     ),
     ScenarioDescriptor(
-        scenario_name=ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE, claim_missing_employee=True,
+        scenario_name=ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE, claim_missing_employee=True
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
         claim_missing_employee=True,
         claim_extract_employee_identifier_unknown=True,
     ),
+    # ScenarioDescriptor(
+    #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT,
+    #     payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+    # ),
+    # ScenarioDescriptor(
+    #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT,
+    #     payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+    #     payment_method=PaymentMethod.CHECK,
+    #     fineos_extract_address_valid=True,
+    #     invalid_address= False,
+    # ),
+    # ScenarioDescriptor(
+    #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_WITH_STANDARD_PAYMENT,
+    #     payment_transaction_type=PaymentTransactionType.STANDARD,
+    #     is_employer_reimbursement_records_exists = True,
+    #     payment_method=PaymentMethod.CHECK,
+    #     fineos_extract_address_valid=True,
+    #     invalid_address= False,
+    # ),
+    # ScenarioDescriptor(
+    #     scenario_name=ScenarioName.STANDARD_PAYMENT_WITH_TW_AND_ER,
+    #     payment_transaction_type=PaymentTransactionType.STANDARD,
+    #     is_employer_reimbursement_records_exists = True,
+    #     is_tax_withholding_records_exists=True,
+    #     payment_method=PaymentMethod.CHECK,
+    #     fineos_extract_address_valid=True,
+    #     invalid_address= False,
+    # ),
+    # ScenarioDescriptor(
+    #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT_INVALID_ADDRESS,
+    #     payment_transaction_type=PaymentTransactionType.STANDARD,
+    #     is_employer_reimbursement_records_exists = True,
+    #     fineos_extract_address_valid=False,
+    #     payment_method=PaymentMethod.CHECK,
+    # ),
+    # ScenarioDescriptor(
+    #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_INVALID_ADDRESS_WITH_VALID_PRIMARY,
+    #     payment_transaction_type=PaymentTransactionType.STANDARD,
+    #     is_employer_reimbursement_records_exists=True,
+    #     fineos_extract_address_valid=True,
+    #     is_employer_reimbursement_fineos_extract_address_valid=False,
+    #     payment_method=PaymentMethod.CHECK,
+    # ),
+    # ScenarioDescriptor(
+    #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT_WITH_TAX_WITHHOLDING_RECORDS,
+    #     payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+    #     is_tax_withholding_records_exists=True,
+    #     payment_method=PaymentMethod.CHECK,
+    # ),
+    # ScenarioDescriptor(
+    #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT_VALID_ADDRESS,
+    #     payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+    #     fineos_extract_address_valid=True,
+    #     claim_missing_employee = True,
+    #     employee_in_payment_extract_missing_in_db = True,
+    #     payment_method=PaymentMethod.CHECK,
+    # ),
+    # ScenarioDescriptor(
+    #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT_WITHOUT_TAX_WITHHOLDING_RECORDS,
+    #     payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+    #     payment_method=PaymentMethod.CHECK,
+    # ),
+    # ScenarioDescriptor(
+    #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT_WITH_EFT,
+    #     payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+    #     fineos_extract_address_valid=True,
+    #     claim_missing_employee = True,
+    #     employee_in_payment_extract_missing_in_db = True,
+    #     payment_method=PaymentMethod.ACH,
+    # ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
         is_tax_withholding_records_exists=True,
@@ -461,15 +562,24 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         dor_fineos_name_mismatch=True,
     ),
     ScenarioDescriptor(
-        scenario_name=ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME, dua_additional_income=True,
+        scenario_name=ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME, dua_additional_income=True
     ),
     ScenarioDescriptor(
-        scenario_name=ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME, dia_additional_income=True,
+        scenario_name=ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME, dia_additional_income=True
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_MAX_LEAVE_DURATION_EXCEEDED,
+        max_leave_duration_exceeded=True,
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH,
         payment_date_mismatch=True,
         is_adhoc_payment=False,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED,
+        has_past_payments=True,
+        payment_method=PaymentMethod.CHECK,
     ),
 ]
 

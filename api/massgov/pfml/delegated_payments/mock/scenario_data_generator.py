@@ -14,6 +14,7 @@ from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.employees import (
     AbsencePeriod,
     Address,
+    BenefitYear,
     Claim,
     Employee,
     Employer,
@@ -27,6 +28,7 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.db.models.factories import (
     AbsencePeriodFactory,
     AddressFactory,
+    BenefitYearFactory,
     ClaimFactory,
     CtrAddressPairFactory,
     DiaReductionPaymentFactory,
@@ -34,9 +36,11 @@ from massgov.pfml.db.models.factories import (
     EmployeeFactory,
     EmployeePubEftPairFactory,
     EmployerFactory,
+    ExperianAddressPairFactory,
     PubEftFactory,
 )
 from massgov.pfml.db.models.geo import GeoState
+from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 from massgov.pfml.delegated_payments.mock.mock_util import generate_routing_nbr_from_ssn
 from massgov.pfml.delegated_payments.mock.scenarios import (
     ScenarioDescriptor,
@@ -105,7 +109,7 @@ class ScenarioData:
     additional_payment_i_value: Optional[str] = None
 
     tax_withholding_payment_i_values: Optional[List[str]] = None
-
+    employer_reimbursement_payment_i_values: Optional[List[str]] = None
     additional_payment_absence_case_id: Optional[str] = None
 
     absence_period_c_value: Optional[str] = None
@@ -127,17 +131,19 @@ class ScenarioDataConfig:
 # == Common Utils ==
 
 
-def get_mock_address_client() -> soap_api.Client:
-    def parse_address(mock_address: Dict) -> Address:
-        state = GeoState.description_to_db_instance.get(mock_address["state"], GeoState.MA)
+def parse_address(mock_address: Dict) -> Address:
+    state = GeoState.description_to_db_instance.get(mock_address["state"], GeoState.MA)
 
-        return AddressFactory.build(
-            address_line_one=mock_address["line_1"],
-            address_line_two=mock_address["line_2"],
-            city=mock_address["city"],
-            geo_state=state,
-            zip_code=mock_address["zip"],
-        )
+    return AddressFactory.build(
+        address_line_one=mock_address["line_1"],
+        address_line_two=mock_address["line_2"],
+        city=mock_address["city"],
+        geo_state=state,
+        zip_code=mock_address["zip"],
+    )
+
+
+def get_mock_address_client() -> soap_api.Client:
 
     mock_caller = MockVerificationZeepCaller(sm.VerifyLevel.STREET_PARTIAL)
 
@@ -216,7 +222,7 @@ def create_dua_additional_income(fineos_customer_number: str) -> None:
 
 
 def create_dia_additional_income(fineos_customer_number: str) -> None:
-    DiaReductionPaymentFactory.create(fineos_customer_number=fineos_customer_number,)
+    DiaReductionPaymentFactory.create(fineos_customer_number=fineos_customer_number)
 
 
 def create_claim(
@@ -273,6 +279,8 @@ def generate_scenario_data_in_db(
 
     employee = create_employee(ssn, fineos_customer_number, db_session)
 
+    construct_benefit_year(employee)
+
     if scenario_descriptor.dua_additional_income:
         create_dua_additional_income(fineos_customer_number)
 
@@ -310,6 +318,43 @@ def generate_scenario_data_in_db(
 
     claim = construct_claim(scenario_descriptor, employee, employer, absence_case_id, db_session)
     construct_absence_period(scenario_descriptor, claim, leave_request_id)
+    scenario_descriptor.payment_method
+    if scenario_descriptor.has_past_payments:
+        experian_address_pair = ExperianAddressPairFactory.create(
+            fineos_address=parse_address(MATCH_ADDRESS)
+        )
+        delegated_payment = DelegatedPaymentFactory(
+            db_session,
+            claim=claim,
+            fineos_leave_request_id=leave_request_id,
+            employee=employee,
+            add_import_log=True,
+            payment_method=scenario_descriptor.payment_method,
+            pub_eft=pub_eft if add_eft else None,
+            experian_address_pair=experian_address_pair,
+        )
+        import_log = delegated_payment.get_or_create_import_log()
+        delegated_payment.get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        DelegatedPaymentFactory(
+            db_session,
+            claim=claim,
+            fineos_leave_request_id=leave_request_id,
+            employee=employee,
+            import_log=import_log,
+            payment_method=scenario_descriptor.payment_method,
+            pub_eft=pub_eft if add_eft else None,
+            experian_address_pair=experian_address_pair,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        DelegatedPaymentFactory(
+            db_session,
+            claim=claim,
+            fineos_leave_request_id=leave_request_id,
+            employee=employee,
+            import_log=import_log,
+            payment_method=scenario_descriptor.payment_method,
+            pub_eft=pub_eft if add_eft else None,
+            experian_address_pair=experian_address_pair,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
 
     return ScenarioData(
         scenario_descriptor=scenario_descriptor,
@@ -321,6 +366,18 @@ def generate_scenario_data_in_db(
     )
 
 
+def construct_benefit_year(employee: Employee) -> BenefitYear:
+    # We should assume Benefit Year data exists for all claimants
+    # since this data has been backfilled in prod.
+    #
+    # The dates below were chosen to include claims that start
+    # on 2021-1-1, with the exact values given from the benefit
+    # year dates calculator as 2020-12-27 to 2021-12-25
+    return BenefitYearFactory.create(
+        employee=employee, start_date=date(2020, 12, 27), end_date=date(2021, 12, 25)
+    )
+
+
 def construct_absence_period(
     scenario_descriptor: ScenarioDescriptor, claim: Optional[Claim], leave_request_id: int
 ) -> Optional[AbsencePeriod]:
@@ -328,14 +385,28 @@ def construct_absence_period(
         return None
 
     absence_period_start_date = (
-        claim.absence_period_start_date if claim.absence_period_start_date else date(2021, 1, 3)
+        # This default start date prevents the payment date mismatch processer to fail based on the payment period date
+        claim.absence_period_start_date
+        if claim.absence_period_start_date
+        else date(2021, 5, 1)
     )
-    absence_period_end_date = absence_period_start_date + timedelta(weeks=26)
 
-    if scenario_descriptor.payment_date_mismatch:
-        absence_period_start_date = date(2022, 1, 5)
-        absence_period_end_date = date(2022, 1, 12)
+    absence_period_end_date = (
+        # This default end date prevents the total leave duration processer to fail
+        claim.absence_period_end_date
+        if claim.absence_period_end_date
+        else absence_period_start_date + timedelta(weeks=26, days=-1)
+    )
+
+    if scenario_descriptor.max_leave_duration_exceeded:
+        absence_period_end_date = absence_period_start_date + timedelta(weeks=26)
+    elif scenario_descriptor.payment_date_mismatch:
+        absence_period_start_date = date(2021, 1, 5)
+        absence_period_end_date = date(2021, 1, 12)
         scenario_descriptor.is_adhoc_payment = False
+
+    claim.absence_period_start_date = absence_period_start_date
+    claim.absence_period_end_date = absence_period_end_date
 
     absence_period = AbsencePeriodFactory.create(
         claim=claim,
@@ -451,6 +522,11 @@ def generate_scenario_dataset(
                         str(fake.unique.random_int()),
                     ]
 
+                # TODO need to refactor
+                if scenario_descriptor.is_employer_reimbursement_records_exists:
+                    scenario_data.employer_reimbursement_payment_i_values = [
+                        str(fake.unique.random_int()),
+                    ]
                 scenario_dataset.append(scenario_data)
 
                 # increment sequences

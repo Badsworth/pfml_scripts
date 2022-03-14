@@ -22,7 +22,7 @@ class AbstractRecord(abc.ABC, metaclass=abc.ABCMeta):
 
 @dataclass
 class EmailConfig:
-    """ Represents configuration for sending a report via email. """
+    """Represents configuration for sending a report via email."""
 
     sender: str
     recipient: EmailRecipient  # The EmailRecipient object can contain multiple TO addresses
@@ -33,7 +33,7 @@ class EmailConfig:
 
 @dataclass
 class FileConfig:
-    """ Represents configuration for sending a report to a file store (local disk and S3 supported). """
+    """Represents configuration for sending a report to a file store (local disk and S3 supported)."""
 
     file_prefix: str
 
@@ -43,7 +43,7 @@ class FileConfig:
 # where to store the outputs (s3/email/etc.). That
 # is best served by factories.
 class Report:
-    """ A class representing a report that is made up of records"""
+    """A class representing a report that is made up of records"""
 
     report_name: str
     header_record: AbstractRecord
@@ -83,8 +83,8 @@ class Report:
 
 
 class ReportGroup:
-    """ A container class for a group of reports that all go to the
-        same location (eg. all emailed together)
+    """A container class for a group of reports that all go to the
+    same location (eg. all emailed together)
     """
 
     reports: List[Report]

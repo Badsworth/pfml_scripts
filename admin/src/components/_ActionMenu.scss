@@ -7,7 +7,7 @@
   flex-wrap: nowrap;
   list-style: none;
   margin: 0;
-  padding: 1.14em 1.14em 0;
+  padding: 1.14em 0 1.14em 1.14em;
 }
 
 .action-menu__item {
@@ -32,4 +32,9 @@
   font-size: 1em;
   line-height: inherit;
   padding: 0;
+}
+
+.action-menu__link:hover,
+.action-menu__button:hover {
+  text-decoration: underline;
 }

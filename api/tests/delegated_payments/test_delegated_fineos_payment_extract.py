@@ -15,6 +15,7 @@ from massgov.pfml.db.models.employees import (
     Employee,
     Payment,
     PaymentMethod,
+    PaymentRelevantParty,
     PaymentTransactionType,
     PrenoteState,
     PubEft,
@@ -36,8 +37,10 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVpei,
     FineosExtractVpeiClaimDetails,
     FineosExtractVpeiPaymentDetails,
+    FineosExtractVpeiPaymentLine,
     FineosWritebackDetails,
     FineosWritebackTransactionStatus,
+    PaymentLine,
 )
 from massgov.pfml.db.models.state import Flow, LkState, State
 from massgov.pfml.delegated_payments.delegated_payments_util import (
@@ -179,7 +182,7 @@ def validate_pei_writeback_state_for_payment(
 def validate_non_standard_payment_state(non_standard_payment: Payment, payment_state: LkState):
     assert len(non_standard_payment.state_logs) == 2
     assert set([state_log.end_state_id for state_log in non_standard_payment.state_logs]) == set(
-        [payment_state.state_id, State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id,]
+        [payment_state.state_id, State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id]
     )
 
 
@@ -202,10 +205,20 @@ def validate_withholding(
         withholding_payment.payment_transaction_type.payment_transaction_type_id
         == payment_transaction_type.payment_transaction_type_id
     )
-    assert len(withholding_payment.state_logs) == 1
-    assert set([state_log.end_state_id for state_log in withholding_payment.state_logs]) == set(
-        [payment_state.state_id,]
+    assert payment_state.state_id in set(
+        [state_log.end_state_id for state_log in withholding_payment.state_logs]
     )
+
+    if withholding_payment_data.tin == extractor.STATE_TAX_WITHHOLDING_TIN:
+        assert (
+            withholding_payment.payment_relevant_party_id
+            == PaymentRelevantParty.STATE_TAX.payment_relevant_party_id
+        )
+    elif withholding_payment_data.tin == extractor.FEDERAL_TAX_WITHHOLDING_TIN:
+        assert (
+            withholding_payment.payment_relevant_party_id
+            == PaymentRelevantParty.FEDERAL_TAX.payment_relevant_party_id
+        )
 
 
 def stage_data(
@@ -235,31 +248,50 @@ def stage_data(
         claimant_import_log = ImportLogFactory.create()
 
     for record in records:
-        instance = payments_util.create_staging_table_instance(
-            record.get_vpei_record(), FineosExtractVpei, reference_file, import_log.import_log_id
-        )
-        db_session.add(instance)
-        instance = payments_util.create_staging_table_instance(
-            record.get_payment_details_record(),
-            FineosExtractVpeiPaymentDetails,
-            reference_file,
-            import_log.import_log_id,
-        )
-        db_session.add(instance)
-        instance = payments_util.create_staging_table_instance(
-            record.get_claim_details_record(),
-            FineosExtractVpeiClaimDetails,
-            reference_file,
-            import_log.import_log_id,
-        )
-        db_session.add(instance)
-        instance = payments_util.create_staging_table_instance(
-            record.get_requested_absence_record(),
-            FineosExtractVbiRequestedAbsence,
-            claimant_reference_file,
-            claimant_import_log.import_log_id,
-        )
-        db_session.add(instance)
+        if record.include_vpei:
+            instance = payments_util.create_staging_table_instance(
+                record.get_vpei_record(),
+                FineosExtractVpei,
+                reference_file,
+                import_log.import_log_id,
+            )
+            db_session.add(instance)
+
+        if record.include_payment_details:
+            instance = payments_util.create_staging_table_instance(
+                record.get_payment_details_record(),
+                FineosExtractVpeiPaymentDetails,
+                reference_file,
+                import_log.import_log_id,
+            )
+            db_session.add(instance)
+
+        if record.include_payment_lines:
+            instance = payments_util.create_staging_table_instance(
+                record.get_payment_line_record(),
+                FineosExtractVpeiPaymentLine,
+                reference_file,
+                import_log.import_log_id,
+            )
+            db_session.add(instance)
+
+        if record.include_claim_details:
+            instance = payments_util.create_staging_table_instance(
+                record.get_claim_details_record(),
+                FineosExtractVpeiClaimDetails,
+                reference_file,
+                import_log.import_log_id,
+            )
+            db_session.add(instance)
+
+        if record.include_requested_absence:
+            instance = payments_util.create_staging_table_instance(
+                record.get_requested_absence_record(),
+                FineosExtractVbiRequestedAbsence,
+                claimant_reference_file,
+                claimant_import_log.import_log_id,
+            )
+            db_session.add(instance)
 
     if additional_vpei_records:
         for vpei_record in additional_vpei_records:
@@ -308,9 +340,7 @@ def stage_data(
 
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
-def test_run_step_happy_path(
-    local_payment_extract_step, local_test_db_session,
-):
+def test_run_step_happy_path(local_payment_extract_step, local_test_db_session):
     payment_data_eft = FineosPaymentData()
     payment_data_check = FineosPaymentData(payment_method="Check")
     add_db_records_from_fineos_data(local_test_db_session, payment_data_eft)
@@ -355,6 +385,23 @@ def test_run_step_happy_path(
         assert payment_details.period_start_date == payment.period_start_date
         assert payment_details.period_end_date == payment.period_end_date
         assert payment_details.amount == payment.amount
+
+        assert payment_details.vpei_payment_details_id
+        assert payment_details.payment_details_c_value == payment_data.payment_details_c_value
+        assert payment_details.payment_details_i_value == payment_data.payment_details_i_value
+
+        payment_lines = (
+            local_test_db_session.query(PaymentLine)
+            .filter(PaymentLine.payment_id == payment.payment_id)
+            .all()
+        )
+        assert len(payment_lines) == 1
+        payment_line = payment_lines[0]
+        assert payment_line.payment_details_id == payment_details.payment_details_id
+        assert payment_line.amount == payment.amount  # Setup makes them all match
+        assert payment_line.payment_line_c_value == payment_data.payment_line_c_value
+        assert payment_line.payment_line_i_value == payment_data.payment_line_i_value
+        assert payment_line.line_type == payment_data.payment_line_type
 
         claim = payment.claim
         assert claim
@@ -428,9 +475,7 @@ def test_run_step_happy_path(
     assert import_log_report["standard_valid_payment_count"] == 2
 
 
-def test_run_step_multiple_times(
-    local_payment_extract_step, local_test_db_session,
-):
+def test_run_step_multiple_times(local_payment_extract_step, local_test_db_session):
     # Test what happens if we run multiple times on the same data
     # After the first run, the step should no-op as the reference file
     # has already been processed.
@@ -471,7 +516,7 @@ def test_run_step_multiple_times(
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_data_prior_payment_exists_is_being_processed(
-    local_payment_extract_step, local_test_db_session,
+    local_payment_extract_step, local_test_db_session
 ):
     payment_data = FineosPaymentData()
     add_db_records_from_fineos_data(
@@ -528,9 +573,7 @@ def test_process_extract_data_prior_payment_exists_is_being_processed(
     assert pei_writeback_state is None
 
 
-def test_process_extract_data_one_bad_record(
-    local_payment_extract_step, local_test_db_session,
-):
+def test_process_extract_data_one_bad_record(local_payment_extract_step, local_test_db_session):
     # This payment will end up in an error state
     # because we don't have an TIN/employee/claim associated with them
     payment_data = FineosPaymentData()
@@ -585,7 +628,7 @@ def test_process_extract_data_one_bad_record(
 
 
 def test_process_extract_data_no_employer_on_claim(
-    local_payment_extract_step, local_test_db_session,
+    local_payment_extract_step, local_test_db_session
 ):
     # This payment will end up in an error state
     # because the employer is exempt for the payment
@@ -622,7 +665,7 @@ def test_process_extract_data_no_employer_on_claim(
                 {
                     "reason": "MissingInDB",
                     "details": f"Claim {payment.claim.fineos_absence_id} does not have an employer associated with it",
-                },
+                }
             ],
         },
     }
@@ -631,9 +674,7 @@ def test_process_extract_data_no_employer_on_claim(
     )
 
 
-def test_process_extract_data_employer_exempt(
-    local_payment_extract_step, local_test_db_session,
-):
+def test_process_extract_data_employer_exempt(local_payment_extract_step, local_test_db_session):
     # This payment will end up in an error state
     # because the employer is exempt for the payment
     payment_data = FineosPaymentData()
@@ -667,7 +708,7 @@ def test_process_extract_data_employer_exempt(
                 {
                     "reason": "EmployerExempt",
                     "details": f"Employer {employer.fineos_employer_id} is exempt for dates {employer.exemption_commence_date} - {employer.exemption_cease_date}",
-                },
+                }
             ],
         },
     }
@@ -677,7 +718,7 @@ def test_process_extract_data_employer_exempt(
 
 
 def test_process_extract_data_employer_exempt_non_standard_payment(
-    local_payment_extract_step, local_test_db_session,
+    local_payment_extract_step, local_test_db_session
 ):
     # Show that non-standard payments don't error
     # due to employer exempt
@@ -702,7 +743,7 @@ def test_process_extract_data_employer_exempt_non_standard_payment(
 
 
 def test_process_extract_data_rollback(
-    local_payment_extract_step, local_test_db_session, monkeypatch,
+    local_payment_extract_step, local_test_db_session, monkeypatch
 ):
     payment_data_eft = FineosPaymentData()
     payment_data_check = FineosPaymentData(payment_method="Check")
@@ -730,7 +771,7 @@ def test_process_extract_data_rollback(
 
 
 def test_process_extract_data_no_existing_address_eft(
-    local_payment_extract_step, local_test_db_session,
+    local_payment_extract_step, local_test_db_session
 ):
     payment_data_eft = FineosPaymentData()
     payment_data_check = FineosPaymentData(payment_method="Check")
@@ -830,9 +871,7 @@ def test_process_extract_data_no_existing_address_eft(
 
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
-def test_process_extract_data_existing_payment(
-    local_payment_extract_step, local_test_db_session,
-):
+def test_process_extract_data_existing_payment(local_payment_extract_step, local_test_db_session):
 
     payment_data = FineosPaymentData()
     add_db_records_from_fineos_data(
@@ -873,7 +912,7 @@ def test_process_extract_data_existing_payment(
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_data_minimal_viable_payment(
-    local_payment_extract_step, local_test_db_session,
+    local_payment_extract_step, local_test_db_session
 ):
     # This test creates a payment with absolutely no data besides the bare
     # minimum to be viable to create a payment, this is done in order
@@ -907,8 +946,38 @@ def test_process_extract_data_minimal_viable_payment(
 
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
+def test_process_extract_missing_payment_detail_and_lines(
+    local_test_db_session, local_payment_extract_step
+):
+    fineos_data = FineosPaymentData(include_payment_details=False, include_payment_lines=False)
+    add_db_records_from_fineos_data(local_test_db_session, fineos_data)
+    stage_data([fineos_data], local_test_db_session)
+
+    local_payment_extract_step.run()
+
+    payment = local_test_db_session.query(Payment).one_or_none()
+    assert payment
+
+    assert not payment.payment_details
+    assert not local_test_db_session.query(PaymentLine).all()
+
+    state_log = state_log_util.get_latest_state_log_in_flow(
+        payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+    )
+    assert (
+        state_log.end_state_id
+        == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE.state_id
+    )
+
+    assert state_log.outcome["validation_container"]["validation_issues"] == [
+        {"reason": "MissingDataset", "details": "payment_details", "field_name": "payment_details"},
+        {"reason": "MissingDataset", "details": "payment_lines", "field_name": "payment_lines"},
+    ]
+
+
+@freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_data_minimal_viable_standard_payment(
-    local_payment_extract_step, local_test_db_session,
+    local_payment_extract_step, local_test_db_session
 ):
     # Same as the above test, but we setup enough to make a "standard" payment
 
@@ -942,7 +1011,7 @@ def test_process_extract_data_minimal_viable_standard_payment(
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_data_leave_request_decision_validation(
-    local_payment_extract_step, local_test_db_session,
+    local_payment_extract_step, local_test_db_session
 ):
 
     medical_claim_type_record = FineosPaymentData(claim_type="Employee")
@@ -998,7 +1067,7 @@ def test_process_extract_data_leave_request_decision_validation(
     assert in_review_payment
     assert len(in_review_payment.state_logs) == 2
     validate_pei_writeback_state_for_payment(
-        in_review_payment, local_test_db_session, is_leave_in_review=True,
+        in_review_payment, local_test_db_session, is_leave_in_review=True
     )
     state_log = state_log_util.get_latest_state_log_in_flow(
         in_review_payment, Flow.DELEGATED_PAYMENT, local_test_db_session
@@ -1063,9 +1132,7 @@ def test_process_extract_data_leave_request_decision_validation(
 
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
-def test_process_extract_not_id_proofed(
-    local_test_db_session, local_payment_extract_step,
-):
+def test_process_extract_not_id_proofed(local_test_db_session, local_payment_extract_step):
     datasets = []
     # This tests that a payment with a claim missing ID proofing with be rejected
 
@@ -1145,9 +1212,7 @@ def test_process_extract_no_fineos_name(local_test_db_session, local_payment_ext
     assert import_log_report["employee_fineos_name_missing"] == 1
 
 
-def test_process_extract_is_adhoc(
-    local_payment_extract_step, local_test_db_session,
-):
+def test_process_extract_is_adhoc(local_payment_extract_step, local_test_db_session):
     fineos_adhoc_data = FineosPaymentData(payment_type="Adhoc")
     add_db_records_from_fineos_data(local_test_db_session, fineos_adhoc_data)
     fineos_standard_data = FineosPaymentData(payment_type="Some other value")
@@ -1191,35 +1256,52 @@ def test_process_extract_is_adhoc(
 
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
-def test_process_extract_multiple_payment_details(
-    local_test_db_session, local_payment_extract_step,
+def test_process_extract_multiple_payment_details_and_lines(
+    local_test_db_session, local_payment_extract_step
 ):
     # Create a standard payment, but give it a few payment periods
     # by creating several copies of the payment data, but the others have
-    # other random dates/amounts
+    # other random dates/amounts. Each payment detail will also have
+    # an additional payment line
     fineos_payment_data = FineosPaymentData(
         payment_start="2021-01-01 12:00:00",
         payment_end="2021-01-01 12:00:00",
         payment_amount="100.00",
-        balancing_amount="100.10",
-        business_net_amount="100.01",
+        # These will all be constructed below
+        include_payment_details=False,
+        include_payment_lines=False,
     )
     add_db_records_from_fineos_data(local_test_db_session, fineos_payment_data)
 
     datasets = [fineos_payment_data]
-    for i in range(2, 5):  # 2, 3, 4
+    for i in range(1, 5):  # 1, 2, 3, 4
         additional_data = copy.deepcopy(fineos_payment_data)
         additional_data.include_vpei = False
+        additional_data.include_payment_details = True
+        additional_data.include_payment_lines = True
         additional_data.include_claim_details = False
         additional_data.include_requested_absence = False
+
         additional_data.payment_amount = f"{i}00.00"
         additional_data.balancing_amount = f"{i}00.10"
         additional_data.business_net_amount = f"{i}00.01"
-
         additional_data.payment_start_period = f"2021-01-0{i} 12:00:00"
         additional_data.payment_end_period = f"2021-01-0{i} 12:00:00"
+        additional_data.payment_details_i_value = f"1000{i}"
+
+        additional_data.payment_line_i_value = f"1{i}"
+        additional_data.payment_line_amount = f"10{i}.01"
+        additional_data.payment_line_type = "first line"
 
         datasets.append(additional_data)
+
+        # Add an extra payment line record for the payment detail
+        extra_payment_line_data = copy.deepcopy(additional_data)
+        extra_payment_line_data.include_payment_details = False
+        extra_payment_line_data.payment_line_i_value = f"2{i}"
+        extra_payment_line_data.payment_line_amount = f"10{i}.02"
+        extra_payment_line_data.payment_line_type = "second line"
+        datasets.append(extra_payment_line_data)
 
     stage_data(datasets, local_test_db_session)
 
@@ -1245,6 +1327,25 @@ def test_process_extract_multiple_payment_details(
         assert str(payment_detail.business_net_amount) == f"{i}00.01"
         assert str(payment_detail.period_start_date) == f"2021-01-0{i}"
         assert str(payment_detail.period_end_date) == f"2021-01-0{i}"
+        assert payment_detail.payment_details_i_value == f"1000{i}"
+        assert payment_detail.payment_details_c_value
+        assert payment_detail.vpei_payment_details_id
+
+        payment_lines = (
+            local_test_db_session.query(PaymentLine)
+            .filter(PaymentLine.payment_details_id == payment_detail.payment_details_id)
+            .all()
+        )
+        assert len(payment_lines) == 2
+        payment_lines.sort(key=lambda payment_line: payment_line.amount)
+
+        assert payment_lines[0].payment_line_i_value == f"1{i}"
+        assert str(payment_lines[0].amount) == f"10{i}.01"
+        assert payment_lines[0].line_type == "first line"
+
+        assert payment_lines[1].payment_line_i_value == f"2{i}"
+        assert str(payment_lines[1].amount) == f"10{i}.02"
+        assert payment_lines[1].line_type == "second line"
 
     # Verify a few values on the payment itself
     assert str(payment.amount) == "100.00"  # The file generates with the first value
@@ -1254,7 +1355,7 @@ def test_process_extract_multiple_payment_details(
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_additional_payment_types(
-    local_test_db_session, local_payment_extract_step,
+    local_test_db_session, local_payment_extract_step
 ):
     datasets = []
     # This tests that the behavior of non-standard payment types are handled properly
@@ -1411,7 +1512,7 @@ def test_process_extract_additional_payment_types(
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_additional_payment_types_can_be_missing_other_files(
-    local_test_db_session, local_payment_extract_step,
+    local_test_db_session, local_payment_extract_step
 ):
     # This tests that the behavior of non-standard payment types are handled properly
     # In every scenario, only the VPEI file and payment details file
@@ -1552,6 +1653,7 @@ def test_process_extract_additional_payment_types_can_be_missing_all_additional_
             include_claim_details=False,
             include_payment_details=False,
             include_requested_absence=False,
+            include_payment_lines=True,
         )
         add_db_records_from_fineos_data(
             local_test_db_session, overpayment_data, add_claim=False, add_eft=False
@@ -1560,7 +1662,7 @@ def test_process_extract_additional_payment_types_can_be_missing_all_additional_
 
     # Create a cancellation
     cancellation_data = FineosPaymentData(
-        event_type="PaymentOut Cancellation", payment_amount="-123.45",
+        event_type="PaymentOut Cancellation", payment_amount="-123.45"
     )
     add_db_records_from_fineos_data(
         local_test_db_session, cancellation_data, add_claim=False, add_eft=False
@@ -1624,6 +1726,18 @@ def test_process_extract_additional_payment_types_can_be_missing_all_additional_
         )
         # But no claim as no record of it in the extract file
         assert overpayment.claim_id is None
+
+        # It does have payment lines
+        payment_lines = (
+            local_test_db_session.query(PaymentLine)
+            .filter(PaymentLine.payment_id == overpayment.payment_id)
+            .all()
+        )
+        assert len(payment_lines) == 1
+        payment_line = payment_lines[0]
+        assert not payment_line.payment_details_id
+        assert payment_line.amount
+
     # No PUB EFT records should exist
     assert len(local_test_db_session.query(PubEft).all()) == 0
 
@@ -1739,7 +1853,7 @@ def test_process_extract_additional_payment_types_still_require_employee(
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_tax_withholding_payment_types(
-    local_test_db_session, local_payment_extract_step,
+    local_test_db_session, local_payment_extract_step
 ):
     datasets = []
 
@@ -1812,8 +1926,211 @@ def test_process_extract_tax_withholding_payment_types(
 
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
+def test_process_employer_reimbursement_payment_transaction_type(
+    local_test_db_session, local_payment_extract_step, monkeypatch
+):
+    datasets = []
+
+    monkeypatch.setenv("ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS", "1")
+
+    # Create a record for an employer reimbursement with valid payment method check
+    employer_reimbursement_data = FineosPaymentData(
+        event_reason=extractor.AUTO_ALT_EVENT_REASON,
+        event_type=extractor.PAYMENT_OUT_TRANSACTION_TYPE,
+        payee_identifier=extractor.TAX_IDENTIFICATION_NUMBER,
+        payment_method="Check",
+    )
+    add_db_records_from_fineos_data(
+        local_test_db_session, employer_reimbursement_data, add_eft=False
+    )
+    datasets.append(employer_reimbursement_data)
+
+    stage_data(datasets, local_test_db_session)
+
+    # Run the extract process
+    local_payment_extract_step.run()
+
+    # Employer reimbursement should be in PAYMENT_READY_FOR_ADDRESS_VALIDATION whne we enable ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS
+    employer_payment = (
+        local_test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_i_value == employer_reimbursement_data.i_value)
+        .one_or_none()
+    )
+
+    assert len(employer_payment.state_logs) == 1
+    assert set([state_log.end_state_id for state_log in employer_payment.state_logs]) == set(
+        [
+            State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id,
+        ]
+    )
+
+
+def test_process_extract_zero_dollar_tax_withholding_no_payment_line(
+    local_test_db_session, local_payment_extract_step
+):
+    # We've noticed that zero dollar tax withholdings are missing
+    # their payment line information, so verify that the process
+    # will work with that correctly.
+    datasets = []
+
+    state_withholding_data = FineosPaymentData(
+        tin=extractor.STATE_TAX_WITHHOLDING_TIN, payment_amount="0.00", include_payment_lines=False
+    )
+    add_db_records_from_fineos_data(local_test_db_session, state_withholding_data, add_eft=False)
+    datasets.append(state_withholding_data)
+
+    federal_withholding_data = FineosPaymentData(
+        tin=extractor.FEDERAL_TAX_WITHHOLDING_TIN,
+        payment_amount="0.00",
+        include_payment_lines=False,
+    )
+    add_db_records_from_fineos_data(local_test_db_session, federal_withholding_data, add_eft=False)
+    datasets.append(federal_withholding_data)
+
+    stage_data(datasets, local_test_db_session)
+
+    # Run the extract process
+    local_payment_extract_step.run()
+
+    for data in datasets:
+        payment = (
+            local_test_db_session.query(Payment)
+            .filter(Payment.fineos_pei_i_value == data.i_value)
+            .one_or_none()
+        )
+        assert payment
+        validate_withholding(
+            payment,
+            data,
+            State.DELEGATED_PAYMENT_PROCESSED_ZERO_PAYMENT,
+            PaymentTransactionType.ZERO_DOLLAR,
+        )
+
+
+@freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
+def test_process_employer_reimbursement_payment_method_is_eft(
+    local_test_db_session, local_payment_extract_step, monkeypatch
+):
+    datasets = []
+
+    monkeypatch.setenv("ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS", "1")
+
+    # Create a record for an employer reimbursement with valid payment method check
+    employer_reimbursement_data = FineosPaymentData(
+        event_reason=extractor.AUTO_ALT_EVENT_REASON,
+        event_type=extractor.PAYMENT_OUT_TRANSACTION_TYPE,
+        payee_identifier=extractor.TAX_IDENTIFICATION_NUMBER,
+        payment_method="Elec Funds Transfer",
+    )
+    add_db_records_from_fineos_data(
+        local_test_db_session, employer_reimbursement_data, add_eft=False
+    )
+    datasets.append(employer_reimbursement_data)
+
+    stage_data(datasets, local_test_db_session)
+
+    # Run the extract process
+    local_payment_extract_step.run()
+
+    employer_payment = (
+        local_test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_i_value == employer_reimbursement_data.i_value)
+        .one_or_none()
+    )
+
+    assert len(employer_payment.state_logs) == 2
+    assert set([state_log.end_state_id for state_log in employer_payment.state_logs]) == set(
+        [
+            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id,
+            State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id,
+        ]
+    )
+
+
+@freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
+def test_process_extract_data_minimal_viable_employer_reimbursement_payment(
+    local_payment_extract_step, local_test_db_session
+):
+    # Setup enough to make a employer reimbursement payment
+    # This test creates a employer reimbursement with absolutely no data besides the bare
+    # minimum to be viable to create a payment, this is done in order
+    # to test that all of our validations work, and all of the missing data
+    # edge cases are accounted for and handled appropriately.
+
+    # C & I value are the bare minimum to have a payment
+    employer_reimbursement_data = FineosPaymentData(
+        False,
+        c_value="1000",
+        i_value="1",
+        event_reason=extractor.AUTO_ALT_EVENT_REASON,
+        event_type=extractor.PAYMENT_OUT_TRANSACTION_TYPE,
+        payee_identifier=extractor.TAX_IDENTIFICATION_NUMBER,
+        payment_method="Elec Funds Transfer",
+        payment_amount="100.00",
+    )
+    stage_data([employer_reimbursement_data], local_test_db_session)
+    # We deliberately do no DB setup, there will not be any prior employee or claim
+    local_payment_extract_step.run()
+
+    payment = local_test_db_session.query(Payment).one_or_none()
+    assert payment
+    assert payment.vpei_id is not None
+    assert payment.claim is None
+
+    state_log = state_log_util.get_latest_state_log_in_flow(
+        payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+    )
+    assert state_log.end_state_id == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+
+    assert state_log.outcome["message"] == "Error processing payment record"
+    assert state_log.outcome["validation_container"]["record_key"] == "C=1000,I=1"
+    # Not going to exactly match the errors here as there are many
+    # and they may adjust in the future
+
+    assert len(state_log.outcome["validation_container"]["validation_issues"]) >= 8
+
+    validation_issues = state_log.outcome["validation_container"]["validation_issues"]
+    expected_validation_issues = [
+        {"reason": "MissingField", "details": "PAYEESOCNUMBE", "field_name": "PAYEESOCNUMBE"},
+        {"reason": "MissingField", "details": "PAYMENTDATE", "field_name": "PAYMENTDATE"},
+        {"reason": "MissingField", "details": "PAYMENTSTARTP", "field_name": "PAYMENTSTARTP"},
+        {"reason": "MissingField", "details": "PAYMENTENDPER", "field_name": "PAYMENTENDPER"},
+        {
+            "reason": "MissingField",
+            "details": "BALANCINGAMOU_MONAMT",
+            "field_name": "BALANCINGAMOU_MONAMT",
+        },
+        {
+            "reason": "MissingField",
+            "details": "BUSINESSNETBE_MONAMT",
+            "field_name": "BUSINESSNETBE_MONAMT",
+        },
+        {
+            "reason": "MissingField",
+            "details": "ABSENCEREASON_COVERAGE",
+            "field_name": "ABSENCEREASON_COVERAGE",
+        },
+        {
+            "reason": "MissingField",
+            "details": "ABSENCE_CASECREATIONDATE",
+            "field_name": "ABSENCE_CASECREATIONDATE",
+        },
+        {
+            "reason": "MissingField",
+            "details": "LINETYPE",
+            "field_name": "LINETYPE",
+        },
+    ]
+    for expected_validation_issue in expected_validation_issues:
+        assert expected_validation_issue in validation_issues
+
+    # Payment is also added to the PEI writeback error flow
+    validate_pei_writeback_state_for_payment(payment, local_test_db_session, is_invalid=True)
+
+
+@freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_invalid_tax_withholding_payment_types(
-    local_test_db_session, local_payment_extract_step,
+    local_test_db_session, local_payment_extract_step
 ):
     datasets = []
 
@@ -1861,7 +2178,7 @@ def test_process_extract_invalid_tax_withholding_payment_types(
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_data_minimal_viable_withholding_payment(
-    local_payment_extract_step, local_test_db_session,
+    local_payment_extract_step, local_test_db_session
 ):
     # Setup enough to make a tax withholding payment
     # This test creates a tax withholding with absolutely no data besides the bare
@@ -1922,6 +2239,12 @@ def make_payment_data_from_fineos_data(fineos_data):
         reference_file,
         import_log.import_log_id,
     )
+    payment_line_record = payments_util.create_staging_table_instance(
+        fineos_data.get_payment_line_record(),
+        FineosExtractVpeiPaymentLine,
+        reference_file,
+        import_log.import_log_id,
+    )
     claim_details_record = payments_util.create_staging_table_instance(
         fineos_data.get_claim_details_record(),
         FineosExtractVpeiClaimDetails,
@@ -1939,12 +2262,13 @@ def make_payment_data_from_fineos_data(fineos_data):
     return (
         f"C={fineos_data.c_value},I={fineos_data.i_value}",
         extractor.PaymentData(
-            fineos_data.c_value,
-            fineos_data.i_value,
-            vpei_record,
-            [payment_details_record],
-            claim_details_record,
-            requested_absence_record,
+            c_value=fineos_data.c_value,
+            i_value=fineos_data.i_value,
+            pei_record=vpei_record,
+            payment_details=[payment_details_record],
+            payment_lines=[payment_line_record],
+            claim_details=claim_details_record,
+            requested_absence_record=requested_absence_record,
         ),
     )
 
@@ -1954,6 +2278,47 @@ def test_validation_missing_fields(initialize_factories_session):
 
     # Create a fineos dataset that only contains C/I values with all other values empty
     # We want to make sure "" and Unknown are treated the same, so set a few to Unknown
+
+    # These validations issues will appear for all below checks
+    base_expected_missing_values = set(
+        [
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEESOCNUMBE", "PAYEESOCNUMBE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTDATE", "PAYMENTDATE"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEIDENTIFI", "PAYEEIDENTIFI"),
+            ValidationIssue(
+                ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE", "ABSENCEREASON_COVERAGE"
+            ),
+            ValidationIssue(
+                ValidationReason.MISSING_FIELD,
+                "ABSENCE_CASECREATIONDATE",
+                "ABSENCE_CASECREATIONDATE",
+            ),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTSTARTP", "PAYMENTSTARTP"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTENDPER", "PAYMENTENDPER"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "C", "C"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "I", "I"),
+            ValidationIssue(
+                ValidationReason.MISSING_FIELD, "BALANCINGAMOU_MONAMT", "BALANCINGAMOU_MONAMT"
+            ),
+            ValidationIssue(
+                ValidationReason.MISSING_FIELD, "BUSINESSNETBE_MONAMT", "BUSINESSNETBE_MONAMT"
+            ),
+            ValidationIssue(
+                ValidationReason.MISSING_FIELD, "PAYMENTDETAILINDEXID", "PAYMENTDETAILINDEXID"
+            ),
+            ValidationIssue(
+                ValidationReason.MISSING_FIELD, "PAYMENTDETAILCLASSID", "PAYMENTDETAILCLASSID"
+            ),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "AMOUNT_MONAMT", "AMOUNT_MONAMT"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "LINETYPE", "LINETYPE"),
+            ValidationIssue(
+                ValidationReason.MISSING_DATASET,
+                "Payment detail with C=None,I=None not found for payment line",
+                "payment_detail",
+            ),
+        ]
+    )
+
     fineos_data = FineosPaymentData(
         False,
         c_value="1000",
@@ -1966,27 +2331,19 @@ def test_validation_missing_fields(initialize_factories_session):
 
     validation_container = payment_data.validation_container
     assert validation_container.record_key == str(ci_index)
-    expected_missing_values = set(
+
+    expected_missing_values = base_expected_missing_values | set(
         [
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEESOCNUMBE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTDATE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "AMOUNT_MONAMT"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "EVENTTYPE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEIDENTIFI"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCE_CASECREATIONDATE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTSTARTP"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTENDPER"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "BALANCINGAMOU_MONAMT"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "BUSINESSNETBE_MONAMT"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "EVENTTYPE", "EVENTTYPE"),
             ValidationIssue(
                 ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE,
                 "Unknown payment scenario encountered. Payment Amount: None, Event Type: None, Event Reason: ",
             ),
         ]
     )
-
-    assert expected_missing_values == set(validation_container.validation_issues)
+    assert expected_missing_values == set(
+        validation_container.validation_issues
+    ), "Validation issues do not match for unknown payment scenario"
 
     # Set the event type to PaymentOut and give it a valid amount so that
     # it expects it to be a valid payment that requires payment method and several
@@ -1997,23 +2354,18 @@ def test_validation_missing_fields(initialize_factories_session):
 
     validation_container = payment_data.validation_container
     assert validation_container.record_key == str(ci_index)
-    expected_missing_values = set(
+    expected_missing_values = base_expected_missing_values | set(
         [
-            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCECASENU"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "LEAVEREQUEST_DECISION"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEESOCNUMBE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTSTARTP"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTENDPER"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTDATE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTMETHOD"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEIDENTIFI"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCE_CASECREATIONDATE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "BALANCINGAMOU_MONAMT"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "BUSINESSNETBE_MONAMT"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTMETHOD", "PAYMENTMETHOD"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCECASENU", "ABSENCECASENU"),
+            ValidationIssue(
+                ValidationReason.MISSING_FIELD, "LEAVEREQUEST_DECISION", "LEAVEREQUEST_DECISION"
+            ),
         ]
     )
-    assert expected_missing_values == set(validation_container.validation_issues)
+    assert expected_missing_values == set(
+        validation_container.validation_issues
+    ), "Validation issues do not match for standard payment scenario"
 
     # Set the payment method to Check and verify it additionally adds errors for those missing
     fineos_data.payment_method = "Check"
@@ -2021,26 +2373,21 @@ def test_validation_missing_fields(initialize_factories_session):
 
     validation_container = payment_data.validation_container
     assert validation_container.record_key == str(ci_index)
-    expected_missing_values = set(
+    expected_missing_values = base_expected_missing_values | set(
         [
-            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCECASENU"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "LEAVEREQUEST_DECISION"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEESOCNUMBE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTSTARTP"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTENDPER"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTDATE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEIDENTIFI"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTADD1"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTADD4"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTADD6"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTPOSTCO"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCE_CASECREATIONDATE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "BALANCINGAMOU_MONAMT"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "BUSINESSNETBE_MONAMT"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTADD1", "PAYMENTADD1"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTADD4", "PAYMENTADD4"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTADD6", "PAYMENTADD6"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTPOSTCO", "PAYMENTPOSTCO"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCECASENU", "ABSENCECASENU"),
+            ValidationIssue(
+                ValidationReason.MISSING_FIELD, "LEAVEREQUEST_DECISION", "LEAVEREQUEST_DECISION"
+            ),
         ]
     )
-    assert expected_missing_values == set(validation_container.validation_issues)
+    assert expected_missing_values == set(
+        validation_container.validation_issues
+    ), "Validation issues do not match for check payment scenario"
 
     # Set the payment method to EFT and verify it additionally adds errors for those missing
     fineos_data.payment_method = "Elec Funds Transfer"
@@ -2048,26 +2395,21 @@ def test_validation_missing_fields(initialize_factories_session):
 
     validation_container = payment_data.validation_container
     assert validation_container.record_key == str(ci_index)
-    expected_missing_values = set(
+    expected_missing_values = base_expected_missing_values | set(
         [
-            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCECASENU"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "LEAVEREQUEST_DECISION"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEESOCNUMBE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTSTARTP"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTENDPER"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYMENTDATE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEIDENTIFI"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEBANKSORT"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEACCOUNTN"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEACCOUNTT"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEREASON_COVERAGE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCE_CASECREATIONDATE"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "BALANCINGAMOU_MONAMT"),
-            ValidationIssue(ValidationReason.MISSING_FIELD, "BUSINESSNETBE_MONAMT"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEBANKSORT", "PAYEEBANKSORT"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEACCOUNTN", "PAYEEACCOUNTN"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "PAYEEACCOUNTT", "PAYEEACCOUNTT"),
+            ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCECASENU", "ABSENCECASENU"),
+            ValidationIssue(
+                ValidationReason.MISSING_FIELD, "LEAVEREQUEST_DECISION", "LEAVEREQUEST_DECISION"
+            ),
         ]
     )
 
-    assert expected_missing_values == set(validation_container.validation_issues)
+    assert expected_missing_values == set(
+        validation_container.validation_issues
+    ), "Validation issues do not match for EFT payment scenario"
 
 
 def test_validation_param_length(initialize_factories_session, set_exporter_env_vars):
@@ -2206,6 +2548,11 @@ def test_validation_payment_amount(initialize_factories_session, set_exporter_en
                     ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE,
                     "Unknown payment scenario encountered. Payment Amount: None, Event Type: PaymentOut, Event Reason: Automatic Main Payment",
                 ),
+                ValidationIssue(  # Appears due to payment detail not being made
+                    ValidationReason.MISSING_DATASET,
+                    f"Payment detail with C={fineos_data.payment_details_c_value},I={fineos_data.payment_details_i_value} not found for payment line",
+                    "payment_detail",
+                ),
             ]
         ) == set(payment_data.validation_container.validation_issues)
 
@@ -2328,13 +2675,190 @@ def test_get_payment_transaction_type(initialize_factories_session, set_exporter
         )
 
 
+def test_get_payment_relevant_party(initialize_factories_session, set_exporter_env_vars):
+    # get_payment_relevant_party is called as part of the constructor
+    # and sets payment_relevant_party accordingly.
+
+    # note the defaults for FineosPaymentData make a standard payment
+    standard_data = FineosPaymentData()
+    _, payment_data = make_payment_data_from_fineos_data(standard_data)
+    assert not payment_data.validation_container.has_validation_issues()
+    assert (
+        payment_data.payment_relevant_party.payment_relevant_party_id
+        == PaymentRelevantParty.CLAIMANT.payment_relevant_party_id
+    )
+
+    # Employer Reimbursement
+    employer_reimbursement_data = FineosPaymentData(
+        event_reason=extractor.AUTO_ALT_EVENT_REASON,
+        event_type=extractor.PAYMENT_OUT_TRANSACTION_TYPE,
+        payee_identifier=extractor.TAX_IDENTIFICATION_NUMBER,
+    )
+    _, payment_data = make_payment_data_from_fineos_data(employer_reimbursement_data)
+    assert not payment_data.validation_container.has_validation_issues()
+    assert (
+        payment_data.payment_relevant_party.payment_relevant_party_id
+        == PaymentRelevantParty.REIMBURSED_EMPLOYER.payment_relevant_party_id
+    )
+
+    # State witholding
+    employer_reimbursement_data = FineosPaymentData(tin=extractor.STATE_TAX_WITHHOLDING_TIN)
+    _, payment_data = make_payment_data_from_fineos_data(employer_reimbursement_data)
+    assert not payment_data.validation_container.has_validation_issues()
+    assert (
+        payment_data.payment_relevant_party.payment_relevant_party_id
+        == PaymentRelevantParty.STATE_TAX.payment_relevant_party_id
+    )
+
+    # Federal tax
+    employer_reimbursement_data = FineosPaymentData(tin=extractor.FEDERAL_TAX_WITHHOLDING_TIN)
+    _, payment_data = make_payment_data_from_fineos_data(employer_reimbursement_data)
+    assert not payment_data.validation_container.has_validation_issues()
+    assert (
+        payment_data.payment_relevant_party.payment_relevant_party_id
+        == PaymentRelevantParty.FEDERAL_TAX.payment_relevant_party_id
+    )
+
+
+@pytest.mark.parametrize(
+    "party_id",
+    [
+        PaymentRelevantParty.CLAIMANT.payment_relevant_party_id,
+        PaymentRelevantParty.REIMBURSED_EMPLOYER.payment_relevant_party_id,
+        PaymentRelevantParty.FEDERAL_TAX.payment_relevant_party_id,
+        PaymentRelevantParty.STATE_TAX.payment_relevant_party_id,
+    ],
+)
+@pytest.mark.parametrize(
+    "payment_category",
+    [
+        "cancellation",
+        "zero_dollar",
+        "overpayment",
+        "malformed_payment_negative",
+        "malformed_payment_unknown_event_type",
+        "malformed_payment_missing_everything",
+        "standard",
+    ],
+)
+def test_payment_party_and_type_combinations(
+    party_id, payment_category, initialize_factories_session, set_exporter_env_vars
+):
+    # There are four possible PaymentRelevantParty values and five categories of payments:
+    # cancellations, overpayments, zero dollar payments, malformed payments, and standard payments.
+    # We test all 20 possible combinations here to verify the correct PaymentTransactionType is
+    # returned for each.
+
+    # For each relevant party:
+    # Cancellation payments should always return a cancellation transaction type
+    # Overpayments should always return an overpayment transaction type
+    # Zero dollar payments for all relevant parties should return a zero dollar transaction type
+    # Malformed payments of various kinds should return an unknown transaction type with validation issues
+    # The transaction type of standard payments is determined by the relevant party
+
+    # these helpers specify the kwargs we must pass to the FineosPaymentData generator
+    # to generate various kinds of claimants
+    party_kwargs = {
+        PaymentRelevantParty.CLAIMANT.payment_relevant_party_id: {},
+        PaymentRelevantParty.REIMBURSED_EMPLOYER.payment_relevant_party_id: {
+            "event_reason": extractor.AUTO_ALT_EVENT_REASON,
+            "event_type": extractor.PAYMENT_OUT_TRANSACTION_TYPE,
+            "payee_identifier": extractor.TAX_IDENTIFICATION_NUMBER,
+        },
+        PaymentRelevantParty.FEDERAL_TAX.payment_relevant_party_id: {
+            "tin": extractor.FEDERAL_TAX_WITHHOLDING_TIN
+        },
+        PaymentRelevantParty.STATE_TAX.payment_relevant_party_id: {
+            "tin": extractor.STATE_TAX_WITHHOLDING_TIN
+        },
+    }
+    # note that "overpayment" is not entered here because we programmatically generate
+    # many different kinds of overpayments below
+    payment_kwargs = {
+        "cancellation": {"event_type": "PaymentOut Cancellation", "payment_amount": "-100.00"},
+        "zero_dollar": {"payment_amount": "0.00"},
+        "malformed_payment_negative": {"payment_amount": "-100.00"},
+        "malformed_payment_unknown_event_type": {
+            "event_type": "Yet another overpayment event type"
+        },
+        "malformed_payment_missing_everything": {
+            "generate_defaults": False,
+            "c_value": "1000",
+            "i_value": "1",
+        },
+        "standard": {},
+    }
+
+    # we handle testing overpayments separately since there are multiple types of overpayments to generate
+    if payment_category == "overpayment":
+        for overpayment_payment_transaction_type in extractor.OVERPAYMENT_PAYMENT_TRANSACTION_TYPES:
+            # Event reason is always unknown for overpayments in the real data
+            overpayment_data_kwargs = {
+                "event_type": overpayment_payment_transaction_type.payment_transaction_type_description,
+                "event_reason": "Unknown",
+            }
+            payment_data_kwargs = party_kwargs[party_id] | overpayment_data_kwargs
+            fineos_payment_data = FineosPaymentData(**payment_data_kwargs)
+            _, payment_data = make_payment_data_from_fineos_data(fineos_payment_data)
+
+            assert not payment_data.validation_container.has_validation_issues()
+            assert (
+                payment_data.payment_transaction_type.payment_transaction_type_id
+                == overpayment_payment_transaction_type.payment_transaction_type_id
+            )
+
+    else:
+        payment_data_kwargs = party_kwargs[party_id] | payment_kwargs[payment_category]
+        fineos_payment_data = FineosPaymentData(**payment_data_kwargs)
+        _, payment_data = make_payment_data_from_fineos_data(fineos_payment_data)
+
+        # all cancellation payments have same type regardless of party
+        if payment_category == "cancellation":
+            assert (
+                payment_data.payment_transaction_type.payment_transaction_type_id
+                == PaymentTransactionType.CANCELLATION.payment_transaction_type_id
+            )
+        # all zero dollar payments have same type regardless of party
+        elif payment_category == "zero_dollar":
+            assert (
+                payment_data.payment_transaction_type.payment_transaction_type_id
+                == PaymentTransactionType.ZERO_DOLLAR.payment_transaction_type_id
+            )
+
+        # standard payments are determined by their relevant party
+        elif payment_category == "standard":
+            party_to_type = {
+                PaymentRelevantParty.STATE_TAX.payment_relevant_party_id: PaymentTransactionType.STATE_TAX_WITHHOLDING,
+                PaymentRelevantParty.FEDERAL_TAX.payment_relevant_party_id: PaymentTransactionType.FEDERAL_TAX_WITHHOLDING,
+                PaymentRelevantParty.REIMBURSED_EMPLOYER.payment_relevant_party_id: PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+                PaymentRelevantParty.CLAIMANT.payment_relevant_party_id: PaymentTransactionType.STANDARD,
+            }
+
+            assert (
+                payment_data.payment_transaction_type.payment_transaction_type_id
+                == party_to_type[party_id].payment_transaction_type_id
+            )
+
+        # all other payment categories for this test are various kinds of malformed payments
+        else:
+            assert payment_data.validation_container.has_validation_issues()
+            assert (
+                payments_util.ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE
+                in payment_data.validation_container.get_reasons()
+            )
+            assert (
+                payment_data.payment_transaction_type.payment_transaction_type_id
+                == PaymentTransactionType.UNKNOWN.payment_transaction_type_id
+            )
+
+
 @pytest.mark.parametrize(
     "prenote_state",
     [(PrenoteState.REJECTED), (PrenoteState.PENDING_PRE_PUB), (PrenoteState.PENDING_WITH_PUB)],
 )
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_update_eft_existing_eft_matches_and_not_approved(
-    local_payment_extract_step, local_test_db_session, prenote_state,
+    local_payment_extract_step, local_test_db_session, prenote_state
 ):
     # This is the happiest of paths, we've already got the EFT info for the
     # employee and it has already been prenoted.
@@ -2407,7 +2931,7 @@ def test_update_eft_existing_eft_matches_and_not_approved(
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_update_experian_address_pair_fineos_address_no_update(
-    local_payment_extract_step, local_test_db_session,
+    local_payment_extract_step, local_test_db_session
 ):
     # update_experian_address_pair_fineos_address() has 2 possible outcomes:
     #   1. There is no change to address
@@ -2491,11 +3015,24 @@ def test_get_active_payment_state(payment_extract_step, test_db_session):
             test_db_session, payment_end_state_message=EXPECTED_OUTCOME["message"]
         ).get_or_create_payment_with_state(restartable_state)
 
+        # Due to odd timing issues, a payment could have restartable
+        # states, but also failed for already-active validation reasons
+        # on a prior day. This should be considered fine as we don't
+        # want a payment with only the already active issue blocking itself.
+        DelegatedPaymentFactory(
+            test_db_session,
+            payment_end_state_message=EXPECTED_OUTCOME["message"],
+            fineos_pei_c_value=payment.fineos_pei_c_value,
+            fineos_pei_i_value=payment.fineos_pei_i_value,
+            exclude_from_payment_status=True,
+        ).get_or_create_payment_with_state(non_restartable_states[0])
+
         # Create a payment with the same C/I value
         new_payment = PaymentFactory.build(
             fineos_pei_c_value=payment.fineos_pei_c_value,
             fineos_pei_i_value=payment.fineos_pei_i_value,
         )
+
         # We should not find anything
         found_state = payment_extract_step.get_active_payment_state(new_payment)
         assert found_state is None

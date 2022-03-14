@@ -1,7 +1,6 @@
 from typing import Dict, List, Optional, Tuple, Union
 from uuid import UUID
 
-import newrelic.agent
 from sqlalchemy.orm.session import Session
 
 import massgov
@@ -40,20 +39,6 @@ def split_fineos_absence_period_id(id: str) -> Tuple[int, int]:
     return int(period_ids[1]), int(period_ids[2])
 
 
-def split_fineos_leave_request_id(id: str, log_attributes: Dict) -> int:
-    period_ids = id.split("-")
-    if len(period_ids) != 3 or not period_ids[2].isdigit():
-        message = f"Invalid fineos leave request id format, leave request id: {id}"
-        logger.error(
-            message, extra={"fineos_leave_request_id": id, **log_attributes},
-        )
-        validation_error = ValidationErrorDetail(
-            message=message, type=IssueType.value_error, field="id/periodReference"
-        )
-        raise ValidationException(errors=[validation_error], message=message, data={})
-    return int(period_ids[2])
-
-
 def get_absence_period_by_claim_id_and_fineos_ids(
     db_session: Session, claim_id: UUID, class_id: int, index_id: int
 ) -> Optional[AbsencePeriod]:
@@ -65,6 +50,28 @@ def get_absence_period_by_claim_id_and_fineos_ids(
             AbsencePeriod.fineos_absence_period_index_id == index_id,
         )
         .one_or_none()
+    )
+
+
+def get_employee_absence_periods(
+    db_session: Session,
+    employee_id: UUID,
+    fineos_absence_status_ids: Optional[List[int]] = None,
+    absence_period_type_id: Optional[int] = None,
+) -> List[AbsencePeriod]:
+    filters = [Claim.employee_id == employee_id]
+    if fineos_absence_status_ids is not None and len(fineos_absence_status_ids) > 0:
+        filters.append(Claim.fineos_absence_status_id.in_(fineos_absence_status_ids))
+
+    if absence_period_type_id is not None:
+        filters.append(AbsencePeriod.absence_period_type_id == absence_period_type_id)
+
+    return (
+        db_session.query(AbsencePeriod)
+        .join(Claim)
+        .filter(*filters)
+        .order_by(AbsencePeriod.absence_period_start_date)
+        .all()
     )
 
 
@@ -109,10 +116,6 @@ def parse_fineos_period_leave_request(
     db_absence_period.leave_request_decision_id = LeaveRequestDecision.get_id(
         leave_request.decisionStatus
     )
-    if leave_request.id:
-        db_absence_period.fineos_leave_request_id = split_fineos_leave_request_id(
-            leave_request.id, log_attributes
-        )
     return db_absence_period
 
 
@@ -129,16 +132,12 @@ def upsert_absence_period_from_fineos_period(
     fineos_period = convert_customer_api_period_to_group_client_period(fineos_period)
 
     if fineos_period.leaveRequest is None:
-        logger.error(
-            "Failed to extract leave request from fineos period.", extra=log_attributes,
-        )
+        logger.error("Failed to extract leave request from fineos period.", extra=log_attributes)
         return
     if fineos_period.periodReference:
         class_id, index_id = split_fineos_absence_period_id(fineos_period.periodReference)
     else:
-        logger.error(
-            "Failed to extract class and index id.", extra=log_attributes,
-        )
+        logger.error("Failed to extract class and index id.", extra=log_attributes)
         return
 
     db_absence_period = get_absence_period_by_claim_id_and_fineos_ids(
@@ -201,13 +200,6 @@ def convert_fineos_absence_period_to_claim_response_absence_period(
     absence_period.reason_qualifier_one = leave_request.qualifier1
     absence_period.reason_qualifier_two = leave_request.qualifier2
     absence_period.request_decision = leave_request.decisionStatus
-    if leave_request.id:
-        try:
-            absence_period.fineos_leave_request_id = split_fineos_leave_request_id(
-                leave_request.id, log_attributes
-            )
-        except ValidationException:
-            newrelic.agent.notice_error(attributes=log_attributes)
     return absence_period
 
 
@@ -224,9 +216,7 @@ def sync_customer_api_absence_periods_to_db(
                 db_session, claim.claim_id, absence_period, log_attributes
             )
     except Exception as error:
-        logger.exception(
-            "Failed while populating AbsencePeriod Table", extra={**log_attributes},
-        )
+        logger.exception("Failed while populating AbsencePeriod Table", extra={**log_attributes})
         raise error
     # only commit if there were no errors
     db_session.commit()

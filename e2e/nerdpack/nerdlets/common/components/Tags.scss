@@ -1,3 +1,5 @@
+@import "../scss/variables";
+
 .E2E-tag {
   padding: 2px 12px;
   border: 0.1em #aaa solid;
@@ -25,6 +27,48 @@
     color: #986ae1;
     border-color: #986ae1;
     background: #f0e6f5;
+    font-weight: bold;
+  }
+}
+
+.tag {
+  font-family: monospace;
+  display: inline-block;
+  padding: 2px 6px;
+  background: $TAG_BG;
+  border: 0.1em $TAG_COLOR solid;
+  color: $TAG_COLOR;
+  border-radius: 5px;
+  margin-right: 5px;
+  font-size: 8px;
+  word-break: keep-all;
+  text-wrap: none;
+  line-height: 8px;
+
+  &.branch {
+    background: $TAG_BG_BRANCH;
+    color: $TAG_COLOR_BRANCH;
+    border-color: $TAG_COLOR_BRANCH;
+  }
+
+  &.pr {
+    color: $TAG_COLOR_PR;
+    border-color: $TAG_COLOR_PR;
+    background: $TAG_BG_PR;
+    font-weight: bold;
+  }
+
+  &.deploy {
+    color: $TAG_COLOR_DEPLOY;
+    border-color: $TAG_COLOR_DEPLOY;
+    background: $TAG_BG_DEPLOY;
+    font-weight: bold;
+  }
+
+  &.morning {
+    color: $TAG_COLOR_MORNING;
+    border-color: $TAG_COLOR_MORNING;
+    background: $TAG_BG_MORNING;
     font-weight: bold;
   }
 }

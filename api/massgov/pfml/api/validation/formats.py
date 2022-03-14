@@ -10,6 +10,18 @@ from jsonschema import draft4_format_checker
 RE_UUID4 = re.compile("^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}", re.I)
 
 
+@draft4_format_checker.checks("email", raises=ValueError)
+def is_valid_email(email):
+    # If email is not a string, it will get caught by other validation
+    # so we can skip format validation.
+    if not isinstance(email, str):
+        return True
+    regex = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
+    if not re.fullmatch(regex, email):
+        raise ValueError()
+    return True
+
+
 # Date is not validated by default using the Draft4 validator,
 # so we re-implement it here and register it.
 @draft4_format_checker.checks("date", raises=ValueError)

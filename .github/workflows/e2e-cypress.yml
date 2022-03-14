@@ -57,7 +57,7 @@ on:
           - Manual - Environment Sanity Check (all envs)
           - Manual - New Dataset Check (all envs)
           - Manual - Other (all envs)
-          - Deploy-Fineos
+          - Deploy,Deploy-Fineos
           - Deploy,Deploy-API
           - Deploy,Deploy-Portal
           - Deploy,Deploy-Infra

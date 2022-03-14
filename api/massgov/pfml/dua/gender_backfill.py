@@ -24,11 +24,7 @@ DUAColumns = {
     "employer_unit_number": "EmployerUnitNumber",
 }
 
-DUA_TO_FINEOS_GENDER_MAP = {
-    "M": Gender.MAN,
-    "F": Gender.WOMAN,
-    "U": Gender.NOT_LISTED,
-}
+DUA_TO_FINEOS_GENDER_MAP = {"M": Gender.MAN, "F": Gender.WOMAN, "U": Gender.NOT_LISTED}
 
 
 class Metrics(str, Enum):

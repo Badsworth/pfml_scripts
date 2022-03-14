@@ -26,7 +26,7 @@ LOGGING: Dict[str, Any] = {
         "json": {"()": formatters.JsonFormatter},
         "develop": {"()": formatters.DevelopFormatter},
     },
-    "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "json"},},
+    "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "json"}},
     "root": {"handlers": ["console"], "level": "WARN"},
     "loggers": {
         "alembic": {"handlers": ["console"], "level": "INFO", "propagate": False},
@@ -40,7 +40,7 @@ LOGGING: Dict[str, Any] = {
         # level includes all connection checkin/checkouts to the pool.
         #
         # https://docs.sqlalchemy.org/en/13/core/engines.html#configuring-logging
-        "sqlalchemy.pool": {"handlers": ["console"], "level": "INFO", "propagate": False,},
+        "sqlalchemy.pool": {"handlers": ["console"], "level": "INFO", "propagate": False},
         # Log PostgreSQL NOTICE messages
         # https://docs.sqlalchemy.org/en/13/dialects/postgresql.html#notice-logging
         "sqlalchemy.dialects.postgresql": {

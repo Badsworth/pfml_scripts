@@ -75,7 +75,11 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
             });
           });
           claimPage.shouldHaveStatus("Availability", "As Certified");
-          claimPage.approve("Completed");
+          if (config("HAS_APRIL_UPGRADE") === "true") {
+            claimPage.approve("Completed", true);
+          } else {
+            claimPage.approve("Completed", false);
+          }
         });
       });
     }

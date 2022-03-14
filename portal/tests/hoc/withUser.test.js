@@ -1,6 +1,5 @@
 import { mockAuth, mockFetch, renderPage } from "../test-utils";
 import { screen, waitFor } from "@testing-library/react";
-import AppErrorInfo from "../../src/models/AppErrorInfo";
 import React from "react";
 import User from "../../src/models/User";
 import { mockRouter } from "next/router";
@@ -109,7 +108,7 @@ describe("withUser", () => {
     mockLoggedInUser();
     setup({
       addCustomSetup: (appLogic) => {
-        appLogic.appErrors = [new AppErrorInfo()];
+        appLogic.errors = [new Error()];
       },
     });
 

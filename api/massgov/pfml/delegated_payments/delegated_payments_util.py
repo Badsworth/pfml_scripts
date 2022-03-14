@@ -45,6 +45,7 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVpei,
     FineosExtractVpeiClaimDetails,
     FineosExtractVpeiPaymentDetails,
+    FineosExtractVpeiPaymentLine,
     PaymentLog,
 )
 from massgov.pfml.db.models.state import LkState, State
@@ -60,6 +61,7 @@ ExtractTable = Union[
     Type[FineosExtractVpei],
     Type[FineosExtractVpeiClaimDetails],
     Type[FineosExtractVpeiPaymentDetails],
+    Type[FineosExtractVpeiPaymentLine],
     Type[FineosExtractVbiRequestedAbsenceSom],
     Type[FineosExtractEmployeeFeed],
     Type[FineosExtractVbiRequestedAbsence],
@@ -107,6 +109,7 @@ class Constants:
 
     PEI_EXPECTED_FILE_NAME = "vpei.csv"
     PAYMENT_DETAILS_EXPECTED_FILE_NAME = "vpeipaymentdetails.csv"
+    PAYMENT_LINE_EXPECTED_FILE_NAME = "vpeipaymentline.csv"
     CLAIM_DETAILS_EXPECTED_FILE_NAME = "vpeiclaimdetails.csv"
     REQUESTED_ABSENCE_FILE_NAME = "VBI_REQUESTEDABSENCE.csv"
 
@@ -133,6 +136,7 @@ class Constants:
             State.FEDERAL_WITHHOLDING_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
             State.STATE_WITHHOLDING_ERROR_RESTARTABLE,
             State.FEDERAL_WITHHOLDING_ERROR_RESTARTABLE,
+            State.DELEGATED_PAYMENT_CASCADED_ERROR_RESTARTABLE,
         ]
     )
     RESTARTABLE_PAYMENT_STATE_IDS = frozenset(
@@ -247,7 +251,7 @@ class FineosExtractConstants:
     VBI_1099DATA_SOM = FineosExtract(
         file_name="VBI_1099DATA_SOM.csv",
         table=FineosExtractVbi1099DataSom,
-        field_names=["FIRSTNAMES", "LASTNAME", "CUSTOMERNO", "PACKEDDATA", "DOCUMENTTYPE", "C",],
+        field_names=["FIRSTNAMES", "LASTNAME", "CUSTOMERNO", "PACKEDDATA", "DOCUMENTTYPE", "C"],
     )
     VPEI = FineosExtract(
         file_name="vpei.csv",
@@ -279,12 +283,29 @@ class FineosExtractConstants:
         file_name="vpeipaymentdetails.csv",
         table=FineosExtractVpeiPaymentDetails,
         field_names=[
+            "C",
+            "I",
             "PECLASSID",
             "PEINDEXID",
             "PAYMENTSTARTP",
             "PAYMENTENDPER",
             "BALANCINGAMOU_MONAMT",
             "BUSINESSNETBE_MONAMT",
+        ],
+    )
+
+    PAYMENT_LINE = FineosExtract(
+        file_name="vpeipaymentline.csv",
+        table=FineosExtractVpeiPaymentLine,
+        field_names=[
+            "C",
+            "I",
+            "AMOUNT_MONAMT",
+            "LINETYPE",
+            "PAYMENTDETAILCLASSID",
+            "PAYMENTDETAILINDEXID",
+            "C_PYMNTEIF_PAYMENTLINES",
+            "I_PYMNTEIF_PAYMENTLINES",
         ],
     )
 
@@ -428,7 +449,7 @@ class FineosExtractConstants:
     VBI_LEAVE_PLAN_REQUESTED_ABSENCE = FineosExtract(
         file_name="VBI_LEAVEPLANREQUESTEDABSENCE.csv",
         table=FineosExtractVbiLeavePlanRequestedAbsence,
-        field_names=["SELECTEDPLAN_CLASSID", "SELECTEDPLAN_INDEXID", "LEAVEREQUEST_ID",],
+        field_names=["SELECTEDPLAN_CLASSID", "SELECTEDPLAN_INDEXID", "LEAVEREQUEST_ID"],
     )
 
     PAID_LEAVE_INSTRUCTION = FineosExtract(
@@ -456,6 +477,7 @@ PAYMENT_EXTRACT_FILES = [
     FineosExtractConstants.VPEI,
     FineosExtractConstants.CLAIM_DETAILS,
     FineosExtractConstants.PAYMENT_DETAILS,
+    FineosExtractConstants.PAYMENT_LINE,
 ]
 PAYMENT_EXTRACT_FILE_NAMES = [extract_file.file_name for extract_file in PAYMENT_EXTRACT_FILES]
 
@@ -474,9 +496,7 @@ IAWW_EXTRACT_FILES = [
 ]
 IAWW_EXTRACT_FILES_NAMES = [extract_file.file_name for extract_file in IAWW_EXTRACT_FILES]
 
-REQUEST_1099_EXTRACT_FILES = [
-    FineosExtractConstants.VBI_1099DATA_SOM,
-]
+REQUEST_1099_EXTRACT_FILES = [FineosExtractConstants.VBI_1099DATA_SOM]
 
 REQUEST_1099_EXTRACT_FILES_NAMES = [
     extract_file.file_name for extract_file in REQUEST_1099_EXTRACT_FILES
@@ -538,7 +558,7 @@ class ValidationContainer:
     validation_issues: List[ValidationIssue] = field(default_factory=list)
 
     def add_validation_issue(
-        self, reason: ValidationReason, details: Optional[str], field_name: Optional[str] = None,
+        self, reason: ValidationReason, details: Optional[str], field_name: Optional[str] = None
     ) -> None:
         self.validation_issues.append(ValidationIssue(reason, details, field_name))
 
@@ -634,7 +654,7 @@ def routing_number_validator(routing_number: str) -> Optional[ValidationReason]:
     return None
 
 
-def leave_request_id_validator(leave_request_id: str,) -> Optional[ValidationReason]:
+def leave_request_id_validator(leave_request_id: str) -> Optional[ValidationReason]:
     parsed_leave_request_id = str_to_int(leave_request_id)
     if parsed_leave_request_id is None:
         return ValidationReason.INVALID_TYPE
@@ -663,7 +683,7 @@ def validate_db_input(
         value = None  # Effectively treating "" and "Unknown" the same
 
     if required and not value:
-        errors.add_validation_issue(ValidationReason.MISSING_FIELD, key)
+        errors.add_validation_issue(ValidationReason.MISSING_FIELD, key, field_name=key)
         return None
 
     validation_issues = []
@@ -709,8 +729,8 @@ def get_date_group_folder_name(date_group: str, reference_file_type: LkReference
     ):  # TODO remove when lookup descriptions are non nullable
         return ""
 
-    reference_file_type_folder_postfix = reference_file_type.reference_file_type_description.lower().replace(
-        " ", "-"
+    reference_file_type_folder_postfix = (
+        reference_file_type.reference_file_type_description.lower().replace(" ", "-")
     )
 
     date_group_folder = f"{date_group}-{reference_file_type_folder_postfix}"
@@ -1086,7 +1106,7 @@ def get_mapped_claim_type(claim_type_str: str) -> LkClaimType:
 def move_reference_file(
     db_session: db.Session, ref_file: ReferenceFile, src_dir: str, dest_dir: str
 ) -> None:
-    """ Moves a ReferenceFile
+    """Moves a ReferenceFile
 
     Renames the actual S3 file (copies and deletes) and updates the reference_file.file_location
     """
@@ -1151,7 +1171,7 @@ def create_staging_table_instance(
     fineos_extract_import_log_id: Optional[int],
     ignore_properties: Optional[List[Any]] = None,
 ) -> base.Base:
-    """ We return an instance of cls, with matching properties from data and cls. If there are any
+    """We return an instance of cls, with matching properties from data and cls. If there are any
     properties from the data that don't have a match in staging model db_cls, we discard them and log it.
     Eg:
         class VbiRequestedAbsenceSom(Base):
@@ -1178,7 +1198,7 @@ def create_staging_table_instance(
     if len(unconfigured_columns) > 0:
         logger.warning(
             "Unconfigured columns in FINEOS extract after first record.",
-            extra={"db_cls.__name__": db_cls.__name__, "fields": ",".join(unconfigured_columns),},
+            extra={"db_cls.__name__": db_cls.__name__, "fields": ",".join(unconfigured_columns)},
         )
     [lower_data.pop(column) for column in unconfigured_columns]
 
@@ -1239,11 +1259,17 @@ def get_traceable_payment_details(
         "fineos_employer_id": employer.fineos_employer_id if employer else None,
         # Misc
         "current_state": state.state_description if state else None,
+        "relevant_party": payment.payment_relevant_party.payment_relevant_party_description
+        if payment.payment_relevant_party
+        else None,
     }
 
 
 def get_traceable_pub_eft_details(
-    pub_eft: PubEft, employee: Optional[Employee] = None, payment: Optional[Payment] = None
+    pub_eft: PubEft,
+    employee: Optional[Employee] = None,
+    payment: Optional[Payment] = None,
+    state: Optional[LkState] = None,
 ) -> Dict[str, Any]:
     # For logging purposes, this returns useful, traceable details
     # about an EFT record and related fields
@@ -1263,6 +1289,8 @@ def get_traceable_pub_eft_details(
     if employee:
         details["employee_id"] = employee.employee_id
         details["fineos_customer_number"] = employee.fineos_customer_number
+
+    details["current_state"] = state.state_description if state else None
 
     return details
 

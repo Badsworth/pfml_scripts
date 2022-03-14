@@ -1,5 +1,6 @@
 import math
-from typing import Any, List, Union
+from dataclasses import asdict, dataclass
+from typing import Any, Dict, List, Union
 
 import flask
 from sqlalchemy import func
@@ -13,29 +14,17 @@ DEFAULT_PAGE_OFFSET = 1
 DEFAULT_PAGE_SIZE = 25
 
 
-def make_pagination_params(request: Union[flask.Request, SearchEnvelope]) -> SearchEnvelope:
-    if isinstance(request, SearchEnvelope):
-        return request
+@dataclass
+class PagingMetaData:
+    total_records: int
+    total_pages: int
+    page_offset: int
+    page_size: int
+    order_by: str
+    order_direction: str
 
-    page_data = {}
-
-    if page_size := request.args.get("page_size", default=None, type=int):
-        page_data["size"] = page_size
-
-    if page_offset := request.args.get("page_offset", default=None, type=int):
-        page_data["offset"] = page_offset
-
-    order_data = {}
-
-    if order_by := request.args.get("order_by", default=None, type=str):
-        order_data["by"] = order_by
-
-    if order_direction := request.args.get("order_direction", default=None, type=str):
-        order_data["direction"] = OrderDirection(order_direction)
-
-    return SearchEnvelope[None](
-        terms=None, order=OrderData(**order_data), paging=PagingData(**page_data)
-    )
+    def to_dict(self) -> Dict[str, Union[int, str]]:
+        return asdict(self)
 
 
 class PaginationAPIContext:
@@ -83,9 +72,7 @@ class Page:
 
 
 class Paginator:
-    def __init__(
-        self, query_set: Query, page_size: int = DEFAULT_PAGE_SIZE, page_offset: int = 1,
-    ):
+    def __init__(self, query_set: Query, page_size: int = DEFAULT_PAGE_SIZE, page_offset: int = 1):
         self.query_set = query_set
 
         if page_size <= 0:
@@ -137,3 +124,41 @@ class Paginator:
 def page_for_api_context(context: PaginationAPIContext, query: Query) -> Page:
     paginator = Paginator(query, page_size=context.page_size)
     return paginator.page_at(page_offset=context.page_offset)
+
+
+def make_pagination_params(request: Union[flask.Request, SearchEnvelope]) -> SearchEnvelope:
+    if isinstance(request, SearchEnvelope):
+        return request
+
+    page_data = {}
+
+    if page_size := request.args.get("page_size", default=None, type=int):
+        page_data["size"] = page_size
+
+    if page_offset := request.args.get("page_offset", default=None, type=int):
+        page_data["offset"] = page_offset
+
+    order_data = {}
+
+    if order_by := request.args.get("order_by", default=None, type=str):
+        order_data["by"] = order_by
+
+    if order_direction := request.args.get("order_direction", default=None, type=str):
+        order_data["direction"] = OrderDirection(order_direction)
+
+    return SearchEnvelope[None](  # type: ignore
+        terms=None, order=OrderData(**order_data), paging=PagingData(**page_data)
+    )
+
+
+def make_paging_meta_data_from_paginator(
+    context: PaginationAPIContext, page: Page
+) -> PagingMetaData:
+    return PagingMetaData(
+        total_records=page.total_records,
+        total_pages=page.total_pages,
+        page_offset=context.page_offset,
+        page_size=context.page_size,
+        order_by=context.order_by,
+        order_direction=context.order_direction,
+    )

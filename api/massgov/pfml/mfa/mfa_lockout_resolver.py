@@ -20,7 +20,7 @@ class MfaLockoutResolver:
         user_email,
         psd_number,
         reason_for_disabling,
-        employee_name,
+        agent_email,
         verification_method,
         dry_run,
         db_session=None,
@@ -30,7 +30,7 @@ class MfaLockoutResolver:
             "dry_run": dry_run,
             "psd_ticket_number": psd_number,
             "reason_for_disabling": reason_for_disabling,
-            "contact_center_employee_name": employee_name,
+            "contact_center_agent": agent_email,
             "identity_verification_method": verification_method,
         }
 

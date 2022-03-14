@@ -1,0 +1,112 @@
+@import "../common/scss/variables";
+
+table.testGridTable {
+  min-width: 900px;
+  td {
+    padding: 0 10px;
+  }
+  .clickable {
+    cursor: pointer;
+  }
+
+  .colProgress {
+    min-width: 150px;
+  }
+
+  thead th {
+    font-size: 14px;
+    font-weight: bold;
+    border-bottom: 1px #ddd solid;
+
+    .tag {
+      margin-left: 5px;
+    }
+
+    .date {
+      display: block;
+      font-size: 10px;
+      font-weight: normal;
+    }
+  }
+
+  tbody {
+    tr:hover {
+      td {
+        background: #eee;
+      }
+    }
+
+    .indicator {
+      @include COLOR_FILTER();
+      width: 10px;
+      height: 100%;
+      display: block;
+
+      &.fail {
+        background: $COLOR_FAIL;
+      }
+
+      &.skip {
+        background: $COLOR_WARN;
+      }
+
+      &.pass {
+        background: $COLOR_PASS;
+      }
+    }
+    .filename {
+      text-wrap: none;
+      white-space: nowrap;
+      word-break: keep-all;
+    }
+  }
+
+  .runProgress {
+    background: $PROGRESS_DEFAULT_FILL;
+    width: 100%;
+    position: relative;
+    border-radius: 15px;
+    height: 30px;
+    min-width: 50px;
+
+    &.fail {
+      background: $PROGRESS_ERROR_FILL;
+    }
+
+    &.clickable {
+      cursor: pointer;
+      &:hover {
+        outline: 1px dotted #000;
+        outline-offset: 4px;
+      }
+    }
+
+    .progress {
+      left: 0;
+      position: absolute;
+      height: 30px;
+      border-radius: 15px;
+      text-align: center;
+      color: #000 !important;
+      line-height: 30px !important;
+      font-weight: bold;
+      @include COLOR_FILTER();
+
+      &.fail {
+        background: $COLOR_FAIL;
+      }
+
+      &.skip {
+        background: $COLOR_WARN;
+      }
+
+      &.flake {
+        background: $COLOR_FLAKE;
+      }
+
+      &.pass {
+        background: $COLOR_PASS;
+      }
+    }
+  }
+}

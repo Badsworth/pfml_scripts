@@ -109,17 +109,26 @@ class AzureGroup(LookupTable):
         "be96c3c2-5d2b-4845-9ed5-bb0aa109009e",
         NON_PROD.azure_group_id,
     )
-    PROD = LkAzureGroup(7, "TSS-SG-PFML_ADMIN_PORTAL_PROD", "7", None)
-    PROD_ADMIN = LkAzureGroup(8, "TSS-SG-PFML_ADMIN_PORTAL_PROD_ADMIN", "8", PROD.azure_group_id)
-    PROD_DEV = LkAzureGroup(9, "TSS-SG-PFML_ADMIN_PORTAL_PROD_DEV", "9", PROD.azure_group_id)
+    PROD = LkAzureGroup(
+        7, "TSS-SG-PFML_ADMIN_PORTAL_PROD", "ccda65ae-07e1-4db8-b9ad-891e882698f3", None
+    )
+    PROD_ADMIN = LkAzureGroup(
+        8,
+        "TSS-SG-PFML_ADMIN_PORTAL_PROD_ADMIN",
+        "68800ca3-9f10-48e9-9e41-b62de7a48dfb",
+        PROD.azure_group_id,
+    )
+    PROD_DEV = LkAzureGroup(
+        9, "TSS-SG-PFML_ADMIN_PORTAL_PROD_DEV (reserved)", "9", PROD.azure_group_id
+    )
     PROD_CONTACT_CENTER = LkAzureGroup(
-        10, "TSS-SG-PFML_ADMIN_PORTAL_PROD_CONTACT_CENTER", "10", PROD.azure_group_id
+        10, "TSS-SG-PFML_ADMIN_PORTAL_PROD_CONTACT_CENTER (reserved)", "10", PROD.azure_group_id
     )
     PROD_SERVICE_DESK = LkAzureGroup(
-        11, "TSS-SG-PFML_ADMIN_PORTAL_PROD_SERVICE_DESK", "11", PROD.azure_group_id
+        11, "TSS-SG-PFML_ADMIN_PORTAL_PROD_SERVICE_DESK (reserved)", "11", PROD.azure_group_id
     )
     PROD_DFML_OPS = LkAzureGroup(
-        12, "TSS-SG-PFML_ADMIN_PORTAL_PROD_DFML_OPS", "12", PROD.azure_group_id
+        12, "TSS-SG-PFML_ADMIN_PORTAL_PROD_DFML_OPS (reserved)", "12", PROD.azure_group_id
     )
 
 
@@ -146,10 +155,7 @@ class AzurePermission(LookupTable):
 
 def sync_azure_permissions(db_session):
     """Insert every permission for non_prod and prod admin groups."""
-    group_ids = [
-        AzureGroup.NON_PROD_ADMIN.azure_group_id,
-        AzureGroup.PROD_ADMIN.azure_group_id,
-    ]
+    group_ids = [AzureGroup.NON_PROD_ADMIN.azure_group_id, AzureGroup.PROD_ADMIN.azure_group_id]
     permissions = AzurePermission.get_all()
     for group_id in group_ids:
         group_permission_ids = [
@@ -169,7 +175,7 @@ def sync_azure_permissions(db_session):
                 )
                 db_session.add(
                     AzureGroupPermission(
-                        azure_group_id=group_id, azure_permission_id=permission.azure_permission_id,
+                        azure_group_id=group_id, azure_permission_id=permission.azure_permission_id
                     )
                 )
     db_session.commit()

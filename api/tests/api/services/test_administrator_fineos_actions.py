@@ -1011,9 +1011,7 @@ def mock_fineos_other_leaves_v2_eform():
         )
 
     def mock_eform_summary(*args, **kwargs):
-        return [
-            group_client_api.EFormSummary(eformId=12345, eformType=EformTypes.OTHER_LEAVES),
-        ]
+        return [group_client_api.EFormSummary(eformId=12345, eformType=EformTypes.OTHER_LEAVES)]
 
     mock_client = massgov.pfml.fineos.mock_client.MockFINEOSClient()
     mock_client.get_eform = mock_eform
@@ -1294,9 +1292,7 @@ def mock_fineos_other_leaves_v2_accrued_leave_different_employer_eform():
         )
 
     def mock_eform_summary(*args, **kwargs):
-        return [
-            group_client_api.EFormSummary(eformId=12345, eformType=EformTypes.OTHER_LEAVES),
-        ]
+        return [group_client_api.EFormSummary(eformId=12345, eformType=EformTypes.OTHER_LEAVES)]
 
     mock_client = massgov.pfml.fineos.mock_client.MockFINEOSClient()
     mock_client.get_eform = mock_eform
@@ -1308,9 +1304,7 @@ def mock_fineos_other_leaves_v2_accrued_leave_different_employer_eform():
 @pytest.fixture
 def mock_fineos_other_income_v1_eform():
     def mock_eform_summary(*args, **kwargs):
-        return [
-            group_client_api.EFormSummary(eformId=12345, eformType=EformTypes.OTHER_INCOME),
-        ]
+        return [group_client_api.EFormSummary(eformId=12345, eformType=EformTypes.OTHER_INCOME)]
 
     def mock_get_eform(*args, **kwargs):
         return group_client_api.EForm(
@@ -1716,10 +1710,10 @@ def test_computed_start_dates_for_absence_with_no_reason():
                     "period": {
                         "startDate": "2021-01-01",
                         "endDate": "2021-01-31",
-                        "leaveRequest": {"reasonName": None,},
-                    },
+                        "leaveRequest": {"reasonName": None},
+                    }
                 }
-            ],
+            ]
         }
     )
     computed_start_dates = _get_computed_start_dates(period_decisions.dict())
@@ -1742,10 +1736,10 @@ def test_computed_start_dates_for_caring_leave_with_prior_year_after_launch():
                     "period": {
                         "startDate": "2022-07-30",
                         "endDate": "2021-01-31",
-                        "leaveRequest": {"reasonName": "Care for a Family Member",},
-                    },
+                        "leaveRequest": {"reasonName": "Care for a Family Member"},
+                    }
                 }
-            ],
+            ]
         }
     )
     computed_start_dates = _get_computed_start_dates(period_decisions.dict())
@@ -1832,7 +1826,7 @@ def test_get_claim_eform_type_contains_neither_version(mock_fineos_period_decisi
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.build()
     leave_details, _, _ = get_claim_as_leave_admin(
-        fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions,
+        fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions
     )
     assert leave_details.uses_second_eform_version is True
 
@@ -1845,9 +1839,7 @@ def test_get_claim_other_income_eform_type_contains_both_versions():
     )
     employer = EmployerFactory.build()
     with pytest.raises(ContainsV1AndV2Eforms):
-        get_claim_as_leave_admin(
-            fineos_user_id, absence_id, employer, fineos_client=client,
-        )
+        get_claim_as_leave_admin(fineos_user_id, absence_id, employer, fineos_client=client)
 
 
 def test_get_claim_other_leaves_v2_eform(mock_fineos_other_leaves_v2_eform):
@@ -1855,7 +1847,7 @@ def test_get_claim_other_leaves_v2_eform(mock_fineos_other_leaves_v2_eform):
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.build()
     leave_details, _, _ = get_claim_as_leave_admin(
-        fineos_user_id, absence_id, employer, fineos_client=mock_fineos_other_leaves_v2_eform,
+        fineos_user_id, absence_id, employer, fineos_client=mock_fineos_other_leaves_v2_eform
     )
 
     assert leave_details.uses_second_eform_version is True
@@ -1964,7 +1956,7 @@ def test_get_claim_other_income(mock_fineos_other_income_v1_eform):
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.build()
     leave_details, _, _ = get_claim_as_leave_admin(
-        fineos_user_id, absence_id, employer, fineos_client=mock_fineos_other_income_v1_eform,
+        fineos_user_id, absence_id, employer, fineos_client=mock_fineos_other_income_v1_eform
     )
     assert leave_details.date_of_birth == "****-12-25"
     assert len(leave_details.employer_benefits) == 1

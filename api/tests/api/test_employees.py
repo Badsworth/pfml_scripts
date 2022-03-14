@@ -36,7 +36,7 @@ def employee_different_fineos_name():
 
 def test_employees_get_snow_user_allowed(client, employee, snow_user_headers):
     response = client.get(
-        "/v1/employees/{}".format(employee.employee_id), headers=snow_user_headers,
+        "/v1/employees/{}".format(employee.employee_id), headers=snow_user_headers
     )
 
     assert response.status_code == 200
@@ -44,7 +44,7 @@ def test_employees_get_snow_user_allowed(client, employee, snow_user_headers):
 
 def test_employees_get_e164_phone_number(client, employee, snow_user_headers):
     response = client.get(
-        "/v1/employees/{}".format(employee.employee_id), headers=snow_user_headers,
+        "/v1/employees/{}".format(employee.employee_id), headers=snow_user_headers
     )
     response_data = response.get_json().get("data")
 
@@ -64,8 +64,7 @@ def test_employees_get_snow_user_requires_agent_id(client, employee, snow_user_t
 
 def test_employess_get_invalid_employee(client, employee, snow_user_headers):
     response = client.get(
-        "/v1/employees/{}".format("9e243bae-3b1e-43a4-aafe-aca3c6517cf0"),
-        headers=snow_user_headers,
+        "/v1/employees/{}".format("9e243bae-3b1e-43a4-aafe-aca3c6517cf0"), headers=snow_user_headers
     )
     tests.api.validate_error_response(response, 404)
 
@@ -73,7 +72,7 @@ def test_employess_get_invalid_employee(client, employee, snow_user_headers):
 def test_employees_get_nonsnow_forbidden(client, employee, consented_user_token):
     response = client.get(
         "/v1/employees/{}".format(employee.employee_id),
-        headers={"Authorization": "Bearer {}".format(consented_user_token),},
+        headers={"Authorization": "Bearer {}".format(consented_user_token)},
     )
 
     assert response.status_code == 403
@@ -108,11 +107,11 @@ def test_employees_get_fineos_user_forbidden(client, employee, fineos_user_token
     assert response.status_code == 403
 
 
-def test_employees_search_nonsnow_forbidden(client, employee, consented_user_token):
-    terms = {
-        "first_name": employee.first_name,
-        "last_name": employee.last_name,
-    }
+def test_employees_search_nonsnow_forbidden(client, consented_user_token):
+    employee = EmployeeFactory.create(
+        first_name="John", last_name="Smith", email_address="test@example.com"
+    )
+    terms = {"first_name": employee.first_name, "last_name": employee.last_name}
     body = {"terms": terms}
     response = client.post(
         "/v1/employees/search",
@@ -125,15 +124,20 @@ def test_employees_search_nonsnow_forbidden(client, employee, consented_user_tok
     assert response.status_code == 403
 
 
-def test_employees_search_snow_allowed_with_default_values(client, employee, snow_user_headers):
-    EmployeeFactory.create(first_name=employee.first_name)
-    EmployeeFactory.create(last_name=employee.last_name)
-    terms = {
-        "first_name": employee.first_name,
-        "last_name": employee.last_name,
-    }
+def test_employees_search_snow_allowed_with_default_values(client, snow_user_headers):
+    employee = EmployeeFactory.create(
+        first_name="John", last_name="Smith", email_address="test@example.com"
+    )
+
+    EmployeeFactory.create(
+        first_name=employee.first_name, last_name="Black", email_address="test@example.com"
+    )
+    EmployeeFactory.create(
+        first_name="Black", last_name=employee.last_name, email_address="test@example.com"
+    )
+    terms = {"first_name": employee.first_name, "last_name": employee.last_name}
     body = {"terms": terms}
-    response = client.post("/v1/employees/search", json=body, headers=snow_user_headers,)
+    response = client.post("/v1/employees/search", json=body, headers=snow_user_headers)
 
     assert_employee_search_response_data(response, [employee])
 
@@ -141,21 +145,22 @@ def test_employees_search_snow_allowed_with_default_values(client, employee, sno
     assert_employee_search_response_paging_data(data)
 
 
-def test_employees_search_snow_allowed(client, employee, snow_user_headers):
+def test_employees_search_snow_allowed(client, snow_user_headers):
+    employee = EmployeeFactory.create(
+        first_name="John", last_name="Smith", email_address="test@example.com"
+    )
+
     EmployeeFactory.create(first_name=employee.first_name)
     EmployeeFactory.create(last_name=employee.last_name)
     employee_2 = EmployeeFactory.create(
         first_name=employee.first_name, last_name=employee.last_name
     )
-    terms = {
-        "first_name": employee.first_name,
-        "last_name": employee.last_name,
-    }
+    terms = {"first_name": employee.first_name, "last_name": employee.last_name}
     order = {"by": "created_at", "direction": "ascending"}
     paging = {"offset": 1, "size": 5}
 
     body = {"terms": terms, "order": order, "paging": paging}
-    response = client.post("/v1/employees/search", json=body, headers=snow_user_headers,)
+    response = client.post("/v1/employees/search", json=body, headers=snow_user_headers)
 
     assert_employee_search_response_data(response, [employee, employee_2])
 
@@ -164,26 +169,24 @@ def test_employees_search_snow_allowed(client, employee, snow_user_headers):
     assert_employee_search_response_paging_data(data, paging)
 
 
-def test_employees_search_name_requirement(client, employee, snow_user_headers):
-    terms_1 = {
-        "first_name": employee.first_name,
-    }
+def test_employees_search_name_requirement(client, snow_user_headers):
+    employee = EmployeeFactory.create(
+        first_name="John", last_name="Smith", email_address="test@example.com"
+    )
+
+    terms_1 = {"first_name": employee.first_name}
     body_1 = {"terms": terms_1}
-    terms_2 = {
-        "last_name": employee.last_name,
-    }
+    terms_2 = {"last_name": employee.last_name}
     body_2 = {"terms": terms_2}
-    terms_3 = {
-        "email_address": "ac",
-    }
+    terms_3 = {"email_address": "ac"}
     body_3 = {"terms": terms_3}
     terms_4 = {"first_name": "a", "last_name": "1"}
     body_4 = {"terms": terms_4}
 
-    response_1 = client.post("/v1/employees/search", json=body_1, headers=snow_user_headers,)
-    response_2 = client.post("/v1/employees/search", json=body_2, headers=snow_user_headers,)
-    response_3 = client.post("/v1/employees/search", json=body_3, headers=snow_user_headers,)
-    response_4 = client.post("/v1/employees/search", json=body_4, headers=snow_user_headers,)
+    response_1 = client.post("/v1/employees/search", json=body_1, headers=snow_user_headers)
+    response_2 = client.post("/v1/employees/search", json=body_2, headers=snow_user_headers)
+    response_3 = client.post("/v1/employees/search", json=body_3, headers=snow_user_headers)
+    response_4 = client.post("/v1/employees/search", json=body_4, headers=snow_user_headers)
 
     assert response_1.status_code == 400
     assert response_2.status_code == 400
@@ -192,10 +195,10 @@ def test_employees_search_name_requirement(client, employee, snow_user_headers):
 
 
 def test_employees_search_nonexisting_employee(client, snow_user_headers):
-    EmployeeFactory.create(first_name="Jar", last_name="binks")
+    EmployeeFactory.create(first_name="Jar", last_name="binks", email_address="test@example.com")
     terms = {"first_name": "JarJar", "last_name": "Binks"}
     body = {"terms": terms}
-    response = client.post("/v1/employees/search", json=body, headers=snow_user_headers,)
+    response = client.post("/v1/employees/search", json=body, headers=snow_user_headers)
 
     assert_employee_search_response_data(response, [])
 
@@ -204,13 +207,10 @@ def test_employees_search_nonexisting_employee(client, snow_user_headers):
 
 
 def test_employees_search_wildcard_rejects_invalid(client, snow_user_headers):
-    employee_1 = EmployeeFactory(first_name="Bob")
+    employee_1 = EmployeeFactory(first_name="Bob", last_name="Black")
     EmployeeFactory(first_name="Bobby", last_name=employee_1.last_name)
 
-    terms = {
-        "first_name": "Bob%",
-        "last_name": employee_1.last_name,
-    }
+    terms = {"first_name": "Bob%", "last_name": employee_1.last_name}
 
     response = client.post("/v1/employees/search", json={"terms": terms}, headers=snow_user_headers)
 
@@ -225,17 +225,14 @@ def test_employees_search_wildcard_rejects_invalid(client, snow_user_headers):
 
 
 def test_employees_search_wildcard_name(client, snow_user_headers):
-    employee_1 = EmployeeFactory(first_name="Bob")
+    employee_1 = EmployeeFactory(first_name="Bob", last_name="Smith")
     employee_2 = EmployeeFactory(first_name="Bobby", last_name=employee_1.last_name)
     # different first name, same last name
     EmployeeFactory(first_name="Jane", last_name=employee_1.last_name)
     # different first and last name
     EmployeeFactory(first_name="Joe")
 
-    terms = {
-        "first_name": "Bob",
-        "last_name": employee_1.last_name,
-    }
+    terms = {"first_name": "Bob", "last_name": employee_1.last_name}
 
     response = client.post("/v1/employees/search", json={"terms": terms}, headers=snow_user_headers)
 
@@ -248,9 +245,7 @@ def test_employees_search_wildcard_name(client, snow_user_headers):
 def test_employees_search_with_phone_number(client, snow_user_headers):
     employee_1 = EmployeeFactory(cell_phone_number="+12247052345")
     EmployeeFactory(first_name=employee_1.first_name)
-    terms = {
-        "phone_number": employee_1.cell_phone_number,
-    }
+    terms = {"phone_number": employee_1.cell_phone_number}
 
     response = client.post("/v1/employees/search", json={"terms": terms}, headers=snow_user_headers)
 
@@ -262,9 +257,7 @@ def test_employees_search_with_phone_number(client, snow_user_headers):
 def test_employees_search_with_fineos_customer_number(client, snow_user_headers):
     employee_1 = EmployeeFactory(fineos_customer_number="111111")
     EmployeeFactory(first_name=employee_1.first_name)
-    terms = {
-        "fineos_customer_number": employee_1.fineos_customer_number,
-    }
+    terms = {"fineos_customer_number": employee_1.fineos_customer_number}
 
     response = client.post("/v1/employees/search", json={"terms": terms}, headers=snow_user_headers)
 
@@ -275,11 +268,9 @@ def test_employees_search_with_fineos_customer_number(client, snow_user_headers)
 
 
 def test_employees_search_with_email_address(client, snow_user_headers):
-    employee_1 = EmployeeFactory(email_address="test@example.com")
+    employee_1 = EmployeeFactory(first_name="Will", email_address="test@example.com")
     EmployeeFactory(first_name=employee_1.first_name)
-    terms = {
-        "email_address": employee_1.email_address,
-    }
+    terms = {"email_address": employee_1.email_address}
 
     response = client.post("/v1/employees/search", json={"terms": terms}, headers=snow_user_headers)
 
@@ -308,11 +299,7 @@ def test_employees_search(client, snow_user_headers):
     )
     EmployeeFactory(first_name="Will")
 
-    terms = {
-        "first_name": "will",
-        "last_name": "Smith",
-        "phone_number": "+12247052345",
-    }
+    terms = {"first_name": "will", "last_name": "Smith", "phone_number": "+12247052345"}
     order = {"by": "created_at", "direction": "descending"}
     paging = {"size": 5}
 
@@ -329,7 +316,7 @@ def test_employees_search(client, snow_user_headers):
 
 def test_get_employee_basic_response(client, employee_different_fineos_name, snow_user_headers):
     response = client.get(
-        f"/v1/employees/{employee_different_fineos_name.employee_id}", headers=snow_user_headers,
+        f"/v1/employees/{employee_different_fineos_name.employee_id}", headers=snow_user_headers
     )
 
     assert response.status_code == 200
@@ -357,7 +344,7 @@ def test_employee_for_pfml_crm_response(client, employee, snow_user_headers, use
 
     address = AddressFactory.create()
     employee.employee_addresses = [
-        EmployeeAddress(employee_id=employee.employee_id, address_id=address.address_id,)
+        EmployeeAddress(employee_id=employee.employee_id, address_id=address.address_id)
     ]
 
     test_db_session.commit()
@@ -365,7 +352,7 @@ def test_employee_for_pfml_crm_response(client, employee, snow_user_headers, use
     ApplicationFactory.create(user=user)
     test_db_session.commit()
 
-    response = client.get(f"/v1/employees/{employee.employee_id}", headers=snow_user_headers,)
+    response = client.get(f"/v1/employees/{employee.employee_id}", headers=snow_user_headers)
 
     assert response.status_code == 200
     response_body = response.get_json()
@@ -382,12 +369,12 @@ def test_employee_with_claims_no_id_proof(
     employer = EmployerFactory.create()
     employee = EmployeeFactory.create()
 
-    claim = ClaimFactory.create(employer=employer, employee=employee,)
+    claim = ClaimFactory.create(employer=employer, employee=employee)
 
     ApplicationFactory.create(user=user, claim=claim, mass_id="123456789")
     test_db_session.commit()
 
-    response = client.get(f"/v1/employees/{employee.employee_id}", headers=snow_user_headers,)
+    response = client.get(f"/v1/employees/{employee.employee_id}", headers=snow_user_headers)
 
     assert response.status_code == 200
     response_body = response.get_json()
@@ -401,7 +388,7 @@ def test_employee_empty_mass_id(client, employee, snow_user_headers, user, test_
     ApplicationFactory.create(user=user)
     test_db_session.commit()
 
-    response = client.get(f"/v1/employees/{employee.employee_id}", headers=snow_user_headers,)
+    response = client.get(f"/v1/employees/{employee.employee_id}", headers=snow_user_headers)
 
     assert response.status_code == 200
     response_body = response.get_json()
@@ -415,7 +402,7 @@ def test_employee_get_mass_id(client, employee, snow_user_headers, user, test_db
     employee = EmployeeFactory.create()
 
     claim = ClaimFactory.create(
-        employer=employer, employee=employee, is_id_proofed=True, created_at=date(2020, 1, 1),
+        employer=employer, employee=employee, is_id_proofed=True, created_at=date(2020, 1, 1)
     )
 
     claim2 = ClaimFactory.create(
@@ -431,7 +418,7 @@ def test_employee_get_mass_id(client, employee, snow_user_headers, user, test_db
     ApplicationFactory.create(user=user, claim=claim2, mass_id="012345678")
     test_db_session.commit()
 
-    response = client.get(f"/v1/employees/{employee.employee_id}", headers=snow_user_headers,)
+    response = client.get(f"/v1/employees/{employee.employee_id}", headers=snow_user_headers)
 
     assert response.status_code == 200
     response_body = response.get_json()

@@ -18,11 +18,9 @@
   padding: 0;
 }
 
-.tooltip__trigger::before {
-  @include IconFontProps;
+.tooltip__trigger-icon {
   color: $Color-GraniteGray-300;
-  content: $IconInfo;
-  font-size: 1.16em;
+  width: 1.46em;
 }
 
 .tooltip__container {

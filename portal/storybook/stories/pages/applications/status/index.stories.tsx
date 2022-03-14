@@ -22,13 +22,15 @@ import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 function getDocuments({
   requestDecision,
   shouldIncludeRfiDocument,
+  shouldIncludeApprovalNotice,
 }: {
   requestDecision: AbsencePeriodRequestDecisionEnum;
   shouldIncludeRfiDocument: boolean;
+  shouldIncludeApprovalNotice: boolean;
 }) {
   const documents = [];
 
-  if (requestDecision === "Approved") {
+  if (requestDecision === "Approved" && shouldIncludeApprovalNotice) {
     documents.push(generateNotice("approvalNotice"));
   } else if (requestDecision === "Denied") {
     documents.push(generateNotice("denialNotice"));
@@ -49,9 +51,11 @@ export default {
   component: Status,
   args: {
     "Has payments": true,
-    "Leave scenario": Object.keys(leaveScenarioMap)[0],
+    "Has approval notice": true,
+    "Leave scenario": "Medical (illness)",
     "Request decision": requestTypes[0],
     "Show request for more information": false,
+    "Show holiday alert": false,
   },
   argTypes: {
     "Has payments": {
@@ -77,7 +81,17 @@ export default {
         options: requestTypes,
       },
     },
+    "Has approval notice": {
+      control: {
+        type: "boolean",
+      },
+    },
     "Show request for more information": {
+      control: {
+        type: "boolean",
+      },
+    },
+    "Show holiday alert": {
       control: {
         type: "boolean",
       },
@@ -88,14 +102,18 @@ export default {
 export const DefaultStory = (
   args: Props<typeof Status> & {
     "Has payments": boolean;
+    "Has approval notice": true;
     "Leave scenario": keyof typeof leaveScenarioMap;
     "Leave type": AbsencePeriodTypes;
     "Request decision": AbsencePeriodRequestDecisionEnum;
     "Show request for more information": boolean;
+    "Show holiday alert": boolean;
   }
 ) => {
   const requestDecision = args["Request decision"];
   const shouldIncludeRfiDocument = args["Show request for more information"];
+  const shouldShowHolidayAlert = args["Show holiday alert"];
+  const shouldIncludeApprovalNotice = args["Has approval notice"];
 
   const claimDetail = createMockClaimDetail({
     leaveScenario: args["Leave scenario"],
@@ -109,9 +127,19 @@ export const DefaultStory = (
       isLoadingClaimDetail: false,
     },
     documents: {
-      documents: getDocuments({ requestDecision, shouldIncludeRfiDocument }),
+      documents: getDocuments({
+        requestDecision,
+        shouldIncludeRfiDocument,
+        shouldIncludeApprovalNotice,
+      }),
       hasLoadedClaimDocuments: () => true,
       loadAll: () => new Promise(() => {}),
+    },
+    holidays: {
+      loadHolidays: () => new Promise(() => {}),
+      holidays: shouldShowHolidayAlert
+        ? [{ name: "Memorial Day", date: "2022-05-30" }]
+        : [],
     },
     payments: {
       loadPayments: () => new Promise(() => {}),

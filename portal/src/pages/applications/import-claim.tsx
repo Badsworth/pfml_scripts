@@ -74,14 +74,19 @@ export const ImportClaim = (props: WithUserProps) => {
    */
   const { formState, updateFields } = useFormState(initialFormState);
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: props.appLogic.appErrors,
+    errors: props.appLogic.errors,
     formState,
     updateFields,
   });
 
   const handleSubmit = async () => {
-    // TODO (PORTAL-264): Remove the type assertion once we're able to tell useFormState what type to expect
-    await props.appLogic.benefitsApplications.associate(formState as FormState);
+    // Reset so that this newly associated application is listed
+    props.appLogic.benefitsApplications.invalidateApplicationsCache();
+
+    await props.appLogic.applicationImports.associate(
+      // TODO (PORTAL-264): Remove the type assertion once we're able to tell useFormState what type to expect
+      formState as FormState
+    );
   };
 
   /**

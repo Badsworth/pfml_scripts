@@ -10,13 +10,19 @@ DOCKER_REPO ?= pfml-api
 DOCKER_PDF_REPO ?= pfml-pdf-api
 DOCKER_REGISTRY ?= 498823821309.dkr.ecr.us-east-1.amazonaws.com
 
-# Generate a unique tag based solely on the git hash.
-# This will be the identifier used for deployment via terraform.
-IMAGE_TAG := $(shell git rev-parse HEAD)
-
 # Generate an informational tag so we can see where every image comes from.
 DATE := $(shell date -u '+%Y%m%d.%H%M%S')
 INFO_TAG := $(DATE).$(USER)
+
+GIT_REPO_AVAILABLE := $(shell git rev-parse --is-inside-work-tree 2>/dev/null)
+
+# Generate a unique tag based solely on the git hash.
+# This will be the identifier used for deployment via terraform.
+ifdef GIT_REPO_AVAILABLE
+IMAGE_TAG := $(shell git rev-parse HEAD)
+else
+IMAGE_TAG := "uknown-dev.$(DATE)"
+endif
 
 # Use -T to avoid making a pseudo-TTY, since docker-compose makes a real TTY by
 # default. -T is needed for Github Actions to work properly with its version of
@@ -99,9 +105,6 @@ clean-docker: ## Remove project docker artifacts (which includes the DB)
 
 clean-docker-volumes: ## Remove project docker volumes (which includes the DB state)
 	docker-compose down --volumes
-
-clean-node: ## Remove project Node.js modules
-	rm -rf node_modules
 
 clean-venv: ## Remove active poetry virtualenv
 	rm -rf $(shell poetry env info --path)
@@ -214,9 +217,6 @@ pub-payments-process-snapshot:
 pub-payments-mock-generate:
 	$(PY_RUN_CMD)  pub-payments-mock-generate $(DECODE_LOG)
 
-pub-payments-process-mmars-payments:
-	$(PY_RUN_CMD)  pub-payments-process-mmars-payments $(DECODE_LOG)
-
 pub-payments-process-1099-documents:
 	$(PY_RUN_CMD) pub-payments-process-1099-documents --steps ALL $(DECODE_LOG)
 
@@ -240,7 +240,7 @@ ecr-login: ## Login to ECR for Docker
 	aws ecr get-login-password --region 'us-east-1' | \
 	docker login --username AWS --password-stdin 498823821309.dkr.ecr.us-east-1.amazonaws.com
 
-pre-commit: 
+pre-commit:
 	$(PY_RUN_CMD) isort --atomic --apply $(args)
 	$(PY_RUN_CMD) black $(args)
 ifdef flake_args
@@ -261,12 +261,12 @@ format-check: ## Check format of code
 # Allow command to be run with max={num}, where {num} is the number of recent commits to include.
 # e.g. max=0 is only 'dirty' file changes, max=1 includes changes from the latest commit.
 format-changed: max := 0
-format-changed: FILES := $(shell { \
+format-changed: FILES := $(shell [ "$(GIT_REPO_AVAILABLE)" = "true" ] && { \
 	git diff --name-only --relative HEAD~$(max); \
 	git diff --name-only --staged --relative HEAD~$(max); \
 	git ls-files --other --exclude-standard HEAD~$(max);} | \
 	grep \\.py | uniq)
-format-changed: ## Format changed files
+format-changed: ## Format changed files, $max var determines number of commits to compare
 	$(PY_RUN_CMD) isort --atomic --apply $(FILES)
 	$(PY_RUN_CMD) black $(FILES)
 
@@ -294,21 +294,21 @@ ifdef CI
  FLAKE8_FORMAT := '::warning file=api/%(path)s,line=%(row)d,col=%(col)d::%(path)s:%(row)d:%(col)d: %(code)s %(text)s'
  MYPY_FLAGS := --no-pretty
  MYPY_POSTPROC := | perl -pe "s/^(.+):(\d+):(\d+): error: (.*)/::warning file=api\/\1,line=\2,col=\3::\4/"
+ SPECTRAL_POSTPROC := --format=text | perl -pe "s/^\/tmp\/(.+):(\d+):(\d+) (error|warning) (.*)/::warning file=api\/\1,line=\2,col=\3::\4 \5/"
 else
  FLAKE8_FORMAT := default
 endif
 
 lint-changed: max := 0
-lint-changed: FILES := $(shell { \
+lint-changed: FILES := $(shell [ "$(GIT_REPO_AVAILABLE)" = "true" ] && { \
 	git diff --name-only --relative HEAD~$(max); \
 	git diff --name-only --staged --relative HEAD~$(max); \
 	git ls-files --other --exclude-standard HEAD~$(max);} | \
-	grep '^[massgov|tests|bin].*\.py' | sort -u )
-lint-changed: FILES_MYPY := $(shell echo $(FILES) | tr " " "\n" | grep '^[massgov|bin]' | sort -t\\n -u -k1,1)
-lint-changed: 
-	$(PY_RUN_CMD) flake8 --format=$(FLAKE8_FORMAT) $(FILES) 
+	grep -E '^(massgov|tests|bin)/.*\.py' | sort -u)
+lint-changed: FILES_MYPY := $(shell echo $(FILES) | tr " " "\n" | grep -E '^(massgov|bin)/')
+lint-changed: ## Lint changed files, $max var determines number of commits to compare
+	$(PY_RUN_CMD) flake8 --format=$(FLAKE8_FORMAT) $(FILES)
 	$(PY_RUN_CMD) mypy $(MYPY_FLAGS) $(FILES_MYPY) $(MYPY_POSTPROC)
-	
 
 lint: ## Run linting
 lint: lint-spectral lint-py db-check-model-parity
@@ -330,7 +330,7 @@ lint-security: ## Run security linting
 
 lint-spectral: ## Run OpenAPI Spec linting
 	docker run --rm --tty --cap-drop=ALL --network=none --read-only --volume=$(PWD):/tmp:ro \
-           stoplight/spectral:6 lint /tmp/$(OPEN_API_PATH) --ruleset /tmp/.spectral.yaml
+           stoplight/spectral:6 lint /tmp/$(OPEN_API_PATH) --ruleset /tmp/.spectral.yaml $(SPECTRAL_POSTPROC)
 
 login: start ## Start shell in running container
 	docker exec -it $(APP_NAME) bash
@@ -371,7 +371,7 @@ start: jwks.json
 	docker-compose up --detach
 
 start-local: ## Start all containers using a cognito instance, in order to match local-to-local development with portal
-start-local: 
+start-local:
 	docker-compose --env-file .env.local up --detach
 
 start-db: ## Start DB container
@@ -613,6 +613,7 @@ help: ## Displays this help screen
 	@echo "APP_NAME=$(APP_NAME)"
 	@echo "INFO_TAG=$(INFO_TAG)"
 	@echo "RUN_CMD_OPT=$(RUN_CMD_OPT)"
+	@echo "GIT_REPO_AVAILABLE=$(GIT_REPO_AVAILABLE)"
 	@echo "IMAGE_TAG=$(IMAGE_TAG)"
 	@echo "RUN_UID=$(RUN_UID)"
 	@echo "RUN_USER=$(RUN_USER)"

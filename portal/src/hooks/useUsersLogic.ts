@@ -5,21 +5,22 @@ import {
 } from "src/services/mfa";
 import routes, { isApplicationsRoute, isEmployersRoute } from "../routes";
 import { useMemo, useState } from "react";
-import { AppErrorsLogic } from "./useAppErrorsLogic";
+import { ErrorsLogic } from "./useErrorsLogic";
 import { PortalFlow } from "./usePortalFlow";
 import RolesApi from "../api/RolesApi";
 import User from "../models/User";
 import UsersApi from "../api/UsersApi";
+import { isFeatureEnabled } from "../services/featureFlags";
 
 /**
  * Hook that defines user state
  */
 const useUsersLogic = ({
-  appErrorsLogic,
+  errorsLogic,
   isLoggedIn,
   portalFlow,
 }: {
-  appErrorsLogic: AppErrorsLogic;
+  errorsLogic: ErrorsLogic;
   isLoggedIn: boolean;
   portalFlow: PortalFlow;
 }) => {
@@ -36,7 +37,7 @@ const useUsersLogic = ({
     user_id: User["user_id"],
     patchData: Partial<User>
   ) => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
       // Extract mfa related pieces
@@ -47,9 +48,15 @@ const useUsersLogic = ({
       }
       // Get api validation errors and update the user
       const { user } = await usersApi.updateUser(user_id, patchData);
-      // Update Cognito
-      if (mfa_delivery_preference)
+
+      // Update Cognito unless the API will be doing that synchronization
+      // todo (PORTAL-1828): Remove claimantSyncCognitoPreferences feature flag
+      if (
+        mfa_delivery_preference &&
+        !isFeatureEnabled("claimantSyncCognitoPreferences")
+      ) {
         await setMFAPreference(mfa_delivery_preference);
+      }
       if (mfa_phone_number?.phone_number)
         await updateMFAPhoneNumber(mfa_phone_number.phone_number);
       // Change internal state
@@ -57,7 +64,7 @@ const useUsersLogic = ({
       // Return the user only if the update did not throw any errors
       return user;
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 
@@ -72,12 +79,12 @@ const useUsersLogic = ({
     // Caching logic: if user has already been loaded, just reuse the cached user
     if (user) return;
 
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
     try {
       const { user } = await usersApi.getCurrentUser();
       setUser(user);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 
@@ -130,7 +137,7 @@ const useUsersLogic = ({
     user_id: User["user_id"],
     postData: { employer_fein: string }
   ) => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
       const { user } = await usersApi.convertUserToEmployer(user_id, postData);
@@ -143,7 +150,7 @@ const useUsersLogic = ({
       );
       setUser(user);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 
@@ -153,7 +160,7 @@ const useUsersLogic = ({
    * @param postData - User fields to update - role and leave admin
    */
   const convertUserToEmployee = async (user_id: User["user_id"]) => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
       await rolesApi.deleteEmployerRole(user_id);
@@ -167,7 +174,7 @@ const useUsersLogic = ({
       );
       setUser(user);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 

@@ -207,7 +207,7 @@ output "slackbot_channels" {
 }
 
 output "bucket_replication_environment" {
-  value = "test"
+  value = "prod"
 }
 
 # Env Var mappings for ECS Tasks
@@ -237,12 +237,62 @@ output "admin_portal_waf_whitelist" {
     "68.204.24.240/32",  # Last Call Media WFH IP - Tyler
     "68.84.12.117/32",   # Last Call Media WFH IP - Niki Ramlogan
     "71.227.169.195/32", # Last Call Media WFH IP - Jessi Murray
+    "73.39.112.119/32",  # Last Call Media WFH IP - Jim Ruggiero
+    "73.47.218.158/32",  # Chris Griffith WFH
     "47.200.176.201/32", # Ben WFH
     "47.199.161.99/32",  # Jamie WFH
     "76.202.246.67/32",  # Mark WFH
     "70.122.162.186/32", # Jake WFH
     "35.174.218.119/32", # PFML nat-0e7778fcf7a7fc067
     "3.234.51.136/32"    # PFML nat-022bece54348228b5
+  ]
+}
+
+# High risk country codes to block on WAFs
+output "high_risk_country_codes" {
+  value = [
+    "AF", # Afghanistan
+    "DZ", # Algeria
+    "BY", # Belarus
+    "BI", # Burundi
+    "CM", # Cameroon
+    "CF", # Central African Republic
+    "TD", # Chad
+    "CN", # China
+    "CO", # Colombia
+    "CD", # Democratic Republic of the Congo
+    "CU", # Cuba
+    "EG", # Egypt
+    "SV", # El Savador
+    "ER", # Eritrea
+    "HT", # Haiti
+    "HN", # Honduras
+    "HK", # Hong Kong
+    "IR", # Iran
+    "IQ", # Iraq
+    "IL", # Israel
+    "KE", # Kenya
+    "KP", # Korea (the Democratic People's Republic of)
+    "LB", # Lebanon
+    "LY", # Libya
+    "ML", # Mali
+    "MR", # Mauritania
+    "MX", # Mexico
+    "MM", # Myanmar 
+    "NE", # Niger
+    "NG", # Nigeria
+    "PK", # Pakistan
+    "PH", # Philippines
+    "RU", # Russia
+    "SA", # Saudi Arabia
+    "SO", # Somalia
+    "SS", # South Sudan
+    "SY", # Syria
+    "TH", # Thailand
+    "UA", # Ukraine
+    "VE", # Venezuela
+    "YE", # Yemen
+    "ZW", # Zimbabwe 
   ]
 }
 
@@ -277,4 +327,21 @@ output "newrelic_account_id" {
 output "newrelic_trusted_account_key" {
   description = "EOLWD's New Relic parent account number"
   value       = "1606654"
+}
+
+#
+# Import manually created s3 buckets for management in s3.tf
+#
+output "import_buckets" {
+  value = [
+    "aws-glue-assets-498823821309-us-east-1",
+    "aws-glue-scripts-498823821309-us-east-1",
+    "aws-glue-temporary-498823821309-us-east-1",
+    "massgov-pfml-demo-business-intelligence-tool",
+    "cf-templates-rvbkfcj4nho2-us-east-1",
+    "config-bucket-498823821309",
+    "test-eotss-aws-cloudopsteam-config-tags",
+    "smx-pfml-test-db-testing",
+    "massgov-pfml-test-experian-soap"
+  ]
 }

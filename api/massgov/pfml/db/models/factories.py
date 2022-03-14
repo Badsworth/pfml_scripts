@@ -62,6 +62,7 @@ Session = scoped_session(lambda: get_db_session(), scopefunc=lambda: get_db_sess
 
 class Generators:
     AccountKey = factory.Sequence(lambda n: "%011d" % n)
+    EmailAddress = factory.Sequence(lambda n: f"example-{n}@example.com")
     Tin = factory.LazyFunction(lambda: fake.ssn().replace("-", ""))
     Fein = Tin
     Money = factory.LazyFunction(lambda: Decimal(round(random.uniform(0, 50000), 2)))
@@ -108,7 +109,7 @@ class AzureUserFactory(factory.Factory):
     sub_id = factory.Faker("uuid4")
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
-    email_address = factory.Faker("email")
+    email_address = Generators.EmailAddress
     groups = fake.pylist(3, True, "uuid4")
     permissions = fake.pylist(10, True, "int")
 
@@ -119,7 +120,7 @@ class UserFactory(BaseFactory):
 
     user_id = Generators.UuidObj
     sub_id = factory.Faker("uuid4")
-    email_address = factory.Faker("email")
+    email_address = Generators.EmailAddress
 
     @factory.post_generation
     def roles(self, create, extracted, **kwargs):
@@ -491,6 +492,8 @@ class PaymentFactory(BaseFactory):
     # The I value is unique for all payments and should be a string, not an int.
     fineos_pei_i_value = factory.Sequence(lambda n: "%d" % n)
 
+    fineos_leave_request_id = factory.Faker("random_int")
+
     claim = factory.SubFactory(ClaimFactory)
     claim_id = factory.LazyAttribute(lambda a: a.claim.claim_id)
 
@@ -557,7 +560,6 @@ class ApplicationFactory(BaseFactory):
 
     application_id = Generators.UuidObj
 
-    nickname = "My leave application"
     requestor = None
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
@@ -610,6 +612,7 @@ class ApplicationFactory(BaseFactory):
         application_models.LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id
     )
     leave_reason_qualifier_id = None
+    split_from_application_id = None
 
     created_at = Generators.TransactionDateTime
     updated_at = factory.LazyAttribute(lambda a: a.created_at + timedelta(days=1))
@@ -903,7 +906,7 @@ class WorkPatternRotatingFactory(WorkPatternFixedFactory):
     work_pattern_days = factory.LazyAttribute(
         lambda w: [
             application_models.WorkPatternDay(
-                work_pattern_id=w.work_pattern_id, day_of_week_id=i % 7 + 1, minutes=8 * 60,
+                work_pattern_id=w.work_pattern_id, day_of_week_id=i % 7 + 1, minutes=8 * 60
             )
             for i in range(28)
         ]
@@ -1336,6 +1339,21 @@ class LinkSplitPaymentFactory(BaseFactory):
     related_payment_id = factory.LazyAttribute(lambda c: c.related_payment.payment_id)
 
 
+class BenefitYearFactory(BaseFactory):
+    class Meta:
+        model = employee_models.BenefitYear
+
+    employee = factory.SubFactory(EmployeeFactory)
+    employee_id = factory.LazyAttribute(lambda w: w.employee.employee_id)
+
+    start_date = date(2021, 1, 3)
+    end_date = date(2022, 1, 1)
+
+    base_period_start_date = None
+    base_period_end_date = None
+    total_wages = 0
+
+
 class Pfml1099RequestFactory(BaseFactory):
     class Meta:
         model = payment_models.Pfml1099Request
@@ -1344,3 +1362,20 @@ class Pfml1099RequestFactory(BaseFactory):
     employee_id = Generators.UuidObj
     correction_ind = factory.Faker("boolean")
     pfml_1099_batch_id = Generators.UuidObj
+
+
+class ChangeRequestFactory(BaseFactory):
+    class Meta:
+        model = employee_models.ChangeRequest
+
+    change_request_id = Generators.UuidObj
+    change_request_type_id = 1
+    claim = factory.SubFactory(ClaimFactory)
+    claim_id = factory.LazyAttribute(lambda w: w.claim.claim_id)
+    start_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 2, 1), date_end=date(2021, 2, 15)
+    )
+    end_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 2, 16), date_end=date(2021, 2, 28)
+    )
+    submitted_time = None

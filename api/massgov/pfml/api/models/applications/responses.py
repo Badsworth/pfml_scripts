@@ -25,13 +25,10 @@ from massgov.pfml.api.models.common import (
     EmployerBenefit,
     MaskedPhoneResponse,
     get_computed_start_dates,
+    get_earliest_start_date,
+    get_leave_reason,
 )
-from massgov.pfml.db.models.applications import (
-    Application,
-    ApplicationPaymentPreference,
-    Document,
-    LeaveReason,
-)
+from massgov.pfml.db.models.applications import Application, ApplicationPaymentPreference, Document
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import (
     FEINFormattedStr,
@@ -51,7 +48,6 @@ class ApplicationResponse(PydanticBaseModel):
     application_id: UUID4
     organization_unit_id: Optional[UUID4]
     organization_unit_selection: Optional[OrganizationUnitSelection]
-    application_nickname: Optional[str]
     tax_identifier: Optional[MaskedTaxIdFormattedStr]
     employer_fein: Optional[FEINFormattedStr]
     fineos_absence_id: Optional[str]
@@ -96,11 +92,12 @@ class ApplicationResponse(PydanticBaseModel):
     imported_from_fineos_at: Optional[datetime]
     updated_at: datetime
     computed_start_dates: Optional[ComputedStartDates]
+    split_from_application_id: Optional[UUID4]
+    split_into_application_id: Optional[UUID4]
 
     @classmethod
     def from_orm(cls, application: Application) -> "ApplicationResponse":
         application_response = super().from_orm(application)
-        application_response.application_nickname = application.nickname
         if application.mailing_address is not None:
             application_response.mailing_address = MaskedAddress.from_orm(
                 application.mailing_address
@@ -135,18 +132,8 @@ class ApplicationResponse(PydanticBaseModel):
 
 
 def _get_computed_start_dates(application: Application) -> ComputedStartDates:
-    all_leave_periods = application.all_leave_periods
-    leave_period_start_dates = [
-        leave_period.start_date for leave_period in all_leave_periods if leave_period.start_date
-    ]
-    earliest_start_date = min(leave_period_start_dates, default=None)
-
-    leave_reason = (
-        LeaveReason.get_description(application.leave_reason_id)
-        if application.leave_reason_id
-        else None
-    )
-
+    earliest_start_date = get_earliest_start_date(application)
+    leave_reason = get_leave_reason(application)
     return get_computed_start_dates(earliest_start_date, leave_reason)
 
 

@@ -42,3 +42,11 @@ def format_fein(fein: str) -> str:
 
 def format_tax_identifier(tax_identifier: str) -> str:
     return "{}-{}-{}".format(tax_identifier[:3], tax_identifier[3:5], tax_identifier[5:])
+
+
+def remove_unicode_replacement_char(text: str) -> str:
+    # This character has appeared a few times in files
+    # the payments process reads that the PI team makes.
+    # We aren't sure of the exact cause, but just replace
+    # it with a space as that appears to be the correct char.
+    return text.replace("\ufffd", " ")

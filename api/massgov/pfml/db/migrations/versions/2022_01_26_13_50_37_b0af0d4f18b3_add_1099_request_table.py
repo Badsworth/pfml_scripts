@@ -36,8 +36,8 @@ def upgrade():
         sa.Column("employee_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("correction_ind", sa.Boolean(), nullable=False),
         sa.Column("pfml_1099_batch_id", postgresql.UUID(as_uuid=True), nullable=True),
-        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"],),
-        sa.ForeignKeyConstraint(["pfml_1099_batch_id"], ["pfml_1099_batch.pfml_1099_batch_id"],),
+        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"]),
+        sa.ForeignKeyConstraint(["pfml_1099_batch_id"], ["pfml_1099_batch.pfml_1099_batch_id"]),
         sa.PrimaryKeyConstraint("pfml_1099_request_id"),
     )
     op.create_index(

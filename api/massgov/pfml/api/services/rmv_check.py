@@ -115,7 +115,7 @@ def _do_rmv_license_inquiry_request(
         rmv_check_record.api_error_code = RMVCheckApiErrorCode.FAILED_TO_BUILD_REQUEST
 
         logger.exception(
-            "Could not construct RMV API request object", extra=rmv_check_for_log(rmv_check_record),
+            "Could not construct RMV API request object", extra=rmv_check_for_log(rmv_check_record)
         )
 
         return rmv_check_record, None
@@ -129,13 +129,13 @@ def _do_rmv_license_inquiry_request(
         rmv_check_record.api_error_code = RMVCheckApiErrorCode.UNKNOWN_RMV_ISSUE
 
         logger.exception(
-            "RMV Check failed due to unknown error", extra=rmv_check_for_log(rmv_check_record),
+            "RMV Check failed due to unknown error", extra=rmv_check_for_log(rmv_check_record)
         )
     except pydantic.ValidationError:
         rmv_check_record.api_error_code = RMVCheckApiErrorCode.FAILED_TO_PARSE_RESPONSE
 
         logger.exception(
-            "Could not parse response from the RMV API", extra=rmv_check_for_log(rmv_check_record),
+            "Could not parse response from the RMV API", extra=rmv_check_for_log(rmv_check_record)
         )
     except (requests.ConnectionError, requests.Timeout):
         rmv_check_record.api_error_code = RMVCheckApiErrorCode.NETWORKING_ISSUES

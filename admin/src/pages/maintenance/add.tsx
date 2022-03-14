@@ -1,8 +1,8 @@
 import "react-datetime/css/react-datetime.css";
+
 //import { Flag, HttpError, patchFlagsByName } from "../../api";
 import {
   Field,
-  FieldArray,
   FieldHookConfig,
   Formik,
   FormikErrors,
@@ -10,14 +10,16 @@ import {
   useField,
   useFormikContext,
 } from "formik";
+import React, { useRef } from "react";
+
 import Breadcrumb from "../../components/Breadcrumb";
+import { CalendarIcon } from "@heroicons/react/outline";
 import Datetime from "react-datetime";
-import { useRouter } from "next/router";
 import { Helmet } from "react-helmet-async";
-import React from "react";
 import { StaticPropsPermissions } from "../../menus";
-import { Timezone } from "../maintenance";
+import { Timezone } from "../index";
 import moment from "moment-timezone";
+import { useRouter } from "next/router";
 
 // This is the dateTimeFormat that is rendered in the date time input element.
 // Date/times are converted to ISO8601 on save.
@@ -47,10 +49,6 @@ type FormValues = {
   start_datetime: string;
   end_use_datetime: "true" | "false" | null;
   end_datetime: string;
-  checked_page_routes: string[];
-  page_routes: string[];
-  custom_page_routes: string[];
-  custom_page_route: string;
 };
 
 const TextField = (props: { label?: string } & FieldHookConfig<string>) => {
@@ -83,6 +81,14 @@ const TextField = (props: { label?: string } & FieldHookConfig<string>) => {
 const DateTimeField = (props: FieldHookConfig<string>) => {
   const { setFieldValue } = useFormikContext<FormValues>();
   const [field, meta] = useField(props);
+  const calInput = useRef<HTMLInputElement>(null);
+
+  const calIconClick = () => {
+    if (calInput.current) {
+      calInput.current.focus();
+      calInput.current.click();
+    }
+  };
 
   // Declared as any in react-datetime.
   const renderInput = (options: any) => {
@@ -90,8 +96,13 @@ const DateTimeField = (props: FieldHookConfig<string>) => {
     // https://github.com/arqex/react-datetime/blob/7e30d6c20cd864bf8e91bc94e6c3a0ee02864d19/src/DateTime.js#L524
     return (
       <>
-        <input {...options} />
-        <i className="maintenance-configure__calendar-icon"></i>
+        <input {...options} ref={calInput} />
+        <CalendarIcon
+          className="maintenance-configure__calendar-icon"
+          aria-hidden="true"
+          tabIndex={-1}
+          onClick={calIconClick}
+        />
         {meta.error ? (
           <div className="maintenance-configure__error">{meta.error}</div>
         ) : null}
@@ -106,7 +117,6 @@ const DateTimeField = (props: FieldHookConfig<string>) => {
       dateFormat="YYYY-MM-DD"
       timeFormat="h:mmA z"
       displayTimeZone={Timezone}
-      initialViewDate={new Date()}
       renderInput={renderInput}
       value={field.value}
       inputProps={{
@@ -115,6 +125,7 @@ const DateTimeField = (props: FieldHookConfig<string>) => {
         placeholder: "Choose Date/Time",
         disabled: props.disabled,
         required: props.required,
+        readOnly: true,
       }}
       // This overwrites the onChange function from the Formik {..field}.
       onChange={(value) => {
@@ -124,31 +135,6 @@ const DateTimeField = (props: FieldHookConfig<string>) => {
         meta.error ? " maintenance-configure__input--error" : ""
       }`}
     />
-  );
-};
-
-/*
- * Error classes are added here if an error is present, but there is
- * currently no validation.
- */
-const CheckboxField = (props: { label: string } & FieldHookConfig<string>) => {
-  const [field, meta] = useField(props);
-  return (
-    <>
-      <label className="maintenance-configure__checkbox-label maintenance-configure__label">
-        <Field
-          type="checkbox"
-          {...field}
-          {...props}
-          className={`maintenance-configure__input${
-            meta.touched && meta.error
-              ? " maintenance-configure__input--error"
-              : ""
-          }`}
-        />
-        {props.label}
-      </label>
-    </>
   );
 };
 
@@ -164,32 +150,9 @@ export default function Maintenance() {
     enabled?: boolean;
   }
 
-  // The query param can be either a string (it occurs once in the URL) or
-  // array of strings (it occurs more than once).
-  const checked_page_routes = Array.isArray(router.query?.checked_page_routes)
-    ? router.query?.checked_page_routes
-    : router.query?.checked_page_routes
-    ? [router.query?.checked_page_routes?.toString()]
-    : [];
-
-  const custom_page_routes = Array.isArray(router.query?.custom_page_routes)
-    ? router.query?.custom_page_routes
-    : router.query?.custom_page_routes
-    ? [router.query?.custom_page_routes.toString()]
-    : [];
-
-  const [showAdvanced, setShowAdvanced] = React.useState(
-    !!checked_page_routes.length || !!custom_page_routes.length,
-  );
-
-  const showAdvancedOnClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setShowAdvanced(!showAdvanced);
-  };
-
   const handleCancelOnClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    router.push("/maintenance");
+    router.push("/");
   };
 
   const handleEndUseDatetimeOnClick =
@@ -214,10 +177,6 @@ export default function Maintenance() {
     start_datetime: start_datetime,
     end_use_datetime: end_use_datetime,
     end_datetime: end_datetime,
-    checked_page_routes: checked_page_routes,
-    page_routes: [],
-    custom_page_routes: custom_page_routes,
-    custom_page_route: "",
   };
 
   /*
@@ -250,25 +209,9 @@ export default function Maintenance() {
     return errors;
   };
 
-  const pageRoutesOnInvalidHandler = (e: React.FormEvent) => {
-    const element = e.target as HTMLInputElement;
-    if (element.validity.valueMissing === true) {
-      element.setCustomValidity("Please select one or more page routes.");
-    } else {
-      element.setCustomValidity("");
-    }
-  };
-
   const onSubmitHandler = async (
     values: FormValues /*{ setSubmitting, setFieldError }*/,
   ) => {
-    const custom_page_routes = values.custom_page_routes
-      .map((i) => i.trim())
-      .filter((i) => i.length > 0);
-    // Join checked and custom page routes while removing duplicates.
-    values.page_routes = Array.from(
-      new Set([...values.checked_page_routes, ...custom_page_routes]),
-    );
     const flag: Flag = {};
     // TODO is this always enabled from this page?
     flag.enabled = true;
@@ -282,7 +225,6 @@ export default function Maintenance() {
         : moment.tz(values.end_datetime, dateTimeFormat, Timezone).format();
     flag.options = {
       name: values.name,
-      page_routes: values.page_routes,
     };
     /*
     patchFlagsByName({ name: "maintenance" }, flag)
@@ -308,17 +250,17 @@ export default function Maintenance() {
     });
     */
     // Remove this push when above is uncommented.
-    router.push("/maintenance?saved=true");
+    router.push("/?saved=true");
   };
 
   return (
     <>
-      <Breadcrumb text="Back to Maintenance" href="/maintenance" />
+      <Breadcrumb text="Back to Maintenance" href="/" />
       <Helmet>
         <title>Maintenance</title>
       </Helmet>
 
-      <h1>Edit Maintenance</h1>
+      <h1>{router.query?.action || "Configure New Maintenance"}</h1>
 
       <div className="maintenance-configure">
         <div className="maintenance-configure__description">
@@ -406,118 +348,7 @@ export default function Maintenance() {
                     </label>
                   </fieldset>
                 </div>
-                {/* Transform css property, rotate + 90 or - 90*/}
-                <div className="maintenance-configure__advanced">
-                  <a
-                    className="maintenance-configure__show-advanced"
-                    onClick={showAdvancedOnClick}
-                  >
-                    Advanced
-                  </a>
 
-                  <i
-                    className={
-                      "maintenance-configure__show-advanced-icon maintenance-configure__show-advanced-icon--" +
-                      (showAdvanced ? "open" : "closed")
-                    }
-                  ></i>
-                  {showAdvanced && (
-                    <fieldset className="maintenance-configure__fieldset maintenance-configure__fieldset--advanced">
-                      <legend>
-                        Page Routes<span style={{ color: "red" }}>*</span>
-                      </legend>
-                      <CheckboxField
-                        label="Entire site"
-                        name="checked_page_routes"
-                        required={
-                          props.values.custom_page_routes.length === 0 &&
-                          props.values.checked_page_routes.length === 0
-                        }
-                        onInvalid={pageRoutesOnInvalidHandler}
-                        value="/*"
-                      />
-                      <CheckboxField
-                        label="Applications"
-                        name="checked_page_routes"
-                        value="/applications/*"
-                      />
-                      <CheckboxField
-                        label="Employers"
-                        name="checked_page_routes"
-                        value="/employers/*"
-                      />
-                      <CheckboxField
-                        label="Create-Account"
-                        name="checked_page_routes"
-                        value="/*create-account"
-                      />
-                      <CheckboxField
-                        label="Login"
-                        name="checked_page_routes"
-                        value="/login"
-                      />
-                      <FieldArray
-                        name="custom_page_routes"
-                        render={(arrayHelpers) => (
-                          <div className="maintenance-configure__containers">
-                            {props.values.custom_page_routes.length > 0 &&
-                              props.values.custom_page_routes.map(
-                                (route, index) => (
-                                  <div
-                                    key={index}
-                                    className="maintenance-configure__container"
-                                  >
-                                    <TextField
-                                      name={`route.${index}`}
-                                      value={route}
-                                      disabled
-                                      className="maintenance-configure__input"
-                                    />
-                                    <button
-                                      className="btn maintenance-configure__btn--page-route"
-                                      type="button"
-                                      onClick={() => arrayHelpers.remove(index)}
-                                    >
-                                      X
-                                    </button>
-                                  </div>
-                                ),
-                              )}
-                            <div className="maintenance-configure__container">
-                              <TextField
-                                name="custom_page_route"
-                                placeholder="Enter custom page route"
-                              />
-                              <button
-                                type="button"
-                                className="btn maintenance-configure__btn--page-route"
-                                onClick={() => {
-                                  const custom_page_route =
-                                    arrayHelpers.form.values.custom_page_route.trim();
-                                  if (custom_page_route) {
-                                    arrayHelpers.push(custom_page_route);
-                                    arrayHelpers.form.setFieldValue(
-                                      "custom_page_route",
-                                      "",
-                                    );
-                                  }
-                                }}
-                              >
-                                Add
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      />
-                      {props.errors.page_routes &&
-                        props.touched.page_routes && (
-                          <div className="input-feedback">
-                            {props.errors.page_routes}
-                          </div>
-                        )}
-                    </fieldset>
-                  )}
-                </div>
                 <fieldset className="maintenance-configure__fieldset maintenance-configure__buttons">
                   <button
                     className="maintenance-configure__btn maintenance-configure__btn--cancel btn btn--cancel"

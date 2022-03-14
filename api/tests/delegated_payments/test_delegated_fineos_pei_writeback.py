@@ -442,7 +442,7 @@ def test_process_payments_for_writeback(
 
 
 def test_process_payments_for_writeback_no_payments_ready_for_writeback(
-    fineos_pei_writeback_step, test_db_session,
+    fineos_pei_writeback_step, test_db_session
 ):
     # Create some small amount of Payments that are in a state other than the one we pick up
     # for the writeback.

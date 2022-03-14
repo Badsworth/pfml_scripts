@@ -9,8 +9,9 @@
 
 
 locals {
-  api_gateway_stage_arn  = "arn:aws:apigateway:us-east-1::/restapis/${aws_api_gateway_rest_api.pfml.id}/stages/${var.environment_name}"
-  api_gateway_deployment = "aws_api_gateway_deployment.${var.environment_name}"
+  api_gateway_stage_arn     = "arn:aws:apigateway:us-east-1::/restapis/${aws_api_gateway_rest_api.pfml.id}/stages/${var.environment_name}"
+  api_gateway_deployment    = "aws_api_gateway_deployment.${var.environment_name}"
+  kinesis_data_firehose_arn = "arn:aws:firehose:us-east-1:498823821309:deliverystream/aws-waf-logs-${var.environment_name}-kinesis-to-s3"
 }
 
 resource "aws_wafv2_web_acl" "regional_api_acl" {
@@ -100,11 +101,32 @@ resource "aws_wafv2_web_acl" "regional_api_acl" {
   }
 
   #------------------------------------------------------------------------------#
+  #                            Geo Match AWS WAF rule                            #
+  #------------------------------------------------------------------------------#
+  rule {
+    name     = "massgov-pfml-${var.environment_name}-block-high-risk-countries-rule"
+    priority = 2
+    action {
+      block {}
+    }
+    statement {
+      geo_match_statement {
+        country_codes = module.constants.high_risk_country_codes
+      }
+    }
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "massgov-pfml-${var.environment_name}-block-high-risk-countries"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  #------------------------------------------------------------------------------#
   #                      Fortinet OWASP 10 AWS WAF rule                          #
   #------------------------------------------------------------------------------#
   rule {
     name     = "mass-pfml-${var.environment_name}-fortinet-managed-rules"
-    priority = 2
+    priority = 3
 
     dynamic "override_action" {
       for_each = var.enforce_fortinet_managed_rules ? [1] : []
@@ -147,4 +169,14 @@ resource "aws_wafv2_web_acl_association" "rate_based_acl" {
   # resource_arn will need to be manually entered prior to
   resource_arn = local.api_gateway_stage_arn
   web_acl_arn  = aws_wafv2_web_acl.regional_api_acl.arn
+}
+
+#------------------------------------------------------------------------------#
+#                 Kinesis Data Firehose Logging Configuration                  #
+#------------------------------------------------------------------------------#
+
+resource "aws_wafv2_web_acl_logging_configuration" "regional_waf_logging_config" {
+  depends_on              = [aws_wafv2_web_acl.regional_api_acl]
+  log_destination_configs = [local.kinesis_data_firehose_arn]
+  resource_arn            = aws_wafv2_web_acl.regional_api_acl.arn
 }

@@ -3,6 +3,7 @@ import { portal, fineos, fineosPages } from "../../../actions";
 import { Submission } from "../../../../src/types";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { addBusinessDays, addWeeks } from "date-fns";
+import { config } from "../../../actions/common";
 
 describe("Submit medical application via the web portal: Adjudication Approval & payment checking", () => {
   const submissionTest =
@@ -76,7 +77,12 @@ describe("Submit medical application via the web portal: Adjudication Approval &
           claimPage.shouldHaveStatus("Availability", "Time Available");
           claimPage.shouldHaveStatus("Restriction", "Passed");
           claimPage.shouldHaveStatus("PlanDecision", "Accepted");
-          claimPage.approve().triggerNotice("Designation Notice");
+          if (config("HAS_APRIL_UPGRADE") === "true") {
+            claimPage.approve("Approved", true);
+          } else {
+            claimPage.approve("Approved", false);
+          }
+          claimPage.triggerNotice("Designation Notice");
         });
       });
     }

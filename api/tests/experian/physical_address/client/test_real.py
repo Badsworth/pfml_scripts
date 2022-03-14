@@ -31,7 +31,7 @@ def test_client_request_different_timeout(mock_requests_session_empty_response, 
 
     client._request("GET", "foo", timeout=timeout)
     mock_requests_session_empty_response.request.assert_called_with(
-        "GET", f"{client.config.base_url}/foo", timeout=timeout,
+        "GET", f"{client.config.base_url}/foo", timeout=timeout
     )
 
 

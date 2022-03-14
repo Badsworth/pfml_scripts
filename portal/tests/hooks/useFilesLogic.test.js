@@ -75,7 +75,13 @@ describe("useFilesLogic", () => {
       expect(error.issues).toMatchInlineSnapshot(`
         [
           {
-            "message": "We could not upload: file1. Files must be smaller than 4.5 MB.",
+            "extra": {
+              "disallowedFileNames": "file1",
+              "sizeLimit": 4.5,
+            },
+            "field": "file",
+            "namespace": "documents",
+            "type": "clientSideError_size",
           },
         ]
       `);
@@ -123,7 +129,13 @@ describe("useFilesLogic", () => {
       expect(error.issues).toMatchInlineSnapshot(`
         [
           {
-            "message": "We could not upload: file1. Files must be smaller than 10 MB.",
+            "extra": {
+              "disallowedFileNames": "file1",
+              "sizeLimit": 10,
+            },
+            "field": "file",
+            "namespace": "documents",
+            "type": "clientSideError_size",
           },
         ]
       `);
@@ -143,7 +155,13 @@ describe("useFilesLogic", () => {
       expect(error.issues).toMatchInlineSnapshot(`
         [
           {
-            "message": "We could not upload: file1. Choose a PDF or an image file (.jpg, .jpeg, .png).",
+            "extra": {
+              "disallowedFileNames": "file1",
+              "sizeLimit": 4.5,
+            },
+            "field": "file",
+            "namespace": "documents",
+            "type": "clientSideError_type",
           },
         ]
       `);
@@ -172,7 +190,13 @@ describe("useFilesLogic", () => {
       expect(error.issues).toMatchInlineSnapshot(`
         [
           {
-            "message": "We could not upload: file1. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than 4.5 MB.",
+            "extra": {
+              "disallowedFileNames": "file1",
+              "sizeLimit": 4.5,
+            },
+            "field": "file",
+            "namespace": "documents",
+            "type": "clientSideError_sizeAndType",
           },
         ]
       `);

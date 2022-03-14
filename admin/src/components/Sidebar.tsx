@@ -1,11 +1,14 @@
-import React from "react";
-import Link from "next/link";
-import routes from "../routes";
-import menus, { Menu } from "../menus";
-import { useRouter } from "next/router";
-import classNames from "classnames";
 import * as api from "../api";
+import * as heroIcons from "@heroicons/react/solid";
+
+import menus, { Menu } from "../menus";
+
+import Link from "next/link";
+import React from "react";
 import WithPermissions from "./WithPermissions";
+import classNames from "classnames";
+import routes from "../routes";
+import { useRouter } from "next/router";
 
 type Props = {
   user: api.AdminUserResponse;
@@ -27,6 +30,9 @@ export default function Sidebar({ user }: Props) {
         return allMenus;
       }, [] as RouteMenu[])
       .map(([page, menu]: [string, Menu]) => {
+        const Icon =
+          menu?.heroIconName &&
+          heroIcons[menu.heroIconName as keyof typeof heroIcons];
         const menuName = isMainMenu ? "menu" : "settings";
         const MenuItem = (
           <li className={`${menuName}__list-item`}>
@@ -42,7 +48,12 @@ export default function Sidebar({ user }: Props) {
                 )}
                 data-testid={`${page}-navigation-link`}
               >
-                {menu.title}
+                {Icon && (
+                  <Icon
+                    className={`${menuName}__link-icon ${menuName}__link-icon--${page}`}
+                  />
+                )}
+                <span>{menu.title}</span>
               </a>
             </Link>
           </li>

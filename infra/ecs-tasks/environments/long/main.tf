@@ -29,6 +29,8 @@ terraform {
 module "tasks" {
   source = "../../template"
 
+  logging_level = "massgov.pfml.fineos.fineos_client=DEBUG"
+
   environment_name         = "long"
   service_docker_tag       = local.service_docker_tag
   vpc_id                   = data.aws_vpc.vpc.id
@@ -49,6 +51,8 @@ module "tasks" {
   fineos_aws_iam_role_external_id                     = "12345"
   fineos_eligibility_feed_output_directory_path       = "s3://fin-somdev-data-import/DT4"
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/DT4/dataexports"
+
+  fineos_is_running_v21 = "true"
 
   # These can be kept blank.
   eolwd_moveit_sftp_uri   = ""

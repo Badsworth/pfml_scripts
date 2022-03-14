@@ -85,7 +85,7 @@ export const LeavePeriodIntermittent = (
     claim.isContinuous || claim.isReducedSchedule;
 
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });

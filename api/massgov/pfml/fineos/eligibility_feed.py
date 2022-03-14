@@ -347,12 +347,14 @@ def get_employer_to_employee_map_from_queue_and_most_recent_wages(
     db_session: db.Session, employee_ids: Iterable[EmployeeId]
 ) -> Dict[EmployerId, List[EmployeeId]]:
 
-    employer_employee_pairs_with_most_recent_wages_and_contributions = get_employeer_employee_pairs_with_most_recent_wages_and_contributions(
-        db_session, employee_ids
+    employer_employee_pairs_with_most_recent_wages_and_contributions = (
+        get_employeer_employee_pairs_with_most_recent_wages_and_contributions(
+            db_session, employee_ids
+        )
     )
 
-    employer_employee_pairs_in_push_to_fineos_queue = get_employer_employee_pairs_for_employees_in_push_to_fineos_queue(
-        db_session, employee_ids
+    employer_employee_pairs_in_push_to_fineos_queue = (
+        get_employer_employee_pairs_for_employees_in_push_to_fineos_queue(db_session, employee_ids)
     )
 
     # Organize pairs into the structure we want
@@ -794,9 +796,9 @@ def process_a_list_of_employers(
 
     logger.info(f"Starting eligibility feeds generation for a list of employers: {employer_ids}")
 
-    employers_to_process: List[Employer] = db_session.query(Employer).filter(
-        Employer.employer_id.in_(employer_ids)
-    ).all()
+    employers_to_process: List[Employer] = (
+        db_session.query(Employer).filter(Employer.employer_id.in_(employer_ids)).all()
+    )
     employers_to_process_count = len(employers_to_process)
 
     if employers_to_process_count != len(employer_ids):
@@ -920,7 +922,7 @@ def open_and_write_to_eligibility_file(
                 s3_obj = output_file.to_boto3()
 
             write_employees_to_csv(
-                employer, str(fineos_employer_id), number_of_employees, employees, output_file,
+                employer, str(fineos_employer_id), number_of_employees, employees, output_file
             )
     except Exception:
         logger.info(

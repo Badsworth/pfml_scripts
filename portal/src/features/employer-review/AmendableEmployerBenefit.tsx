@@ -4,11 +4,11 @@ import EmployerBenefit, {
 import React, { useRef, useState } from "react";
 import AmendButton from "./AmendButton";
 import AmendmentForm from "../../components/AmendmentForm";
-import AppErrorInfo from "../../models/AppErrorInfo";
 import ConditionalContent from "../../components/ConditionalContent";
 import Heading from "../../components/core/Heading";
 import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import InputDate from "../../components/core/InputDate";
+import findErrorMessageForField from "../../utils/findErrorMessageForField";
 import formatDateRange from "../../utils/formatDateRange";
 import { get } from "lodash";
 import getInputValueFromEvent from "../../utils/getInputValueFromEvent";
@@ -16,7 +16,7 @@ import useAutoFocusEffect from "../../hooks/useAutoFocusEffect";
 import { useTranslation } from "../../locales/i18n";
 
 interface AmendableEmployerBenefitProps {
-  appErrors: AppErrorInfo[];
+  errors: Error[];
   employerBenefit: EmployerBenefit;
   isAddedByLeaveAdmin: boolean;
   onChange: (
@@ -33,7 +33,7 @@ interface AmendableEmployerBenefitProps {
  */
 
 const AmendableEmployerBenefit = ({
-  appErrors,
+  errors,
   isAddedByLeaveAdmin,
   employerBenefit,
   onChange,
@@ -51,7 +51,7 @@ const AmendableEmployerBenefit = ({
     `employer_benefits[${amendment.employer_benefit_id}].${field}`;
 
   const getErrorMessage = (field: string) =>
-    AppErrorInfo.fieldErrorMessage(appErrors, getFieldPath(field));
+    findErrorMessageForField(errors, getFieldPath(field));
 
   /**
    * Update amendment state and sends to `review.js` (dates, dollars, frequency)

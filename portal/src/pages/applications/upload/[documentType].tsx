@@ -21,6 +21,7 @@ import AccordionItem from "../../../components/core/AccordionItem";
 import Alert from "../../../components/core/Alert";
 import ConditionalContent from "../../../components/ConditionalContent";
 import DocumentRequirements from "../../../components/DocumentRequirements";
+import { DocumentsUploadError } from "../../../errors";
 import FileCardList from "../../../components/FileCardList";
 import FileUploadDetails from "../../../components/FileUploadDetails";
 import Heading from "../../../components/core/Heading";
@@ -203,7 +204,7 @@ export interface DocumentUploadProps extends WithClaimDocumentsProps {
 
 export const DocumentUpload = (props: DocumentUploadProps) => {
   const { appLogic, documents, isLoadingDocuments, query } = props;
-  const { appErrors, portalFlow } = appLogic;
+  const { errors, portalFlow } = appLogic;
   const { t } = useTranslation();
   const { files, processFiles, removeFile } = useFilesLogic({
     clearErrors: appLogic.clearErrors,
@@ -212,7 +213,7 @@ export const DocumentUpload = (props: DocumentUploadProps) => {
   const [submissionInProgress, setSubmissionInProgress] = React.useState(false);
 
   const hasLoadingDocumentsError = hasDocumentsLoadError(
-    appErrors,
+    errors,
     query.claim_id
   );
 
@@ -270,9 +271,9 @@ export const DocumentUpload = (props: DocumentUploadProps) => {
     }
   };
 
-  const fileErrors = appErrors.filter(
-    (appErrorInfo) => appErrorInfo.meta && appErrorInfo.meta.file_id
-  );
+  const fileErrors = errors.filter(
+    (error) => error instanceof DocumentsUploadError
+  ) as DocumentsUploadError[];
 
   return (
     <QuestionPage

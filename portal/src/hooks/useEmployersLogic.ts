@@ -1,22 +1,23 @@
 import { useMemo, useState } from "react";
 import ApiResourceCollection from "../models/ApiResourceCollection";
-import { AppErrorsLogic } from "./useAppErrorsLogic";
 import { ClaimDocument } from "../models/Document";
 import { ClaimsLogic } from "./useClaimsLogic";
 import EmployerClaim from "../models/EmployerClaim";
 import EmployersApi from "../api/EmployersApi";
-import { LeaveAdminForbiddenError } from "../errors";
+import { ErrorsLogic } from "./useErrorsLogic";
 import { PortalFlow } from "./usePortalFlow";
 import { UsersLogic } from "./useUsersLogic";
 import { get } from "lodash";
+import routes from "../routes";
+import tracker from "../services/tracker";
 
 const useEmployersLogic = ({
-  appErrorsLogic,
+  errorsLogic,
   clearClaims,
   portalFlow,
   setUser,
 }: {
-  appErrorsLogic: AppErrorsLogic;
+  errorsLogic: ErrorsLogic;
   clearClaims: ClaimsLogic["clearClaims"];
   portalFlow: PortalFlow;
   setUser: UsersLogic["setUser"];
@@ -31,7 +32,7 @@ const useEmployersLogic = ({
    * Associate employer FEIN with logged in user
    */
   const addEmployer = async (data: { employer_fein: string }, next: string) => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
       const employer = await employersApi.addEmployer(data);
@@ -40,7 +41,7 @@ const useEmployersLogic = ({
       setUser(undefined);
       portalFlow.goToNextPage({}, params);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 
@@ -49,7 +50,7 @@ const useEmployersLogic = ({
    */
   const loadClaim = async (absenceId: string) => {
     if (claim && claim.fineos_absence_id === absenceId) return;
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
       const { claim } = await employersApi.getClaim(absenceId);
@@ -62,16 +63,15 @@ const useEmployersLogic = ({
         "responseData.has_verification_data"
       );
 
-      if (employer_id && typeof has_verification_data === "boolean") {
-        appErrorsLogic.catchError(
-          new LeaveAdminForbiddenError(
-            employer_id,
-            has_verification_data,
-            error instanceof Error ? error.message : ""
-          )
-        );
+      if (
+        typeof employer_id === "string" &&
+        typeof has_verification_data === "boolean"
+      ) {
+        // Leave admin was prevented from loading the claim, which we interpret to mean
+        // as they need to still verify their organization:
+        handleUnverifiedLeaveAdmin(employer_id, has_verification_data);
       } else {
-        appErrorsLogic.catchError(error);
+        errorsLogic.catchError(error);
       }
     }
   };
@@ -81,7 +81,7 @@ const useEmployersLogic = ({
    */
   const loadDocuments = async (absenceId: string) => {
     if (claimDocumentsMap.has(absenceId)) return;
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
       const { documents } = await employersApi.getDocuments(absenceId);
@@ -90,7 +90,7 @@ const useEmployersLogic = ({
 
       setClaimDocumentsMap(loadedClaimDocumentsMap);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 
@@ -101,7 +101,7 @@ const useEmployersLogic = ({
     try {
       return await employersApi.getWithholding(employerId);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 
@@ -112,11 +112,11 @@ const useEmployersLogic = ({
     document: ClaimDocument,
     absenceId: string
   ) => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
     try {
       return await employersApi.downloadDocument(absenceId, document);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 
@@ -127,7 +127,7 @@ const useEmployersLogic = ({
     absenceId: string,
     data: { [key: string]: unknown }
   ) => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
       await employersApi.submitClaimReview(absenceId, data);
@@ -141,7 +141,7 @@ const useEmployersLogic = ({
       const params = { absence_id: absenceId };
       portalFlow.goToNextPage({}, params);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 
@@ -156,7 +156,7 @@ const useEmployersLogic = ({
     },
     next?: string
   ) => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
       const { user } = await employersApi.submitWithholding(data);
@@ -165,7 +165,40 @@ const useEmployersLogic = ({
       setUser(user);
       portalFlow.goToNextPage({}, params);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
+    }
+  };
+
+  /**
+   * Redirect to either the Verify Contributions or Cannot Verify page
+   * based on if the UserLeaveAdministrator is verifiable.
+   */
+  const handleUnverifiedLeaveAdmin = (
+    employer_id: string,
+    has_verification_data: boolean
+  ) => {
+    tracker.trackEvent("LeaveAdminForbiddenError", {
+      employerId: employer_id,
+      hasVerificationData: has_verification_data.toString(),
+    });
+
+    if (has_verification_data) {
+      portalFlow.goTo(
+        routes.employers.verifyContributions,
+        {
+          employer_id,
+          next: portalFlow.pathWithParams,
+        },
+        { redirect: true }
+      );
+    } else {
+      portalFlow.goTo(
+        routes.employers.cannotVerify,
+        {
+          employer_id,
+        },
+        { redirect: true }
+      );
     }
   };
 

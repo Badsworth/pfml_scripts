@@ -239,7 +239,7 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def get_week_based_work_pattern(
-        self, user_id: str, occupation_id: Union[str, int],
+        self, user_id: str, occupation_id: Union[str, int]
     ) -> models.customer_api.WeekBasedWorkPattern:
         pass
 
@@ -277,6 +277,16 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         existing_organization: Optional[models.OCOrganisationItem] = None,
     ) -> Tuple[str, int]:
         """Create or update an employer in FINEOS."""
+        pass
+
+    @abc.abstractmethod
+    def create_or_update_leave_period_change_request(
+        self,
+        fineos_web_id: str,
+        absence_id: str,
+        change_request: models.customer_api.LeavePeriodChangeRequest,
+    ) -> models.customer_api.LeavePeriodChangeRequest:
+        """Create or update a leave period change request in FINEOS."""
         pass
 
     @abc.abstractmethod

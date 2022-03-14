@@ -6,21 +6,26 @@ import {
   BenefitsApplicationDocument,
   DocumentType,
 } from "../../../../src/models/Document";
+import {
+  DocumentsLoadError,
+  RequestTimeoutError,
+} from "../../../../src/errors";
 import Status, {
   LeaveDetails,
 } from "../../../../src/pages/applications/status/index";
 import { cleanup, render, screen } from "@testing-library/react";
 import { createAbsencePeriod, renderPage } from "../../../test-utils";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
-import AppErrorInfo from "../../../../src/models/AppErrorInfo";
 import { AppLogic } from "../../../../src/hooks/useAppLogic";
 import ClaimDetail from "../../../../src/models/ClaimDetail";
+import { Holiday } from "../../../../src/models/Holiday";
 import LeaveReason from "../../../../src/models/LeaveReason";
 import { Payment } from "../../../../src/models/Payment";
 import React from "react";
 import { ReasonQualifier } from "../../../../src/models/BenefitsApplication";
 import { createMockBenefitsApplicationDocument } from "../../../../lib/mock-helpers/createMockDocument";
 import { createMockManagedRequirement } from "../../../../lib/mock-helpers/createMockManagedRequirement";
+import { createMockPayment } from "lib/mock-helpers/createMockPayment";
 // @ts-expect-error This should eventually be removed, in favor of setting the pathname option in renderPage
 import { mockRouter } from "next/router";
 import routes from "../../../../src/routes";
@@ -62,47 +67,60 @@ const DOCUMENTS: BenefitsApplicationDocument[] = [
     fineos_document_id: "fineos-id-7",
     name: "legal notice 3",
   }),
-  createMockBenefitsApplicationDocument({
-    application_id: "mock-application-id",
-    content_type: "image/png",
-    created_at: "2020-04-05",
-    document_type: DocumentType.approvalNotice,
-    fineos_document_id: "fineos-id-8",
-    name: "legal notice 3",
-  }),
 ];
 
-const renderWithClaimDocuments = (
-  appLogicHook: AppLogic,
-  documents: BenefitsApplicationDocument[] = []
+const approvalNotice = createMockBenefitsApplicationDocument({
+  application_id: "mock-application-id",
+  content_type: "image/png",
+  created_at: "2020-04-05",
+  document_type: DocumentType.approvalNotice,
+  fineos_document_id: "fineos-id-8",
+  name: "legal notice 3",
+});
+
+const createDocuments = (
+  documents: BenefitsApplicationDocument[] = [],
+  includeApprovalNotice: boolean
 ) => {
-  appLogicHook.documents.loadAll = jest.fn();
-  appLogicHook.documents.documents =
-    new ApiResourceCollection<BenefitsApplicationDocument>(
-      "fineos_document_id",
-      documents
-    );
-  appLogicHook.documents.hasLoadedClaimDocuments = () => !!documents.length;
-  appLogicHook.documents.download = jest.fn();
+  return new ApiResourceCollection<BenefitsApplicationDocument>(
+    "fineos_document_id",
+    includeApprovalNotice ? [...documents, approvalNotice] : documents
+  );
 };
 
 const setupHelper =
   (
     claimDetailAttrs?: Partial<ClaimDetail>,
     documents: BenefitsApplicationDocument[] = [],
-    appErrors: AppErrorInfo[] = [],
-    loadClaimDetailMock: jest.Mock = jest.fn()
+    errors: Error[] = [],
+    loadClaimDetailMock: jest.Mock = jest.fn(),
+    payments: Partial<Payment> = defaultPayments,
+    includeApprovalNotice = true,
+    hasLoadedClaimDocumentsValue = true,
+    holidays: Holiday[] = defaultHolidays
   ) =>
   (appLogicHook: AppLogic) => {
     appLogicHook.claims.claimDetail = claimDetailAttrs
       ? new ClaimDetail(claimDetailAttrs)
       : undefined;
     appLogicHook.claims.loadClaimDetail = loadClaimDetailMock;
-    appLogicHook.appErrors = appErrors;
-    renderWithClaimDocuments(appLogicHook, documents);
+    appLogicHook.errors = errors;
+    appLogicHook.holidays.holidays = holidays;
+    appLogicHook.holidays.loadHolidays = jest.fn();
+    appLogicHook.holidays.hasLoadedHolidays = true;
+    appLogicHook.holidays.isLoadingHolidays = false;
     appLogicHook.payments.loadPayments = jest.fn();
-    appLogicHook.payments.loadedPaymentsData = new Payment();
+    appLogicHook.payments.loadedPaymentsData = new Payment(payments);
     appLogicHook.payments.hasLoadedPayments = () => true;
+
+    appLogicHook.documents.loadAll = jest.fn();
+    appLogicHook.documents.download = jest.fn();
+    appLogicHook.documents.documents = createDocuments(
+      documents,
+      includeApprovalNotice
+    );
+    appLogicHook.documents.hasLoadedClaimDocuments = () =>
+      hasLoadedClaimDocumentsValue;
   };
 
 const defaultClaimDetail: Partial<ClaimDetail> = {
@@ -124,67 +142,125 @@ const defaultClaimDetail: Partial<ClaimDetail> = {
   ],
 };
 
+const defaultPayments = {
+  absence_case_id: "NTN-12345-ABS-01",
+  payments: [
+    createMockPayment({ status: "Sent to bank" }, true),
+    createMockPayment({ status: "Delayed", sent_to_bank_date: null }, true),
+    createMockPayment({ status: "Pending", sent_to_bank_date: null }, true),
+    createMockPayment({ status: "Sent to bank" }, true),
+  ],
+};
+
+const defaultHolidays = [{ name: "Memorial Day", date: "2022-05-30" }];
+const defaultHolidayAlertText =
+  "Due to the upcoming holiday, payments may be delayed by one business day.";
 const props = {
   query: { absence_id: defaultClaimDetail.fineos_absence_id },
 };
 
 describe("Status", () => {
-  beforeEach(() => {
-    process.env.featureFlags = JSON.stringify({
-      claimantShowPaymentsPhaseTwo: true,
+  describe("Payments tab display", () => {
+    it("does not show StatusNavigationTabs if feature flag is enabled, claim has no payments, and is not approved", () => {
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper(
+            {
+              ...defaultClaimDetail,
+              absence_periods: [
+                createAbsencePeriod({
+                  period_type: "Reduced Schedule",
+                  reason: LeaveReason.bonding,
+                  request_decision: "Pending",
+                  reason_qualifier_one: "Newborn",
+                }),
+              ],
+            },
+            [], // documents, default
+            [], // errors, default
+            jest.fn(), // loadClaimDetailMock, default
+            new Payment(), // payments, default
+            false // don't include the approval notice
+          ),
+        },
+        props
+      );
+
+      expect(
+        screen.queryByRole("link", { name: "Payments" })
+      ).not.toBeInTheDocument();
     });
-  });
 
-  it("does not show StatusNavigationTabs if claimantShowPaymentsPhaseTwo feature flag is enabled and claim loaded without approval notice", () => {
-    renderPage(
-      Status,
-      {
-        addCustomSetup: setupHelper({
-          ...defaultClaimDetail,
-          has_paid_payments: false,
-          absence_periods: [
-            createAbsencePeriod({
-              period_type: "Reduced Schedule",
-              reason: LeaveReason.bonding,
-              request_decision: "Approved",
-              reason_qualifier_one: "Newborn",
-            }),
-          ],
-        }),
-      },
-      props
-    );
-
-    expect(
-      screen.queryByRole("link", { name: "Payments" })
-    ).not.toBeInTheDocument();
-  });
-
-  it("does not show StatusNavigationTabs if claimantShowPaymentsPhaseTwo feature flag is disabled", () => {
-    process.env.featureFlags = JSON.stringify({
-      claimantShowPaymentsPhaseTwo: false,
+    it("shows payment tab if there are payments and claim is approved", () => {
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper(
+            defaultClaimDetail,
+            [], // documents, default
+            [], // errors, default
+            jest.fn(), // loadClaimDetailMock, default
+            defaultPayments // payments, default, but set explicitly to make this clearer
+          ),
+        },
+        props
+      );
+      expect(
+        screen.queryByRole("link", { name: "Payments" })
+      ).toBeInTheDocument();
     });
-    renderPage(
-      Status,
-      {
-        addCustomSetup: setupHelper({
-          ...defaultClaimDetail,
-          absence_periods: [
-            createAbsencePeriod({
-              period_type: "Reduced Schedule",
-              reason: LeaveReason.bonding,
-              request_decision: "Approved",
-              reason_qualifier_one: "Newborn",
-            }),
-          ],
-        }),
-      },
-      props
-    );
 
-    expect(
-      screen.queryByRole("link", { name: "Payments" })
-    ).not.toBeInTheDocument();
+    it("shows payment tab if there are no payments and claim is approved", () => {
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper(
+            defaultClaimDetail,
+            [], // documents, default
+            [], // errors, default
+            jest.fn(), // loadClaimDetailMock, default
+            new Payment() // payments, none
+          ),
+        },
+        props
+      );
+
+      expect(
+        screen.queryByRole("link", { name: "Payments" })
+      ).toBeInTheDocument();
+    });
+
+    it("shows payment tab if there are payments and claim is not approved", () => {
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper(
+            {
+              ...defaultClaimDetail,
+              absence_periods: [
+                createAbsencePeriod({
+                  period_type: "Reduced Schedule",
+                  reason: LeaveReason.bonding,
+                  request_decision: "Pending",
+                  reason_qualifier_one: "Newborn",
+                }),
+              ],
+            },
+            [], // documents, default
+            [], // errors, default
+            jest.fn(), // loadClaimDetailMock, default
+            defaultPayments, // payments, default, but need some for this test
+            false // don't include the approval notice
+          ),
+        },
+        props
+      );
+
+      expect(
+        screen.queryByRole("link", { name: "Payments" })
+      ).toBeInTheDocument();
+    });
   });
 
   it("redirects to 404 if there's no absence case ID", () => {
@@ -203,12 +279,7 @@ describe("Status", () => {
   });
 
   it("renders the page if the only errors are DocumentsLoadError", () => {
-    const errors = [
-      new AppErrorInfo({
-        meta: { application_id: "mock_application_id" },
-        name: "DocumentsLoadError",
-      }),
-    ];
+    const errors = [new DocumentsLoadError("mock_application_id")];
 
     const { container } = renderPage(
       Status,
@@ -222,12 +293,7 @@ describe("Status", () => {
   });
 
   it("renders the page with only a back button if non-DocumentsLoadErrors exists", () => {
-    const errors = [
-      new AppErrorInfo({
-        meta: { application_id: "mock_application_id" },
-        name: "RequestTimeoutError",
-      }),
-    ];
+    const errors = [new RequestTimeoutError("mock_application_id")];
     renderPage(
       Status,
       {
@@ -255,14 +321,13 @@ describe("Status", () => {
 
   it("fetches claim detail on if none is loaded", () => {
     const loadClaimDetailMock = jest.fn();
-    const errors = [new AppErrorInfo({})];
     renderPage(
       Status,
       {
         addCustomSetup: setupHelper(
           { ...defaultClaimDetail },
           [],
-          errors,
+          [], // errors, default
           loadClaimDetailMock
         ),
       },
@@ -314,7 +379,6 @@ describe("Status", () => {
         }
       );
 
-      expect(screen.getByRole("region")).toMatchSnapshot();
       expect(
         screen.getByRole("heading", {
           name: "You've successfully submitted your proof of birth documents",
@@ -389,7 +453,11 @@ describe("Status", () => {
         props
       );
 
-      expect(screen.getByRole("region")).toMatchSnapshot();
+      const bondingAlertText =
+        "If you are giving birth, you may also be eligible for paid medical leave";
+      expect(
+        screen.getByText(bondingAlertText, { exact: false })
+      ).toBeInTheDocument();
     });
 
     it("displays if claimant has pregnancy but not bonding claims", () => {
@@ -410,7 +478,11 @@ describe("Status", () => {
         props
       );
 
-      expect(screen.getByRole("region")).toMatchSnapshot();
+      const pregnancyAlertText =
+        "You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends.";
+      expect(
+        screen.getByText(pregnancyAlertText, { exact: false })
+      ).toBeInTheDocument();
     });
 
     it("displays if claimant has In Review claim status", () => {
@@ -431,7 +503,11 @@ describe("Status", () => {
         props
       );
 
-      expect(screen.getByRole("region")).toMatchSnapshot();
+      const pregnancyAlertText =
+        "You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends.";
+      expect(
+        screen.getByText(pregnancyAlertText, { exact: false })
+      ).toBeInTheDocument();
     });
 
     it("displays if claimant has Projected claim status", () => {
@@ -452,7 +528,11 @@ describe("Status", () => {
         props
       );
 
-      expect(screen.getByRole("region")).toMatchSnapshot();
+      const pregnancyAlertText =
+        "You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends.";
+      expect(
+        screen.getByText(pregnancyAlertText, { exact: false })
+      ).toBeInTheDocument();
     });
 
     it("does not display if claimant has bonding AND pregnancy claims", () => {
@@ -478,50 +558,199 @@ describe("Status", () => {
         props
       );
 
-      expect(screen.queryByRole("region")).not.toBeInTheDocument();
+      const bondingAlertText =
+        "If you are giving birth, you may also be eligible for paid medical leave";
+      const pregnancyAlertText =
+        "You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends.";
+      expect(
+        screen.queryByText(bondingAlertText, { exact: false })
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(pregnancyAlertText, { exact: false })
+      ).not.toBeInTheDocument();
     });
 
     it("does not display if claimant has Denied claims", () => {
       renderPage(
         Status,
         {
-          addCustomSetup: setupHelper({
-            ...defaultClaimDetail,
-            absence_periods: [
-              createAbsencePeriod({
-                period_type: "Reduced Schedule",
-                reason: LeaveReason.pregnancy,
-                request_decision: "Denied",
-              }),
-            ],
-          }),
+          addCustomSetup: setupHelper(
+            {
+              ...defaultClaimDetail,
+              absence_periods: [
+                createAbsencePeriod({
+                  period_type: "Reduced Schedule",
+                  reason: LeaveReason.pregnancy,
+                  request_decision: "Denied",
+                }),
+              ],
+            },
+            [], // documents, default
+            [], // errors, default
+            jest.fn(), // loadClaimDetailMock, default
+            new Payment(), // payments, none
+            false // don't include the approval notice
+          ),
         },
         props
       );
 
-      expect(screen.queryByRole("region")).not.toBeInTheDocument();
+      const bondingAlertText =
+        "If you are giving birth, you may also be eligible for paid medical leave";
+      const pregnancyAlertText =
+        "You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends.";
+      expect(
+        screen.queryByText(bondingAlertText, { exact: false })
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(pregnancyAlertText, { exact: false })
+      ).not.toBeInTheDocument();
     });
 
     it("does not display if claimant has Withdrawn claims", () => {
       renderPage(
         Status,
         {
-          addCustomSetup: setupHelper({
-            ...defaultClaimDetail,
-            absence_periods: [
-              createAbsencePeriod({
-                period_type: "Reduced Schedule",
-                reason: LeaveReason.bonding,
-                reason_qualifier_one: "Newborn",
-                request_decision: "Withdrawn",
-              }),
-            ],
-          }),
+          addCustomSetup: setupHelper(
+            {
+              ...defaultClaimDetail,
+              absence_periods: [
+                createAbsencePeriod({
+                  period_type: "Reduced Schedule",
+                  reason: LeaveReason.bonding,
+                  reason_qualifier_one: "Newborn",
+                  request_decision: "Withdrawn",
+                }),
+              ],
+            },
+            [], // documents, default
+            [], // errors, default
+            jest.fn(), // loadClaimDetailMock, default
+            new Payment(), // payments, none
+            false // don't include the approval notice
+          ),
         },
         props
       );
 
-      expect(screen.queryByRole("region")).not.toBeInTheDocument();
+      const bondingAlertText =
+        "If you are giving birth, you may also be eligible for paid medical leave";
+      const pregnancyAlertText =
+        "You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends.";
+      expect(
+        screen.queryByText(bondingAlertText, { exact: false })
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(pregnancyAlertText, { exact: false })
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe("holiday alert", () => {
+    it("doesn't show the holiday alert when there are holidays, but the claimantShowPaymentsPhaseThree feature flag is off", () => {
+      process.env.featureFlags = JSON.stringify({
+        showHolidayAlert: true,
+        claimantShowPaymentsPhaseThree: false,
+      });
+
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper(
+            { ...defaultClaimDetail },
+            [], // documents, default
+            [], // errors, default
+            jest.fn(), // loadClaimDetailMock, default
+            defaultPayments, // payments, default
+            true, // approval notice, default
+            true, // loaded documents, default
+            defaultHolidays // holidays, default
+          ),
+        },
+        props
+      );
+      expect(
+        screen.queryByText(defaultHolidayAlertText)
+      ).not.toBeInTheDocument();
+    });
+
+    it("doesn't show the holiday alert when there are holidays, but the showHolidayAlert feature flag is off", () => {
+      process.env.featureFlags = JSON.stringify({
+        showHolidayAlert: false,
+        claimantShowPaymentsPhaseThree: true,
+      });
+
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper(
+            { ...defaultClaimDetail },
+            [], // documents, default
+            [], // errors, default
+            jest.fn(), // loadClaimDetailMock, default
+            defaultPayments, // payments, default
+            true, // approval notice, default
+            true, // loaded documents, default
+            defaultHolidays // holidays, default
+          ),
+        },
+        props
+      );
+      expect(
+        screen.queryByText(defaultHolidayAlertText)
+      ).not.toBeInTheDocument();
+    });
+
+    it("doesn't show the holiday alert when there are no holidays", () => {
+      process.env.featureFlags = JSON.stringify({
+        showHolidayAlert: true,
+        claimantShowPaymentsPhaseThree: true,
+      });
+
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper(
+            { ...defaultClaimDetail },
+            [], // documents, default
+            [], // errors, default
+            jest.fn(), // loadClaimDetailMock, default
+            defaultPayments, // payments, default
+            true, // approval notice, default
+            true, // loaded documents, default
+            [] // no holidays
+          ),
+        },
+        props
+      );
+      expect(
+        screen.queryByText(defaultHolidayAlertText)
+      ).not.toBeInTheDocument();
+    });
+
+    it("shows the holiday alert when there are holidays", () => {
+      process.env.featureFlags = JSON.stringify({
+        showHolidayAlert: true,
+        claimantShowPaymentsPhaseThree: true,
+      });
+
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper(
+            { ...defaultClaimDetail },
+            [], // documents, default
+            [], // errors, default
+            jest.fn(), // loadClaimDetailMock, default
+            defaultPayments, // payments, default
+            true, // approval notice, default
+            true, // loaded documents, default
+            defaultHolidays // holidays, default
+          ),
+        },
+        props
+      );
+      expect(screen.queryByText(defaultHolidayAlertText)).toBeInTheDocument();
     });
   });
 
@@ -530,7 +759,15 @@ describe("Status", () => {
       renderPage(
         Status,
         {
-          addCustomSetup: setupHelper({ ...defaultClaimDetail }),
+          addCustomSetup: setupHelper(
+            { ...defaultClaimDetail },
+            [], // documents, default
+            [], // errors, default
+            jest.fn(), // loadClaimDetailMock, default
+            new Payment(), // payments, none
+            false, // don't include approval notice
+            false // doesn't have loaded documents
+          ),
         },
         props
       );
@@ -542,7 +779,10 @@ describe("Status", () => {
       renderPage(
         Status,
         {
-          addCustomSetup: setupHelper({ ...defaultClaimDetail }, DOCUMENTS),
+          addCustomSetup: setupHelper(
+            { ...defaultClaimDetail },
+            DOCUMENTS // include documents
+          ),
         },
         props
       );
@@ -557,12 +797,26 @@ describe("Status", () => {
     });
 
     it("displays the fallback text if there are no legal notices", () => {
+      const nonLegalNotice = createMockBenefitsApplicationDocument({
+        application_id: "mock-application-id",
+        content_type: "image/png",
+        created_at: "2020-04-05",
+        document_type: DocumentType.identityVerification,
+        fineos_document_id: "fineos-id-6",
+        name: "non-legal notice 1",
+      });
+
       renderPage(
         Status,
         {
-          addCustomSetup: setupHelper({ ...defaultClaimDetail }, [
-            DOCUMENTS[1],
-          ]),
+          addCustomSetup: setupHelper(
+            defaultClaimDetail,
+            [nonLegalNotice], // documents
+            [], // errors, default
+            jest.fn(), // loadClaimDetailMock, default
+            defaultPayments, // payments, default
+            false // dont include the approval notice
+          ),
         },
         props
       );
@@ -574,27 +828,17 @@ describe("Status", () => {
       ).toBeInTheDocument();
     });
 
-    it("displays status timeline for notices if notices are due but not present", () => {
+    it("displays status timeline when the claim has 'Approved' status, but no approval notice document", () => {
       renderPage(
         Status,
         {
           addCustomSetup: setupHelper(
-            {
-              ...defaultClaimDetail,
-              absence_periods: [
-                createAbsencePeriod({
-                  period_type: "Reduced Schedule",
-                  reason: LeaveReason.pregnancy,
-                  request_decision: "Pending",
-                }),
-                createAbsencePeriod({
-                  period_type: "Reduced Schedule",
-                  reason: LeaveReason.bonding,
-                  request_decision: "Approved",
-                }),
-              ],
-            },
-            [DOCUMENTS[1]]
+            defaultClaimDetail,
+            [], // documents, default
+            [], // errors, default
+            jest.fn(), // loadClaimDetailMock, default
+            defaultPayments, // payments, default
+            false // dont include the approval notice
           ),
         },
         props
@@ -607,27 +851,17 @@ describe("Status", () => {
       ).toBeInTheDocument();
     });
 
-    it("doesn't display status timeline for notices if notices are due and present", () => {
+    it("doesn't display status timeline when claim has 'Approved' status and approval notice document is present", () => {
       renderPage(
         Status,
         {
           addCustomSetup: setupHelper(
-            {
-              ...defaultClaimDetail,
-              absence_periods: [
-                createAbsencePeriod({
-                  period_type: "Reduced Schedule",
-                  reason: LeaveReason.pregnancy,
-                  request_decision: "Pending",
-                }),
-                createAbsencePeriod({
-                  period_type: "Reduced Schedule",
-                  reason: LeaveReason.bonding,
-                  request_decision: "Approved",
-                }),
-              ],
-            },
-            [DOCUMENTS[0]]
+            defaultClaimDetail,
+            [], // documents, default
+            [], // errors, default
+            jest.fn(), // loadClaimDetailMock, default
+            defaultPayments, // payments, default
+            true // default, include the approval notice
           ),
         },
         props
@@ -1152,10 +1386,17 @@ describe("Status", () => {
       renderPage(
         Status,
         {
-          addCustomSetup: setupHelper({
-            ...defaultClaimDetail,
-            absence_periods,
-          }),
+          addCustomSetup: setupHelper(
+            {
+              ...defaultClaimDetail,
+              absence_periods,
+            },
+            [], // documents, default
+            [], // errors, default
+            jest.fn(), // loadClaimDetailMock, default
+            new Payment(), // payments, none
+            false // don't include the approval notice
+          ),
         },
         props
       );

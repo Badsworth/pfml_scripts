@@ -57,20 +57,23 @@ import { config } from "../../actions/common";
           const claimPage = fineosPages.ClaimPage.visit(
             submission.fineos_absence_id
           );
-          claimPage
-            .adjudicate((adjudication) => {
-              adjudication.evidence((evidence) => {
-                // Receive and approve all documents for the claim.
-                claim.documents.forEach((document) => {
-                  evidence.receive(document.document_type);
-                });
+          claimPage.adjudicate((adjudication) => {
+            adjudication.evidence((evidence) => {
+              // Receive and approve all documents for the claim.
+              claim.documents.forEach((document) => {
+                evidence.receive(document.document_type);
               });
-              adjudication.certificationPeriods((certificationPeriods) =>
-                certificationPeriods.prefill()
-              );
-              adjudication.acceptLeavePlan();
-            })
-            .approve();
+            });
+            adjudication.certificationPeriods((certificationPeriods) =>
+              certificationPeriods.prefill()
+            );
+            adjudication.acceptLeavePlan();
+          });
+          if (config("HAS_APRIL_UPGRADE") === "true") {
+            claimPage.approve("Approved", true);
+          } else {
+            claimPage.approve("Approved", false);
+          }
           claimPage.tasks((task) => {
             task.closeWithAdditionalSelection(
               "Employer Reimbursement",

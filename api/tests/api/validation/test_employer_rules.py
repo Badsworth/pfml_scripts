@@ -81,7 +81,7 @@ class TestEmployerAddFeinIssue:
 
             assert exc.value.errors == [
                 ValidationErrorDetail(
-                    type=IssueType.require_employer, message="Invalid FEIN", field="employer_fein",
+                    type=IssueType.require_employer, message="Invalid FEIN", field="employer_fein"
                 )
             ]
 

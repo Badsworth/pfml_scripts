@@ -7,14 +7,15 @@
   }
   // .search__input
   &__input[type=text] {
-    padding-left: 2.86em;
+    padding: 0.9em 3.5em 0.9em 1em;
   }
   // .search__icon
   &__icon {
     color: $Color-GraniteGray-400;
-    left: 1em;
+    display: block;
     position: absolute;
-    top: calc(50% - 1px);
-    transform: translateY(-50%);
+    right: 1.1em;
+    top: 1em;
+    width: 1.5em;
   }
 }

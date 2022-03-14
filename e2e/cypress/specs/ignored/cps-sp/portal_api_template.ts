@@ -1,5 +1,6 @@
 import { fineos, fineosPages, portal } from "../../../actions";
 import { Submission } from "../../../../src/types";
+import { config } from "../../../actions/common";
 
 describe("Submit a claim through Portal: Verify it creates an absence case in Fineos", () => {
   const submissionTest =
@@ -66,7 +67,11 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
             true
           );
         });
-        claimPage.approve();
+        if (config("HAS_APRIL_UPGRADE") === "true") {
+          claimPage.approve("Approved", true);
+        } else {
+          claimPage.approve("Approved", false);
+        }
       });
     });
   });

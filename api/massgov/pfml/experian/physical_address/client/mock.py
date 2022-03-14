@@ -26,7 +26,7 @@ from .models import (
 
 class MockClient(BaseClient):
     """
-        Mock client for accessing the Experian Address Validation API endpoints.
+    Mock client for accessing the Experian Address Validation API endpoints.
     """
 
     search_responses: Dict[str, AddressSearchV1Response]
@@ -91,7 +91,7 @@ class MockClient(BaseClient):
         )
 
     def add_mock_address_response(
-        self, address: Address, confidence: Confidence, suggestion: Optional[str] = None,
+        self, address: Address, confidence: Confidence, suggestion: Optional[str] = None
     ) -> AddressSearchV1Response:
         # Pull out the raw address as text as the process will later see it.
         expected_request = address_to_experian_search_request(address)
@@ -115,7 +115,7 @@ class MockClient(BaseClient):
 
         response = AddressSearchV1Response(
             result=AddressSearchV1Result(
-                more_results_available=False, confidence=confidence, suggestions=suggestions,
+                more_results_available=False, confidence=confidence, suggestions=suggestions
             )
         )
         self.search_responses[raw_address] = response

@@ -5,41 +5,43 @@
 .e2e-run-history {
   min-width: 330px;
 }
+.EnvironmentsTable {
+  .versions {
+    min-width: 250px;
+  }
 
-.versions {
-  min-width: 250px;
-}
+  .version {
+    div {
+      display: flex;
+      flex-direction: column;
 
-.version {
-  div {
-    display: flex;
-    flex-direction: column;
-    span {
-      color: #999;
+      span {
+        color: #999;
+      }
     }
   }
-}
 
-span.info {
-  background: #bbecff;
-  padding: 8px;
-  border-radius: 8px;
-  color: #004058;
-  border: 1px #004058 solid;
+  span.info {
+    background: #bbecff;
+    padding: 8px;
+    border-radius: 8px;
+    color: #004058;
+    border: 1px #004058 solid;
 
-  .ic-Icon {
-    margin-right: 5px;
+    .ic-Icon {
+      margin-right: 5px;
+    }
   }
-}
 
-span.warning {
-  background: #d4e500;
-  padding: 8px;
-  border-radius: 8px;
-  color: #2c2f00;
-  border: 1px #2c2f00 solid;
+  span.warning {
+    background: #d4e500;
+    padding: 8px;
+    border-radius: 8px;
+    color: #2c2f00;
+    border: 1px #2c2f00 solid;
 
-  .ic-Icon {
-    margin-right: 5px;
+    .ic-Icon {
+      margin-right: 5px;
+    }
   }
 }

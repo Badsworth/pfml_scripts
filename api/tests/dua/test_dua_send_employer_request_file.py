@@ -17,13 +17,7 @@ from massgov.pfml.util.batch.log import LogEntry
 
 @pytest.fixture
 def expected_fineos_employer_ids():
-    return (
-        "11111111",
-        "22222222",
-        "33333333",
-        "44444444",
-        "55555555",
-    )
+    return ("11111111", "22222222", "33333333", "44444444", "55555555")
 
 
 @pytest.fixture

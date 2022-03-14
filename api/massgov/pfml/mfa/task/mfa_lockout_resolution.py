@@ -38,7 +38,7 @@ def _parse_script_args(args: List[str]) -> argparse.Namespace:
         "--employee",
         type=str,
         required=True,
-        help="(Required) The full name of the contact center employee who filed the request. \
+        help="(Required) The email address of the contact center agent who filed the request. \
             If none provided, put 'None Provided'",
     )
 
@@ -46,7 +46,7 @@ def _parse_script_args(args: List[str]) -> argparse.Namespace:
         "--verification_method",
         type=str,
         required=True,
-        help="(Required) The method used to verify the user's identity (eg 'Claim number and last four digits of SSN'). \
+        help="(Required) The method used to verify the user's identity ('With Claim' or 'Without Claim'). \
             If none provided, put 'None Provided'",
     )
 
@@ -69,13 +69,13 @@ def main() -> None:
     user_email = parsed_args.email
     psd_number = parsed_args.psd_number.upper()
     reason_for_disabling = parsed_args.reason
-    employee_name = parsed_args.employee
+    agent_email = parsed_args.employee
     verification_method = parsed_args.verification_method
 
     # dry_run defaults to true unless "false" is explicitly passed in
     dry_run = not (parsed_args.dry_run.lower() == "false")
 
     lockout_resolver = MfaLockoutResolver(
-        user_email, psd_number, reason_for_disabling, employee_name, verification_method, dry_run
+        user_email, psd_number, reason_for_disabling, agent_email, verification_method, dry_run
     )
     lockout_resolver.run()

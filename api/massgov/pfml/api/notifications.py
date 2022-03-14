@@ -91,10 +91,7 @@ def notifications_post():
             )
 
             if employer:
-                log_attributes = {
-                    **log_attributes,
-                    "employer_id": str(employer.employer_id),
-                }
+                log_attributes = {**log_attributes, "employer_id": str(employer.employer_id)}
                 newrelic.agent.add_custom_parameter("employer_id", employer.employer_id)
         except MultipleResultsFound:
             return _err400_multiple_employer_feins_found(notification_request, log_attributes)
@@ -223,7 +220,8 @@ def _err400_employer_fein_not_found(notification_request, log_attributes):
             "request.method": flask.request.method if flask.has_request_context() else None,
             "request.uri": flask.request.path if flask.has_request_context() else None,
             "request.headers.x-amzn-requestid": flask.request.headers.get("x-amzn-requestid", None),
-            "absence-id": notification_request.absence_case_id
+            "absence-id": notification_request.absence_case_id,
+            "absence_case_id": notification_request.absence_case_id
             if flask.has_request_context()
             else None,
         },
@@ -249,7 +247,8 @@ def _err400_multiple_employer_feins_found(notification_request, log_attributes):
             "request.method": flask.request.method if flask.has_request_context() else None,
             "request.uri": flask.request.path if flask.has_request_context() else None,
             "request.headers.x-amzn-requestid": flask.request.headers.get("x-amzn-requestid", None),
-            "absence-id": notification_request.absence_case_id
+            "absence-id": notification_request.absence_case_id,
+            "absence_case_id": notification_request.absence_case_id
             if flask.has_request_context()
             else None,
         },
@@ -266,6 +265,7 @@ def _err400_multiple_employer_feins_found(notification_request, log_attributes):
 def handle_managed_requirements(
     notification: NotificationRequest, claim_id: UUID, db_session: Session, log_attributes: dict
 ) -> None:
+    fineos_requirements = []
     if notification.recipient_type == FineosRecipientType.LEAVE_ADMINISTRATOR:
         fineos_requirements = get_fineos_managed_requirements_from_notification(
             notification, log_attributes

@@ -42,13 +42,14 @@ class Generate1099DocumentsStep(Step):
             # Determine the maximum number of 1099s to generate in this run
             generate_max = pfml_1099_util.get_generate_1099_max_files()
             generate_limit = generate_max
-            if generate_max > len(records):
-                generate_limit = len(records)
+            records_len = len(records)
+            if generate_max > records_len:
+                generate_limit = records_len
 
             # Determine how many have already been generated so that we start at the right subbatch
             generated = pfml_1099_util.get_1099_generated_count(self.db_session, batchId=batch_id)
 
-            if len(records) > 0:
+            if records_len > 0:
                 max_records_in_subbatch = 250
                 con_subbatch = math.ceil(generated / max_records_in_subbatch) + 1
                 con = 1
@@ -111,6 +112,7 @@ class Generate1099DocumentsStep(Step):
                 "repayments": str(record.overpayment_repayments),
                 "name": f"{sub_bacth}/{record.first_name} {record.last_name}",
                 "address": record.address_line_1,
+                "address2": record.address_line_2,
                 "city": record.city,
                 "state": record.state,
                 "zipCode": record.zip,

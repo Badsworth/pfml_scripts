@@ -10,8 +10,6 @@
 /.github/actions/ @EOLWD/pfml-infra
 /.github/CODEOWNERS @EOLWD/pfml-infra
 
-/portal/ @EOLWD/pfml-portal
-#/admin/ @EOLWD/pfml-admin-portal
 /bin/ @EOLWD/pfml-infra
 /docs/portal/ @EOLWD/pfml-portal
 /e2e/ @EOLWD/pfml-e2e

@@ -26,6 +26,9 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PaymentAuditCSV,
     PaymentAuditDetails,
 )
+from massgov.pfml.delegated_payments.audit.delegated_payment_preapproval_util import (
+    get_payment_preapproval_status,
+)
 from massgov.pfml.delegated_payments.pub.pub_check import _format_check_memo
 from massgov.pfml.delegated_payments.reporting.delegated_abstract_reporting import (
     FileConfig,
@@ -56,6 +59,8 @@ class PaymentAuditData:
     state_withholding_amount: str
     federal_withholding_i_value: str
     state_withholding_i_value: str
+    employer_reimbursement_amount: str
+    employer_reimbursement_i_value: str
 
 
 def write_audit_report(
@@ -140,6 +145,9 @@ def build_audit_report_row(
         )
 
     audit_report_details = get_payment_audit_report_details(payment, audit_report_time, db_session)
+    preapproval_status = get_payment_preapproval_status(
+        payment, audit_report_details.audit_report_details_list, db_session
+    )
 
     payment_audit_row = PaymentAuditCSV(
         pfml_payment_id=str(payment.payment_id),
@@ -155,6 +163,7 @@ def build_audit_report_row(
         state=address.geo_state.geo_state_description if address and address.geo_state else None,
         zip=address.zip_code if address else None,
         is_address_verified=is_address_verified,
+        employer_name=None,
         payment_preference=get_payment_preference(payment),
         scheduled_payment_date=payment.payment_date.isoformat() if payment.payment_date else None,
         payment_period_start_date=payment_period_start_date,
@@ -164,14 +173,14 @@ def build_audit_report_row(
         payment_amount=str(payment_audit_data.net_payment_amount),
         federal_withholding_amount=str(payment_audit_data.federal_withholding_amount),
         state_withholding_amount=str(payment_audit_data.state_withholding_amount),
-        employer_reimbursement_amount=None,
+        employer_reimbursement_amount=str(payment_audit_data.employer_reimbursement_amount),
         child_support_amount=None,
         absence_case_number=claim.fineos_absence_id,
         c_value=payment.fineos_pei_c_value,
         i_value=payment.fineos_pei_i_value,
         federal_withholding_i_value=str(payment_audit_data.federal_withholding_i_value),
         state_withholding_i_value=str(payment_audit_data.state_withholding_i_value),
-        employer_reimbursement_i_value=None,
+        employer_reimbursement_i_value=str(payment_audit_data.employer_reimbursement_i_value),
         child_support_i_value=None,
         employer_id=str(employer.fineos_employer_id) if employer else None,
         absence_case_creation_date=payment.absence_case_creation_date.isoformat()
@@ -204,7 +213,10 @@ def build_audit_report_row(
         rejected_notes=audit_report_details.rejected_notes,
         previously_paid_payment_count=str(payment_audit_data.previously_paid_payment_count),
         previously_paid_payments=payment_audit_data.previously_paid_payments_string,
+        exceeds_26_weeks_total_leave_details=audit_report_details.exceeds_26_weeks_total_leave_details,
         payment_date_mismatch_details=audit_report_details.payment_date_mismatch_details,
+        is_preapproved=bool_to_str[preapproval_status.is_preapproved()],
+        preapproval_issues=preapproval_status.get_preapproval_issue_description(),
     )
 
     return payment_audit_row
@@ -320,5 +332,6 @@ def get_payment_audit_report_details(
         rejected_by_program_integrity=rejected,
         skipped_by_program_integrity=(not rejected and skipped),
         rejected_notes=rejected_notes,
+        audit_report_details_list=staged_audit_report_details_list,
         **audit_report_details,
     )

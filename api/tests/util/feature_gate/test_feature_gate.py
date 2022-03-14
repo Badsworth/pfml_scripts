@@ -1,8 +1,8 @@
 import io
+import unittest.mock as mock
 from datetime import datetime, timedelta
 from pathlib import Path
 
-import mock
 import pytest
 from freezegun import freeze_time
 
@@ -54,9 +54,7 @@ test_feature_disabled:
 """
     )
 
-    with mock.patch(
-        "massgov.pfml.util.files.open_stream", return_value=mock_features_file,
-    ):
+    with mock.patch("massgov.pfml.util.files.open_stream", return_value=mock_features_file):
         enabled = features_cache.check_enabled("test_feature_disabled")
         # Enabled is still False
         assert enabled is False
@@ -71,9 +69,7 @@ test_feature_disabled:
 def test_feature_gate_malformed_file(features_file_path):
     mock_features_file = io.StringIO("""garbage format""")
 
-    with mock.patch(
-        "massgov.pfml.util.files.open_stream", return_value=mock_features_file,
-    ):
+    with mock.patch("massgov.pfml.util.files.open_stream", return_value=mock_features_file):
         features_cache = FeaturesCache(file_path=features_file_path, ttl=60 * 15)
         enabled = features_cache.check_enabled("test_feature")
 
@@ -82,7 +78,7 @@ def test_feature_gate_malformed_file(features_file_path):
 
 def test_feature_gate_invalid_path():
     features_cache = FeaturesCache(
-        file_path="/does/not/exist/invalid_feature_path.yaml", ttl=60 * 15,
+        file_path="/does/not/exist/invalid_feature_path.yaml", ttl=60 * 15
     )
     enabled = features_cache.check_enabled("test_feature")
 

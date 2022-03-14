@@ -46,7 +46,11 @@ describe("Post-approval (notifications/notices)", () => {
           });
           // Skip checking tasks. We do that in other tests.
           // Also skip checking claim status for the same reason.
-          claimPage.approve();
+          if (config("HAS_APRIL_UPGRADE") === "true") {
+            claimPage.approve("Approved", true);
+          } else {
+            claimPage.approve("Approved", false);
+          }
           claimPage.triggerNotice("Designation Notice");
         });
       });

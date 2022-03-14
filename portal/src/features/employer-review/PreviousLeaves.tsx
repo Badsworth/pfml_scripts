@@ -1,6 +1,5 @@
 import AddButton from "./AddButton";
 import AmendablePreviousLeave from "./AmendablePreviousLeave";
-import AppErrorInfo from "../../models/AppErrorInfo";
 import Details from "../../components/core/Details";
 import EmployerClaim from "../../models/EmployerClaim";
 import Heading from "../../components/core/Heading";
@@ -14,7 +13,7 @@ import { useTranslation } from "../../locales/i18n";
 
 interface PreviousLeavesProps {
   addedPreviousLeaves: PreviousLeave[];
-  appErrors: AppErrorInfo[];
+  errors: Error[];
   claim: EmployerClaim;
   onAdd: React.MouseEventHandler<HTMLButtonElement>;
   onChange: (
@@ -35,7 +34,7 @@ const PreviousLeaves = (props: PreviousLeavesProps) => {
   const { t } = useTranslation();
   const {
     addedPreviousLeaves,
-    appErrors,
+    errors,
     claim,
     onAdd,
     onChange,
@@ -52,15 +51,6 @@ const PreviousLeaves = (props: PreviousLeavesProps) => {
       </Heading>
       <Trans
         i18nKey="components.employersPreviousLeaves.explanation"
-        components={{
-          "calculate-reductions-link": (
-            <a
-              href={routes.external.massgov.calculateReductions}
-              target="_blank"
-              rel="noopener"
-            />
-          ),
-        }}
         tOptions={{
           context:
             claim.computed_start_dates.other_reason ===
@@ -152,7 +142,7 @@ const PreviousLeaves = (props: PreviousLeavesProps) => {
             <React.Fragment>
               {previousLeaves.map((previousLeave) => (
                 <AmendablePreviousLeave
-                  appErrors={appErrors}
+                  errors={errors}
                   isAddedByLeaveAdmin={false}
                   key={previousLeave.previous_leave_id}
                   onChange={onChange}
@@ -172,7 +162,7 @@ const PreviousLeaves = (props: PreviousLeavesProps) => {
           {shouldShowV2 &&
             addedPreviousLeaves.map((addedLeave) => (
               <AmendablePreviousLeave
-                appErrors={appErrors}
+                errors={errors}
                 isAddedByLeaveAdmin
                 key={addedLeave.previous_leave_id}
                 onChange={onChange}

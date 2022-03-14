@@ -75,14 +75,10 @@ def get_application_log_attributes(application: Application) -> Dict[str, Option
         "updated_at",
         "completed_time",
         "submitted_time",
+        "split_from_application_id",
     ]
 
-    timestamp_attributes_to_log = [
-        "created_at",
-        "updated_at",
-        "completed_time",
-        "submitted_time",
-    ]
+    timestamp_attributes_to_log = ["created_at", "updated_at", "completed_time", "submitted_time"]
 
     result = {}
     for name in attributes_to_log:
@@ -99,6 +95,9 @@ def get_application_log_attributes(application: Application) -> Dict[str, Option
     result["application.absence_case_id"] = (
         application.claim.fineos_absence_id if application.claim else None
     )
+    # Makes it easier to track logs related to specific ID's, as our standard for tracking this ID
+    # is 'absence_case_id' and not 'application.absence_case_id'
+    result["absence_case_id"] = application.claim.fineos_absence_id if application.claim else None
 
     # leave_reason and leave_reason_qualifier are objects, so get the underlying string description
     result["application.leave_reason"] = (
@@ -178,7 +177,7 @@ def get_previous_leaves_log_attributes(
     return result
 
 
-def get_employer_benefits_log_attributes(benefits: Iterable[EmployerBenefit],) -> Dict[str, str]:
+def get_employer_benefits_log_attributes(benefits: Iterable[EmployerBenefit]) -> Dict[str, str]:
     result = {"application.num_employer_benefits": str(len(list(benefits)))}
 
     type_values = [

@@ -29,7 +29,7 @@ function RunIdsQuery({ children, environment, accountId }) {
           return (
             <SectionMessage
               title={"There was an error executing the query"}
-              description={error}
+              description={error.message}
               type={SectionMessage.TYPE.CRITICAL}
             />
           );
@@ -199,7 +199,7 @@ function RunQueryIntegration({ accountId, runIds, children }) {
           return (
             <SectionMessage
               title={"There was an error executing the query"}
-              description={error}
+              description={error.message}
               type={SectionMessage.TYPE.CRITICAL}
             />
           );
@@ -232,7 +232,7 @@ function RunQuery({ accountId, runIds, groupName, children }) {
           return (
             <SectionMessage
               title={"There was an error executing the query"}
-              description={error}
+              description={error.message}
               type={SectionMessage.TYPE.CRITICAL}
             />
           );

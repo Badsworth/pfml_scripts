@@ -2,6 +2,7 @@ import { fineos, portal, email, fineosPages } from "../../../actions";
 import { Submission } from "../../../../src/types";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { getClaimantCredentials } from "../../../config";
+import { config } from "../../../actions/common";
 
 describe("Denial Notification and Notice", () => {
   before(() => {
@@ -24,7 +25,11 @@ describe("Denial Notification and Notice", () => {
         claimPage.triggerNotice("Preliminary Designation");
         fineos.onTab("Absence Hub");
         claimPage.shouldHaveStatus("Eligibility", "Not Met");
-        claimPage.deny("Claimant wages failed 30x rule");
+        if (config("HAS_APRIL_UPGRADE") === "true") {
+          claimPage.deny("Claimant wages failed 30x rule", true, true);
+        } else {
+          claimPage.deny("Claimant wages failed 30x rule", true, false);
+        }
         claimPage.triggerNotice("Leave Request Declined");
         claimPage.documents((docPage) =>
           docPage.assertDocumentExists("Denial Notice")

@@ -2,6 +2,7 @@ import re
 from datetime import date
 from enum import Enum
 from typing import Any, Callable, List, Optional, Set, Type, Union, no_type_check
+from uuid import UUID
 
 from sqlalchemy import Column, and_, asc, desc, func, or_
 from sqlalchemy.orm import contains_eager
@@ -82,7 +83,7 @@ class GetClaimsQuery:
         else:
             self.query = self.query.join(model, isouter=isouter)
 
-    def add_employers_filter(self, employers: list[Employer], user: User) -> None:
+    def add_leave_admin_filter(self, employers: list[Employer], user: User) -> None:
         employers_without_units = [
             e.employer_id for e in employers if not e.uses_organization_units
         ]
@@ -93,7 +94,7 @@ class GetClaimsQuery:
         )
 
         employers_without_units_filter = and_(
-            Claim.employer_id.in_(employers_without_units), Claim.organization_unit_id.is_(None),
+            Claim.employer_id.in_(employers_without_units), Claim.organization_unit_id.is_(None)
         )
         employers_with_units_filter = and_(
             Claim.employer_id.in_(employers_with_units),
@@ -113,7 +114,10 @@ class GetClaimsQuery:
             or_(employers_without_units_filter, employers_with_units_or_claims_notified_filter)
         )
 
-    def add_employees_filter(self, employee_ids: Set[str]) -> None:
+    def add_employers_filter(self, employer_ids: Set[UUID]) -> None:
+        self.query = self.query.filter(Claim.employer_id.in_(employer_ids))
+
+    def add_employees_filter(self, employee_ids: Set[UUID]) -> None:
         self.query = self.query.filter(Claim.employee_id.in_(employee_ids))
 
     def add_user_owns_claim_filter(self, current_user: User) -> None:
@@ -261,7 +265,7 @@ class GetClaimsQuery:
         self.join(ManagedRequirement, isouter=True, join_filter=and_(*filters))
         self.query = self.query.options(contains_eager("managed_requirements"))
 
-    def add_order_by(self, context: PaginationAPIContext) -> None:
+    def add_order_by(self, context: PaginationAPIContext, is_reviewable: Optional[str]) -> None:
         is_asc = context.order_direction == OrderDirection.asc.value
         sort_fn = asc_null_first if is_asc else desc_null_last
 
@@ -269,7 +273,7 @@ class GetClaimsQuery:
             self.add_order_by_employee(sort_fn)
 
         elif context.order_by == "latest_follow_up_date":
-            self.add_order_by_follow_up_date(is_asc)
+            self.add_order_by_follow_up_date(is_asc, is_reviewable)
 
         elif context.order_key is Claim.fineos_absence_status:
             self.add_order_by_absence_status(is_asc)
@@ -277,7 +281,7 @@ class GetClaimsQuery:
         elif context.order_by in Claim.__table__.columns:
             self.add_order_by_column(is_asc, context)
 
-    def add_order_by_follow_up_date(self, is_asc: bool) -> None:
+    def add_order_by_follow_up_date(self, is_asc: bool, is_reviewable: Optional[str]) -> None:
         """
         For order_direction=ascending (user selects "Oldest"),
         return non-open requirements first, then open,
@@ -287,14 +291,23 @@ class GetClaimsQuery:
         return open requirements first (sorted by those that need attention first),
         then all the non-open claims in desc order.
 
-        More details in test_get_claims_with_order_by_follow_up_date_desc and
-        test_get_claims_with_order_by_follow_up_date_asc
+        More details in test_get_claims_with_order_by_follow_up_date_desc,
+        test_get_claims_with_order_by_follow_up_date_asc, and
+        test_get_claims_with_order_by_follow_up_date_asc_and_is_reviewable_yes
         """
         if is_asc:
-            order_keys = [
-                asc(Claim.latest_follow_up_date),  # type:ignore
-                asc(Claim.soonest_open_requirement_date),  # type:ignore
-            ]
+            if is_reviewable and is_reviewable == "yes":
+                # Only sort by one key, otherwise a subset (those with multiple managed requirements)
+                # get returned first (non-open), followed by all the rest (open requirements).
+                # When is_reviewable=="yes", all claims will have `soonest_open_requirement_date`.
+                order_keys = [
+                    asc(Claim.soonest_open_requirement_date),  # type:ignore
+                ]
+            else:
+                order_keys = [
+                    asc(Claim.latest_follow_up_date),  # type:ignore
+                    asc(Claim.soonest_open_requirement_date),  # type:ignore
+                ]
         else:
             order_keys = [
                 asc(Claim.soonest_open_requirement_date),  # type:ignore

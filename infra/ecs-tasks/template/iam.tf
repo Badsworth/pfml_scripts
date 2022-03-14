@@ -121,7 +121,9 @@ data "aws_iam_policy_document" "task_sql_export_s3_policy_doc" {
       "arn:aws:s3:::massgov-pfml-${var.environment_name}-execute-sql-export",
       "arn:aws:s3:::massgov-pfml-${var.environment_name}-execute-sql-export/*",
       "arn:aws:s3:::massgov-pfml-${var.environment_name}-business-intelligence-tool/api_db/accounts_created",
-      "arn:aws:s3:::massgov-pfml-${var.environment_name}-business-intelligence-tool/api_db/accounts_created/*"
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-business-intelligence-tool/api_db/accounts_created/*",
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-reports",
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-reports/*"
     ]
   }
 }

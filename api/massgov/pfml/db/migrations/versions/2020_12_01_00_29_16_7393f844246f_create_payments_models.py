@@ -42,7 +42,7 @@ def upgrade():
         sa.Column("file_location", sa.Text(), nullable=False),
         sa.Column("reference_file_type_id", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(
-            ["reference_file_type_id"], ["lk_reference_file_type.reference_file_type_id"],
+            ["reference_file_type_id"], ["lk_reference_file_type.reference_file_type_id"]
         ),
         sa.PrimaryKeyConstraint("reference_file_id"),
     )
@@ -54,9 +54,9 @@ def upgrade():
         sa.Column("bank_account_type_id", sa.Integer(), nullable=False),
         sa.Column("employee_id", postgresql.UUID(as_uuid=True), nullable=True),
         sa.ForeignKeyConstraint(
-            ["bank_account_type_id"], ["lk_bank_account_type.bank_account_type_id"],
+            ["bank_account_type_id"], ["lk_bank_account_type.bank_account_type_id"]
         ),
-        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"],),
+        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"]),
         sa.PrimaryKeyConstraint("eft_id"),
     )
     op.create_index(op.f("ix_eft_employee_id"), "eft", ["employee_id"], unique=False)
@@ -66,8 +66,8 @@ def upgrade():
         sa.Column("reference_file_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("ctr_document_id", sa.Text(), nullable=True),
         sa.Column("ctr_batch_id", sa.Text(), nullable=True),
-        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"],),
-        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"],),
+        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"]),
+        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"]),
         sa.PrimaryKeyConstraint("employee_id", "reference_file_id"),
     )
     op.create_index(
@@ -91,9 +91,9 @@ def upgrade():
         sa.Column("disb_check_eft_issue_date", sa.Date(), nullable=True),
         sa.Column("disb_method_id", sa.Integer(), nullable=True),
         sa.Column("disb_amount", sa.Numeric(), nullable=True),
-        sa.ForeignKeyConstraint(["claim_id"], ["claim.claim_id"],),
-        sa.ForeignKeyConstraint(["disb_method_id"], ["lk_payment_method.payment_method_id"],),
-        sa.ForeignKeyConstraint(["payment_method_id"], ["lk_payment_method.payment_method_id"],),
+        sa.ForeignKeyConstraint(["claim_id"], ["claim.claim_id"]),
+        sa.ForeignKeyConstraint(["disb_method_id"], ["lk_payment_method.payment_method_id"]),
+        sa.ForeignKeyConstraint(["payment_method_id"], ["lk_payment_method.payment_method_id"]),
         sa.PrimaryKeyConstraint("payment_id"),
     )
     op.create_index(op.f("ix_payment_claim_id"), "payment", ["claim_id"], unique=False)
@@ -103,8 +103,8 @@ def upgrade():
         sa.Column("reference_file_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("ctr_document_id", sa.Text(), nullable=True),
         sa.Column("ctr_batch_id", sa.Text(), nullable=True),
-        sa.ForeignKeyConstraint(["payment_id"], ["payment.payment_id"],),
-        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"],),
+        sa.ForeignKeyConstraint(["payment_id"], ["payment.payment_id"]),
+        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"]),
         sa.PrimaryKeyConstraint("payment_id", "reference_file_id"),
     )
     op.create_index(
@@ -125,11 +125,11 @@ def upgrade():
         sa.Column("payment_id", postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column("reference_file_id", postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column("employee_id", postgresql.UUID(as_uuid=True), nullable=True),
-        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"],),
-        sa.ForeignKeyConstraint(["flow_id"], ["lk_flow.flow_id"],),
-        sa.ForeignKeyConstraint(["payment_id"], ["payment.payment_id"],),
-        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"],),
-        sa.ForeignKeyConstraint(["state_id"], ["lk_state.state_id"],),
+        sa.ForeignKeyConstraint(["employee_id"], ["employee.employee_id"]),
+        sa.ForeignKeyConstraint(["flow_id"], ["lk_flow.flow_id"]),
+        sa.ForeignKeyConstraint(["payment_id"], ["payment.payment_id"]),
+        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"]),
+        sa.ForeignKeyConstraint(["state_id"], ["lk_state.state_id"]),
         sa.PrimaryKeyConstraint("state_log_id"),
     )
     op.create_index(op.f("ix_state_log_employee_id"), "state_log", ["employee_id"], unique=False)
@@ -206,9 +206,7 @@ def downgrade():
     op.drop_column("claim", "fineos_claim_number")
     op.drop_column("claim", "employee_id")
     op.drop_column("claim", "claim_type_id")
-    op.add_column(
-        "claim", sa.Column("claim_type_id", postgresql.UUID(), nullable=True),
-    )
+    op.add_column("claim", sa.Column("claim_type_id", postgresql.UUID(), nullable=True))
     op.drop_index(op.f("ix_state_log_success"), table_name="state_log")
     op.drop_index(op.f("ix_state_log_reference_file_id"), table_name="state_log")
     op.drop_index(op.f("ix_state_log_payment_id"), table_name="state_log")

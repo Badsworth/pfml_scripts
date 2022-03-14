@@ -21,7 +21,15 @@ from massgov.pfml.db.models.applications import (
     RelationshipQualifier,
     RelationshipToCaregiver,
 )
-from massgov.pfml.db.models.employees import AddressType, BankAccountType, Employer, PaymentMethod
+from massgov.pfml.db.models.employees import (
+    AddressType,
+    BankAccountType,
+    ChangeRequest,
+    ChangeRequestType,
+    Employer,
+    LkChangeRequestType,
+    PaymentMethod,
+)
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,
@@ -213,41 +221,141 @@ class TestSendToFineos:
         assert claim.employer == employer
 
 
-def test_document_upload(user, test_db_session):
-    application = ApplicationFactory.create(
-        user=user, work_pattern=WorkPatternFixedFactory.create()
-    )
-    application.employer_fein = "179892886"
-    application.tax_identifier.tax_identifier = "784569632"
+@pytest.fixture
+def file():
+    file = MagicMock()
+    file.name = "test.png"
+    file.content = io.BytesIO(b"abcdef")
+    file.content_type = "image/png"
 
-    fineos_actions.send_to_fineos(application, test_db_session, user)
-    updated_application = test_db_session.query(Application).get(application.application_id)
+    return file
 
-    assert updated_application.claim.fineos_absence_id is not None
 
-    file = io.BytesIO(b"abcdef")
-    file_content = file.read()
-    file_name = "test.png"
-    content_type = "image/png"
+@pytest.fixture
+def document():
+    document = MagicMock()
+    document.type = "Passport"
+    document.description = "Test document upload description"
 
-    document_type = "Passport"
-    description = "Test document upload description"
+    return document
 
-    fineos_document = fineos_actions.upload_document(
-        updated_application,
-        document_type,
-        file_content,
-        file_name,
-        content_type,
-        description,
-        test_db_session,
-    ).dict()
-    assert fineos_document["caseId"] == application.claim.fineos_absence_id
-    assert fineos_document["documentId"] == 3011  # See massgov/pfml/fineos/mock_client.py
-    assert fineos_document["name"] == document_type
-    assert fineos_document["fileExtension"] == ".png"
-    assert fineos_document["originalFilename"] == file_name
-    assert fineos_document["description"] == description
+
+class TestUploadDocument:
+    def test_success(self, user, document, file, test_db_session):
+        application = ApplicationFactory.create(
+            user=user, work_pattern=WorkPatternFixedFactory.create()
+        )
+        application.employer_fein = "179892886"
+        application.tax_identifier.tax_identifier = "784569632"
+
+        fineos_actions.send_to_fineos(application, test_db_session, user)
+        updated_application = test_db_session.query(Application).get(application.application_id)
+
+        assert updated_application.claim.fineos_absence_id is not None
+
+        fineos_document = fineos_actions.upload_document(
+            updated_application,
+            document.type,
+            file.content,
+            file.name,
+            file.content_type,
+            document.description,
+            test_db_session,
+        ).dict()
+
+        assert fineos_document["caseId"] == application.claim.fineos_absence_id
+        assert fineos_document["documentId"] == 3011  # See massgov/pfml/fineos/mock_client.py
+        assert fineos_document["name"] == document.type
+        assert fineos_document["fileExtension"] == ".png"
+        assert fineos_document["originalFilename"] == file.name
+        assert fineos_document["description"] == document.description
+
+
+class TestUploadDocumentWithClaim:
+    # Run `initialize_factories_session` for all tests,
+    # so that it doesn't need to be manually included
+    @pytest.fixture(autouse=True)
+    def setup_factories(self, initialize_factories_session):
+        return
+
+    @pytest.fixture
+    def mock_fineos(self):
+        mock_fineos = MagicMock()
+        mock_fineos.find_employer.return_value = "1234"
+        return mock_fineos
+
+    def test_success(self, claim, document, file, test_db_session):
+        fineos_document = fineos_actions.upload_document_with_claim(
+            claim,
+            document.type,
+            file.content,
+            file.name,
+            file.content_type,
+            document.description,
+            test_db_session,
+            with_multipart=False,
+        ).dict()
+
+        assert fineos_document["caseId"] == claim.fineos_absence_id
+        assert fineos_document["documentId"] == 3011  # See massgov/pfml/fineos/mock_client.py
+        assert fineos_document["name"] == document.type
+        assert fineos_document["fileExtension"] == ".png"
+        assert fineos_document["originalFilename"] == file.name
+        assert fineos_document["description"] == document.description
+
+    @mock.patch("massgov.pfml.fineos.create_client")
+    def test_uploads_to_fineos(
+        self, mock_create_fineos, mock_fineos, claim, document, file, test_db_session
+    ):
+        mock_create_fineos.return_value = mock_fineos
+
+        fineos_actions.upload_document_with_claim(
+            claim,
+            document.type,
+            file.content,
+            file.name,
+            file.content_type,
+            document.description,
+            test_db_session,
+            with_multipart=False,
+        )
+
+        mock_fineos.upload_document.assert_called_once_with(
+            mock.ANY,
+            claim.fineos_absence_id,
+            document.type,
+            file.content,
+            file.name,
+            file.content_type,
+            document.description,
+        )
+
+    @mock.patch("massgov.pfml.fineos.create_client")
+    def test_uploads_to_fineos_with_multipart(
+        self, mock_create_fineos, mock_fineos, claim, document, file, test_db_session
+    ):
+        mock_create_fineos.return_value = mock_fineos
+
+        fineos_actions.upload_document_with_claim(
+            claim,
+            document.type,
+            file.content,
+            file.name,
+            file.content_type,
+            document.description,
+            test_db_session,
+            with_multipart=True,
+        )
+
+        mock_fineos.upload_document_multipart.assert_called_once_with(
+            mock.ANY,
+            claim.fineos_absence_id,
+            document.type,
+            file.content,
+            file.name,
+            file.content_type,
+            document.description,
+        )
 
 
 def test_submit_direct_deposit_payment_preference(user, test_db_session):
@@ -357,7 +465,7 @@ def test_submit_direct_deposit_payment_pref_without_mailing_addr(user, test_db_s
 
 def test_submit_check_payment_pref_with_mailing_addr(user, test_db_session):
     payment_pref = PaymentPreferenceFactory.create(
-        payment_method_id=PaymentMethod.CHECK.payment_method_id,
+        payment_method_id=PaymentMethod.CHECK.payment_method_id
     )
     mailing_address = AddressFactory.create(
         address_type_id=AddressType.MAILING.address_type_id,
@@ -406,7 +514,7 @@ def test_submit_check_payment_pref_with_mailing_addr(user, test_db_session):
 
 def test_submit_check_payment_pref_without_mailing_addr(user, test_db_session):
     payment_pref = PaymentPreferenceFactory.create(
-        payment_method_id=PaymentMethod.CHECK.payment_method_id,
+        payment_method_id=PaymentMethod.CHECK.payment_method_id
     )
     residential_address = AddressFactory.create(
         address_type_id=AddressType.RESIDENTIAL.address_type_id,
@@ -435,7 +543,7 @@ def test_submit_check_payment_pref_without_mailing_addr(user, test_db_session):
 
 
 def test_build_week_based_work_pattern(user, test_db_session):
-    application = ApplicationFactory.create(user=user, work_pattern=WorkPatternFixedFactory(),)
+    application = ApplicationFactory.create(user=user, work_pattern=WorkPatternFixedFactory())
 
     work_pattern = fineos_actions.build_week_based_work_pattern(application)
 
@@ -586,7 +694,7 @@ def test_build_caring_leave_reflexive_question_age_capacity(user):
     # Child relationship uses the "AgeCapacityFamilyMemberQuestionGroup.familyMemberDetailsQuestions" field name
 
     caring_leave_metadata = CaringLeaveMetadataFactory.create(
-        relationship_to_caregiver_id=RelationshipToCaregiver.CHILD.relationship_to_caregiver_id,
+        relationship_to_caregiver_id=RelationshipToCaregiver.CHILD.relationship_to_caregiver_id
     )
     application = ApplicationFactory.create(user=user, caring_leave_metadata=caring_leave_metadata)
     application.leave_reason_id = LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id
@@ -639,7 +747,7 @@ def test_build_caring_leave_reflexive_question_family_member_details(user):
 
     for relationship_id in relationship_ids:
         caring_leave_metadata = CaringLeaveMetadataFactory.create(
-            relationship_to_caregiver_id=relationship_id,
+            relationship_to_caregiver_id=relationship_id
         )
         application = ApplicationFactory.create(
             user=user, caring_leave_metadata=caring_leave_metadata
@@ -686,7 +794,7 @@ def test_build_caring_leave_reflexive_question_family_member_sibling(user):
     # Sibling relationship uses the "FamilyMemberSiblingDetailsQuestionGroup.familyMemberDetailsQuestions" field name
 
     caring_leave_metadata = CaringLeaveMetadataFactory.create(
-        relationship_to_caregiver_id=RelationshipToCaregiver.SIBLING.relationship_to_caregiver_id,
+        relationship_to_caregiver_id=RelationshipToCaregiver.SIBLING.relationship_to_caregiver_id
     )
     application = ApplicationFactory.create(user=user, caring_leave_metadata=caring_leave_metadata)
     application.leave_reason_id = LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id
@@ -773,7 +881,7 @@ def test_create_service_agreement_for_employer(test_db_session):
 
 def test_create_service_agreement_payload():
     service_agreement_inputs = CreateOrUpdateServiceAgreement(
-        leave_plans="MA PFML - Family, MA PFML - Military Care", unlink_leave_plans=True,
+        leave_plans="MA PFML - Family, MA PFML - Military Care", unlink_leave_plans=True
     )
     payload = FINEOSClient._create_service_agreement_payload(123, service_agreement_inputs)
 
@@ -791,7 +899,7 @@ def test_create_service_agreement_payload():
     )
 
     service_agreement_inputs = CreateOrUpdateServiceAgreement(
-        absence_management_flag=False, unlink_leave_plans=True,
+        absence_management_flag=False, unlink_leave_plans=True
     )
     payload = FINEOSClient._create_service_agreement_payload(123, service_agreement_inputs)
 
@@ -821,7 +929,7 @@ def test_service_agreement_exempt_to_not_payload():
     prev_exemption_cease_date = date(2021, 2, 9)
 
     service_agreement_inputs = fineos_actions.resolve_service_agreement_inputs(
-        False, employer, prev_family_exemption, prev_medical_exemption, prev_exemption_cease_date,
+        False, employer, prev_family_exemption, prev_medical_exemption, prev_exemption_cease_date
     )
 
     payload = FINEOSClient._create_service_agreement_payload(123, service_agreement_inputs)
@@ -858,7 +966,7 @@ def test_service_agreement_not_exempt_to_exempt_payload():
     prev_exemption_cease_date = None
 
     service_agreement_inputs = fineos_actions.resolve_service_agreement_inputs(
-        False, employer, prev_family_exemption, prev_medical_exemption, prev_exemption_cease_date,
+        False, employer, prev_family_exemption, prev_medical_exemption, prev_exemption_cease_date
     )
     payload = FINEOSClient._create_service_agreement_payload(123, service_agreement_inputs)
 
@@ -1074,7 +1182,7 @@ def test_format_other_leaves_data_only_other_reason(user, test_db_session):
             is_for_current_employer=False,
             worked_per_week_minutes=2430,
             leave_minutes=3600,
-        ),
+        )
     ]
     application.has_previous_leaves_other_reason = True
 
@@ -1091,7 +1199,7 @@ def test_format_other_leaves_data_only_other_reason(user, test_db_session):
             "name": "V2OtherLeavesPastLeaveEndDate1",
         },
         {
-            "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy",},
+            "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy"},
             "name": "V2QualifyingReason1",
         },
         {
@@ -1129,7 +1237,7 @@ def test_format_other_leaves_data_only_same_reason(user, test_db_session):
             is_for_current_employer=True,
             worked_per_week_minutes=2430,
             leave_minutes=3600,
-        ),
+        )
     ]
     application.has_previous_leaves_same_reason = True
 
@@ -1182,7 +1290,7 @@ def test_format_other_leaves_data_only_same_reason(user, test_db_session):
 def test_format_other_leaves_data_only_concurrent_leave(user, test_db_session):
     application: Application = ApplicationFactory.create(user=user)
     application.concurrent_leave = ConcurrentLeaveFactory.create(
-        application_id=application.application_id, is_for_current_employer=False,
+        application_id=application.application_id, is_for_current_employer=False
     )
     application.has_concurrent_leave = True
 
@@ -1235,12 +1343,12 @@ def test_format_other_leaves_data_all_present(user, test_db_session):
             is_for_current_employer=True,
             worked_per_week_minutes=2430,
             leave_minutes=3600,
-        ),
+        )
     ]
     application.has_previous_leaves_other_reason = True
 
     application.concurrent_leave = ConcurrentLeaveFactory.create(
-        application_id=application.application_id, is_for_current_employer=False,
+        application_id=application.application_id, is_for_current_employer=False
     )
     application.has_concurrent_leave = True
 
@@ -1258,7 +1366,7 @@ def test_format_other_leaves_data_all_present(user, test_db_session):
             "name": "V2OtherLeavesPastLeaveEndDate1",
         },
         {
-            "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy",},
+            "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy"},
             "name": "V2QualifyingReason1",
         },
         {
@@ -1292,7 +1400,7 @@ def test_format_other_leaves_data_all_present(user, test_db_session):
             "name": "V2OtherLeavesPastLeaveEndDate2",
         },
         {
-            "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy",},
+            "enumValue": {"domainName": "QualifyingReasons", "instanceValue": "Pregnancy"},
             "name": "V2QualifyingReason2",
         },
         {
@@ -1537,3 +1645,154 @@ def test_upsert_week_based_work_pattern(existing_work_pattern, expected_fn_call,
     )
     capture = fineos_mock.get_capture()
     assert capture[0][0] == expected_fn_call
+
+
+@mock.patch(
+    "massgov.pfml.api.services.fineos_actions.register_employee_with_claim", return_value="web_id"
+)
+class TestSubmitChangeRequest:
+    # Run `initialize_factories_session` for all tests,
+    # so that it doesn't need to be manually included
+    @pytest.fixture(autouse=True)
+    def setup_factories(self, initialize_factories_session):
+        return
+
+    @pytest.fixture
+    def change_request(self, claim):
+        return ChangeRequest(
+            claim_id=claim.claim_id, change_request_type_instance=ChangeRequestType.WITHDRAWAL
+        )
+
+    @mock.patch("massgov.pfml.api.services.fineos_actions.convert_change_request_to_fineos_model")
+    @mock.patch("massgov.pfml.fineos.create_client")
+    def test_success(
+        self, mock_create_fineos, mock_convert, change_request, claim, test_db_session
+    ):
+        mock_fineos = MagicMock()
+        mock_create_fineos.return_value = mock_fineos
+        mock_convert.return_value = {}
+
+        fineos_actions.submit_change_request(change_request, claim, test_db_session)
+
+        mock_convert.assert_called_with(change_request, claim)
+        mock_fineos.create_or_update_leave_period_change_request.assert_called_with(
+            "web_id", claim.fineos_absence_id, mock.ANY
+        )
+
+
+class TestConvertChangeRequestToFineosModel:
+    # Run `initialize_factories_session` for all tests,
+    # so that it doesn't need to be manually included
+    @pytest.fixture(autouse=True)
+    def setup_factories(self, initialize_factories_session):
+        return
+
+    @pytest.fixture
+    def claim(self, claim):
+        claim.absence_period_start_date = datetime.date(2022, 1, 1)
+        claim.absence_period_end_date = datetime.date(2022, 1, 10)
+
+        return claim
+
+    @pytest.fixture
+    def change_request(self, claim):
+        return ChangeRequest(
+            claim_id=claim.claim_id, change_request_type_instance=ChangeRequestType.MODIFICATION
+        )
+
+    def test_withdrawn(self, claim, change_request):
+        change_request.change_request_type_instance = ChangeRequestType.WITHDRAWAL
+
+        fineos_change_request = fineos_actions.convert_change_request_to_fineos_model(
+            change_request, claim
+        )
+
+        assert fineos_change_request.reason.name == "Employee Requested Removal"
+        assert fineos_change_request.additionalNotes == "Withdrawal"
+
+        change_request_period = fineos_change_request.changeRequestPeriods[0]
+        assert change_request_period.startDate == datetime.date(2022, 1, 1)
+        assert change_request_period.endDate == datetime.date(2022, 1, 10)
+
+    def test_medical_to_bonding(self, claim, change_request):
+        change_request.change_request_type_instance = ChangeRequestType.MEDICAL_TO_BONDING
+        change_request.start_date = datetime.date(2022, 2, 2)
+        change_request.end_date = datetime.date(2022, 2, 12)
+
+        fineos_change_request = fineos_actions.convert_change_request_to_fineos_model(
+            change_request, claim
+        )
+
+        assert fineos_change_request.reason.name == "Add time for different Absence Reason"
+        assert fineos_change_request.additionalNotes == "Medical to bonding transition"
+
+        change_request_period = fineos_change_request.changeRequestPeriods[0]
+        assert change_request_period.startDate == datetime.date(2022, 2, 2)
+        assert change_request_period.endDate == datetime.date(2022, 2, 12)
+
+    def test_extension(self, claim, change_request):
+        change_request.start_date = datetime.date(2022, 2, 2)
+        change_request.end_date = datetime.date(2022, 2, 12)
+
+        fineos_change_request = fineos_actions.convert_change_request_to_fineos_model(
+            change_request, claim
+        )
+
+        assert fineos_change_request.reason.name == "Add time for identical Absence Reason"
+        assert fineos_change_request.additionalNotes == "Extension"
+
+        change_request_period = fineos_change_request.changeRequestPeriods[0]
+        assert change_request_period.startDate == datetime.date(2022, 2, 2)
+        assert change_request_period.endDate == datetime.date(2022, 2, 12)
+
+    def test_cancellation(self, claim, change_request):
+        change_request.start_date = datetime.date(2022, 1, 1)
+        change_request.end_date = datetime.date(2022, 1, 5)
+
+        fineos_change_request = fineos_actions.convert_change_request_to_fineos_model(
+            change_request, claim
+        )
+
+        assert fineos_change_request.reason.name == "Employee Requested Removal"
+        assert fineos_change_request.additionalNotes == "Cancellation"
+
+        change_request_period = fineos_change_request.changeRequestPeriods[0]
+        assert change_request_period.startDate == datetime.date(2022, 1, 6)
+        assert change_request_period.endDate == datetime.date(2022, 1, 10)
+
+    def test_unknown_type(self, claim, change_request):
+        change_request.change_request_type_instance = LkChangeRequestType(123, "Foo")
+
+        with pytest.raises(ValueError) as exc_info:
+            fineos_actions.convert_change_request_to_fineos_model(change_request, claim)
+
+        error = exc_info.value
+        assert "Unknown type: Foo" in str(error)
+
+
+class TestBuildContactDetailsForFineosUpgrade:
+    def test_fineos_21_3(self, monkeypatch):
+        monkeypatch.setenv("FINEOS_IS_RUNNING_V21", "true")
+
+        application = ApplicationFactory.build()
+        fineos_client = massgov.pfml.fineos.MockFINEOSClient()
+
+        contact_details = fineos_actions.build_contact_details(
+            application, fineos_client.read_customer_contact_details("foo")
+        )
+
+        assert contact_details.emailAddresses[0].emailAddress == application.user.email_address
+        assert contact_details.emailAddresses[0].emailAddressType == "Email"
+
+    def test_not_fineos_21_3(self, monkeypatch):
+        monkeypatch.setenv("FINEOS_IS_RUNNING_V21", "false")
+
+        application = ApplicationFactory.build()
+        fineos_client = massgov.pfml.fineos.MockFINEOSClient()
+
+        contact_details = fineos_actions.build_contact_details(
+            application, fineos_client.read_customer_contact_details("foo")
+        )
+
+        assert contact_details.emailAddresses[0].emailAddress == application.user.email_address
+        assert "emailAddressType" not in contact_details.emailAddresses[0].dict()

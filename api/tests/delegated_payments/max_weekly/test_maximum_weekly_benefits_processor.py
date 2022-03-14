@@ -179,18 +179,14 @@ def test_validate_payments_not_exceeding_cap_in_same_claim(
     failed_containers = [payment_container4, payment_container5]
 
     # The successful containers will work on their own
-    maximum_weekly_processor.process(
-        employee, successful_containers,
-    )
+    maximum_weekly_processor.process(employee, successful_containers)
 
     for container in successful_containers:
         validate_payment_success(container)
 
     # But if you run them with another claim, now they all need
     # to meet the rule and they start failing
-    maximum_weekly_processor.process(
-        employee, successful_containers + failed_containers,
-    )
+    maximum_weekly_processor.process(employee, successful_containers + failed_containers)
 
     for container in successful_containers + failed_containers:
         validate_payment_failed(container)
@@ -233,9 +229,7 @@ def test_validate_payments_not_exceeding_cap_many_overlap(
         payment_container4,
     ]
     failed_containers = [payment_container5, payment_container6]
-    maximum_weekly_processor.process(
-        employee, successful_containers + failed_containers,
-    )
+    maximum_weekly_processor.process(employee, successful_containers + failed_containers)
 
     for container in successful_containers:
         validate_payment_success(container)
@@ -290,9 +284,7 @@ def test_validate_payments_not_exceeding_cap_adhoc(maximum_weekly_processor, loc
     )
 
     containers = [payment_container1, payment_container2, payment_container3, payment_container4]
-    maximum_weekly_processor.process(
-        employee, containers,
-    )
+    maximum_weekly_processor.process(employee, containers)
     for container in containers:
         validate_payment_success(container)
 
@@ -341,9 +333,7 @@ def test_validate_payments_not_exceeding_cap_for_multiweek_payments(
     )
 
     containers = [payment_container1, payment_container2, payment_container3]
-    maximum_weekly_processor.process(
-        employee, containers,
-    )
+    maximum_weekly_processor.process(employee, containers)
     validate_payment_success(payment_container1)
     validate_payment_success(payment_container2)
     validate_payment_failed(payment_container3)

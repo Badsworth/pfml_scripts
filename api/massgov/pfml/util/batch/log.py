@@ -187,7 +187,7 @@ def latest_import_log_for_metric(
     """
     found_import_log = (
         db_session.query(ImportLog)
-        .filter(ImportLog.source == source, ImportLog.report.op("~")(f'"{metric}": [1-9][0-9]*'),)
+        .filter(ImportLog.source == source, ImportLog.report.op("~")(f'"{metric}": [1-9][0-9]*'))
         .order_by(ImportLog.created_at.desc())
         .first()
     )

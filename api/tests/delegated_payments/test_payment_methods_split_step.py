@@ -6,10 +6,7 @@ from massgov.pfml.db.models.employees import PaymentMethod, State
 from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 
 # A few miscellaneous states that won't be cleaned up
-misc_states = [
-    State.DELEGATED_PAYMENT_COMPLETE,
-    State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
-]
+misc_states = [State.DELEGATED_PAYMENT_COMPLETE, State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT]
 
 
 @pytest.fixture
@@ -76,7 +73,7 @@ def test_cleanup_states_rollback(payment_split_step, test_db_session):
         ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_VALIDATED)
 
         for misc_state in misc_states:
-            DelegatedPaymentFactory(test_db_session,).get_or_create_payment_with_state(misc_state)
+            DelegatedPaymentFactory(test_db_session).get_or_create_payment_with_state(misc_state)
 
     test_db_session.commit()  # It will rollback to this DB state
     test_db_session.begin_nested()

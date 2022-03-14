@@ -26,9 +26,7 @@ def test_get_1099_batch_id_as_none(generate_1099_document_step: Generate1099Docu
         return_value=None,
     )
 
-    with pytest.raises(
-        Exception, match="Batch cannot be empty at this point.",
-    ):
+    with pytest.raises(Exception, match="Batch cannot be empty at this point."):
         generate_1099_document_step.get_1099_batch_id()
 
 

@@ -16,12 +16,12 @@ describe("errors", () => {
           field: "tax_identifier",
           type: "pattern",
           message: "Field didn't match regex pattern",
+          namespace: "applications",
         },
       ];
-      const error = new ValidationError(issues, "applications");
+      const error = new ValidationError(issues);
 
       expect(error.issues).toBe(issues);
-      expect(error.i18nPrefix).toBe("applications");
       expect(error.name).toBe("ValidationError");
     });
   });

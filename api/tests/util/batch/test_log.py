@@ -90,7 +90,7 @@ def test_latest_import_log_for_metric__source_doesnt_exist(
 
 
 def test_latest_import_log_for_metric__import_metric_doesnt_exist_for_source(
-    test_db_session: db.Session, initialize_factories_session,
+    test_db_session: db.Session, initialize_factories_session
 ):
     source = "some_source"
     metrics = dict()
@@ -123,12 +123,8 @@ def test_latest_import_log_for_metric__import_metric_is_0(
     assert found_import_log is None
 
 
-@pytest.mark.parametrize(
-    "test_metric", ["some_metric"],
-)
-@pytest.mark.parametrize(
-    "metric_count", [1, 10, 100, 1234],
-)
+@pytest.mark.parametrize("test_metric", ["some_metric"])
+@pytest.mark.parametrize("metric_count", [1, 10, 100, 1234])
 def test_latest_import_log_for_metric(
     test_db_session: db.Session, initialize_factories_session, test_metric: str, metric_count: int
 ):

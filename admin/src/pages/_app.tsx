@@ -1,16 +1,19 @@
 import "../../styles/index.scss";
-import { useEffect, useState } from "react";
-import type { AppProps } from "next/app";
-import { useRouter } from "next/router";
-import dynamic from "next/dynamic";
+
+import * as api from "../api";
+
 import { Helmet, HelmetProvider } from "react-helmet-async";
-import { authorizeUser } from "../utils/azure_sso_authorization";
-import classNames from "classnames";
+import { useEffect, useState } from "react";
+
+import type { AppProps } from "next/app";
 import Header from "../components/Header";
-import Sidebar from "../components/Sidebar";
+// import Sidebar from "../components/Sidebar";
 import Loading from "../components/Loading";
 import WithPermissions from "../components/WithPermissions";
-import * as api from "../api";
+import { authorizeUser } from "../utils/azure_sso_authorization";
+import classNames from "classnames";
+import dynamic from "next/dynamic";
+import { useRouter } from "next/router";
 
 const Login = dynamic(() => import("../components/Login"));
 
@@ -59,7 +62,7 @@ function MyApp({ Component, pageProps }: AppProps) {
           loadingState={loadingState}
           setLoadingState={setLoadingState}
         />
-        {user && <Sidebar user={user} />}
+        {/*user && <Sidebar user={user} />*/}
         <main className={pageMainClasses} tabIndex={0}>
           {loadingState.loading ? (
             <Loading

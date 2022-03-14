@@ -4,7 +4,11 @@
 // https://on.cypress.io/custom-commands
 // ***********************************************s
 import "@testing-library/cypress/add-commands";
-
+import {
+  trackedResults,
+  getRunnableId,
+  getRunnableSuiteId,
+} from "./dependents";
 /**
  * This command types, but masks the input in the logs (eg: for passwords).
  */
@@ -97,3 +101,18 @@ Cypress.Commands.add(
     cy.log(data);
   }
 );
+
+/**
+ * Return the current tests attempt count
+ * This is helpful in situations where a test timed out on the very final step, but the action eventually completed sucessfully (i.e: Claim Approval)
+ */
+Cypress.Commands.add("tryCount", () => {
+  // @ts-ignore
+  const runnable = cy.state("runnable") as Runnable;
+  const thisSuiteResults = trackedResults[getRunnableSuiteId(runnable)];
+  const thisTestId = getRunnableId(runnable);
+  if (!thisSuiteResults) return cy.wrap(0);
+  if (!thisSuiteResults[thisTestId]) return cy.wrap(0);
+  if (thisSuiteResults[thisTestId].attempts === undefined) return cy.wrap(0);
+  return cy.wrap(thisSuiteResults[thisTestId].attempts as number);
+});

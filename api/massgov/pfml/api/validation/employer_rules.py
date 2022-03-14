@@ -28,7 +28,7 @@ def validate_employer_being_added(employer: Optional[Employer]) -> None:
         raise ValidationException(
             errors=[
                 ValidationErrorDetail(
-                    type=IssueType.require_employer, message="Invalid FEIN", field="employer_fein",
+                    type=IssueType.require_employer, message="Invalid FEIN", field="employer_fein"
                 )
             ]
         )

@@ -48,8 +48,8 @@ def upgrade():
         sa.Column("benefitcasenumber", sa.Text(), nullable=True),
         sa.Column("reference_file_id", postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column("fineos_extract_import_log_id", sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(["fineos_extract_import_log_id"], ["import_log.import_log_id"],),
-        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"],),
+        sa.ForeignKeyConstraint(["fineos_extract_import_log_id"], ["import_log.import_log_id"]),
+        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"]),
         sa.PrimaryKeyConstraint("canelled_payment_id"),
     )
     op.create_index(
@@ -173,8 +173,8 @@ def upgrade():
         sa.Column("transstatusda", sa.Text(), nullable=True),
         sa.Column("reference_file_id", postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column("fineos_extract_import_log_id", sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(["fineos_extract_import_log_id"], ["import_log.import_log_id"],),
-        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"],),
+        sa.ForeignKeyConstraint(["fineos_extract_import_log_id"], ["import_log.import_log_id"]),
+        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"]),
         sa.PrimaryKeyConstraint("payment_report_id"),
     )
     op.create_index(
@@ -219,8 +219,8 @@ def upgrade():
         sa.Column("benefitcasenumber", sa.Text(), nullable=True),
         sa.Column("reference_file_id", postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column("fineos_extract_import_log_id", sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(["fineos_extract_import_log_id"], ["import_log.import_log_id"],),
-        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"],),
+        sa.ForeignKeyConstraint(["fineos_extract_import_log_id"], ["import_log.import_log_id"]),
+        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"]),
         sa.PrimaryKeyConstraint("replaced_payment_id"),
     )
     op.create_index(

@@ -55,7 +55,7 @@ def format_payment(payment, scenario):
 def main(total_payments: int, scenarios: List[str]) -> None:
     user = UserFactory.create(consented_to_data_sharing=True, roles=[Role.USER])
 
-    claim = ClaimFactory.create(fineos_absence_id=f"NTN-{fake.unique.random_int()}-ABS-01",)
+    claim = ClaimFactory.create(fineos_absence_id=f"NTN-{fake.unique.random_int()}-ABS-01")
 
     application = ApplicationFactory.create(claim=claim, user=user)
 
@@ -107,9 +107,7 @@ def main(total_payments: int, scenarios: List[str]) -> None:
         )
         payment = factory.get_or_create_payment()
 
-        click.secho(
-            f"Created Payment {format_payment(payment, scenario)}", fg="cyan",
-        )
+        click.secho(f"Created Payment {format_payment(payment, scenario)}", fg="cyan")
 
         # Scenarios that add additional information
         if scenario == "posted":
@@ -152,8 +150,7 @@ def main(total_payments: int, scenarios: List[str]) -> None:
             )
 
             click.secho(
-                f"Created successor {format_payment(successor_payment, scenario)}",
-                fg="bright_cyan",
+                f"Created successor {format_payment(successor_payment, scenario)}", fg="bright_cyan"
             )
 
         elif scenario == "cancelled":

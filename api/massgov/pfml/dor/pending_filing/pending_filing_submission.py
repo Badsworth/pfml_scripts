@@ -162,8 +162,6 @@ def write_to_submission_file(
 ) -> None:
     logger.info(f"Received {employer_fein}, {first_requested_quarter}")
 
-    line = "{:10}{:14}{:8}\n".format(
-        "FEIN      ", f"{employer_fein}     ", first_requested_quarter,
-    )
+    line = "{:10}{:14}{:8}\n".format("FEIN      ", f"{employer_fein}     ", first_requested_quarter)
     output_file.write(line)
     logger.info(f"Wrote line {line}")

@@ -52,10 +52,7 @@ def load_rows_from_file_path(
 
     db_session.commit()
 
-    final_count = {
-        "total_row_count": total_row_count,
-        "inserted_row_count": inserted_row_count,
-    }
+    final_count = {"total_row_count": total_row_count, "inserted_row_count": inserted_row_count}
 
     return final_count
 

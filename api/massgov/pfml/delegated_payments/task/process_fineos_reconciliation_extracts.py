@@ -22,11 +22,7 @@ logger = logging.get_logger(__name__)
 ALL = "ALL"
 EXTRACT = "extract"
 REPORT = "report"
-ALLOWED_VALUES = [
-    ALL,
-    EXTRACT,
-    REPORT,
-]
+ALLOWED_VALUES = [ALL, EXTRACT, REPORT]
 
 
 class Configuration:

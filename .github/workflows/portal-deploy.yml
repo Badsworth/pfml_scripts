@@ -9,8 +9,8 @@ on:
         required: true
         default: "test"
         description: |
-          🛑 DO NOT CHANGE THE DROPDOWN ABOVE FOR THE WORKFLOW. KEEP IT ON "main" BRANCH.                         
-          --------------------------------------                                                                     
+          🛑 DO NOT CHANGE THE DROPDOWN ABOVE FOR THE WORKFLOW. KEEP IT ON "main" BRANCH.
+          --------------------------------------
           ⬇️ Environment to be deployed.
         type: choice
         options:
@@ -57,7 +57,6 @@ env:
   workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
   version: ${{ github.event.inputs.version || 'main' }}
   deployment_env: ${{ github.event.inputs.deployment_env || 'test' }}
-  deploys_channel: "C01HEAJPE76" #mass-pfml-deploys-shared
   nodeVersion: 16.x
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   terraformVersion: 0.14.7
@@ -116,14 +115,14 @@ jobs:
             commit_hash=$(git rev-parse ${{env.version}})
             echo "Received tag"
           fi
-          
+
           if [[ -z $commit_hash ]]; then
             echo "💣 No valid commit hash could be found in Git for the provided branch or tag '${{env.version}}'. This deploy can't proceed."
             exit 1
           fi
-       
+
           echo "::set-output name=commit_hash::$commit_hash"
-          
+
       - name: Commit and push new code to archival branch
         if: "!contains(env.deployment_env, 'test')"
         run: |
@@ -185,8 +184,8 @@ jobs:
           environment: "Portal (${{ needs.deploy-info.outputs.portal-env }})"
           ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
 
-  start-comms-slack:
-    name: Start deploy comms (Slack)
+  start-comms-teams:
+    name: Start deploy comms (Teams)
     needs: [update-the-deploy-branch, deploy-info]
     outputs:
       version_link: ${{ steps.create_version_link.outputs.version_link }}
@@ -211,17 +210,17 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
-      - name: Pull slackbot API token from SSM
+      - name: Pull teams uri from SSM
         uses: "marvinpinto/action-inject-ssm-secrets@latest"
         with:
-          ssm_parameter: "/admin/common/nava-slackbot-api-key"
-          env_variable_name: "slackbot_token"
+          ssm_parameter: "/admin/common/teams-deploy-uri"
+          env_variable_name: "teams_uri"
 
       - name: Create version link
         id: create_version_link
         env:
-          feature_branch_link: "<https://github.com/EOLWD/pfml/commits/${{ env.version }}|${{env.version}}>"
-          release_tag_link: "<https://github.com/EOLWD/pfml/releases/tag/${{ env.version }}|${{env.version}}>"
+          feature_branch_link: "[${{ env.version }}](https://github.com/EOLWD/pfml/commits/${{ env.version }})"
+          release_tag_link: "[${{ env.version }}](https://github.com/EOLWD/pfml/releases/tag/${{ env.version }})"
         run: |
           if [[ ${{ env.version }} == portal/* ]]; then
             echo "::set-output name=version_link::${{ env.release_tag_link }}"
@@ -229,32 +228,17 @@ jobs:
             echo "::set-output name=version_link::${{ env.feature_branch_link }}"
           fi
 
-      - name: Post to Slack
+      - name: Post to Teams
         run: |
-          SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
-          -H 'Content-Type: application/json;charset=utf-8' \
+          RESPONSE=$(curl -fsLS -X POST ${{ env.TEAMS_URI }} \
+          --header 'Content-Type: application/json' \
           --data '{
-            "channel": "${{ env.deploys_channel }}",
-            "blocks": [
-              {
-                "type": "section",
-                "text": {
-                  "type": "mrkdwn",
-                  "text": ":ship: Starting *<${{ env.workflow_self_link }}|Portal deploy #${{ github.run_number }}>* of *${{ steps.create_version_link.outputs.version_link }}* to *${{ needs.deploy-info.outputs.portal-env }}*"
-                }
-              },
-              {
-                "type": "context",
-                "elements": [
-                  {
-                    "type": "mrkdwn",
-                    "text": "started by: *${{ github.actor }}*"
-                  }
-                ]
-              }
-            ]
-          }' https://slack.com/api/chat.postMessage)
-
+            "@type": "MessageCard",
+            "themeColor": "FF0000",
+            "title": "Portal Deployment Started",
+            "text": "Starting [Portal Deploy](${{ env.workflow_self_link }}) #${{ github.run_number }} of **${{ steps.create_version_link.outputs.version_link }}** to **${{ needs.deploy-info.outputs.portal-env }}**"
+            }'
+          )
 
   extra-uat-deploy:
     if: contains(github.event.inputs.deployment_env, 'stage') && github.event.inputs.extraUatDeploy == 'true'
@@ -306,7 +290,7 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
     needs: [update-the-deploy-branch, deploy-info]
-    env: 
+    env:
       releaseVersion: ${{ github.event.inputs.version }}
     steps:
       - uses: actions/checkout@v2
@@ -427,31 +411,29 @@ jobs:
           role-duration-seconds: 3600
           role-to-assume: ci-run-deploys
 
+      - uses: hashicorp/setup-terraform@v1.2.1
+        with:
+          terraform_version: ${{ env.terraformVersion }}
+          terraform_wrapper: true
+
       - name: Terraform Init
         id: terraform_init
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env.terraformVersion }}
-          tf_actions_subcommand: init
-          tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraformBaseDir }}${{ needs.deploy-info.outputs.portal-env }}
+        run: terraform init
+        working-directory: ${{ env.terraformBaseDir }}${{ needs.deploy-info.outputs.portal-env }}
 
       - name: Terraform Output
         id: terraform
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env.terraformVersion }}
-          tf_actions_subcommand: output
-          tf_actions_working_dir: ${{ env.terraformBaseDir }}${{ needs.deploy-info.outputs.portal-env }}
+        run: terraform output -json
+        working-directory: ${{ env.terraformBaseDir }}${{ needs.deploy-info.outputs.portal-env }}
         env:
           TF_CLI_ARGS: ''
 
       - name: Invalidate old Cloudfront cache
         env:
-          TF_OUTPUT: ${{ steps.terraform.outputs.tf_actions_output }}
+          TF_OUTPUT: ${{ steps.terraform.outputs.stdout }}
         run: |
-          sudo apt-get install jq
           DISTRIBUTION_ID=$(echo $TF_OUTPUT | jq -r '.cloudfront_distribution_id.value')
+          echo $DISTRIBUTION_ID
           aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
 
   postdeploy-info:
@@ -492,19 +474,12 @@ jobs:
           token: ${{ secrets.PFML_DEVOPS_TOKEN }}
           ref: main
 
-  finish-comms-slack:
-    name: Finish deploy comms (Slack)
-    needs: [start-comms-slack, deploy-info, postdeploy-info]
+  post-to-teams:
+    name: post end status to teams
+    needs: [start-comms-teams, deploy-info, postdeploy-info]
     runs-on: ubuntu-latest
-    outputs: 
-      message-ts: ${{ steps.post-start-slack.outputs.message-ts }}
-    # Notifies if there's a failure on auto-deploys to test
-    if: always() && 
-        (
-          (needs.start-comms-slack.result == 'success' && !contains(github.event.inputs.version || 'main', 'main')) ||
-          (needs.postdeploy-info.outputs.deploy-state == 'timed_out' || needs.postdeploy-info.outputs.deploy-state == 'failure')
-        )
     steps:
+      - uses: actions/checkout@v2
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -514,72 +489,23 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
-      - name: Pull slackbot API token from SSM
+      - name: Pull teams uri from SSM
         uses: "marvinpinto/action-inject-ssm-secrets@latest"
         with:
-          ssm_parameter: "/admin/common/nava-slackbot-api-key"
-          env_variable_name: "slackbot_token"
+          ssm_parameter: "/admin/common/teams-deploy-uri"
+          env_variable_name: "teams_uri"
 
-      - name: Choose Slackbot message
-        id: choose_finish_message
-        env:
-          deployment_success: ":success: Completed"
-          deployment_failure: ":fail: Failed"
-          deployment_cancelled: ":heavy_multiplication_x: Cancelled"
+      - name: Post to Teams
         run: |
-          if [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'success' ]]; then
-            echo "::set-output name=message::${{ env.deployment_success }}"
-            echo "::set-output name=color::good"
-          elif [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'cancelled' ]]; then
-            echo "::set-output name=message::${{ env.deployment_cancelled }}"
-            echo "::set-output name=color::#35373b"
-          elif [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'skipped' ]]; then
-            echo "::set-output name=message::${{ env.deployment_cancelled }}"
-            echo "::set-output name=color::#35373b"
-          elif [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'neutral' ]]; then
-            echo "::set-output name=message::${{ env.deployment_cancelled }}"
-            echo "::set-output name=color::#35373b"
-          elif [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'timed_out' ]]; then
-            echo "::set-output name=message::${{ env.deployment_failure }}"
-            echo "::set-output name=color::danger"
-          elif [[ ${{ needs.postdeploy-info.outputs.deploy-state }} == 'failure' ]]; then
-            echo "::set-output name=message::${{ env.deployment_failure }}"
-            echo "::set-output name=color::danger"
-          else
-            echo "::set-output name=message::${{ env.deployment_failure }}"
-            echo "::set-output name=color::#2767cf"
-          fi
-
-      - name: Post to Slack
-        id: post-start-slack
-        run: |
-          SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
-          -H 'Content-Type: application/json;charset=utf-8' \
+          RESPONSE=$(curl -fsLS -X POST ${{ env.TEAMS_URI }} \
+          --header 'Content-Type: application/json' \
           --data '{
-            "channel": "${{ env.deploys_channel }}",
-            "blocks": [
-              {
-                "type": "section",
-                "text": {
-                  "type": "mrkdwn",
-                  "text": "${{ steps.choose_finish_message.outputs.message }} *<${{ env.workflow_self_link }}|Portal deploy #${{ github.run_number }}>* of *${{ needs.start-comms-slack.outputs.version_link }}* to *${{ needs.deploy-info.outputs.portal-env }}*"
-                }
-              },
-              {
-                "type": "context",
-                "elements": [
-                  {
-                    "type": "mrkdwn",
-                    "text": "started by: *${{ github.actor }}*"
-                  }
-                ]
-              }
-            ]
-          }' https://slack.com/api/chat.postMessage)
-
-          MESSAGE_TS=$(echo $SLACKBOT_RESPONSE | jq -r '.ts')
-          echo $MESSAGE_TS
-          echo "::set-output name=message-ts::$MESSAGE_TS"
+            "@type": "MessageCard",
+            "themeColor": "2986CC",
+            "title": "Portal Deploy Completed",
+            "text": "Portal deploy #${{ github.run_number }} ${{ needs.postdeploy-info.outputs.deploy-state }} in **${{ env.deployment_env}}**: [workflow run](${{ env.workflow_self_link }})"
+            }'
+          )
 
   end-to-end:
     name: E2E Tests
@@ -610,14 +536,14 @@ jobs:
       PFML_AWS_ACCESS_KEY_ID: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
       PFML_AWS_SECRET_ACCESS_KEY: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
 
-  post-e2e-failures-to-slack:
-    name: Post E2E failures to Slack
-    needs: [finish-comms-slack, end-to-end]
+  post-e2e-failures-to-teams:
+    name: Post E2E Failures to Teams
+    needs: [post-to-teams, end-to-end]
     # Run if the E2E tests failed or timed out. Applies to any environment that runs E2E tests.
-    if: always() &&
-        (needs.end-to-end.result == 'failure' || needs.end-to-end.result == 'timed_out')
+    if: always() && (needs.end-to-end.result == 'failure' || needs.end-to-end.result == 'timed_out')
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -627,23 +553,25 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
-      - name: Pull slackbot API token from SSM
+      - name: Pull teams uri from SSM
         uses: "marvinpinto/action-inject-ssm-secrets@latest"
         with:
-          ssm_parameter: "/admin/common/nava-slackbot-api-key"
-          env_variable_name: "slackbot_token"
+          ssm_parameter: "/admin/common/teams-deploy-uri"
+          env_variable_name: "teams_uri"
 
-      - name: Post to Slack
+      - name: Post to Teams
         run: |
-          echo "Slackbot message reply TS is ${{ needs.finish-comms-slack.outputs.message-ts }}"
-          
-          SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
-          -H 'Content-Type: application/json;charset=utf-8' \
+          RESPONSE=$(curl -fsLS -X POST ${{ env.TEAMS_URI }} \
+          --header 'Content-Type: application/json' \
           --data '{
-            "channel": "${{ env.deploys_channel }}",
-            "thread_ts": "${{ needs.finish-comms-slack.outputs.message-ts }}",
-            "attachments": [{
-              "title": "E2E Test failed in ${{ github.event.inputs.deployment_env || 'test' }} (<${{ env.workflow_self_link }}|build logs>)",
-              "color": "danger"
+            "@type": "MessageCard",
+            "themeColor": "FF0000",
+            "title": "E2E Tests Failed",
+            "text": "E2E tests failed in ${{ github.event.inputs.deployment_env || 'test'}} [build logs](${{ env.workflow_self_link }})",
+            "sections": [{
+                "activityImage":"https://th.bing.com/th/id/R.ee8882f44294e8a6f1732a54343ff17e?rik=FAYIPD4sACftKw&riu=http%3a%2f%2f3.bp.blogspot.com%2f-u6MZBWbGcZI%2fUT4mft01YTI%2fAAAAAAAADpU%2fJubGsyGdL00%2fs1600%2ffailure.png&ehk=ranH%2bkeeo59wsILuyxVyNTIR2oUECprijedE01jHq34%3d&risl=&pid=ImgRaw&r=0"
+            },
+            {
+              "text": "Run **#${{ github.run_number }}** in **${{ env.version }}**. Triggered via Portal deployment"
             }]
-          }' https://slack.com/api/chat.postMessage)
+          }')

@@ -12,15 +12,15 @@ const useCollectionState = <TApiResource extends ApiResource>(
   const [collection, setCollection] = useState(initialCollection);
 
   const addItem = (item: TApiResource) => {
-    setCollection((prevCollection) => prevCollection.addItem(item));
+    setCollection((prevCollection) => prevCollection.setItem(item));
   };
 
   const addItems = (items: TApiResource[]) => {
-    setCollection((prevCollection) => prevCollection.addItems(items));
+    setCollection((prevCollection) => prevCollection.setItems(items));
   };
 
   const updateItem = (item: TApiResource) => {
-    setCollection((prevCollection) => prevCollection.updateItem(item));
+    setCollection((prevCollection) => prevCollection.setItem(item));
   };
 
   const removeItem = (itemId: string) => {

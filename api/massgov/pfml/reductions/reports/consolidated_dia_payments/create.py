@@ -27,9 +27,7 @@ DFML_REPORT_FILENAME_PREFIX = "DIA_DFML_CONSOLIDATED_"
 DFML_REPORT_FILENAME_TIME_FORMAT = "%Y%m%d%H%M"
 DFML_REPORT_TIME_FORMAT = "%m/%d/%Y"
 
-DFML_REPORT_CSV_ENCODERS: csv_util.Encoders = {
-    date: lambda d: d.strftime("%m/%d/%Y"),
-}
+DFML_REPORT_CSV_ENCODERS: csv_util.Encoders = {date: lambda d: d.strftime("%m/%d/%Y")}
 
 TERMINATION_CODES = ["NT", "GT"]
 
@@ -225,10 +223,10 @@ def _get_record_group(db_session: db.Session, group_key: PaymentGroupKey) -> Lis
 
 # S3 Operations
 def _write_dfml_report_rows(
-    output_file: IO[str], reduction_payments_info: List[DFMLReportRow],
+    output_file: IO[str], reduction_payments_info: List[DFMLReportRow]
 ) -> None:
     writer = pydantic_csv_util.DataWriter(
-        output_file, row_type=DFMLReportRow, encoders=DFML_REPORT_CSV_ENCODERS,
+        output_file, row_type=DFMLReportRow, encoders=DFML_REPORT_CSV_ENCODERS
     )
     writer.writeheader()
     writer.writerows(reduction_payments_info)
@@ -239,25 +237,23 @@ def _save_report_as_csv_in_s3(
 ) -> ReferenceFile:
     config = get_s3_config()
 
-    s3_file_path = os.path.join(config.s3_dfml_outbound_directory_path, file_name + ".csv",)
+    s3_file_path = os.path.join(config.s3_dfml_outbound_directory_path, file_name + ".csv")
 
     s3_dest = os.path.join(config.s3_bucket_uri, s3_file_path)
 
     logger.info(
-        "Starting to write report",
-        extra={"output_file": s3_dest, "report_data_count": len(report)},
+        "Starting to write report", extra={"output_file": s3_dest, "report_data_count": len(report)}
     )
 
     with file_util.open_stream(s3_dest, mode="w") as output_file:
         _write_dfml_report_rows(output_file, report)
 
     logger.info(
-        "Finished writing report",
-        extra={"output_file": s3_dest, "report_data_count": len(report),},
+        "Finished writing report", extra={"output_file": s3_dest, "report_data_count": len(report)}
     )
 
     # Create ReferenceFile for new export
-    ref_file = ReferenceFile(file_location=s3_dest, reference_file_type_id=reference_file_type_id,)
+    ref_file = ReferenceFile(file_location=s3_dest, reference_file_type_id=reference_file_type_id)
 
     db_session.add(ref_file)
     db_session.commit()

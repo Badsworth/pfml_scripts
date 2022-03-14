@@ -139,7 +139,7 @@ export const Dashboard = (
           </Details>
         </section>
       )}
-      <section ref={introElementRef}>
+      <section ref={introElementRef} className="margin-top-2">
         <Search
           initialValue={get(apiParams, "search", "")}
           updatePageQuery={updatePageQuery}

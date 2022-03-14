@@ -24,7 +24,7 @@ describe("BaseApi", () => {
       return "/api";
     }
 
-    get i18nPrefix() {
+    get namespace() {
       return "testPrefix";
     }
   }
@@ -291,14 +291,17 @@ describe("BaseApi", () => {
             {
               field: "foo.0.bar.12.cat",
               type: "required",
+              namespace: "testPrefix",
             },
             {
               field: "beta[2].alpha[3].charlie",
               type: "required",
+              namespace: "testPrefix",
             },
             {
               field: "gamma.4",
               type: "required",
+              namespace: "testPrefix",
             },
           ],
         }),
@@ -383,31 +386,7 @@ describe("BaseApi", () => {
       } catch (error) {
         expect(error).toBeInstanceOf(ValidationError);
         expect(error.issues).toHaveLength(1);
-        expect(error.i18nPrefix).toBe("testPrefix");
-      }
-    });
-
-    it("overrides the error's i18nPrefix when an override is passed as an argument", async () => {
-      global.fetch = jest.fn().mockResolvedValue({
-        ok: false,
-        status: 400,
-        json: jest.fn().mockResolvedValue({
-          errors: [
-            {
-              type: "minLength",
-              rule: "5",
-              field: "residential_address.zip",
-            },
-          ],
-        }),
-      });
-
-      try {
-        await testsApi.request("GET", "users", undefined, {
-          i18nPrefix: "customPrefix",
-        });
-      } catch (error) {
-        expect(error.i18nPrefix).toBe("customPrefix");
+        expect(error.issues[0].namespace).toBe("testPrefix");
       }
     });
 

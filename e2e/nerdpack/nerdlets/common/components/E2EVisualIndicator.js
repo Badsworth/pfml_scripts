@@ -13,6 +13,9 @@ import {
 import { format } from "date-fns";
 import React from "react";
 
+/**
+ * @deprecated
+ */
 export function E2EVisualIndicator({ run, runId, simpleView = true }) {
   let state = "error";
   let morning_state = "none";

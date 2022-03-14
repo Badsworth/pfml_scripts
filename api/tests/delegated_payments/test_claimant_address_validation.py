@@ -119,7 +119,7 @@ def test_validate_claimant_address_has_all_parts(employee_extract_factory):
     assert result is True
 
 
-def test_process_address_via_soap_api(employee_extract_factory, address_factory,) -> None:
+def test_process_address_via_soap_api(employee_extract_factory, address_factory) -> None:
     mock_caller = MockVerificationZeepCaller()
 
     client = Client(mock_caller)

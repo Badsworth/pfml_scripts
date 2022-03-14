@@ -33,7 +33,7 @@ class PaymentMethodsSplitStep(Step):
 
         if state_log_count == 0:
             logger.warning(
-                "No payments found in state %s, nothing to split", READY_STATE.state_description,
+                "No payments found in state %s, nothing to split", READY_STATE.state_description
             )
             return
 

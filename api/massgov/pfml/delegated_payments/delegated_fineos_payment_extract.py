@@ -19,11 +19,13 @@ from massgov.pfml.db.models.employees import (
     EmployeePubEftPair,
     ExperianAddressPair,
     LatestStateLog,
+    LkPaymentRelevantParty,
     LkPaymentTransactionType,
     Payment,
     PaymentDetails,
     PaymentMethod,
     PaymentReferenceFile,
+    PaymentRelevantParty,
     PaymentTransactionType,
     PrenoteState,
     PubEft,
@@ -39,8 +41,10 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVpei,
     FineosExtractVpeiClaimDetails,
     FineosExtractVpeiPaymentDetails,
+    FineosExtractVpeiPaymentLine,
     FineosWritebackTransactionStatus,
     LkFineosWritebackTransactionStatus,
+    PaymentLine,
 )
 from massgov.pfml.db.models.state import Flow, LkState, State
 from massgov.pfml.delegated_payments.step import Step
@@ -136,11 +140,17 @@ class PaymentData:
     account_nbr: Optional[str] = None
     raw_account_type: Optional[str] = None
 
-    payment_detail_records: Optional[List[PaymentDetails]] = None
+    payment_detail_records: List[PaymentDetails]
+    payment_line_records: List[PaymentLine]
 
     payment_transaction_type: LkPaymentTransactionType
+    payment_relevant_party: LkPaymentRelevantParty
     is_standard_payment: bool
     is_employee_required: bool
+    is_employer_reimbursement: bool
+    is_employer_reimbursement_enabled: bool
+    is_payment_intended_for_pub: bool
+    is_payment_detail_expected: bool
 
     def __init__(
         self,
@@ -148,6 +158,7 @@ class PaymentData:
         i_value: str,
         pei_record: FineosExtractVpei,
         payment_details: List[FineosExtractVpeiPaymentDetails],
+        payment_lines: List[FineosExtractVpeiPaymentLine],
         claim_details: Optional[FineosExtractVpeiClaimDetails],
         requested_absence_record: Optional[FineosExtractVbiRequestedAbsence],
         count_incrementer: Optional[Callable[[str], None]] = None,
@@ -158,6 +169,9 @@ class PaymentData:
         self.c_value = c_value
         self.i_value = i_value
         self.pei_record = pei_record
+
+        self.payment_detail_records = []
+        self.payment_line_records = []
 
         #######################################
         # BEGIN - VALIDATION OF PARAMETERS ALWAYS REQUIRED FOR ALL PAYMENTS
@@ -200,22 +214,44 @@ class PaymentData:
 
         self.payment_amount = self.get_payment_amount(pei_record)
 
+        self.payment_relevant_party = self.get_relevant_party()
+
         self.payment_transaction_type = self.get_payment_transaction_type()
 
-        # Process the payment details records in order to get specific
-        # pay-period information for payments. Note that some non-standard payments
-        # like overpayment recoveries will never have payment details.
-        if (
-            not payment_details
-            and self.payment_transaction_type.payment_transaction_type_id
+        # Overpayment recoveries (of several different types) do not
+        # have payment detail records as they don't have pay periods
+        self.is_payment_detail_expected = (
+            self.payment_transaction_type.payment_transaction_type_id
             not in payments_util.Constants.OVERPAYMENT_TYPES_WITHOUT_PAYMENT_DETAILS_IDS
-        ):
+        )
+
+        # Process the payment details records in order to get specific
+        # pay-period information for payments.
+        if not payment_details and self.is_payment_detail_expected:
             self.validation_container.add_validation_issue(
-                payments_util.ValidationReason.MISSING_DATASET, "payment_details"
+                payments_util.ValidationReason.MISSING_DATASET, "payment_details", "payment_details"
             )
 
         if payment_details:
             self.aggregate_payment_details(payment_details)
+
+        # We always expect payment lines, except for zero dollar tax withholdings
+        # which don't end up with payment line records for whatever reason
+        is_tax_withholding = self.payment_relevant_party.payment_relevant_party_id in [
+            PaymentRelevantParty.FEDERAL_TAX.payment_relevant_party_id,
+            PaymentRelevantParty.STATE_TAX.payment_relevant_party_id,
+        ]
+        is_zero_dollar = (
+            self.payment_transaction_type.payment_transaction_type_id
+            == PaymentTransactionType.ZERO_DOLLAR.payment_transaction_type_id
+        )
+        if not payment_lines and not (is_tax_withholding and is_zero_dollar):
+            self.validation_container.add_validation_issue(
+                payments_util.ValidationReason.MISSING_DATASET, "payment_lines", "payment_lines"
+            )
+
+        if payment_lines:
+            self.aggregate_payment_lines(payment_lines)
 
         # We only want to do specific checks if it is a standard payment
         # There is no need to error a cancellation/overpayment/etc. if the payment
@@ -225,45 +261,67 @@ class PaymentData:
             == PaymentTransactionType.STANDARD.payment_transaction_type_id
         )
 
+        self.is_employer_reimbursement = (
+            self.payment_transaction_type.payment_transaction_type_id
+            == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+        )
+
+        self.is_employer_reimbursement_enabled = (
+            payments_util.is_employer_reimbursement_payments_enabled()
+        )
+
+        self.is_payment_intended_for_pub = self.is_standard_payment or (
+            self.is_employer_reimbursement and self.is_employer_reimbursement_enabled
+        )
+
         # We only want to check for an employee in certain scenarios
         # Employer Reimbursements will not map to an Employee,
         # and nor will payments associated with tax withholdings
         # We are not checking against transaction type here because
         # cancelled tax withholdings will be "Cancellations" not tax withholdings.
-        self.is_employee_required = (
-            self.payment_transaction_type.payment_transaction_type_id
-            != PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
-            and self.tin != STATE_TAX_WITHHOLDING_TIN
-            and self.tin != FEDERAL_TAX_WITHHOLDING_TIN
-        )
+        if self.is_employer_reimbursement_enabled:
+            self.is_employee_required = (
+                self.tin != STATE_TAX_WITHHOLDING_TIN and self.tin != FEDERAL_TAX_WITHHOLDING_TIN
+            )
+        else:
+            self.is_employee_required = (
+                self.payment_transaction_type.payment_transaction_type_id
+                != PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+                and self.tin != STATE_TAX_WITHHOLDING_TIN
+                and self.tin != FEDERAL_TAX_WITHHOLDING_TIN
+            )
 
         #######################################
         # BEGIN - VALIDATION OF PARAMETERS ALWAYS REQUIRED FOR STANDARD PAYMENTS
         #######################################
 
         # Find the record in the other datasets.
-        if not claim_details and self.is_standard_payment:
+        if not claim_details and self.is_payment_intended_for_pub:
             self.validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISSING_DATASET, "claim_details"
             )
 
         if claim_details:
             self.process_claim_details(claim_details, requested_absence_record, count_incrementer)
-        elif self.is_standard_payment:
+        elif self.is_payment_intended_for_pub:
             # We require the absence case number, if claim details doesn't exist
             # we want to set the validation issue manually here
             self.validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISSING_FIELD, "ABSENCECASENU"
             )
 
+        disallowed_lookup_values = [PaymentMethod.DEBIT.payment_method_description]
+        # Employer reimbursements are check only
+        if self.is_employer_reimbursement:
+            disallowed_lookup_values.append(PaymentMethod.ACH.payment_method_description)
         self.raw_payment_method = payments_util.validate_db_input(
             "PAYMENTMETHOD",
             pei_record,
             self.validation_container,
-            self.is_standard_payment,
+            self.is_payment_intended_for_pub,
             custom_validator_func=payments_util.lookup_validator(
                 PaymentMethod,
-                disallowed_lookup_values=[PaymentMethod.DEBIT.payment_method_description],
+                disallowed_lookup_values=disallowed_lookup_values,
             ),
         )
 
@@ -274,7 +332,7 @@ class PaymentData:
         # Address values are only required if we are paying by check
         address_required = (
             self.raw_payment_method == PaymentMethod.CHECK.payment_method_description
-            and self.is_standard_payment
+            and self.is_payment_intended_for_pub
         )
         self.address_line_one = payments_util.validate_db_input(
             "PAYMENTADD1", pei_record, self.validation_container, address_required
@@ -362,44 +420,59 @@ class PaymentData:
         if self.payment_amount == Decimal("0"):
             return PaymentTransactionType.ZERO_DOLLAR
 
-        # Tax Withholdings
-        # SIT
-        if self.tin == STATE_TAX_WITHHOLDING_TIN:
-            return PaymentTransactionType.STATE_TAX_WITHHOLDING
-
-        # FIT
-        if self.tin == FEDERAL_TAX_WITHHOLDING_TIN:
-            return PaymentTransactionType.FEDERAL_TAX_WITHHOLDING
-
-        # Employer reimbursements reimbursements are a very specific set of records
-        if (
-            self.event_reason == AUTO_ALT_EVENT_REASON
-            and self.event_type == PAYMENT_OUT_TRANSACTION_TYPE
-            and self.payee_identifier == TAX_IDENTIFICATION_NUMBER
-        ):
-            return PaymentTransactionType.EMPLOYER_REIMBURSEMENT
-
         # Note that Overpayments can be positive or negative amounts
-        for overpayment_transaction_type in OVERPAYMENT_PAYMENT_TRANSACTION_TYPES:
-            if self.event_type == overpayment_transaction_type.payment_transaction_type_description:
-                return overpayment_transaction_type
+        overpayment_transaction_type = self.get_transaction_type_if_overpayment()
+        if overpayment_transaction_type:
+            return overpayment_transaction_type
 
-        # The bulk of the payments we process will be standard payments
+        party_to_type = {
+            PaymentRelevantParty.STATE_TAX.payment_relevant_party_id: PaymentTransactionType.STATE_TAX_WITHHOLDING,
+            PaymentRelevantParty.FEDERAL_TAX.payment_relevant_party_id: PaymentTransactionType.FEDERAL_TAX_WITHHOLDING,
+            PaymentRelevantParty.REIMBURSED_EMPLOYER.payment_relevant_party_id: PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+            PaymentRelevantParty.CLAIMANT.payment_relevant_party_id: PaymentTransactionType.STANDARD,
+        }
         if (
             self.event_type == PAYMENT_OUT_TRANSACTION_TYPE
             and self.payment_amount
             and self.payment_amount > Decimal("0")
+            and self.payment_relevant_party.payment_relevant_party_id in party_to_type
         ):
-            return PaymentTransactionType.STANDARD
+            return party_to_type[self.payment_relevant_party.payment_relevant_party_id]
 
-        # We should always have been able to figure out the payment type
-        # from the above checks, this shouldn't happen and should go
-        # to the error report as it's not clear what we should do with it
         self.validation_container.add_validation_issue(
             payments_util.ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE,
             f"Unknown payment scenario encountered. Payment Amount: {self.payment_amount}, Event Type: {self.event_type}, Event Reason: {self.event_reason}",
         )
         return PaymentTransactionType.UNKNOWN
+
+    def get_transaction_type_if_overpayment(self) -> Optional[LkPaymentTransactionType]:
+        for overpayment_transaction_type in OVERPAYMENT_PAYMENT_TRANSACTION_TYPES:
+            if self.event_type == overpayment_transaction_type.payment_transaction_type_description:
+                return overpayment_transaction_type
+        return None
+
+    def get_relevant_party(self) -> LkPaymentRelevantParty:
+        """
+        Determine the relevant party for the payment. Payment transaction type
+        on its own doesn't determine this; for example, a zero dollar payment
+        might be issued to a claimant or as part of federal tax withholding.
+        """
+
+        if self.tin == STATE_TAX_WITHHOLDING_TIN:
+            return PaymentRelevantParty.STATE_TAX
+
+        if self.tin == FEDERAL_TAX_WITHHOLDING_TIN:
+            return PaymentRelevantParty.FEDERAL_TAX
+
+        if (
+            self.event_reason == AUTO_ALT_EVENT_REASON
+            and self.event_type == PAYMENT_OUT_TRANSACTION_TYPE
+            and self.payee_identifier == TAX_IDENTIFICATION_NUMBER
+        ):
+            return PaymentRelevantParty.REIMBURSED_EMPLOYER
+
+        # All other scenarios should be claimants
+        return PaymentRelevantParty.CLAIMANT
 
     def process_claim_details(
         self,
@@ -415,7 +488,7 @@ class PaymentData:
             "LEAVEREQUESTI",
             claim_details,
             self.validation_container,
-            self.is_standard_payment,
+            self.is_payment_intended_for_pub,
             custom_validator_func=payments_util.leave_request_id_validator,
         )
 
@@ -449,7 +522,7 @@ class PaymentData:
                 "LEAVEREQUEST_DECISION",
                 requested_absence,
                 self.validation_container,
-                self.is_standard_payment,
+                self.is_payment_intended_for_pub,
                 custom_validator_func=leave_request_decision_validator_closure(
                     self.is_adhoc_payment()
                 ),
@@ -467,7 +540,7 @@ class PaymentData:
                 custom_validator_func=self.payment_period_date_validator,
             )
 
-        elif self.is_standard_payment:
+        elif self.is_payment_intended_for_pub:
             self.validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISSING_DATASET,
                 f"Payment leave request ID not found in requested absence file: {self.leave_request_id}",
@@ -484,8 +557,21 @@ class PaymentData:
         """
         start_periods = []
         end_periods = []
-        self.payment_detail_records = []
         for payment_detail_row in payment_details:
+            payment_details_c_value = payments_util.validate_db_input(
+                "C",
+                payment_detail_row,
+                self.validation_container,
+                True,
+            )
+
+            payment_details_i_value = payments_util.validate_db_input(
+                "I",
+                payment_detail_row,
+                self.validation_container,
+                True,
+            )
+
             row_start_period = payments_util.validate_db_input(
                 "PAYMENTSTARTP",
                 payment_detail_row,
@@ -529,6 +615,8 @@ class PaymentData:
             if all(
                 field is not None
                 for field in [
+                    payment_details_c_value,
+                    payment_details_i_value,
                     row_start_period,
                     row_end_period,
                     row_amount_post_tax,
@@ -537,6 +625,10 @@ class PaymentData:
             ):
                 self.payment_detail_records.append(
                     PaymentDetails(
+                        payment_details_id=uuid.uuid4(),
+                        vpei_payment_details_id=payment_detail_row.vpei_payment_details_id,
+                        payment_details_c_value=payment_details_c_value,
+                        payment_details_i_value=payment_details_i_value,
                         period_start_date=datetime_str_to_date(row_start_period),
                         period_end_date=datetime_str_to_date(row_end_period),
                         amount=Decimal(cast(str, row_amount_post_tax)),
@@ -548,6 +640,99 @@ class PaymentData:
             self.payment_start_period = min(start_periods)
         if end_periods:
             self.payment_end_period = max(end_periods)
+
+    def aggregate_payment_lines(self, payment_lines: List[FineosExtractVpeiPaymentLine]) -> None:
+        """
+        Iterate over the list of payment lines and validate
+        their values. If valid, create a payment line record
+        in the DB.
+
+        Also connects the payment line to the payment detail
+        record that it is associated with at the same time.
+        """
+        # Create a mapping for payment detail C/I value
+        # as we'll reference it below
+        payment_detail_mapping = {}
+        for payment_detail in self.payment_detail_records:
+            key = (payment_detail.payment_details_c_value, payment_detail.payment_details_i_value)
+            payment_detail_mapping[key] = payment_detail
+
+        for payment_line in payment_lines:
+            payment_line_c_value = payments_util.validate_db_input(
+                "C",
+                payment_line,
+                self.validation_container,
+                True,
+            )
+
+            payment_line_i_value = payments_util.validate_db_input(
+                "I",
+                payment_line,
+                self.validation_container,
+                True,
+            )
+
+            amount = payments_util.validate_db_input(
+                "AMOUNT_MONAMT",
+                payment_line,
+                self.validation_container,
+                True,
+                custom_validator_func=payments_util.amount_validator,
+            )
+
+            line_type = payments_util.validate_db_input(
+                "LINETYPE",
+                payment_line,
+                self.validation_container,
+                True,
+            )
+
+            payment_detail_class_id = payments_util.validate_db_input(
+                "PAYMENTDETAILCLASSID",
+                payment_line,
+                self.validation_container,
+                True,
+            )
+            payment_detail_index_id = payments_util.validate_db_input(
+                "PAYMENTDETAILINDEXID",
+                payment_line,
+                self.validation_container,
+                True,
+            )
+
+            related_payment_detail: Optional[PaymentDetails] = payment_detail_mapping.get(
+                (payment_detail_class_id, payment_detail_index_id), None
+            )
+            if not related_payment_detail and self.is_payment_detail_expected:
+                self.validation_container.add_validation_issue(
+                    payments_util.ValidationReason.MISSING_DATASET,
+                    f"Payment detail with C={payment_detail_class_id},I={payment_detail_index_id} not found for payment line",
+                    "payment_detail",
+                )
+
+            if all(
+                field is not None
+                for field in [
+                    payment_line_c_value,
+                    payment_line_i_value,
+                    amount,
+                    line_type,
+                ]
+            ):
+
+                self.payment_line_records.append(
+                    PaymentLine(
+                        vpei_payment_line_id=payment_line.vpei_payment_line_id,
+                        # Payment ID gets set after we create the payment
+                        payment_details_id=related_payment_detail.payment_details_id
+                        if related_payment_detail
+                        else None,
+                        payment_line_c_value=cast(str, payment_line_c_value),
+                        payment_line_i_value=cast(str, payment_line_i_value),
+                        amount=Decimal(cast(str, amount)),
+                        line_type=cast(str, line_type),
+                    )
+                )
 
     def payment_period_date_validator(
         self, payment_period_date_str: str
@@ -567,6 +752,7 @@ class PaymentData:
             "period_start_date": self.payment_start_period,
             "period_end_date": self.payment_end_period,
             "payment_transaction_type": self.payment_transaction_type.payment_transaction_type_description,
+            "payment_relevant_party": self.payment_relevant_party.payment_relevant_party_description,
             "is_for_standard_payment": self.is_employee_required,
         }
 
@@ -602,6 +788,7 @@ class PaymentExtractStep(Step):
         IN_REVIEW_LEAVE_REQUEST_COUNT = "in_review_leave_request_count"
         OVERPAYMENT_COUNT = "overpayment_count"
         PAYMENT_DETAILS_RECORD_COUNT = "payment_details_record_count"
+        PAYMENT_LINE_RECORD_COUNT = "payment_line_record_count"
         PEI_RECORD_COUNT = "pei_record_count"
         PRENOTE_PAST_WAITING_PERIOD_APPROVED_COUNT = "prenote_past_waiting_period_approved_count"
         PROCESSED_PAYMENT_COUNT = "processed_payment_count"
@@ -644,6 +831,7 @@ class PaymentExtractStep(Step):
             .join(LkState, StateLog.end_state_id == LkState.state_id)
             .filter(
                 Payment.payment_id.in_(payment_ids),
+                Payment.exclude_from_payment_status != True,  # noqa: E712
                 StateLog.end_state_id.notin_(payments_util.Constants.RESTARTABLE_PAYMENT_STATE_IDS),
                 LkState.flow_id == Flow.DELEGATED_PAYMENT.flow_id,
             )
@@ -672,28 +860,19 @@ class PaymentExtractStep(Step):
         # Get the TIN, employee and claim associated with the payment to be made
         employee, claim = None, None
         try:
+            claim = (
+                self.db_session.query(Claim)
+                .filter_by(fineos_absence_id=payment_data.absence_case_number)
+                .one_or_none()
+            )
             # If the employee is required and should be validated, do so
             # Otherwise, we know we aren't going to find an employee, so don't look
             if payment_data.is_employee_required:
-                tax_identifier = (
-                    self.db_session.query(TaxIdentifier)
-                    .filter_by(tax_identifier=payment_data.tin)
-                    .one_or_none()
-                )
-                if not tax_identifier:
-                    self.increment(self.Metrics.TAX_IDENTIFIER_MISSING_IN_DB_COUNT)
-                    payment_data.validation_container.add_validation_issue(
-                        payments_util.ValidationReason.MISSING_IN_DB,
-                        payment_data.tin,
-                        "tax_identifier",
-                    )
-                else:
-                    employee = (
-                        self.db_session.query(Employee)
-                        .filter_by(tax_identifier=tax_identifier)
-                        .one_or_none()
-                    )
-
+                if (
+                    payment_data.is_employer_reimbursement
+                    and payment_data.is_employer_reimbursement_enabled
+                ):
+                    employee = claim.employee if claim is not None else None
                     if not employee:
                         self.increment(self.Metrics.EMPLOYEE_MISSING_IN_DB_COUNT)
                         payment_data.validation_container.add_validation_issue(
@@ -701,12 +880,33 @@ class PaymentExtractStep(Step):
                             payment_data.tin,
                             "employee",
                         )
+                else:
+                    tax_identifier = (
+                        self.db_session.query(TaxIdentifier)
+                        .filter_by(tax_identifier=payment_data.tin)
+                        .one_or_none()
+                    )
+                    if not tax_identifier:
+                        self.increment(self.Metrics.TAX_IDENTIFIER_MISSING_IN_DB_COUNT)
+                        payment_data.validation_container.add_validation_issue(
+                            payments_util.ValidationReason.MISSING_IN_DB,
+                            payment_data.tin,
+                            "tax_identifier",
+                        )
+                    else:
+                        employee = (
+                            self.db_session.query(Employee)
+                            .filter_by(tax_identifier=tax_identifier)
+                            .one_or_none()
+                        )
+                        if not employee:
+                            self.increment(self.Metrics.EMPLOYEE_MISSING_IN_DB_COUNT)
+                            payment_data.validation_container.add_validation_issue(
+                                payments_util.ValidationReason.MISSING_IN_DB,
+                                payment_data.tin,
+                                "employee",
+                            )
 
-            claim = (
-                self.db_session.query(Claim)
-                .filter_by(fineos_absence_id=payment_data.absence_case_number)
-                .one_or_none()
-            )
         except SQLAlchemyError as e:
             logger.exception(
                 "Unexpected error %s with one_or_none when querying for tin/employee/claim",
@@ -718,7 +918,7 @@ class PaymentExtractStep(Step):
         # If we cannot find the claim, we want to error only for standard
         # payments. While we'd like to attach the claim to other payment types
         # it's less of a concern to us.
-        if not claim and payment_data.is_standard_payment:
+        if not claim and payment_data.is_payment_intended_for_pub:
             payment_data.validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISSING_IN_DB,
                 payment_data.absence_case_number,
@@ -739,7 +939,7 @@ class PaymentExtractStep(Step):
                     f"Claim {payment_data.absence_case_number} has not been ID proofed",
                 )
 
-            if payment_data.is_standard_payment and not claim.employer_id:
+            if payment_data.is_payment_intended_for_pub and not claim.employer_id:
                 payment_data.validation_container.add_validation_issue(
                     payments_util.ValidationReason.MISSING_IN_DB,
                     f"Claim {payment_data.absence_case_number} does not have an employer associated with it",
@@ -803,8 +1003,10 @@ class PaymentExtractStep(Step):
         self.db_session.add(new_experian_address_pair)
 
         # We also want to make sure the address is linked in the EmployeeAddress table
-        employee_address = EmployeeAddress(employee=employee, address=payment_data_address)
-        self.db_session.add(employee_address)
+        if payment_data.is_standard_payment:
+            employee_address = EmployeeAddress(employee=employee, address=payment_data_address)
+            self.db_session.add(employee_address)
+
         return new_experian_address_pair, True
 
     def create_payment(
@@ -817,10 +1019,8 @@ class PaymentExtractStep(Step):
         # We always create a new payment record. This may be completely new
         # or a payment might have been created before. We'll check that later.
 
-        logger.info(
-            "Creating payment record in DB", extra=payment_data.get_traceable_details(),
-        )
-        payment = Payment(payment_id=uuid.uuid4(), vpei_id=payment_data.pei_record.vpei_id,)
+        logger.info("Creating payment record in DB", extra=payment_data.get_traceable_details())
+        payment = Payment(payment_id=uuid.uuid4(), vpei_id=payment_data.pei_record.vpei_id)
 
         # set the payment method
         if payment_data.raw_payment_method:
@@ -839,6 +1039,10 @@ class PaymentExtractStep(Step):
         payment.payment_date = datetime_str_to_date(payment_data.payment_date)
         payment.absence_case_creation_date = datetime_str_to_date(
             payment_data.absence_case_creation_date
+        )
+
+        payment.payment_relevant_party_id = (
+            payment_data.payment_relevant_party.payment_relevant_party_id
         )
 
         payment.payment_transaction_type_id = (
@@ -898,10 +1102,13 @@ class PaymentExtractStep(Step):
 
         self.db_session.add(payment)
 
-        if payment_data.payment_detail_records:
-            for payment_detail in payment_data.payment_detail_records:
-                payment_detail.payment = payment
-                self.db_session.add(payment_detail)
+        for payment_detail in payment_data.payment_detail_records:
+            payment_detail.payment = payment
+            self.db_session.add(payment_detail)
+
+        for payment_line in payment_data.payment_line_records:
+            payment_line.payment = payment
+            self.db_session.add(payment_line)
 
         return payment
 
@@ -952,9 +1159,7 @@ class PaymentExtractStep(Step):
         if existing_eft:
             extra |= payments_util.get_traceable_pub_eft_details(existing_eft, employee)
             self.increment(self.Metrics.EFT_FOUND_COUNT)
-            logger.info(
-                "Found existing EFT info for claimant associated with payment", extra=extra,
-            )
+            logger.info("Found existing EFT info for claimant associated with payment", extra=extra)
 
             if PrenoteState.APPROVED.prenote_state_id == existing_eft.prenote_state_id:
                 self.increment(self.Metrics.APPROVED_PRENOTE_COUNT)
@@ -995,7 +1200,9 @@ class PaymentExtractStep(Step):
             self.db_session.add(new_eft)
             self.db_session.add(employee_pub_eft_pair)
 
-            extra |= payments_util.get_traceable_pub_eft_details(new_eft, employee)
+            extra |= payments_util.get_traceable_pub_eft_details(
+                new_eft, employee, state=State.DELEGATED_EFT_SEND_PRENOTE
+            )
             logger.info(
                 "Starting DELEGATED_EFT prenote flow for employee associated with payment",
                 extra=extra,
@@ -1033,9 +1240,10 @@ class PaymentExtractStep(Step):
         payment_eft, address_pair = None, None
         if employee and not payment_data.validation_container.has_validation_issues():
             # Update the mailing address with values from FINEOS
-            address_pair, has_address_update = self.update_experian_address_pair_fineos_address(
-                payment_data, employee
-            )
+            if payment_data.is_payment_intended_for_pub:
+                address_pair, has_address_update = self.update_experian_address_pair_fineos_address(
+                    payment_data, employee
+                )
 
             # Update the EFT info with values from FINEOS
             payment_eft, has_eft_update = self.update_eft(payment_data, employee)
@@ -1093,7 +1301,7 @@ class PaymentExtractStep(Step):
 
         # Link the payment object to the payment_reference_file
         payment_reference_file = PaymentReferenceFile(
-            payment=payment, reference_file=reference_file,
+            payment=payment, reference_file=reference_file
         )
         self.db_session.add(payment_reference_file)
 
@@ -1143,11 +1351,15 @@ class PaymentExtractStep(Step):
             payment.payment_transaction_type_id
             == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
         ):
-            end_state = State.DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT
-            message = "Employer reimbursement payment processed"
-            self._manage_pei_writeback_state(
-                payment, FineosWritebackTransactionStatus.PROCESSED, payment_data
-            )
+            if payments_util.is_employer_reimbursement_payments_enabled():
+                end_state = State.PAYMENT_READY_FOR_ADDRESS_VALIDATION
+                message = "Success"
+            else:
+                end_state = State.DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT
+                message = "Employer reimbursement payment processed"
+                self._manage_pei_writeback_state(
+                    payment, FineosWritebackTransactionStatus.PROCESSED, payment_data
+                )
             self.increment(self.Metrics.EMPLOYER_REIMBURSEMENT_COUNT)
 
         # Zero dollar payments are added to the FINEOS writeback + a report
@@ -1200,6 +1412,7 @@ class PaymentExtractStep(Step):
             end_state = State.STATE_WITHHOLDING_READY_FOR_PROCESSING
             message = "State Withholding payment processed"
             self.increment(self.Metrics.STATE_WITHHOLDING_PAYMENT_COUNT)
+
         else:
             end_state = State.PAYMENT_READY_FOR_ADDRESS_VALIDATION
             message = "Success"
@@ -1382,6 +1595,22 @@ class PaymentExtractStep(Step):
             )
             self.increment(self.Metrics.PAYMENT_DETAILS_RECORD_COUNT, len(payment_details_records))
 
+            # We expect multiple payment line records for each payment
+            # joined on the C/I value. Each of these represents
+            # a specific amount+type that makes up the payment
+            # eg. $500 for base benefit, or -$50 removed for tax
+            payment_line_records = (
+                self.db_session.query(FineosExtractVpeiPaymentLine)
+                .filter(
+                    FineosExtractVpeiPaymentLine.c_pymnteif_paymentlines == c_value,
+                    FineosExtractVpeiPaymentLine.i_pymnteif_paymentlines == i_value,
+                    FineosExtractVpeiPaymentLine.reference_file_id
+                    == reference_file.reference_file_id,
+                )
+                .all()
+            )
+            self.increment(self.Metrics.PAYMENT_LINE_RECORD_COUNT, len(payment_line_records))
+
             # We expect only one claim details record
             # joined on the C/I value
             claim_details_records = (
@@ -1451,6 +1680,7 @@ class PaymentExtractStep(Step):
                 i_value,
                 raw_payment_record,
                 payment_details_records,
+                payment_line_records,
                 claim_details_record,
                 requested_absence_record,
                 count_incrementer=self.increment,
@@ -1466,16 +1696,14 @@ class PaymentExtractStep(Step):
             # Create and finish the state log. If there were any issues, this'll set the
             # record to an error state which'll send out a report to address it, otherwise
             # it will move onto the next step in processing
-            self._setup_state_log(
-                payment, payment_data,
-            )
+            self._setup_state_log(payment, payment_data)
 
         except Exception:
             # An exception during processing would indicate
             # either a bug or a scenario that we believe invalidates
             # an entire file and warrants investigating
             logger.exception(
-                "An error occurred while processing payment for CI: %s, %s", c_value, i_value,
+                "An error occurred while processing payment for CI: %s, %s", c_value, i_value
             )
             raise
 

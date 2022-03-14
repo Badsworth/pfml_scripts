@@ -87,18 +87,9 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         self.db_session.add(self.reference_file)
 
         stream = massgov.pfml.util.files.open_stream(path)
-        try:
-            self.process_stream(stream)
-        except Exception as err:
-            self.db_session.rollback()
-            logger.exception("%s: %s", type(err).__name__, str(err), extra={"path": path})
-            delegated_payments_util.move_reference_file(
-                self.db_session, self.reference_file, self.received_path, self.error_path
-            )
-            # TODO: add to general error report
-            raise
 
-        self.db_session.commit()
+        self.process_stream(stream)
+
         delegated_payments_util.move_reference_file(
             self.db_session, self.reference_file, self.received_path, self.processed_path
         )
@@ -296,7 +287,7 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
     ) -> None:
         """Handle a check payment that remains in an outstanding status."""
         logger.info(
-            "check still outstanding, no state change", extra=extra_for_log(check_payment, payment),
+            "check still outstanding, no state change", extra=extra_for_log(check_payment, payment)
         )
         self.increment(self.Metrics.PAYMENT_STILL_OUTSTANDING)
 
@@ -349,7 +340,7 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         )
 
         logger.info(
-            "payment failed by check", extra=extra_for_log(check_payment, payment, end_state),
+            "payment failed by check", extra=extra_for_log(check_payment, payment, end_state)
         )
         self.increment(self.Metrics.PAYMENT_FAILED_BY_CHECK)
         self.add_pub_error(

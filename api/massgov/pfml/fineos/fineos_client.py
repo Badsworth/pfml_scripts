@@ -28,6 +28,7 @@ from massgov.pfml.fineos.util.response import (
     get_fineos_correlation_id,
     log_validation_error,
 )
+from massgov.pfml.fineos.wscomposer.schemas import fineos_wscomposer_schema
 from massgov.pfml.util.converters.json_to_obj import set_empty_dates_to_none
 
 from . import client, exception, models
@@ -42,16 +43,12 @@ EXPECTED_UNPROCESSABLE_ENTITY_FAILURES = {
     "is not a valid file",
 }
 
-employee_register_request_schema = xmlschema.XMLSchema(
-    os.path.join(os.path.dirname(__file__), "wscomposer", "EmployeeRegisterService.Request.xsd")
-)
+employee_register_request_schema = fineos_wscomposer_schema("EmployeeRegisterService.Request.xsd")
 
-update_or_create_party_request_schema = xmlschema.XMLSchema(
-    os.path.join(os.path.dirname(__file__), "wscomposer", "UpdateOrCreateParty.Request.xsd")
-)
+update_or_create_party_request_schema = fineos_wscomposer_schema("UpdateOrCreateParty.Request.xsd")
 
-update_or_create_party_response_schema = xmlschema.XMLSchema(
-    os.path.join(os.path.dirname(__file__), "wscomposer", "UpdateOrCreateParty.Response.xsd")
+update_or_create_party_response_schema = fineos_wscomposer_schema(
+    "UpdateOrCreateParty.Response.xsd"
 )
 
 create_or_update_leave_admin_request_schema = xmlschema.XMLSchema(
@@ -66,30 +63,26 @@ create_or_update_leave_admin_response_schema = xmlschema.XMLSchema(
     )
 )
 
-service_agreement_service_request_schema = xmlschema.XMLSchema(
-    os.path.join(os.path.dirname(__file__), "wscomposer", "ServiceAgreementService.Request.xsd")
+service_agreement_service_request_schema = fineos_wscomposer_schema(
+    "ServiceAgreementService.Request.xsd"
 )
 
-service_agreement_service_response_schema = xmlschema.XMLSchema(
-    os.path.join(os.path.dirname(__file__), "wscomposer", "ServiceAgreementService.Response.xsd")
+service_agreement_service_response_schema = fineos_wscomposer_schema(
+    "ServiceAgreementService.Response.xsd"
 )
 
-occupation_detail_update_service_request_schema = xmlschema.XMLSchema(
-    os.path.join(
-        os.path.dirname(__file__), "wscomposer", "OccupationDetailUpdateService.Request.xsd"
-    )
+occupation_detail_update_service_request_schema = fineos_wscomposer_schema(
+    "OccupationDetailUpdateService.Request.xsd"
 )
 
-read_employer_response_schema = xmlschema.XMLSchema(
-    os.path.join(os.path.dirname(__file__), "wscomposer", "ReadEmployer.Response.xsd")
+read_employer_response_schema = fineos_wscomposer_schema("ReadEmployer.Response.xsd")
+
+update_tax_withholding_pref_request_schema = fineos_wscomposer_schema(
+    "OptInSITFITService.Request.xsd"
 )
 
-update_tax_withholding_pref_request_schema = xmlschema.XMLSchema(
-    os.path.join(os.path.dirname(__file__), "wscomposer", "OptInSITFITService.Request.xsd")
-)
-
-update_tax_withholding_pref_response_schema = xmlschema.XMLSchema(
-    os.path.join(os.path.dirname(__file__), "wscomposer", "OptInSITFITService.Response.xsd")
+update_tax_withholding_pref_response_schema = fineos_wscomposer_schema(
+    "OptInSITFITService.Response.xsd"
 )
 
 
@@ -204,7 +197,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
             raise exception.FINEOSFatalClientSideError(method_name=method_name, cause=ex)
 
     def _request(
-        self, method: str, url: str, method_name: str, headers: Dict[str, str], **args: Any,
+        self, method: str, url: str, method_name: str, headers: Dict[str, str], **args: Any
     ) -> requests.Response:
         """Make a request and handle errors."""
         self.request_count += 1
@@ -275,7 +268,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
             if (
                 response.status_code
-                in (requests.codes.SERVICE_UNAVAILABLE, requests.codes.GATEWAY_TIMEOUT,)
+                in (requests.codes.SERVICE_UNAVAILABLE, requests.codes.GATEWAY_TIMEOUT)
                 or "ESOCKETTIMEDOUT" in response.text
             ):
                 # The service is unavailable for some reason. Log a warning. There should be a
@@ -292,18 +285,18 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 log_fn = logger.warning
             elif response.status_code == requests.codes.UNPROCESSABLE_ENTITY:
                 err = exception.FINEOSUnprocessableEntity(
-                    method_name, requests.codes.ok, response.status_code, message=response.text,
+                    method_name, requests.codes.ok, response.status_code, message=response.text
                 )
                 log_fn = logger.warning
                 log_validation_error(err, EXPECTED_UNPROCESSABLE_ENTITY_FAILURES)
             elif response.status_code == requests.codes.NOT_FOUND:
                 err = exception.FINEOSNotFound(
-                    method_name, requests.codes.ok, response.status_code, message=response.text,
+                    method_name, requests.codes.ok, response.status_code, message=response.text
                 )
                 log_fn = logger.warning
             elif response.status_code == requests.codes.FORBIDDEN:
                 err = exception.FINEOSForbidden(
-                    method_name, requests.codes.ok, response.status_code, message=response.text,
+                    method_name, requests.codes.ok, response.status_code, message=response.text
                 )
                 log_fn = logger.warning
             else:
@@ -458,7 +451,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
             raise
 
     @staticmethod
-    def _register_api_user_payload(employee_registration: models.EmployeeRegistration,) -> str:
+    def _register_api_user_payload(employee_registration: models.EmployeeRegistration) -> str:
         parameters = {
             "@xmlns:p": "http://www.fineos.com/wscomposer/EmployeeRegisterService",
             "config-name": "EmployeeRegisterService",
@@ -831,7 +824,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
     ) -> List[models.customer_api.ReadCustomerOccupation]:
 
         response = self._customer_api(
-            "GET", "customer/occupations", user_id, "get_customer_occupations_customer_api",
+            "GET", "customer/occupations", user_id, "get_customer_occupations_customer_api"
         )
 
         json = response.json()
@@ -844,7 +837,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         self, user_id: str, case_id: str
     ) -> List[models.customer_api.ReadCustomerOccupation]:
         response = self._customer_api(
-            "GET", f"customer/cases/{case_id}/occupations", user_id, "get_case_occupations",
+            "GET", f"customer/cases/{case_id}/occupations", user_id, "get_case_occupations"
         )
 
         json = response.json()
@@ -857,7 +850,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         self, user_id: str
     ) -> List[models.customer_api.PaymentPreferenceResponse]:
         response = self._customer_api(
-            "GET", "customer/paymentPreferences", user_id, "get_payment_preferences",
+            "GET", "customer/paymentPreferences", user_id, "get_payment_preferences"
         )
 
         json = response.json()
@@ -890,11 +883,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         worksite_id: Optional[str],
     ) -> None:
         xml_body = self._create_update_occupation_payload(
-            occupation_id,
-            employment_status,
-            hours_worked_per_week,
-            fineos_org_unit_id,
-            worksite_id,
+            occupation_id, employment_status, hours_worked_per_week, fineos_org_unit_id, worksite_id
         )
         self._wscomposer_request(
             "POST",
@@ -967,16 +956,16 @@ class FINEOSClient(client.AbstractFINEOSClient):
         content_type: str,
         description: str,
     ) -> models.customer_api.Document:
-        """ Upload a document to FINEOS using the Base64 endpoint, which accepts document content
-            through a Base64-encoded string.
+        """Upload a document to FINEOS using the Base64 endpoint, which accepts document content
+        through a Base64-encoded string.
 
-            FINEOS document uploads occur through an API Gateway --> Lambda function, so the max
-            request size is 6MB. However, since base64 encoding can bloat the file size by up to
-            33%, the effective file size is 4.5MB.
+        FINEOS document uploads occur through an API Gateway --> Lambda function, so the max
+        request size is 6MB. However, since base64 encoding can bloat the file size by up to
+        33%, the effective file size is 4.5MB.
 
-            The binary upload flag should be disabled on the FINEOS side when using this method;
-            if it's enabled, the effective file size reduces even further to 3.4-3.6MB.
-           """
+        The binary upload flag should be disabled on the FINEOS side when using this method;
+        if it's enabled, the effective file size reduces even further to 3.4-3.6MB.
+        """
         file_size = len(file_content)
         encoded_file_contents = base64.b64encode(file_content).decode("utf-8")
         file_name_root, file_extension = os.path.splitext(file_name)
@@ -1016,14 +1005,14 @@ class FINEOSClient(client.AbstractFINEOSClient):
         content_type: str,
         description: str,
     ) -> models.customer_api.Document:
-        """ Upload a document through the multipart/form-data API endpoint.
+        """Upload a document through the multipart/form-data API endpoint.
 
-            FINEOS document uploads occur through an API Gateway --> Lambda function.
-            The binary upload flag must be enabled on the FINEOS side in order for this
-            to function correctly; otherwise the documents will be blank when uploaded.
+        FINEOS document uploads occur through an API Gateway --> Lambda function.
+        The binary upload flag must be enabled on the FINEOS side in order for this
+        to function correctly; otherwise the documents will be blank when uploaded.
 
-            The max request size is 6MB (limited by AWS Lambda); however, in practice,
-            testing indicates that 4.5MB is the effective file size limit.
+        The max request size is 6MB (limited by AWS Lambda); however, in practice,
+        testing indicates that 4.5MB is the effective file size limit.
         """
         multipart_data = (
             ("documentContents", (file_name, file_content, content_type)),
@@ -1136,7 +1125,11 @@ class FINEOSClient(client.AbstractFINEOSClient):
             if finres.response_status == requests.codes.FORBIDDEN:
                 logger.warning(
                     "FINEOS API responded with 403. Returning empty documents list",
-                    extra={"absence_id": absence_id, "user_id": user_id,},
+                    extra={
+                        "absence_id": absence_id,
+                        "absence_case_id": absence_id,
+                        "user_id": user_id,
+                    },
                 )
                 return []
 
@@ -1209,7 +1202,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         )
 
     def get_week_based_work_pattern(
-        self, user_id: str, occupation_id: Union[str, int],
+        self, user_id: str, occupation_id: Union[str, int]
     ) -> models.customer_api.WeekBasedWorkPattern:
 
         response = self._customer_api(
@@ -1346,7 +1339,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         return employer_create_or_update.fineos_customer_nbr, fineos_employer_id_int
 
     def create_or_update_leave_period_change_request(
-        self, user_id: str, change_request: LeavePeriodChangeRequest
+        self, fineos_web_id: str, absence_id: str, change_request: LeavePeriodChangeRequest
     ) -> LeavePeriodChangeRequest:
         # call the FINEOS POST change_request endpoint when the upgrade is complete
         # TODO: https://lwd.atlassian.net/browse/PFMLPB-2055
@@ -1357,21 +1350,6 @@ class FINEOSClient(client.AbstractFINEOSClient):
         }
 
         return LeavePeriodChangeRequest.parse_obj(mock_response_json)
-
-    def get_leave_period_change_requests(
-        self, user_id: str, claim_id: str
-    ) -> List[LeavePeriodChangeRequest]:
-        # call the FINEOS GET change_request endpoint when the upgrade is complete
-        # TODO: https://lwd.atlassian.net/browse/PFMLPB-2055
-        mock_response_json = [
-            {
-                "additionalNotes": "Withdrawal",
-                "changeRequestPeriods": [{"endDate": "2022-02-15", "startDate": "2022-02-14"}],
-                "reason": {"fullId": 0, "name": "Employee Requested Removal"},
-            }
-        ]
-
-        return pydantic.parse_obj_as(List[LeavePeriodChangeRequest], mock_response_json)
 
     @staticmethod
     def _create_or_update_leave_admin_payload(
@@ -1629,7 +1607,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         )
         logger.warning(
             "FINEOS API responded with an error: {}".format(fineos_err),
-            extra={"absence_id": absence_id},
+            extra={"absence_id": absence_id, "absence_case_id": absence_id},
         )
         raise Exception(fineos_err)
 
