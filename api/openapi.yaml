@@ -2792,6 +2792,11 @@ components:
         tax_identifier:
           $ref: "#/components/schemas/MaskedSsnItin"
           nullable: true
+        employee_id:
+          type: string
+          format: uuid
+          example: '2a340cf8-6d2a-4f82-a075-73588d003f8f'
+          nullable: true
         employer_id:
           type: string
           format: uuid

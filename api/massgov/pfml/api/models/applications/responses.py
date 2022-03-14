@@ -49,6 +49,7 @@ class ApplicationResponse(PydanticBaseModel):
     organization_unit_id: Optional[UUID4]
     organization_unit_selection: Optional[OrganizationUnitSelection]
     tax_identifier: Optional[MaskedTaxIdFormattedStr]
+    employee_id: Optional[UUID4]
     employer_fein: Optional[FEINFormattedStr]
     fineos_absence_id: Optional[str]
     first_name: Optional[str]
@@ -124,6 +125,9 @@ class ApplicationResponse(PydanticBaseModel):
 
         if application.claim is not None:
             application_response.fineos_absence_id = application.claim.fineos_absence_id
+
+        if application.employee is not None:
+            application_response.employee_id = application.employee.employee_id
 
         application_response.updated_time = application_response.updated_at
         application_response.computed_start_dates = _get_computed_start_dates(application)

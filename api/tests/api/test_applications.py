@@ -287,6 +287,35 @@ def test_applications_get_split_from_application_id(client, user, auth_token, te
     assert response_body.get("split_into_application_id") == str(split_application.application_id)
 
 
+def test_applications_get_employee_id(client, user, auth_token, test_db_session):
+    # No employee_id should be returned if there isn't an employee associated with the application
+    application = ApplicationFactory.create(user=user)
+    test_db_session.commit()
+
+    response = client.get(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    assert response_body.get("employee_id") is None
+
+    # employee_id will be returned when the application is associated with an employee
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(user=user, tax_identifier=employee.tax_identifier)
+    test_db_session.commit()
+
+    response = client.get(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    assert response_body.get("employee_id") == str(employee.employee_id)
+
+
 def test_applications_get_all_for_user(client, user, auth_token):
     applications = sorted(
         [ApplicationFactory.create(user=user), ApplicationFactory.create(user=user)],
