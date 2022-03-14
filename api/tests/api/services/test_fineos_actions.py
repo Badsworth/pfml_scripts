@@ -1768,3 +1768,31 @@ class TestConvertChangeRequestToFineosModel:
 
         error = exc_info.value
         assert "Unknown type: Foo" in str(error)
+
+
+class TestBuildContactDetailsForFineosUpgrade:
+    def test_fineos_21_3(self, monkeypatch):
+        monkeypatch.setenv("FINEOS_IS_RUNNING_V21", "true")
+
+        application = ApplicationFactory.build()
+        fineos_client = massgov.pfml.fineos.MockFINEOSClient()
+
+        contact_details = fineos_actions.build_contact_details(
+            application, fineos_client.read_customer_contact_details("foo")
+        )
+
+        assert contact_details.emailAddresses[0].emailAddress == application.user.email_address
+        assert contact_details.emailAddresses[0].emailAddressType == "Email"
+
+    def test_not_fineos_21_3(self, monkeypatch):
+        monkeypatch.setenv("FINEOS_IS_RUNNING_V21", "false")
+
+        application = ApplicationFactory.build()
+        fineos_client = massgov.pfml.fineos.MockFINEOSClient()
+
+        contact_details = fineos_actions.build_contact_details(
+            application, fineos_client.read_customer_contact_details("foo")
+        )
+
+        assert contact_details.emailAddresses[0].emailAddress == application.user.email_address
+        assert "emailAddressType" not in contact_details.emailAddresses[0].dict()

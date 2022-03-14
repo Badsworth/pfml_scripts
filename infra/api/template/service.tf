@@ -75,6 +75,7 @@ resource "aws_ecs_task_definition" "app" {
       fineos_client_wscomposer_user_id           = var.fineos_client_wscomposer_user_id
       fineos_client_oauth2_url                   = var.fineos_client_oauth2_url
       fineos_client_oauth2_client_id             = var.fineos_client_oauth2_client_id
+      fineos_is_running_v21                      = var.fineos_is_running_v21
       pfml_email_address                         = var.pfml_email_address
       bounce_forwarding_email_address            = var.bounce_forwarding_email_address
       bounce_forwarding_email_address_arn        = var.bounce_forwarding_email_address_arn
