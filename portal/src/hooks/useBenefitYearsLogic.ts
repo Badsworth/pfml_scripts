@@ -59,9 +59,8 @@ const useBenefitYearsLogic = ({
     end_date: string
   ) => {
     if (isLoadingCrossedBenefitYears) return;
-    const shouldCrossedBenefitYearsLoad = isFeatureEnabled(
-      "splitClaimsAcrossBY"
-    );
+    const shouldCrossedBenefitYearsLoad =
+      isFeatureEnabled("splitClaimsAcrossBY") && employee_id != null;
     if (shouldCrossedBenefitYearsLoad) {
       setIsLoadingCrossedBenefitYears(true);
       errorsLogic.clearErrors();

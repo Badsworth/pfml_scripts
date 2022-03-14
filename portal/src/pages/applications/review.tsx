@@ -101,7 +101,8 @@ export const Review = (
 
   useEffect(() => {
     loadCrossedBenefitYears(employeeId, startDate, endDate);
-  }, [loadCrossedBenefitYears, employeeId, startDate, endDate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [employeeId, startDate, endDate]);
   const crossedBenefitYear = getCrossedBenefitYear();
   const canSubmitBoth =
     crossedBenefitYear !== null &&
