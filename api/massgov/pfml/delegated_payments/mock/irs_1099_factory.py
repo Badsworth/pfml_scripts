@@ -1,6 +1,7 @@
 from typing import Any, Optional
 
 import faker
+
 import massgov.pfml.db as db
 from massgov.pfml.db.models.factories import (
     Pfml1099BatchFactory,
@@ -9,7 +10,6 @@ from massgov.pfml.db.models.factories import (
     Pfml1099PaymentFactory,
     Pfml1099RefundFactory,
     Pfml1099StateWithholdingFactory,
-    Pfml1099Factory as Pfml1099ItemFactory
 )
 from massgov.pfml.db.models.payments import (
     Pfml1099Batch,
@@ -17,10 +17,8 @@ from massgov.pfml.db.models.payments import (
     Pfml1099Payment,
     Pfml1099Refund,
     Pfml1099Withholding,
-    Pfml1099,
 )
 from massgov.pfml.delegated_payments.mock.mock_util import MockData
-
 
 fake = faker.Faker()
 fake.seed_instance(2394)
@@ -45,7 +43,6 @@ class Pfml1099Factory(MockData):
         add_refund: bool = True,
         add_state_withholding: bool = True,
         add_federal_withholding: bool = True,
-        pfml_1099: Optional[Pfml1099] = None,
         **kwargs: Any,
     ):
         super().__init__(generate_defaults, **kwargs)
@@ -64,7 +61,6 @@ class Pfml1099Factory(MockData):
         self.add_refund = add_refund
         self.add_state_withholding = add_state_withholding
         self.add_federal_withholding = add_federal_withholding
-        self.pfml_1099 = pfml_1099
 
     # only set if value was passed in constructor through kwarg
     # else defer to lazy factory initialization
@@ -136,13 +132,3 @@ class Pfml1099Factory(MockData):
 
         if self.add_federal_withholding:
             self.get_or_create_federal_withholding()
-
-    def get_or_create_pfml_1099(self):
-        if self.pfml_1099 is not None:
-            return self.pfml_1099
-
-        self.get_or_create_batch()
-        
-        self.pfml_1099 = Pfml1099ItemFactory() #.create(pfml_1099_batch_id = self.batch.pfml_1099_batch_id)
-
-        return self.pfml_1099
