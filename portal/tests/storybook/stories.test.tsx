@@ -11,9 +11,9 @@ import {
   composeStories,
   setGlobalConfig as setupStorybook,
 } from "@storybook/testing-react";
-import { render, waitFor } from "@testing-library/react/pure";
+import { render, waitFor } from "@testing-library/react";
 import React from "react";
-import { configureAxe } from "jest-axe";
+import { axe } from "jest-axe";
 import path from "path";
 import recursiveReadSync from "recursive-readdir-sync";
 
@@ -45,23 +45,6 @@ const storyFilePaths: Array<[RelativeFilePath, AbsoluteFilePath]> =
 
 // Axe tests can sometimes take longer than the default 5 seconds
 jest.setTimeout(20000);
-
-/**
- * With this rule enabled any component with an html "id=" that has multiple stories will fail.
- * This is likely because of the way composedStories interacts with jest-axe. Given our infrequent use
- * of the "id" attribute this rule is worth disabling.
- *
- * Example that would cause this rule to fail:
- * ExampleComponent = () => { return (<div id="thisisanid" />) }
- * const Template: Story<Args> = (args) => { return <ExampleComponent />; }
- * export const FirstStory = Template.bind({});
- * export const SecondStory = Template.bind({});
- */
-const axe = configureAxe({
-  rules: {
-    "duplicate-id": { enabled: false },
-  },
-});
 
 /**
  * Generated tests for each Storybook story, to ensure our stories are
