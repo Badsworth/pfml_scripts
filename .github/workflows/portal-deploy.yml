@@ -570,5 +570,8 @@ jobs:
             "text": "E2E tests failed in ${{ github.event.inputs.deployment_env || 'test'}} [build logs](${{ env.workflow_self_link }})",
             "sections": [{
                 "activityImage":"https://th.bing.com/th/id/R.ee8882f44294e8a6f1732a54343ff17e?rik=FAYIPD4sACftKw&riu=http%3a%2f%2f3.bp.blogspot.com%2f-u6MZBWbGcZI%2fUT4mft01YTI%2fAAAAAAAADpU%2fJubGsyGdL00%2fs1600%2ffailure.png&ehk=ranH%2bkeeo59wsILuyxVyNTIR2oUECprijedE01jHq34%3d&risl=&pid=ImgRaw&r=0"
+            },
+            {
+              "text": "Run **#${{ github.run_number }}** in **${{ env.version }}**. Triggered via Portal deployment"
             }]
           }')

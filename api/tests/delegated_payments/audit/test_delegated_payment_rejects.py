@@ -155,6 +155,8 @@ def test_rejects_column_validation(test_db_session, payment_rejects_step):
         state_withholding_amount="",
         federal_withholding_i_value="",
         state_withholding_i_value="",
+        employer_reimbursement_amount="",
+        employer_reimbursement_i_value="",
     )
     payment_rejects_row = build_audit_report_row(
         payment_audit_data, get_now_us_eastern(), test_db_session
@@ -215,6 +217,8 @@ def test_valid_combination_of_reject_and_skip(
         state_withholding_amount="",
         federal_withholding_i_value="",
         state_withholding_i_value="",
+        employer_reimbursement_amount="",
+        employer_reimbursement_i_value="",
     )
 
     payment_rejects_row = build_audit_report_row(

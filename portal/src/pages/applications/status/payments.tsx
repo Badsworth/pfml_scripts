@@ -4,6 +4,7 @@ import {
   findDocumentsByTypes,
 } from "../../../models/Document";
 import {
+  PROCESSING_DAYS_PER_DELAY,
   Payment,
   WritebackTransactionStatus,
   isAfterDelayProcessingTime,
@@ -142,10 +143,23 @@ export const Payments = ({
 
   const shouldShowPaymentsTable = hasPayments || hasWaitingWeek;
 
-  const getPaymentAmount = (status: string, amount: number | null) => {
+  const getPaymentAmountOrStatusText = (
+    status: string,
+    amount: number | null,
+    writeback_transaction_status: WritebackTransactionStatus,
+    transaction_date: string | null
+  ) => {
     if (status === "Sent to bank") {
       return t("pages.payments.tableAmountSent", { amount });
-    } else if (status === "Pending") {
+    } else if (
+      status === "Pending" ||
+      (status === "Delayed" &&
+        transaction_date &&
+        !isAfterDelayProcessingTime(
+          writeback_transaction_status,
+          transaction_date
+        ))
+    ) {
       return "Processing";
     }
     return status;
@@ -171,6 +185,7 @@ export const Payments = ({
       isFeatureEnabled("claimantShowPaymentsPhaseThree") &&
       status === "Delayed"
     ) {
+      // Handle delay cases below
       if (isBlank(transaction_date)) return "Pending";
 
       const shouldShowWritebackSpecificText = isAfterDelayProcessingTime(
@@ -178,7 +193,9 @@ export const Payments = ({
         transaction_date
       );
       return shouldShowWritebackSpecificText
-        ? `${status}_${writeback_transaction_status}`
+        ? writeback_transaction_status in PROCESSING_DAYS_PER_DELAY
+          ? `${status}_${writeback_transaction_status}`
+          : `${status}_Default`
         : "Pending";
     }
     return status;
@@ -306,7 +323,12 @@ export const Payments = ({
                             )}
                           </td>
                           <td data-label={tableColumns[1]}>
-                            {getPaymentAmount(status, amount)}
+                            {getPaymentAmountOrStatusText(
+                              status,
+                              amount,
+                              writeback_transaction_status,
+                              transaction_date
+                            )}
                           </td>
                           <td data-label={tableColumns[2]}>
                             <Trans

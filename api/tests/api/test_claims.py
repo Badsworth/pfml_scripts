@@ -53,7 +53,6 @@ from massgov.pfml.db.models.factories import (
 )
 from massgov.pfml.db.queries.absence_periods import (
     split_fineos_absence_period_id,
-    split_fineos_leave_request_id,
     upsert_absence_period_from_fineos_period,
 )
 from massgov.pfml.db.queries.get_claims_query import ActionRequiredStatusFilter
@@ -906,13 +905,6 @@ class TestGetClaimReview:
         return PeriodDecisions.parse_obj(absence_details)
 
     @pytest.fixture
-    def mock_absence_details_invalid_leave_request_id(self, absence_details_data):
-        absence_details = absence_details_data.copy()
-        absence_details["decisions"][0]["period"]["leaveRequest"]["id"] = "PL0000100001"
-        absence_details["decisions"][1]["period"]["leaveRequest"]["id"] = "PL-00001-one"
-        return PeriodDecisions.parse_obj(absence_details)
-
-    @pytest.fixture
     def employer(self):
         return EmployerFactory.create(employer_fein="112222222")
 
@@ -1063,26 +1055,6 @@ class TestGetClaimReview:
         self._assert_no_absence_period_data_for_claim(test_db_session, claim)
 
     @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence_period_decisions")
-    def test_employer_get_claim_review_creates_absence_period_invalid_leave_request_id(
-        self,
-        mock_get_absence,
-        test_db_session,
-        client,
-        employer_auth_token,
-        mock_absence_details_invalid_leave_request_id,
-        claim,
-    ):
-        self._assert_no_absence_period_data_for_claim(test_db_session, claim)
-        mock_get_absence.return_value = mock_absence_details_invalid_leave_request_id
-        response = client.get(
-            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
-            headers={"Authorization": f"Bearer {employer_auth_token}"},
-        )
-
-        assert response.status_code == 400
-        self._assert_no_absence_period_data_for_claim(test_db_session, claim)
-
-    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence_period_decisions")
     def test_employer_get_claim_returns_absence_periods_from_fineos(
         self, mock_get_absence, client, employer_auth_token, mock_absence_details_create, claim
     ):
@@ -1097,8 +1069,7 @@ class TestGetClaimReview:
         periods = [decision.period for decision in mock_absence_details_create.decisions]
         for fineos_period_data, absence_data in zip(periods, absence_periods):
             class_id, index_id = split_fineos_absence_period_id(fineos_period_data.periodReference)
-            leave_request_id = split_fineos_leave_request_id(fineos_period_data.leaveRequest.id, {})
-            assert leave_request_id == absence_data["fineos_leave_request_id"]
+            assert absence_data["fineos_leave_request_id"] is None
             assert (
                 absence_data["period_type"]
                 == AbsencePeriodType.CONTINUOUS.absence_period_type_description
@@ -2910,6 +2881,68 @@ class TestGetClaimsEndpoint:
             # Finally, claims without any associated managed requirements are last
             assert claim_five["managed_requirements"] == []
 
+        def test_get_claims_with_order_by_follow_up_date_asc_and_is_reviewable_yes(
+            self,
+            client,
+            employee,
+            employer_auth_token,
+            employer_user,
+            load_test_db_with_managed_requirements,
+            test_verification,
+            test_db_session,
+        ):
+            # Create one more claim, this one with multiple managed requirements, one of which is open.
+            # Claims with multiple managed requirements can meet both soonest_open_requirement_date and
+            # latest_follow_up_date sort orders, which was throwing off the sort results.
+            employer = EmployerFactory.create()
+            employee = EmployeeFactory.create()
+            link = UserLeaveAdministrator(
+                user_id=employer_user.user_id,
+                employer_id=employer.employer_id,
+                fineos_web_id="fake-fineos-web-id",
+                verification=test_verification,
+            )
+            test_db_session.add(link)
+            claim = ClaimFactory.create(
+                employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1
+            )
+            # follow_up_date of today + 20 should put this between the two other is_reviewable="yes" claims
+            ManagedRequirementFactory.create(
+                claim=claim,
+                managed_requirement_type_id=ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
+                managed_requirement_status_id=ManagedRequirementStatus.OPEN.managed_requirement_status_id,
+                follow_up_date=datetime_util.utcnow() + timedelta(days=20),
+            )
+            ManagedRequirementFactory.create(
+                claim=claim,
+                managed_requirement_type_id=ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
+                managed_requirement_status_id=ManagedRequirementStatus.COMPLETE.managed_requirement_status_id,
+                follow_up_date="2022-02-02",
+            )
+            test_db_session.commit()
+
+            request = {
+                "order_direction": "ascending",
+                "order_by": "latest_follow_up_date",
+                "is_reviewable": "yes",
+            }
+            response = self._perform_api_call(request, client, employer_auth_token)
+            assert response.status_code == 200
+            response_body = response.get_json()
+            claim_one, claim_two, claim_three = response_body["data"]
+
+            # They should all be ordered chronologically
+            assert (
+                claim_one["managed_requirements"][0]["follow_up_date"]
+                < claim_two["managed_requirements"][0]["follow_up_date"]
+            )
+            assert (
+                claim_two["managed_requirements"][0]["follow_up_date"]
+                < claim_three["managed_requirements"][0]["follow_up_date"]
+            )
+            # And the claim made above should be in the middle
+            assert claim_two["fineos_absence_id"] == claim.fineos_absence_id
+
         def test_get_claims_with_order_employee_desc(
             self, client, employer_auth_token, load_test_db
         ):
@@ -3631,80 +3664,6 @@ class TestGetClaimsEndpoint:
         assert len(claim_data) == 3
         for i in range(3):
             assert_claim_response_equal_to_claim_query(claim_data[i], generated_claims[2 - i])
-
-    def test_get_claims_with_blocked_fein(
-        self,
-        client,
-        employer_auth_token,
-        employer_user,
-        test_db_session,
-        test_verification,
-        monkeypatch,
-    ):
-        employer = EmployerFactory.create()
-        employee = EmployeeFactory.create()
-
-        for _ in range(5):
-            ClaimFactory.create(
-                employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1
-            )
-
-        link = UserLeaveAdministrator(
-            user_id=employer_user.user_id,
-            employer_id=employer.employer_id,
-            fineos_web_id="fake-fineos-web-id",
-            verification=test_verification,
-        )
-        test_db_session.add(link)
-
-        other_employer = EmployerFactory.create()
-        other_link = UserLeaveAdministrator(
-            user_id=employer_user.user_id,
-            employer_id=other_employer.employer_id,
-            fineos_web_id="fake-fineos-web-id",
-            verification=test_verification,
-        )
-        test_db_session.add(other_employer)
-        test_db_session.add(other_link)
-
-        for _ in range(5):
-            ClaimFactory.create(
-                employer=other_employer,
-                employee=employee,
-                fineos_absence_status_id=1,
-                claim_type_id=1,
-            )
-
-        test_db_session.commit()
-        monkeypatch.setattr(
-            massgov.pfml.api.claims, "CLAIMS_DASHBOARD_BLOCKED_FEINS", set([employer.employer_fein])
-        )
-
-        # GET /claims deprecated
-        response = client.get(
-            "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"}
-        )
-
-        assert response.status_code == 200
-        response_body = response.get_json()
-
-        assert len(response_body["data"]) == 5
-        for claim in response_body["data"]:
-            assert claim["employer"]["employer_fein"] == format_fein(other_employer.employer_fein)
-
-        # POST /claims/search
-        response = client.post(
-            "/v1/claims/search",
-            headers={"Authorization": f"Bearer {employer_auth_token}"},
-            json={"terms": {}},
-        )
-
-        assert response.status_code == 200
-        response_body = response.get_json()
-
-        assert len(response_body["data"]) == 5
-        for claim in response_body["data"]:
-            assert claim["employer"]["employer_fein"] == format_fein(other_employer.employer_fein)
 
     def test_get_claims_no_employee(
         self, client, employer_auth_token, employer_user, test_db_session, test_verification

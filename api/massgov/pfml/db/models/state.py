@@ -599,6 +599,27 @@ class State(LookupTable):
     LEGACY_MMARS_PAYMENT_PAID = LkState(
         210, "Legacy MMARS Payment Paid", Flow.LEGACY_MMARS_PAYMENTS.flow_id
     )
+    EMPLOYER_REIMBURSEMENT_RELATED_PENDING_AUDIT = LkState(
+        212, "Employer Reimbursement Related Pending Audit", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    EMPLOYER_REIMBURSEMENT_READY_FOR_PROCESSING = LkState(
+        211, "Employer Reimbursement Ready For Processing", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    EMPLOYER_REIMBURSEMENT_RELATED_PENDING_AUDIT = LkState(
+        212, "Employer Reimbursement Related Pending Audit", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    EMPLOYER_REIMBURSEMENT_ERROR = LkState(
+        214, "Employer Reimbursement Error", Flow.DELEGATED_PAYMENT.flow_id
+    )
+    DELEGATED_PAYMENT_CASCADED_ERROR_RESTARTABLE = LkState(
+        215, "Delegated Payment Cascaded Error Restartable", Flow.DELEGATED_PAYMENT.flow_id
+    )
+    DELEGATED_PAYMENT_CASCADED_ERROR = LkState(
+        216, "Delegated Payment Cascaded Error", Flow.DELEGATED_PAYMENT.flow_id
+    )
 
 
 def sync_lookup_tables(db_session):

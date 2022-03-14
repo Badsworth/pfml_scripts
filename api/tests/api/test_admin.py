@@ -400,7 +400,7 @@ def test_admin_users_success(
         algorithm=ALGORITHMS.RS256,
         headers={"kid": azure_auth_private_key.get("kid")},
     )
-    UserFactory.create_batch(50)
+    UserFactory.create_batch(25)
     with app.app.test_request_context("/v1/admin/users"):
         response = client.get(
             "/v1/admin/users?page_size=10", headers={"Authorization": f"Bearer {encoded}"}
@@ -416,8 +416,8 @@ def test_admin_users_success(
         assert paging.get("order_direction") == "descending"
         assert paging.get("page_offset") == 1
         assert paging.get("page_size") == 10
-        assert paging.get("total_pages") == 5
-        assert paging.get("total_records") == 50
+        assert paging.get("total_pages") == 3
+        assert paging.get("total_records") == 25
         assert len(data) == 10
 
 

@@ -1230,6 +1230,14 @@ export class DocumentsPage {
     return this;
   }
 
+  addDocument(documentName: string): this {
+    this.startDocumentCreation(documentName);
+    waitForAjaxComplete();
+    clickBottomWidgetButton("Next");
+    waitForAjaxComplete();
+    return this;
+  }
+
   /**
    * Submits the "Other Income - current version" eForm. If succesfull returns back to the "Documents" page.
    * @param employer_benefits
@@ -1722,7 +1730,8 @@ type Reduction = {
 
 type PaidLeaveCorrespondenceDocument =
   | "Benefit Amount Change Notice"
-  | "Maximum Weekly Benefit Change Notice";
+  | "Maximum Weekly Benefit Change Notice"
+  | "Overpayment Notice - Full Balance Recovery";
 /**
  * Class representing the Absence Paid Leave Case,
  * Claim should be adjudicated and approved before trying to access this.
@@ -2181,6 +2190,122 @@ class PaidLeavePage {
     // confirm that payment processing date has been changed
     cy.get(`td:nth-child(3):contains(${format(date, "MM/dd/yyyy")})`);
     return this;
+  }
+
+  assertOverpaymentRecord(overpayments: OverpaymentRecord) {
+    this.onTab("Financials", "Payment History", "Overpayment Summary");
+    cy.get("table[id$='OverpaymentsListview']").within(() => {
+      cy.contains("td[id$='OverpaymentsListviewStatus0']", overpayments.status);
+      cy.contains(
+        "td[id$='OverpaymentsListviewBalancingAmount0']",
+        numToPaymentFormat(overpayments.amount)
+      );
+      cy.contains(
+        "td[id$='OverpaymentsListviewOverpaymentRecordAdjustment0']",
+        numToPaymentFormat(overpayments.adjustment)
+      );
+      cy.contains(
+        "td[id$='OverpaymentsListviewOutstandingAmount0']",
+        numToPaymentFormat(overpayments.outstandingAmount)
+      );
+    });
+  }
+
+  createOffsetRecoveryPlan(recoveryAmt: number): RecoveryPlanPage {
+    this.onTab("Financials", "Payment History", "Overpayment Summary");
+    waitForAjaxComplete();
+    cy.get("tr[class='ListRowSelected']").click({ force: true });
+    waitForAjaxComplete();
+    cy.get('input[type="submit"][value="Open"]').click({ force: true });
+    cy.get(
+      'input[type="submit"][value="Add"][id^="RecoveryPlanListviewWidget"]'
+    ).click();
+    waitForAjaxComplete();
+    cy.findByLabelText("Type").select("OffsetRecovery");
+    waitForAjaxComplete();
+    cy.wait(500);
+    cy.findByLabelText("Agreement Date").type(
+      `${format(new Date(), "MM/dd/yyyy")}{enter}`
+    );
+    waitForAjaxComplete();
+    cy.wait(500);
+    cy.get("input[type='text'][name$='Amount_per_Frequency']").type(
+      `{selectAll}{backspace}${numToPaymentFormat(recoveryAmt)}`
+    );
+    waitForAjaxComplete();
+    cy.get(
+      "input[type='submit'][id$='calculateEstimatedOffsetEndDate']"
+    ).click();
+    waitForAjaxComplete();
+    clickBottomWidgetButton();
+    waitForAjaxComplete();
+    return new RecoveryPlanPage();
+  }
+
+  getAmountsPending(): Cypress.Chainable<
+    Record<"netAmount" | "netPaymentAmount", string>[]
+  > {
+    this.onTab("Financials", "Payment History", "Amounts Pending");
+    waitForAjaxComplete();
+    // net amount
+    return cy.get("td[id$='benefit_amount_money0']").then(([...netPymt]) => {
+      // net payment amount
+      return cy.get("td[id$='payment_amount_money0']").then((netPymtCols) => {
+        return cy.wrap(
+          [...netPymtCols].reduce((acc, netPaymentAmountCol, idx) => {
+            const rowData = {
+              netAmount: netPymt[idx].textContent as string,
+              netPaymentAmount: netPaymentAmountCol.textContent as string,
+            };
+            acc.push(rowData);
+            return acc;
+          }, [] as Record<"netAmount" | "netPaymentAmount", string>[])
+        );
+      });
+    });
+  }
+}
+
+type OverpaymentRecord = {
+  status: string;
+  amount: number;
+  adjustment: number;
+  outstandingAmount: number;
+};
+
+type RecoveryPageCorrespondenceDropdownOptions =
+  | "OP-Full Balance Demand"
+  | "OP-Full Balance Recovery"
+  | "OP-Full Balance Recovery-Manual"
+  | "OP-Notice of Payoff"
+  | "OP-Payment Received";
+
+type RecoveryPlanDocuments =
+  | "Overpayment Notice-Full Balance Recovery"
+  | "Overpayment Notice-Full Balance Recovery-Manual";
+
+class RecoveryPlanPage {
+  addDocument(
+    correspondenceOption: RecoveryPageCorrespondenceDropdownOptions,
+    documentType: RecoveryPlanDocuments
+  ): this {
+    cy.contains("a", "Correspondence").click({ force: true });
+    waitForAjaxComplete();
+    cy.contains(correspondenceOption).click();
+    clickBottomWidgetButton("Next");
+    onTab("Documents");
+    assertHasDocument(documentType);
+    return this;
+  }
+  assertDocumentStatus(
+    documentType: RecoveryPlanDocuments,
+    status: PaidLeaveDocumentStatus
+  ) {
+    onTab("Documents");
+    waitForAjaxComplete();
+    cy.contains("tr", documentType).within(() => {
+      cy.contains("td", status);
+    });
   }
 }
 

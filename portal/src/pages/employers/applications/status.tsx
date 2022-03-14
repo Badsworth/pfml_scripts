@@ -1,7 +1,6 @@
-import LeaveReason, { LeaveReasonType } from "../../../models/LeaveReason";
 import React, { useEffect } from "react";
 import {
-  findDocumentsByLeaveReason,
+  getLeaveCertificationDocs,
   getLegalNotices,
 } from "../../../models/Document";
 import withEmployerClaim, {
@@ -16,6 +15,7 @@ import EmployeeInformation from "../../../features/employer-review/EmployeeInfor
 import Heading from "../../../components/core/Heading";
 import HeadingPrefix from "src/components/core/HeadingPrefix";
 import Lead from "../../../components/core/Lead";
+import LeaveReason from "../../../models/LeaveReason";
 import StatusRow from "../../../components/StatusRow";
 import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
@@ -44,12 +44,9 @@ export const Status = (props: WithEmployerClaimProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [absenceId]);
 
-  const leaveReason = claim.leave_details?.reason as LeaveReasonType;
   const allDocuments = claimDocumentsMap.get(absenceId)?.items || [];
   const legalNotices = getLegalNotices(allDocuments);
-  const certificationDocuments = leaveReason
-    ? findDocumentsByLeaveReason(allDocuments, leaveReason)
-    : [];
+  const certificationDocuments = getLeaveCertificationDocs(allDocuments);
 
   /**
    * We use this page as the entry point for leave admins viewing an individual claim.

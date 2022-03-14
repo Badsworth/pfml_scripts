@@ -57,17 +57,6 @@ exports[`ComponentWithUser renders the appropriate certification upload content 
             Each file you upload must be smaller than 4.5 MB
           </li>
         </ul>
-        <p>
-          It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the 
-          <a
-            href="https://www.mass.gov/pfmlsubmitinfo"
-            rel="noopener"
-            target="_blank"
-          >
-            fax and mail instructions
-          </a>
-          .
-        </p>
       </div>
     </div>
   </div>
@@ -219,17 +208,6 @@ exports[`ComponentWithUser renders the appropriate certification upload content 
             Each file you upload must be smaller than 4.5 MB
           </li>
         </ul>
-        <p>
-          It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the 
-          <a
-            href="https://www.mass.gov/pfmlsubmitinfo"
-            rel="noopener"
-            target="_blank"
-          >
-            fax and mail instructions
-          </a>
-          .
-        </p>
       </div>
     </div>
   </div>
@@ -381,17 +359,6 @@ exports[`ComponentWithUser renders the appropriate certification upload content 
             Each file you upload must be smaller than 4.5 MB
           </li>
         </ul>
-        <p>
-          It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the 
-          <a
-            href="https://www.mass.gov/pfmlsubmitinfo"
-            rel="noopener"
-            target="_blank"
-          >
-            fax and mail instructions
-          </a>
-          .
-        </p>
       </div>
     </div>
   </div>
@@ -548,17 +515,6 @@ exports[`ComponentWithUser renders the appropriate certification upload content 
             Each file you upload must be smaller than 4.5 MB
           </li>
         </ul>
-        <p>
-          It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the 
-          <a
-            href="https://www.mass.gov/pfmlsubmitinfo"
-            rel="noopener"
-            target="_blank"
-          >
-            fax and mail instructions
-          </a>
-          .
-        </p>
       </div>
     </div>
   </div>
@@ -702,17 +658,6 @@ exports[`ComponentWithUser renders the appropriate certification upload content 
             Each file you upload must be smaller than 4.5 MB
           </li>
         </ul>
-        <p>
-          It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the 
-          <a
-            href="https://www.mass.gov/pfmlsubmitinfo"
-            rel="noopener"
-            target="_blank"
-          >
-            fax and mail instructions
-          </a>
-          .
-        </p>
       </div>
     </div>
   </div>
@@ -854,17 +799,6 @@ exports[`ComponentWithUser renders the appropriate identification upload content
             Each file must be smaller than 4.5 MB
           </li>
         </ul>
-        <p>
-          It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the 
-          <a
-            href="https://www.mass.gov/pfmlsubmitinfo"
-            rel="noopener"
-            target="_blank"
-          >
-            fax and mail instructions
-          </a>
-          .
-        </p>
       </div>
     </div>
   </div>
@@ -1131,17 +1065,6 @@ exports[`ComponentWithUser renders the appropriate identification upload content
             Each file must be smaller than 4.5 MB
           </li>
         </ul>
-        <p>
-          It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the 
-          <a
-            href="https://www.mass.gov/pfmlsubmitinfo"
-            rel="noopener"
-            target="_blank"
-          >
-            fax and mail instructions
-          </a>
-          .
-        </p>
       </div>
     </div>
   </div>

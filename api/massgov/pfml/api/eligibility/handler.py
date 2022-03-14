@@ -97,6 +97,8 @@ def benefit_years_search():
                 start_date = terms.end_date_within[0]
                 end_date = terms.end_date_within[1]
                 query = query.filter(BenefitYear.end_date.between(start_date, end_date))
+            if terms.employee_id is not None:
+                query = query.filter(BenefitYear.employee_id == terms.employee_id)
 
             is_asc = pagination_context.order_direction == OrderDirection.asc.value
             sort_fn = asc if is_asc else desc

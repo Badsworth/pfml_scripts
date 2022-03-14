@@ -49,6 +49,7 @@
       { "name": "FINEOS_CLIENT_WSCOMPOSER_USER_ID", "value": "${fineos_client_wscomposer_user_id}" },
       { "name": "FINEOS_CLIENT_OAUTH2_URL", "value": "${fineos_client_oauth2_url}" },
       { "name": "FINEOS_CLIENT_OAUTH2_CLIENT_ID", "value": "${fineos_client_oauth2_client_id}" },
+      { "name": "FINEOS_IS_RUNNING_V21", "value": "${fineos_is_running_v21}" },
       { "name": "ENABLE_APPLICATION_FRAUD_CHECK", "value": "${enable_application_fraud_check}" },
       { "name": "PFML_EMAIL_ADDRESS", "value": "${pfml_email_address}" },
       { "name": "BOUNCE_FORWARDING_EMAIL_ADDRESS", "value": "${bounce_forwarding_email_address}" },

@@ -14,6 +14,9 @@ const mockIssueTranslations = {
     conflicting: "Foo already exists",
     intermittent_interval_maximum:
       "<ul><li>Message with a <intermittent-leave-guide>link</a>.</li></ul>",
+    file: {
+      size: "{{ filename }} is too big. Max size is {{ maxSize }}.",
+    },
   },
   validationFallback: {
     required: "{{ field }} is required.",
@@ -36,7 +39,7 @@ describe("ErrorMessage", () => {
     await setTranslations();
   });
 
-  it("supports a set of safelisted links and list mark", () => {
+  it("supports a set of safelisted links and list markup", () => {
     const { container } = render(
       <IssueErrorMessage
         type="intermittent_interval_maximum"
@@ -45,6 +48,24 @@ describe("ErrorMessage", () => {
     );
 
     expect(container.innerHTML).toMatchSnapshot();
+  });
+
+  it("supports rendering the issue's `extra` values in error messages", () => {
+    const { container } = render(
+      <IssueErrorMessage
+        field="file"
+        type="size"
+        namespace="fooModel"
+        extra={{
+          filename: "foo.txt",
+          maxSize: "1MB",
+        }}
+      />
+    );
+
+    expect(container.innerHTML).toMatchInlineSnapshot(
+      `"foo.txt is too big. Max size is 1MB."`
+    );
   });
 
   it.each([
