@@ -2617,10 +2617,6 @@ components:
               format: uuid
               example: "2f0f58a0-fcad-465b-b474-ee6c961cd6e3"
               nullable: true
-            application_nickname:
-              type: string
-              nullable: true
-              example: "My bonding leave request"
             tax_identifier:
               $ref: "#/components/schemas/SsnItin"
               nullable: true
@@ -2780,10 +2776,6 @@ components:
     ApplicationResponse:
       type: object
       properties:
-        application_nickname:
-          type: string
-          example: "My bonding leave request"
-          nullable: true
         organization_unit_id:
           type: string
           format: uuid

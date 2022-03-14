@@ -423,9 +423,6 @@ def update_from_request(
             )
             continue
 
-        if key == "application_nickname":
-            key = "nickname"
-
         if key == "phone":
             add_or_update_phone(db_session, body.phone, application)
             continue

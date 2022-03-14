@@ -302,7 +302,6 @@ def test_applications_get_all_for_user(client, user, auth_token):
     assert len(response_data) == len(applications)
     for (application, app_response) in zip(applications, response_data):
         assert str(application.application_id) == app_response["application_id"]
-        assert application.nickname == app_response["application_nickname"]
         assert application.application_id != unassociated_application.application_id
 
 
@@ -316,7 +315,6 @@ def test_applications_get_all_pagination_default_limit(client, user, auth_token)
     assert len(response_data) == DEFAULT_PAGE_SIZE
     for (application, app_response) in zip(applications, response_data):
         assert str(application.application_id) == app_response["application_id"]
-        assert application.nickname == app_response["application_nickname"]
 
 
 def test_applications_get_all_pagination_asc(client, user, auth_token):
@@ -332,7 +330,6 @@ def test_applications_get_all_pagination_asc(client, user, auth_token):
     assert len(response_data) == DEFAULT_PAGE_SIZE
     for (application, app_response) in zip(applications, response_data):
         assert str(application.application_id) == app_response["application_id"]
-        assert application.nickname == app_response["application_nickname"]
 
 
 def test_applications_get_all_pagination_limit_double(client, user, auth_token):
@@ -348,7 +345,6 @@ def test_applications_get_all_pagination_limit_double(client, user, auth_token):
     assert len(response_data) == DEFAULT_PAGE_SIZE * 2
     for (application, app_response) in zip(applications, response_data):
         assert str(application.application_id) == app_response["application_id"]
-        assert application.nickname == app_response["application_nickname"]
 
 
 class TestApplicationsImport:
@@ -3480,8 +3476,7 @@ def test_application_patch_minimum_payload(client, user, auth_token):
     assert response.status_code == 200
 
     response_body = response.get_json().get("data")
-    data = response_body
-    assert application.nickname == data.get("application_nickname")
+    assert response_body is not None
 
 
 def test_application_patch_null_values(client, user, auth_token):
@@ -3489,7 +3484,6 @@ def test_application_patch_null_values(client, user, auth_token):
 
     null_request_body = {
         "application_id": application.application_id,
-        "application_nickname": None,
         "tax_identifier": None,
         "employer_fein": None,
         "hours_worked_per_week": None,
