@@ -158,6 +158,8 @@ const routes = {
       healthcareProviderForm: "https://www.mass.gov/medical-leave-form",
       identityProof:
         "https://www.mass.gov/info-details/identity-proof-for-paid-leave",
+      importantTermsToKnow:
+        "https://www.mass.gov/info-details/types-of-paid-family-and-medical-leave#important-terms-to-know-",
       informedConsent: "https://www.mass.gov/paidleave-informedconsent",
       intermittentLeaveGuide:
         "https://www.mass.gov/intermittent-leave-instructions",

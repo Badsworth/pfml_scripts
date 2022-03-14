@@ -1,5 +1,5 @@
-import BenefitYearsApi, { GetBenefitYearParams } from "src/api/BenefitYearsApi";
 import BenefitYear from "src/models/BenefitYear";
+import BenefitYearsApi from "src/api/BenefitYearsApi";
 import { ErrorsLogic } from "./useErrorsLogic";
 import { isFeatureEnabled } from "src/services/featureFlags";
 import { useState } from "react";
@@ -13,6 +13,10 @@ const useBenefitYearsLogic = ({
 
   const [isLoadingBenefitYears, setIsLoadingBenefitYears] = useState<boolean>();
   const [benefitYearsData, setBenefitYearsData] = useState<BenefitYear[]>();
+  const [isLoadingCrossedBenefitYears, setIsLoadingCrossedBenefitYears] =
+    useState<boolean>();
+  const [crossedBenefitYears, setCrossedBenefitYears] =
+    useState<BenefitYear[]>();
 
   const hasLoadedBenefitYears = () => {
     return !!benefitYearsData;
@@ -45,16 +49,53 @@ const useBenefitYearsLogic = ({
     return benefitYearsData?.find((by) => by.current_benefit_year);
   };
 
-  const getBenefitYear = async (queryParams: GetBenefitYearParams) => {
-    const benefitYear = await benefitYearApi.getBenefitYears(queryParams)
-    return benefitYear
-  }
+  const hasLoadedCrossedBenefitYears = () => {
+    return !!crossedBenefitYears;
+  };
+
+  const loadCrossedBenefitYears = async (
+    employee_id: string,
+    start_date: string,
+    end_date: string
+  ) => {
+    if (isLoadingCrossedBenefitYears) return;
+    const shouldCrossedBenefitYearsLoad = isFeatureEnabled(
+      "splitClaimsAcrossBY"
+    );
+    if (shouldCrossedBenefitYearsLoad) {
+      setIsLoadingCrossedBenefitYears(true);
+      errorsLogic.clearErrors();
+      try {
+        const crossedBenefitYears = await benefitYearApi.getBenefitYears({
+          employee_id,
+          end_date_within: [start_date, end_date],
+        });
+        setCrossedBenefitYears(crossedBenefitYears);
+      } catch (error) {
+        errorsLogic.catchError(error);
+        setCrossedBenefitYears([]);
+      } finally {
+        setIsLoadingCrossedBenefitYears(false);
+      }
+    }
+  };
+
+  const getCrossedBenefitYear = () => {
+    if (!hasLoadedCrossedBenefitYears()) return null;
+    if (crossedBenefitYears && crossedBenefitYears.length > 0) {
+      return crossedBenefitYears[0];
+    } else {
+      return null;
+    }
+  };
 
   return {
     loadBenefitYears,
     hasLoadedBenefitYears,
     getCurrentBenefitYear,
-    getBenefitYear,
+    loadCrossedBenefitYears,
+    hasLoadedCrossedBenefitYears,
+    getCrossedBenefitYear,
   };
 };
 

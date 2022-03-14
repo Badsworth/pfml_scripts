@@ -12,7 +12,9 @@ import Lead from "../../components/core/Lead";
 import LeaveReason from "../../models/LeaveReason";
 import QuestionPage from "../../components/QuestionPage";
 import { Trans } from "react-i18next";
+import dayjs from "dayjs";
 import findKeyByValue from "../../utils/findKeyByValue";
+import formatDate from "src/utils/formatDate";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -38,6 +40,33 @@ export const LeavePeriodContinuous = (props: WithBenefitsApplicationProps) => {
   const { formState, getField, updateFields, clearField } = useFormState(
     pick(props, fields).claim
   );
+  const { loadCrossedBenefitYears, getCrossedBenefitYear } =
+    appLogic.benefitYears;
+
+  const employee_id = get(claim, "employee_id");
+  const submissionWindow = dayjs().add(60, "day").format("YYYY-MM-DD");
+
+  const startDate = String(get(formState, `${leavePeriodPath}.start_date`));
+  const endDate = String(get(formState, `${leavePeriodPath}.end_date`));
+
+  useEffect(() => {
+    // make sure startDate & endDate are both valid dates before making the API call
+    const validDateRegex = /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/;
+    const validStartDate =
+      startDate.match(validDateRegex) !== null &&
+      !isNaN(new Date(startDate).getDate());
+    const validEndDate =
+      endDate.match(validDateRegex) !== null &&
+      !isNaN(new Date(endDate).getDate());
+    if (validStartDate && validEndDate) {
+      loadCrossedBenefitYears(employee_id, startDate, endDate);
+    }
+  }, [loadCrossedBenefitYears, employee_id, startDate, endDate]);
+
+  const crossedBenefitYear = getCrossedBenefitYear();
+  const canSubmitBoth =
+    crossedBenefitYear !== null &&
+    crossedBenefitYear.benefit_year_end_date <= submissionWindow;
 
   /**
    * When user indicates they have this leave period type,
@@ -180,6 +209,105 @@ export const LeavePeriodContinuous = (props: WithBenefitsApplicationProps) => {
           yearLabel={t("components.form.dateInputYearLabel")}
           smallLabel
         />
+
+        {crossedBenefitYear !== null && canSubmitBoth && (
+          <Alert
+            state="info"
+            heading={t("shared.crossedBenefitYear.header")}
+            autoWidth
+          >
+            <Trans
+              i18nKey="shared.crossedBenefitYear.submittingBoth"
+              components={{
+                b: <b />,
+                ul: <ul className="usa-list" />,
+                li: <li />,
+                "benefits-amount-link": (
+                  <a
+                    href={
+                      routes.external.massgov.benefitsGuide_weeklyBenefitAmounts
+                    }
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  />
+                ),
+                "terms-to-know-link": (
+                  <a
+                    href={routes.external.massgov.importantTermsToKnow}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  />
+                ),
+                "waiting-week-link": (
+                  <a
+                    href={routes.external.massgov.sevenDayWaitingPeriodInfo}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  />
+                ),
+              }}
+              values={{
+                benefitYearStartDate: formatDate(
+                  crossedBenefitYear.benefit_year_start_date
+                ).short(),
+                benefitYearEndDate: formatDate(
+                  crossedBenefitYear.benefit_year_end_date
+                ).short(),
+                newBenefitYearStartDate: formatDate(
+                  dayjs(crossedBenefitYear.benefit_year_end_date)
+                    .add(1, "day")
+                    .format("YYYY-MM-DD")
+                ).short(),
+                leaveStartDate: formatDate(startDate).short(),
+                leaveEndDate: formatDate(endDate).short(),
+              }}
+            />
+          </Alert>
+        )}
+        {crossedBenefitYear !== null && !canSubmitBoth && (
+          <Alert
+            state="info"
+            heading={t("shared.crossedBenefitYear.header")}
+            autoWidth
+          >
+            <Trans
+              i18nKey="shared.crossedBenefitYear.submittingOne_leaveDetails"
+              components={{
+                b: <b />,
+                ul: <ul className="usa-list" />,
+                li: <li />,
+                "terms-to-know-link": (
+                  <a
+                    href={routes.external.massgov.importantTermsToKnow}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  />
+                ),
+              }}
+              values={{
+                benefitYearStartDate: formatDate(
+                  crossedBenefitYear.benefit_year_start_date
+                ).short(),
+                benefitYearEndDate: formatDate(
+                  crossedBenefitYear.benefit_year_end_date
+                ).short(),
+                newBenefitYearStartDate: formatDate(
+                  dayjs(crossedBenefitYear.benefit_year_end_date)
+                    .add(1, "day")
+                    .format("YYYY-MM-DD")
+                ).short(),
+                leaveStartDate: formatDate(startDate).short(),
+                leaveEndDate: formatDate(endDate).short(),
+                applicationSubmissionDate: formatDate(
+                  dayjs(crossedBenefitYear.benefit_year_end_date)
+                    .add(1, "day")
+                    .subtract(60, "day")
+                    .format("YYYY-MM-DD")
+                ).short(),
+              }}
+            />
+          </Alert>
+        )}
       </ConditionalContent>
     </QuestionPage>
   );

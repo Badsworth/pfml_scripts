@@ -51,6 +51,7 @@ import { Trans } from "react-i18next";
 import WeeklyTimeTable from "../../components/WeeklyTimeTable";
 import claimantConfigs from "../../flows/claimant";
 import convertMinutesToHours from "../../utils/convertMinutesToHours";
+import dayjs from "dayjs";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDate from "../../utils/formatDate";
 import formatDateRange from "../../utils/formatDateRange";
@@ -59,6 +60,7 @@ import getMissingRequiredFields from "../../utils/getMissingRequiredFields";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import isBlank from "../../utils/isBlank";
 import { isFeatureEnabled } from "../../services/featureFlags";
+import routes from "src/routes";
 import tracker from "../../services/tracker";
 import { useTranslation } from "../../locales/i18n";
 
@@ -89,6 +91,21 @@ export const Review = (
 ) => {
   const { t } = useTranslation();
   const { appLogic, claim, documents, isLoadingDocuments } = props;
+  const { loadCrossedBenefitYears, getCrossedBenefitYear } =
+    appLogic.benefitYears;
+
+  const employeeId = get(claim, "employee_id");
+  const startDate = String(get(claim, "leaveStartDate"));
+  const endDate = String(get(claim, "leaveEndDate"));
+  const submissionWindow = dayjs().add(60, "day").format("YYYY-MM-DD");
+
+  useEffect(() => {
+    loadCrossedBenefitYears(employeeId, startDate, endDate);
+  }, [loadCrossedBenefitYears, employeeId, startDate, endDate]);
+  const crossedBenefitYear = getCrossedBenefitYear();
+  const canSubmitBoth =
+    crossedBenefitYear !== null &&
+    crossedBenefitYear.benefit_year_end_date <= submissionWindow;
 
   const { errors, clearRequiredFieldErrors } = appLogic;
   const hasLoadingDocumentsError = hasDocumentsLoadError(
@@ -418,6 +435,64 @@ export const Review = (
         {t("pages.claimsReview.stepHeading", { context: "leaveDetails" })}
       </ReviewHeading>
 
+      {crossedBenefitYear !== null && canSubmitBoth && (
+        <React.Fragment>
+          <Alert
+            state="info"
+            heading={t("shared.crossedBenefitYear.header")}
+            autoWidth
+          >
+            <Trans
+              i18nKey="shared.crossedBenefitYear.submittingBoth"
+              components={{
+                b: <b />,
+                ul: <ul className="usa-list" />,
+                li: <li />,
+                "benefits-amount-link": (
+                  <a
+                    href={
+                      routes.external.massgov.benefitsGuide_weeklyBenefitAmounts
+                    }
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  />
+                ),
+                "terms-to-know-link": (
+                  <a
+                    href={routes.external.massgov.importantTermsToKnow}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  />
+                ),
+                "waiting-week-link": (
+                  <a
+                    href={routes.external.massgov.sevenDayWaitingPeriodInfo}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  />
+                ),
+              }}
+              values={{
+                benefitYearStartDate: formatDate(
+                  crossedBenefitYear.benefit_year_start_date
+                ).short(),
+                benefitYearEndDate: formatDate(
+                  crossedBenefitYear.benefit_year_end_date
+                ).short(),
+                newBenefitYearStartDate: formatDate(
+                  dayjs(crossedBenefitYear.benefit_year_end_date)
+                    .add(1, "day")
+                    .format("YYYY-MM-DD")
+                ).short(),
+                leaveStartDate: formatDate(startDate).short(),
+                leaveEndDate: formatDate(endDate).short(),
+              }}
+            />
+          </Alert>
+          <p></p>
+        </React.Fragment>
+      )}
+
       <ReviewRow
         level={reviewRowLevel}
         label={t("pages.claimsReview.leaveReasonLabel")}
@@ -711,16 +786,66 @@ export const Review = (
       )}
 
       {usePartOneReview ? (
-        <div className="margin-top-6 margin-bottom-2">
-          <Trans
-            i18nKey="pages.claimsReview.partOneNextSteps"
-            components={{
-              "contact-center-phone-link": (
-                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-              ),
-            }}
-          />
-        </div>
+        <React.Fragment>
+          {crossedBenefitYear !== null && !canSubmitBoth ? (
+            <Alert
+              state="info"
+              heading={t("shared.crossedBenefitYear.header")}
+              autoWidth
+            >
+              <Trans
+                i18nKey="pages.claimsReview.crossedBenefitYearSubmittingOne"
+                components={{
+                  b: <b />,
+                  ul: <ul className="usa-list" />,
+                  li: <li />,
+                  "terms-to-know-link": (
+                    <a
+                      href={routes.external.massgov.importantTermsToKnow}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    />
+                  ),
+                  "contact-center-phone-link": (
+                    <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                  ),
+                }}
+                values={{
+                  benefitYearStartDate: formatDate(
+                    crossedBenefitYear.benefit_year_start_date
+                  ).short(),
+                  benefitYearEndDate: formatDate(
+                    crossedBenefitYear.benefit_year_end_date
+                  ).short(),
+                  newBenefitYearStartDate: formatDate(
+                    dayjs(crossedBenefitYear.benefit_year_end_date)
+                      .add(1, "day")
+                      .format("YYYY-MM-DD")
+                  ).short(),
+                  leaveStartDate: formatDate(startDate).short(),
+                  leaveEndDate: formatDate(endDate).short(),
+                  applicationSubmissionDate: formatDate(
+                    dayjs(crossedBenefitYear.benefit_year_end_date)
+                      .add(1, "day")
+                      .subtract(60, "day")
+                      .format("YYYY-MM-DD")
+                  ).short(),
+                }}
+              />
+            </Alert>
+          ) : (
+            <div className="margin-top-6 margin-bottom-2">
+              <Trans
+                i18nKey="pages.claimsReview.partOneNextSteps"
+                components={{
+                  "contact-center-phone-link": (
+                    <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                  ),
+                }}
+              />
+            </div>
+          )}
+        </React.Fragment>
       ) : (
         <React.Fragment>
           <Heading level="2">
