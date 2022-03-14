@@ -1,7 +1,6 @@
 import { MockBenefitsApplicationBuilder } from "lib/mock-helpers/mock-model-builder";
 import OrganizationUnit from "src/models/OrganizationUnit";
 import generateClaimPageStory from "storybook/utils/generateClaimPageStory";
-import { updateCookieWithFlag } from "src/services/featureFlags";
 
 // Mock data
 const employerOrgUnitList: OrganizationUnit[] = [
@@ -70,11 +69,6 @@ const mockClaims = {
   ),
   Long: claimWithUnits(longDepartmentList),
 };
-
-// Workaround to pass render stories test
-// The department page is currently behind a feature flag
-// and causes the stories test to fail due to empty story component
-updateCookieWithFlag("claimantShowOrganizationUnits", "true");
 
 const { config, DefaultStory } = generateClaimPageStory(
   "department",

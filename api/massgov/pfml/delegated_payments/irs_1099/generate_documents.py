@@ -112,6 +112,7 @@ class Generate1099DocumentsStep(Step):
                 "repayments": str(record.overpayment_repayments),
                 "name": f"{sub_bacth}/{record.first_name} {record.last_name}",
                 "address": record.address_line_1,
+                "address2": record.address_line_2,
                 "city": record.city,
                 "state": record.state,
                 "zipCode": record.zip,

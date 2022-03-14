@@ -176,6 +176,7 @@ describe("Series of test that verifies LAs are properly registered in Fineos", (
       RLAF_test.claim
     );
     const res = await submitter.submit(claim, getClaimantCredentials());
+    console.log(res.fineos_absence_id);
     console.log("API submission completed successfully");
 
     try {

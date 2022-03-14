@@ -20,6 +20,7 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVpei,
     FineosExtractVpeiClaimDetails,
     FineosExtractVpeiPaymentDetails,
+    FineosExtractVpeiPaymentLine,
 )
 from massgov.pfml.delegated_payments.fineos_extract_step import (
     CLAIMANT_EXTRACT_CONFIG,
@@ -162,7 +163,7 @@ def test_run_happy_path(
         # Verify all files are present and in the expected processed paths
         expected_path_prefix = f"s3://{mock_s3_bucket}/cps/inbound/processed/"
         files = file_util.list_files(expected_path_prefix, recursive=True)
-        assert len(files) == 6
+        assert len(files) == 7
 
         claimant_prefix = f"{date_str}-claimant-extract/{date_str}"
         assert (
@@ -251,10 +252,18 @@ def test_run_happy_path(
             local_test_db_session,
         )
 
+        payment_line_records = [record.get_payment_line_record() for record in payment_data]
+        validate_records(
+            payment_line_records,
+            FineosExtractVpeiPaymentLine,
+            "I",
+            local_test_db_session,
+        )
+
         ### and verify the skipped files as well
         expected_path_prefix = f"s3://{mock_s3_bucket}/cps/inbound/skipped/"
         files = file_util.list_files(expected_path_prefix, recursive=True)
-        assert len(files) == 6
+        assert len(files) == 7
 
         claimant_prefix = f"{skipped_date_str}-claimant-extract/{skipped_date_str}"
         assert (
@@ -271,6 +280,9 @@ def test_run_happy_path(
         )
         assert (
             f"{payment_prefix}-{payments_util.Constants.CLAIM_DETAILS_EXPECTED_FILE_NAME}" in files
+        )
+        assert (
+            f"{payment_prefix}-{payments_util.Constants.PAYMENT_LINE_EXPECTED_FILE_NAME}" in files
         )
 
         # And the skipped reference files
@@ -479,11 +491,12 @@ def test_run_with_error_during_processing(
     # Files were moved to error directory
     expected_path_prefix = f"s3://{mock_s3_bucket}/cps/inbound/error/"
     files = file_util.list_files(expected_path_prefix, recursive=True)
-    assert len(files) == 3
+    assert len(files) == 4
     payment_prefix = f"{date_str}-payment-extract/{date_str}"
     assert f"{payment_prefix}-{payments_util.Constants.PEI_EXPECTED_FILE_NAME}" in files
     assert f"{payment_prefix}-{payments_util.Constants.PAYMENT_DETAILS_EXPECTED_FILE_NAME}" in files
     assert f"{payment_prefix}-{payments_util.Constants.CLAIM_DETAILS_EXPECTED_FILE_NAME}" in files
+    assert f"{payment_prefix}-{payments_util.Constants.PAYMENT_LINE_EXPECTED_FILE_NAME}" in files
 
     # A reference file is present and pointing to the errored directory
     reference_files = local_test_db_session.query(ReferenceFile).all()
@@ -498,6 +511,7 @@ def test_run_with_error_during_processing(
     validate_records([], FineosExtractVpei, "I", local_test_db_session)
     validate_records([], FineosExtractVpeiClaimDetails, "LEAVEREQUESTI", local_test_db_session)
     validate_records([], FineosExtractVpeiPaymentDetails, "PEINDEXID", local_test_db_session)
+    validate_records([], FineosExtractVpeiPaymentLine, "I", local_test_db_session)
 
 
 def test_run_with_missing_fineos_file(
@@ -543,6 +557,7 @@ def test_run_with_missing_fineos_file(
     validate_records([], FineosExtractVpeiClaimDetails, "LEAVEREQUESTI", local_test_db_session)
     validate_records([], FineosExtractVpeiPaymentDetails, "PEINDEXID", local_test_db_session)
     validate_records([], FineosExtractVbiRequestedAbsence, "LEAVEREQUEST_ID", local_test_db_session)
+    validate_records([], FineosExtractVpeiPaymentLine, "I", local_test_db_session)
 
 
 def test_run_with_missing_files_skipped_run(

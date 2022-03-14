@@ -93,7 +93,7 @@ module "api" {
   new_plan_proofs_active_at = "2021-06-26 00:00:00+00:00"
   use_claim_status_url      = true
 
-  enable_application_import        = "0"
+  enable_application_import        = "1"
   enable_document_multipart_upload = "1"
 
   azure_ad_authority_domain = "login.microsoftonline.com"

@@ -108,15 +108,6 @@ class Upload1099DocumentsStep(Step):
         else:
             logger.info("Upload 1099 Pdf flag is not enabled")
 
-    def _get_batch_id(self) -> str:
-        batch = pfml_1099_util.get_current_1099_batch(self.db_session)
-
-        if batch is None:
-            logger.error("No current batch exists. This should never happen.")
-            raise Exception("Batch cannot be empty at this point.")
-
-        return str(batch.pfml_1099_batch_id)
-
     def _upload_document(
         self,
         fineos: AbstractFINEOSClient,
@@ -144,34 +135,20 @@ class Upload1099DocumentsStep(Step):
             },
         }
 
-        current_retry += 1
         try:
             response = fineos.upload_document_to_dms(file_name, file, data)
 
             if response.status_code == 200:
                 logger.info(f"File {file_name} was successfully uploaded to Fineos Api.")
             else:
-                if current_retry <= 1:
-                    logger.info(
-                        f"RETRY ({current_retry}) to upload document {file_name} to Fineos Api."
-                    )
-                    self._upload_document(
-                        fineos, document_path, file_name, document_type, record, current_retry
-                    )
-                else:
-                    logger.error(
-                        f"Retrying Upload document: {current_retry}. Error when uploading file {file_name} to Fineos Api."
-                    )
-        except Exception as error:
-            if current_retry <= 1:
-                logger.info(
-                    f"RETRY ({current_retry}) to upload document {file_name} to Fineos Api."
-                )
-                self._upload_document(
+                self._retry_upload_document(
                     fineos, document_path, file_name, document_type, record, current_retry
                 )
-            else:
-                raise error
+        except Exception:
+            logger.exception("Upload 1099 exception.")
+            self._retry_upload_document(
+                fineos, document_path, file_name, document_type, record, current_retry
+            )
 
     def _get_document_content(self, document_path: str) -> bytes:
         logger.info(f"Getting file content: {document_path}")
@@ -183,3 +160,22 @@ class Upload1099DocumentsStep(Step):
     def update_status(self, record: Pfml1099, status: FineosUploadStatus) -> None:
         record.fineos_status = status
         self.db_session.commit()
+
+    def _retry_upload_document(
+        self,
+        fineos: AbstractFINEOSClient,
+        document_path: str,
+        file_name: str,
+        document_type: str,
+        record: Pfml1099,
+        current_retry: int,
+    ) -> None:
+        current_retry += 1
+
+        if current_retry <= 1:
+            logger.info(f"RETRY ({current_retry}) to upload document {file_name} to Fineos Api.")
+            self._upload_document(
+                fineos, document_path, file_name, document_type, record, current_retry
+            )
+        else:
+            logger.info("No more RETRY allowed to Fineos Api.")

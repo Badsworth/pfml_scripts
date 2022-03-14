@@ -93,10 +93,6 @@ from massgov.pfml.util.users import has_role_in
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
-# Added in https://lwd.atlassian.net/browse/PSD-2401
-# Modified in https://lwd.atlassian.net/browse/PFMLPB-3276
-CLAIMS_DASHBOARD_BLOCKED_FEINS: Set[str] = set([])
-
 
 class VerificationRequired(Forbidden):
     user_leave_admin: UserLeaveAdministrator
@@ -645,8 +641,7 @@ def _process_claims_request(claim_request: ClaimSearchRequest, method_name: str)
                 verified_employers = [
                     employer
                     for employer in employers_list
-                    if employer.employer_fein not in CLAIMS_DASHBOARD_BLOCKED_FEINS
-                    and current_user.verified_employer(employer)
+                    if current_user.verified_employer(employer)
                 ]
 
                 # filters claims by employer id - shows all claims of those employers
@@ -688,7 +683,7 @@ def _process_claims_request(claim_request: ClaimSearchRequest, method_name: str)
                 )
                 query.add_request_decision_filter(request_decisions)
 
-            query.add_order_by(pagination_context)
+            query.add_order_by(pagination_context, is_reviewable)
 
             page = query.get_paginated_results(pagination_context)
             page_data_log_attributes = make_paging_meta_data_from_paginator(
@@ -888,5 +883,27 @@ def submit_change_request(change_request_id: str) -> flask.Response:
     return response_util.success_response(
         message="Successfully submitted Change Request to FINEOS",
         data=response_data.dict(),
+        status_code=200,
+    ).to_api_response()
+
+
+def delete_change_request(change_request_id: str) -> flask.Response:
+    with app.db_session() as db_session:
+        change_request = get_or_404(db_session, change_request_db_model, UUID(change_request_id))
+
+        if change_request.submitted_time is not None:
+            error = response_util.error_response(
+                BadRequest,
+                "Cannot delete a submitted request",
+                data={},
+                errors=[],
+            )
+            return error.to_api_response()
+
+        db_session.delete(change_request)
+
+    return response_util.success_response(
+        message="Successfully deleted change request",
+        data={},
         status_code=200,
     ).to_api_response()

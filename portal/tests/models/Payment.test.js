@@ -1,7 +1,45 @@
-import { Payment, PaymentDetail } from "../../src/models/Payment";
+import {
+  PROCESSING_DAYS_PER_DELAY,
+  Payment,
+  PaymentDetail,
+  isAfterDelayProcessingTime,
+} from "../../src/models/Payment";
 import dayjs from "dayjs";
 import dayjsBusinessTime from "dayjs-business-time";
 dayjs.extend(dayjsBusinessTime);
+
+describe("isAfterDelayProcessingTime", () => {
+  it("returns true if transaction_date is before the amount of days mapped in PROCESSING_DAYS_PER_DELAY before current date ", () => {
+    const delayReason = "Address Validation Error";
+    const transactionDateBeforeDisplayTime = dayjs().subtractBusinessDays(
+      PROCESSING_DAYS_PER_DELAY[delayReason] + 1
+    );
+    expect(
+      isAfterDelayProcessingTime(delayReason, transactionDateBeforeDisplayTime)
+    ).toBe(true);
+  });
+
+  it("returns true if transaction_date is to be shown immediately (value is 0)", () => {
+    const delayReason = "EFT Account Information Error";
+    const transactionDateBeforeDisplayTime = dayjs().subtractBusinessDays(
+      PROCESSING_DAYS_PER_DELAY[delayReason]
+    );
+    expect(
+      isAfterDelayProcessingTime(delayReason, transactionDateBeforeDisplayTime)
+    ).toBe(true);
+  });
+
+  it("returns true if transaction_date is over three days prior to current date and delay reason isn't in PROCESSING_DAYS_PER_DELAY map", () => {
+    const delayReason = "DUA Additional Income";
+    const transactionDateBeforeDisplayTime = dayjs().subtractBusinessDays(
+      3 + 1
+    );
+    expect(PROCESSING_DAYS_PER_DELAY[delayReason]).toBeUndefined();
+    expect(
+      isAfterDelayProcessingTime(delayReason, transactionDateBeforeDisplayTime)
+    ).toBe(true);
+  });
+});
 
 describe("creates payments", () => {
   it("to be initialized as an empty array", () => {

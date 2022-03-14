@@ -75,6 +75,7 @@ const IssueErrorMessage = (props: Issue) => {
       <Trans
         i18nKey={i18nKeys}
         tOptions={{
+          ...issue.extra,
           // Some of the fallback i18nKeys reference the field name in the error message
           // in order to provide additional context on what field the error is referring to.
           field: "field" in issue ? issue.field : undefined,

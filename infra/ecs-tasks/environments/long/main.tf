@@ -29,6 +29,8 @@ terraform {
 module "tasks" {
   source = "../../template"
 
+  logging_level = "massgov.pfml.fineos.fineos_client=DEBUG"
+
   environment_name         = "long"
   service_docker_tag       = local.service_docker_tag
   vpc_id                   = data.aws_vpc.vpc.id

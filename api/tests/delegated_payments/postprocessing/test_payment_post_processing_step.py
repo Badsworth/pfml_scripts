@@ -5,7 +5,7 @@ import pytest
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 from massgov.pfml.db.models.absences import AbsencePeriodType, AbsenceStatus
-from massgov.pfml.db.models.employees import State
+from massgov.pfml.db.models.employees import PaymentTransactionType, State
 from massgov.pfml.db.models.factories import (
     AbsencePeriodFactory,
     BenefitYearFactory,
@@ -340,4 +340,48 @@ def test_mixed_post_processing_scenarios(
     assert (
         payment_date_mismatch_details[0].details["message"]
         == "Payment for 2021-01-16 -> 2021-01-22 outside all leave dates. Had absence periods for 2021-01-07 -> None."
+    )
+
+
+def test_employer_reimbursement_payment_post_processing(
+    payment_post_processing_step, local_test_db_session
+):
+    fineos_customer_number = "1"
+
+    employee = EmployeeFactory.create(
+        fineos_customer_number=fineos_customer_number, first_name="Jane", last_name="Smith"
+    )
+    payment_container = _create_payment_container(
+        employee,
+        Decimal("600.00"),
+        local_test_db_session,
+        start_date=date(2020, 12, 16),
+        payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+    )
+
+    payment_container.payment.fineos_employee_first_name = "Sam"
+    payment_container.payment.fineos_employee_last_name = "Jones"
+
+    payment_post_processing_step.run()
+
+    payment = payment_container.payment
+    # Check that it is staged for audit
+    payment_flow_log = state_log_util.get_latest_state_log_in_flow(
+        payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+    )
+
+    audit_report_details = (
+        local_test_db_session.query(PaymentAuditReportDetails)
+        .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
+        .one()
+    )
+
+    # it should not report name mismatch since employer reimbursements will not qualify for name mismatch check
+    assert (
+        audit_report_details.details["message"]
+        == "Payment for 2020-12-16 -> 2020-12-22 outside all leave dates. Had absence periods for 2021-01-07 -> None."
+    )
+
+    assert (
+        payment_flow_log.end_state_id == State.EMPLOYER_REIMBURSEMENT_READY_FOR_PROCESSING.state_id
     )

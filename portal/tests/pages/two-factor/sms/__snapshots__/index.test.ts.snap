@@ -10,19 +10,19 @@ exports[`Two-factor SMS Index renders landing page content 1`] = `
     <legend
       class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
     >
-      Do you want to add a cell phone number to verify it's you when you log in to your account?
+      Do you want to add a cell phone number to verify it's you when you log in?
     </legend>
     <span
       class="display-block line-height-sans-5 measure-5 usa-intro"
     >
       <p>
-        This is an optional step to make your account more secure. In the future, you’ll also be able to access sensitive information like tax documents (when available) once you set this up.
+        This optional step makes your account more secure. This will also allow you to access sensitive information like tax documents (when available).
       </p>
       <p>
-        If you select Yes, we’ll ask for a phone number that can receive text messages (SMS). To protect your security, we'll send you a 6-digit code to verify it's really you. You’ll need to enter the code in order to log in to your account.
+        If you select Yes, we’ll ask for a phone number that can receive text messages (SMS). When you log in to your account, we’ll send a 6-digit code you’ll need to enter to verify it’s really you.
       </p>
       <p>
-        If you select No, you can add a phone number later by going to the Settings page.
+        You can add or change your phone number later by going to the Settings page.
       </p>
     </span>
     <div
@@ -42,7 +42,7 @@ exports[`Two-factor SMS Index renders landing page content 1`] = `
           class="usa-radio__label"
           for="InputChoice1"
         >
-          Yes, I want to add a phone number for verifying logins.
+          Yes, I want to add a phone number for additional security.
         </label>
       </div>
       <div
@@ -59,7 +59,24 @@ exports[`Two-factor SMS Index renders landing page content 1`] = `
           class="usa-radio__label"
           for="InputChoice2"
         >
-          No, I do not want to add a phone number for verifying logins.
+          No, I do not want to add a phone number.
+        </label>
+      </div>
+      <div
+        class="usa-radio measure-5 bg-transparent"
+      >
+        <input
+          class="usa-radio__input"
+          id="InputChoice3"
+          name="enterMFASetupFlow"
+          type="radio"
+          value="no_sms_phone"
+        />
+        <label
+          class="usa-radio__label"
+          for="InputChoice3"
+        >
+          I do not have a phone that can receive text messages.
         </label>
       </div>
     </div>

@@ -1086,7 +1086,6 @@ def _parse_continuous_leave_period(
         application_id=application_id,
         start_date=time_off.startDate,
         end_date=time_off.endDate,
-        expected_return_to_work_date=time_off.expectedReturnToWorkDate,
         start_date_full_day=time_off.startDateFullDay,
         start_date_off_hours=time_off.startDateOffHours,
         start_date_off_minutes=time_off.startDateOffMinutes,

@@ -28,11 +28,12 @@ const flagsConfig = {
     // TODO (CP-534): Show all options when portal supports activeDutyFamily, serviceMemberFamily
     claimantShowMilitaryLeaveTypes: false,
 
-    // When this flag is false, you can bypass the deparment capture form when applying
-    claimantShowOrganizationUnits: false,
-
     // When this flag is enabled payment status phase three work will be displayed.
     claimantShowPaymentsPhaseThree: false,
+
+    // When this flag is enabled logic in code will account for new payment schedule post FINEOS deploy
+    // TODO (PORTAL-1934) Remove flag
+    claimantUseFineosNewPaymentSchedule: false,
 
     // Show multiple leave request UI updates to leave admins (dashboard++)
     // TODO (PORTAL-1560) Remove flag

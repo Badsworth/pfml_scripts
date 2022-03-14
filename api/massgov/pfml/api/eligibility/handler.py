@@ -1,6 +1,6 @@
 from datetime import date
 from decimal import Decimal
-from typing import Optional
+from typing import Optional, Tuple
 from uuid import UUID
 
 import connexion
@@ -29,20 +29,21 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 class BenefitYearsSearchTerms(PydanticBaseModel):
     employee_id: Optional[str]
     current: Optional[bool]
+    end_date_within: Optional[Tuple[date, date]]
 
 
 BenefitYearSearchRequest = SearchEnvelope[BenefitYearsSearchTerms]
 
 
-class BenefitYearsSearchResponse(PydanticBaseModel):
+class BenefitYearsResponse(PydanticBaseModel):
     benefit_year_end_date: date
     benefit_year_start_date: date
     employee_id: str
     current_benefit_year: bool
 
     @classmethod
-    def from_orm(cls, benefit_year: BenefitYear) -> "BenefitYearsSearchResponse":
-        return BenefitYearsSearchResponse(
+    def from_orm(cls, benefit_year: BenefitYear) -> "BenefitYearsResponse":
+        return BenefitYearsResponse(
             benefit_year_end_date=benefit_year.end_date,
             benefit_year_start_date=benefit_year.start_date,
             employee_id=benefit_year.employee_id.__str__(),
@@ -92,6 +93,13 @@ def benefit_years_search():
             if terms.current is not None:
                 query = query.filter(BenefitYear.current_benefit_year == terms.current)  # type: ignore
 
+            if terms.end_date_within is not None:
+                start_date = terms.end_date_within[0]
+                end_date = terms.end_date_within[1]
+                query = query.filter(BenefitYear.end_date.between(start_date, end_date))
+            if terms.employee_id is not None:
+                query = query.filter(BenefitYear.employee_id == terms.employee_id)
+
             is_asc = pagination_context.order_direction == OrderDirection.asc.value
             sort_fn = asc if is_asc else desc
             query = query.order_by(sort_fn(pagination_context.order_key))
@@ -108,7 +116,7 @@ def benefit_years_search():
 
             return response_util.paginated_success_response(
                 message="success",
-                model=BenefitYearsSearchResponse,
+                model=BenefitYearsResponse,
                 page=page,
                 context=pagination_context,
                 status_code=200,
