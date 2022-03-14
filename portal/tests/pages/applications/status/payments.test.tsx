@@ -604,6 +604,12 @@ describe("Payments", () => {
       "five business days before today": dayjs(staticTransactionDate)
         .subtractBusinessDays(5)
         .format("YYYY-MM-DD"),
+      "four business days before today": dayjs(staticTransactionDate)
+        .subtractBusinessDays(4)
+        .format("YYYY-MM-DD"),
+      "three business days before today": dayjs(staticTransactionDate)
+        .subtractBusinessDays(3)
+        .format("YYYY-MM-DD"),
       "two business days before today": dayjs(staticTransactionDate)
         .subtractBusinessDays(2)
         .format("YYYY-MM-DD"),
@@ -615,7 +621,7 @@ describe("Payments", () => {
     ).sort() as Array<keyof typeof transactionDate>;
 
     it.each(transactionDateScenarios)(
-      "conditional render for delays with immediate display time %s: ",
+      "conditional render for 'Bank Processing Error' writeback status with immediate display time: %s ",
       (state) => {
         renderPage(
           Payments,
@@ -648,10 +654,16 @@ describe("Payments", () => {
       }
     );
 
-    const [beforeFiveDays, ...beforeTwoDaysOrSameDay] =
-      transactionDateScenarios;
-    it.each(beforeTwoDaysOrSameDay)(
-      "conditional render for delayed display time, current date before or same as delay date:%s ",
+    const [
+      beforeFiveDays,
+      beforeFourDays,
+      sameDay,
+      beforeThreeDays,
+      beforeTwoDays,
+    ] = transactionDateScenarios;
+
+    it.each([beforeTwoDays, sameDay])(
+      "conditional render for 'Address Validation Error' transaction status, shows 'Pending' status if current date has transaction date: %s ",
       (state) => {
         renderPage(
           Payments,
@@ -686,7 +698,43 @@ describe("Payments", () => {
       }
     );
 
-    it("conditional render for delayed display time, current date after delay date", () => {
+    it.each([beforeThreeDays, beforeFourDays, beforeFiveDays])(
+      "conditional render for 'Address Validation Error' transaction status, shows 'Delayed' status if current date has transaction date: %s ",
+      (state) => {
+        renderPage(
+          Payments,
+          {
+            addCustomSetup: setupHelper({
+              payments: {
+                absence_case_id: "NTN-12345-ABS-01",
+                payments: [
+                  createMockPayment(
+                    {
+                      status: "Delayed",
+                      sent_to_bank_date: null,
+                      writeback_transaction_status: "Address Validation Error",
+                      transaction_date: transactionDate[state],
+                    },
+                    true
+                  ),
+                ],
+              },
+            }),
+          },
+          props
+        );
+
+        const addressDelayReasonText =
+          "This payment is delayed due to an error with your provided mailing address.";
+        expect(
+          screen.queryByText(addressDelayReasonText, { exact: false })
+        ).toBeInTheDocument();
+        expect(screen.queryByText("Delayed")).toBeInTheDocument();
+        expect(screen.queryByText("Processing")).not.toBeInTheDocument();
+      }
+    );
+
+    it("default render for status not in PROCESSING_DAYS_PER_DELAY ('DUA Additional Income') displays 'Delayed' status if transaction date after 3 business days", () => {
       renderPage(
         Payments,
         {
@@ -698,8 +746,8 @@ describe("Payments", () => {
                   {
                     status: "Delayed",
                     sent_to_bank_date: null,
-                    writeback_transaction_status: "Address Validation Error",
-                    transaction_date: transactionDate[beforeFiveDays],
+                    writeback_transaction_status: "DUA Additional Income",
+                    transaction_date: transactionDate[beforeFourDays],
                   },
                   true
                 ),
@@ -709,13 +757,45 @@ describe("Payments", () => {
         },
         props
       );
-      const addressDelayReasonText =
-        "This payment is delayed due to an error with your provided mailing address.";
+      const defaultDelayReasonText =
+        "Most delays are resolved within 3 to 5 business days. The Contact Center will contact you if they require more information.";
       expect(
-        screen.queryByText(addressDelayReasonText, { exact: false })
+        screen.queryByText(defaultDelayReasonText, { exact: false })
       ).toBeInTheDocument();
       expect(screen.queryByText("Delayed")).toBeInTheDocument();
       expect(screen.queryByText("Processing")).not.toBeInTheDocument();
+    });
+
+    it("default render for status not in PROCESSING_DAYS_PER_DELAY ('DUA Additional Income') will display 'Processing' status if transaction date before 2 business days", () => {
+      renderPage(
+        Payments,
+        {
+          addCustomSetup: setupHelper({
+            payments: {
+              absence_case_id: "NTN-12345-ABS-01",
+              payments: [
+                createMockPayment(
+                  {
+                    status: "Delayed",
+                    sent_to_bank_date: null,
+                    writeback_transaction_status: "DUA Additional Income",
+                    transaction_date: transactionDate[beforeThreeDays],
+                  },
+                  true
+                ),
+              ],
+            },
+          }),
+        },
+        props
+      );
+      const defaultDelayReasonText =
+        "Most delays are resolved within 3 to 5 business days. The Contact Center will contact you if they require more information.";
+      expect(
+        screen.queryByText(defaultDelayReasonText, { exact: false })
+      ).not.toBeInTheDocument();
+      expect(screen.queryByText("Delayed")).not.toBeInTheDocument();
+      expect(screen.queryByText("Processing")).toBeInTheDocument();
     });
 
     it("will not display updated delay text if claimantShowPaymentsPhaseThree feature flag is false", () => {

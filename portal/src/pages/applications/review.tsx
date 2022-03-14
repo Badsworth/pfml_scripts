@@ -4,8 +4,8 @@ import {
 } from "../../models/PaymentPreference";
 import {
   DocumentType,
-  findDocumentsByLeaveReason,
   findDocumentsByTypes,
+  getLeaveCertificationDocs,
 } from "../../models/Document";
 import EmployerBenefit, {
   EmployerBenefitType,
@@ -114,10 +114,7 @@ export const Review = (
     claim.application_id
   );
 
-  const certificationDocuments = findDocumentsByLeaveReason(
-    documents,
-    get(claim, "leave_details.reason")
-  );
+  const certificationDocuments = getLeaveCertificationDocs(documents);
   const idDocuments = findDocumentsByTypes(documents, [
     DocumentType.identityVerification,
   ]);

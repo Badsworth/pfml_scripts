@@ -93,10 +93,6 @@ from massgov.pfml.util.users import has_role_in
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
-# Added in https://lwd.atlassian.net/browse/PSD-2401
-# Modified in https://lwd.atlassian.net/browse/PFMLPB-3276
-CLAIMS_DASHBOARD_BLOCKED_FEINS: Set[str] = set([])
-
 
 class VerificationRequired(Forbidden):
     user_leave_admin: UserLeaveAdministrator
@@ -645,8 +641,7 @@ def _process_claims_request(claim_request: ClaimSearchRequest, method_name: str)
                 verified_employers = [
                     employer
                     for employer in employers_list
-                    if employer.employer_fein not in CLAIMS_DASHBOARD_BLOCKED_FEINS
-                    and current_user.verified_employer(employer)
+                    if current_user.verified_employer(employer)
                 ]
 
                 # filters claims by employer id - shows all claims of those employers
@@ -688,7 +683,7 @@ def _process_claims_request(claim_request: ClaimSearchRequest, method_name: str)
                 )
                 query.add_request_decision_filter(request_decisions)
 
-            query.add_order_by(pagination_context)
+            query.add_order_by(pagination_context, is_reviewable)
 
             page = query.get_paginated_results(pagination_context)
             page_data_log_attributes = make_paging_meta_data_from_paginator(

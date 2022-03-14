@@ -48,8 +48,8 @@ class ApplicationResponse(PydanticBaseModel):
     application_id: UUID4
     organization_unit_id: Optional[UUID4]
     organization_unit_selection: Optional[OrganizationUnitSelection]
-    application_nickname: Optional[str]
     tax_identifier: Optional[MaskedTaxIdFormattedStr]
+    employee_id: Optional[UUID4]
     employer_fein: Optional[FEINFormattedStr]
     fineos_absence_id: Optional[str]
     first_name: Optional[str]
@@ -99,7 +99,6 @@ class ApplicationResponse(PydanticBaseModel):
     @classmethod
     def from_orm(cls, application: Application) -> "ApplicationResponse":
         application_response = super().from_orm(application)
-        application_response.application_nickname = application.nickname
         if application.mailing_address is not None:
             application_response.mailing_address = MaskedAddress.from_orm(
                 application.mailing_address
@@ -126,6 +125,9 @@ class ApplicationResponse(PydanticBaseModel):
 
         if application.claim is not None:
             application_response.fineos_absence_id = application.claim.fineos_absence_id
+
+        if application.employee is not None:
+            application_response.employee_id = application.employee.employee_id
 
         application_response.updated_time = application_response.updated_at
         application_response.computed_start_dates = _get_computed_start_dates(application)

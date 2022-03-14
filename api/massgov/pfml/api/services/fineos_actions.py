@@ -36,6 +36,7 @@ from massgov.pfml.db.models.applications import (
     FINEOSWebIdExt,
     LeaveReason,
     LeaveReasonQualifier,
+    PhoneType,
     RelationshipQualifier,
     RelationshipToCaregiver,
 )
@@ -59,6 +60,8 @@ from massgov.pfml.fineos.models.customer_api import (
     Base64EncodedFileData,
     ChangeRequestPeriod,
     ChangeRequestReason,
+    EmailAddressV20,
+    EmailAddressV21,
     LeavePeriodChangeRequest,
     ReflexiveQuestionType,
 )
@@ -68,6 +71,7 @@ from massgov.pfml.fineos.transforms.to_fineos.eforms.employee import (
     OtherIncomesEFormBuilder,
     PreviousLeavesEFormBuilder,
 )
+from massgov.pfml.util.config import get_env_bool
 from massgov.pfml.util.datetime import convert_minutes_to_hours_minutes
 from massgov.pfml.util.logging.applications import get_application_log_attributes
 
@@ -455,18 +459,22 @@ def build_contact_details(
 ) -> massgov.pfml.fineos.models.customer_api.ContactDetails:
     """Convert an application's email and phone number to FINEOS API ContactDetails model."""
 
+    email_address: Union[EmailAddressV20, EmailAddressV21]
+    if not get_env_bool("FINEOS_IS_RUNNING_V21"):
+        email_address = EmailAddressV20(emailAddress=application.user.email_address)
+    else:
+        email_address = EmailAddressV21(
+            emailAddress=application.user.email_address, emailAddressType="Email"
+        )
+
     contact_details = massgov.pfml.fineos.models.customer_api.ContactDetails(
-        emailAddresses=[
-            massgov.pfml.fineos.models.customer_api.EmailAddress(
-                emailAddress=application.user.email_address
-            )
-        ]
+        emailAddresses=[email_address]
     )
 
     if application.phone.phone_number is not None:
         phone_number = phonenumbers.parse(application.phone.phone_number)
 
-        phone_number_type = application.phone.phone_type_instance.phone_type_description
+        phone_number_type = PhoneType.get_description(application.phone.phone_type_id)
         int_code = phone_number.country_code
         if phone_number.national_number is not None:
             telephone_no = str(phone_number.national_number)

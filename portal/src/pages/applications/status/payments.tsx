@@ -4,6 +4,7 @@ import {
   findDocumentsByTypes,
 } from "../../../models/Document";
 import {
+  PROCESSING_DAYS_PER_DELAY,
   Payment,
   WritebackTransactionStatus,
   isAfterDelayProcessingTime,
@@ -142,7 +143,7 @@ export const Payments = ({
 
   const shouldShowPaymentsTable = hasPayments || hasWaitingWeek;
 
-  const getPaymentAmountOrStatus = (
+  const getPaymentAmountOrStatusText = (
     status: string,
     amount: number | null,
     writeback_transaction_status: WritebackTransactionStatus,
@@ -184,6 +185,7 @@ export const Payments = ({
       isFeatureEnabled("claimantShowPaymentsPhaseThree") &&
       status === "Delayed"
     ) {
+      // Handle delay cases below
       if (isBlank(transaction_date)) return "Pending";
 
       const shouldShowWritebackSpecificText = isAfterDelayProcessingTime(
@@ -191,7 +193,9 @@ export const Payments = ({
         transaction_date
       );
       return shouldShowWritebackSpecificText
-        ? `${status}_${writeback_transaction_status}`
+        ? writeback_transaction_status in PROCESSING_DAYS_PER_DELAY
+          ? `${status}_${writeback_transaction_status}`
+          : `${status}_Default`
         : "Pending";
     }
     return status;
@@ -319,7 +323,7 @@ export const Payments = ({
                             )}
                           </td>
                           <td data-label={tableColumns[1]}>
-                            {getPaymentAmountOrStatus(
+                            {getPaymentAmountOrStatusText(
                               status,
                               amount,
                               writeback_transaction_status,

@@ -627,13 +627,13 @@ const errors = {
   documents: {
     file: {
       clientSideError_size:
-        "We could not upload: {{disallowedFileNames}}. Files must be smaller than {{ sizeLimit }} MB.",
+        "We could not upload: {{disallowedFileNames}}. Files must be smaller than {{ sizeLimit }} MB.<br />You may fax or mail color copies of your documents if you prefer. <mail-fax-instructions>Follow the fax and mail instructions</mail-fax-instructions>.",
       clientSideError_sizeAndType:
-        "We could not upload: {{disallowedFileNames}}. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than {{ sizeLimit }} MB.",
+        "We could not upload: {{disallowedFileNames}}. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than {{ sizeLimit }} MB.<br />You may fax or mail color copies of your documents if you prefer. <mail-fax-instructions>Follow the fax and mail instructions</mail-fax-instructions>.",
       clientSideError_type:
-        "We could not upload: {{disallowedFileNames}}. Choose a PDF or an image file (.jpg, .jpeg, .png).",
+        "We could not upload: {{disallowedFileNames}}. Choose a PDF or an image file (.jpg, .jpeg, .png).<br />You may fax or mail color copies of your documents if you prefer. <mail-fax-instructions>Follow the fax and mail instructions</mail-fax-instructions>.",
       file_size:
-        "We could not upload all files. Files must be smaller than {{ fileSizeMaxMB }} MB.",
+        "We could not upload all files. Files must be smaller than {{ fileSizeMaxMB }} MB.<br />You may fax or mail color copies of your documents if you prefer. <mail-fax-instructions>Follow the fax and mail instructions</mail-fax-instructions>.",
       required: "Upload at least one file to continue.",
     },
     fineos_client: "$t(shared.documentsUploadError)",
@@ -1093,12 +1093,13 @@ const pages: {
     title: "Confirm your phone number",
   },
   authTwoFactorSmsIndex: {
-    hint: "<p>This is an optional step to make your account more secure. In the future, you’ll also be able to access sensitive information like tax documents (when available) once you set this up.</p><p>If you select Yes, we’ll ask for a phone number that can receive text messages (SMS). To protect your security, we'll send you a 6-digit code to verify it's really you. You’ll need to enter the code in order to log in to your account.</p><p>If you select No, you can add a phone number later by going to the Settings page.</p>",
-    optIn: "Yes, I want to add a phone number for verifying logins.",
-    optOut: "No, I do not want to add a phone number for verifying logins.",
+    hint: "<p>This optional step makes your account more secure. This will also allow you to access sensitive information like tax documents (when available).</p><p>If you select Yes, we’ll ask for a phone number that can receive text messages (SMS). When you log in to your account, we’ll send a 6-digit code you’ll need to enter to verify it’s really you.</p><p>You can add or change your phone number later by going to the Settings page.</p>",
+    optIn: "Yes, I want to add a phone number for additional security.",
+    optOut: "No, I do not want to add a phone number.",
+    optOutNoSms: "I do not have a phone that can receive text messages.",
     saveButton: "$t(shared.saveAndContinue)",
     title:
-      "Do you want to add a cell phone number to verify it's you when you log in to your account?",
+      "Do you want to add a cell phone number to verify it's you when you log in?",
   },
   authTwoFactorSmsSetup: {
     lead: "Enter a number that can receive text messages and that you'll have consistent access to. We’ll send a 6-digit code by text message (SMS) to confirm your phone number.",
@@ -2760,8 +2761,18 @@ const pages: {
       "$t(pages.payments.tablePaymentStatus_Delayed_Banking_Error)",
     tablePaymentStatus_Delayed_Banking_Error:
       "This payment has been rejected by your bank. Call <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> to resolve this issue.",
+    tablePaymentStatus_Delayed_Default:
+      "This payment is delayed. See <delays-accordion-link>what may cause a delayed or cancelled payment</delays-accordion-link> for details. Most delays are resolved within 3 to 5 business days. The Contact Center will contact you if they require more information.",
     "tablePaymentStatus_Delayed_EFT Account Information Error":
       "$t(pages.payments.tablePaymentStatus_Delayed_Banking_Error)",
+    "tablePaymentStatus_Delayed_Exempt Employer":
+      "$t(pages.payments.tablePaymentStatus_Delayed_Default)",
+    "tablePaymentStatus_Delayed_InvalidPayment NameMismatch":
+      "$t(pages.payments.tablePaymentStatus_Delayed_Default)",
+    "tablePaymentStatus_Delayed_Leave Plan In Review":
+      "$t(pages.payments.tablePaymentStatus_Delayed_Default)",
+    "tablePaymentStatus_Delayed_Max Weekly Benefits Exceeded":
+      "$t(pages.payments.tablePaymentStatus_Delayed_Default)",
     tablePaymentStatus_Pending:
       "Your payment will be sent by {{paymentMethod}} between {{payPeriod}}.",
     "tablePaymentStatus_Sent to bank":
@@ -2896,9 +2907,9 @@ const components: {
   },
   documentRequirements: {
     body_certification:
-      "<ul><li>The text must be clear and readable</li><li>Upload every page of the document where you or your health care provider have entered information</li><li>Each file you upload must be smaller than 4.5 MB</li></ul><p>It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p>",
+      "<ul><li>The text must be clear and readable</li><li>Upload every page of the document where you or your health care provider have entered information</li><li>Each file you upload must be smaller than 4.5 MB</li></ul>",
     body_id:
-      "<ul><li>The image of the card must be in full color</li><li>The text must be clear and readable</li><li>The front and back can be in one file, or in two separate files</li><li>Each file must be smaller than 4.5 MB</li></ul><p>It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p>",
+      "<ul><li>The image of the card must be in full color</li><li>The text must be clear and readable</li><li>The front and back can be in one file, or in two separate files</li><li>Each file must be smaller than 4.5 MB</li></ul>",
     header: "Document Requirements:",
   },
   downloadableDocument: {

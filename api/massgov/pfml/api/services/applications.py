@@ -423,9 +423,6 @@ def update_from_request(
             )
             continue
 
-        if key == "application_nickname":
-            key = "nickname"
-
         if key == "phone":
             add_or_update_phone(db_session, body.phone, application)
             continue
@@ -1086,7 +1083,6 @@ def _parse_continuous_leave_period(
         application_id=application_id,
         start_date=time_off.startDate,
         end_date=time_off.endDate,
-        expected_return_to_work_date=time_off.expectedReturnToWorkDate,
         start_date_full_day=time_off.startDateFullDay,
         start_date_off_hours=time_off.startDateOffHours,
         start_date_off_minutes=time_off.startDateOffMinutes,

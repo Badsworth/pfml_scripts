@@ -18,6 +18,10 @@ export interface Issue {
   namespace: string;
   rule?: string;
   type?: string;
+  // Dynamic values that provide more context for the error. For instance,
+  // if this is a "file too large" error, this might include properties
+  // for the size limit and the name of the failing file.
+  extra?: { [key: string]: string | number };
 }
 
 export interface ErrorWithIssues extends BasePortalError {

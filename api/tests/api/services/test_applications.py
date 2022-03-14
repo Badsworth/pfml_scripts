@@ -80,7 +80,6 @@ def continuous_leave_periods():
             endDate=date(2021, 2, 9),
             status="known",
             lastDayWorked=date(2020, 12, 30),
-            expectedReturnToWorkDate=date(2021, 2, 11),
             startDateFullDay=True,
             startDateOffHours=1,
             startDateOffMinutes=5,
@@ -286,10 +285,6 @@ def _compare_continuous_leave(
     assert continuous_leave.application_id == application.application_id
     assert continuous_leave.start_date == fineos_continuous_leave.startDate
     assert continuous_leave.end_date == fineos_continuous_leave.endDate
-    assert (
-        continuous_leave.expected_return_to_work_date
-        == fineos_continuous_leave.expectedReturnToWorkDate
-    )
     assert continuous_leave.start_date_full_day == fineos_continuous_leave.startDateFullDay
     assert continuous_leave.start_date_off_hours == fineos_continuous_leave.startDateOffHours
     assert continuous_leave.start_date_off_minutes == fineos_continuous_leave.startDateOffMinutes

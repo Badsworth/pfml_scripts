@@ -118,6 +118,24 @@ describe("useUsersLogic", () => {
     describe("when mfa_delivery_preference is updated", () => {
       const patchData = { mfa_delivery_preference: "SMS" };
       it("sets MFA preferences and updates user", async () => {
+        // todo (PORTAL-1828): Remove claimantSyncCognitoPreferences feature flag
+        process.env.featureFlags = JSON.stringify({
+          claimantSyncCognitoPreferences: true,
+        });
+
+        await act(async () => {
+          await usersLogic.updateUser(user_id, patchData);
+        });
+
+        expect(MFAService.setMFAPreference).not.toHaveBeenCalled();
+        expect(usersApi.updateUser).toHaveBeenCalledWith(user_id, patchData);
+      });
+    });
+
+    // todo (PORTAL-1828): Remove claimantSyncCognitoPreferences feature flag
+    describe("when mfa_delivery_preference is updated and claimantSyncCognitoPreferences feature flag is disabled", () => {
+      const patchData = { mfa_delivery_preference: "SMS" };
+      it("sets MFA preferences and updates user", async () => {
         await act(async () => {
           await usersLogic.updateUser(user_id, patchData);
         });
