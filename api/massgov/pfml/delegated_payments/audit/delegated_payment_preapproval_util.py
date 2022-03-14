@@ -76,8 +76,16 @@ class PreapprovalStatus:
                 logger.info("Payment encountered preapproval issue", extra=extra)
 
                 if issue == PreapprovalIssue.CHANGED_ADDRESS and self.last_payment:
-                    old_address = f"{self.last_payment.experian_address_pair.fineos_address.address_line_one} {self.last_payment.experian_address_pair.fineos_address.city} {self.last_payment.experian_address_pair.fineos_address.zip_code}"
-                    new_address = f"{self.payment.experian_address_pair.fineos_address.address_line_one} {self.payment.experian_address_pair.fineos_address.city} {self.payment.experian_address_pair.fineos_address.zip_code}"
+                    old_address = (
+                        f"{self.last_payment.experian_address_pair.fineos_address.address_line_one} {self.last_payment.experian_address_pair.fineos_address.city} {self.last_payment.experian_address_pair.fineos_address.zip_code}"
+                        if self.last_payment.experian_address_pair
+                        else "No address associated with last payment"
+                    )
+                    new_address = (
+                        f"{self.payment.experian_address_pair.fineos_address.address_line_one} {self.payment.experian_address_pair.fineos_address.city} {self.payment.experian_address_pair.fineos_address.zip_code}"
+                        if self.payment.experian_address_pair
+                        else "No address associated with payment"
+                    )
                     issue_descriptions.append(f"{issue.value}: {old_address} -> {new_address}")
 
                 elif issue == PreapprovalIssue.CHANGED_EFT and self.last_payment:
