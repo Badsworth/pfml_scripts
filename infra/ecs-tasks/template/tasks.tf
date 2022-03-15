@@ -280,6 +280,7 @@ locals {
         { name : "FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", value : "2021-06-12" },
         { name : "FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", value : "2021-06-12" },
         { name : "FINEOS_1099_DATA_EXTRACT_MAX_HISTORY_DATE", value : "2022-01-01" },
+        { name : "FINEOS_VBI_TASKREPORT_SOM_EXTRACT_MAX_HISTORY_DATE", value : "2022-03-11" },
         { name : "USE_EXPERIAN_SOAP_CLIENT", value : "1" },
         { name : "EXPERIAN_AUTH_TOKEN", valueFrom : "/service/${local.app_name}/common/experian-auth-token" },
         { "name" : "ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS", "value" : var.enable_employer_reimbursement_payments }

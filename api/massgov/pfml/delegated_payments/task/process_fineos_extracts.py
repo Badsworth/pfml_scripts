@@ -20,6 +20,7 @@ from massgov.pfml.delegated_payments.fineos_extract_step import (
     CLAIMANT_EXTRACT_CONFIG,
     PAYMENT_EXTRACT_CONFIG,
     REQUEST_1099_EXTRACT_CONFIG,
+    VBI_TASKREPORT_SOM_EXTRACT_CONFIG,
     FineosExtractStep,
 )
 from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_step import (
@@ -42,6 +43,7 @@ ALL = "ALL"
 RUN_AUDIT_CLEANUP = "audit-cleanup"
 CONSUME_FINEOS_CLAIMANT = "consume-fineos-claimant"
 CONSUME_FINEOS_PAYMENT = "consume-fineos-payment"
+VBI_TASKREPORT_EXTRACT = "vbi-taskreport-extract"
 CLAIMANT_EXTRACT = "claimant-extract"
 PAYMENT_EXTRACT = "payment-extract"
 CONSUME_FINEOS_1099_REQUEST_EXTRACT = "consume-fineos-1099-request"
@@ -60,6 +62,7 @@ ALLOWED_VALUES = [
     RUN_AUDIT_CLEANUP,
     CONSUME_FINEOS_CLAIMANT,
     CONSUME_FINEOS_PAYMENT,
+    VBI_TASKREPORT_EXTRACT,
     CLAIMANT_EXTRACT,
     PAYMENT_EXTRACT,
     CONSUME_FINEOS_1099_REQUEST_EXTRACT,
@@ -70,6 +73,7 @@ ALLOWED_VALUES = [
     CREATE_AUDIT_REPORT,
     CREATE_PEI_WRITEBACK,
     REPORT,
+    VALIDATE_MAX_WEEKLY_BENEFIT_AMOUNT,
 ]
 
 
@@ -77,6 +81,7 @@ class Configuration:
     do_audit_cleanup: bool
     consume_fineos_claimant: bool
     consume_fineos_payment: bool
+    do_vbi_taskreport_extract: bool
     do_claimant_extract: bool
     do_payment_extract: bool
     consume_fineos_1099_request: bool
@@ -108,6 +113,7 @@ class Configuration:
             self.do_audit_cleanup = True
             self.consume_fineos_claimant = True
             self.consume_fineos_payment = True
+            self.do_vbi_taskreport_extract = True
             self.do_claimant_extract = True
             self.do_payment_extract = True
             self.consume_fineos_1099_request = True
@@ -124,6 +130,7 @@ class Configuration:
             self.do_audit_cleanup = RUN_AUDIT_CLEANUP in steps
             self.consume_fineos_claimant = CONSUME_FINEOS_CLAIMANT in steps
             self.consume_fineos_payment = CONSUME_FINEOS_PAYMENT in steps
+            self.do_vbi_taskreport_extract = VBI_TASKREPORT_EXTRACT in steps
             self.do_claimant_extract = CLAIMANT_EXTRACT in steps
             self.do_payment_extract = PAYMENT_EXTRACT in steps
             self.consume_fineos_1099_request = CONSUME_FINEOS_1099_REQUEST_EXTRACT in steps
@@ -174,6 +181,13 @@ def _process_fineos_extracts(
             db_session=db_session,
             log_entry_db_session=log_entry_db_session,
             extract_config=PAYMENT_EXTRACT_CONFIG,
+        ).run()
+
+    if config.do_vbi_taskreport_extract:
+        FineosExtractStep(
+            db_session=db_session,
+            log_entry_db_session=log_entry_db_session,
+            extract_config=VBI_TASKREPORT_SOM_EXTRACT_CONFIG,
         ).run()
 
     if config.do_claimant_extract:
