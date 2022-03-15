@@ -2,11 +2,8 @@ from datetime import date
 
 import pytest
 
-from massgov.pfml.api.models.claims.common import (
-    ChangeRequest,
-    ChangeRequestType,
-    EmployerClaimReview,
-)
+import massgov.pfml.util.datetime as datetime_util
+from massgov.pfml.api.models.claims.common import EmployerClaimReview
 from massgov.pfml.api.models.common import EmployerBenefit, PreviousLeave
 from massgov.pfml.api.validation.claim_rules import (
     get_change_request_issues,
@@ -16,8 +13,12 @@ from massgov.pfml.api.validation.claim_rules import (
     get_previous_leaves_issues,
 )
 from massgov.pfml.api.validation.exceptions import IssueType
-from massgov.pfml.db.models.employees import AbsencePeriod
-from massgov.pfml.db.models.factories import AbsencePeriodFactory, ClaimFactory
+from massgov.pfml.db.models.employees import AbsencePeriod, ChangeRequestType
+from massgov.pfml.db.models.factories import (
+    AbsencePeriodFactory,
+    ChangeRequestFactory,
+    ClaimFactory,
+)
 
 
 @pytest.fixture
@@ -162,20 +163,29 @@ def setup_factories(initialize_factories_session):
 
 @pytest.fixture
 def modification_change_request():
-    return ChangeRequest(change_request_type=ChangeRequestType.MODIFICATION, end_date="2020-03-01")
+    return ChangeRequestFactory.create(
+        change_request_type_id=ChangeRequestType.MODIFICATION.change_request_type_id,
+        start_date=None,
+        end_date=date(2020, 3, 1),
+        documents_submitted_at=datetime_util.utcnow(),
+    )
 
 
 @pytest.fixture
 def withdrawal_change_request():
-    return ChangeRequest(change_request_type=ChangeRequestType.WITHDRAWAL)
+    return ChangeRequestFactory.create(
+        change_request_type_id=ChangeRequestType.WITHDRAWAL.change_request_type_id,
+        start_date=None,
+        end_date=None,
+    )
 
 
 @pytest.fixture
 def mtb_change_request():
-    return ChangeRequest(
-        change_request_type=ChangeRequestType.MEDICAL_TO_BONDING,
-        start_date="2020-02-01",
-        end_date="2020-03-01",
+    return ChangeRequestFactory.create(
+        change_request_type_id=ChangeRequestType.MEDICAL_TO_BONDING.change_request_type_id,
+        start_date=date(2020, 2, 1),
+        end_date=date(2020, 3, 1),
     )
 
 
@@ -228,6 +238,13 @@ class TestGetChangeRequestIssues:
                 "Claim must have at least one approved absence period to submit a change request"
                 in resp[0].message
             )
+
+        def test_missing_documents(self, modification_change_request, claim):
+            modification_change_request.documents_submitted_at = None
+            resp = get_change_request_issues(modification_change_request, claim)
+            assert resp[0].type == IssueType.required
+            assert resp[0].field == "change_request.documents_submitted_at"
+            assert "Supporting documents must be submitted for this request type" in resp[0].message
 
     class TestChangeRequestTypeWithdrawal:
         # Test rules specific to the Withdrawal type

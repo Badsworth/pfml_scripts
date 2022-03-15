@@ -112,6 +112,13 @@ export class ClaimPage {
     cy.findByText("Absence Case", { selector: "a" }).click();
     return this;
   }
+  // FINEOS April upgrade will adjust the in review process to which we don't have to click on the Adjudication
+  // buton on the Absence Hub tab.
+  adjudicateUpgrade(cb: (page: AdjudicationPage) => unknown): this {
+    cb(new AdjudicationPage());
+    cy.get("#footerButtonsBar input[value='OK']").click();
+    return this;
+  }
 
   adjudicate(cb: (page: AdjudicationPage) => unknown): this {
     cy.get('input[type="submit"][value="Adjudicate"]').click();
@@ -243,12 +250,21 @@ export class ClaimPage {
     return this;
   }
 
-  approve(status: "Approved" | "Completed" = "Approved"): this {
+  approve(
+    status: "Approved" | "Completed" = "Approved",
+    upgrade: boolean | null | undefined = false
+  ): this {
     // This button turns out to be unclickable without force, because selecting
     // it seems to scroll it out of view. Force works around that.
-    cy.get('a[title="Approve the Pending Leaving Request"]').click({
-      force: true,
-    });
+    if (upgrade) {
+      cy.get('a[title="Approve the pending/in review leave request"]').click({
+        force: true,
+      });
+    } else {
+      cy.get('a[title="Approve the Pending Leaving Request"]').click({
+        force: true,
+      });
+    }
     waitForAjaxComplete();
     assertClaimStatus(status);
     return this;
@@ -392,12 +408,27 @@ export class ClaimPage {
     return this;
   }
 
-  reviewClaim(): this {
+  reviewClaim(upgrade: boolean): this {
     onTab("Leave Details");
     cy.contains("td", "Approved").click();
-    cy.get('input[title="Review a Leave Request"').click();
-    waitForAjaxComplete();
-    onTab("Absence Hub");
+    if (upgrade) {
+      // Note in the new workflow for putting a claim into Review we are going directly to the Adjudication
+      // instead of click on the Absence Hub. Then clicking the Adjudication button on the Absence Hub tab.
+      cy.findByText("Review").click();
+      cy.get('input[type="radio"][id*="secondOption"]').click();
+      cy.get(".ant-modal-footer").within(() => {
+        cy.findByText("OK", {
+          selector: "span",
+        }).click({
+          force: true,
+        });
+      });
+      waitForAjaxComplete();
+    } else {
+      cy.get('input[title="Review a Leave Request"').click();
+      waitForAjaxComplete();
+      onTab("Absence Hub");
+    }
     return this;
   }
 
@@ -1199,6 +1230,14 @@ export class DocumentsPage {
     return this;
   }
 
+  addDocument(documentName: string): this {
+    this.startDocumentCreation(documentName);
+    waitForAjaxComplete();
+    clickBottomWidgetButton("Next");
+    waitForAjaxComplete();
+    return this;
+  }
+
   /**
    * Submits the "Other Income - current version" eForm. If succesfull returns back to the "Documents" page.
    * @param employer_benefits
@@ -1691,7 +1730,8 @@ type Reduction = {
 
 type PaidLeaveCorrespondenceDocument =
   | "Benefit Amount Change Notice"
-  | "Maximum Weekly Benefit Change Notice";
+  | "Maximum Weekly Benefit Change Notice"
+  | "Overpayment Notice - Full Balance Recovery";
 /**
  * Class representing the Absence Paid Leave Case,
  * Claim should be adjudicated and approved before trying to access this.
@@ -2151,6 +2191,174 @@ class PaidLeavePage {
     cy.get(`td:nth-child(3):contains(${format(date, "MM/dd/yyyy")})`);
     return this;
   }
+
+  assertOverpaymentRecord(overpayments: OverpaymentRecord) {
+    this.onTab("Financials", "Payment History", "Overpayment Summary");
+    cy.get("table[id$='OverpaymentsListview']").within(() => {
+      cy.contains("td[id$='OverpaymentsListviewStatus0']", overpayments.status);
+      cy.contains(
+        "td[id$='OverpaymentsListviewBalancingAmount0']",
+        numToPaymentFormat(overpayments.amount)
+      );
+      cy.contains(
+        "td[id$='OverpaymentsListviewOverpaymentRecordAdjustment0']",
+        numToPaymentFormat(overpayments.adjustment)
+      );
+      cy.contains(
+        "td[id$='OverpaymentsListviewOutstandingAmount0']",
+        numToPaymentFormat(overpayments.outstandingAmount)
+      );
+    });
+  }
+
+  createRecoveryPlan(
+    recoveryAmt: number,
+    type: "OffsetRecovery" | "Reimbursement"
+  ): RecoveryPlanPage {
+    this.onTab("Financials", "Payment History", "Overpayment Summary");
+    waitForAjaxComplete();
+    cy.get("tr[class='ListRowSelected']").click({ force: true });
+    waitForAjaxComplete();
+    cy.get('input[type="submit"][value="Open"]').click({ force: true });
+    cy.get(
+      'input[type="submit"][value="Add"][id^="RecoveryPlanListviewWidget"]'
+    ).click();
+    waitForAjaxComplete();
+    cy.findByLabelText("Type").select(type);
+    waitForAjaxComplete();
+    cy.wait(500);
+    cy.findByLabelText("Agreement Date").type(
+      `${format(new Date(), "MM/dd/yyyy")}{enter}`
+    );
+    waitForAjaxComplete();
+    cy.wait(500);
+    if (type === "Reimbursement") {
+      cy.get("input[type='text'][name$='Amount_to_Submit']").type(
+        `{selectAll}{backspace}${numToPaymentFormat(recoveryAmt)}`
+      );
+    }
+    if (type === "OffsetRecovery") {
+      cy.get("input[type='text'][name$='Amount_per_Frequency']").type(
+        `{selectAll}{backspace}${numToPaymentFormat(recoveryAmt)}`
+      );
+      waitForAjaxComplete();
+      cy.get(
+        "input[type='submit'][id$='calculateEstimatedOffsetEndDate']"
+      ).click();
+    }
+    waitForAjaxComplete();
+    clickBottomWidgetButton();
+    waitForAjaxComplete();
+    return new RecoveryPlanPage();
+  }
+
+  getAmountsPending(): Cypress.Chainable<
+    Record<"netAmount" | "netPaymentAmount", string>[]
+  > {
+    this.onTab("Financials", "Payment History", "Amounts Pending");
+    waitForAjaxComplete();
+    // net amount
+    return cy.get("td[id$='benefit_amount_money0']").then(([...netPymt]) => {
+      // net payment amount
+      return cy.get("td[id$='payment_amount_money0']").then((netPymtCols) => {
+        return cy.wrap(
+          [...netPymtCols].reduce((acc, netPaymentAmountCol, idx) => {
+            const rowData = {
+              netAmount: netPymt[idx].textContent as string,
+              netPaymentAmount: netPaymentAmountCol.textContent as string,
+            };
+            acc.push(rowData);
+            return acc;
+          }, [] as Record<"netAmount" | "netPaymentAmount", string>[])
+        );
+      });
+    });
+  }
+  goToOverpaymentCase(): RecoveryPlanPage {
+    this.onTab("Financials", "Payment History", "Overpayment Summary");
+    waitForAjaxComplete();
+    cy.get("tr[class='ListRowSelected']").click({ force: true });
+    waitForAjaxComplete();
+    cy.get('input[type="submit"][value="Open"]').click({ force: true });
+    waitForAjaxComplete();
+    return new RecoveryPlanPage();
+  }
+}
+
+type OverpaymentRecord = {
+  status: string;
+  amount: number;
+  adjustment: number;
+  outstandingAmount: number;
+};
+
+type RecoveryPageCorrespondenceDropdownOptions =
+  | "OP-Full Balance Demand"
+  | "OP-Full Balance Recovery"
+  | "OP-Full Balance Recovery-Manual"
+  | "OP-Notice of Payoff"
+  | "OP-Payment Received";
+
+type RecoveryPlanDocuments =
+  | "Overpayment Notice-Full Balance Recovery"
+  | "Overpayment Notice-Full Balance Recovery-Manual"
+  | "Overpayment Notice-Full Balance Demand"
+  | "Overpayment Payoff Notice"
+  | "Payment Received-Updated Overpayment Balance";
+
+class RecoveryPlanPage {
+  addDocument(
+    correspondenceOption: RecoveryPageCorrespondenceDropdownOptions,
+    documentType: RecoveryPlanDocuments
+  ): this {
+    cy.contains("a", "Correspondence").click({ force: true });
+    waitForAjaxComplete();
+    cy.contains(correspondenceOption).click();
+    clickBottomWidgetButton("Next");
+    onTab("Documents");
+    assertHasDocument(documentType);
+    return this;
+  }
+  assertDocumentStatus(
+    documentType: RecoveryPlanDocuments,
+    status: PaidLeaveDocumentStatus
+  ) {
+    onTab("Documents");
+    waitForAjaxComplete();
+    cy.contains("tr", documentType).within(() => {
+      cy.contains("td", status);
+    });
+  }
+  addActualRecovery(recoveryAmt: number): this {
+    cy.get(
+      "input[type='submit'][value='Add'][name^='ActualRecoveriesListviewWidget']"
+    ).click({ force: true });
+    waitForAjaxComplete();
+    cy.findByLabelText("Amount of Recovery").type(
+      `{selectAll}{backspace}${numToPaymentFormat(recoveryAmt)}`
+    );
+    waitForAjaxComplete();
+    cy.findByLabelText("Check Number").type("5555");
+    clickBottomWidgetButton();
+    waitForAjaxComplete();
+    return this;
+  }
+  assertTaskExists(name: FineosTasks): this {
+    onTab("Tasks");
+    waitForAjaxComplete();
+    cy.get("table[id*='TasksForCaseWidget']").should((table) => {
+      expect(table, `Expected to find a "${name}" task`).to.have.descendants(
+        `tr td:nth-child(6)[title="${name}"]`
+      );
+    });
+    return this;
+  }
+  assertOutstandingOverpaymentBalance(amount: number): this {
+    onTab("Recovery Details");
+    waitForAjaxComplete();
+    cy.contains("span[id$=OutstandingAmount]", numToPaymentFormat(amount));
+    return this;
+  }
 }
 
 export function numToPaymentFormat(num: number): string {
@@ -2451,7 +2659,8 @@ export class ClaimantPage {
    * @param changes Object with one or more of propreties to edit.
    */
   editPersonalIdentification(
-    changes: Partial<PersonalIdentificationDetails>
+    changes: Partial<PersonalIdentificationDetails>,
+    upgrade: boolean
   ): this {
     cy.get(`#personalIdentificationCardWidget`)
       .findByTitle("Edit")
@@ -2463,10 +2672,18 @@ export class ClaimantPage {
         );
 
       if (changes.date_of_birth)
-        cy.findByLabelText(`Date of birth`)
-          .focus()
-          .type(`{selectAll}{backspace}${changes.date_of_birth}`)
-          .blur();
+        if (upgrade) {
+          // FINEOS upgrade keeps failing when using blur on the birth date in last few runs.
+          // Removing for the upgrade till we stablize these Cypress tests better.
+          cy.findByLabelText(`Date of birth`)
+            .focus()
+            .type(`{selectAll}{backspace}${changes.date_of_birth}`);
+        } else {
+          cy.findByLabelText(`Date of birth`)
+            .focus()
+            .type(`{selectAll}{backspace}${changes.date_of_birth}`)
+            .blur();
+        }
 
       if (changes.gender) cy.findByLabelText(`Gender`).select(changes.gender);
 
@@ -2483,7 +2700,9 @@ export class ClaimantPage {
     cy.findByText(`+ Add address`).click({ force: true });
     waitForAjaxComplete();
     cy.get(`#addressPopupWidget_PopupWidgetWrapper`).within(() => {
-      cy.findByLabelText(`Address line 1`).type(`${address.line_1}`);
+      cy.findByLabelText(`Address line 1`).type(`${address.line_1}`, {
+        force: true,
+      });
       if (address.line_2) {
         cy.findByLabelText(`Address line 2`).type(`${address.line_2}`);
       }

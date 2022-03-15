@@ -17,13 +17,14 @@ from massgov.pfml.api.authorization.flask import READ, can, requires
 from massgov.pfml.api.exceptions import ClaimWithdrawn, ObjectNotFound
 from massgov.pfml.api.models.applications.common import OrganizationUnit
 from massgov.pfml.api.models.claims.common import ChangeRequest, EmployerClaimReview
-from massgov.pfml.api.models.claims.requests import ClaimRequest
+from massgov.pfml.api.models.claims.requests import ClaimSearchRequest, ClaimSearchTerms
 from massgov.pfml.api.models.claims.responses import (
     ChangeRequestResponse,
     ClaimForPfmlCrmResponse,
     ClaimResponse,
     ManagedRequirementResponse,
 )
+from massgov.pfml.api.models.common import OrderData, PagingData
 from massgov.pfml.api.services.administrator_fineos_actions import (
     awaiting_leave_info,
     complete_claim_review,
@@ -40,13 +41,17 @@ from massgov.pfml.api.services.claims import (
 )
 from massgov.pfml.api.services.managed_requirements import update_employer_confirmation_requirements
 from massgov.pfml.api.util.claims import user_has_access_to_claim
-from massgov.pfml.api.util.paginate.paginator import PaginationAPIContext
+from massgov.pfml.api.util.paginate.paginator import (
+    PaginationAPIContext,
+    make_paging_meta_data_from_paginator,
+)
 from massgov.pfml.api.validation.exceptions import (
     ContainsV1AndV2Eforms,
     IssueType,
     ValidationErrorDetail,
 )
 from massgov.pfml.db.models.absences import AbsenceStatus
+from massgov.pfml.db.models.employees import ChangeRequest as change_request_db_model
 from massgov.pfml.db.models.employees import (
     Claim,
     Employer,
@@ -87,10 +92,6 @@ from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.util.users import has_role_in
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
-
-# Added in https://lwd.atlassian.net/browse/PSD-2401
-# Modified in https://lwd.atlassian.net/browse/PFMLPB-3276
-CLAIMS_DASHBOARD_BLOCKED_FEINS: Set[str] = set([])
 
 
 class VerificationRequired(Forbidden):
@@ -567,7 +568,7 @@ def get_claim_from_db(fineos_absence_id: Optional[str]) -> Optional[Claim]:
 def retrieve_claims() -> flask.Response:
 
     body = connexion.request.json
-    claim_request = ClaimRequest.parse_obj(body)
+    claim_request = ClaimSearchRequest.parse_obj(body)
 
     return _process_claims_request(claim_request=claim_request, method_name="retrieve_claims")
 
@@ -576,27 +577,47 @@ def get_claims() -> flask.Response:
     employer_id_str = flask.request.args.get("employer_id")
     employee_id_str = flask.request.args.get("employee_id")
 
-    claim_request = ClaimRequest()
+    terms = ClaimSearchTerms()
     if employer_id_str is not None:
-        claim_request.employer_ids = {UUID(eid.strip()) for eid in employer_id_str.split(",")}
+        terms.employer_ids = {UUID(eid.strip()) for eid in employer_id_str.split(",")}
     if employee_id_str is not None:
-        claim_request.employee_ids = {UUID(eid.strip()) for eid in employee_id_str.split(",")}
-    claim_request.search = flask.request.args.get("search", type=str)
-    claim_request.claim_status = flask.request.args.get("claim_status")
-    claim_request.request_decision = flask.request.args.get("request_decision")
-    claim_request.is_reviewable = flask.request.args.get("is_reviewable", type=str)
+        terms.employee_ids = {UUID(eid.strip()) for eid in employee_id_str.split(",")}
+    terms.search = flask.request.args.get("search", type=str)
+    terms.claim_status = flask.request.args.get("claim_status")
+    terms.request_decision = flask.request.args.get("request_decision")
+    terms.is_reviewable = flask.request.args.get("is_reviewable", type=str)
+
+    request_body = _prepare_request_body(flask.request, terms)
+    claim_request = ClaimSearchRequest.parse_obj(request_body)
 
     return _process_claims_request(claim_request=claim_request, method_name="get_claims")
 
 
-def _process_claims_request(claim_request: ClaimRequest, method_name: str) -> flask.Response:
+def _prepare_request_body(request: flask.Request, terms: ClaimSearchTerms) -> Dict:
+    order_data = OrderData()
+    order = {
+        "by": request.args.get("order_by", order_data.by, type=str),
+        "direction": request.args.get("order_direction", order_data.direction, type=str),
+    }
+    paging_data = PagingData()
+    paging = {
+        "offset": request.args.get("page_offset", paging_data.offset, type=int),
+        "size": request.args.get("page_size", paging_data.size, type=int),
+    }
+    return {"terms": terms, "paging": paging, "order": order}
 
-    employee_ids = claim_request.employee_ids
-    employer_ids = claim_request.employer_ids
-    search_string = claim_request.search
-    absence_statuses = parse_filterable_absence_statuses(claim_request.claim_status)
-    is_reviewable = claim_request.is_reviewable
-    request_decisions = map_request_decision_param_to_db_columns(claim_request.request_decision)
+
+def _process_claims_request(claim_request: ClaimSearchRequest, method_name: str) -> flask.Response:
+
+    claim_request_terms = claim_request.terms
+    employee_ids = claim_request_terms.employee_ids
+    employer_ids = claim_request_terms.employer_ids
+    search_string = claim_request_terms.search
+    absence_statuses = parse_filterable_absence_statuses(claim_request_terms.claim_status)
+    is_reviewable = claim_request_terms.is_reviewable
+    request_decisions = map_request_decision_param_to_db_columns(
+        claim_request_terms.request_decision
+    )
 
     current_user = app.current_user()
     is_pfml_crm_user = has_role_in(current_user, [Role.PFML_CRM])
@@ -604,7 +625,7 @@ def _process_claims_request(claim_request: ClaimRequest, method_name: str) -> fl
     log_attributes = {}
     log_attributes.update(get_employer_log_attributes(current_user))
 
-    with PaginationAPIContext(Claim, request=flask.request) as pagination_context:
+    with PaginationAPIContext(Claim, request=claim_request) as pagination_context:
         with app.db_session() as db_session:
             query = GetClaimsQuery(db_session)
             # The logic here is similar to that in user_has_access_to_claim (except it is applied to multiple claims)
@@ -620,8 +641,7 @@ def _process_claims_request(claim_request: ClaimRequest, method_name: str) -> fl
                 verified_employers = [
                     employer
                     for employer in employers_list
-                    if employer.employer_fein not in CLAIMS_DASHBOARD_BLOCKED_FEINS
-                    and current_user.verified_employer(employer)
+                    if current_user.verified_employer(employer)
                 ]
 
                 # filters claims by employer id - shows all claims of those employers
@@ -658,31 +678,22 @@ def _process_claims_request(claim_request: ClaimRequest, method_name: str) -> fl
 
             if request_decisions:
                 # Log values from query param since more familiar to new relic users
-                log_attributes.update({"filter.request_decision": claim_request.request_decision})
+                log_attributes.update(
+                    {"filter.request_decision": claim_request_terms.request_decision}
+                )
                 query.add_request_decision_filter(request_decisions)
 
-            # Update the pagination parameters from the request
-            if flask.request.method == "POST":
-                pagination_context.page_size = claim_request.page_size
-                pagination_context.page_offset = claim_request.page_offset
-                pagination_context.order_by = claim_request.order_by
-                pagination_context.order_direction = claim_request.order_direction
-
-            query.add_order_by(pagination_context)
+            query.add_order_by(pagination_context, is_reviewable)
 
             page = query.get_paginated_results(pagination_context)
+            page_data_log_attributes = make_paging_meta_data_from_paginator(
+                pagination_context, page
+            ).to_dict()
 
     logger.info(
         f"{method_name} success",
         extra={
-            "is_employer": str(is_employer),
-            "pagination.order_by": pagination_context.order_by,
-            "pagination.order_direction": pagination_context.order_direction,
-            "pagination.page_offset": pagination_context.page_offset,
-            "pagination.page_size": pagination_context.page_size,
-            "pagination.total_pages": page.total_pages,
-            "pagination.total_records": page.total_records,
-            "filter.search_string": search_string,
+            **page_data_log_attributes,
             **log_attributes,
         },
     )
@@ -808,30 +819,17 @@ def post_change_request(fineos_absence_id: str) -> flask.Response:
         )
         return error.to_api_response()
 
-    if issues := claim_rules.get_change_request_issues(change_request, claim):
-        return response_util.error_response(
-            status_code=BadRequest,
-            message="Invalid change request body",
-            errors=issues,
-            data={},
-        ).to_api_response()
+    db_change_request = add_change_request_to_db(change_request, claim.claim_id)
 
-    # Post change request to FINEOS - https://lwd.atlassian.net/browse/PORTAL-1710
-    submitted_time = utcnow()
-    add_change_request_to_db(change_request, claim.claim_id, submitted_time)
+    issues = claim_rules.get_change_request_issues(db_change_request, claim)
 
-    response_data = ChangeRequestResponse(
-        fineos_absence_id=fineos_absence_id,
-        change_request_type=change_request.change_request_type,
-        start_date=change_request.start_date,
-        end_date=change_request.end_date,
-        submitted_time=submitted_time,
-    )
+    response_data = ChangeRequestResponse.from_orm(db_change_request)
 
     return response_util.success_response(
         message="Successfully posted change request",
         data=response_data.dict(),
         status_code=201,
+        warnings=issues,
     ).to_api_response()
 
 
@@ -850,7 +848,8 @@ def get_change_requests(fineos_absence_id: str) -> flask.Response:
         )
         return error.to_api_response()
 
-    change_requests = get_change_requests_from_db(claim.claim_id)
+    with app.db_session() as db_session:
+        change_requests = get_change_requests_from_db(claim.claim_id, db_session)
 
     # TODO: (PORTAL-1864) Convert the change_request_type to return the enum value rather than the id
     change_requests_dict = []
@@ -860,5 +859,51 @@ def get_change_requests(fineos_absence_id: str) -> flask.Response:
     return response_util.success_response(
         message="Successfully retrieved change requests",
         data={"absence_case_id": fineos_absence_id, "change_requests": change_requests_dict},
+        status_code=200,
+    ).to_api_response()
+
+
+def submit_change_request(change_request_id: str) -> flask.Response:
+    with app.db_session() as db_session:
+        change_request = get_or_404(db_session, change_request_db_model, UUID(change_request_id))
+
+    if issues := claim_rules.get_change_request_issues(change_request, change_request.claim):
+        return response_util.error_response(
+            status_code=BadRequest,
+            message="Invalid change request",
+            errors=issues,
+            data={},
+        ).to_api_response()
+
+    # TODO: Post change request to FINEOS - https://lwd.atlassian.net/browse/PORTAL-1710
+    change_request.submitted_time = utcnow()
+
+    response_data = ChangeRequestResponse.from_orm(change_request)
+
+    return response_util.success_response(
+        message="Successfully submitted Change Request to FINEOS",
+        data=response_data.dict(),
+        status_code=200,
+    ).to_api_response()
+
+
+def delete_change_request(change_request_id: str) -> flask.Response:
+    with app.db_session() as db_session:
+        change_request = get_or_404(db_session, change_request_db_model, UUID(change_request_id))
+
+        if change_request.submitted_time is not None:
+            error = response_util.error_response(
+                BadRequest,
+                "Cannot delete a submitted request",
+                data={},
+                errors=[],
+            )
+            return error.to_api_response()
+
+        db_session.delete(change_request)
+
+    return response_util.success_response(
+        message="Successfully deleted change request",
+        data={},
         status_code=200,
     ).to_api_response()

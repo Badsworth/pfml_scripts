@@ -15,9 +15,11 @@ export default class HolidaysApi extends BaseApi {
    * Fetches holidays in a date range
    */
   getHolidays = async (start_date: string, end_date: string) => {
-    const { data } = await this.request<Holiday>("POST", "search", {
-      start_date,
-      end_date,
+    const { data } = await this.request<Holiday[]>("POST", "search", {
+      terms: {
+        start_date,
+        end_date,
+      },
     });
     return data;
   };

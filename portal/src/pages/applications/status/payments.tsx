@@ -3,6 +3,12 @@ import {
   DocumentType,
   findDocumentsByTypes,
 } from "../../../models/Document";
+import {
+  PROCESSING_DAYS_PER_DELAY,
+  Payment,
+  WritebackTransactionStatus,
+  isAfterDelayProcessingTime,
+} from "../../../models/Payment";
 import React, { useEffect } from "react";
 import withUser, { WithUserProps } from "../../../hoc/withUser";
 import { AbsencePeriod } from "../../../models/AbsencePeriod";
@@ -13,9 +19,9 @@ import ApiResourceCollection from "src/models/ApiResourceCollection";
 import BackButton from "../../../components/BackButton";
 import ClaimDetail from "src/models/ClaimDetail";
 import Heading from "../../../components/core/Heading";
+import HolidayAlert from "../../../components/status/HolidayAlert";
 import LeaveReason from "../../../models/LeaveReason";
 import PageNotFound from "../../../components/PageNotFound";
-import { Payment } from "src/models/Payment";
 import Spinner from "../../../components/core/Spinner";
 import StatusNavigationTabs from "../../../components/status/StatusNavigationTabs";
 import Table from "../../../components/core/Table";
@@ -27,6 +33,7 @@ import dayjsBusinessTime from "dayjs-business-time";
 import formatDate from "src/utils/formatDate";
 import formatDateRange from "../../../utils/formatDateRange";
 import isBlank from "../../../utils/isBlank";
+import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
 
@@ -52,6 +59,7 @@ export const Payments = ({
       loadAll: loadAllClaimDocuments,
       hasLoadedClaimDocuments,
     },
+    holidays,
     payments: { loadPayments, loadedPaymentsData, hasLoadedPayments },
     portalFlow,
   } = appLogic;
@@ -135,10 +143,23 @@ export const Payments = ({
 
   const shouldShowPaymentsTable = hasPayments || hasWaitingWeek;
 
-  const getPaymentAmount = (status: string, amount: number | null) => {
+  const getPaymentAmountOrStatusText = (
+    status: string,
+    amount: number | null,
+    writeback_transaction_status: WritebackTransactionStatus,
+    transaction_date: string | null
+  ) => {
     if (status === "Sent to bank") {
       return t("pages.payments.tableAmountSent", { amount });
-    } else if (status === "Pending") {
+    } else if (
+      status === "Pending" ||
+      (status === "Delayed" &&
+        transaction_date &&
+        !isAfterDelayProcessingTime(
+          writeback_transaction_status,
+          transaction_date
+        ))
+    ) {
       return "Processing";
     }
     return status;
@@ -152,16 +173,40 @@ export const Payments = ({
     }
   };
 
-  const getPaymentStatus = (status: string, payment_method: string) => {
+  const getPaymentStatusContext = (
+    status: string,
+    payment_method: string,
+    writeback_transaction_status: WritebackTransactionStatus,
+    transaction_date: string | null
+  ) => {
     if (status === "Sent to bank" && payment_method === "Check") {
       return "Check";
-    } else {
-      return status;
+    } else if (
+      isFeatureEnabled("claimantShowPaymentsPhaseThree") &&
+      status === "Delayed"
+    ) {
+      // Handle delay cases below
+      if (isBlank(transaction_date)) return "Pending";
+
+      const shouldShowWritebackSpecificText = isAfterDelayProcessingTime(
+        writeback_transaction_status,
+        transaction_date
+      );
+      return shouldShowWritebackSpecificText
+        ? writeback_transaction_status in PROCESSING_DAYS_PER_DELAY
+          ? `${status}_${writeback_transaction_status}`
+          : `${status}_Default`
+        : "Pending";
     }
+    return status;
   };
 
   return (
     <React.Fragment>
+      {isFeatureEnabled("showHolidayAlert") &&
+        isFeatureEnabled("claimantShowPaymentsPhaseThree") && (
+          <HolidayAlert holidaysLogic={holidays} />
+        )}
       {!!infoAlertContext &&
         (hasPendingStatus ||
           hasApprovedStatus ||
@@ -263,40 +308,66 @@ export const Payments = ({
                       expected_send_date_start,
                       expected_send_date_end,
                       status,
-                    }) => (
-                      <tr key={payment_id}>
-                        <td
-                          data-label={tableColumns[0]}
-                          className="tablet:width-card-lg"
-                        >
-                          {formatDateRange(period_start_date, period_end_date)}
-                        </td>
-                        <td data-label={tableColumns[1]}>
-                          {getPaymentAmount(status, amount)}
-                        </td>
-                        <td data-label={tableColumns[2]}>
-                          <Trans
-                            i18nKey="pages.payments.tablePaymentStatus"
-                            tOptions={{
-                              context: getPaymentStatus(status, payment_method),
-                              paymentMethod: getPaymentMethod(payment_method),
-                              payPeriod: formatDateRange(
-                                expected_send_date_start,
-                                expected_send_date_end,
-                                "and"
-                              ),
-                              sentDate:
-                                dayjs(sent_to_bank_date).format("MMMM D, YYYY"),
-                            }}
-                            components={{
-                              "delays-accordion-link": (
-                                <a href={"#delays_accordion"} />
-                              ),
-                            }}
-                          />
-                        </td>
-                      </tr>
-                    )
+                      writeback_transaction_status,
+                      transaction_date,
+                    }) => {
+                      return (
+                        <tr key={payment_id}>
+                          <td
+                            data-label={tableColumns[0]}
+                            className="tablet:width-card-lg"
+                          >
+                            {formatDateRange(
+                              period_start_date,
+                              period_end_date
+                            )}
+                          </td>
+                          <td data-label={tableColumns[1]}>
+                            {getPaymentAmountOrStatusText(
+                              status,
+                              amount,
+                              writeback_transaction_status,
+                              transaction_date
+                            )}
+                          </td>
+                          <td data-label={tableColumns[2]}>
+                            <Trans
+                              i18nKey="pages.payments.tablePaymentStatus"
+                              tOptions={{
+                                context: getPaymentStatusContext(
+                                  status,
+                                  payment_method,
+                                  writeback_transaction_status,
+                                  transaction_date
+                                ),
+                                paymentMethod: getPaymentMethod(payment_method),
+                                payPeriod: formatDateRange(
+                                  expected_send_date_start,
+                                  expected_send_date_end,
+                                  "and"
+                                ),
+                                sentDate:
+                                  dayjs(sent_to_bank_date).format(
+                                    "MMMM D, YYYY"
+                                  ),
+                              }}
+                              components={{
+                                "contact-center-phone-link": (
+                                  <a
+                                    href={`tel:${t(
+                                      "shared.contactCenterPhoneNumber"
+                                    )}`}
+                                  />
+                                ),
+                                "delays-accordion-link": (
+                                  <a href={"#delays_accordion"} />
+                                ),
+                              }}
+                            />
+                          </td>
+                        </tr>
+                      );
+                    }
                   )}
                 {hasWaitingWeek && (
                   <tr>

@@ -30,6 +30,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
   concurrent_leave: ConcurrentLeave | null = null;
   employer_benefits: EmployerBenefit[] = [];
   date_of_birth: string | null = null;
+  employee_id: string | null = null;
   employer_fein: string | null = null;
   gender: ValuesOf<typeof Gender> | null = null;
   has_concurrent_leave: boolean | null = null;

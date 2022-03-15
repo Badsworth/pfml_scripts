@@ -168,10 +168,10 @@ export const LSTBHAP_5MB: ScenarioSpecification = {
     },
     docs: {
       FOSTERPLACEMENT: {
-        filename: getDocPath("5MB"),
+        filename: getDocPath("5MB.pdf"),
       },
       MASSID: {
-        filename: getDocPath("5MB"),
+        filename: getDocPath("5MB.pdf"),
       },
     },
   },
@@ -237,10 +237,10 @@ export const LSTBHAP_8MB: ScenarioSpecification = {
     },
     docs: {
       FOSTERPLACEMENT: {
-        filename: getDocPath("8MB"),
+        filename: getDocPath("8MB.pdf"),
       },
       MASSID: {
-        filename: getDocPath("8MB"),
+        filename: getDocPath("8MB.pdf"),
       },
     },
   },
@@ -257,10 +257,10 @@ export const LSTCHAP1_9MB: ScenarioSpecification = {
     work_pattern_spec: "0,720,0,720,0,720,0",
     docs: {
       MASSID: {
-        filename: getDocPath("9.4MB"),
+        filename: getDocPath("9.4MB.pdf"),
       },
       CARING: {
-        filename: getDocPath("9.4MB"),
+        filename: getDocPath("9.4MB.pdf"),
       },
     },
     shortClaim: true,

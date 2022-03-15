@@ -2,6 +2,7 @@ import { portal, fineos, fineosPages } from "../../actions";
 import { Submission } from "../../../src/types";
 import { assertValidClaim } from "../../../src/util/typeUtils";
 import { getDocumentReviewTaskName } from "../../../src/util/documents";
+import { config } from "../../actions/common";
 
 describe("Submitting a Medical pregnancy claim and adding bonding leave in Fineos", () => {
   it("Create a financially eligible claim (MHAP4) in which an employer will respond", () => {
@@ -30,8 +31,7 @@ describe("Submitting a Medical pregnancy claim and adding bonding leave in Fineo
     fineos.before();
     cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
       cy.unstash<DehydratedClaim>("claim").then((claim) => {
-        cy.visit("/");
-        fineosPages.ClaimPage.visit(fineos_absence_id)
+        const claimPage = fineosPages.ClaimPage.visit(fineos_absence_id)
           .tasks((tasks) => {
             claim.documents.forEach((doc) =>
               tasks.assertTaskExists(
@@ -50,8 +50,12 @@ describe("Submitting a Medical pregnancy claim and adding bonding leave in Fineo
               )
               .certificationPeriods((certPreiods) => certPreiods.prefill())
               .acceptLeavePlan();
-          })
-          .approve();
+          });
+        if (config("HAS_APRIL_UPGRADE") === "true") {
+          claimPage.approve("Approved", true);
+        } else {
+          claimPage.approve("Approved", false);
+        }
         fineos.addBondingLeaveFlow(new Date());
       });
     });

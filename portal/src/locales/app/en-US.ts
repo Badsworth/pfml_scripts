@@ -30,7 +30,7 @@ const errors = {
     absence_case_id: {
       duplicate: "You already have access.",
       exists:
-        "This application cannot be added. You will need to call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak) to work on your application or get status updates.",
+        "This application cannot be added. You will need to call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> to work on your application or get status updates.",
       required: "Application ID is required.",
     },
     conflicting: "$t(shared.applicationImportError_noMatch)",
@@ -54,7 +54,7 @@ const errors = {
   applications: {
     claim: {
       exists:
-        "You have already submitted this portion of your application. If you need to edit your information, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
+        "You have already submitted this portion of your application. If you need to edit your information, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
     },
     concurrent_leave: {
       is_for_current_employer: {
@@ -181,7 +181,7 @@ const errors = {
     },
     is_withholding_tax: {
       duplicate:
-        "You have already submitted your tax withholding preference. If you need to edit your preference, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
+        "You have already submitted your tax withholding preference. If you need to edit your preference, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
       required: "Select your tax withholding preference.",
     },
     last_name: {
@@ -267,7 +267,7 @@ const errors = {
         },
         frequency_interval_basis: {
           intermittent_interval_maximum:
-            "Sorry, our intermittent leave request service is a work in progress. Use our <intermittent-leave-guide>step-by-step guide to intermittent leave</intermittent-leave-guide> to complete your application. You can also complete your application by calling our Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
+            "Sorry, our intermittent leave request service is a work in progress. Use our <intermittent-leave-guide>step-by-step guide to intermittent leave</intermittent-leave-guide> to complete your application. You can also complete your application by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
           required: "Select how often absences may occur.",
         },
         start_date: {
@@ -403,7 +403,7 @@ const errors = {
       payment_method: {
         required: "Select how you want to get your weekly benefit.",
         exists:
-          "You have already submitted your payment preference. If you need to edit your preference, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
+          "You have already submitted your payment preference. If you need to edit your preference, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
       },
       routing_number: {
         checksum:
@@ -516,7 +516,7 @@ const errors = {
       disallow_12mo_leave_period: "$t(shared.disallow12moLeavePeriod)",
       disallow_12mo_reduced_leave_period: "$t(shared.disallow12moLeavePeriod)",
       disallow_attempts:
-        "We already have an account set up for you. Please sign in with that account. If that doesn’t sound familiar to you, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
+        "We already have an account set up for you. Please sign in with that account. If that doesn’t sound familiar to you, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
       disallow_caring_leave_before_july:
         "Leave start dates must be after June 30, 2021.",
       disallow_hybrid_intermittent_leave:
@@ -536,7 +536,7 @@ const errors = {
       min_reduced_leave_minutes:
         "The total time entered for your hours off must be greater than 0.",
       require_employee:
-        "We couldn’t find you in our system. Check that you entered your employer’s Employer Identification Number (EIN) correctly. If you continue to get this error, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
+        "We couldn’t find you in our system. Check that you entered your employer’s Employer Identification Number (EIN) correctly. If you continue to get this error, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
       require_employer_notified:
         "You must tell your employer that you’re taking leave before you can submit an application. If you’ve told your employer, update your application with the date that you notified them.",
     },
@@ -564,7 +564,7 @@ const errors = {
   },
   auth: {
     attemptBlocked_forgotPassword:
-      "Your authentication attempt has been blocked due to suspicious activity. We sent you an email to confirm your identity. Check your email and then follow the instructions to try again. If this continues to occur, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
+      "Your authentication attempt has been blocked due to suspicious activity. We sent you an email to confirm your identity. Check your email and then follow the instructions to try again. If this continues to occur, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
     attemptBlocked_login:
       "Your log in attempt was blocked due to suspicious activity. You will need to reset your password to continue. We’ve also sent you an email to confirm your identity.",
     attemptsLimitExceeded_forgotPassword:
@@ -612,7 +612,7 @@ const errors = {
     },
   },
   caughtError:
-    "Sorry, an unexpected error in our system was encountered. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
+    "Sorry, an unexpected error in our system was encountered. If this continues to happen, you may call the Paid Family Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
   caughtError_DocumentsLoadError: "$t(shared.documentsLoadError)",
   caughtError_DocumentsUploadError: "$t(shared.documentsUploadError)",
   caughtError_ForbiddenError:
@@ -627,13 +627,13 @@ const errors = {
   documents: {
     file: {
       clientSideError_size:
-        "We could not upload: {{disallowedFileNames}}. Files must be smaller than {{ sizeLimit }} MB.",
+        "We could not upload: {{disallowedFileNames}}. Files must be smaller than {{ sizeLimit }} MB.<br />You may fax or mail color copies of your documents if you prefer. <mail-fax-instructions>Follow the fax and mail instructions</mail-fax-instructions>.",
       clientSideError_sizeAndType:
-        "We could not upload: {{disallowedFileNames}}. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than {{ sizeLimit }} MB.",
+        "We could not upload: {{disallowedFileNames}}. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than {{ sizeLimit }} MB.<br />You may fax or mail color copies of your documents if you prefer. <mail-fax-instructions>Follow the fax and mail instructions</mail-fax-instructions>.",
       clientSideError_type:
-        "We could not upload: {{disallowedFileNames}}. Choose a PDF or an image file (.jpg, .jpeg, .png).",
+        "We could not upload: {{disallowedFileNames}}. Choose a PDF or an image file (.jpg, .jpeg, .png).<br />You may fax or mail color copies of your documents if you prefer. <mail-fax-instructions>Follow the fax and mail instructions</mail-fax-instructions>.",
       file_size:
-        "We could not upload all files. Files must be smaller than {{ fileSizeMaxMB }} MB.",
+        "We could not upload all files. Files must be smaller than {{ fileSizeMaxMB }} MB.<br />You may fax or mail color copies of your documents if you prefer. <mail-fax-instructions>Follow the fax and mail instructions</mail-fax-instructions>.",
       required: "Upload at least one file to continue.",
     },
     fineos_client: "$t(shared.documentsUploadError)",
@@ -696,7 +696,7 @@ const errors = {
     },
   },
   network:
-    "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak)",
+    "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>",
   users: {
     email_address: {
       exists: "$t(shared.auth.emailError_exists)",
@@ -767,9 +767,9 @@ const shared: {
   amountPerFrequency_unknown: "{{amount, currency}} (frequency unknown)",
   amountPerFrequency_weekly: "{{amount, currency}} per week",
   applicationImportError_noMatch:
-    "No match found. Applications started on the phone with a Contact Center agent can take up to 24 hours to appear in our online system. Check back again. If you’re still unable to find your application, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
+    "No match found. Applications started on the phone with a Contact Center agent can take up to 24 hours to appear in our online system. Check back again. If you’re still unable to find your application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
   applicationImportError_unsupported:
-    "This application cannot be added at this time. If you are applying for military-related paid family leave benefits, or you are currently self-employed or unemployed, your application cannot be managed by this website. You will need to call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak) to work on your application or get status updates.",
+    "This application cannot be added at this time. If you are applying for military-related paid family leave benefits, or you are currently self-employed or unemployed, your application cannot be managed by this website. You will need to call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> to work on your application or get status updates.",
   auth: {
     emailError_exists: "An account with the given email already exists",
     emailError_required: "Enter your email address",
@@ -879,9 +879,9 @@ const shared: {
     identification: "identification documents",
   },
   documentsLoadError:
-    "An error was encountered while checking your application for documents. If this continues to happen, call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
+    "An error was encountered while checking your application for documents. If this continues to happen, call the Paid Family Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
   documentsUploadError:
-    "We encountered an error when uploading your file. Try uploading your file again. If this continues to happen, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
+    "We encountered an error when uploading your file. Try uploading your file again. If this continues to happen, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
   employerBenefitEntryPrefix: "Benefit",
   employerBenefitType_familyOrMedicalLeave: "Family or medical leave insurance",
   employerBenefitType_paidLeave: "Accrued paid leave",
@@ -943,7 +943,7 @@ const shared: {
     "Reduced leave schedule hours must be 0 or greater.",
   minutesLabel: "Minutes",
   networkError:
-    "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak)",
+    "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>",
   newbornCertificationDocOptions:
     "<ul><li>Your child’s birth certificate.</li><li>A note from your child’s health care provider stating your child’s date of birth.</li><li>A note from the health care provider of the person who gave birth stating your child’s date of birth.</li></ul>",
   noneReported: "None reported",
@@ -994,6 +994,8 @@ const pages: {
   },
   applications: {
     addApplication: "$t(shared.addApplication)",
+    can_submit_application_across_benefit_year:
+      "You can submit an application for leave that crosses into a new benefit year. We will review the request as two separate applications. $t(pages.applications.claimsApprovalProcess)",
     claimsApprovalProcess:
       "Learn more about the <approval-process-link>application review and approval process</approval-process-link>.",
     createApplicationHeading: "Create a new application",
@@ -1004,6 +1006,8 @@ const pages: {
     uploadSuccessHeading: "You successfully submitted your documents",
     uploadSuccessMessage:
       "Our Contact Center staff will review your documents for {{absence_id}}.",
+    your_benefit_year:
+      "Your current <benefit-year-guide-link>benefit year</benefit-year-guide-link> is {{startDate}} to {{endDate}}. Most Massachusetts employees are eligible for up to 26 weeks of combined family and medical leave per benefit year.",
   },
   authCreateAccount: {
     alertBody:
@@ -1074,12 +1078,13 @@ const pages: {
     title: "Confirm your phone number",
   },
   authTwoFactorSmsIndex: {
-    hint: "<p>This is an optional step to make your account more secure. In the future, you’ll also be able to access sensitive information like tax documents (when available) once you set this up.</p><p>If you select Yes, we’ll ask for a phone number that can receive text messages (SMS). To protect your security, we'll send you a 6-digit code to verify it's really you. You’ll need to enter the code in order to log in to your account.</p><p>If you select No, you can add a phone number later by going to the Settings page.</p>",
-    optIn: "Yes, I want to add a phone number for verifying logins.",
-    optOut: "No, I do not want to add a phone number for verifying logins.",
+    hint: "<p>This optional step makes your account more secure. This will also allow you to access sensitive information like tax documents (when available).</p><p>If you select Yes, we’ll ask for a phone number that can receive text messages (SMS). When you log in to your account, we’ll send a 6-digit code you’ll need to enter to verify it’s really you.</p><p>You can add or change your phone number later by going to the Settings page.</p>",
+    optIn: "Yes, I want to add a phone number for additional security.",
+    optOut: "No, I do not want to add a phone number.",
+    optOutNoSms: "I do not have a phone that can receive text messages.",
     saveButton: "$t(shared.saveAndContinue)",
     title:
-      "Do you want to add a cell phone number to verify it's you when you log in to your account?",
+      "Do you want to add a cell phone number to verify it's you when you log in?",
   },
   authTwoFactorSmsSetup: {
     lead: "Enter a number that can receive text messages and that you'll have consistent access to. We’ll send a 6-digit code by text message (SMS) to confirm your phone number.",
@@ -2733,6 +2738,24 @@ const pages: {
     tablePaymentStatus_Check: "Check mailed on {{sentDate}}",
     tablePaymentStatus_Delayed:
       "See <delays-accordion-link>what may cause a delayed or cancelled payment</delays-accordion-link>.",
+    "tablePaymentStatus_Delayed_Address Validation Error":
+      "This payment is delayed due to an error with your provided mailing address. Call <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> to resolve this issue.",
+    "tablePaymentStatus_Delayed_Bank Processing Error":
+      "$t(pages.payments.tablePaymentStatus_Delayed_Banking_Error)",
+    tablePaymentStatus_Delayed_Banking_Error:
+      "This payment has been rejected by your bank. Call <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> to resolve this issue.",
+    tablePaymentStatus_Delayed_Default:
+      "This payment is delayed. See <delays-accordion-link>what may cause a delayed or cancelled payment</delays-accordion-link> for details. Most delays are resolved within 3 to 5 business days. The Contact Center will contact you if they require more information.",
+    "tablePaymentStatus_Delayed_EFT Account Information Error":
+      "$t(pages.payments.tablePaymentStatus_Delayed_Banking_Error)",
+    "tablePaymentStatus_Delayed_Exempt Employer":
+      "$t(pages.payments.tablePaymentStatus_Delayed_Default)",
+    "tablePaymentStatus_Delayed_InvalidPayment NameMismatch":
+      "$t(pages.payments.tablePaymentStatus_Delayed_Default)",
+    "tablePaymentStatus_Delayed_Leave Plan In Review":
+      "$t(pages.payments.tablePaymentStatus_Delayed_Default)",
+    "tablePaymentStatus_Delayed_Max Weekly Benefits Exceeded":
+      "$t(pages.payments.tablePaymentStatus_Delayed_Default)",
     tablePaymentStatus_Pending:
       "Your payment will be sent by {{paymentMethod}} between {{payPeriod}}.",
     "tablePaymentStatus_Sent to bank":
@@ -2867,9 +2890,9 @@ const components: {
   },
   documentRequirements: {
     body_certification:
-      "<ul><li>The text must be clear and readable</li><li>Upload every page of the document where you or your health care provider have entered information</li><li>Each file you upload must be smaller than 4.5 MB</li></ul><p>It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p>",
+      "<ul><li>The text must be clear and readable</li><li>Upload every page of the document where you or your health care provider have entered information</li><li>Each file you upload must be smaller than 4.5 MB</li></ul>",
     body_id:
-      "<ul><li>The image of the card must be in full color</li><li>The text must be clear and readable</li><li>The front and back can be in one file, or in two separate files</li><li>Each file must be smaller than 4.5 MB</li></ul><p>It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p>",
+      "<ul><li>The image of the card must be in full color</li><li>The text must be clear and readable</li><li>The front and back can be in one file, or in two separate files</li><li>Each file must be smaller than 4.5 MB</li></ul>",
     header: "Document Requirements:",
   },
   downloadableDocument: {
@@ -3131,7 +3154,7 @@ const components: {
   },
   errorBoundary: {
     message:
-      "Sorry, we encountered an unexpected error. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak)",
+      "Sorry, we encountered an unexpected error. If this continues to happen, you may call the Paid Family Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>",
     reloadButton: "Reload this page",
   },
   errorsSummary: {
@@ -3192,6 +3215,10 @@ const components: {
     appTitle: "Paid Family and Medical Leave",
     settingsLinkText: "Settings",
     skipToContent: "Skip to main content",
+  },
+  holidayAlert: {
+    alertText:
+      "Due to the upcoming holiday, payments may be delayed by one business day.",
   },
   inputPassword: {
     toggleLabel: "Show password",

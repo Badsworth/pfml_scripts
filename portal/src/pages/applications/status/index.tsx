@@ -22,6 +22,7 @@ import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
 import ButtonLink from "../../../components/ButtonLink";
 import Heading from "../../../components/core/Heading";
+import HolidayAlert from "../../../components/status/HolidayAlert";
 import LeaveReason from "../../../models/LeaveReason";
 import LegalNoticeList from "../../../components/LegalNoticeList";
 import PageNotFound from "../../../components/PageNotFound";
@@ -34,6 +35,7 @@ import { createRouteWithQuery } from "../../../utils/routeWithParams";
 import findKeyByValue from "../../../utils/findKeyByValue";
 import formatDate from "../../../utils/formatDate";
 import hasDocumentsLoadError from "../../../utils/hasDocumentsLoadError";
+import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
 
@@ -58,6 +60,7 @@ export const Status = ({
       hasLoadedClaimDocuments,
       loadAll: loadAllClaimDocuments,
     },
+    holidays,
     payments: { loadPayments, loadedPaymentsData },
   } = appLogic;
   const { absence_case_id, absence_id, uploaded_document_type } = query;
@@ -232,6 +235,10 @@ export const Status = ({
 
   return (
     <React.Fragment>
+      {isFeatureEnabled("showHolidayAlert") &&
+        isFeatureEnabled("claimantShowPaymentsPhaseThree") && (
+          <HolidayAlert holidaysLogic={holidays} />
+        )}
       {uploaded_document_type && (
         <Alert
           heading={t("pages.claimsStatus.uploadSuccessHeading", {
@@ -637,7 +644,7 @@ export const Timeline = ({
         components={{
           "timeline-link": (
             <a
-              href={routes.external.massgov.timeline}
+              href={routes.external.massgov.approvalTimeline}
               rel="noopener noreferrer"
               target="_blank"
             />

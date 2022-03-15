@@ -5,10 +5,11 @@ import { ClaimsLogic } from "./useClaimsLogic";
 import EmployerClaim from "../models/EmployerClaim";
 import EmployersApi from "../api/EmployersApi";
 import { ErrorsLogic } from "./useErrorsLogic";
-import { LeaveAdminForbiddenError } from "../errors";
 import { PortalFlow } from "./usePortalFlow";
 import { UsersLogic } from "./useUsersLogic";
 import { get } from "lodash";
+import routes from "../routes";
+import tracker from "../services/tracker";
 
 const useEmployersLogic = ({
   errorsLogic,
@@ -62,14 +63,13 @@ const useEmployersLogic = ({
         "responseData.has_verification_data"
       );
 
-      if (employer_id && typeof has_verification_data === "boolean") {
-        errorsLogic.catchError(
-          new LeaveAdminForbiddenError(
-            employer_id,
-            has_verification_data,
-            error instanceof Error ? error.message : ""
-          )
-        );
+      if (
+        typeof employer_id === "string" &&
+        typeof has_verification_data === "boolean"
+      ) {
+        // Leave admin was prevented from loading the claim, which we interpret to mean
+        // as they need to still verify their organization:
+        handleUnverifiedLeaveAdmin(employer_id, has_verification_data);
       } else {
         errorsLogic.catchError(error);
       }
@@ -166,6 +166,39 @@ const useEmployersLogic = ({
       portalFlow.goToNextPage({}, params);
     } catch (error) {
       errorsLogic.catchError(error);
+    }
+  };
+
+  /**
+   * Redirect to either the Verify Contributions or Cannot Verify page
+   * based on if the UserLeaveAdministrator is verifiable.
+   */
+  const handleUnverifiedLeaveAdmin = (
+    employer_id: string,
+    has_verification_data: boolean
+  ) => {
+    tracker.trackEvent("LeaveAdminForbiddenError", {
+      employerId: employer_id,
+      hasVerificationData: has_verification_data.toString(),
+    });
+
+    if (has_verification_data) {
+      portalFlow.goTo(
+        routes.employers.verifyContributions,
+        {
+          employer_id,
+          next: portalFlow.pathWithParams,
+        },
+        { redirect: true }
+      );
+    } else {
+      portalFlow.goTo(
+        routes.employers.cannotVerify,
+        {
+          employer_id,
+        },
+        { redirect: true }
+      );
     }
   };
 

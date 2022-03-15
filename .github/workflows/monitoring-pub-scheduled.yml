@@ -70,7 +70,7 @@ jobs:
             },
             \"links\": [
               {
-              \"href\":\"https://github.com/EOLWD/pfml/actions/runs/${{ github.run_id }}\",
+              \"href\":\"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\",
               \"text\": \"GitHub Actions run\"
               }
             ]

@@ -316,170 +316,6 @@ exports[`Status displays a description for the Withdrawn request decision 1`] = 
 </div>
 `;
 
-exports[`Status info alert displays if claimant has In Review claim status 1`] = `
-<div
-  aria-labelledby="alert-heading12"
-  class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
-  role="region"
-  tabindex="-1"
->
-  <div
-    class="usa-alert__body"
-  >
-    <h2
-      class="usa-alert__heading font-heading-xs text-bold"
-      id="alert-heading12"
-    >
-      You may also be eligible for paid family leave
-    </h2>
-    <div
-      class="usa-alert__text"
-    >
-      <p>
-        You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. 
-        <a
-          href="https://www.mass.gov/family-leave-bonding"
-          rel="noreferrer noopener"
-          target="_blank"
-        >
-          Family leave to bond with your child
-        </a>
-         can be easily added to your application by calling our Contact Center at 
-        <a
-          href="tel:(833) 344-7365"
-        >
-          (833) 344‑7365
-        </a>
-        . You should not submit a second application.
-      </p>
-    </div>
-  </div>
-</div>
-`;
-
-exports[`Status info alert displays if claimant has Projected claim status 1`] = `
-<div
-  aria-labelledby="alert-heading13"
-  class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
-  role="region"
-  tabindex="-1"
->
-  <div
-    class="usa-alert__body"
-  >
-    <h2
-      class="usa-alert__heading font-heading-xs text-bold"
-      id="alert-heading13"
-    >
-      You may also be eligible for paid family leave
-    </h2>
-    <div
-      class="usa-alert__text"
-    >
-      <p>
-        You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. 
-        <a
-          href="https://www.mass.gov/family-leave-bonding"
-          rel="noreferrer noopener"
-          target="_blank"
-        >
-          Family leave to bond with your child
-        </a>
-         can be easily added to your application by calling our Contact Center at 
-        <a
-          href="tel:(833) 344-7365"
-        >
-          (833) 344‑7365
-        </a>
-        . You should not submit a second application.
-      </p>
-    </div>
-  </div>
-</div>
-`;
-
-exports[`Status info alert displays if claimant has bonding-newborn but not pregnancy claims 1`] = `
-<div
-  aria-labelledby="alert-heading10"
-  class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
-  role="region"
-  tabindex="-1"
->
-  <div
-    class="usa-alert__body"
-  >
-    <h2
-      class="usa-alert__heading font-heading-xs text-bold"
-      id="alert-heading10"
-    >
-      If you are giving birth, you may also be eligible for paid medical leave
-    </h2>
-    <div
-      class="usa-alert__text"
-    >
-      <p>
-        You may be able to take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy or for your recovery from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at 
-        <a
-          href="tel:(833) 344-7365"
-        >
-          (833) 344‑7365
-        </a>
-         if you need 
-        <a
-          href="https://www.mass.gov/family-leave-bonding"
-          rel="noreferrer noopener"
-          target="_blank"
-        >
-          medical leave after giving birth
-        </a>
-        . You should not submit a second application.
-      </p>
-    </div>
-  </div>
-</div>
-`;
-
-exports[`Status info alert displays if claimant has pregnancy but not bonding claims 1`] = `
-<div
-  aria-labelledby="alert-heading11"
-  class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
-  role="region"
-  tabindex="-1"
->
-  <div
-    class="usa-alert__body"
-  >
-    <h2
-      class="usa-alert__heading font-heading-xs text-bold"
-      id="alert-heading11"
-    >
-      You may also be eligible for paid family leave
-    </h2>
-    <div
-      class="usa-alert__text"
-    >
-      <p>
-        You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. 
-        <a
-          href="https://www.mass.gov/family-leave-bonding"
-          rel="noreferrer noopener"
-          target="_blank"
-        >
-          Family leave to bond with your child
-        </a>
-         can be easily added to your application by calling our Contact Center at 
-        <a
-          href="tel:(833) 344-7365"
-        >
-          (833) 344‑7365
-        </a>
-        . You should not submit a second application.
-      </p>
-    </div>
-  </div>
-</div>
-`;
-
 exports[`Status manage your application displays manage approved application link if any of the claim statuses on an application are Approved 1`] = `
 <a
   data-testid="manageApprovedApplicationLink"
@@ -1366,31 +1202,6 @@ exports[`Status renders the page with claim detail when there is absence_case_id
 </div>
 `;
 
-exports[`Status success alert renders success alert when document type param is given 1`] = `
-<div
-  aria-labelledby="alert-heading7"
-  class="usa-alert usa-alert--success"
-  role="region"
-  tabindex="-1"
->
-  <div
-    class="usa-alert__body"
-  >
-    <h2
-      class="usa-alert__heading font-heading-md text-bold"
-      id="alert-heading7"
-    >
-      You've successfully submitted your proof of birth documents
-    </h2>
-    <div
-      class="usa-alert__text"
-    >
-      Our Contact Center staff will review your documents for mock-absence-case-id.
-    </div>
-  </div>
-</div>
-`;
-
 exports[`Status timeline is displayed if there is a pending absence period 1`] = `
 <div
   class="border-bottom border-base-lighter padding-y-4"
@@ -1434,7 +1245,7 @@ exports[`Status timeline is displayed if there is a pending absence period 1`] =
   <p>
     Learn more about the 
     <a
-      href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-application-approval-timeline"
+      href="https://mass.gov/pfml/application-timeline"
       rel="noopener noreferrer"
       target="_blank"
     >

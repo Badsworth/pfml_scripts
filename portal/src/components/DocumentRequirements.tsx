@@ -1,7 +1,6 @@
 import Heading from "./core/Heading";
 import React from "react";
 import { Trans } from "react-i18next";
-import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
 
 interface DocumentRequirementsProps {
@@ -27,13 +26,6 @@ function DocumentRequirements(props: DocumentRequirementsProps) {
             components={{
               ul: <ul className="usa-list" />,
               li: <li />,
-              "mail-fax-instructions-link": (
-                <a
-                  target="_blank"
-                  rel="noopener"
-                  href={routes.external.massgov.mailFaxInstructions}
-                />
-              ),
             }}
           />
         </div>

@@ -1,8 +1,8 @@
-from datetime import datetime
 from typing import Dict, List
 from uuid import UUID
 
 import newrelic.agent
+from sqlalchemy.orm.session import Session
 
 import massgov
 import massgov.pfml.api.app as app
@@ -68,21 +68,21 @@ def _is_withdrawn_claim_error(error: exception.FINEOSForbidden) -> bool:
     return withdrawn_msg in error.message
 
 
-# TODO: (PORTAL-1855) Add tests for this method
-def get_change_requests_from_db(claim_id: UUID) -> List[db_models.ChangeRequest]:
+def get_change_requests_from_db(
+    claim_id: UUID, db_session: Session
+) -> List[db_models.ChangeRequest]:
 
-    with app.db_session() as db_session:
-        change_requests = (
-            db_session.query(db_models.ChangeRequest)
-            .filter(db_models.ChangeRequest.claim_id == claim_id)
-            .all()
-        )
+    change_requests = (
+        db_session.query(db_models.ChangeRequest)
+        .filter(db_models.ChangeRequest.claim_id == claim_id)
+        .all()
+    )
 
     return change_requests
 
 
 def add_change_request_to_db(
-    change_request: api_models.ChangeRequest, claim_id: UUID, submitted_time: datetime
+    change_request: api_models.ChangeRequest, claim_id: UUID
 ) -> db_models.ChangeRequest:
     with app.db_session() as db_session:
         change_request_type = db_lookups.by_value(
@@ -90,6 +90,6 @@ def add_change_request_to_db(
         )
         # needed for linter
         assert isinstance(change_request_type, db_models.LkChangeRequestType)
-        db_request = change_request.to_db_model(change_request_type, claim_id, submitted_time)
+        db_request = change_request.to_db_model(change_request_type, claim_id)
         db_session.add(db_request)
         return db_request

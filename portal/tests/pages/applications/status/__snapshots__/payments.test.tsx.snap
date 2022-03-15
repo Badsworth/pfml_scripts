@@ -150,88 +150,6 @@ exports[`Payments Checkback date implementation renders intro text for reduced s
 </section>
 `;
 
-exports[`Payments displays info alert if claimant has bonding-newborn but not pregnancy claims 1`] = `
-<div
-  aria-labelledby="alert-heading7"
-  class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
-  role="region"
-  tabindex="-1"
->
-  <div
-    class="usa-alert__body"
-  >
-    <h2
-      class="usa-alert__heading font-heading-xs text-bold"
-      id="alert-heading7"
-    >
-      If you are giving birth, you may also be eligible for paid medical leave
-    </h2>
-    <div
-      class="usa-alert__text"
-    >
-      <p>
-        You may be able to take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy or for your recovery from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at 
-        <a
-          href="tel:(833) 344-7365"
-        >
-          (833) 344‑7365
-        </a>
-         if you need 
-        <a
-          href="https://www.mass.gov/family-leave-bonding"
-          rel="noreferrer noopener"
-          target="_blank"
-        >
-          medical leave after giving birth
-        </a>
-        . You should not submit a second application.
-      </p>
-    </div>
-  </div>
-</div>
-`;
-
-exports[`Payments displays info alert if claimant has pregnancy but not bonding claims 1`] = `
-<div
-  aria-labelledby="alert-heading11"
-  class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
-  role="region"
-  tabindex="-1"
->
-  <div
-    class="usa-alert__body"
-  >
-    <h2
-      class="usa-alert__heading font-heading-xs text-bold"
-      id="alert-heading11"
-    >
-      You may also be eligible for paid family leave
-    </h2>
-    <div
-      class="usa-alert__text"
-    >
-      <p>
-        You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. 
-        <a
-          href="https://www.mass.gov/family-leave-bonding"
-          rel="noreferrer noopener"
-          target="_blank"
-        >
-          Family leave to bond with your child
-        </a>
-         can be easily added to your application by calling our Contact Center at 
-        <a
-          href="tel:(833) 344-7365"
-        >
-          (833) 344‑7365
-        </a>
-        . You should not submit a second application.
-      </p>
-    </div>
-  </div>
-</div>
-`;
-
 exports[`Payments does not render payments if the is a 404 status 1`] = `
 <a
   class="usa-button margin-bottom-5 usa-button--unstyled"
@@ -282,7 +200,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
         class="usa-accordion__heading margin-y-2"
       >
         <button
-          aria-controls="accordion27"
+          aria-controls="accordion40"
           aria-expanded="false"
           class="usa-accordion__button"
           type="button"
@@ -292,9 +210,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       </h2>
       <div
         class="usa-accordion__content usa-prose"
-        data-testid="accordion27"
+        data-testid="accordion40"
         hidden=""
-        id="accordion27"
+        id="accordion40"
       >
         <strong>
           What may cause a delayed payment
@@ -360,7 +278,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       class="usa-accordion__heading margin-y-2"
     >
       <button
-        aria-controls="accordion28"
+        aria-controls="accordion41"
         aria-expanded="false"
         class="usa-accordion__button"
         type="button"
@@ -370,9 +288,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
     </h2>
     <div
       class="usa-accordion__content usa-prose"
-      data-testid="accordion28"
+      data-testid="accordion41"
       hidden=""
-      id="accordion28"
+      id="accordion41"
     >
       <p>
         To see your maximum weekly benefit amount, view your approval notice in the 
@@ -421,7 +339,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       class="usa-accordion__heading margin-y-2"
     >
       <button
-        aria-controls="accordion29"
+        aria-controls="accordion42"
         aria-expanded="false"
         class="usa-accordion__button"
         type="button"
@@ -431,9 +349,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
     </h2>
     <div
       class="usa-accordion__content usa-prose"
-      data-testid="accordion29"
+      data-testid="accordion42"
       hidden=""
-      id="accordion29"
+      id="accordion42"
     >
       <p>
         To make changes to your payment method or banking information, call the Contact Center at 

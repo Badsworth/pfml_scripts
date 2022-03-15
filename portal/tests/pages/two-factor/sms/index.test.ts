@@ -53,7 +53,7 @@ describe("Two-factor SMS Index", () => {
     });
 
     const enableMFARadio = screen.getByLabelText(
-      /Yes, I want to add a phone number for verifying logins/
+      /Yes, I want to add a phone number for additional security/
     );
     await act(async () => await userEvent.click(enableMFARadio));
 
@@ -69,30 +69,37 @@ describe("Two-factor SMS Index", () => {
     expect(updateUser).not.toHaveBeenCalled();
   });
 
-  it("updates user when user clicks disable MFA option", async () => {
-    renderPage(IndexSMS, {
-      addCustomSetup: (appLogic) => {
-        appLogic.portalFlow.goToPageFor = goToPageFor;
-        appLogic.users.updateUser = updateUser;
-      },
-    });
+  it.each([
+    // Both of these should opt the user out of MFA:
+    [/No, I do not want to add a phone number/, "false"],
+    [/I do not have a phone that can receive text messages/, "no_sms_phone"],
+  ])(
+    "updates user when user clicks disable MFA option",
+    async (labelMatch, value) => {
+      renderPage(IndexSMS, {
+        addCustomSetup: (appLogic) => {
+          appLogic.portalFlow.goToPageFor = goToPageFor;
+          appLogic.users.updateUser = updateUser;
+        },
+      });
 
-    const disableMFARadio = screen.getByLabelText(
-      /No, I do not want to add a phone number for verifying logins./
-    );
-    await act(async () => await userEvent.click(disableMFARadio));
+      const disableMFARadio = screen.getByLabelText(labelMatch);
+      await act(async () => await userEvent.click(disableMFARadio));
 
-    const submitButton = screen.getByRole("button", {
-      name: "Save and continue",
-    });
-    await act(async () => await userEvent.click(submitButton));
+      const submitButton = screen.getByRole("button", {
+        name: "Save and continue",
+      });
+      await act(async () => await userEvent.click(submitButton));
 
-    expect(tracker.trackEvent).toHaveBeenCalledWith("User opted out of MFA");
-    expect(goToPageFor).toHaveBeenCalledWith("CONTINUE");
-    expect(updateUser).toHaveBeenCalledWith(expect.any(String), {
-      mfa_delivery_preference: "Opt Out",
-    });
-  });
+      expect(tracker.trackEvent).toHaveBeenCalledWith("User opted out of MFA", {
+        selectedOption: value,
+      });
+      expect(goToPageFor).toHaveBeenCalledWith("CONTINUE");
+      expect(updateUser).toHaveBeenCalledWith(expect.any(String), {
+        mfa_delivery_preference: "Opt Out",
+      });
+    }
+  );
 
   it("renders PageNotFound if the claimantShowMFA feature flag is not set", () => {
     process.env.featureFlags = JSON.stringify({ claimantShowMFA: false });

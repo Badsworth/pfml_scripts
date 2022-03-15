@@ -9,8 +9,9 @@
 
 
 locals {
-  api_gateway_stage_arn  = "arn:aws:apigateway:us-east-1::/restapis/${aws_api_gateway_rest_api.pfml.id}/stages/${var.environment_name}"
-  api_gateway_deployment = "aws_api_gateway_deployment.${var.environment_name}"
+  api_gateway_stage_arn     = "arn:aws:apigateway:us-east-1::/restapis/${aws_api_gateway_rest_api.pfml.id}/stages/${var.environment_name}"
+  api_gateway_deployment    = "aws_api_gateway_deployment.${var.environment_name}"
+  kinesis_data_firehose_arn = "arn:aws:firehose:us-east-1:498823821309:deliverystream/aws-waf-logs-${var.environment_name}-kinesis-to-s3"
 }
 
 resource "aws_wafv2_web_acl" "regional_api_acl" {
@@ -168,4 +169,14 @@ resource "aws_wafv2_web_acl_association" "rate_based_acl" {
   # resource_arn will need to be manually entered prior to
   resource_arn = local.api_gateway_stage_arn
   web_acl_arn  = aws_wafv2_web_acl.regional_api_acl.arn
+}
+
+#------------------------------------------------------------------------------#
+#                 Kinesis Data Firehose Logging Configuration                  #
+#------------------------------------------------------------------------------#
+
+resource "aws_wafv2_web_acl_logging_configuration" "regional_waf_logging_config" {
+  depends_on              = [aws_wafv2_web_acl.regional_api_acl]
+  log_destination_configs = [local.kinesis_data_firehose_arn]
+  resource_arn            = aws_wafv2_web_acl.regional_api_acl.arn
 }

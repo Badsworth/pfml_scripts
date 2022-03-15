@@ -55,6 +55,7 @@ export default {
     "Leave scenario": "Medical (illness)",
     "Request decision": requestTypes[0],
     "Show request for more information": false,
+    "Show holiday alert": false,
   },
   argTypes: {
     "Has payments": {
@@ -90,6 +91,11 @@ export default {
         type: "boolean",
       },
     },
+    "Show holiday alert": {
+      control: {
+        type: "boolean",
+      },
+    },
   },
 };
 
@@ -101,10 +107,12 @@ export const DefaultStory = (
     "Leave type": AbsencePeriodTypes;
     "Request decision": AbsencePeriodRequestDecisionEnum;
     "Show request for more information": boolean;
+    "Show holiday alert": boolean;
   }
 ) => {
   const requestDecision = args["Request decision"];
   const shouldIncludeRfiDocument = args["Show request for more information"];
+  const shouldShowHolidayAlert = args["Show holiday alert"];
   const shouldIncludeApprovalNotice = args["Has approval notice"];
 
   const claimDetail = createMockClaimDetail({
@@ -126,6 +134,12 @@ export const DefaultStory = (
       }),
       hasLoadedClaimDocuments: () => true,
       loadAll: () => new Promise(() => {}),
+    },
+    holidays: {
+      loadHolidays: () => new Promise(() => {}),
+      holidays: shouldShowHolidayAlert
+        ? [{ name: "Memorial Day", date: "2022-05-30" }]
+        : [],
     },
     payments: {
       loadPayments: () => new Promise(() => {}),

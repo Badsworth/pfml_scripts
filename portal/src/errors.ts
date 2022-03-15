@@ -18,6 +18,10 @@ export interface Issue {
   namespace: string;
   rule?: string;
   type?: string;
+  // Dynamic values that provide more context for the error. For instance,
+  // if this is a "file too large" error, this might include properties
+  // for the size limit and the name of the failing file.
+  extra?: { [key: string]: string | number };
 }
 
 export interface ErrorWithIssues extends BasePortalError {
@@ -244,26 +248,5 @@ export class ValidationError extends BasePortalError {
     super();
     this.issues = issues;
     this.name = "ValidationError";
-  }
-}
-
-/**
- * An error was encountered because the current user is not verified.
- */
-export class LeaveAdminForbiddenError extends ForbiddenError {
-  employer_id: string;
-  has_verification_data: boolean;
-  message: string;
-
-  constructor(
-    employer_id: string,
-    has_verification_data: boolean,
-    message: string
-  ) {
-    super(message);
-    this.employer_id = employer_id;
-    this.has_verification_data = has_verification_data;
-    this.message = message;
-    this.name = "LeaveAdminForbiddenError";
   }
 }

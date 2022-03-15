@@ -3,16 +3,16 @@ from decimal import Decimal
 from itertools import chain
 from typing import List, Optional
 
-from massgov.pfml.api.models.claims.common import (
-    ChangeRequest,
-    ChangeRequestType,
-    EmployerClaimReview,
-    PreviousLeave,
-)
+from massgov.pfml.api.models.claims.common import EmployerClaimReview, PreviousLeave
 from massgov.pfml.api.models.common import EmployerBenefit
 from massgov.pfml.api.validation.exceptions import IssueType, ValidationErrorDetail
 from massgov.pfml.db.models.absences import AbsenceReasonQualifierOne
-from massgov.pfml.db.models.employees import Claim, LeaveRequestDecision
+from massgov.pfml.db.models.employees import (
+    ChangeRequest,
+    ChangeRequestType,
+    Claim,
+    LeaveRequestDecision,
+)
 
 # there are 168 hours in a week
 MAX_HOURS_WORKED_PER_WEEK = 168
@@ -144,11 +144,11 @@ def get_change_request_issues(
     # so this should be set (saves problems with linter)
     assert claim.absence_period_start_date
 
-    if change_request.change_request_type == ChangeRequestType.WITHDRAWAL:
+    if change_request.type == ChangeRequestType.WITHDRAWAL.description:
         error_list.extend(get_withdrawal_issues(change_request, claim))
-    if change_request.change_request_type == ChangeRequestType.MODIFICATION:
+    if change_request.type == ChangeRequestType.MODIFICATION.description:
         error_list.extend(get_modification_issues(change_request, claim))
-    if change_request.change_request_type == ChangeRequestType.MEDICAL_TO_BONDING:
+    if change_request.type == ChangeRequestType.MEDICAL_TO_BONDING.description:
         error_list.extend(get_medical_to_bonding_issues(change_request, claim))
 
     start_date = (
@@ -227,6 +227,14 @@ def get_modification_issues(
                 message="End date is required for this request type",
                 type=IssueType.required,
                 field="end_date",
+            )
+        )
+    if not change_request.documents_submitted_at:
+        error_list.append(
+            ValidationErrorDetail(
+                message="Supporting documents must be submitted for this request type",
+                type=IssueType.required,
+                field="change_request.documents_submitted_at",
             )
         )
     error_list.extend(has_approved_absence_period(claim))

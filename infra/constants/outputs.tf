@@ -207,7 +207,7 @@ output "slackbot_channels" {
 }
 
 output "bucket_replication_environment" {
-  value = "test"
+  value = "prod"
 }
 
 # Env Var mappings for ECS Tasks
@@ -327,4 +327,21 @@ output "newrelic_account_id" {
 output "newrelic_trusted_account_key" {
   description = "EOLWD's New Relic parent account number"
   value       = "1606654"
+}
+
+#
+# Import manually created s3 buckets for management in s3.tf
+#
+output "import_buckets" {
+  value = [
+    "aws-glue-assets-498823821309-us-east-1",
+    "aws-glue-scripts-498823821309-us-east-1",
+    "aws-glue-temporary-498823821309-us-east-1",
+    "massgov-pfml-demo-business-intelligence-tool",
+    "cf-templates-rvbkfcj4nho2-us-east-1",
+    "config-bucket-498823821309",
+    "test-eotss-aws-cloudopsteam-config-tags",
+    "smx-pfml-test-db-testing",
+    "massgov-pfml-test-experian-soap"
+  ]
 }

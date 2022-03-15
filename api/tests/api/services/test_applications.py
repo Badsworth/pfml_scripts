@@ -80,7 +80,6 @@ def continuous_leave_periods():
             endDate=date(2021, 2, 9),
             status="known",
             lastDayWorked=date(2020, 12, 30),
-            expectedReturnToWorkDate=date(2021, 2, 11),
             startDateFullDay=True,
             startDateOffHours=1,
             startDateOffMinutes=5,
@@ -286,10 +285,6 @@ def _compare_continuous_leave(
     assert continuous_leave.application_id == application.application_id
     assert continuous_leave.start_date == fineos_continuous_leave.startDate
     assert continuous_leave.end_date == fineos_continuous_leave.endDate
-    assert (
-        continuous_leave.expected_return_to_work_date
-        == fineos_continuous_leave.expectedReturnToWorkDate
-    )
     assert continuous_leave.start_date_full_day == fineos_continuous_leave.startDateFullDay
     assert continuous_leave.start_date_off_hours == fineos_continuous_leave.startDateOffHours
     assert continuous_leave.start_date_off_minutes == fineos_continuous_leave.startDateOffMinutes
@@ -668,10 +663,10 @@ def test_set_payment_preference_fields_without_a_default_preference(
 ):
     mock_get_payment_preferences.return_value = [
         massgov.pfml.fineos.models.customer_api.PaymentPreferenceResponse(
-            paymentMethod="Check",
-            paymentPreferenceId="1234",
+            paymentMethod="Elec Funds Transfer",
+            paymentPreferenceId="96166",
             accountDetails=massgov.pfml.fineos.models.customer_api.AccountDetails(
-                accountNo="1234565555",
+                accountNo="0987654321",
                 accountName="Constance Griffin",
                 routingNumber="011222333",
                 accountType="Checking",
@@ -690,11 +685,46 @@ def test_set_payment_preference_fields_without_a_default_preference(
     ]
     set_payment_preference_fields(fineos_client, fineos_web_id, application, test_db_session)
     # takes first payment pref, if none is set to default
+    assert application.payment_preference.account_number == "0987654321"
     assert application.has_submitted_payment_preference is True
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_payment_preferences")
+def test_set_payment_preference_fields_with_check_as_default_preference(
+    mock_get_payment_preferences, fineos_client, fineos_web_id, application, test_db_session
+):
+    mock_get_payment_preferences.return_value = [
+        massgov.pfml.fineos.models.customer_api.PaymentPreferenceResponse(
+            paymentMethod="Check",
+            paymentPreferenceId="96166",
+            isDefault=True,
+            chequeDetails=massgov.pfml.fineos.models.customer_api.ChequeDetails(
+                nameToPrintOnCheck=""
+            ),
+            customerAddress=massgov.pfml.fineos.models.customer_api.CustomerAddress(
+                address=massgov.pfml.fineos.models.customer_api.Address(
+                    addressLine1="1234 SE Elm",
+                    addressLine2="",
+                    addressLine3="",
+                    addressLine4="Amherst",
+                    addressLine5="",
+                    addressLine6="MA",
+                    addressLine7="",
+                    postCode="01002",
+                    country="USA",
+                    classExtensionInformation=[],
+                )
+            ),
+        ),
+    ]
+    set_payment_preference_fields(fineos_client, fineos_web_id, application, test_db_session)
     assert (
         application.payment_preference.payment_method.payment_method_id
         == PaymentMethod.CHECK.payment_method_id
     )
+    assert application.has_submitted_payment_preference is True
+    assert application.has_mailing_address is True
+    assert application.mailing_address.address_line_one == "1234 SE Elm"
 
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_payment_preferences")
@@ -867,6 +897,17 @@ def test_set_other_leaves(
     assert application.has_previous_leaves_other_reason is True
     assert application.has_previous_leaves_same_reason is False
     assert application.has_concurrent_leave is True
+
+
+def test_set_other_leaves_includes_minutes(
+    fineos_client, fineos_web_id, application, test_db_session, absence_case_id
+):
+    set_other_leaves(fineos_client, fineos_web_id, application, test_db_session, absence_case_id)
+    assert application.has_previous_leaves_other_reason is True
+    test_db_session.refresh(application)
+    # values from MOCK_CUSTOMER_EFORM_OTHER_LEAVES
+    assert application.previous_leaves_other_reason[0].leave_minutes == 120
+    assert application.previous_leaves_other_reason[0].worked_per_week_minutes == 40
 
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.customer_get_eform_summary")

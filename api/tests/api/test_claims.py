@@ -24,6 +24,7 @@ from massgov.pfml.db.models.absences import AbsencePeriodType, AbsenceStatus
 from massgov.pfml.db.models.applications import FINEOSWebIdExt
 from massgov.pfml.db.models.employees import (
     AbsencePeriod,
+    ChangeRequest,
     Claim,
     LeaveRequestDecision,
     LkManagedRequirementStatus,
@@ -39,6 +40,7 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.db.models.factories import (
     AbsencePeriodFactory,
     ApplicationFactory,
+    ChangeRequestFactory,
     ClaimFactory,
     EmployeeFactory,
     EmployeeWithFineosNumberFactory,
@@ -51,7 +53,6 @@ from massgov.pfml.db.models.factories import (
 )
 from massgov.pfml.db.queries.absence_periods import (
     split_fineos_absence_period_id,
-    split_fineos_leave_request_id,
     upsert_absence_period_from_fineos_period,
 )
 from massgov.pfml.db.queries.get_claims_query import ActionRequiredStatusFilter
@@ -904,13 +905,6 @@ class TestGetClaimReview:
         return PeriodDecisions.parse_obj(absence_details)
 
     @pytest.fixture
-    def mock_absence_details_invalid_leave_request_id(self, absence_details_data):
-        absence_details = absence_details_data.copy()
-        absence_details["decisions"][0]["period"]["leaveRequest"]["id"] = "PL0000100001"
-        absence_details["decisions"][1]["period"]["leaveRequest"]["id"] = "PL-00001-one"
-        return PeriodDecisions.parse_obj(absence_details)
-
-    @pytest.fixture
     def employer(self):
         return EmployerFactory.create(employer_fein="112222222")
 
@@ -1061,26 +1055,6 @@ class TestGetClaimReview:
         self._assert_no_absence_period_data_for_claim(test_db_session, claim)
 
     @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence_period_decisions")
-    def test_employer_get_claim_review_creates_absence_period_invalid_leave_request_id(
-        self,
-        mock_get_absence,
-        test_db_session,
-        client,
-        employer_auth_token,
-        mock_absence_details_invalid_leave_request_id,
-        claim,
-    ):
-        self._assert_no_absence_period_data_for_claim(test_db_session, claim)
-        mock_get_absence.return_value = mock_absence_details_invalid_leave_request_id
-        response = client.get(
-            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
-            headers={"Authorization": f"Bearer {employer_auth_token}"},
-        )
-
-        assert response.status_code == 400
-        self._assert_no_absence_period_data_for_claim(test_db_session, claim)
-
-    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence_period_decisions")
     def test_employer_get_claim_returns_absence_periods_from_fineos(
         self, mock_get_absence, client, employer_auth_token, mock_absence_details_create, claim
     ):
@@ -1095,8 +1069,7 @@ class TestGetClaimReview:
         periods = [decision.period for decision in mock_absence_details_create.decisions]
         for fineos_period_data, absence_data in zip(periods, absence_periods):
             class_id, index_id = split_fineos_absence_period_id(fineos_period_data.periodReference)
-            leave_request_id = split_fineos_leave_request_id(fineos_period_data.leaveRequest.id, {})
-            assert leave_request_id == absence_data["fineos_leave_request_id"]
+            assert absence_data["fineos_leave_request_id"] is None
             assert (
                 absence_data["period_type"]
                 == AbsencePeriodType.CONTINUOUS.absence_period_type_description
@@ -2350,7 +2323,9 @@ class TestGetClaimsEndpoint:
 
         # POST /claims/search
         response = client.post(
-            "/v1/claims/search", headers={"Authorization": f"Bearer {employer_auth_token}"}, json={}
+            "/v1/claims/search",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json={"terms": {}},
         )
 
         assert response.status_code == 200
@@ -2390,7 +2365,7 @@ class TestGetClaimsEndpoint:
             assert_claim_pfml_crm_response_equal_to_claim_query(response_claim, generated_claim)
 
         # POST /claims/search
-        response = client.post("/v1/claims/search", headers=snow_user_headers, json={})
+        response = client.post("/v1/claims/search", headers=snow_user_headers, json={"terms": {}})
         assert response.status_code == 200
         response_body = response.get_json()
         claim_data = response_body.get("data")
@@ -2536,8 +2511,18 @@ class TestGetClaimsEndpoint:
                     )
 
             # POST /claims/search
+            paging = {
+                k.partition("_")[2]: v
+                for k, v in scenario["paging"].items()
+                if k.startswith("page")
+            }
+            order = {
+                k.partition("_")[2]: v
+                for k, v in scenario["paging"].items()
+                if k.startswith("order")
+            }
 
-            post_body = {**scenario["request"]}
+            post_body = {"terms": {}, "paging": paging, "order": order}
             response = client.post(
                 "/v1/claims/search",
                 headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -2612,7 +2597,9 @@ class TestGetClaimsEndpoint:
 
         # POST /claims/search
         response = client.post(
-            "/v1/claims/search", headers={"Authorization": f"Bearer {employer_auth_token}"}, json={}
+            "/v1/claims/search",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json={"terms": {}},
         )
 
         assert response.status_code == 200
@@ -2894,6 +2881,68 @@ class TestGetClaimsEndpoint:
             # Finally, claims without any associated managed requirements are last
             assert claim_five["managed_requirements"] == []
 
+        def test_get_claims_with_order_by_follow_up_date_asc_and_is_reviewable_yes(
+            self,
+            client,
+            employee,
+            employer_auth_token,
+            employer_user,
+            load_test_db_with_managed_requirements,
+            test_verification,
+            test_db_session,
+        ):
+            # Create one more claim, this one with multiple managed requirements, one of which is open.
+            # Claims with multiple managed requirements can meet both soonest_open_requirement_date and
+            # latest_follow_up_date sort orders, which was throwing off the sort results.
+            employer = EmployerFactory.create()
+            employee = EmployeeFactory.create()
+            link = UserLeaveAdministrator(
+                user_id=employer_user.user_id,
+                employer_id=employer.employer_id,
+                fineos_web_id="fake-fineos-web-id",
+                verification=test_verification,
+            )
+            test_db_session.add(link)
+            claim = ClaimFactory.create(
+                employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1
+            )
+            # follow_up_date of today + 20 should put this between the two other is_reviewable="yes" claims
+            ManagedRequirementFactory.create(
+                claim=claim,
+                managed_requirement_type_id=ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
+                managed_requirement_status_id=ManagedRequirementStatus.OPEN.managed_requirement_status_id,
+                follow_up_date=datetime_util.utcnow() + timedelta(days=20),
+            )
+            ManagedRequirementFactory.create(
+                claim=claim,
+                managed_requirement_type_id=ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
+                managed_requirement_status_id=ManagedRequirementStatus.COMPLETE.managed_requirement_status_id,
+                follow_up_date="2022-02-02",
+            )
+            test_db_session.commit()
+
+            request = {
+                "order_direction": "ascending",
+                "order_by": "latest_follow_up_date",
+                "is_reviewable": "yes",
+            }
+            response = self._perform_api_call(request, client, employer_auth_token)
+            assert response.status_code == 200
+            response_body = response.get_json()
+            claim_one, claim_two, claim_three = response_body["data"]
+
+            # They should all be ordered chronologically
+            assert (
+                claim_one["managed_requirements"][0]["follow_up_date"]
+                < claim_two["managed_requirements"][0]["follow_up_date"]
+            )
+            assert (
+                claim_two["managed_requirements"][0]["follow_up_date"]
+                < claim_three["managed_requirements"][0]["follow_up_date"]
+            )
+            # And the claim made above should be in the middle
+            assert claim_two["fineos_absence_id"] == claim.fineos_absence_id
+
         def test_get_claims_with_order_employee_desc(
             self, client, employer_auth_token, load_test_db
         ):
@@ -3153,7 +3202,8 @@ class TestGetClaimsEndpoint:
             assert claim["employer"]["employer_fein"] == format_fein(employer.employer_fein)
 
         # POST /claims/search
-        post_body = {"employer_id": [employer.employer_id]}
+        terms = {"employer_id": [employer.employer_id]}
+        post_body = {"terms": terms}
         response = client.post(
             "/v1/claims/search",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -3268,7 +3318,8 @@ class TestGetClaimsEndpoint:
             ) or claim["employer"]["employer_fein"] == format_fein(other_employer.employer_fein)
 
         # POST /claims/search
-        post_body = {"employer_id": [employer.employer_id, other_employer.employer_id]}
+        terms = {"employer_id": [employer.employer_id, other_employer.employer_id]}
+        post_body = {"terms": terms}
         response1 = client.post(
             "/v1/claims/search",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -3315,7 +3366,8 @@ class TestGetClaimsEndpoint:
         assert response_body1["data"][0]["employee"]["employee_id"] == str(employee.employee_id)
 
         # POST /claims/search
-        post_body = {"employee_id": [employee.employee_id]}
+        terms = {"employee_id": [employee.employee_id]}
+        post_body = {"terms": terms}
         response1 = client.post(
             "/v1/claims/search",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -3336,7 +3388,8 @@ class TestGetClaimsEndpoint:
         assert len(response_body2["data"]) == 0
 
         # POST /claims/search
-        post_body = {"employee_id": [employer.employer_id]}
+        terms = {"employee_id": [employer.employer_id]}
+        post_body = {"terms": terms}
         response2 = client.post(
             "/v1/claims/search",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -3378,7 +3431,8 @@ class TestGetClaimsEndpoint:
         assert len(response_body1["data"]) == 0
 
         # POST /claims/search
-        post_body = {"employer_id": [employee.employee_id], "employee_id": [employer.employer_id]}
+        terms = {"employer_id": [employee.employee_id], "employee_id": [employer.employer_id]}
+        post_body = {"terms": terms}
         response1 = client.post(
             "/v1/claims/search",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -3399,7 +3453,8 @@ class TestGetClaimsEndpoint:
         assert response_body2["data"][0]["employee"]["employee_id"] == str(employee.employee_id)
 
         # POST /claims/search
-        post_body = {"employer_id": [employer.employer_id], "employee_id": [employee.employee_id]}
+        terms = {"employer_id": [employer.employer_id], "employee_id": [employee.employee_id]}
+        post_body = {"terms": terms}
         response2 = client.post(
             "/v1/claims/search",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -3447,7 +3502,8 @@ class TestGetClaimsEndpoint:
         assert response_body1["data"][0]["employee"]["employee_id"] == str(employee.employee_id)
 
         # POST /claims/search
-        post_body = {"employee_id": [employee.employee_id, employer.employer_id]}
+        terms = {"employee_id": [employee.employee_id, employer.employer_id]}
+        post_body = {"terms": terms}
         response1 = client.post(
             "/v1/claims/search",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -3471,7 +3527,8 @@ class TestGetClaimsEndpoint:
             assert found_employee["employee"]["employee_id"] in eids_to_find
 
         # POST /claims/search
-        post_body = {"employee_id": [employee.employee_id, employee2.employee_id]}
+        terms = {"employee_id": [employee.employee_id, employee2.employee_id]}
+        post_body = {"terms": terms}
         response2 = client.post(
             "/v1/claims/search",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -3492,7 +3549,8 @@ class TestGetClaimsEndpoint:
         assert response3.status_code == 400
 
         # POST /claims/search
-        post_body = {"employee_id": f"{employee.employee_id},"}
+        terms = {"employee_id": f"{employee.employee_id},"}
+        post_body = {"terms": terms}
         response3 = client.post(
             "/v1/claims/search",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -3531,7 +3589,8 @@ class TestGetClaimsEndpoint:
         assert len(claim_data1) == 0
 
         # POST /claims/search
-        post_body = {"employee_id": [employeeB.employee_id]}
+        terms = {"employee_id": [employeeB.employee_id]}
+        post_body = {"terms": terms}
         response1 = client.post(
             "/v1/claims/search", headers={"Authorization": f"Bearer {auth_token}"}, json=post_body
         )
@@ -3552,7 +3611,8 @@ class TestGetClaimsEndpoint:
             assert found_claim["employee"]["employee_id"] == str(employeeA.employee_id)
 
         # POST /claims/search
-        post_body = {"employee_id": [employeeA.employee_id]}
+        terms = {"employee_id": [employeeA.employee_id]}
+        post_body = {"terms": terms}
         response2 = client.post(
             "/v1/claims/search", headers={"Authorization": f"Bearer {auth_token}"}, json=post_body
         )
@@ -3593,7 +3653,9 @@ class TestGetClaimsEndpoint:
 
         # POST /claims/search
         response = client.post(
-            "/v1/claims/search", headers={"Authorization": f"Bearer {auth_token}"}, json={}
+            "/v1/claims/search",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json={"terms": {}},
         )
 
         assert response.status_code == 200
@@ -3602,78 +3664,6 @@ class TestGetClaimsEndpoint:
         assert len(claim_data) == 3
         for i in range(3):
             assert_claim_response_equal_to_claim_query(claim_data[i], generated_claims[2 - i])
-
-    def test_get_claims_with_blocked_fein(
-        self,
-        client,
-        employer_auth_token,
-        employer_user,
-        test_db_session,
-        test_verification,
-        monkeypatch,
-    ):
-        employer = EmployerFactory.create()
-        employee = EmployeeFactory.create()
-
-        for _ in range(5):
-            ClaimFactory.create(
-                employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1
-            )
-
-        link = UserLeaveAdministrator(
-            user_id=employer_user.user_id,
-            employer_id=employer.employer_id,
-            fineos_web_id="fake-fineos-web-id",
-            verification=test_verification,
-        )
-        test_db_session.add(link)
-
-        other_employer = EmployerFactory.create()
-        other_link = UserLeaveAdministrator(
-            user_id=employer_user.user_id,
-            employer_id=other_employer.employer_id,
-            fineos_web_id="fake-fineos-web-id",
-            verification=test_verification,
-        )
-        test_db_session.add(other_employer)
-        test_db_session.add(other_link)
-
-        for _ in range(5):
-            ClaimFactory.create(
-                employer=other_employer,
-                employee=employee,
-                fineos_absence_status_id=1,
-                claim_type_id=1,
-            )
-
-        test_db_session.commit()
-        monkeypatch.setattr(
-            massgov.pfml.api.claims, "CLAIMS_DASHBOARD_BLOCKED_FEINS", set([employer.employer_fein])
-        )
-
-        # GET /claims deprecated
-        response = client.get(
-            "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"}
-        )
-
-        assert response.status_code == 200
-        response_body = response.get_json()
-
-        assert len(response_body["data"]) == 5
-        for claim in response_body["data"]:
-            assert claim["employer"]["employer_fein"] == format_fein(other_employer.employer_fein)
-
-        # POST /claims/search
-        response = client.post(
-            "/v1/claims/search", headers={"Authorization": f"Bearer {employer_auth_token}"}, json={}
-        )
-
-        assert response.status_code == 200
-        response_body = response.get_json()
-
-        assert len(response_body["data"]) == 5
-        for claim in response_body["data"]:
-            assert claim["employer"]["employer_fein"] == format_fein(other_employer.employer_fein)
 
     def test_get_claims_no_employee(
         self, client, employer_auth_token, employer_user, test_db_session, test_verification
@@ -3704,7 +3694,8 @@ class TestGetClaimsEndpoint:
         assert len(response_body["data"]) == 5
 
         # POST /claims/search
-        post_body = {"employer_id": [employer.employer_id]}
+        terms = {"employer_id": [employer.employer_id]}
+        post_body = {"terms": terms}
         response = client.post(
             "/v1/claims/search",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -3903,7 +3894,8 @@ class TestGetClaimsEndpoint:
             self._perform_assertions(resp, status_code=200, expected_claims=expected_claims)
 
             # POST /claims/search
-            post_body = {"claim_status": "Approved"}
+            terms = {"claim_status": "Approved"}
+            post_body = {"terms": terms}
             response = client.post(
                 "/v1/claims/search",
                 headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -3920,7 +3912,8 @@ class TestGetClaimsEndpoint:
             self._perform_assertions(resp, status_code=200, expected_claims=[review_by_claim])
 
             # POST /claims/search
-            post_body = {"is_reviewable": "yes"}
+            terms = {"is_reviewable": "yes"}
+            post_body = {"terms": terms}
             response = client.post(
                 "/v1/claims/search",
                 headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -3952,7 +3945,8 @@ class TestGetClaimsEndpoint:
             )
 
             # POST /claims/search
-            post_body = {"is_reviewable": "no"}
+            terms = {"is_reviewable": "no"}
+            post_body = {"terms": terms}
             response = client.post(
                 "/v1/claims/search",
                 headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -3980,7 +3974,8 @@ class TestGetClaimsEndpoint:
             assert "'invalid' is not one of" in response_body["detail"]
 
             # POST /claims/search
-            post_body = {"is_reviewable": "invalid"}
+            terms = {"is_reviewable": "invalid"}
+            post_body = {"terms": terms}
             response = client.post(
                 "/v1/claims/search",
                 headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -4006,7 +4001,8 @@ class TestGetClaimsEndpoint:
             self._perform_assertions(resp, status_code=200, expected_claims=expected_claims)
 
             # POST /claims/search
-            post_body = {"claim_status": "Approved,Closed"}
+            terms = {"claim_status": "Approved,Closed"}
+            post_body = {"terms": terms}
             response = client.post(
                 "/v1/claims/search",
                 headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -4023,7 +4019,8 @@ class TestGetClaimsEndpoint:
             self._perform_assertions(resp, status_code=400, expected_claims=[])
 
             # POST /claims/search
-            post_body = {"claim_status": "Unknown"}
+            terms = {"claim_status": "Unknown"}
+            post_body = {"terms": terms}
             response = client.post(
                 "/v1/claims/search",
                 headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -4049,6 +4046,7 @@ class TestGetClaimsEndpoint:
         def claim_no_absence_period(self, employer, employee):
             return ClaimFactory.create(employer=employer, employee=employee, claim_type_id=1)
 
+        ## Note testing w/ None absence_reason_qualifier_two to test field nullability
         @pytest.fixture()
         def absence_periods(self, claim):
             start = date.today() + timedelta(days=5)
@@ -4056,7 +4054,10 @@ class TestGetClaimsEndpoint:
             for _ in range(5):
                 end = start + timedelta(days=10)
                 period = AbsencePeriodFactory.create(
-                    claim=claim, absence_period_start_date=start, absence_period_end_date=end
+                    claim=claim,
+                    absence_period_start_date=start,
+                    absence_period_end_date=end,
+                    absence_reason_qualifier_two_id=None,
                 )
                 periods.append(period)
                 start = start + timedelta(days=20)
@@ -4328,7 +4329,7 @@ class TestGetClaimsEndpoint:
             resp = client.post(
                 "/v1/claims/search",
                 headers={"Authorization": f"Bearer {employer_auth_token}"},
-                json={},
+                json={"terms": {}},
             )
             assert resp.status_code == 200
             response_body = resp.get_json()
@@ -4354,7 +4355,8 @@ class TestGetClaimsEndpoint:
             claim_data = response_body.get("data")
             assert len(claim_data) == 1
 
-            post_body = {"claim_status": ActionRequiredStatusFilter.OPEN_REQUIREMENT}
+            terms = {"claim_status": ActionRequiredStatusFilter.OPEN_REQUIREMENT}
+            post_body = {"terms": terms}
             resp = client.post(
                 "/v1/claims/search",
                 headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -4394,7 +4396,8 @@ class TestGetClaimsEndpoint:
                     == 0
                 )
 
-            post_body = {"claim_status": ActionRequiredStatusFilter.PENDING_NO_ACTION}
+            terms = {"claim_status": ActionRequiredStatusFilter.PENDING_NO_ACTION}
+            post_body = {"terms": terms}
             resp = client.post(
                 "/v1/claims/search",
                 headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -4434,9 +4437,10 @@ class TestGetClaimsEndpoint:
             claim_data = response_body.get("data")
             assert len(claim_data) == 4
 
-            post_body = {
+            terms = {
                 "claim_status": f"{ActionRequiredStatusFilter.PENDING_NO_ACTION},{ActionRequiredStatusFilter.OPEN_REQUIREMENT}"
             }
+            post_body = {"terms": terms}
             resp = client.post(
                 "/v1/claims/search",
                 headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -5206,7 +5210,7 @@ class TestGetClaimsEndpoint:
             return client.post(
                 "/v1/claims/search",
                 headers={"Authorization": f"Bearer {employer_auth_token}"},
-                json=request,
+                json={"terms": request},
             )
 
         def _assert_400_error_response(self, response):
@@ -5562,7 +5566,9 @@ class TestEmployerWithOrgUnitsAccess:
 
         # POST /claims/search
         response = client.post(
-            "/v1/claims/search", headers={"Authorization": f"Bearer {employer_auth_token}"}, json={}
+            "/v1/claims/search",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json={"terms": {}},
         )
 
         response_body = response.get_json()
@@ -5600,7 +5606,9 @@ class TestEmployerWithOrgUnitsAccess:
 
         # POST /claims/search
         response = client.post(
-            "/v1/claims/search", headers={"Authorization": f"Bearer {employer_auth_token}"}, json={}
+            "/v1/claims/search",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json={"terms": {}},
         )
 
         response_body = response.get_json()
@@ -5635,7 +5643,9 @@ class TestEmployerWithOrgUnitsAccess:
 
         # POST /claims/search
         response = client.post(
-            "/v1/claims/search", headers={"Authorization": f"Bearer {employer_auth_token}"}, json={}
+            "/v1/claims/search",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            json={"terms": {}},
         )
 
         response_body = response.get_json()
@@ -5906,7 +5916,8 @@ class TestReviewByFilter:
             resp, status_code=200, expected_claims=review_by_claims
         )
 
-        post_body = {"claim_status": "Open requirement"}
+        terms = {"claim_status": "Open requirement"}
+        post_body = {"terms": terms}
         response = client.post(
             "/v1/claims/search",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -5954,8 +5965,6 @@ class TestPostChangeRequest:
         assert response_body.get("fineos_absence_id") == claim.fineos_absence_id
         assert response_body.get("start_date") == request_body["start_date"]
         assert response_body.get("end_date") == request_body["end_date"]
-        assert response_body.get("end_date") == request_body["end_date"]
-        assert response_body.get("submitted_time") == str(submitted_time.isoformat())
 
     @mock.patch("massgov.pfml.api.claims.claim_rules.get_change_request_issues", return_value=[])
     @mock.patch("massgov.pfml.api.claims.get_claim_from_db", return_value=None)
@@ -5970,23 +5979,9 @@ class TestPostChangeRequest:
         assert response.status_code == 404
         assert response.get_json()["message"] == "Claim does not exist for given absence ID"
 
-    @mock.patch("massgov.pfml.api.claims.get_claim_from_db")
-    def test_validation_issues(self, mock_get_claim, auth_token, claim, client, request_body):
-        claim.absence_period_start_date = date(2021, 1, 1)
-        claim.fineos_absence_status_id = 1
-        mock_get_claim.return_value = claim
-        del request_body["end_date"]
-        response = client.post(
-            "/v1/change-request?fineos_absence_id={}".format(claim.fineos_absence_id),
-            headers={"Authorization": f"Bearer {auth_token}"},
-            json=request_body,
-        )
-        assert response.status_code == 400
-        assert response.get_json()["message"] == "Invalid change request body"
-
 
 class TestGetChangeRequests:
-    @mock.patch("massgov.pfml.api.services.claims.get_change_requests_from_db")
+    @mock.patch("massgov.pfml.api.claims.get_change_requests_from_db")
     def test_successful_get_request(
         self, mock_get_change_requests_from_db, claim, change_request, client, auth_token, user
     ):
@@ -6002,7 +5997,7 @@ class TestGetChangeRequests:
         assert len(response_body["data"]["change_requests"]) == 1
         assert response_body["message"] == "Successfully retrieved change requests"
 
-    @mock.patch("massgov.pfml.api.services.claims.get_change_requests_from_db")
+    @mock.patch("massgov.pfml.api.claims.get_change_requests_from_db")
     def test_successful_get_request_no_change_requests(
         self, mock_get_change_requests_from_db, claim, client, auth_token, user
     ):
@@ -6034,3 +6029,90 @@ class TestGetChangeRequests:
         )
 
         assert response.status_code == 401
+
+
+class TestSubmitChangeRequest:
+    @mock.patch("massgov.pfml.api.claims.get_or_404")
+    @mock.patch("massgov.pfml.api.claims.claim_rules.get_change_request_issues", return_value=[])
+    def test_successful_call(
+        self, mock_get_issues, mock_get_or_404, auth_token, change_request, client
+    ):
+        mock_get_or_404.return_value = change_request
+        response = client.post(
+            "/v1/change-request/5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32/submit",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert change_request.submitted_time is not None
+        assert response.status_code == 200
+
+    @mock.patch("massgov.pfml.api.claims.get_or_404")
+    @mock.patch("massgov.pfml.api.claims.claim_rules.get_change_request_issues")
+    def test_validation_issues(
+        self, mock_get_issues, mock_get_or_404, auth_token, change_request, client
+    ):
+        mock_get_or_404.return_value = change_request
+        mock_get_issues.return_value = [
+            ValidationErrorDetail(
+                message="start_date required",
+                type="required",
+                field="start_date",
+            )
+        ]
+        response = client.post(
+            "/v1/change-request/5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32/submit",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert response.status_code == 400
+        assert response.get_json()["message"] == "Invalid change request"
+
+    def test_missing_claim(self, auth_token, claim, client):
+        response = client.post(
+            "/v1/change-request/5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32/submit",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert response.status_code == 404
+        assert (
+            response.get_json()["message"]
+            == "Could not find ChangeRequest with ID 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32"
+        )
+
+
+class TestDeleteChangeRequest:
+    def test_success(self, client, auth_token, test_db_session):
+        change_request = ChangeRequestFactory.create()
+        response = client.delete(
+            f"/v1/change-request/{change_request.change_request_id}",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert response.status_code == 200
+        response_body = response.get_json()
+        assert response_body["message"] == "Successfully deleted change request"
+
+        db_entry = (
+            test_db_session.query(ChangeRequest)
+            .filter(ChangeRequest.change_request_id == change_request.change_request_id)
+            .one_or_none()
+        )
+        assert db_entry is None
+
+    def test_missing_change_request(self, client, auth_token):
+        response = client.delete(
+            "/v1/change-request/009fa369-291b-403f-a85a-15e938c26f2f",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert response.status_code == 404
+        response_body = response.get_json()
+        assert (
+            response_body["message"]
+            == "Could not find ChangeRequest with ID 009fa369-291b-403f-a85a-15e938c26f2f"
+        )
+
+    def test_error_on_submitted_change_request(self, client, auth_token):
+        change_request = ChangeRequestFactory.create(submitted_time=datetime_util.utcnow())
+        response = client.delete(
+            f"/v1/change-request/{change_request.change_request_id}",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert response.status_code == 400
+        response_body = response.get_json()
+        assert response_body["message"] == "Cannot delete a submitted request"

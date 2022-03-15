@@ -59,6 +59,8 @@ class PaymentAuditData:
     state_withholding_amount: str
     federal_withholding_i_value: str
     state_withholding_i_value: str
+    employer_reimbursement_amount: str
+    employer_reimbursement_i_value: str
 
 
 def write_audit_report(
@@ -161,6 +163,7 @@ def build_audit_report_row(
         state=address.geo_state.geo_state_description if address and address.geo_state else None,
         zip=address.zip_code if address else None,
         is_address_verified=is_address_verified,
+        employer_name=None,
         payment_preference=get_payment_preference(payment),
         scheduled_payment_date=payment.payment_date.isoformat() if payment.payment_date else None,
         payment_period_start_date=payment_period_start_date,
@@ -170,14 +173,14 @@ def build_audit_report_row(
         payment_amount=str(payment_audit_data.net_payment_amount),
         federal_withholding_amount=str(payment_audit_data.federal_withholding_amount),
         state_withholding_amount=str(payment_audit_data.state_withholding_amount),
-        employer_reimbursement_amount=None,
+        employer_reimbursement_amount=str(payment_audit_data.employer_reimbursement_amount),
         child_support_amount=None,
         absence_case_number=claim.fineos_absence_id,
         c_value=payment.fineos_pei_c_value,
         i_value=payment.fineos_pei_i_value,
         federal_withholding_i_value=str(payment_audit_data.federal_withholding_i_value),
         state_withholding_i_value=str(payment_audit_data.state_withholding_i_value),
-        employer_reimbursement_i_value=None,
+        employer_reimbursement_i_value=str(payment_audit_data.employer_reimbursement_i_value),
         child_support_i_value=None,
         employer_id=str(employer.fineos_employer_id) if employer else None,
         absence_case_creation_date=payment.absence_case_creation_date.isoformat()

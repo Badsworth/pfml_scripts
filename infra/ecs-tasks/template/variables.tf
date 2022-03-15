@@ -90,6 +90,12 @@ variable "fineos_import_employee_updates_input_directory_path" {
   default     = null
 }
 
+variable "fineos_is_running_v21" {
+  description = "If the connected FINEOS environment is running the 21.3 upgrade (April 2022 deployment)"
+  type        = string
+  default     = "false"
+}
+
 variable "logging_level" {
   description = "Logging level override"
   type        = string

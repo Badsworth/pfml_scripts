@@ -137,7 +137,9 @@ export type OtherTasks =
   | "SOM Autopay After Appeal Reminder"
   | "DO NOT USE Autopay After Appeal Reminder"
   | "Employer Reimbursement Adjustment"
-  | "Print and Mail Correspondence";
+  | "Print and Mail Correspondence"
+  | "Send Overpayment Letter to Claimant (Payee)"
+  | "Returned Payment Received";
 /**Tasks avalable in fineos */
 export type FineosTasks = DocumentReviewTasks | ERTasks | OtherTasks;
 

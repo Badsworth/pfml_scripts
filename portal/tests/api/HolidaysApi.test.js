@@ -22,7 +22,9 @@ describe("HolidaysApi", () => {
       expect.objectContaining({
         headers: expect.any(Object),
         method: "POST",
-        body: JSON.stringify({ start_date: startDate, end_date: endDate }),
+        body: JSON.stringify({
+          terms: { start_date: startDate, end_date: endDate },
+        }),
       })
     );
   });

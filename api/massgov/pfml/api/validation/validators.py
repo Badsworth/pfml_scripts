@@ -1,6 +1,7 @@
 #
 # Custom validation implementations to support custom API response formats
 #
+import re
 from typing import Callable, Optional
 
 import jsonschema
@@ -122,9 +123,20 @@ def log_validation_error(
 ) -> None:
     # Create a readable message for the individual error.
     # Do not use the error's actual message since it may include PII.
+    #
+    # Note that the field is modified in the message so array-based fields can be aggregated, e.g.
+    #
+    #   error.field: data.0.absence_periods.12.reason_qualifier_two
+    #   aggregated_field: data.<NUM>.absence_periods.<NUM>.reason_qualifier_two
+    #
+    aggregated_field = error.field
+
+    if aggregated_field:
+        aggregated_field = re.sub(r"\.\d+\.", ".<NUM>.", aggregated_field)
+
     message = "%s (field: %s, type: %s, rule: %s)" % (
         validation_exception.message,
-        error.field,
+        aggregated_field,
         error.type,
         error.rule,
     )
@@ -138,8 +150,8 @@ def log_validation_error(
     if unexpected_error_check_func and not unexpected_error_check_func(error):
         logger.info(message, extra=log_attributes)
     else:
-        newrelic_util.log_and_capture_exception(message, extra=log_attributes)
         # Log explicit errors in the case of unexpected validation errors.
+        newrelic_util.log_and_capture_exception(message, extra=log_attributes)
 
 
 class CustomResponseValidator(ResponseValidator):

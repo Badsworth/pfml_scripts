@@ -1,7 +1,7 @@
 # just to get the namespace
 from datetime import date
 from enum import Enum
-from typing import List, Optional
+from typing import List, Optional, TypeVar
 
 from pydantic import BaseModel, Field
 
@@ -24,11 +24,54 @@ class AbsencePeriodStatus(Enum):
     ESTIMATED = "estimated"
 
 
-# Optional properties
-class EmailAddress(base.EmailAddress):
-    id: Optional[int] = Field(  # type: ignore
-        None, description="The id of the contact method (e.g. phone / mobile / emailAddress) "
+class EmailAddressV20(BaseModel):
+    """API payload for FINEOS 20.2"""
+
+    classExtensionInformation: Optional[List[base.ExtensionAttribute]] = Field(
+        None,
+        description="An array of the extensionAttribute objects which contain email Address extension information.",
     )
+    emailAddress: Optional[str] = Field(
+        None, description="Customers email address.", max_length=120, min_length=0
+    )
+    id: Optional[int] = Field(
+        None,
+        description="The id of the contact method (e.g. phone / mobile / emailAddress) ",
+        ge=0.0,
+    )
+    preferred: Optional[bool] = Field(
+        None, description="Specify if it is the first person to try to contact when it is required."
+    )
+
+
+class EmailAddressV21(BaseModel):
+    """API payload for FINEOS 21.3
+
+    The notable difference from the v20 version is the `emailAddressType` field
+    is required.
+    """
+
+    classExtensionInformation: Optional[List[base.ExtensionAttribute]] = Field(
+        None,
+        description="An array of the extensionAttribute objects which contain email Address extension information.",
+    )
+    emailAddress: Optional[str] = Field(
+        None, description="Customers email address.", max_length=120, min_length=0
+    )
+    emailAddressType: str = Field(
+        ..., description="Identifies the type of mail which is returned (Enum Domain=51)"
+    )
+    id: Optional[int] = Field(
+        None,
+        description="The id of the contact method (e.g. phone / mobile / emailAddress) ",
+        ge=0.0,
+    )
+    preferred: Optional[bool] = Field(
+        None, description="Specify if it is the first person to try to contact when it is required."
+    )
+
+
+EmailAddressT = TypeVar("EmailAddressT", EmailAddressV21, EmailAddressV20)
 
 
 # Optional properties
@@ -43,7 +86,7 @@ class ParticipantContactDetails(base.ParticipantContactDetails):
     phoneNumbers: Optional[List[PhoneNumber]] = Field(  # type: ignore
         None, description="Return list of phone numbers"
     )
-    emailAddresses: Optional[List[EmailAddress]] = Field(  # type: ignore
+    emailAddresses: Optional[List[EmailAddressT]] = Field(  # type: ignore
         None, description="Return list of email addresses"
     )
 
@@ -53,7 +96,7 @@ class ContactDetails(base.ContactDetails):
     phoneNumbers: Optional[List[PhoneNumber]] = Field(  # type: ignore
         None, description="An array of objects which contain customer phone number details."
     )
-    emailAddresses: Optional[List[EmailAddress]] = Field(  # type: ignore
+    emailAddresses: Optional[List[EmailAddressT]] = Field(  # type: ignore
         None, description="Email Address of the customer.", max_items=100, min_items=0
     )
 

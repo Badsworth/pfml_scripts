@@ -439,12 +439,6 @@ paths:
             Absence Case IDs, in addition to the employees' first, middle, and last names.
             When the string is empty, it is ignored.
           required: false
-        - name: "allow_hrd"
-          in: query
-          schema:
-            type: boolean
-          description: A temporary boolean value used to allow smoke testers to see HRD dashboard
-          required: false
         - name: "is_reviewable"
           in: query
           schema:
@@ -490,7 +484,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ClaimRequest"
+              $ref: "#/components/schemas/ClaimSearchRequest"
       responses:
         "200":
           description: The claim information.
@@ -511,7 +505,7 @@ paths:
 
   /change-request:
     post:
-      summary: Submit a change request to FINEOS
+      summary: Create a change request record
       operationId: massgov.pfml.api.claims.post_change_request
       tags:
         - ChangeRequest
@@ -578,6 +572,67 @@ paths:
                             nullable: false
                           change_requests:
                               $ref: "#/components/schemas/ChangeRequestsResponse"
+                              
+  /change-request/{change_request_id}/submit:
+    post:
+      summary: Submit a completed change request to FINEOS
+      operationId: massgov.pfml.api.claims.submit_change_request
+      tags:
+        - ChangeRequest
+      parameters:
+        - name: change_request_id
+          in: path
+          schema:
+            type: string
+            format: uuid
+          description: ID of Change Request to submit
+          required: true
+      responses:
+        "200":
+          description: A successful request returns a 200
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessfulResponse'
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/ChangeRequestResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "400":
+          description: An unsuccessful request returns a 400 status code if one or more errors occurred.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /change-request/{change_request_id}:
+    delete:
+      summary: Delete an in-progress ChangeRequest
+      operationId: massgov.pfml.api.claims.delete_change_request
+      tags:
+        - ChangeRequest
+      parameters:
+        - name: change_request_id
+          in: path
+          schema:
+            type: string
+            format: uuid
+            example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
+          description: ID of the change request to delete
+          required: true
+      responses:
+        "200":
+          description: Change Request successfully deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessfulResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"   
 
   /payments:
     get:
@@ -1383,6 +1438,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
 
+
   /admin/authorize:
     get:
       security:
@@ -1533,7 +1589,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FlagWithLogsResponse"
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/FlagWithLog"
         "503":
           $ref: "#/components/responses/ServiceUnavailableError"
 
@@ -1633,6 +1693,11 @@ components:
           schema:
             $ref: "#/components/schemas/UserUpdateRequest"
       required: true
+    ClaimSearchRequest:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ClaimSearchRequest"
     EmployeeSearchRequest:
       content:
         application/json:
@@ -2011,6 +2076,7 @@ components:
           readOnly: true
         options:
           type: object
+          nullable: true
           example:
             page_routes:
              - "/applications/*"
@@ -2018,7 +2084,6 @@ components:
         enabled:
           type: boolean
           example: false
-      additionalProperties: false
 
     FlagWithLog:
       allOf:
@@ -2039,18 +2104,6 @@ components:
               format: date-time
               example: "2020-06-26T01:02:03.967736+00:00"
               readOnly: true
-          additionalProperties: false
-
-    FlagWithLogsResponse:
-      type: array
-      items:
-        $ref: "#/components/schemas/FlagWithLog"
-
-
-    FlagsResponse:
-      type: array
-      items:
-        $ref: "#/components/schemas/Flag"
 
     UserResponse:
       type: object
@@ -2224,6 +2277,19 @@ components:
           example: "SMS"
         mfa_phone_number:
           $ref: "#/components/schemas/Phone"
+
+    ClaimSearchRequest:
+      type: object
+      properties:
+        terms:
+          $ref: "#/components/schemas/ClaimSearchRequestTermsMetadata"
+        order:
+          $ref: "#/components/schemas/SearchRequestOrderMetadata"
+          nullable: true
+        paging:
+          $ref: "#/components/schemas/SearchRequestPagingMetadata"
+          nullable: true
+      required: ["terms"]
 
     EmployeeSearchRequest:
       type: object
@@ -2551,10 +2617,6 @@ components:
               format: uuid
               example: "2f0f58a0-fcad-465b-b474-ee6c961cd6e3"
               nullable: true
-            application_nickname:
-              type: string
-              nullable: true
-              example: "My bonding leave request"
             tax_identifier:
               $ref: "#/components/schemas/SsnItin"
               nullable: true
@@ -2714,10 +2776,6 @@ components:
     ApplicationResponse:
       type: object
       properties:
-        application_nickname:
-          type: string
-          example: "My bonding leave request"
-          nullable: true
         organization_unit_id:
           type: string
           format: uuid
@@ -2733,6 +2791,11 @@ components:
           nullable: true
         tax_identifier:
           $ref: "#/components/schemas/MaskedSsnItin"
+          nullable: true
+        employee_id:
+          type: string
+          format: uuid
+          example: '2a340cf8-6d2a-4f82-a075-73588d003f8f'
           nullable: true
         employer_id:
           type: string
@@ -3076,6 +3139,7 @@ components:
           example: "Newborn"
         reason_qualifier_two:
           type: string
+          nullable: true
         period_type:
           type: string
           enum:
@@ -3189,61 +3253,6 @@ components:
       type: array
       items:
         $ref: "#/components/schemas/ClaimResponse"
-
-    ClaimRequest:
-      type: object
-      properties:
-        page_size:
-          type: integer
-          format: int32
-          minimum: 1
-          default: 25
-        page_offset:
-          type: integer
-          format: int32
-          minimum: 1
-          default: 1
-        order_by:
-          type: string
-          default: "created_at"
-          enum: ["fineos_absence_status", "created_at", "employee"]
-        order_direction:
-          type: string
-          default: "descending"
-          enum: ["ascending", "descending"]
-        employer_id:
-          type: array
-          items:
-            type: string
-            format: uuid
-          description: ID of Employer to query claims for
-        employee_id:
-          type: array
-          items:
-            type: string
-            format: uuid
-          description: ID(s) of Employee to query claims for
-        claim_status:
-          type: string
-          description: >
-            claim status used to filter the request,
-            single claim status or a comma seperated list of claim status (i.e claim_status="Approved,Closed"),
-            the valid status are "Approved", "Closed", "Completed", "Declined", "Open requirement" and "Pending - no action".
-        search:
-          type: string
-          description: >
-            A search string used to filter the request that,
-            when provided, is used in a fuzzy search against the claims'
-            Absence Case IDs, in addition to the employees' first, middle, and last names.
-            When the string is empty, it is ignored.
-        allow_hrd:
-          type: boolean
-          description: A temporary boolean value used to allow smoke testers to see HRD dashboard
-
-        is_reviewable:
-          type: string
-          enum: ["yes", "no"]
-          description: A string value used to check whether or not to filter claims where a review is requested for a leave admin.
 
     EmployeesResponse:
       type: array
@@ -3461,6 +3470,7 @@ components:
         content_type:
           type: string
           example: "image/png"
+          nullable: true
         fineos_document_id:
           type: string
           example: "1234"
@@ -3475,7 +3485,6 @@ components:
         - application_id
         - created_at
         - document_type
-        - content_type
         - fineos_document_id
         - name
         - description
@@ -4367,6 +4376,14 @@ components:
         current:
           type: boolean
           example: false
+        end_date_within:
+          type: array
+          items:
+            type: string
+            format: date
+          minItems: 2
+          maxItems: 2
+          example: ['2020-12-12','2021-01-10']
     
     BenefitYearsSearchRequest:
       type: object
@@ -4380,6 +4397,44 @@ components:
         paging:
           $ref: "#/components/schemas/SearchRequestPagingMetadata"
           nullable: true
+
+    ClaimSearchRequestTermsMetadata:
+      type: object
+      properties:
+        employer_id:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: ID of Employer to query claims for
+        employee_id:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: ID(s) of Employee to query claims for
+        claim_status:
+          type: string
+          description: >
+            claim status used to filter the request,
+            single claim status or a comma seperated list of claim status (i.e claim_status="Approved,Closed"),
+            the valid status are "Approved", "Closed", "Completed", "Declined", "Open requirement" and "Pending - no action".
+        search:
+          type: string
+          description: >
+            A search string used to filter the request that,
+            when provided, is used in a fuzzy search against the claims'
+            Absence Case IDs, in addition to the employees' first, middle, and last names.
+            When the string is empty, it is ignored.
+        is_reviewable:
+          type: string
+          enum: ["yes", "no"]
+          description: A string value used to check whether or not to filter claims where a review is requested for a leave admin.
+        request_decision:
+          type: string
+          enum: ["approved", "denied", "withdrawn", "pending", "cancelled"]
+          description: > 
+            request decision used in filtering, request_decision is a status associated with an absence_period
 
     EmployeeSearchRequestTermsMetadata:
       type: object

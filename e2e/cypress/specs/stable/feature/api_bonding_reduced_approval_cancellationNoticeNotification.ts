@@ -26,7 +26,9 @@ describe("Approval (notifications/notices)", () => {
           fineos_absence_id: response.fineos_absence_id,
           timestamp_from: Date.now(),
         });
-        fineosPages.ClaimPage.visit(response.fineos_absence_id)
+        const claimPage = fineosPages.ClaimPage.visit(
+          response.fineos_absence_id
+        )
           .adjudicate((adjudication) => {
             adjudication
               .evidence((evidence) => {
@@ -51,9 +53,13 @@ describe("Approval (notifications/notices)", () => {
           .shouldHaveStatus("Evidence", "Satisfied")
           .shouldHaveStatus("Availability", "Time Available")
           .shouldHaveStatus("Restriction", "Passed")
-          .shouldHaveStatus("PlanDecision", "Accepted")
-          .approve()
-          .triggerNotice("Designation Notice");
+          .shouldHaveStatus("PlanDecision", "Accepted");
+        if (config("HAS_APRIL_UPGRADE") === "true") {
+          claimPage.approve("Approved", true);
+        } else {
+          claimPage.approve("Approved", false);
+        }
+        claimPage.triggerNotice("Designation Notice");
       });
     });
   });

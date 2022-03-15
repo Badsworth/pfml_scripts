@@ -28,11 +28,12 @@ const flagsConfig = {
     // TODO (CP-534): Show all options when portal supports activeDutyFamily, serviceMemberFamily
     claimantShowMilitaryLeaveTypes: false,
 
-    // When this flag is false, you can bypass the deparment capture form when applying
-    claimantShowOrganizationUnits: false,
-
     // When this flag is enabled payment status phase three work will be displayed.
     claimantShowPaymentsPhaseThree: false,
+
+    // When this flag is enabled logic in code will account for new payment schedule post FINEOS deploy
+    // TODO (PORTAL-1934) Remove flag
+    claimantUseFineosNewPaymentSchedule: false,
 
     // Show multiple leave request UI updates to leave admins (dashboard++)
     // TODO (PORTAL-1560) Remove flag
@@ -51,6 +52,11 @@ const flagsConfig = {
 
     // When this flag is true, PDF files up to 10mb are sent to the API.
     sendLargePdfToApi: false,
+
+    // TODO (PORTAL-1893) This flag should be enabled when the /holidays endpoint is ready for production.
+    // The /holidays endpoint is still under development, but the holiday alert component is done.
+    // When this flag is enabled the holiday alert will be displayed on the payments pages.
+    showHolidayAlert: false,
 
     // When this flag is true, claims that would span multiple benefit years
     // are split into separate claims

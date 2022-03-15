@@ -4,6 +4,8 @@
 
 import dayjs from "dayjs";
 import dayjsBusinessTime from "dayjs-business-time";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+dayjs.extend(isSameOrAfter);
 dayjs.extend(dayjsBusinessTime);
 
 export type PaymentStatus =
@@ -17,7 +19,6 @@ export type WritebackTransactionStatus =
   | "EFT Account Information Error"
   | "EFT Pending Bank Validation"
   | "Payment System Error"
-  | "Max Weekly Benefits Exceeded"
   | "Address Validation Error"
   | "Pending Payment Audit"
   | "Bank Processing Error"
@@ -42,24 +43,42 @@ export type WritebackTransactionStatus =
   | "PUB Check Undeliverable"
   | "PUB Check Stale";
 
-const delayedByRejection = (payment: PaymentDetail) => {
-  return (
-    payment.status === "Delayed" &&
-    (payment.writeback_transaction_status === "EFT Account Information Error" ||
-      payment.writeback_transaction_status === "Bank Processing Error")
-  );
+type ProcessingDaysPerDelay = {
+  [key in WritebackTransactionStatus]: number;
 };
 
-const delayedByAddressValidation = (payment: PaymentDetail) => {
-  const todaysDate = dayjs();
-  const transactionDate = dayjs(payment.transaction_date);
-  const twoBusinessDaysAfterTransaction = transactionDate.addBusinessDays(2);
+export const PROCESSING_DAYS_PER_DELAY: Partial<ProcessingDaysPerDelay> = {
+  "Address Validation Error": 2,
+  "Bank Processing Error": 0,
+  "EFT Account Information Error": 0,
+  "Exempt Employer": 0,
+  "InvalidPayment NameMismatch": 0,
+  "Leave Plan In Review": 0,
+  "Max Weekly Benefits Exceeded": 5,
+};
 
+/* 
+  Payments can be delayed for any of the reasons listed in the WritebackTransactionStatus type.
+  The amount of time it takes the contact center to process a delayed payment varies by the reason mapped in PROCESSING_DAYS_PER_DELAY.
+  We will only show information about the delay after the contact center has had enough time to resolve the payment
+  isAfterDelayProcessingTime calculates if the current date is after the time it should have taken to 
+  process the delay which would be the transaction date + the number of days it takes to
+  process that delay reason (3 days by default).
+*/
+
+export const isAfterDelayProcessingTime = (
+  writeback_transaction_status: WritebackTransactionStatus,
+  transaction_date: string
+): boolean => {
+  const todaysDate = dayjs();
+
+  const transactionDate = dayjs(transaction_date);
+  const daysToProcess =
+    PROCESSING_DAYS_PER_DELAY[writeback_transaction_status] ?? 3;
+  const showImmediately = daysToProcess === 0;
   return (
-    payment.status === "Delayed" &&
-    payment.writeback_transaction_status === "Address Validation Error" &&
-    // This date logic should probably be isSameOrAfter? There's a followup ticket for this.
-    todaysDate.isSame(twoBusinessDaysAfterTransaction, "day")
+    showImmediately ||
+    todaysDate.isAfter(transactionDate.addBusinessDays(daysToProcess), "day")
   );
 };
 
@@ -87,17 +106,6 @@ export class PaymentDetail {
     }
 
     Object.assign(this, attrs);
-  }
-
-  getDelayReason(): "delayedByRejection" | "delayedByAddressValidation" | null {
-    if (delayedByRejection(this)) return "delayedByRejection";
-    if (delayedByAddressValidation(this)) return "delayedByAddressValidation";
-
-    return null;
-  }
-
-  hasDelayReason() {
-    return !!this.getDelayReason();
   }
 }
 

@@ -100,3 +100,8 @@ def is_range_contained(container_range: Tuple[date, date], test_range: Tuple[dat
     c_start, c_end = container_range
     t_start, t_end = test_range
     return c_start <= t_start and t_end <= c_end
+
+
+def date_to_isoformat(date_obj: Optional[date]) -> Optional[str]:
+    # Minor util to handle cases where the date can be None
+    return date_obj.isoformat() if date_obj else None

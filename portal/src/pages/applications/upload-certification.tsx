@@ -1,8 +1,4 @@
-import {
-  BenefitsApplicationDocument,
-  DocumentType,
-  findDocumentsByLeaveReason,
-} from "../../models/Document";
+import { DocumentType, getLeaveCertificationDocs } from "../../models/Document";
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
@@ -80,11 +76,7 @@ export const UploadCertification = (props: UploadCertificationProps) => {
       break;
   }
 
-  const certificationDocuments =
-    findDocumentsByLeaveReason<BenefitsApplicationDocument>(
-      documents,
-      get(claim, "leave_details.reason")
-    );
+  const certificationDocuments = getLeaveCertificationDocs(documents);
 
   const handleSave = async () => {
     if (files.isEmpty && certificationDocuments.length) {
