@@ -1,6 +1,7 @@
 import Alert from "./core/Alert";
 import Button from "./core/Button";
 import React from "react";
+import { Trans } from "react-i18next";
 import tracker from "../services/tracker";
 import { withTranslation } from "../locales/i18n";
 
@@ -62,7 +63,14 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps> {
     if (this.state.hasError) {
       return (
         <Alert state="error">
-          <p>{t("components.errorBoundary.message")}</p>
+          <Trans
+            i18nKey="components.errorBoundary.message"
+            components={{
+              "contact-center-phone-link": (
+                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+              ),
+            }}
+          />
           <Button onClick={this.handleReloadClick}>
             {t("components.errorBoundary.reloadButton")}
           </Button>

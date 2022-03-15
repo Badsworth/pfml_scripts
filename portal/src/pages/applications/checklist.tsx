@@ -4,8 +4,8 @@ import BenefitsApplication, {
 } from "../../models/BenefitsApplication";
 import {
   DocumentType,
-  findDocumentsByLeaveReason,
   findDocumentsByTypes,
+  getLeaveCertificationDocs,
 } from "../../models/Document";
 import StepModel, { ClaimSteps } from "../../models/Step";
 import { camelCase, get } from "lodash";
@@ -76,10 +76,7 @@ export const Checklist = (props: ChecklistProps) => {
     DocumentType.identityVerification,
   ]);
 
-  const certificationDocuments = findDocumentsByLeaveReason(
-    documents,
-    get(claim, "leave_details.reason")
-  );
+  const certificationDocuments = getLeaveCertificationDocs(documents);
 
   const warnings =
     appLogic.benefitsApplications.warningsLists[claim.application_id];

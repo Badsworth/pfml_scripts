@@ -30,7 +30,7 @@ const errors = {
     absence_case_id: {
       duplicate: "You already have access.",
       exists:
-        "This application cannot be added. You will need to call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak) to work on your application or get status updates.",
+        "This application cannot be added. You will need to call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> to work on your application or get status updates.",
       required: "Application ID is required.",
     },
     conflicting: "$t(shared.applicationImportError_noMatch)",
@@ -54,7 +54,7 @@ const errors = {
   applications: {
     claim: {
       exists:
-        "You have already submitted this portion of your application. If you need to edit your information, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
+        "You have already submitted this portion of your application. If you need to edit your information, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
     },
     concurrent_leave: {
       is_for_current_employer: {
@@ -181,7 +181,7 @@ const errors = {
     },
     is_withholding_tax: {
       duplicate:
-        "You have already submitted your tax withholding preference. If you need to edit your preference, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
+        "You have already submitted your tax withholding preference. If you need to edit your preference, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
       required: "Select your tax withholding preference.",
     },
     last_name: {
@@ -267,7 +267,7 @@ const errors = {
         },
         frequency_interval_basis: {
           intermittent_interval_maximum:
-            "Sorry, our intermittent leave request service is a work in progress. Use our <intermittent-leave-guide>step-by-step guide to intermittent leave</intermittent-leave-guide> to complete your application. You can also complete your application by calling our Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
+            "Sorry, our intermittent leave request service is a work in progress. Use our <intermittent-leave-guide>step-by-step guide to intermittent leave</intermittent-leave-guide> to complete your application. You can also complete your application by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
           required: "Select how often absences may occur.",
         },
         start_date: {
@@ -403,7 +403,7 @@ const errors = {
       payment_method: {
         required: "Select how you want to get your weekly benefit.",
         exists:
-          "You have already submitted your payment preference. If you need to edit your preference, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
+          "You have already submitted your payment preference. If you need to edit your preference, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
       },
       routing_number: {
         checksum:
@@ -516,7 +516,7 @@ const errors = {
       disallow_12mo_leave_period: "$t(shared.disallow12moLeavePeriod)",
       disallow_12mo_reduced_leave_period: "$t(shared.disallow12moLeavePeriod)",
       disallow_attempts:
-        "We already have an account set up for you. Please sign in with that account. If that doesn’t sound familiar to you, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
+        "We already have an account set up for you. Please sign in with that account. If that doesn’t sound familiar to you, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
       disallow_caring_leave_before_july:
         "Leave start dates must be after June 30, 2021.",
       disallow_hybrid_intermittent_leave:
@@ -536,7 +536,7 @@ const errors = {
       min_reduced_leave_minutes:
         "The total time entered for your hours off must be greater than 0.",
       require_employee:
-        "We couldn’t find you in our system. Check that you entered your employer’s Employer Identification Number (EIN) correctly. If you continue to get this error, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
+        "We couldn’t find you in our system. Check that you entered your employer’s Employer Identification Number (EIN) correctly. If you continue to get this error, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
       require_employer_notified:
         "You must tell your employer that you’re taking leave before you can submit an application. If you’ve told your employer, update your application with the date that you notified them.",
     },
@@ -564,7 +564,7 @@ const errors = {
   },
   auth: {
     attemptBlocked_forgotPassword:
-      "Your authentication attempt has been blocked due to suspicious activity. We sent you an email to confirm your identity. Check your email and then follow the instructions to try again. If this continues to occur, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
+      "Your authentication attempt has been blocked due to suspicious activity. We sent you an email to confirm your identity. Check your email and then follow the instructions to try again. If this continues to occur, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
     attemptBlocked_login:
       "Your log in attempt was blocked due to suspicious activity. You will need to reset your password to continue. We’ve also sent you an email to confirm your identity.",
     attemptsLimitExceeded_forgotPassword:
@@ -612,7 +612,7 @@ const errors = {
     },
   },
   caughtError:
-    "Sorry, an unexpected error in our system was encountered. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
+    "Sorry, an unexpected error in our system was encountered. If this continues to happen, you may call the Paid Family Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
   caughtError_DocumentsLoadError: "$t(shared.documentsLoadError)",
   caughtError_DocumentsUploadError: "$t(shared.documentsUploadError)",
   caughtError_ForbiddenError:
@@ -696,7 +696,7 @@ const errors = {
     },
   },
   network:
-    "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak)",
+    "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>",
   users: {
     email_address: {
       exists: "$t(shared.auth.emailError_exists)",
@@ -767,9 +767,9 @@ const shared: {
   amountPerFrequency_unknown: "{{amount, currency}} (frequency unknown)",
   amountPerFrequency_weekly: "{{amount, currency}} per week",
   applicationImportError_noMatch:
-    "No match found. Applications started on the phone with a Contact Center agent can take up to 24 hours to appear in our online system. Check back again. If you’re still unable to find your application, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
+    "No match found. Applications started on the phone with a Contact Center agent can take up to 24 hours to appear in our online system. Check back again. If you’re still unable to find your application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
   applicationImportError_unsupported:
-    "This application cannot be added at this time. If you are applying for military-related paid family leave benefits, or you are currently self-employed or unemployed, your application cannot be managed by this website. You will need to call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak) to work on your application or get status updates.",
+    "This application cannot be added at this time. If you are applying for military-related paid family leave benefits, or you are currently self-employed or unemployed, your application cannot be managed by this website. You will need to call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> to work on your application or get status updates.",
   auth: {
     emailError_exists: "An account with the given email already exists",
     emailError_required: "Enter your email address",
@@ -879,9 +879,9 @@ const shared: {
     identification: "identification documents",
   },
   documentsLoadError:
-    "An error was encountered while checking your application for documents. If this continues to happen, call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
+    "An error was encountered while checking your application for documents. If this continues to happen, call the Paid Family Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
   documentsUploadError:
-    "We encountered an error when uploading your file. Try uploading your file again. If this continues to happen, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
+    "We encountered an error when uploading your file. Try uploading your file again. If this continues to happen, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
   employerBenefitEntryPrefix: "Benefit",
   employerBenefitType_familyOrMedicalLeave: "Family or medical leave insurance",
   employerBenefitType_paidLeave: "Accrued paid leave",
@@ -943,7 +943,7 @@ const shared: {
     "Reduced leave schedule hours must be 0 or greater.",
   minutesLabel: "Minutes",
   networkError:
-    "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak)",
+    "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>",
   newbornCertificationDocOptions:
     "<ul><li>Your child’s birth certificate.</li><li>A note from your child’s health care provider stating your child’s date of birth.</li><li>A note from the health care provider of the person who gave birth stating your child’s date of birth.</li></ul>",
   noneReported: "None reported",
@@ -3154,7 +3154,7 @@ const components: {
   },
   errorBoundary: {
     message:
-      "Sorry, we encountered an unexpected error. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak)",
+      "Sorry, we encountered an unexpected error. If this continues to happen, you may call the Paid Family Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>",
     reloadButton: "Reload this page",
   },
   errorsSummary: {

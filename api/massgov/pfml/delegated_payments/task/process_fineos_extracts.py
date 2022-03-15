@@ -177,10 +177,18 @@ def _process_fineos_extracts(
         ).run()
 
     if config.do_claimant_extract:
-        ClaimantExtractStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()
+        ClaimantExtractStep(
+            db_session=db_session,
+            log_entry_db_session=log_entry_db_session,
+            should_add_to_report_queue=True,
+        ).run()
 
     if config.do_payment_extract:
-        PaymentExtractStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()
+        PaymentExtractStep(
+            db_session=db_session,
+            log_entry_db_session=log_entry_db_session,
+            should_add_to_report_queue=True,
+        ).run()
 
     if config.consume_fineos_1099_request:
         FineosExtractStep(
@@ -227,6 +235,7 @@ def _process_fineos_extracts(
             db_session=db_session,
             log_entry_db_session=log_entry_db_session,
             report_names=PROCESS_FINEOS_EXTRACT_REPORTS,
+            sources_to_clear_from_report_queue=[ClaimantExtractStep],
         ).run()
 
     payments_util.create_success_file(start_time, "pub-payments-process-fineos")

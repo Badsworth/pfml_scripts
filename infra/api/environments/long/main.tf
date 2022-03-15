@@ -92,6 +92,8 @@ module "api" {
 
   fineos_client_oauth2_client_id = "5744bq9dpveko6jie4ma1e4g93"
 
+  fineos_is_running_v21 = "true"
+
   admin_portal_base_url               = "https://paidleave-admin-long.dfml.eol.mass.gov"
   pfml_email_address                  = "PFML_DoNotReply@eol.mass.gov"
   bounce_forwarding_email_address     = "PFML_DoNotReply@eol.mass.gov"

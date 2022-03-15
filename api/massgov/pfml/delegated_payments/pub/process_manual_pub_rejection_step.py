@@ -83,12 +83,19 @@ class ProcessManualPubRejectionStep(ProcessFilesInPathStep):
         )
         PAYMENT_REJECTED_SUCCESSFULLY_COUNT = "payment_rejected_successfully_count"
 
-    def __init__(self, db_session: db.Session, log_entry_db_session: db.Session) -> None:
+    def __init__(
+        self,
+        db_session: db.Session,
+        log_entry_db_session: db.Session,
+        should_add_to_report_queue: bool = False,
+    ) -> None:
         """Constructor."""
         manual_pub_inbound_path = (
             delegated_config.get_s3_config().pfml_manual_pub_reject_archive_path
         )
-        super().__init__(db_session, log_entry_db_session, manual_pub_inbound_path)
+        super().__init__(
+            db_session, log_entry_db_session, manual_pub_inbound_path, should_add_to_report_queue
+        )
 
     def process_file(self, path: str) -> None:
         self.reference_file = ReferenceFile(
