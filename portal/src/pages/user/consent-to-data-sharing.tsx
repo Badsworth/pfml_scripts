@@ -21,23 +21,27 @@ interface ConsentToDataSharingProps {
 
 export const ConsentToDataSharing = (props: ConsentToDataSharingProps) => {
   const { t } = useTranslation();
-  const { appLogic, user } = props;
+  const { appLogic } = props;
   const { updateUser } = appLogic.users;
 
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
-    await updateUser(user.user_id, {
+    const user = await updateUser(props.user.user_id, {
       consented_to_data_sharing: true,
     });
-    tracker.trackEvent("User consented to data sharing", {});
-    if (isFeatureEnabled("claimantShowMFA") && !user.hasEmployerRole) {
-      appLogic.portalFlow.goToPageFor("ENABLE_MFA");
-    } else {
-      appLogic.portalFlow.goToNextPage({});
+
+    // Only navigate away if there are no errors. The user is only returned if there are no errors.
+    if (user !== undefined) {
+      tracker.trackEvent("User consented to data sharing", {});
+      if (isFeatureEnabled("claimantShowMFA") && !user.hasEmployerRole) {
+        appLogic.portalFlow.goToPageFor("ENABLE_MFA");
+      } else {
+        appLogic.portalFlow.goToNextPage({});
+      }
     }
   });
 
-  const roleContext = user.hasEmployerRole ? "employer" : "user";
+  const roleContext = props.user.hasEmployerRole ? "employer" : "user";
 
   return (
     <form onSubmit={handleSubmit} className="usa-form" method="post">

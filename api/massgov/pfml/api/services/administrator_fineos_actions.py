@@ -26,7 +26,12 @@ from massgov.pfml.api.models.claims.responses import (
     ClaimReviewResponse,
     DocumentResponse,
 )
-from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit
+from massgov.pfml.api.models.common import (
+    ComputedStartDates,
+    ConcurrentLeave,
+    EmployerBenefit,
+    get_computed_start_dates,
+)
 from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
 from massgov.pfml.db.models.employees import Employer, User, UserLeaveAdministrator
 from massgov.pfml.db.queries.absence_periods import (
@@ -98,7 +103,7 @@ class EmployerInfoForReview(PydanticBaseModel):
 
 
 def _get_leave_details(absence_periods: Dict[str, Dict]) -> LeaveDetails:
-    """ Extracts absence data based on a PeriodDecisions dict and returns a LeaveDetails """
+    """Extracts absence data based on a PeriodDecisions dict and returns a LeaveDetails"""
     leave_details = {}
     leave_details["reason"] = absence_periods["decisions"][0]["period"]["leaveRequest"][
         "reasonName"
@@ -159,6 +164,24 @@ def _get_leave_details(absence_periods: Dict[str, Dict]) -> LeaveDetails:
     return LeaveDetails.parse_obj(leave_details)
 
 
+def _get_computed_start_dates(absence_periods: Dict[str, Dict]) -> ComputedStartDates:
+    """Extracts absence data based on a PeriodDecisions dict and returns ComputedStartDates"""
+    if len(absence_periods["decisions"]) == 0 or not absence_periods["decisions"][0]["period"]:
+        return ComputedStartDates(other_reason=None, same_reason=None)
+
+    # This assumes a multiple leave claim won't have a mix of caring leave and some other leave reason
+    leave_reason = absence_periods["decisions"][0]["period"]["leaveRequest"]["reasonName"]
+
+    leave_period_start_dates = [
+        decision["period"]["startDate"]
+        for decision in absence_periods["decisions"]
+        if decision["period"]["startDate"]
+    ]
+    earliest_start_date = min(leave_period_start_dates, default=None)
+
+    return get_computed_start_dates(earliest_start_date, leave_reason)
+
+
 def fineos_document_response_to_document_response(
     fineos_document_response: massgov.pfml.fineos.models.group_client_api.GroupClientDocument,
 ) -> DocumentResponse:
@@ -191,7 +214,7 @@ def get_documents_as_leave_admin(fineos_user_id: str, absence_id: str) -> List[D
             lambda fd: fineos_document_response_to_document_response(fd),
             # Certain document types are Word documents when first created, then converted to PDF documents
             # Only PDF documents should be returned to the portal
-            filter(lambda fd: fd.fileExtension == ".pdf", downloadable_documents),
+            filter(lambda fd: fd.fileExtension not in [".doc", ".docx"], downloadable_documents),
         )
     )
 
@@ -210,6 +233,7 @@ def download_document_as_leave_admin(
         {
             "fineos_user_id": fineos_user_id,
             "absence_id": absence_id,
+            "absence_case_id": absence_id,
             "fineos_document_id": fineos_document_id,
         }
     )
@@ -256,7 +280,11 @@ def find_sub_case_id(
     if not case_id:
         logger.warning(
             "Document with that fineos_document_id could not be found",
-            extra={"absence_id": absence_id, "fineos_document_id": fineos_document_id,},
+            extra={
+                "absence_id": absence_id,
+                "absence_case_id": absence_id,
+                "fineos_document_id": fineos_document_id,
+            },
         )
         raise Exception("Document with that fineos_document_id could not be found")
     return case_id
@@ -403,7 +431,7 @@ def _group_by_absence_period_reference(
 
 
 def _parse_absence_period_responses(
-    absence_period_decisions: List[Decision], log_attributes: Dict,
+    absence_period_decisions: List[Decision], log_attributes: Dict
 ) -> List[AbsencePeriodResponse]:
     absence_period_responses = []
 
@@ -434,6 +462,7 @@ def get_claim_as_leave_admin(
     log_attributes = {
         "fineos_user_id": fineos_user_id,
         "absence_id": absence_id,
+        "absence_case_id": absence_id,
         "employer_id": employer.employer_id,
     }
 
@@ -501,6 +530,9 @@ def get_claim_as_leave_admin(
     customer_info_for_review = CustomerInfoForReview.parse_obj(customer_info)
     employer_info_for_review = EmployerInfoForReview.from_orm(employer)
 
+    # Get computed start dates based on absence_periods
+    computed_start_dates = _get_computed_start_dates(absence_periods.dict())
+
     return (
         ClaimReviewResponse(
             **customer_info_for_review.dict(),
@@ -512,6 +544,7 @@ def get_claim_as_leave_admin(
             leave_details=leave_details,
             status=status,
             absence_periods=absence_period_responses,
+            computed_start_dates=computed_start_dates,
         ),
         managed_reqs,
         absence_periods,

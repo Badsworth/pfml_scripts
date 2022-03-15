@@ -71,13 +71,20 @@ function getRawEnvironment() {
 
     TWILIO_ACCOUNTSID: process.env.E2E_TWILIO_ACCOUNTSID,
     TWILIO_AUTHTOKEN: process.env.E2E_TWILIO_AUTHTOKEN,
+    TWILIO_NUMBERS: process.env.E2E_TWILIO_NUMBERS,
 
     FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION:
       process.env.FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION,
     HAS_ORGUNITS_SETUP: process.env.HAS_ORGUNITS_SETUP,
     HAS_LARGE_FILE_COMPRESSION: process.env.HAS_LARGE_FILE_COMPRESSION,
     HAS_EMPLOYER_REIMBURSEMENTS: process.env.HAS_EMPLOYER_REIMBURSEMENTS,
+    HAS_APRIL_UPGRADE: process.env.HAS_APRIL_UPGRADE,
     HAS_FEB_RELEASE: process.env.HAS_FEB_RELEASE,
+    LST_FILE_RANGE: process.env.E2E_LST_FILE_RANGE, // valid values are "small", "large", "full_range"
+    MFA_ENABLED: process.env.MFA_ENABLED,
+    S3_INTELLIGENCE_TOOL_BUCKET: process.env.E2E_S3_INTELLIGENCE_TOOL_BUCKET,
+    HAS_CHANNEL_SWITCHING: process.env.HAS_CHANNEL_SWITCHING,
+    HAS_UPDATED_ER_DASHBOARD: process.env.E2E_HAS_UPDATED_ER_DASHBOARD,
   };
 }
 
@@ -118,6 +125,9 @@ export const factory: ConfigFactory = (env: string) => {
     ...fileConfiguration._default, // Defaults
     ...file,
     ...environment,
+    // explicitly map the environment we've been passed. Otherwise, ENVIRONMENT always comes from
+    // the .env file, which is not correct when we're using an explicit config factory.
+    ENVIRONMENT: env,
   };
   const get: ConfigFunction = (name) => {
     const value = configuration[name];

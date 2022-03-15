@@ -301,7 +301,7 @@ def test_residential_address_required():
 def test_residential_address_fields_required():
     test_app = ApplicationFactory.build(
         residential_address=AddressFactory.build(
-            address_line_one=None, city=None, geo_state_id=None, zip_code=None,
+            address_line_one=None, city=None, geo_state_id=None, zip_code=None
         ),
         employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id,
         employer_notification_date=date(2021, 1, 3),
@@ -337,7 +337,7 @@ def test_residential_address_fields_required():
 def test_mailing_address_fields_required():
     test_app = ApplicationFactory.build(
         mailing_address=AddressFactory.build(
-            address_line_one=None, city=None, geo_state_id=None, zip_code=None,
+            address_line_one=None, city=None, geo_state_id=None, zip_code=None
         ),
         employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id,
         employer_notification_date=date(2021, 1, 3),
@@ -673,7 +673,7 @@ def test_min_leave_periods():
             message="At least one leave period should be entered",
             rule=IssueRule.min_leave_periods,
             type=IssueType.required,
-        ),
+        )
     ] == issues
 
 
@@ -728,7 +728,7 @@ def test_leave_period_end_date_before_start_date():
             type=IssueType.minimum,
             message="end_date cannot be earlier than the start_date",
             field="leave_details.continuous_leave_periods[0].end_date",
-        ),
+        )
     ] == continuous_leave_issues
 
     assert [
@@ -736,7 +736,7 @@ def test_leave_period_end_date_before_start_date():
             type=IssueType.minimum,
             message="end_date cannot be earlier than the start_date",
             field="leave_details.intermittent_leave_periods[0].end_date",
-        ),
+        )
     ] == intermittent_leave_issues
 
     assert [
@@ -744,7 +744,7 @@ def test_leave_period_end_date_before_start_date():
             type=IssueType.minimum,
             message="end_date cannot be earlier than the start_date",
             field="leave_details.reduced_schedule_leave_periods[0].end_date",
-        ),
+        )
     ] == reduced_schedule_leave_issues
 
 
@@ -782,7 +782,7 @@ def test_leave_period_disallow_12mo_leave_period_per_type():
             message="Leave cannot exceed 364 days",
             rule=IssueRule.disallow_12mo_continuous_leave_period,
             type="",
-        ),
+        )
     ] == continuous_leave_issues
 
     assert [
@@ -790,7 +790,7 @@ def test_leave_period_disallow_12mo_leave_period_per_type():
             message="Leave cannot exceed 364 days",
             rule=IssueRule.disallow_12mo_intermittent_leave_period,
             type="",
-        ),
+        )
     ] == intermittent_leave_issues
 
     assert [
@@ -798,7 +798,7 @@ def test_leave_period_disallow_12mo_leave_period_per_type():
             message="Leave cannot exceed 364 days",
             rule=IssueRule.disallow_12mo_reduced_leave_period,
             type="",
-        ),
+        )
     ] == reduced_schedule_leave_issues
 
 
@@ -830,7 +830,7 @@ def test_leave_period_disallow_12mo_leave_period():
             rule=IssueRule.disallow_12mo_leave_period,
             message="Leave cannot exceed 364 days",
             type="",
-        ),
+        )
     ] == issues
 
 
@@ -841,7 +841,7 @@ def test_leave_period_allows_same_start_end_date():
             reduced_schedule_leave_periods=[
                 ReducedScheduleLeavePeriodFactory.build(
                     start_date=start_end_date, end_date=start_end_date
-                ),
+                )
             ]
         )
     )
@@ -1663,8 +1663,7 @@ def test_employer_fein_required_for_employed_claimants():
 
 def test_employer_fein_not_required_for_self_employed_claimants():
     test_app = ApplicationFactory.build(
-        employer_fein=None,
-        employment_status_id=EmploymentStatus.SELF_EMPLOYED.employment_status_id,
+        employer_fein=None, employment_status_id=EmploymentStatus.SELF_EMPLOYED.employment_status_id
     )
     issues = get_conditional_issues(test_app)
     assert not issues
@@ -1685,8 +1684,7 @@ def test_employer_notification_date_required():
 
 def test_employer_notification_date_required_when_employed():
     test_app = ApplicationFactory.build(
-        employer_notified=False,
-        employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id,
+        employer_notified=False, employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id
     )
     issues = get_conditional_issues(test_app)
     assert [
@@ -1761,7 +1759,7 @@ def test_employer_benefit_start_date_must_be_after_2020():
     application = ApplicationFactory.build()
     benefits = [
         EmployerBenefitFactory.build(
-            application_id=application.application_id, benefit_start_date=date(2020, 12, 31),
+            application_id=application.application_id, benefit_start_date=date(2020, 12, 31)
         )
     ]
     application.employer_benefits = benefits
@@ -1772,7 +1770,7 @@ def test_employer_benefit_start_date_must_be_after_2020():
             type=IssueType.minimum,
             message="employer_benefits[0].benefit_start_date cannot be earlier than 2021-01-01",
             field="employer_benefits[0].benefit_start_date",
-        ),
+        )
     ] == issues
 
 
@@ -1780,7 +1778,7 @@ def test_employer_benefit_end_date_must_be_after_2020():
     application = ApplicationFactory.build()
     benefits = [
         EmployerBenefitFactory.build(
-            application_id=application.application_id, benefit_end_date=date(2020, 12, 31),
+            application_id=application.application_id, benefit_end_date=date(2020, 12, 31)
         )
     ]
     application.employer_benefits = benefits
@@ -1791,7 +1789,7 @@ def test_employer_benefit_end_date_must_be_after_2020():
             type=IssueType.minimum,
             message="employer_benefits[0].benefit_end_date cannot be earlier than 2021-01-01",
             field="employer_benefits[0].benefit_end_date",
-        ),
+        )
     ] == issues
 
 
@@ -1812,7 +1810,7 @@ def test_employer_benefit_end_date_must_be_after_start_date():
             type=IssueType.invalid_date_range,
             message="employer_benefits[0].benefit_end_date cannot be earlier than employer_benefits[0].benefit_start_date",
             field="employer_benefits[0].benefit_end_date",
-        ),
+        )
     ] == issues
 
 
@@ -1948,9 +1946,7 @@ def test_has_other_incomes_true_zero_income():
     application.has_other_incomes = True
 
     incomes = [
-        OtherIncomeFactory.build(
-            application_id=application.application_id, income_amount_dollars=0,
-        )
+        OtherIncomeFactory.build(application_id=application.application_id, income_amount_dollars=0)
     ]
     application.other_incomes = incomes
 
@@ -1966,7 +1962,7 @@ def test_has_other_incomes_true_zero_income():
 
 def test_other_income_no_issues():
     application = ApplicationFactory.build()
-    incomes = [OtherIncomeFactory.build(application_id=application.application_id,)]
+    incomes = [OtherIncomeFactory.build(application_id=application.application_id)]
     application.other_incomes = incomes
 
     issues = get_conditional_issues(application)
@@ -2009,7 +2005,7 @@ def test_other_income_start_date_must_be_after_2020():
     application = ApplicationFactory.build()
     incomes = [
         OtherIncomeFactory.build(
-            application_id=application.application_id, income_start_date=date(2020, 12, 31),
+            application_id=application.application_id, income_start_date=date(2020, 12, 31)
         )
     ]
     application.other_incomes = incomes
@@ -2020,7 +2016,7 @@ def test_other_income_start_date_must_be_after_2020():
             type=IssueType.minimum,
             message="other_incomes[0].income_start_date cannot be earlier than 2021-01-01",
             field="other_incomes[0].income_start_date",
-        ),
+        )
     ] == issues
 
 
@@ -2028,7 +2024,7 @@ def test_other_income_end_date_must_be_after_2020():
     application = ApplicationFactory.build()
     incomes = [
         OtherIncomeFactory.build(
-            application_id=application.application_id, income_end_date=date(2020, 12, 31),
+            application_id=application.application_id, income_end_date=date(2020, 12, 31)
         )
     ]
     application.other_incomes = incomes
@@ -2039,7 +2035,7 @@ def test_other_income_end_date_must_be_after_2020():
             type=IssueType.minimum,
             message="other_incomes[0].income_end_date cannot be earlier than 2021-01-01",
             field="other_incomes[0].income_end_date",
-        ),
+        )
     ] == issues
 
 
@@ -2060,7 +2056,7 @@ def test_other_income_end_date_must_be_after_start_date():
             type=IssueType.invalid_date_range,
             message="other_incomes[0].income_end_date cannot be earlier than other_incomes[0].income_start_date",
             field="other_incomes[0].income_end_date",
-        ),
+        )
     ] == issues
 
 
@@ -2184,7 +2180,7 @@ def test_previous_leave_no_issues():
     application.has_previous_leaves_other_reason = True
     application.has_previous_leaves_same_reason = False
     leaves_other_reason = [
-        PreviousLeaveOtherReasonFactory.build(application_id=application.application_id,)
+        PreviousLeaveOtherReasonFactory.build(application_id=application.application_id)
     ]
     application.previous_leaves_other_reason = leaves_other_reason
 
@@ -2263,7 +2259,7 @@ def test_previous_leave_start_date_must_be_after_2020():
     application = ApplicationFactory.build()
     leaves = [
         PreviousLeaveSameReasonFactory.build(
-            application_id=application.application_id, leave_start_date=date(2020, 12, 31),
+            application_id=application.application_id, leave_start_date=date(2020, 12, 31)
         )
     ]
     application.previous_leaves_same_reason = leaves
@@ -2274,7 +2270,7 @@ def test_previous_leave_start_date_must_be_after_2020():
             type=IssueType.minimum,
             message="previous_leaves_same_reason[0].leave_start_date cannot be earlier than 2021-01-01",
             field="previous_leaves_same_reason[0].leave_start_date",
-        ),
+        )
     ] == issues
 
 
@@ -2282,7 +2278,7 @@ def test_previous_leave_end_date_must_be_after_2020():
     application = ApplicationFactory.build()
     leaves = [
         PreviousLeaveOtherReasonFactory.build(
-            application_id=application.application_id, leave_end_date=date(2020, 12, 31),
+            application_id=application.application_id, leave_end_date=date(2020, 12, 31)
         )
     ]
     application.previous_leaves_other_reason = leaves
@@ -2293,6 +2289,73 @@ def test_previous_leave_end_date_must_be_after_2020():
             type=IssueType.minimum,
             message="previous_leaves_other_reason[0].leave_end_date cannot be earlier than 2021-01-01",
             field="previous_leaves_other_reason[0].leave_end_date",
+        )
+    ] == issues
+
+
+def test_previous_leave_start_dates_for_caring_leave_with_prior_year_before_launch():
+    application = ApplicationFactory.build(
+        leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id,
+    )
+    leave_periods = [
+        ContinuousLeavePeriodFactory.build(
+            application_id=application.application_id,
+            start_date=date(2021, 8, 1),
+            end_date=date(2021, 8, 15),
+        )
+    ]
+    application.continuous_leave_periods = leave_periods
+    leaves = [
+        PreviousLeaveSameReasonFactory.build(
+            application_id=application.application_id,
+            leave_start_date=date(2021, 4, 1),
+            leave_end_date=date(2021, 4, 15),
+        )
+    ]
+    application.previous_leaves_same_reason = leaves
+
+    issues = get_conditional_issues(application)
+    assert [
+        ValidationErrorDetail(
+            type=IssueType.minimum,
+            message="previous_leaves_same_reason[0].leave_start_date cannot be earlier than 2021-07-01",
+            field="previous_leaves_same_reason[0].leave_start_date",
+        ),
+        ValidationErrorDetail(
+            type=IssueType.minimum,
+            message="previous_leaves_same_reason[0].leave_end_date cannot be earlier than 2021-07-01",
+            field="previous_leaves_same_reason[0].leave_end_date",
+        ),
+    ] == issues
+
+
+def test_previous_leave_start_dates_for_caring_leave_with_prior_year_after_launch():
+    application = ApplicationFactory.build(
+        leave_reason_id=LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id,
+    )
+    leave_periods = [
+        ContinuousLeavePeriodFactory.build(
+            application_id=application.application_id,
+            start_date=date(2022, 8, 1),
+            end_date=date(2022, 8, 15),
+        )
+    ]
+    application.continuous_leave_periods = leave_periods
+    leaves = [
+        PreviousLeaveSameReasonFactory.build(
+            application_id=application.application_id,
+            leave_start_date=date(2021, 7, 30),
+            leave_end_date=date(2021, 8, 15),
+        )
+    ]
+    application.previous_leaves_same_reason = leaves
+
+    issues = get_conditional_issues(application)
+    assert [
+        ValidationErrorDetail(
+            type=IssueType.minimum,
+            message="previous_leaves_same_reason[0].leave_start_date cannot be earlier than 2021-08-01",
+            field="previous_leaves_same_reason[0].leave_start_date",
         ),
     ] == issues
 
@@ -2314,7 +2377,7 @@ def test_previous_leave_end_date_must_be_after_start_date():
             type=IssueType.invalid_date_range,
             message="previous_leaves_same_reason[0].leave_end_date cannot be earlier than previous_leaves_same_reason[0].leave_start_date",
             field="previous_leaves_same_reason[0].leave_end_date",
-        ),
+        )
     ] == issues
 
 
@@ -2368,7 +2431,7 @@ def test_previous_leaves_cannot_overlap_leave_periods():
             type=IssueType.conflicting,
             rule=IssueRule.disallow_overlapping_leave_period_with_previous_leave,
             message="Previous leaves cannot overlap with leave periods. Received leave period 2021-01-01 – 2021-02-28 and previous leave 2021-02-28 – 2021-03-12.",
-        ),
+        )
     ] == issues
 
     # Previous leaves for the same reason; reduced leave; previous leave overlapping with the beginning of the leave period
@@ -2397,7 +2460,7 @@ def test_previous_leaves_cannot_overlap_leave_periods():
             type=IssueType.conflicting,
             rule=IssueRule.disallow_overlapping_leave_period_with_previous_leave,
             message="Previous leaves cannot overlap with leave periods. Received leave period 2021-01-05 – 2021-02-28 and previous leave 2021-01-01 – 2021-01-05.",
-        ),
+        )
     ] == issues
 
     # Previous leaves for another reason; reduced leave; previous leave contained within the leave period
@@ -2424,7 +2487,7 @@ def test_previous_leaves_cannot_overlap_leave_periods():
             type=IssueType.conflicting,
             rule=IssueRule.disallow_overlapping_leave_period_with_previous_leave,
             message="Previous leaves cannot overlap with leave periods. Received leave period 2021-01-05 – 2021-02-28 and previous leave 2021-01-07 – 2021-01-24.",
-        ),
+        )
     ] == issues
 
     # Previous leaves for another reason; intermittent leave; previous leave contain the entire leave period
@@ -2453,7 +2516,7 @@ def test_previous_leaves_cannot_overlap_leave_periods():
             type=IssueType.conflicting,
             rule=IssueRule.disallow_overlapping_leave_period_with_previous_leave,
             message="Previous leaves cannot overlap with leave periods. Received leave period 2021-01-05 – 2021-02-28 and previous leave 2021-01-03 – 2021-03-01.",
-        ),
+        )
     ] == issues
 
 
@@ -2469,7 +2532,7 @@ def test_previous_leaves_cannot_overlap_leave_periods():
                     type=IssueType.required,
                     message="Tax withholding preference is required",
                     field="is_withholding_tax",
-                ),
+                )
             ],
         ),
         (False, True, True, []),
@@ -2530,7 +2593,7 @@ def test_get_application_complete_issues(
 
 
 def test_get_application_complete_issues_certification_validation(
-    initialize_factories_session, user, test_db_session,
+    initialize_factories_session, user, test_db_session
 ):
     application = ApplicationFactory.create(
         is_withholding_tax=True,
@@ -2651,7 +2714,7 @@ class TestGetConcurrentLeaveIssues:
     def continuous_leave_periods(self, application):
         return [
             ContinuousLeavePeriodFactory.build(
-                start_date=date(2021, 11, 20), end_date=date(2021, 12, 28),
+                start_date=date(2021, 11, 20), end_date=date(2021, 12, 28)
             )
         ]
 
@@ -2659,7 +2722,7 @@ class TestGetConcurrentLeaveIssues:
     def reduced_leave_periods(self):
         return [
             ReducedScheduleLeavePeriodFactory.build(
-                start_date=date(2021, 11, 20), end_date=date(2021, 12, 28),
+                start_date=date(2021, 11, 20), end_date=date(2021, 12, 28)
             )
         ]
 
@@ -2837,8 +2900,7 @@ class TestValidateApplicationImportRequestForClaim:
         assert exc.value.errors == [
             ValidationErrorDetail(
                 type=IssueType.incorrect,
-                message="tax_identifier does not match our records",
-                field="tax_identifier",
+                message="Code 2: An issue occurred while trying to import the application.",
             )
         ]
 

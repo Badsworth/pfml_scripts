@@ -1,6 +1,6 @@
 import { AbsencePeriod } from "src/models/AbsencePeriod";
 import LeaveReason from "src/models/LeaveReason";
-import faker from "faker";
+import { faker } from "@faker-js/faker";
 
 function createPeriod(customAttrs: Partial<AbsencePeriod> = {}) {
   return new AbsencePeriod({

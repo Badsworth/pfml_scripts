@@ -2,14 +2,15 @@ import { fineos, fineosPages, portal } from "../../actions";
 import { ApplicationResponse } from "_api";
 import {
   isToday,
-  addDays,
   format,
   differenceInHours,
   getHours,
+  isAfter,
 } from "date-fns";
 import { config } from "../../actions/common";
 import { addBusinessDays } from "date-fns/esm";
 import { convertToTimeZone } from "date-fns-timezone";
+import { calculatePaymentDatePreventingOP } from "../../actions/fineos.pages";
 
 describe("Create a new caring leave claim in FINEOS and Suppress Correspondence check", () => {
   const credentials: Credentials = {
@@ -59,7 +60,12 @@ describe("Create a new caring leave claim in FINEOS and Suppress Correspondence 
             );
             adjudication.acceptLeavePlan();
           });
-          claimPage.approve("Approved").triggerNotice("Designation Notice");
+          if (config("HAS_APRIL_UPGRADE") === "true") {
+            claimPage.approve("Approved", true);
+          } else {
+            claimPage.approve("Approved", false);
+          }
+          claimPage.triggerNotice("Designation Notice");
         });
       });
     });
@@ -74,6 +80,16 @@ describe("Create a new caring leave claim in FINEOS and Suppress Correspondence 
         applications.filter((application) => {
           if (!application.updated_time)
             throw Error("updated_time is undefined");
+          if (config("HAS_FEB_RELEASE") === "true") {
+            return (
+              isAfter(
+                new Date(),
+                calculatePaymentDatePreventingOP(
+                  new Date(application.updated_time)
+                )
+              ) && application.status === "Completed"
+            );
+          }
           // Must use EST timezone here to avoid issues when running this spec across different timezones
           // E.X running this test at 5PM PST will select a claim approved on the day the test is running, so no payments would appear
           const estTime = getHours(
@@ -90,7 +106,6 @@ describe("Create a new caring leave claim in FINEOS and Suppress Correspondence 
             application.status === "Completed"
           );
         });
-
       cy.task("findFirstApprovedClaim", {
         applications: completedApplicationsBeforeToday,
         credentials,
@@ -103,24 +118,48 @@ describe("Create a new caring leave claim in FINEOS and Suppress Correspondence 
           false
         );
         portal.viewPaymentStatus();
-        portal.assertPayments([
-          {
-            paymentMethod: "Check",
-            estimatedScheduledDate: "Sent",
-            dateSent: format(
-              addDays(
+        // payments are only processed on weekdays, warranting the use of addBusinessDays
+        const paymentDate =
+          config("HAS_FEB_RELEASE") === "true"
+            ? addBusinessDays(calculatePaymentDatePreventingOP(), 1) // calculatePaymentDatePreventingOP returns the processing date, a business day is added to allow payment to fully process
+            : addBusinessDays(
                 // Enforce using EST time
                 // Causes failures if local timezone is behind EST, and claim submission time in EST is past 23:59
                 convertToTimeZone(response.updated_at, {
                   timeZone: "America/New_York",
                 }),
                 1
+              );
+        // Additional pay period is included in lumpsum payment due to preventing overpayment rules
+        const paymentAmount =
+          config("HAS_FEB_RELEASE") === "true" ? "2493.18" : "1,662.12";
+        if (config("ENVIRONMENT") !== "trn2") {
+          portal.assertPaymentsOverV66([
+            {
+              status: `Check mailed on ${format(paymentDate, "MMMM d, yyyy")}`,
+              amount: paymentAmount,
+            },
+          ]);
+        } else {
+          portal.assertPaymentsUnderV66([
+            {
+              paymentMethod: "Check",
+              estimatedScheduledDate: "Sent",
+              dateSent: format(
+                addBusinessDays(
+                  // Enforce using EST time
+                  // Causes failures if local timezone is behind EST, and claim submission time in EST is past 23:59
+                  convertToTimeZone(response.updated_at, {
+                    timeZone: "America/New_York",
+                  }),
+                  1
+                ),
+                "M/d/yyyy"
               ),
-              "M/dd/yyyy"
-            ),
-            amount: "1,662.12",
-          },
-        ]);
+              amount: paymentAmount,
+            },
+          ]);
+        }
       });
     });
   });
@@ -130,18 +169,18 @@ describe("Create a new caring leave claim in FINEOS and Suppress Correspondence 
     portal.login(credentials);
     cy.wait("@getApplications").then(({ response }) => {
       const applications: ApplicationResponse[] = response?.body.data;
-      const completedApplicationsBeforeToday: ApplicationResponse[] =
-        applications.filter((application) => {
-          if (!application.updated_time)
-            throw Error("updated_time is undefined");
+      const completedToday: ApplicationResponse[] = applications.filter(
+        (application) => {
+          if (!application.updated_at) throw Error("updated_at is undefined");
           // a claim cannot be older than 24 hours and must be in a completed state for this spec
           return (
-            differenceInHours(new Date(), new Date(application.updated_time)) <
-              24 && application.status === "Completed"
+            isToday(new Date(application.updated_at)) &&
+            application.status === "Completed"
           );
-        });
+        }
+      );
       cy.task("findFirstApprovedClaim", {
-        applications: completedApplicationsBeforeToday,
+        applications: completedToday,
         credentials,
       }).then((response) => {
         if (!response) return;
@@ -152,9 +191,19 @@ describe("Create a new caring leave claim in FINEOS and Suppress Correspondence 
           false
         );
         portal.viewPaymentStatus();
-        portal.assertPaymentCheckBackDate(
-          addBusinessDays(new Date(response.updated_at), 3)
-        );
+        // portal/v58.0-rc2 contains updates to push back the "Check back date"
+        if (
+          config("ENVIRONMENT") === "stage" ||
+          config("ENVIRONMENT") === "test"
+        ) {
+          portal.assertPaymentCheckBackDate(
+            addBusinessDays(new Date(response.updated_at), 5)
+          );
+        } else {
+          portal.assertPaymentCheckBackDate(
+            addBusinessDays(new Date(response.updated_at), 3)
+          );
+        }
       });
     });
   });

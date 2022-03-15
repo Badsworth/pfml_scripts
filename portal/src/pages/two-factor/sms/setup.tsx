@@ -33,7 +33,7 @@ export const SetupSMS = (props: SetupSMSProps) => {
     : undefined;
 
   const { formState, updateFields } = useFormState({
-    phone_number: "",
+    "mfa_phone_number.phone_number": "",
   });
 
   const handleSubmit = async () => {
@@ -43,7 +43,7 @@ export const SetupSMS = (props: SetupSMSProps) => {
       mfa_phone_number: {
         int_code: "1",
         phone_type: PhoneType.cell,
-        phone_number: formState.phone_number,
+        phone_number: formState["mfa_phone_number.phone_number"],
       },
     });
 
@@ -59,7 +59,7 @@ export const SetupSMS = (props: SetupSMSProps) => {
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });
@@ -75,7 +75,7 @@ export const SetupSMS = (props: SetupSMSProps) => {
         <Trans i18nKey="pages.authTwoFactorSmsSetup.lead" />
       </Lead>
       <InputText
-        {...getFunctionalInputProps("phone_number")}
+        {...getFunctionalInputProps("mfa_phone_number.phone_number")}
         mask="phone"
         label={t("pages.authTwoFactorSmsSetup.phoneNumberLabel")}
         smallLabel

@@ -3,7 +3,7 @@ name: E2E Test Suite (All Environments)
 # This workflow is to trigger scheduled runs every morning
 #
 # Scheduled runs will trigger a workflow_dispatch for all
-# enviornments via the End-to-End Test Suite workflow
+# environments via the End-to-End Test Suite workflow
 
 on:
   workflow_dispatch:
@@ -19,30 +19,49 @@ on:
         - Manual - Post Morning Run Check (all envs)
         - Manual - Environment Sanity Check (all envs)
         - Manual - New Dataset Check (all envs)
+        - Manual - Targeted Specs Check (all envs)
         - Manual - Other (all envs)
+      run_stable:
+        description: "Run tests in stable group"
+        required: false
+        default: true
+        type: boolean
       run_unstable:
         description: "Run tests in unstable group"
         required: false
         default: false
         type: boolean
-      run_nightly:
-        description: "Run tests in nightly group"
+      run_morning:
+        description: "Run tests in morning group"
         required: false
         default: false
         type: boolean
+      run_targeted:
+        description: |
+          ⬇️ Run a specific test, comma seperated (no space)
+          list of tests, or blob: Ex: cypress/specs/stable/feature/api_**
+        required: false
+        default: false
+        type: boolean
+      targeted_pattern:
+        description: "Input Pattern"        
+        required: false
+        default: "cypress/specs/<group>/<type>/**"
+        type: "string"
   schedule:
-    - cron: "0 11 * * 1-5"
-    - cron: "45 12 * * 1-5"
+    - cron: "15 12 * * 1-5"
 
 jobs:
   trigger_e2e:
+    # This workflow intentionally doesn't use workflow_call because at the moment, it doesn't support matrix builds.
+    # Also, since we don't wait for results or care about having an accurate run URL, the benefit is small.
     name: Run Cypress Test
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         environment:
-          ["test", "stage", "performance", "training", "uat", "cps-preview", "breakfix", "long", "trn2"]
+          ["test", "stage", "performance", "training", "uat", "cps-preview", "breakfix", "long"]
     steps:
       - name: Trigger E2E Workflow
         uses: aurelien-baudet/workflow-dispatch@v2.1.1
@@ -55,7 +74,10 @@ jobs:
             {
               "target_environment": "${{ matrix.environment }}",
               "cypress_tags": "${{ github.event_name == 'schedule' && 'Morning Run' || github.event.inputs.cypress_tags }}",
-              "run_unstable": "${{ github.event.inputs.run_unstable || 'false' }}",
-              "run_nightly": "${{ github.event_name == 'schedule' && 'true' || github.event.inputs.run_nightly }}",
+              "run_stable": "${{ github.event_name == 'schedule' && 'true' || github.event.inputs.run_stable }}",
+              "run_unstable": "${{ github.event_name == 'schedule' && 'true' || github.event.inputs.run_unstable }}",
+              "run_morning": "${{ github.event_name == 'schedule' && 'true' || github.event.inputs.run_morning }}",
+              "run_targeted": "${{ github.event_name == 'schedule' && 'false' || github.event.inputs.run_targeted }}",
+              "targeted_pattern": "${{ github.event_name == 'schedule' && 'cypress/specs/stable/feature/**' || github.event.inputs.targeted_pattern }}",
               "title_override": "${{ github.event_name == 'schedule' && format('Scheduled Run: {0}', matrix.environment) || '' }}"
             }

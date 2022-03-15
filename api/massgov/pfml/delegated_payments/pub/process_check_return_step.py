@@ -14,17 +14,15 @@ import massgov.pfml.util.files
 import massgov.pfml.util.logging
 from massgov.pfml.api.util import state_log_util
 from massgov.pfml.db.models.employees import (
-    Flow,
-    LkState,
     Payment,
     PaymentCheck,
     PaymentCheckStatus,
     PubErrorType,
     ReferenceFile,
     ReferenceFileType,
-    State,
 )
 from massgov.pfml.db.models.payments import FineosWritebackTransactionStatus
+from massgov.pfml.db.models.state import Flow, LkState, State
 from massgov.pfml.delegated_payments import delegated_config, delegated_payments_util
 from massgov.pfml.delegated_payments.pub import check_return, process_files_in_path_step
 from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
@@ -72,12 +70,15 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         db_session: massgov.pfml.db.Session,
         log_entry_db_session: massgov.pfml.db.Session,
         inbound_path: str = "",
+        should_add_to_report_queue: bool = False,
     ) -> None:
         """Constructor."""
         pub_check_inbound_path = inbound_path
         if not inbound_path:
             pub_check_inbound_path = delegated_config.get_s3_config().pfml_pub_check_archive_path
-        super().__init__(db_session, log_entry_db_session, pub_check_inbound_path)
+        super().__init__(
+            db_session, log_entry_db_session, pub_check_inbound_path, should_add_to_report_queue
+        )
 
     def process_file(self, path: str) -> None:
         """Parse a check payment return file and process each record."""
@@ -89,18 +90,9 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         self.db_session.add(self.reference_file)
 
         stream = massgov.pfml.util.files.open_stream(path)
-        try:
-            self.process_stream(stream)
-        except Exception as err:
-            self.db_session.rollback()
-            logger.exception("%s: %s", type(err).__name__, str(err), extra={"path": path})
-            delegated_payments_util.move_reference_file(
-                self.db_session, self.reference_file, self.received_path, self.error_path
-            )
-            # TODO: add to general error report
-            raise
 
-        self.db_session.commit()
+        self.process_stream(stream)
+
         delegated_payments_util.move_reference_file(
             self.db_session, self.reference_file, self.received_path, self.processed_path
         )
@@ -206,6 +198,8 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         latest_state = state_log_util.get_latest_state_log_in_flow(
             payment, Flow.DELEGATED_PAYMENT, self.db_session
         )
+
+        end_state = latest_state.end_state if latest_state is not None else None
         if latest_state is not None and latest_state.end_state is not None:
             end_state_id = latest_state.end_state_id
             state_description = str(latest_state.end_state.state_description)
@@ -214,7 +208,7 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
             if end_state_id in EXPECTED_STATE_IDS:
                 return latest_state.end_state
 
-        extra = extra_for_log(check_payment, payment)
+        extra = extra_for_log(check_payment, payment, end_state)
         extra["payments.state"] = end_state_id
 
         # The latest state for this payment is not compatible with a check return.
@@ -234,7 +228,7 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         self, payment: Payment, check_payment: check_return.CheckPayment, payment_state: LkState
     ) -> None:
         """Handle a check payment that has been paid."""
-        extra = extra_for_log(check_payment, payment)
+        extra = extra_for_log(check_payment, payment, payment_state)
         # Don't recreate state logs and writebacks if we've already done it
         if payment_state.state_id == State.DELEGATED_PAYMENT_COMPLETE.state_id:
             logger.info("Payment previously processed and marked complete", extra=extra)
@@ -263,9 +257,10 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
 
         writeback_transaction_status = FineosWritebackTransactionStatus.POSTED
 
+        end_state = State.DELEGATED_PAYMENT_COMPLETE
         create_payment_finished_state_log_with_writeback(
             payment=payment,
-            payment_end_state=State.DELEGATED_PAYMENT_COMPLETE,
+            payment_end_state=end_state,
             payment_outcome=state_log_util.build_outcome(
                 "Payment complete by paid check",
                 check_paid_date=str(check_payment.paid_date),
@@ -285,7 +280,7 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
             extra["check_time_to_cash"] = check_time_to_cash
 
         logger.info(
-            "payment complete by paid check", extra=extra,
+            "payment complete by paid check", extra=extra_for_log(check_payment, payment, end_state)
         )
 
         self.increment(self.Metrics.PAYMENT_COMPLETE_BY_PAID_CHECK)
@@ -295,7 +290,7 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
     ) -> None:
         """Handle a check payment that remains in an outstanding status."""
         logger.info(
-            "check still outstanding, no state change", extra=extra_for_log(check_payment, payment),
+            "check still outstanding, no state change", extra=extra_for_log(check_payment, payment)
         )
         self.increment(self.Metrics.PAYMENT_STILL_OUTSTANDING)
 
@@ -303,7 +298,7 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         self, payment: Payment, check_payment: check_return.CheckPayment, payment_state: LkState
     ) -> None:
         """Handle a check payment that was void, stale, or stopped."""
-        extra = extra_for_log(check_payment, payment)
+        extra = extra_for_log(check_payment, payment, payment_state)
         # Don't recreate state logs and writebacks if we've already done it
         if payment_state.state_id == State.DELEGATED_PAYMENT_ERROR_FROM_BANK.state_id:
             logger.info("Payment previously processed and marked as errored", extra=extra)
@@ -321,11 +316,22 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
             description=check_payment.status.value
         )
 
-        writeback_transaction_status = FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR
+        if check_payment.status == check_return.PaidStatus.VOID:
+            writeback_transaction_status = FineosWritebackTransactionStatus.VOID_CHECK
+        elif check_payment.status == check_return.PaidStatus.STALE:
+            writeback_transaction_status = FineosWritebackTransactionStatus.STALE_CHECK
+        elif check_payment.status == check_return.PaidStatus.STOP:
+            writeback_transaction_status = FineosWritebackTransactionStatus.STOP_CHECK
+        else:
+            logger.warning(
+                "Payment check errored, but status is not one of: void, stale, or stop", extra=extra
+            )
+            writeback_transaction_status = FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR
 
+        end_state = State.DELEGATED_PAYMENT_ERROR_FROM_BANK
         create_payment_finished_state_log_with_writeback(
             payment=payment,
-            payment_end_state=State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
+            payment_end_state=end_state,
             payment_outcome=state_log_util.build_outcome(
                 "Payment failed by check status %s" % check_payment.status.name,
                 check_line_number=str(check_payment.line_number),
@@ -337,7 +343,7 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         )
 
         logger.info(
-            "payment failed by check", extra=extra,
+            "payment failed by check", extra=extra_for_log(check_payment, payment, end_state)
         )
         self.increment(self.Metrics.PAYMENT_FAILED_BY_CHECK)
         self.add_pub_error(
@@ -351,10 +357,10 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
 
 
 def extra_for_log(
-    check_payment: check_return.CheckPayment, payment: Payment
+    check_payment: check_return.CheckPayment, payment: Payment, state: Optional[LkState] = None
 ) -> Dict[str, Union[None, int, str]]:
     return {
-        **delegated_payments_util.get_traceable_payment_details(payment),
+        **delegated_payments_util.get_traceable_payment_details(payment, state),
         "absence_case_id": payment.claim.fineos_absence_id if payment.claim else None,
         "payments.check.line_number": check_payment.line_number,
         "payments.check.check_number": check_payment.check_number,

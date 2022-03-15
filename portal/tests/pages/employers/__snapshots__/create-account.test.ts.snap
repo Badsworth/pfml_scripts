@@ -22,7 +22,7 @@ exports[`CreateAccount renders the empty page 1`] = `
       <div
         class="usa-alert__text"
       >
-        Workers who wish to apply for paid leave should follow 
+        Employees in Massachusetts who wish to apply for paid leave should follow 
         <a
           href="/"
         >
@@ -35,12 +35,12 @@ exports[`CreateAccount renders the empty page 1`] = `
   <p
     class="usa-intro"
   >
-    Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers can now apply for paid family and medical leave.
+    Welcome! Please take a few minutes to create an account for your organization so you can manage leave for your team. Employees in Massachusetts can now apply for paid family and medical leave.
   </p>
   <p
     class="usa-intro"
   >
-    If you manage leave for multiple companies, please create an account for one using the form below. You’ll be able to add more companies to your account in the portal.
+    If you manage leave for multiple organizations, please create an account for one using the form below. Then you’ll be able to add multiple organizations to your account.
   </p>
   <details
     class="c-details"

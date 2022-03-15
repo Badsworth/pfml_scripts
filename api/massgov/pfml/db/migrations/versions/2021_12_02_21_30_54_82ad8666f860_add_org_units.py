@@ -28,7 +28,7 @@ def upgrade():
         sa.Column("user_leave_administrator_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("organization_unit_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.ForeignKeyConstraint(
-            ["organization_unit_id"], ["organization_unit.organization_unit_id"],
+            ["organization_unit_id"], ["organization_unit.organization_unit_id"]
         ),
         sa.ForeignKeyConstraint(
             ["user_leave_administrator_id"],

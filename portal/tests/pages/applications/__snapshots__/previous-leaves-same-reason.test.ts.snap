@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`PreviousLeavesSameReason renders different legend and hint when claim is for Caring Leave 1`] = `
+exports[`PreviousLeavesSameReason renders legend and hint with computed dates 1`] = `
 <fieldset
   class="usa-fieldset margin-top-3 usa-form-group"
 >
@@ -10,14 +10,9 @@ exports[`PreviousLeavesSameReason renders different legend and hint when claim i
     <h2
       class="font-heading-lg text-bold"
     >
-      Did you take any previous leave between July 1, 2021 and the first day of the leave you are applying for, for the same reason as you are applying?
+      Did you take any previous leave between January 1, 2021 and January 1, 2022 for the same reason as you are applying for paid leave now?
     </h2>
   </legend>
-  <span
-    class="display-block line-height-sans-5 measure-5 usa-intro"
-  >
-    Select No if your current paid leave from PFML began on July 1, 2021.
-  </span>
   <div
     class="margin-top-3"
   >
@@ -57,72 +52,6 @@ exports[`PreviousLeavesSameReason renders different legend and hint when claim i
       <label
         class="usa-radio__label"
         for="InputChoice2"
-      >
-        No
-        <span
-          class="usa-hint text-base-dark"
-        >
-          <br />
-          I have not taken previous leave for the same reason, or my other leave was through Massachusetts’ PFML program
-        </span>
-      </label>
-    </div>
-  </div>
-</fieldset>
-`;
-
-exports[`PreviousLeavesSameReason renders different legend and hint when claim is for Caring Leave 2`] = `
-<fieldset
-  class="usa-fieldset margin-top-3 usa-form-group"
->
-  <legend
-    class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
-  >
-    <h2
-      class="font-heading-lg text-bold"
-    >
-      Did you take any previous leave between January 1, 2021 and January 1, 2022 for the same reason as you are applying for paid leave now?
-    </h2>
-  </legend>
-  <div
-    class="margin-top-3"
-  >
-    <div
-      class="usa-radio measure-5 bg-transparent"
-    >
-      <input
-        class="usa-radio__input"
-        id="InputChoice3"
-        name="has_previous_leaves_same_reason"
-        type="radio"
-        value="true"
-      />
-      <label
-        class="usa-radio__label"
-        for="InputChoice3"
-      >
-        Yes
-        <span
-          class="usa-hint text-base-dark"
-        >
-          <br />
-          I have taken previous leave for the same reason
-        </span>
-      </label>
-    </div>
-    <div
-      class="usa-radio measure-5 bg-transparent"
-    >
-      <input
-        class="usa-radio__input"
-        id="InputChoice4"
-        name="has_previous_leaves_same_reason"
-        type="radio"
-        value="false"
-      />
-      <label
-        class="usa-radio__label"
-        for="InputChoice4"
       >
         No
         <span

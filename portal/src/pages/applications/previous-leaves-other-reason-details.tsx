@@ -10,7 +10,6 @@ import Hint from "../../components/core/Hint";
 import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import InputDate from "../../components/core/InputDate";
 import InputHours from "../../components/core/InputHours";
-import LeaveReason from "../../models/LeaveReason";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import RepeatableFieldset from "../../components/core/RepeatableFieldset";
@@ -55,12 +54,9 @@ export const PreviousLeavesOtherReasonDetails = (
   );
 
   const leaveStartDate = formatDate(claim.leaveStartDate).full();
-  const otherLeaveStartDate = formatDate(claim.otherLeaveStartDate).full();
-
-  const isCaringLeave = get(claim, "leave_details.reason") === LeaveReason.care;
-  const previousLeaveStartDate = isCaringLeave
-    ? formatDate("2021-07-01").full()
-    : otherLeaveStartDate;
+  const previousLeaveStartDate = formatDate(
+    claim.computed_start_dates.other_reason
+  ).full();
 
   const handleSave = () => {
     return appLogic.benefitsApplications.update(
@@ -85,7 +81,7 @@ export const PreviousLeavesOtherReasonDetails = (
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });
@@ -97,6 +93,7 @@ export const PreviousLeavesOtherReasonDetails = (
         entry={entry}
         index={index}
         getFunctionalInputProps={getFunctionalInputProps}
+        minimumDate={previousLeaveStartDate}
       />
     );
   };
@@ -148,6 +145,7 @@ interface PreviousLeavesOtherReasonDetailsCardProps {
   entry: PreviousLeave;
   getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
   index: number;
+  minimumDate: string;
 }
 
 export const PreviousLeavesOtherReasonDetailsCard = (
@@ -252,6 +250,12 @@ export const PreviousLeavesOtherReasonDetailsCard = (
         label={t(
           "pages.claimsPreviousLeavesOtherReasonDetails.leaveStartDateLabel"
         )}
+        hint={t(
+          "pages.claimsPreviousLeavesOtherReasonDetails.leaveStartDateHint",
+          {
+            minimumDate: props.minimumDate,
+          }
+        )}
         example={t("components.form.dateInputExample")}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
@@ -264,6 +268,12 @@ export const PreviousLeavesOtherReasonDetailsCard = (
         smallLabel
         label={t(
           "pages.claimsPreviousLeavesOtherReasonDetails.leaveEndDateLabel"
+        )}
+        hint={t(
+          "pages.claimsPreviousLeavesOtherReasonDetails.leaveEndDateHint",
+          {
+            minimumDate: props.minimumDate,
+          }
         )}
         example={t("components.form.dateInputExample")}
         dayLabel={t("components.form.dateInputDayLabel")}

@@ -121,4 +121,5 @@ module "api" {
 
   enable_document_multipart_upload = "1"
   enable_application_import        = "1"
+  enable_employee_endpoints        = "1"
 }

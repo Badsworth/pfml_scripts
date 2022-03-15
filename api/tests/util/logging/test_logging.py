@@ -12,7 +12,9 @@ import flask
 import pytest
 
 import massgov.pfml.util.logging
+from massgov.pfml.db.models.employees import Role
 from massgov.pfml.db.models.factories import AzureUserFactory, UserFactory
+from massgov.pfml.util.users import get_user_log_attributes
 
 
 @pytest.fixture(autouse=True)
@@ -187,14 +189,14 @@ def test_log_message_with_flask_request_context(capsys, monkeypatch):
     )
 
     user = UserFactory.build()
+    user.roles = [Role.USER, Role.PFML_CRM]
+    user_attributes = get_user_log_attributes(user)
     azure_user = AzureUserFactory.build()
     monkeypatch.setattr(
         flask,
         "g",
         {
-            "current_user_user_id": str(user.user_id),
-            "current_user_auth_id": str(user.sub_id),
-            "current_user_role_ids": ",".join(str(role.role_id) for role in user.roles),
+            "current_user_log_attributes": user_attributes,
             "azure_user_sub_id": str(azure_user.sub_id),
         },
     )
@@ -204,6 +206,7 @@ def test_log_message_with_flask_request_context(capsys, monkeypatch):
     stderr = capsys.readouterr().err
     lines = stderr.split("\n")
     last_line = json.loads(lines[-2])
+
     assert last_line.keys() == {
         "name",
         "levelname",
@@ -220,6 +223,11 @@ def test_log_message_with_flask_request_context(capsys, monkeypatch):
         "current_user.user_id",
         "current_user.auth_id",
         "current_user.role_ids",
+        "current_user.role_names",
+        "current_user.has_role_id_1",
+        "current_user.has_role_id_4",
+        "current_user.has_role_User",
+        "current_user.has_role_PFML_CRM",
         "azure_user.sub_id",
         "mass_pfml_agent_id",
     }
@@ -232,6 +240,15 @@ def test_log_message_with_flask_request_context(capsys, monkeypatch):
     assert last_line["request_id"] == "123"
     assert last_line["message"] == "test request context"
     assert last_line["current_user.user_id"] == str(user.user_id)
+    assert last_line["current_user.auth_id"] == str(user.sub_id)
+    assert last_line["current_user.role_ids"] == ",".join(str(role.role_id) for role in user.roles)
+    assert last_line["current_user.role_names"] == ",".join(
+        str(role.role_description) for role in user.roles
+    )
+    assert last_line["current_user.has_role_id_1"]
+    assert last_line["current_user.has_role_id_4"]
+    assert last_line["current_user.has_role_User"]
+    assert last_line["current_user.has_role_PFML_CRM"]
     assert last_line["current_user.auth_id"] == user.sub_id
     assert last_line["azure_user.sub_id"] == azure_user.sub_id
 

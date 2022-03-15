@@ -91,9 +91,7 @@ def create_mock_s3_files(bucket, *files):
 def test_copy_default_args(mock_s3_bucket, mock_fineos_s3_bucket):
     s3 = boto3.resource("s3")
 
-    create_mock_s3_files(
-        mock_s3_bucket, "filename.txt", "filename2.txt",
-    )
+    create_mock_s3_files(mock_s3_bucket, "filename.txt", "filename2.txt")
 
     run_tool(
         [
@@ -123,7 +121,7 @@ def test_copy_dir(mock_s3_bucket, mock_fineos_s3_bucket):
     )
 
     args = parse_args(
-        ["--copy_dir", f"s3://{mock_fineos_s3_bucket}", "--to_dir", f"s3://{mock_s3_bucket}",]
+        ["--copy_dir", f"s3://{mock_fineos_s3_bucket}", "--to_dir", f"s3://{mock_s3_bucket}"]
     )
 
     bucket_tool(args, s3, s3_fineos, boto3, None)
@@ -207,9 +205,7 @@ def test_copy_dir_dated_folders_no_date(mock_s3_bucket, mock_fineos_s3_bucket):
     s3 = boto3.resource("s3")
     s3_fineos = boto3.resource("s3")
 
-    create_mock_s3_files(
-        mock_fineos_s3_bucket, "2021-01-02-XX-XX-XX-filename.txt",
-    )
+    create_mock_s3_files(mock_fineos_s3_bucket, "2021-01-02-XX-XX-XX-filename.txt")
 
     args = parse_args(
         [
@@ -226,9 +222,7 @@ def test_copy_dir_dated_folders_no_date(mock_s3_bucket, mock_fineos_s3_bucket):
 
     copied_items = set(map(lambda x: x.key, s3.Bucket(name=mock_s3_bucket).objects.all()))
 
-    assert copied_items == {
-        "2021-01-02-XX-XX-XX-filename.txt",
-    }
+    assert copied_items == {"2021-01-02-XX-XX-XX-filename.txt"}
 
 
 def test_copy_dir_file_prefixes(mock_s3_bucket, mock_fineos_s3_bucket):

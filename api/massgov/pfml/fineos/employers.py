@@ -91,17 +91,21 @@ def load_updates(
         employers_actions,
         count=1,
         start_time=start_time,
-        item_name="Tuple[Employer, Actions]",
+        item_name="employer",
         extra={"process_id": process_id},
     )
 
     for employer, actions in employers_actions_with_logging:
         report.total_employers_count += 1
+        employer_id = employer.employer_id
+        fineos_employer_id = None
         # we must commit or rollback the transaction for each item to ensure the
         # row lock put in place by `skip_locked_query` is released
         try:
 
-            fineos_actions.create_or_update_employer(fineos, employer)
+            fineos_employer_id = fineos_actions.create_or_update_employer(fineos, employer)
+            db_session.flush()
+
             is_create = "INSERT" in actions
             log_data = None
             if not is_create:
@@ -139,12 +143,16 @@ def load_updates(
 
             # finalize the deletes before moving on
             db_session.commit()
-        except Exception:
+
+        except Exception as e:
+            # Note: do not access `employer` or other SQLAlchemy objects here. That may cause
+            # an unhandled exception if the database session was rolled back due to an error.
             logger.exception(
                 "Error creating/updating employer in FINEOS",
                 extra={
-                    "internal_employer_id": employer.employer_id,
-                    "fineos_employer_id": employer.fineos_employer_id,
+                    "exc_type": type(e),
+                    "internal_employer_id": employer_id,
+                    "fineos_employer_id": fineos_employer_id,
                     "process_id": process_id,
                 },
             )

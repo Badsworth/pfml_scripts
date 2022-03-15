@@ -19,7 +19,7 @@ describe("sendMFAConfirmationCode", () => {
 
   it("tracks requests", async () => {
     await MFAService.sendMFAConfirmationCode();
-    expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+    expect(tracker.trackAuthRequest).toHaveBeenCalledTimes(1);
     expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
   });
 
@@ -69,7 +69,7 @@ describe("updateMFAPhoneNumber", () => {
   it("tracks requests", async () => {
     await MFAService.updateMFAPhoneNumber(phoneNumber);
 
-    expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(2);
+    expect(tracker.trackAuthRequest).toHaveBeenCalledTimes(2);
     expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(2);
   });
 });
@@ -94,7 +94,7 @@ describe("verifyMFAPhoneNumber", () => {
   it("tracks request", async () => {
     await MFAService.verifyMFAPhoneNumber(verificationCode);
 
-    expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+    expect(tracker.trackAuthRequest).toHaveBeenCalledTimes(1);
     expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
   });
 });
@@ -116,7 +116,7 @@ describe("setMFAPreference", () => {
     it("tracks request", async () => {
       await MFAService.setMFAPreference(mfaPreference);
 
-      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+      expect(tracker.trackAuthRequest).toHaveBeenCalledTimes(1);
       expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
     });
   });
@@ -133,7 +133,7 @@ describe("setMFAPreference", () => {
     it("tracks request", async () => {
       await MFAService.setMFAPreference(mfaPreference);
 
-      expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+      expect(tracker.trackAuthRequest).toHaveBeenCalledTimes(1);
       expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
     });
   });

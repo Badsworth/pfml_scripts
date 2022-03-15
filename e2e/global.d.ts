@@ -16,7 +16,6 @@ type waitForClaimDocuments =
 type Email = import("./src/submission/TestMailClient").Email;
 type GetEmailsOpts = import("./src/submission/TestMailClient").GetEmailsOpts;
 type MFAOpts = import("./src/submission/TwilioClient").MFAOpts;
-type RES_MFA = import("./src/submission/TwilioClient").RES_MFA;
 type Result = import("pdf-parse").Result;
 type DehydratedClaim = import("./src/generation/Claim").DehydratedClaim;
 type Employer = import("./src/generation/Employer").Employer;
@@ -47,6 +46,7 @@ declare namespace Cypress {
     // Declare our custom tasks.
     stashLog(key: string, value: string | null | undefined): null;
     dependsOnPreviousPass(dependencies?: Mocha.Test[]): null;
+    tryCount(): Chainable<number>;
     task<T extends Scenarios>(
       event: "generateClaim",
       arg: T | { scenario: T; employeePoolFileName: string }
@@ -56,8 +56,7 @@ declare namespace Cypress {
         : GeneratedClaim
     >;
     task(event: "getAuthVerification", mail: string): Chainable<string>;
-    task(event: "mfaVerfication", opts: MFAOpts): Chainable<RES_MFA>;
-    task(event: "getMFAPhoneNumber", type: string): Chainable<string>;
+    task(event: "mfaVerification", opts: MFAOpts): Chainable<string>;
     task(
       event: "completeSSOLoginFineos",
       credentials?: Credentials

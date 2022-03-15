@@ -1,6 +1,6 @@
 /* eslint-disable jsx-a11y/no-noninteractive-tabindex */
 import { render, screen } from "@testing-library/react";
-import AmendmentForm from "../../src/components/employers/AmendmentForm";
+import AmendmentForm from "../../src/components/AmendmentForm";
 import ConditionalContent from "../../src/components/ConditionalContent";
 import React from "react";
 import useAutoFocusEffect from "../../src/hooks/useAutoFocusEffect";

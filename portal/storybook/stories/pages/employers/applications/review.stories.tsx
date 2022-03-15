@@ -2,7 +2,6 @@ import { ClaimDocument, DocumentType } from "src/models/Document";
 import LeaveReason, { LeaveReasonType } from "src/models/LeaveReason";
 import { AbsencePeriod } from "src/models/AbsencePeriod";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
-import AppErrorInfo from "src/models/AppErrorInfo";
 import EmployerClaim from "src/models/EmployerClaim";
 import { ManagedRequirement } from "src/models/ManagedRequirement";
 import { MockEmployerClaimBuilder } from "lib/mock-helpers/mock-model-builder";
@@ -10,9 +9,10 @@ import { Props } from "types/common";
 import React from "react";
 import { Review } from "src/pages/employers/applications/review";
 import User from "src/models/User";
+import { ValidationError } from "src/errors";
 import createAbsencePeriod from "lib/mock-helpers/createAbsencePeriod";
 import { createMockManagedRequirement } from "lib/mock-helpers/createMockManagedRequirement";
-import faker from "faker";
+import { faker } from "@faker-js/faker";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 const absencePeriodTypes: Array<AbsencePeriod["period_type"]> = [
@@ -139,7 +139,7 @@ export const Default = (
     : [];
 
   const appLogic = useMockableAppLogic({
-    appErrors: getAppErrorInfoCollection(errorTypes),
+    errors: [new ValidationError(getErrorInfoCollection(errorTypes))],
     employers: {
       claimDocumentsMap: new Map([
         [
@@ -247,57 +247,47 @@ function createCertificationDocumentForReason(
   return document;
 }
 
-function getAppErrorInfoCollection(errorTypes: string[] = []) {
+function getErrorInfoCollection(errorTypes: string[] = []) {
   const errors = [];
 
   if (errorTypes.includes("Hours worked per week - minimum")) {
-    errors.push(
-      new AppErrorInfo({
-        message: "Enter the average weekly hours.",
-        type: "minimum",
-        field: "hours_worked_per_week",
-      })
-    );
+    errors.push({
+      type: "minimum",
+      field: "hours_worked_per_week",
+      namespace: "employers",
+    });
   }
 
   if (errorTypes.includes("Hours worked per week - maximum")) {
-    errors.push(
-      new AppErrorInfo({
-        message: "Average weekly hours must be 168 or fewer.",
-        type: "maximum",
-        field: "hours_worked_per_week",
-      })
-    );
+    errors.push({
+      type: "maximum",
+      field: "hours_worked_per_week",
+      namespace: "employers",
+    });
   }
 
   if (errorTypes.includes("Employer benefit - benefit end date")) {
-    errors.push(
-      new AppErrorInfo({
-        message: "benefit_end_date cannot be earlier than benefit_start_date",
-        type: "minimum",
-        field: "employer_benefits[0].benefit_end_date",
-      })
-    );
+    errors.push({
+      type: "minimum",
+      field: "employer_benefits[0].benefit_end_date",
+      namespace: "employers",
+    });
   }
 
   if (errorTypes.includes("Previous leave - leave start date")) {
-    errors.push(
-      new AppErrorInfo({
-        message: "Previous leaves cannot start before 2021",
-        type: "invalid_previous_leave_start_date",
-        field: "previous_leaves[0].leave_start_date",
-      })
-    );
+    errors.push({
+      type: "invalid_previous_leave_start_date",
+      field: "previous_leaves[0].leave_start_date",
+      namespace: "employers",
+    });
   }
 
   if (errorTypes.includes("Previous leave - leave end date")) {
-    errors.push(
-      new AppErrorInfo({
-        message: "leave_end_date cannot be earlier than leave_start_date",
-        type: "minimum",
-        field: "previous_leaves[0].leave_end_date",
-      })
-    );
+    errors.push({
+      type: "minimum",
+      field: "previous_leaves[0].leave_end_date",
+      namespace: "employers",
+    });
   }
 
   return errors;

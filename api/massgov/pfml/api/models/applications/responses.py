@@ -19,7 +19,15 @@ from massgov.pfml.api.models.applications.common import (
     WorkPattern,
 )
 from massgov.pfml.api.models.claims.common import PreviousLeave
-from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit, MaskedPhoneResponse
+from massgov.pfml.api.models.common import (
+    ComputedStartDates,
+    ConcurrentLeave,
+    EmployerBenefit,
+    MaskedPhoneResponse,
+    get_computed_start_dates,
+    get_earliest_start_date,
+    get_leave_reason,
+)
 from massgov.pfml.db.models.applications import Application, ApplicationPaymentPreference, Document
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import (
@@ -40,8 +48,8 @@ class ApplicationResponse(PydanticBaseModel):
     application_id: UUID4
     organization_unit_id: Optional[UUID4]
     organization_unit_selection: Optional[OrganizationUnitSelection]
-    application_nickname: Optional[str]
     tax_identifier: Optional[MaskedTaxIdFormattedStr]
+    employee_id: Optional[UUID4]
     employer_fein: Optional[FEINFormattedStr]
     fineos_absence_id: Optional[str]
     first_name: Optional[str]
@@ -84,11 +92,13 @@ class ApplicationResponse(PydanticBaseModel):
     is_withholding_tax: Optional[bool]
     imported_from_fineos_at: Optional[datetime]
     updated_at: datetime
+    computed_start_dates: Optional[ComputedStartDates]
+    split_from_application_id: Optional[UUID4]
+    split_into_application_id: Optional[UUID4]
 
     @classmethod
     def from_orm(cls, application: Application) -> "ApplicationResponse":
         application_response = super().from_orm(application)
-        application_response.application_nickname = application.nickname
         if application.mailing_address is not None:
             application_response.mailing_address = MaskedAddress.from_orm(
                 application.mailing_address
@@ -116,9 +126,19 @@ class ApplicationResponse(PydanticBaseModel):
         if application.claim is not None:
             application_response.fineos_absence_id = application.claim.fineos_absence_id
 
+        if application.employee is not None:
+            application_response.employee_id = application.employee.employee_id
+
         application_response.updated_time = application_response.updated_at
+        application_response.computed_start_dates = _get_computed_start_dates(application)
 
         return application_response
+
+
+def _get_computed_start_dates(application: Application) -> ComputedStartDates:
+    earliest_start_date = get_earliest_start_date(application)
+    leave_reason = get_leave_reason(application)
+    return get_computed_start_dates(earliest_start_date, leave_reason)
 
 
 def build_payment_preference(

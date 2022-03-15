@@ -5,7 +5,8 @@ import massgov.pfml.db as db
 import massgov.pfml.util.batch.log as batch_log
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
-from massgov.pfml.db.models.employees import DuaReportingUnitRaw, ReferenceFile, ReferenceFileType
+from massgov.pfml.db.models.dua import DuaReportingUnitRaw
+from massgov.pfml.db.models.employees import ReferenceFile, ReferenceFileType
 from massgov.pfml.dua.config import DUAMoveItConfig, DUATransferConfig
 from massgov.pfml.dua.constants import Constants, Metrics
 from massgov.pfml.dua.util import download_files_from_moveit, load_rows_from_file_path
@@ -24,7 +25,7 @@ def download_employer_unit_file_from_moveit(
     reference_file_type_id = ReferenceFileType.DUA_EMPLOYER_UNIT_FILE.reference_file_type_id
 
     copied_reference_files = download_files_from_moveit(
-        db_session, transfer_config, moveit_config, file_name, reference_file_type_id,
+        db_session, transfer_config, moveit_config, file_name, reference_file_type_id
     )
 
     if len(copied_reference_files) == 0:
@@ -95,7 +96,7 @@ def load_employer_unit_file(
 
 
 def _load_employer_unit_rows_from_file_path(
-    file_location: str, db_session: db.Session,
+    file_location: str, db_session: db.Session
 ) -> Tuple[int, int]:
 
     logger.info("Load Employer Unit rows started", extra={"file_location": file_location})
@@ -109,7 +110,7 @@ def _load_employer_unit_rows_from_file_path(
     )
 
     logger.info(
-        "Load Employer Unit rows finished", extra={"file_location": file_location, **result},
+        "Load Employer Unit rows finished", extra={"file_location": file_location, **result}
     )
 
     return result["total_row_count"], result["inserted_row_count"]

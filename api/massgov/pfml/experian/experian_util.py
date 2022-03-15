@@ -1,6 +1,7 @@
 from typing import Optional, cast
 
-from massgov.pfml.db.models.employees import Address, GeoState, LkGeoState
+from massgov.pfml.db.models.employees import Address
+from massgov.pfml.db.models.geo import GeoState, LkGeoState
 
 # Shared utility methods for both the REST and SOAP Experian clients
 

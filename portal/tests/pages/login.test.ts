@@ -38,7 +38,7 @@ describe("Login", () => {
     expect(screen.getByText(/Email successfully verified/)).toBeInTheDocument();
     expect(
       screen.getByText(
-        /Thanks for verifying your email address. You may now log into your account./
+        /Thanks for verifying your email address. You may now log in to your account./
       )
     ).toBeInTheDocument();
   });

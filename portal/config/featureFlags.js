@@ -21,17 +21,19 @@ const flagsConfig = {
 
     // When this flag is enabled optional MFA will be enabled for claimant users.
     claimantShowMFA: false,
+    claimantSyncCognitoPreferences: false,
 
     // When this flag is enabled, the military leave options are selectable on
     // the Leave Reason page in the claimant flow (CP-1145)
     // TODO (CP-534): Show all options when portal supports activeDutyFamily, serviceMemberFamily
     claimantShowMilitaryLeaveTypes: false,
 
-    // When this flag is false, you can bypass the deparment capture form when applying
-    claimantShowOrganizationUnits: false,
+    // When this flag is enabled payment status phase three work will be displayed.
+    claimantShowPaymentsPhaseThree: false,
 
-    // When this flag is enabled payment status phase two work will be displayed.
-    claimantShowPaymentsPhaseTwo: true,
+    // When this flag is enabled logic in code will account for new payment schedule post FINEOS deploy
+    // TODO (PORTAL-1934) Remove flag
+    claimantUseFineosNewPaymentSchedule: false,
 
     // Show multiple leave request UI updates to leave admins (dashboard++)
     // TODO (PORTAL-1560) Remove flag
@@ -51,43 +53,49 @@ const flagsConfig = {
     // When this flag is true, PDF files up to 10mb are sent to the API.
     sendLargePdfToApi: false,
 
-    // When this flag is true, the HRD employer will no longer have their
-    // dashboard blocked from seeing any applications, and will function like
-    // all other employers' dashboards.
-    // Will only be used for smoke testing purposes and removed afterwards.
-    employerUnlockDashboard: true,
+    // TODO (PORTAL-1893) This flag should be enabled when the /holidays endpoint is ready for production.
+    // The /holidays endpoint is still under development, but the holiday alert component is done.
+    // When this flag is enabled the holiday alert will be displayed on the payments pages.
+    showHolidayAlert: false,
+
+    // When this flag is true, claims that would span multiple benefit years
+    // are split into separate claims
+    // See: https://lwd.atlassian.net/wiki/spaces/DD/pages/2194014380/Tech+Spec+-+Claims+spanning+two+benefit+years
+    splitClaimsAcrossBY: false,
   },
   // Environments can optionally override a default feature flag below.
   // The environment keys should use the same envName defined in
   // environment config files.
-  "cps-preview": {},
+  "cps-preview": {
+    claimantShowMFA: true,
+  },
   development: {
     example: true,
     pfmlTerriyay: true,
-    claimantShowPaymentsPhaseTwo: true,
+    claimantShowMFA: true,
   },
   test: {
-    claimantShowPaymentsPhaseTwo: true,
+    claimantShowMFA: true,
   },
   stage: {
-    claimantShowPaymentsPhaseTwo: true,
+    claimantShowMFA: true,
   },
   training: {
-    claimantShowPaymentsPhaseTwo: true,
+    claimantShowMFA: true,
   },
   performance: {
-    claimantShowPaymentsPhaseTwo: true,
+    claimantShowMFA: true,
   },
   uat: {
-    claimantShowPaymentsPhaseTwo: true,
+    claimantShowMFA: true,
   },
   local: {
     pfmlTerriyay: true,
-    claimantShowPaymentsPhaseTwo: true,
+    claimantShowMFA: true,
   },
   prod: {
     pfmlTerriyay: true,
-    claimantShowPaymentsPhaseTwo: true,
+    claimantShowMFA: true,
   },
 };
 

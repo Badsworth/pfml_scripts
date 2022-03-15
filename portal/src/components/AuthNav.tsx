@@ -25,7 +25,7 @@ const AuthNav = (props: AuthNavProps) => {
 
   const back = (
     <ButtonLink
-      href={routes.external.massgov.index}
+      href={routes.external.massgov.paidLeave}
       className="width-auto"
       inversed
       variation="unstyled"

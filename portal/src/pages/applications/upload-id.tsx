@@ -13,6 +13,7 @@ import Accordion from "../../components/core/Accordion";
 import AccordionItem from "../../components/core/AccordionItem";
 import Alert from "../../components/core/Alert";
 import DocumentRequirements from "../../components/DocumentRequirements";
+import { DocumentsUploadError } from "../../errors";
 import FileCardList from "../../components/FileCardList";
 import FileUploadDetails from "../../components/FileUploadDetails";
 import Heading from "../../components/core/Heading";
@@ -56,9 +57,9 @@ export const UploadId = (props: UploadIdProps) => {
   const contentContext = hasStateId ? "mass" : "other";
   const absence_id = get(claim, "fineos_absence_id");
 
-  const { appErrors, portalFlow } = appLogic;
+  const { errors, portalFlow } = appLogic;
   const hasLoadingDocumentsError = hasDocumentsLoadError(
-    appErrors,
+    errors,
     claim.application_id
   );
 
@@ -95,9 +96,9 @@ export const UploadId = (props: UploadIdProps) => {
     }
   };
 
-  const fileErrors = appErrors.filter(
-    (appErrorInfo) => appErrorInfo.meta && appErrorInfo.meta.file_id
-  );
+  const fileErrors = errors.filter(
+    (error) => error instanceof DocumentsUploadError
+  ) as DocumentsUploadError[];
 
   return (
     <QuestionPage

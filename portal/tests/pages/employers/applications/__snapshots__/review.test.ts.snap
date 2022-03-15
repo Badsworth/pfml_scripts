@@ -207,6 +207,93 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
         </div>
       </div>
       <div
+        class="margin-top-6"
+        data-testid="absence periods"
+      >
+        <h3
+          class="font-heading-sm text-bold"
+        >
+          Medical leave
+        </h3>
+        <table
+          class="usa-table usa-table--borderless width-full usa-table--stacked"
+        >
+          <thead>
+            <tr>
+              <th
+                scope="col"
+              >
+                Date range
+              </th>
+              <th
+                scope="col"
+              >
+                Leave frequency
+              </th>
+              <th
+                scope="col"
+              >
+                Status
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              data-testid="1-0"
+            >
+              <th
+                class="tablet:width-card-lg"
+                data-label="Date range"
+                scope="row"
+              >
+                5/1/2022 to 7/1/2022
+              </th>
+              <td
+                class="tablet:width-card-lg"
+                data-label="Leave frequency"
+              >
+                Reduced leave schedule
+              </td>
+              <td
+                data-label="Status"
+              >
+                <span
+                  class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-base-darkest bg-warning-lighter"
+                >
+                  Pending
+                </span>
+              </td>
+            </tr>
+            <tr
+              data-testid="1-1"
+            >
+              <th
+                class="tablet:width-card-lg"
+                data-label="Date range"
+                scope="row"
+              >
+                1/1/2022 to 4/1/2022
+              </th>
+              <td
+                class="tablet:width-card-lg"
+                data-label="Leave frequency"
+              >
+                Continuous leave
+              </td>
+              <td
+                data-label="Status"
+              >
+                <span
+                  class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-base-darkest bg-warning-lighter"
+                >
+                  Pending
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div
         class="display-flex flex-align-end margin-top-6 margin-bottom-3"
       >
         <h2
@@ -268,7 +355,10 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
         Previous leave
       </h3>
       <p>
-        Your employee has listed leave they have taken for qualified reasons. Only leave since January 1, 2021 is included. This includes both paid leave (for example: paid vacation or sick days) and unpaid leave (for example: FMLA leave). When possible, verify that this previous leave was for reasons that qualify for paid leave under PFML.
+        Verify the accuracy of your employee’s qualified leave dates. Any qualifying reason should only be reported if it was taken after January 1, 2021.
+      </p>
+      <p>
+        This includes both paid leave (for example: paid vacation or sick days) and unpaid leave (for example: FMLA leave).
       </p>
       <details
         class="c-details"
@@ -421,7 +511,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
         Employer-sponsored benefits
       </h3>
       <p>
-        Your employee is planning to use these benefits during their paid leave under PFML. Employer sponsored benefits include temporary disability insurance, permanent disability insurance, and family or medical leave benefits such as a parental leave program. For paid time off (PTO) and other accrued paid leave your employee will use, review “Concurrent accrued paid leave” above. 
+        Your employee is planning to use these benefits during their paid leave under PFML. Employer-sponsored benefits include temporary disability insurance, permanent disability insurance, and family or medical leave benefits such as a parental leave program. For paid time off (PTO) and other accrued paid leave your employee will use, review “Concurrent accrued paid leave” above. 
         <a
           href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
           rel="noopener"
@@ -445,11 +535,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             >
               Benefit type
             </th>
-            <th
-              scope="col"
-            >
-              Details
-            </th>
+            <th />
             <th />
           </tr>
         </thead>
@@ -460,18 +546,11 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             <th
               data-label="Date range"
               scope="row"
-            >
-              1/1/2022 to 2/1/2022
-            </th>
+            />
             <td
               data-label="Benefit type"
             >
               Family or medical leave insurance
-            </td>
-            <td
-              data-label="Details"
-            >
-              $500.00 per week
             </td>
             <td>
               <button
@@ -498,18 +577,11 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             <th
               data-label="Date range"
               scope="row"
-            >
-              1/1/2022 to 2/1/2022
-            </th>
+            />
             <td
               data-label="Benefit type"
             >
               Family or medical leave insurance
-            </td>
-            <td
-              data-label="Details"
-            >
-              $200.00 (frequency unknown)
             </td>
             <td>
               <button
@@ -544,11 +616,6 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             >
               Short-term disability insurance
             </td>
-            <td
-              data-label="Details"
-            >
-              Full salary continuous
-            </td>
             <td>
               <button
                 class="usa-button position-relative text-no-wrap usa-button--unstyled"
@@ -574,18 +641,11 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
             <th
               data-label="Date range"
               scope="row"
-            >
-              1/1/2022 to 2/1/2022
-            </th>
+            />
             <td
               data-label="Benefit type"
             >
               Permanent disability insurance
-            </td>
-            <td
-              data-label="Details"
-            >
-              No amount reported
             </td>
             <td>
               <button
@@ -783,7 +843,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
         <span
           class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
         >
-          Answer based on your company policies and our 
+          Answer based on your organization's policies and our 
           <a
             href="https://www.mass.gov/info-details/employer-paid-leave-application-review-guide"
             rel="noreferrer noopener"

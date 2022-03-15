@@ -5,7 +5,7 @@
 # Run via `make create-claim-with-payments-for-user`.
 # View options: `make create-claim-with-payments-for-user args="--help"`
 #
-from datetime import date, datetime, time, timedelta
+from datetime import date, timedelta
 from decimal import Decimal
 from typing import List
 
@@ -17,6 +17,7 @@ from massgov.pfml.db.models.employees import PaymentMethod, PaymentTransactionTy
 from massgov.pfml.db.models.factories import ApplicationFactory, ClaimFactory, UserFactory
 from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
+from massgov.pfml.util.datetime import to_datetime
 
 fake = faker.Faker()
 # State log logic doesn't like being on a separate
@@ -54,7 +55,7 @@ def format_payment(payment, scenario):
 def main(total_payments: int, scenarios: List[str]) -> None:
     user = UserFactory.create(consented_to_data_sharing=True, roles=[Role.USER])
 
-    claim = ClaimFactory.create(fineos_absence_id=f"NTN-{fake.unique.random_int()}-ABS-01",)
+    claim = ClaimFactory.create(fineos_absence_id=f"NTN-{fake.unique.random_int()}-ABS-01")
 
     application = ApplicationFactory.create(claim=claim, user=user)
 
@@ -76,6 +77,7 @@ def main(total_payments: int, scenarios: List[str]) -> None:
         payment_state = State.DELEGATED_PAYMENT_COMPLETE
         start_date = start_date + timedelta(days=7)
         end_date = start_date + timedelta(days=6)
+        end_datetime = to_datetime(end_date)
         amount = Decimal("500.23")
         payment_transaction_type = PaymentTransactionType.STANDARD
 
@@ -105,18 +107,17 @@ def main(total_payments: int, scenarios: List[str]) -> None:
         )
         payment = factory.get_or_create_payment()
 
-        click.secho(
-            f"Created Payment {format_payment(payment, scenario)}", fg="cyan",
-        )
+        click.secho(f"Created Payment {format_payment(payment, scenario)}", fg="cyan")
 
         # Scenarios that add additional information
         if scenario == "posted":
-            # Create a paid writeback status + setup the default
-            # creation to make a complete after.
+            # Create a paid writeback status set to the prior day
+            prior_day_datetime = to_datetime(end_date - timedelta(days=1))
             writeback_details = FineosWritebackDetails(
                 payment=payment,
                 transaction_status_id=FineosWritebackTransactionStatus.PAID.transaction_status_id,
-                created_at=datetime.combine(end_date + timedelta(days=1), time()),
+                writeback_sent_at=prior_day_datetime,
+                created_at=prior_day_datetime,
             )
             db_session.add(writeback_details)
 
@@ -128,6 +129,7 @@ def main(total_payments: int, scenarios: List[str]) -> None:
                 payment_end_state=State.DELEGATED_PAYMENT_COMPLETE,
                 writeback_transaction_status=transaction_status,
                 amount=Decimal("12.34"),
+                writeback_sent_at=end_datetime,
             )
 
             click.secho(
@@ -140,6 +142,7 @@ def main(total_payments: int, scenarios: List[str]) -> None:
             cancellation_payment, successor_payment = factory.create_reissued_payments(
                 payment_end_state=State.DELEGATED_PAYMENT_COMPLETE,
                 writeback_transaction_status=transaction_status,
+                writeback_sent_at=end_datetime,
             )
             click.secho(
                 f"Created cancellation {format_payment(cancellation_payment, scenario)}",
@@ -147,8 +150,7 @@ def main(total_payments: int, scenarios: List[str]) -> None:
             )
 
             click.secho(
-                f"Created successor {format_payment(successor_payment, scenario)}",
-                fg="bright_cyan",
+                f"Created successor {format_payment(successor_payment, scenario)}", fg="bright_cyan"
             )
 
         elif scenario == "cancelled":
@@ -171,7 +173,9 @@ def main(total_payments: int, scenarios: List[str]) -> None:
 
         # Pending payments have no writeback status
         if scenario != "pending":
-            factory.get_or_create_payment_with_writeback(transaction_status)
+            factory.get_or_create_payment_with_writeback(
+                transaction_status, writeback_sent_at=end_datetime
+            )
 
         factory.get_or_create_payment_with_state(payment_state)
 

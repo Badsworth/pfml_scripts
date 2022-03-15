@@ -1,6 +1,7 @@
 import { fineos, portal, email, fineosPages } from "../../../actions";
 import { getClaimantCredentials } from "../../../config";
 import { Submission } from "../../../../src/types";
+import { config } from "../../../actions/common";
 
 describe("Appeal Hearing Notification & Notice Confirmation", () => {
   after(() => {
@@ -31,7 +32,11 @@ describe("Appeal Hearing Notification & Notice Confirmation", () => {
           adjudicate.certificationPeriods((cert) => cert.prefill());
           adjudicate.acceptLeavePlan();
         });
-        claimPage.approve();
+        if (config("HAS_APRIL_UPGRADE") === "true") {
+          claimPage.approve("Approved", true);
+        } else {
+          claimPage.approve("Approved", false);
+        }
       });
     });
   });
@@ -159,8 +164,8 @@ describe("Appeal Hearing Notification & Notice Confirmation", () => {
     "Check appeal notification delivery for Leave Admin (employer)",
     { retries: 0 },
     () => {
-      portal.before();
       cy.dependsOnPreviousPass([submit, csrAppeal]);
+      portal.before();
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
           const subjectEmployer = email.getNotificationSubject(

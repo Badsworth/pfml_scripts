@@ -1,4 +1,5 @@
 /* eslint sort-keys: ["error", "asc"] */
+import { ValuesOf } from "../../types/common";
 
 /**
  * Enums for the Application's `payment_preference.bank_account_type` field
@@ -18,9 +19,8 @@ export const PaymentPreferenceMethod = {
   check: "Check",
 } as const;
 
-type BankAccountTypeType = typeof BankAccountType[keyof typeof BankAccountType];
-type PaymentPreferenceMethodType =
-  typeof PaymentPreferenceMethod[keyof typeof PaymentPreferenceMethod];
+type BankAccountTypeType = ValuesOf<typeof BankAccountType>;
+type PaymentPreferenceMethodType = ValuesOf<typeof PaymentPreferenceMethod>;
 
 class PaymentPreference {
   account_number: string | null = null;

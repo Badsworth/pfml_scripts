@@ -1,8 +1,10 @@
+import { itIf } from "./../../../util";
 import { portal, fineos, fineosPages } from "../../../actions";
 import { Submission } from "../../../../src/types";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { addDays, formatISO, startOfWeek, subDays } from "date-fns";
 import { config } from "../../../actions/common";
+import { calculatePaymentDatePreventingOP } from "../../../actions/fineos.pages";
 
 describe("Submit bonding application via the web portal: Adjudication Approval, recording actual hours & payment checking", () => {
   const submissionTest =
@@ -34,25 +36,26 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
       });
     });
 
-  it("Leave admin will submit ER approval for employee", () => {
-    cy.dependsOnPreviousPass([submissionTest]);
-    portal.before();
-    cy.unstash<DehydratedClaim>("claim").then((claim) => {
-      cy.unstash<Submission>("submission").then((submission) => {
-        assertValidClaim(claim.claim);
-        portal.loginLeaveAdmin(claim.claim.employer_fein);
-        portal.selectClaimFromEmployerDashboard(submission.fineos_absence_id);
-        portal.visitActionRequiredERFormPage(submission.fineos_absence_id);
-        portal.respondToLeaveAdminRequest(false, true, true);
+  const erApproval =
+    it("Leave admin will submit ER approval for employee", () => {
+      cy.dependsOnPreviousPass([submissionTest]);
+      portal.before();
+      cy.unstash<DehydratedClaim>("claim").then((claim) => {
+        cy.unstash<Submission>("submission").then((submission) => {
+          assertValidClaim(claim.claim);
+          portal.loginLeaveAdmin(claim.claim.employer_fein);
+          portal.selectClaimFromEmployerDashboard(submission.fineos_absence_id);
+          portal.visitActionRequiredERFormPage(submission.fineos_absence_id);
+          portal.respondToLeaveAdminRequest(false, true, true);
+        });
       });
     });
-  });
 
-  it(
+  const claimApproval = it(
     "CSR rep will approve intermittent bonding application",
     { retries: 0 },
     () => {
-      cy.dependsOnPreviousPass();
+      cy.dependsOnPreviousPass([erApproval]);
       fineos.before();
       cy.unstash<DehydratedClaim>("claim").then((claim) => {
         cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
@@ -72,17 +75,21 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
             });
           });
           claimPage.shouldHaveStatus("Availability", "As Certified");
-          claimPage.approve();
+          if (config("HAS_APRIL_UPGRADE") === "true") {
+            claimPage.approve("Completed", true);
+          } else {
+            claimPage.approve("Completed", false);
+          }
         });
       });
     }
   );
 
-  it(
+  const recordingHours = it(
     "CSR rep will record actual hours reported by employee",
     { retries: 0 },
     () => {
-      cy.dependsOnPreviousPass();
+      cy.dependsOnPreviousPass([claimApproval]);
       fineos.before();
       cy.unstash<DehydratedClaim>("claim").then((claim) => {
         cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
@@ -91,11 +98,11 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
             // Those are the specific dates fit to the scenario spec.
             // We need those so that fineos approves the actual leave time and generates payments
             const mostRecentSunday = startOfWeek(new Date());
-            const actualLeaveStart = formatISO(subDays(mostRecentSunday, 13), {
+            const actualLeaveStart = formatISO(subDays(mostRecentSunday, 20), {
               representation: "date",
             });
             const actualLeaveEnd = formatISO(
-              addDays(subDays(mostRecentSunday, 13), 4),
+              addDays(subDays(mostRecentSunday, 20), 4),
               {
                 representation: "date",
               }
@@ -123,23 +130,50 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
     }
   );
 
-  it("Should be able to confirm the weekly payment amount for a intermittent schedule", () => {
-    cy.dependsOnPreviousPass();
-    fineos.before();
-    cy.unstash<DehydratedClaim>("claim").then((claim) => {
-      cy.unstash<Submission>("submission").then((submission) => {
-        const payment = claim.metadata
-          ?.expected_weekly_payment as unknown as number;
-        fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
-          (leaveCase) => {
-            if (config("HAS_FEB_RELEASE") === "true") {
-              leaveCase.assertAmountsPending([{ net_payment_amount: payment }]);
-            } else {
-              leaveCase.assertPaymentsMade([{ net_payment_amount: payment }]);
+  it(
+    "Should be able to confirm the weekly payment amount for a intermittent schedule",
+    { retries: 0 },
+    () => {
+      cy.dependsOnPreviousPass([recordingHours]);
+      fineos.before();
+      cy.unstash<DehydratedClaim>("claim").then((claim) => {
+        cy.unstash<Submission>("submission").then((submission) => {
+          const payment = claim.metadata
+            ?.expected_weekly_payment as unknown as number;
+          fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
+            (leaveCase) => {
+              if (config("HAS_FEB_RELEASE") === "true") {
+                leaveCase.assertAmountsPending([
+                  {
+                    net_payment_amount: 831.06,
+                    paymentProcessingDates: [
+                      calculatePaymentDatePreventingOP(),
+                    ],
+                  },
+                ]);
+              } else {
+                leaveCase.assertPaymentsMade([{ net_payment_amount: payment }]);
+              }
             }
+          );
+        });
+      });
+    }
+  );
+  itIf(
+    config("HAS_FEB_RELEASE") === "true",
+    "CSR rep will override payment processing date to be schudeuled for day of approval",
+    {},
+    () => {
+      cy.dependsOnPreviousPass([recordingHours]);
+      fineos.before();
+      cy.unstash<Submission>("submission").then((submission) => {
+        fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
+          (paidLeavePage) => {
+            paidLeavePage.editPaymentProcessingDate();
           }
         );
       });
-    });
-  });
+    }
+  );
 });

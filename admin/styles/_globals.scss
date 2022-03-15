@@ -34,7 +34,7 @@ a:focus {
 .page {
   background: #e5e5e5;
   display: grid;
-  grid-template-columns: 15.79em auto;
+  // grid-template-columns: 15.79em auto;
   grid-template-rows: minmax(min-content, max-content) auto;
   height: 100vh;
 }
@@ -54,9 +54,10 @@ input[type='text'] {
   box-shadow: $Box-Shadow;
   color: $Color-GraniteGray-400;
   font: inherit;
+  line-height: 1.4;
   margin-bottom: 0.57em;
   outline: none;
-  padding: 1em;
+  padding: 0.57em 1em;
   transition: all 0.2s ease-in-out;
   width: 100%;
 
@@ -78,38 +79,34 @@ input[type='text'] {
   }
 }
 
-input[type='checkbox'] {
+input[type='radio'] {
   appearance: none;
-  background: #fff;
   border: solid 1px $Color-GraniteGray-200;
-  border-radius: 4px;
-  color: $Color-GraniteGray-200;
-  height: 16px;
-  margin: 0;
-  padding: 0;
-  position: relative;
-  width: 16px;
+  border-radius: 50%;
+  height: 1.143em;
+  margin: 0 0.571em 0 0;
+  vertical-align: bottom;
+  width: 1.143em;
+}
 
-  &:checked {
-    background: $Color-BayBlue-50;
-    border-color: $Color-BayBlue-500;
-    color: $Color-BayBlue-500;
-  }
+input[type='radio']:checked {
+  align-items: center;
+  border-color: $Color-BayBlue-500;
+  display: inline-flex;
+  justify-content: center;
+}
 
-  &:checked::after {
-    @include IconFontProps;
-    content: $IconCheck;
-    font-size: 0.6em;
-    left: 2px;
-    position: absolute;
-    top: 3px;
-  }
+input[type='radio']:checked::before {
+  background: $Color-BayBlue-500;
+  border-radius: 50%;
+  content: '';
+  display: block;
+  height: 0.714em;
+  width: 0.714em;
+}
 
-  &[disabled]:checked {
-    background: $Color-GraniteGray-50;
-    border-color: $Color-GraniteGray-300;
-    color: $Color-GraniteGray-300;
-  }
+legend {
+  margin-bottom: 0.214em;
 }
 
 .users__warning-wrapper {

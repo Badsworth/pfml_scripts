@@ -23,13 +23,15 @@ export const PreviousLeavesOtherReason = (
 
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });
 
   const leaveStartDate = formatDate(claim.leaveStartDate).full();
-  const otherLeaveStartDate = formatDate(claim.otherLeaveStartDate).full();
+  const otherLeaveStartDate = formatDate(
+    claim.computed_start_dates.other_reason
+  ).full();
 
   const handleSave = async () => {
     const patchData = { ...formState };

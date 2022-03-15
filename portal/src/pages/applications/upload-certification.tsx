@@ -1,8 +1,4 @@
-import {
-  BenefitsApplicationDocument,
-  DocumentType,
-  findDocumentsByLeaveReason,
-} from "../../models/Document";
+import { DocumentType, getLeaveCertificationDocs } from "../../models/Document";
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
@@ -12,6 +8,7 @@ import withClaimDocuments, {
 import Alert from "../../components/core/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import DocumentRequirements from "../../components/DocumentRequirements";
+import { DocumentsUploadError } from "../../errors";
 import FileCardList from "../../components/FileCardList";
 import FileUploadDetails from "../../components/FileUploadDetails";
 import Heading from "../../components/core/Heading";
@@ -44,13 +41,13 @@ export const UploadCertification = (props: UploadCertificationProps) => {
   const claimReason = claim.leave_details.reason;
   const claimReasonQualifier = claim.leave_details.reason_qualifier;
 
-  const { appErrors, portalFlow } = appLogic;
+  const { errors, portalFlow } = appLogic;
   const { files, processFiles, removeFile } = useFilesLogic({
     clearErrors: appLogic.clearErrors,
     catchError: appLogic.catchError,
   });
   const hasLoadingDocumentsError = hasDocumentsLoadError(
-    appErrors,
+    errors,
     claim.application_id
   );
   const [submissionInProgress, setSubmissionInProgress] = React.useState(false);
@@ -79,11 +76,7 @@ export const UploadCertification = (props: UploadCertificationProps) => {
       break;
   }
 
-  const certificationDocuments =
-    findDocumentsByLeaveReason<BenefitsApplicationDocument>(
-      documents,
-      get(claim, "leave_details.reason")
-    );
+  const certificationDocuments = getLeaveCertificationDocs(documents);
 
   const handleSave = async () => {
     if (files.isEmpty && certificationDocuments.length) {
@@ -117,9 +110,9 @@ export const UploadCertification = (props: UploadCertificationProps) => {
       );
     }
   };
-  const fileErrors = appErrors.filter(
-    (appErrorInfo) => appErrorInfo.meta && appErrorInfo.meta.file_id
-  );
+  const fileErrors = errors.filter(
+    (error) => error instanceof DocumentsUploadError
+  ) as DocumentsUploadError[];
 
   return (
     <QuestionPage

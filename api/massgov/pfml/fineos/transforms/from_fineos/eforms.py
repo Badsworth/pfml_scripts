@@ -6,12 +6,15 @@ import pydantic
 from pydantic import BaseModel
 
 import massgov.pfml.util.logging
+from massgov.pfml.api.models.applications.common import OtherIncome
 from massgov.pfml.api.models.claims.common import PreviousLeave
 from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit
-from massgov.pfml.fineos.models.group_client_api import EForm
+from massgov.pfml.fineos.models.customer_api import EForm as CustomerEForm
+from massgov.pfml.fineos.models.group_client_api import EForm as GroupEForm
 from massgov.pfml.fineos.transforms.common import (
     FineosAmountFrequencyEnum,
     FineosEmployerBenefitEnum,
+    FineosOtherIncomeEnum,
 )
 from massgov.pfml.fineos.transforms.from_fineos.base import TransformEformAttributes
 
@@ -38,6 +41,16 @@ class TransformOtherLeaveAttributes(TransformEformAttributes):
         },
         "V2Leave": {
             "name": "is_for_same_reason",
+            "type": "enumValue",
+            "embeddedProperty": "instanceValue",
+        },
+        "V2TotalMinutes": {
+            "name": "leave_minutes",
+            "type": "enumValue",
+            "embeddedProperty": "instanceValue",
+        },
+        "V2MinutesWorked": {
+            "name": "worked_per_week_minutes",
             "type": "enumValue",
             "embeddedProperty": "instanceValue",
         },
@@ -83,6 +96,37 @@ class TransformEmployerBenefitsAttributes(TransformEformAttributes):
     }
 
 
+class TransformOtherIncomeNonEmployerAttributes(TransformEformAttributes):
+    PROP_MAP = {
+        "V2OtherIncomeNonEmployerBenefitStartDate": {
+            "name": "income_start_date",
+            "type": "dateValue",
+        },
+        "V2OtherIncomeNonEmployerBenefitEndDate": {"name": "income_end_date", "type": "dateValue"},
+        "V2OtherIncomeNonEmployerBenefitAmount": {
+            "name": "income_amount_dollars",
+            "type": "decimalValue",
+        },
+        "V2OtherIncomeNonEmployerBenefitFrequency": {
+            "name": "income_amount_frequency",
+            "type": "enumValue",
+            "embeddedProperty": "instanceValue",
+            "enumOverride": FineosAmountFrequencyEnum,
+        },
+        "V2OtherIncomeNonEmployerBenefitWRT": {
+            "name": "income_type",
+            "type": "enumValue",
+            "embeddedProperty": "instanceValue",
+            "enumOverride": FineosOtherIncomeEnum,
+        },
+        "V2ReceiveWageReplacement": {
+            "name": "receive_wage_replacement",
+            "type": "enumValue",
+            "embeddedProperty": "instanceValue",
+        },
+    }
+
+
 class TransformOtherIncomeAttributes(TransformEformAttributes):
     PROP_MAP = {
         "Amount": {"name": "benefit_amount_dollars", "type": "decimalValue"},
@@ -100,7 +144,7 @@ class TransformOtherIncomeAttributes(TransformEformAttributes):
 
 class TransformPreviousLeaveFromOtherLeaveEform(BaseModel):
     @classmethod
-    def from_fineos(cls, api_model: EForm) -> List[PreviousLeave]:
+    def from_fineos(cls, api_model: Union[GroupEForm, CustomerEForm]) -> List[PreviousLeave]:
         eform = api_model.dict()
         previous_leaves = TransformOtherLeaveAttributes.list_to_props(eform["eformAttributes"])
         for leave in previous_leaves:
@@ -121,7 +165,7 @@ class TransformPreviousLeaveFromOtherLeaveEform(BaseModel):
 
 class TransformConcurrentLeaveFromOtherLeaveEform(BaseModel):
     @classmethod
-    def from_fineos(cls, api_model: EForm) -> Optional[ConcurrentLeave]:
+    def from_fineos(cls, api_model: Union[GroupEForm, CustomerEForm]) -> Optional[ConcurrentLeave]:
         eform = api_model.dict()
         concurrent_leaves = TransformConcurrentLeaveAttributes.list_to_props(
             eform["eformAttributes"]
@@ -147,7 +191,7 @@ class TransformConcurrentLeaveFromOtherLeaveEform(BaseModel):
 
 class TransformEmployerBenefitsFromOtherIncomeEform(BaseModel):
     @classmethod
-    def from_fineos(cls, api_model: EForm) -> List[EmployerBenefit]:
+    def from_fineos(cls, api_model: Union[GroupEForm, CustomerEForm]) -> List[EmployerBenefit]:
         eform = api_model.dict()
         benefits = TransformEmployerBenefitsAttributes.list_to_props(eform["eformAttributes"])
         return list(map(lambda benefit: EmployerBenefit.parse_obj(benefit), benefits))
@@ -155,7 +199,7 @@ class TransformEmployerBenefitsFromOtherIncomeEform(BaseModel):
 
 class TransformOtherIncomeEform(BaseModel):
     @staticmethod
-    def patch_other_income_eform(eform_obj: EForm) -> EForm:
+    def patch_other_income_eform(eform_obj: Union[CustomerEForm, GroupEForm]) -> GroupEForm:
         """
         This hack is required because Other Income Eforms from FINEOS do not follow their standard
         data format with regard to the 'WRT' field, so we patch it for them and return a valid Eform so that it
@@ -185,11 +229,19 @@ class TransformOtherIncomeEform(BaseModel):
             else:
                 new_attrs.append(attr)
         eform["eformAttributes"] = new_attrs
-        return EForm.parse_obj(eform)
+        return GroupEForm.parse_obj(eform)
 
     @classmethod
-    def from_fineos(cls, api_model: EForm) -> List[EmployerBenefit]:
+    def from_fineos(cls, api_model: Union[CustomerEForm, GroupEForm]) -> List[EmployerBenefit]:
         patched_eform = TransformOtherIncomeEform.patch_other_income_eform(api_model)
         eform = patched_eform.dict()
         benefits = TransformOtherIncomeAttributes.list_to_props(eform["eformAttributes"])
         return list(map(lambda benefit: EmployerBenefit.parse_obj(benefit), benefits))
+
+
+class TransformOtherIncomeNonEmployerEform(BaseModel):
+    @classmethod
+    def from_fineos(cls, api_model: Union[CustomerEForm, GroupEForm]) -> List[OtherIncome]:
+        eform = api_model.dict()
+        incomes = TransformOtherIncomeNonEmployerAttributes.list_to_props(eform["eformAttributes"])
+        return list(map(lambda income: OtherIncome.parse_obj(income), incomes))

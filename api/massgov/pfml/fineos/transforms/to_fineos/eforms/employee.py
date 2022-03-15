@@ -103,7 +103,7 @@ class OtherIncomesEFormBuilder(EFormBuilder):
         )
 
         employer_benefit_builders = map(
-            lambda benefit: EmployerBenefitAttributeBuilder(benefit), employer_benefits,
+            lambda benefit: EmployerBenefitAttributeBuilder(benefit), employer_benefits
         )
 
         attributes = list(
@@ -168,7 +168,7 @@ class PreviousLeaveAttributeBuilder(EFormAttributeBuilder):
             "type": "enumValue",
             "domainName": "15MinuteIncrements",
         },
-        "applies": {"name": "V2Applies", "type": "enumValue", "domainName": "PleaseSelectYesNo",},
+        "applies": {"name": "V2Applies", "type": "enumValue", "domainName": "PleaseSelectYesNo"},
     }
 
     def __init__(self, target):
@@ -212,11 +212,11 @@ class PreviousLeavesEFormBuilder(EFormBuilder):
         else:
             if previous_leave_transforms:
                 attributes = list(
-                    chain(cls.to_serialized_attributes(list(previous_leave_transforms), True),)
+                    chain(cls.to_serialized_attributes(list(previous_leave_transforms), True))
                 )
             if concurrent_leave_transforms:
                 attributes = list(
-                    chain(cls.to_serialized_attributes(concurrent_leave_transforms, True),)
+                    chain(cls.to_serialized_attributes(concurrent_leave_transforms, True))
                 )
 
         return EFormBody("Other Leaves - current version", attributes) if attributes else None

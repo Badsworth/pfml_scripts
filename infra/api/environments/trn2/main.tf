@@ -90,16 +90,24 @@ module "api" {
 
   fineos_client_oauth2_client_id = "2e9vsuq808h3tu4rf9tr1efuh5"
 
+  fineos_is_running_v21 = "true"
+
   admin_portal_base_url               = "https://paidleave-admin-trn2.dfml.eol.mass.gov"
   pfml_email_address                  = "PFML_DoNotReply@eol.mass.gov"
   bounce_forwarding_email_address     = "PFML_DoNotReply@eol.mass.gov"
   bounce_forwarding_email_address_arn = "arn:aws:ses:us-east-1:498823821309:identity/PFML_DoNotReply@eol.mass.gov"
 
-  service_now_base_url = "https://savilinxtrain.servicenowservices.com"
+  service_now_base_url = "https://savilinxtrain2.servicenowservices.com"
   portal_base_url      = "https://paidleave-trn2.dfml.eol.mass.gov"
 
   # dor_fineos_etl_schedule_expression               = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour
 
+  azure_ad_authority_domain = "login.microsoftonline.com"
+  azure_ad_client_id        = "ecc75e15-cd60-4e28-b62f-d1bf80e05d4d"
+  azure_ad_parent_group     = "TSS-SG-PFML_ADMIN_PORTAL_NON_PROD"
+  azure_ad_tenant_id        = "3e861d16-48b7-4a0e-9806-8c04d81b7b2a"
+
   enable_document_multipart_upload = "1"
   enable_application_import        = "1"
+  enable_employee_endpoints        = "1"
 }

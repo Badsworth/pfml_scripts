@@ -8,6 +8,7 @@ import massgov.pfml.api.services.fineos_actions as fineos_actions
 import massgov.pfml.db
 import massgov.pfml.fineos
 import massgov.pfml.fineos.employers as fineos_employers
+import massgov.pfml.fineos.mock.field
 from massgov.pfml.db.models.employees import Employer, EmployerPushToFineosQueue
 from massgov.pfml.db.models.factories import (
     EmployerFactory,
@@ -364,6 +365,47 @@ def test_load_updates_multiple(module_persistent_db_session):
 
     employer_queue_items_after = module_persistent_db_session.query(EmployerPushToFineosQueue).all()
     assert len(employer_queue_items_after) == 0
+
+
+def test_load_updates_duplicate_fineos_employer_id(module_persistent_db_session):
+    fineos_client = massgov.pfml.fineos.MockFINEOSClient()
+
+    # MockFINEOSClient generates fineos_employer_id deterministically from employer_fein. Generate
+    # a duplicate by using the expected fineos_employer_id for `employer` in `old_employer`.
+    test_fein = 100000002
+    test_fineos_employer_id = massgov.pfml.fineos.mock.field.fake_customer_no(test_fein)
+    old_employer = EmployerOnlyDORDataFactory.create(
+        employer_fein="100000001", fineos_employer_id=test_fineos_employer_id
+    )
+    employer = EmployerOnlyDORDataFactory.create(employer_fein=str(test_fein))
+    EmployerPushToFineosQueueFactoryFactory.create(employer_id=employer.employer_id)
+
+    assert employer.fineos_employer_id is None
+
+    queue_items_before = (
+        module_persistent_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.employer_id == employer.employer_id)
+        .all()
+    )
+    assert len(queue_items_before) == 1
+
+    result = fineos_employers.load_updates(module_persistent_db_session, fineos_client)
+
+    assert result.total_employers_count == 1
+    assert result.loaded_employers_count == 0
+    assert result.errored_employers_count == 1
+
+    queue_items_after = (
+        module_persistent_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.employer_id == employer.employer_id)
+        .all()
+    )
+    assert len(queue_items_after) == 1
+
+    module_persistent_db_session.refresh(employer)
+
+    assert old_employer.fineos_employer_id == test_fineos_employer_id
+    assert employer.fineos_employer_id is None
 
 
 class SpecialTestException(Exception):

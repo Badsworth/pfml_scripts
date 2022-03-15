@@ -1,26 +1,35 @@
 import delay from "delay";
 import path from "path";
-import { Page, chromium } from "playwright-chromium";
-import config from "../config";
+import { Page, chromium, errors } from "playwright-chromium";
+import defaultConfig, { ConfigFunction } from "../config";
 import { v4 as uuid } from "uuid";
 import * as util from "../util/playwright";
 import { ClaimStatus, Credentials, FineosTasks } from "../types";
-
+import { isAfter, isToday } from "date-fns";
 export type FineosBrowserOptions = {
+  credentials?: Credentials;
   debug: boolean;
   screenshots?: string;
-  credentials?: Credentials;
+  slowMo?: number;
+  config?: ConfigFunction;
 };
 export class Fineos {
   static async withBrowser<T>(
     next: (page: Page) => Promise<T>,
-    { debug = false, screenshots, credentials }: FineosBrowserOptions
+    {
+      debug = false,
+      screenshots,
+      slowMo,
+      credentials,
+      config: configOverride,
+    }: FineosBrowserOptions
   ): Promise<T> {
+    const config = configOverride ?? defaultConfig;
     const isSSO =
       config("ENVIRONMENT") === "uat" || config("ENVIRONMENT") === "breakfix";
     const browser = await chromium.launch({
       headless: !debug,
-      slowMo: debug ? 100 : undefined,
+      slowMo: debug ? slowMo ?? 100 : slowMo,
       executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,
     });
     const httpCredentials = isSSO
@@ -148,12 +157,16 @@ export class Claim extends FineosPage {
     await this.page.click("#footerButtonsBar input[value='OK']");
   }
 
-  async approve(): Promise<void> {
+  async approve(leaveEndDate: Date): Promise<void> {
     await this.page.click("a[title='Approve the Pending Leaving Request']", {
       // This sometimes takes a while. Wait for it to complete.
       timeout: 60000,
     });
-    await this.assertClaimStatus("Approved");
+    if (isAfter(leaveEndDate, new Date()) || isToday(leaveEndDate)) {
+      await this.assertClaimStatus("Approved");
+    } else {
+      await this.assertClaimStatus("Completed");
+    }
   }
 
   async assertClaimStatus(expected: ClaimStatus): Promise<void> {
@@ -431,5 +444,147 @@ export class ClaimantPage extends FineosPage {
     });
     await this.page.click("#footerButtonsBar input[value='OK']");
     return new ClaimantPage(this.page);
+  }
+}
+
+type EmployerAddressType =
+  | "Home"
+  | "Business"
+  | "Practice"
+  | "Temporary"
+  | "Mailing"
+  | "Headquarters"
+  | "Seasonal"
+  | "Main"
+  | "Alternate Mailing";
+
+// `undefined` leaves address part as-is; `null` clears it
+interface EmployerAddress {
+  line1: string;
+  line2?: string | null;
+  line3?: string | null;
+  state: string;
+  city?: string | null;
+  zipCode: string;
+}
+
+export class EmployerPage extends FineosPage {
+  constructor(page: Page) {
+    super(page);
+  }
+
+  static async visit(page: Page, id: string): Promise<EmployerPage> {
+    await util.gotoEmployer(page, id);
+    await page.waitForSelector(
+      `span#ViewOrgSummaryWidget span[id$='taxNumber']:has-text('${id}')`
+    );
+    return new EmployerPage(page);
+  }
+
+  async hasAddress(type: EmployerAddressType): Promise<boolean> {
+    return this.page.isVisible(
+      `span#PartyAddressesForPartyWidget table.ListTable tr:has-text('${type}')`
+    );
+  }
+
+  async editAddress(
+    type: EmployerAddressType,
+    cb: FineosPageCallback<EmployerAddressPage>
+  ): Promise<void> {
+    await this.page.click(
+      `span#PartyAddressesForPartyWidget table.ListTable tr:has-text('${type}')`
+    );
+    await this.page.click(
+      "span#AddressesForPartyWidget table tbody tr input[id$='EditButton']"
+    );
+    await this.page.waitForLoadState("domcontentloaded");
+    try {
+      // if this times out, assume popup didn't appear and we can move
+      // on in the flow
+      await this.page.click("input[id$='editChangeYesNoPopup_yes']", {
+        timeout: 10000,
+      });
+    } catch (e) {
+      if (!(e instanceof errors.TimeoutError)) {
+        throw e;
+      }
+    }
+    await this.page.waitForSelector("span#USEditCountryFormatAddressWidget");
+    return cb(new EmployerAddressPage(this.page));
+  }
+
+  async addAddress(
+    type: EmployerAddressType,
+    cb: FineosPageCallback<EmployerAddressPage>
+  ): Promise<void> {
+    await this.page.click(
+      "span#AddressesForPartyWidget table tbody tr input[id$='NewButton']"
+    );
+    await this.page.selectOption(
+      "div#PopupContainer select[id$='AddUsageDropDown_DropDown']",
+      { label: type }
+    );
+    await this.page.click(
+      "div#PopupContainer input[id$='AddUsageDropDown_yes']"
+    );
+    await this.page.waitForSelector("span#USEditCountryFormatAddressWidget");
+    return cb(new EmployerAddressPage(this.page));
+  }
+}
+
+export class EmployerAddressPage extends FineosPage {
+  constructor(page: Page) {
+    super(page);
+  }
+
+  async setAddress(address: EmployerAddress): Promise<void> {
+    await this.page.fill(
+      "span#USEditCountryFormatAddressWidget input[id$='AddressLine1']",
+      address.line1
+    );
+    if (address.line2 !== undefined) {
+      await this.page.fill(
+        "span#USEditCountryFormatAddressWidget input[id$='AddressLine2']",
+        address.line2 ?? ""
+      );
+    }
+    if (address.line3 !== undefined) {
+      await this.page.fill(
+        "span#USEditCountryFormatAddressWidget input[id$='AddressLine3']",
+        address.line3 ?? ""
+      );
+    }
+    if (address.city !== undefined) {
+      await this.page.fill(
+        "span#USEditCountryFormatAddressWidget input[id$='City']",
+        address.city ?? ""
+      );
+    }
+    await this.page.selectOption(
+      "span#USEditCountryFormatAddressWidget select[id$='State']",
+      { label: address.state }
+    );
+    await this.page.fill(
+      "span#USEditCountryFormatAddressWidget input[id$='ZipCode']",
+      address.zipCode
+    );
+    await this.page.click("span#footerButtonsBar input[id$='editPageSave']");
+    const editing = await this.page.isVisible(
+      "div.pageheader_flex_heading span.sub_header:has-text('Edit Address')"
+    );
+    if (editing) {
+      await this.page.waitForLoadState("domcontentloaded");
+      try {
+        // if this times out, assume popup didn't appear and we can move
+        // on in the flow
+        await this.page.click("input[id$='warningsPopup_yes']", {
+          timeout: 10000,
+        });
+      } catch (e) {
+        if (!(e instanceof errors.TimeoutError)) {
+          throw e;
+        }
+      }
+    }
   }
 }

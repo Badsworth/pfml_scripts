@@ -152,7 +152,6 @@ export const MRAP30: ScenarioSpecification = {
   },
 };
 
-// Only used in ignored `bond_continuous_approval_payment_90K.ts` spec
 export const BCAP90: ScenarioSpecification = {
   employee: {
     wages: 90000,
@@ -182,7 +181,7 @@ export const BIAP60: ScenarioSpecification = {
     label: "BIAP60",
     reason: "Child Bonding",
     reason_qualifier: "Newborn",
-    bondingDate: "future",
+    bondingDate: "past",
     work_pattern_spec: "0,240,240,240,240,240,0",
     docs: {
       MASSID: {},
@@ -194,7 +193,7 @@ export const BIAP60: ScenarioSpecification = {
     },
     is_withholding_tax: false,
     // This scenario requires a 4 week leave time for payment calculation purposes.
-    leave_dates: [subWeeks(mostRecentSunday, 3), addWeeks(mostRecentSunday, 1)],
+    leave_dates: [subWeeks(mostRecentSunday, 4), mostRecentSunday],
     metadata: {
       expected_weekly_payment: "831.06",
       spanHoursStart: "4",
@@ -278,7 +277,10 @@ export const ORGUNIT: ScenarioSpecification = {
       MASSID: {},
       CARING: {},
     },
-    metadata: { orgunit: "Division of Administrative Law Appeals" },
+    metadata: {
+      orgunits: "Division of Administrative Law Appeals",
+      worksite: "TEAMX_",
+    },
   },
 };
 
@@ -323,6 +325,21 @@ export const MED_OLB: ScenarioSpecification = {
         worked_per_week_minutes: 1200,
       },
     ],
+  },
+};
+
+export const CONCURRENT: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "CONCURRENT",
+    shortClaim: true,
+    reason: "Serious Health Condition - Employee",
+    work_pattern_spec: "0,315,315,315,315,315,0",
+    docs: {
+      MASSID: {},
+      //HCP: {}
+    },
+    concurrent_leave: { is_for_current_employer: true },
   },
 };
 
@@ -443,6 +460,25 @@ export const BHAP1_OLB: ScenarioSpecification = {
   },
 };
 
+// This needs a specific scenario to be used by a CPS test. Please do not change specs on this scenario.
+export const MHAP1_OLB_ER: ScenarioSpecification = {
+  employee: { wages: 30000, mass_id: true },
+  claim: {
+    label: "MHAP1_OLB_ER",
+    reason: "Serious Health Condition - Employee",
+    // Create a leave in progress, so we can check adjustments for both made and future payments.
+    leave_dates: [subWeeks(mostRecentSunday, 3), addWeeks(mostRecentSunday, 1)],
+    docs: {
+      MASSID: {},
+      HCP: {},
+    },
+    employerResponse: {
+      employer_decision: "Approve",
+      hours_worked_per_week: 40,
+    },
+  },
+};
+
 const midweek = addDays(mostRecentSunday, 3);
 export const CPS_MID_WK: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
@@ -530,13 +566,18 @@ export const WDCLAIM: ScenarioSpecification = {
   },
 };
 
-export const HIST_CASE: ScenarioSpecification = {
+export const HIST_CASE: ScenarioSpecification<CaringLeaveClaim> = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
     label: "HIST_CASE",
     shortClaim: true,
     has_continuous_leave_periods: true,
     reason: "Care for a Family Member",
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+      fraud: "No",
+    },
     docs: {
       MASSID: {},
       CARING: {},
@@ -584,7 +625,10 @@ export const MED_ERRE: ScenarioSpecification = {
       HCP: {},
       MASSID: {},
     },
-    metadata: { expected_weekly_payment: "461.54" },
+    metadata: {
+      expected_weekly_payment: "461.54",
+      employerReAmount: 100,
+    },
   },
 };
 

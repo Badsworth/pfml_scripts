@@ -1,7 +1,8 @@
 import { fineos, fineosPages, portal } from "../../../actions";
 import { Submission } from "../../../../src/types";
 import { addMonths, addDays, format } from "date-fns";
-import { extractLeavePeriod } from "util/claims";
+import { extractLeavePeriod } from "../../../../src/util/claims";
+import { config } from "../../../actions/common";
 
 describe("Submit medical pre-birth application via the web portal", () => {
   const submission =
@@ -18,42 +19,55 @@ describe("Submit medical pre-birth application via the web portal", () => {
       });
     });
 
-  const approval = it(
-    "CSR rep will approve reduced medical application",
-    { retries: 0 },
-    () => {
+  const approval =
+    it("CSR rep will approve reduced medical application", () => {
       cy.dependsOnPreviousPass([submission]);
       fineos.before();
       cy.unstash<DehydratedClaim>("claim").then((claim) => {
         cy.unstash<Submission>("submission").then((submission) => {
-          const claimPage = fineosPages.ClaimPage.visit(
-            submission.fineos_absence_id
-          );
-          claimPage.triggerNotice("Preliminary Designation");
-          fineos.onTab("Absence Hub");
-          claimPage
-            .adjudicate((adjudication) => {
-              adjudication
-                .evidence((evidence) => {
-                  // Receive all of the claim documentation.
-                  claim.documents.forEach((document) => {
-                    evidence.receive(document.document_type);
-                  });
-                })
-                .certificationPeriods((cert) => cert.prefill())
-                .acceptLeavePlan();
-            })
-            .shouldHaveStatus("Applicability", "Applicable")
-            .shouldHaveStatus("Eligibility", "Met")
-            .shouldHaveStatus("Evidence", "Satisfied")
-            .shouldHaveStatus("Availability", "Time Available")
-            .shouldHaveStatus("Restriction", "Passed")
-            .shouldHaveStatus("PlanDecision", "Accepted")
-            .approve();
+          cy.tryCount().then((attempts) => {
+            const claimPage = fineosPages.ClaimPage.visit(
+              submission.fineos_absence_id
+            );
+            /* This "attempts" is returned by cy.tryCount(),
+               On re-attemps we would like to skip the adjudication flow on retries
+               to do this we will assume the test timed out on the approval action (the most common place of failure)
+               in the future we would like to abstract the logic for skipping certain flows on reattempts to the fineosPages actions
+               This would require ensuring all E2E tests have claim submission and adjudication split up, which is beyond the scope of https://lwd.atlassian.net/browse/PFMLPB-3380
+               */
+            if (attempts > 0) {
+              fineos.assertClaimStatus("Approved");
+              return;
+            }
+            claimPage.triggerNotice("Preliminary Designation");
+            fineos.onTab("Absence Hub");
+            claimPage
+              .adjudicate((adjudication) => {
+                adjudication
+                  .evidence((evidence) => {
+                    // Receive all of the claim documentation.
+                    claim.documents.forEach((document) => {
+                      evidence.receive(document.document_type);
+                    });
+                  })
+                  .certificationPeriods((cert) => cert.prefill())
+                  .acceptLeavePlan();
+              })
+              .shouldHaveStatus("Applicability", "Applicable")
+              .shouldHaveStatus("Eligibility", "Met")
+              .shouldHaveStatus("Evidence", "Satisfied")
+              .shouldHaveStatus("Availability", "Time Available")
+              .shouldHaveStatus("Restriction", "Passed")
+              .shouldHaveStatus("PlanDecision", "Accepted");
+            if (config("HAS_APRIL_UPGRADE") === "true") {
+              claimPage.approve("Approved", true);
+            } else {
+              claimPage.approve("Approved", false);
+            }
+          });
         });
       });
-    }
-  );
+    });
   const extension = it(
     "CSR rep will add bonding leave to the absence case",
     { retries: 0 },
@@ -124,10 +138,19 @@ describe("Submit medical pre-birth application via the web portal", () => {
       cy.dependsOnPreviousPass([extension]);
       fineos.before();
       cy.unstash<Submission>("submission").then((submission) => {
-        fineosPages.ClaimPage.visit(submission.fineos_absence_id).deny(
-          "Claimant wages failed 30x rule",
-          false
-        );
+        if (config("HAS_APRIL_UPGRADE") === "true") {
+          fineosPages.ClaimPage.visit(submission.fineos_absence_id).deny(
+            "Covered family relationship not established",
+            true,
+            true
+          );
+        } else {
+          fineosPages.ClaimPage.visit(submission.fineos_absence_id).deny(
+            "Claimant wages failed 30x rule",
+            false,
+            false
+          );
+        }
       });
     }
   );

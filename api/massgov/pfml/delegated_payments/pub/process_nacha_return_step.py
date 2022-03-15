@@ -5,7 +5,6 @@
 #
 
 import enum
-import re
 import uuid
 from typing import Optional, Sequence, TextIO, cast
 
@@ -14,7 +13,6 @@ import massgov.pfml.util.files
 import massgov.pfml.util.logging
 from massgov.pfml.api.util import state_log_util
 from massgov.pfml.db.models.employees import (
-    Flow,
     LkPrenoteState,
     Payment,
     PrenoteState,
@@ -22,11 +20,15 @@ from massgov.pfml.db.models.employees import (
     PubErrorType,
     ReferenceFile,
     ReferenceFileType,
-    State,
 )
 from massgov.pfml.db.models.payments import FineosWritebackTransactionStatus
+from massgov.pfml.db.models.state import Flow, State
 from massgov.pfml.delegated_payments import delegated_config, delegated_payments_util
 from massgov.pfml.delegated_payments.pub import process_files_in_path_step
+from massgov.pfml.delegated_payments.pub.pub_util import (
+    parse_eft_prenote_pub_individual_id,
+    parse_payment_pub_individual_id,
+)
 from massgov.pfml.delegated_payments.util.ach import reader
 from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
     create_payment_finished_state_log_with_writeback,
@@ -34,9 +36,6 @@ from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
 from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
-
-EFT_PRENOTE_ID_PATTERN = re.compile(r"^E([1-9][0-9]*)$")
-PAYMENT_ID_PATTERN = re.compile(r"^P([1-9][0-9]*)$")
 
 
 class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathStep):
@@ -65,11 +64,16 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         PROCESSED_ACH_FILE = "processed_ach_file"
 
     def __init__(
-        self, db_session: massgov.pfml.db.Session, log_entry_db_session: massgov.pfml.db.Session,
+        self,
+        db_session: massgov.pfml.db.Session,
+        log_entry_db_session: massgov.pfml.db.Session,
+        should_add_to_report_queue: bool = False,
     ) -> None:
         """Constructor."""
         pub_ach_inbound_path = delegated_config.get_s3_config().pfml_pub_ach_archive_path
-        super().__init__(db_session, log_entry_db_session, pub_ach_inbound_path)
+        super().__init__(
+            db_session, log_entry_db_session, pub_ach_inbound_path, should_add_to_report_queue
+        )
 
     def process_file(self, path: str) -> None:
         """Parse an ACH return file and process each record."""
@@ -81,18 +85,9 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         self.db_session.add(self.reference_file)
 
         stream = massgov.pfml.util.files.open_stream(path)
-        try:
-            self.process_stream(stream)
-        except Exception:
-            self.db_session.rollback()
-            logger.exception("fatal error when processing ach return", extra={"path": path})
-            delegated_payments_util.move_reference_file(
-                self.db_session, self.reference_file, self.received_path, self.error_path
-            )
-            # TODO: add to general error report
-            raise
 
-        self.db_session.commit()
+        self.process_stream(stream)
+
         delegated_payments_util.move_reference_file(
             self.db_session, self.reference_file, self.received_path, self.processed_path
         )
@@ -187,7 +182,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         )
         if pub_eft is None:
             logger.warning(
-                "Prenote: id number not in pub_eft table", extra=ach_return.get_details_for_log(),
+                "Prenote: id number not in pub_eft table", extra=ach_return.get_details_for_log()
             )
             self.increment(self.Metrics.EFT_PRENOTE_ID_NOT_FOUND_COUNT)
 
@@ -259,8 +254,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         )
         if payment is None:
             logger.warning(
-                "ACH Return: id number not in payment table",
-                extra=ach_return.get_details_for_log(),
+                "ACH Return: id number not in payment table", extra=ach_return.get_details_for_log()
             )
             self.increment(self.Metrics.PAYMENT_ID_NOT_FOUND_COUNT)
 
@@ -343,9 +337,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
                 **delegated_payments_util.get_traceable_payment_details(payment, end_state),
             }
 
-            logger.error(
-                "ACH Return: unexpected state for payment", extra=details,
-            )
+            logger.error("ACH Return: unexpected state for payment", extra=details)
             self.increment(self.Metrics.PAYMENT_UNEXPECTED_STATE_COUNT)
 
             self.add_pub_error(
@@ -374,9 +366,12 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
 
         if end_state_id == State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT.state_id:
             # Expected normal state for an ACH change notification payment.
+
+            end_state = State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION
+
             create_payment_finished_state_log_with_writeback(
                 payment=payment,
-                payment_end_state=State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION,
+                payment_end_state=end_state,
                 payment_outcome=state_log_util.build_outcome(
                     "Payment complete with change notification",
                     ach_return_reason_code=str(change_notification.return_reason_code),
@@ -390,8 +385,12 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
 
             logger.warning(
                 "ACH Notification: Payment complete with change notification",
-                extra=change_notification.get_details_for_log(),
+                extra={
+                    **change_notification.get_details_for_log(),
+                    **delegated_payments_util.get_traceable_payment_details(payment, end_state),
+                },
             )
+
             self.increment(self.Metrics.PAYMENT_COMPLETE_WITH_CHANGE_COUNT)
 
             self.add_pub_error(
@@ -421,9 +420,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
                 **delegated_payments_util.get_traceable_payment_details(payment, end_state),
             }
 
-            logger.error(
-                "ACH Notification: unexpected state for payment", extra=details,
-            )
+            logger.error("ACH Notification: unexpected state for payment", extra=details)
             self.increment(self.Metrics.PAYMENT_NOTIFICATION_UNEXPECTED_STATE_COUNT)
 
             self.add_pub_error(
@@ -435,15 +432,3 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
                 details=details,
                 payment=payment,
             )
-
-
-def parse_eft_prenote_pub_individual_id(id_number: str) -> Optional[int]:
-    if match := EFT_PRENOTE_ID_PATTERN.match(id_number):
-        return int(match.group(1))
-    return None
-
-
-def parse_payment_pub_individual_id(id_number: str) -> Optional[int]:
-    if match := PAYMENT_ID_PATTERN.match(id_number):
-        return int(match.group(1))
-    return None

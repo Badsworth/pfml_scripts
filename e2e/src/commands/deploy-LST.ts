@@ -103,6 +103,7 @@ const cmd: CommandModule<SystemWideArgs, PresetArgs> = {
       "EMPLOYER_PORTAL_PASSWORD" as const,
       "TESTMAIL_APIKEY" as const,
       "FINEOS_USERS" as const,
+      "LST_FILE_RANGE" as const,
     ];
     const environment = secretNames.reduce(
       (env, name) => {

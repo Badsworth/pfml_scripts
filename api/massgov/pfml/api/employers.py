@@ -1,7 +1,7 @@
 import connexion
 import flask
 from sqlalchemy.exc import IntegrityError
-from werkzeug.exceptions import Conflict, NotFound, Unauthorized
+from werkzeug.exceptions import Conflict, NotFound
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
@@ -51,9 +51,6 @@ def employer_add_fein() -> flask.Response:
     add_fein_request = EmployerAddFeinRequest.parse_obj(connexion.request.json)
     current_user = app.current_user()
 
-    if current_user is None:
-        raise Unauthorized()
-
     if add_fein_request.employer_fein is None:
         raise ValidationException(
             errors=[
@@ -62,7 +59,7 @@ def employer_add_fein() -> flask.Response:
                     type=IssueType.required,
                     message="employer_fein is required",
                 )
-            ],
+            ]
         )
 
     with app.db_session() as db_session:
@@ -81,7 +78,7 @@ def employer_add_fein() -> flask.Response:
 
         if employer is not None:
             link = UserLeaveAdministrator(
-                user_id=current_user.user_id, employer_id=employer.employer_id,
+                user_id=current_user.user_id, employer_id=employer.employer_id
             )
             db_session.add(link)
 

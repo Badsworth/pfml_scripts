@@ -19,7 +19,11 @@ function generateWarningsForStep(name: string) {
   const step = allSteps.find((s) => s.name === name);
 
   return step?.fields.map((field) => {
-    return { field: field.replace(/^claim./, ""), message: "Mocked warning" };
+    return {
+      field: field.replace(/^claim./, ""),
+      message: "Mocked warning",
+      namespace: "applications",
+    };
   });
 }
 

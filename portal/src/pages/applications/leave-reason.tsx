@@ -47,7 +47,7 @@ export const LeaveReason = (props: WithBenefitsApplicationProps) => {
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });
@@ -120,15 +120,6 @@ export const LeaveReason = (props: WithBenefitsApplicationProps) => {
           components={{
             "contact-center-phone-link": (
               <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-            ),
-            "mass-benefits-guide-serious-health-condition": (
-              <a
-                target="_blank"
-                rel="noopener"
-                href={
-                  routes.external.massgov.benefitsGuide_seriousHealthCondition
-                }
-              />
             ),
             p: <p />,
             ul: <ul className="usa-list" />,

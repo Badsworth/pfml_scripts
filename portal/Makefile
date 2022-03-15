@@ -32,7 +32,7 @@ release-list: ## Generate comma-separated list of ticket ids for $refs
 	grep --extended-regexp --only-matching '[A-Za-z]{2,}-[0-9]+' | \
 	tr '\n' ',' | sed 's/,$$//'
 
-PORTAL_RELEASE_BRANCHES := $(addprefix origin/, main deploy/portal/stage deploy/portal/prod deploy/portal/performance deploy/portal/training deploy/portal/uat deploy/portal/breakfix deploy/portal/cps-preview deploy/portal/long deploy/portal/trn2)
+PORTAL_RELEASE_BRANCHES := $(addprefix origin/, main deploy/portal/stage deploy/portal/prod deploy/portal/performance deploy/portal/training deploy/portal/uat deploy/portal/breakfix deploy/portal/cps-preview deploy/portal/long deploy/portal/trn2 deploy/portal/infra-test)
 where-ticket: ## Search release branches for $ticket
 	@for b in $(PORTAL_RELEASE_BRANCHES); do echo "## $$b ##"; \
 		git --no-pager log --oneline --decorate --grep=$(ticket) $$b; \

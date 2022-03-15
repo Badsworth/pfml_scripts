@@ -4,6 +4,22 @@
 name: Business Intelligence CI Deploy
 
 on:
+  workflow_dispatch:
+    inputs:
+      deployment_env:
+        required: true
+        default: "test"
+        description: |
+          🛑 DO NOT CHANGE THE DROPDOWN ABOVE FOR THE WORKFLOW. KEEP IT ON "main" BRANCH.
+          --------------------------------------
+          ⬇️ Environment to be deployed.
+            (test, infra-test, stage,  uat, prod).
+      version:
+        required: true
+        default: "main"
+        description: |
+          --------------------------------------
+          Tag or branch to be deployed. (Tags preferred)
   push:
     branches:
       - main
@@ -14,29 +30,88 @@ on:
 env:
   working-dir: ./infra
   terraform-bi-dir: ./infra/bi/environments
-  tf-version-default: 0.14.7
+  terraformVersion: 0.14.7
+  deployment_env: ${{ github.event.inputs.deployment_env || 'test' }}
+  version: ${{ github.event.inputs.version || 'main'}}
 
 jobs:
-  tf-format-check:
-    name: "tf format (run 'terraform fmt -recursive infra/' if this fails)"
+  prod-check:
+      # run if environment is production
+      runs-on: ubuntu-latest
+      steps:
+        - name: check users
+          if: contains(env.deployment_env, 'prod')
+          id: get_teams
+          env:
+            GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
+          uses: octokit/graphql-action@v2.x
+          with:
+            query: |
+              query {
+                organization(login:"EOLWD"){
+                  team(slug:"pfml-devops"){
+                    members(membership: ALL, query:"${{ github.actor }}"){
+                      nodes {
+                        login
+                      }
+                    }
+                  }
+                }
+              }
+        - name: fail if not a member
+          if: contains(env.deployment_env, 'prod') && contains('', fromJSON(steps.get_teams.outputs.data).organization.team.members.nodes[0])
+          run: |
+            echo "Not part of pfml-devops, cancelling workflow"
+            exit 1
+
+  # find the commit that matches the provided input (val should be a tag, but will pass with a valid git branch in origin )
+  update-the-deploy-branch:
+    name: Find deployment information
+    needs: [prod-check]
     runs-on: ubuntu-latest
+
+    outputs:
+      commit_hash: ${{ steps.calculate_commit_hash.outputs.commit_hash }}
 
     steps:
       - uses: actions/checkout@v2
-      - uses: hashicorp/setup-terraform@v1
         with:
-          terraform_version: ${{ env.tf-version-default }} 
+          fetch-depth: 0
+
+      - name: Calculate commit hash
+        id: calculate_commit_hash
+        run: |
+          if commit_hash=$(git rev-parse origin/${{env.version}} 2>/dev/null); then
+            echo "Received branch"
+          else
+            commit_hash=$(git rev-parse ${{env.version}})
+            echo "Received tag"
+          fi
+
+          if [[ -z $commit_hash ]]; then
+            echo "💣 No valid commit hash could be found in Git for the provided branch or tag '${{env.version}}'. This deploy can't proceed."
+            exit 1
+          fi
+
+          echo "::set-output name=commit_hash::$commit_hash"
+
+  tf-format-check:
+    name: "tf format (run 'terraform fmt -recursive infra/' if this fails)"
+    runs-on: ubuntu-latest
+    needs: prod-check
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: hashicorp/setup-terraform@v1.2.1
+        with:
+          terraform_version: ${{ env.terraformVersion }}
 
       - run: terraform fmt -recursive -check ${{ env.working-dir }}
-     
+
   deploy-bi-infra:
-  # Deploy changes to lowers on PR
     name: "deploy bi infra"
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        environment: ["test", "stage", "uat"]
+    needs: [update-the-deploy-branch, tf-format-check]
 
     steps:
       - name: Configure AWS Credentials
@@ -49,21 +124,79 @@ jobs:
           role-duration-seconds: 3600
 
       - uses: actions/checkout@v2
-      - uses: hashicorp/setup-terraform@v1
         with:
-          terraform_version: ${{ env.tf-version-default }}
+          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+
+      - uses: hashicorp/setup-terraform@v1.2.1
+        with:
+          terraform_version: ${{ env.terraformVersion }}
 
       - name: tf-init
         id: terraform_init
         run: terraform init
-        working-directory: ${{ env.terraform-bi-dir }}/${{ matrix.environment }} 
+        working-directory: ${{ env.terraform-bi-dir }}/${{ env.deployment_env }}
 
       - name: tf-plan
         id: terraform_plan
         run: terraform plan -out=plan.tfplan
-        working-directory: ${{ env.terraform-bi-dir }}/${{ matrix.environment }} 
+        working-directory: ${{ env.terraform-bi-dir }}/${{ env.deployment_env  }}
 
       - name: apply from tf-plan
         id: terraform_apply
         run: terraform apply plan.tfplan
-        working-directory: ${{ env.terraform-bi-dir }}/${{ matrix.environment }}
+        working-directory: ${{ env.terraform-bi-dir }}/${{ env.deployment_env  }}
+
+  # Run Terriyay
+  get-test-state:
+    name: Finalize test state
+    needs: [deploy-bi-infra]
+    if: always() && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    outputs:
+      test-state: ${{ steps.test-state.outputs.test-state }}
+    steps:
+        # https://github.com/technote-space/workflow-conclusion-action
+        # this action takes the "conclusion" status from jobs and compiles them together into an env variable with a rolled up status
+      - uses: actions/checkout@v2
+      - uses: technote-space/workflow-conclusion-action@v2
+      - name: Set test-state value
+        id: test-state
+        run: echo "::set-output name=test-state::${{ env.WORKFLOW_CONCLUSION }}"
+
+
+  post-to-teams:
+    name: post failures to teams
+    needs: [get-test-state]
+    if: always() && (needs.get-test-state.outputs.test-state == 'failure' || needs.get-test-state.outputs.test-state == 'timed_out')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Pull teams uri from SSM
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/admin/common/teams-deploy-uri"
+          env_variable_name: "teams_uri"
+
+      - name: Post to Teams
+        run: |
+          RESPONSE=$(curl -fsLS -X POST ${{ env.TEAMS_URI }} \
+          --header 'Content-Type: application/json' \
+          --data '{
+            "@type": "MessageCard",
+            "themeColor": "FF0000",
+            "title": "API tests failed",
+            "text": "API tests failed in main ${{ env.workflow_self_link }}",
+            "sections": [{
+                "activityImage":"https://th.bing.com/th/id/R.ee8882f44294e8a6f1732a54343ff17e?rik=FAYIPD4sACftKw&riu=http%3a%2f%2f3.bp.blogspot.com%2f-u6MZBWbGcZI%2fUT4mft01YTI%2fAAAAAAAADpU%2fJubGsyGdL00%2fs1600%2ffailure.png&ehk=ranH%2bkeeo59wsILuyxVyNTIR2oUECprijedE01jHq34%3d&risl=&pid=ImgRaw&r=0"
+            }]'
+          )

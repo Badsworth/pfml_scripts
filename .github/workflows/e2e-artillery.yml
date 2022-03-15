@@ -10,34 +10,42 @@ on:
         default: "performance"
         type: choice
         options:
-        - test
-        - performance
+          - test
+          - performance
       deploy_type:
         description: "Set the deploy type"
         required: true
         default: "basic"
         type: choice
         options:
-        - basic
-        - full_lst
-        - noSpikes_lst
+          - basic
+          - full_lst
+          - noSpikes_lst
       debug:
         description: "Turn on debug logging"
         required: false
         default: false
         type: boolean
-
+      document_upload_size:
+        description: "File size ranges for document uploads. 'small' will upload file sizes up to 4.5MB. 'large' will upload file sizes from 5MB to 10MB. 'full_range' uploads from <1MB - 10MB"
+        required: false
+        default: "small"
+        type: choice
+        options:
+          - small
+          - large
+          - full_range
 defaults:
   run:
     working-directory: e2e
 
 env:
   E2E_ENVIRONMENT: ${{ github.event.inputs.target_environment }}
+  E2E_LST_FILE_RANGE: ${{github.event.inputs.document_upload_size}}
   # Caching/build performance
   CYPRESS_CACHE_FOLDER: /home/runner/.npm/.cypress-cache
   PLAYWRIGHT_BROWSERS_PATH: /home/runner/.npm/.playwright-cache
   PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 1 # We never actually need puppeteer chromium installed.
-
 # Prevent this workflow from running more than 1x concurrently in any environment.
 # This prevents us from overloading the environment with requests, which causes false failures.
 # Cypress & Flood share the same concurrency key to prevent E2E and Flood running concurrently.

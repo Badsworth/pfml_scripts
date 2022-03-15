@@ -7,9 +7,19 @@ from dateutil.relativedelta import relativedelta
 
 import massgov.pfml.db as db
 import massgov.pfml.util.logging
-from massgov.pfml.api.constants.application import CERTIFICATION_DOC_TYPES, ID_DOC_TYPES
+from massgov.pfml.api.constants.application import (
+    CARING_LEAVE_EARLIEST_START_DATE,
+    CERTIFICATION_DOC_TYPES,
+    ID_DOC_TYPES,
+    PFML_PROGRAM_LAUNCH_DATE,
+)
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
 from massgov.pfml.api.models.applications.requests import ApplicationImportRequestBody
+from massgov.pfml.api.models.common import (
+    get_computed_start_dates,
+    get_earliest_start_date,
+    get_leave_reason,
+)
 from massgov.pfml.api.services.applications import (
     ContinuousLeavePeriod,
     IntermittentLeavePeriod,
@@ -37,8 +47,6 @@ from massgov.pfml.db.models.applications import (
 from massgov.pfml.db.models.employees import Claim, PaymentMethod
 from massgov.pfml.util.routing_number_validation import validate_routing_number
 
-CARING_LEAVE_EARLIEST_START_DATE = date(2021, 7, 1)
-PFML_PROGRAM_LAUNCH_DATE = date(2021, 1, 1)
 MAX_DAYS_IN_ADVANCE_TO_SUBMIT = 60
 MAX_DAYS_IN_LEAVE_PERIOD_RANGE = 364
 MAX_MINUTES_IN_WEEK = 10080  # 60 * 24 * 7
@@ -62,7 +70,7 @@ def get_application_complete_issues(
     application: Application, db_session: db.Session
 ) -> List[ValidationErrorDetail]:
     """Takes in an application and outputs any validation issues.
-        Validates only the data entered post-submit (Parts 2-3) are present, allowing an application to be completed.
+    Validates only the data entered post-submit (Parts 2-3) are present, allowing an application to be completed.
     """
     issues = []
     issues += get_app_complete_payments_issues(application)
@@ -128,7 +136,9 @@ def check_required_fields(
             field_name = f"{path}.{handle_rename(renames, field)}"
             issues.append(
                 ValidationErrorDetail(
-                    type=IssueType.required, message=f"{field_name} is required", field=field_name,
+                    type=IssueType.required,
+                    message=f"{field_name} is required",
+                    field=field_name,
                 )
             )
 
@@ -171,7 +181,9 @@ def check_codependent_fields(
 
 
 def check_zero_income_amount(
-    item_path: str, item: Any, income_path: str,
+    item_path: str,
+    item: Any,
+    income_path: str,
 ) -> List[ValidationErrorDetail]:
 
     income_amount = getattr(item, income_path)
@@ -264,11 +276,21 @@ def get_employer_benefit_issues(
         "is_full_salary_continuous",
     ]
     issues += check_required_fields(
-        benefit_path, benefit, required_fields, {"benefit_type_id": "benefit_type",},
+        benefit_path,
+        benefit,
+        required_fields,
+        {
+            "benefit_type_id": "benefit_type",
+        },
     )
 
     if benefit.is_full_salary_continuous is True:
-        issues += check_required_fields(benefit_path, benefit, ["benefit_start_date"], {},)
+        issues += check_required_fields(
+            benefit_path,
+            benefit,
+            ["benefit_start_date"],
+            {},
+        )
 
     start_date = benefit.benefit_start_date
     start_date_path = f"{benefit_path}.benefit_start_date"
@@ -319,7 +341,11 @@ def get_other_income_issues(income: OtherIncome, index: int) -> List[ValidationE
         {"income_type_id": "income_type", "income_amount_frequency_id": "income_amount_frequency"},
     )
 
-    issues += check_zero_income_amount(income_path, income, "income_amount_dollars",)
+    issues += check_zero_income_amount(
+        income_path,
+        income,
+        "income_amount_dollars",
+    )
 
     start_date = income.income_start_date
     start_date_path = f"{income_path}.income_start_date"
@@ -454,7 +480,9 @@ def get_previous_leaves_other_reason_issues(
         )
     else:
         for index, leave in enumerate(application.previous_leaves_other_reason, 0):
-            issues += get_previous_leave_issues(leave, f"previous_leaves_other_reason[{index}]")
+            issues += get_previous_leave_issues(
+                leave, f"previous_leaves_other_reason[{index}]", application
+            )
             issues += check_required_fields(
                 f"previous_leaves_other_reason[{index}]",
                 leave,
@@ -482,12 +510,16 @@ def get_previous_leaves_same_reason_issues(application: Application) -> List[Val
         )
     else:
         for index, leave in enumerate(application.previous_leaves_same_reason, 0):
-            issues += get_previous_leave_issues(leave, f"previous_leaves_same_reason[{index}]")
+            issues += get_previous_leave_issues(
+                leave, f"previous_leaves_same_reason[{index}]", application
+            )
 
     return issues
 
 
-def get_previous_leave_issues(leave: PreviousLeave, leave_path: str) -> List[ValidationErrorDetail]:
+def get_previous_leave_issues(
+    leave: PreviousLeave, leave_path: str, application: Application
+) -> List[ValidationErrorDetail]:
     issues = []
 
     required_fields = [
@@ -508,12 +540,33 @@ def get_previous_leave_issues(leave: PreviousLeave, leave_path: str) -> List[Val
             )
         )
 
+    minimum_date = PFML_PROGRAM_LAUNCH_DATE
+
+    earliest_start_date = get_earliest_start_date(application)
+    leave_reason = get_leave_reason(application)
+    if earliest_start_date and leave_reason:
+        computed_start_dates = get_computed_start_dates(earliest_start_date, leave_reason)
+        if (
+            leave_path.startswith("previous_leaves_same_reason")
+            and computed_start_dates.same_reason
+        ):
+            minimum_date = computed_start_dates.same_reason
+        elif (
+            leave_path.startswith("previous_leaves_other_reason")
+            and computed_start_dates.other_reason
+        ):
+            minimum_date = computed_start_dates.other_reason
+
     start_date = leave.leave_start_date
     start_date_path = f"{leave_path}.leave_start_date"
     end_date = leave.leave_end_date
     end_date_path = f"{leave_path}.leave_end_date"
     issues += check_date_range(
-        start_date, start_date_path, end_date, end_date_path, minimum_date=PFML_PROGRAM_LAUNCH_DATE,
+        start_date,
+        start_date_path,
+        end_date,
+        end_date_path,
+        minimum_date=minimum_date,
     )
 
     return issues
@@ -532,7 +585,10 @@ def get_previous_leave_and_leave_period_issues(
     ]
 
     all_previous_leaves: Iterable[PreviousLeave] = list(
-        chain(application.previous_leaves_same_reason, application.previous_leaves_other_reason,)
+        chain(
+            application.previous_leaves_same_reason,
+            application.previous_leaves_other_reason,
+        )
     )
     previous_leave_ranges = [
         (leave.leave_start_date, leave.leave_end_date)
@@ -701,7 +757,9 @@ def get_conditional_issues(application: Application) -> List[ValidationErrorDeta
             if val is None:
                 issues.append(
                     ValidationErrorDetail(
-                        type=IssueType.required, message=f"{field} is required", field=field,
+                        type=IssueType.required,
+                        message=f"{field} is required",
+                        field=field,
                     )
                 )
 
@@ -1441,7 +1499,9 @@ def validate_application_import_request_for_claim(
         if val is None:
             required_field_issues.append(
                 ValidationErrorDetail(
-                    type=IssueType.required, message=f"{field} is required", field=field,
+                    type=IssueType.required,
+                    message=f"{field} is required",
+                    field=field,
                 )
             )
 
@@ -1449,12 +1509,15 @@ def validate_application_import_request_for_claim(
         raise ValidationException(required_field_issues)
 
     if claim is None:
+        logger.info(
+            "application import failure - claim not found",
+            extra={"absence_case_id": body.absence_case_id},
+        )
         raise ValidationException(
             [
                 ValidationErrorDetail(
-                    message="Application not found for the given ID.",
-                    type=IssueType.object_not_found,
-                    field="absence_case_id",
+                    message="Code 1: An issue occurred while trying to import the application.",
+                    type=IssueType.incorrect,
                 )
             ]
         )
@@ -1462,12 +1525,18 @@ def validate_application_import_request_for_claim(
     # Only validate the tax_id when the claim has one set. A separate validator handles the case
     # where the claim.employee_tax_identifier is not set.
     if claim.employee_tax_identifier and claim.employee_tax_identifier != body.tax_identifier:
+        logger.info(
+            "application import failure - tax_identifier mismatch",
+            extra={
+                "absence_case_id": body.absence_case_id,
+                "claim_id": claim.claim_id,
+            },
+        )
         raise ValidationException(
             [
                 ValidationErrorDetail(
+                    message="Code 2: An issue occurred while trying to import the application.",
                     type=IssueType.incorrect,
-                    message="tax_identifier does not match our records",
-                    field="tax_identifier",
                 )
             ]
         )

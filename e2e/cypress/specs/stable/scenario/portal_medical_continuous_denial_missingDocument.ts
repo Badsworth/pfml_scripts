@@ -1,15 +1,25 @@
 import { fineos, fineosPages, portal } from "../../../actions";
-import { Submission } from "../../../../src/types";
+import { Submission, ValidConcurrentLeave } from "../../../../src/types";
+import { format, parseISO } from "date-fns";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
+
+// Used for stash generated concurrent leave dates
+type ConcurrentLeave = {
+  concurrentLeave: ValidConcurrentLeave;
+};
 
 describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
   const submissionTest =
     it("As a claimant, I should be able to submit a continous bonding application through the portal", () => {
       portal.before();
-      cy.task("generateClaim", "MCAP_NODOC").then((claim) => {
+      cy.task("generateClaim", "CONCURRENT").then((claim) => {
         cy.stash("claim", claim);
         const application: ApplicationRequestBody = claim.claim;
         const paymentPreference = claim.paymentPreference;
+        const concurrentLeave = claim.claim.concurrent_leave;
+        cy.stash("ConcurrentLeave", {
+          concurrentLeave,
+        });
 
         portal.loginClaimant();
         portal.skipLoadingClaimantApplications();
@@ -32,7 +42,7 @@ describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
     });
 
   const adjudicate =
-    it("Should check hours worked per week/upload state managed document/mark evidence received (Fineos)", () => {
+    it("Should check hours worked per week/upload state managed document/mark evidence received", () => {
       cy.dependsOnPreviousPass([submissionTest]);
       fineos.before();
 
@@ -83,18 +93,31 @@ describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
     });
   });
 
-  it("Should check for hours worked per week & report conflict on Employer Response Form", () => {
+  it("Should check for hours worked per week & report conflict on Employer Response Form and check concurrent leave dates", () => {
     cy.dependsOnPreviousPass();
     portal.before();
     cy.unstash<DehydratedClaim>("claim").then((claim) => {
       cy.unstash<Submission>("submission").then((submission) => {
-        assertValidClaim(claim.claim);
-        portal.loginLeaveAdmin(claim.claim.employer_fein);
-        portal.visitActionRequiredERFormPage(submission.fineos_absence_id);
-        portal.checkHoursPerWeekLeaveAdmin(
-          claim.claim.hours_worked_per_week as number
+        cy.unstash<ConcurrentLeave>("ConcurrentLeave").then(
+          ({ concurrentLeave }) => {
+            assertValidClaim(claim.claim);
+            portal.loginLeaveAdmin(claim.claim.employer_fein);
+            portal.visitActionRequiredERFormPage(submission.fineos_absence_id);
+            portal.checkHoursPerWeekLeaveAdmin(
+              claim.claim.hours_worked_per_week as number
+            );
+            const newStart = format(
+              parseISO(concurrentLeave.leave_start_date),
+              "M/d/yyyy"
+            );
+            const newEnd = format(
+              parseISO(concurrentLeave.leave_end_date),
+              "M/d/yyyy"
+            );
+            portal.checkConcurrentLeave(newStart, newEnd);
+            portal.respondToLeaveAdminRequest(false, false, false);
+          }
         );
-        portal.respondToLeaveAdminRequest(false, false, false);
       });
     });
   });

@@ -1,278 +1,22 @@
 import uuid
 from collections import defaultdict
-from dataclasses import dataclass, field
-from datetime import date, timedelta
-from decimal import Decimal
-from enum import Enum
-from functools import total_ordering
+from datetime import date
 from typing import Any, Dict, List, Optional, Tuple
 
-import pytz
 from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.expression import desc
 
 from massgov.pfml.api.models.payments.responses import PaymentResponse
+from massgov.pfml.api.services.payments_services_util import (
+    FrontendPaymentStatus,
+    PaymentContainer,
+    PaymentFilterReason,
+)
 from massgov.pfml.db import Session
 from massgov.pfml.db.models.employees import Claim, Payment, PaymentTransactionType
-from massgov.pfml.db.models.payments import FineosWritebackDetails
-from massgov.pfml.db.models.payments import FineosWritebackTransactionStatus as WritebackStatus
 from massgov.pfml.util import logging
 
 logger = logging.get_logger(__name__)
-
-
-class FrontendPaymentStatus(str, Enum):
-    SENT_TO_BANK = "Sent to bank"
-    DELAYED = "Delayed"
-    PENDING = "Pending"
-    CANCELLED = "Cancelled"
-
-    def get_metric_count_name(self) -> str:
-        camelcased_str = self.lower().replace(" ", "_")
-        return f"payment_status_{camelcased_str}_count"
-
-
-# Enum used for tracking+logging why we excluded payments
-# that were fetched from the DB.
-class PaymentFilterReason(str, Enum):
-    UNKNOWN = "Unknown"
-    HAS_SUCCESSOR = "Has successor"
-    CANCELLATION_EVENT = "Cancellation event"
-
-    def get_metric_count_name(self) -> str:
-        camelcased_str = self.lower().replace(" ", "_")
-        return f"payment_filtered_{camelcased_str}_count"
-
-
-@dataclass
-class PaymentScenarioData:
-    amount: Optional[Decimal] = None
-    sent_date: Optional[date] = None
-    expected_send_date_start: Optional[date] = None
-    expected_send_date_end: Optional[date] = None
-    cancellation_date: Optional[date] = None
-    status: FrontendPaymentStatus = FrontendPaymentStatus.DELAYED
-
-    SCENARIOS = {
-        WritebackStatus.PENDING_PRENOTE.transaction_status_id: "pending_prenote",
-        WritebackStatus.DUA_ADDITIONAL_INCOME.transaction_status_id: "reduction",
-        WritebackStatus.DIA_ADDITIONAL_INCOME.transaction_status_id: "reduction",
-        WritebackStatus.WEEKLY_BENEFITS_AMOUNT_EXCEEDS_850.transaction_status_id: "reduction",
-        WritebackStatus.SELF_REPORTED_ADDITIONAL_INCOME.transaction_status_id: "reduction",
-        WritebackStatus.PAID.transaction_status_id: "paid",
-        WritebackStatus.POSTED.transaction_status_id: "paid",
-        WritebackStatus.PAYMENT_AUDIT_IN_PROGRESS.transaction_status_id: "pending",
-        # Payments may not have a status, but be in our system if
-        # the batch processing is actively occurring.
-        None: "pending",
-    }
-
-    @classmethod
-    def compute(cls, payment_container: "PaymentContainer") -> "PaymentScenarioData":
-        if payment_container.is_cancelled():
-            return cls.cancelled(cancellation_date=payment_container.get_cancellation_date())
-
-        if payment_container.is_legacy_payment():
-            return cls.legacy_mmars_paid(payment=payment_container.payment)
-
-        writeback_detail = payment_container.writeback_detail
-        detail_id = writeback_detail.transaction_status_id if writeback_detail else None
-        method_to_call = getattr(cls, cls.SCENARIOS.get(detail_id, "other"))
-
-        return method_to_call(payment=payment_container.payment, writeback_detail=writeback_detail)
-
-    @classmethod
-    def cancelled(cls, **kwargs):
-        return cls(
-            status=FrontendPaymentStatus.CANCELLED,
-            amount=Decimal("0.00"),  # The portal wants cancellations to be for $0
-            cancellation_date=kwargs["cancellation_date"],
-        )
-
-    @classmethod
-    def pending_prenote(cls, **kwargs):
-        payment = kwargs["payment"]
-        pub_eft = payment.pub_eft
-        created_date = (
-            pub_eft.prenote_sent_at.date() if pub_eft and pub_eft.prenote_sent_at else None
-        )
-
-        if created_date is None:
-            # If the EFT record hasn't been sent to PUB yet, pub_eft.prenote_sent_at won't be set yet.
-            # We'll assume we are going to send it within the next day, so up the 5-7 day date range by 1 to compensate.
-            expected_send_date_start, expected_send_date_end = get_expected_dates(
-                date.today(), range_start=6, range_end=8
-            )
-        else:
-            # We must wait 5 days before we can approve a prenote,
-            # so we recommend waiting 5-7 days from when we sent it.
-            expected_send_date_start, expected_send_date_end = get_expected_dates(
-                created_date, range_start=5, range_end=7
-            )
-
-        return cls(
-            expected_send_date_start=expected_send_date_start,
-            expected_send_date_end=expected_send_date_end,
-        )
-
-    @classmethod
-    def reduction(cls, **kwargs):
-        """
-        Reduction scenarios require someone to manually make a change in FINEOS
-        Which usually takes about 2 days. Note the payment could still be cancelled
-        if the reduction ends up greater than the amount remaining.
-        """
-        writeback_detail = kwargs["writeback_detail"]
-        created_date = to_est(writeback_detail.created_at).date()
-        expected_send_date_start, expected_send_date_end = get_expected_dates(
-            created_date, range_start=2, range_end=4
-        )
-
-        return cls(
-            expected_send_date_start=expected_send_date_start,
-            expected_send_date_end=expected_send_date_end,
-        )
-
-    @classmethod
-    def paid(cls, **kwargs):
-        """
-        The payment has been successfully paid
-        """
-        payment, writeback_detail = kwargs["payment"], kwargs["writeback_detail"]
-        sent_date = to_est(writeback_detail.created_at).date()
-
-        return cls(
-            amount=payment.amount,
-            sent_date=sent_date,
-            expected_send_date_start=sent_date,
-            expected_send_date_end=sent_date,
-            status=FrontendPaymentStatus.SENT_TO_BANK,
-        )
-
-    @classmethod
-    def pending(cls, **_):
-        """
-        No writeback means the payment hasn't failed any validation,
-        but hasn't been sent to the bank yet. Likely it's waiting for the audit report
-        so we'll consider it a pending payment
-        """
-        expected_send_date_start, expected_send_date_end = get_expected_dates(
-            date.today(), range_start=1, range_end=3
-        )
-        return cls(
-            expected_send_date_start=expected_send_date_start,
-            expected_send_date_end=expected_send_date_end,
-            status=FrontendPaymentStatus.PENDING,
-        )
-
-    @classmethod
-    def legacy_mmars_paid(cls, **kwargs):
-        """
-        Payment is a legacy payment from MMARS which stores
-        the send date in a dedicated column
-        """
-        payment = kwargs["payment"]
-        sent_date = payment.disb_check_eft_issue_date
-        return cls(
-            amount=payment.amount,
-            sent_date=sent_date,
-            expected_send_date_start=sent_date,
-            expected_send_date_end=sent_date,
-            status=FrontendPaymentStatus.SENT_TO_BANK,
-        )
-
-    @classmethod
-    def other(cls, **_):
-        """
-        All payments that don't match one of the
-        other criteria end up with the defaults and display as delayed.
-        """
-        return cls()
-
-
-@total_ordering  # Handles supporting sort with just __eq__ and __lt__
-@dataclass
-class PaymentContainer:
-    payment: Payment
-
-    writeback_detail: Optional[FineosWritebackDetails] = None
-
-    # The event that cancels this payment
-    cancellation_event: Optional["PaymentContainer"] = None
-
-    # (Only for payments that are themselves cancellations)
-    # Which payment it cancels
-    cancelled_payment: Optional["PaymentContainer"] = None
-
-    # Whether the payment is being returned in the API response (ie. not filtered)
-    is_valid_for_response: bool = False
-
-    # For any payments filtered, display a reason, defaults to unknown
-    # in case a reason was not configured.
-    payment_filter_reason: PaymentFilterReason = PaymentFilterReason.UNKNOWN
-
-    # Used for tracking/logging purposes. For some filtered payments
-    # indicates the payments that we instead returned.
-    successors: List["PaymentContainer"] = field(default_factory=list)
-
-    def __post_init__(self):
-        self.writeback_detail = get_latest_writeback_detail(self.payment)
-
-    def get_scenario_data(self) -> PaymentScenarioData:
-        return PaymentScenarioData.compute(self)
-
-    def _get_sort_key(self) -> Any:
-        return (
-            self.payment.period_start_date,
-            self.import_log_id(),
-            int(self.payment.fineos_pei_i_value),  # type: ignore
-        )
-
-    def __eq__(self, other):
-        return self._get_sort_key() == other._get_sort_key()
-
-    def __lt__(self, other):
-        return self._get_sort_key() < other._get_sort_key()
-
-    def import_log_id(self) -> int:
-        # In a function so I can ignore mypy warnings
-        # The field is nullable, but a payment isn't ever
-        # created without this in a real environment
-        return self.payment.fineos_extract_import_log_id  # type: ignore
-
-    def is_zero_dollar_payment(self) -> bool:
-        return (
-            self.payment.payment_transaction_type_id
-            == PaymentTransactionType.ZERO_DOLLAR.payment_transaction_type_id
-        )
-
-    def is_cancelled(self) -> bool:
-        if self.cancellation_event:
-            return True
-
-        if self.is_zero_dollar_payment():
-            return True
-
-        return False
-
-    def get_cancellation_date(self) -> Optional[date]:
-        # Zero dollar payments, assume they were cancelled
-        # on the date we received it, even if it's earlier
-        if self.is_zero_dollar_payment():
-            return self.payment.fineos_extraction_date
-
-        # For cancelled payments, use the date we received the
-        # cancellation event as the cancellation date
-        if self.cancellation_event:
-            return self.cancellation_event.payment.fineos_extraction_date
-
-        return None
-
-    def is_legacy_payment(self) -> bool:
-        return (
-            self.payment.payment_transaction_type_id
-            == PaymentTransactionType.STANDARD_LEGACY_MMARS.payment_transaction_type_id
-        )
 
 
 def get_payments_with_status(db_session: Session, claim: Claim) -> Dict:
@@ -321,7 +65,7 @@ def get_payments_from_db(
 ) -> Tuple[List[PaymentContainer], List[PaymentContainer]]:
     payments = (
         db_session.query(Payment)
-        .filter(Payment.claim_id == claim_id,)
+        .filter(Payment.claim_id == claim_id)
         .filter(
             Payment.payment_transaction_type_id.in_(
                 [
@@ -330,9 +74,12 @@ def get_payments_from_db(
                     PaymentTransactionType.ZERO_DOLLAR.payment_transaction_type_id,
                     PaymentTransactionType.CANCELLATION.payment_transaction_type_id,
                 ]
-            ),
+            )
         )
         .filter(Payment.exclude_from_payment_status != True)  # noqa: E712
+        .filter(
+            Payment.disb_method_id.isnot(None)
+        )  # Handling a bug where payments have an unset payment method
         .order_by(Payment.fineos_pei_i_value, desc(Payment.fineos_extract_import_log_id))
         .distinct(Payment.fineos_pei_i_value)
         .options(joinedload(Payment.fineos_writeback_details))  # type: ignore
@@ -513,52 +260,21 @@ def to_response_dict(payment_data: List[PaymentContainer], absence_case_id: Opti
                 expected_send_date_end=scenario_data.expected_send_date_end,
                 cancellation_date=scenario_data.cancellation_date,
                 status=scenario_data.status,
+                writeback_transaction_status=scenario_data.writeback_transaction_status,
+                transaction_date=scenario_data.transaction_date,
+                transaction_date_could_change=scenario_data.transaction_date_could_change,
             ).dict()
         )
 
-    return {
-        "payments": payments,
-        "absence_case_id": absence_case_id,
-    }
-
-
-def get_latest_writeback_detail(payment: Payment) -> Optional[FineosWritebackDetails]:
-    writeback_details_records = payment.fineos_writeback_details  # type: ignore
-
-    if len(writeback_details_records) == 0:
-        return None
-
-    first_detail_record = writeback_details_records[-1]
-
-    if first_detail_record.transaction_status_id == WritebackStatus.POSTED.transaction_status_id:
-        for record in reversed(writeback_details_records):
-            # TODO: Log error if no preceding paid record is found.
-            if record.transaction_status_id == WritebackStatus.PAID.transaction_status_id:
-                return record
-
-    return first_detail_record
-
-
-def get_expected_dates(
-    from_date: date, range_start: int, range_end: int
-) -> tuple[Optional[date], Optional[date]]:
-    if (from_date + timedelta(days=range_end)) < date.today():
-        expected_end, expected_start = None, None
-    else:
-        expected_start = from_date + timedelta(days=range_start)
-        expected_end = from_date + timedelta(days=range_end)
-
-    return (expected_start, expected_end)
-
-
-def to_est(datetime_obj):
-    est = pytz.timezone("US/Eastern")
-    return datetime_obj.astimezone(est)
+    return {"payments": payments, "absence_case_id": absence_case_id}
 
 
 def log_payment_status(claim: Claim, payment_containers: List[PaymentContainer]) -> None:
     log_attributes: Dict[str, Any] = defaultdict(int)
     log_attributes["absence_case_id"] = claim.fineos_absence_id
+    log_attributes["fineos_customer_number"] = (
+        claim.employee.fineos_customer_number if claim.employee else None
+    )
 
     # For the various payment scenarios, initialize the counts to 0
     # New enums defined above automatically get added here
@@ -606,6 +322,15 @@ def log_payment_status(claim: Claim, payment_containers: List[PaymentContainer])
             f"payment[{i}].payment_type"
         ] = returned_payment.payment.payment_transaction_type.payment_transaction_type_description
         log_attributes[f"payment[{i}].status"] = scenario_data.status.value
+        log_attributes[
+            f"payment[{i}].writeback_transaction_status"
+        ] = scenario_data.writeback_transaction_status
+        log_attributes[f"payment[{i}].transaction_date"] = (
+            scenario_data.transaction_date.isoformat() if scenario_data.transaction_date else None
+        )
+        log_attributes[
+            f"payment[{i}].transaction_date_could_change"
+        ] = scenario_data.transaction_date_could_change
 
         if returned_payment.cancellation_event:
             log_attributes[

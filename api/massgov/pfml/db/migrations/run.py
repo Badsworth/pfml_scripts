@@ -90,7 +90,5 @@ def check_model_parity() -> None:
         for line in diff:
             print("::error title=Missing migration::Missing migration:", line)
 
-        logger.error(
-            message, extra={"issues": str(diff)},
-        )
+        logger.error(message, extra={"issues": str(diff)})
         raise Exception(message)

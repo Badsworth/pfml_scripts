@@ -9,17 +9,13 @@ import {
 } from "../errors";
 import { useMemo, useState } from "react";
 import ApiResourceCollection from "../models/ApiResourceCollection";
-import { AppErrorsLogic } from "./useAppErrorsLogic";
 import DocumentsApi from "../api/DocumentsApi";
+import { ErrorsLogic } from "./useErrorsLogic";
 import TempFile from "../models/TempFile";
 import assert from "assert";
 import useCollectionState from "./useCollectionState";
 
-const useDocumentsLogic = ({
-  appErrorsLogic,
-}: {
-  appErrorsLogic: AppErrorsLogic;
-}) => {
+const useDocumentsLogic = ({ errorsLogic }: { errorsLogic: ErrorsLogic }) => {
   /**
    * State representing the collection of documents for the current user.
    * Initialize to empty collection, but will eventually store the document
@@ -70,7 +66,7 @@ const useDocumentsLogic = ({
     )
       return;
 
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     setLoadedApplicationDocs((loadingClaimDocuments) => {
       const docs = { ...loadingClaimDocuments };
@@ -93,7 +89,7 @@ const useDocumentsLogic = ({
         return docs;
       });
     } catch (error) {
-      appErrorsLogic.catchError(new DocumentsLoadError(application_id));
+      errorsLogic.catchError(new DocumentsLoadError(application_id));
     }
   };
 
@@ -113,22 +109,19 @@ const useDocumentsLogic = ({
     mark_evidence_received: boolean
   ) => {
     assert(application_id);
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     if (!filesWithUniqueId.length) {
-      appErrorsLogic.catchError(
-        new ValidationError(
-          [
-            {
-              // field and type will be used for forming the internationalized error message
-              field: "file", // 'file' is the field name in the API
-              message:
-                "Client requires at least one file before sending request",
-              type: "required",
-            },
-          ],
-          "documents"
-        )
+      errorsLogic.catchError(
+        new ValidationError([
+          {
+            // field and type will be used for forming the internationalized error message
+            field: "file", // 'file' is the field name in the API
+            message: "Client requires at least one file before sending request",
+            type: "required",
+            namespace: "documents",
+          },
+        ])
       );
       return [];
     }
@@ -144,7 +137,7 @@ const useDocumentsLogic = ({
         addDocument(document);
         return { success: true };
       } catch (error) {
-        appErrorsLogic.catchError(
+        errorsLogic.catchError(
           new DocumentsUploadError(
             application_id,
             fileWithUniqueId.id,
@@ -163,12 +156,12 @@ const useDocumentsLogic = ({
    * Download document from the API and sets app errors if any
    */
   const download = async (document: BenefitsApplicationDocument) => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
     try {
       const response = await documentsApi.downloadDocument(document);
       return response;
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 

@@ -302,7 +302,7 @@ describe("Submit a claim through Fineos intake process, check the alert message"
                       .applyStandardWorkWeek()
                       .nextStep((wrapUp) => {
                         wrapUp.selectWithholdingPreference(
-                          claim.claim.is_withholding_tax
+                          claim.is_withholding_tax
                         );
                         wrapUp.clickNext();
                         // Bubble up Leave Case id number to outside scope

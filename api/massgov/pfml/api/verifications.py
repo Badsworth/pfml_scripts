@@ -37,15 +37,6 @@ def verifications():
         "withholding_quarter": verification_request.withholding_quarter,
     }
 
-    if current_user is None:
-        logger.error("No authenticated user", extra=log_attributes)
-        return response_util.error_response(
-            status_code=BadRequest,
-            message="No authenticated user",
-            errors=[],
-            data=verification_request.dict(exclude_none=True),
-        ).to_api_response()
-
     with app.db_session() as db_session:
         user_leave_administrator = (
             db_session.query(UserLeaveAdministrator)
@@ -58,9 +49,7 @@ def verifications():
         )
 
         if user_leave_administrator is None:
-            logger.error(
-                "User not associated with this employer.", extra=log_attributes,
-            )
+            logger.error("User not associated with this employer.", extra=log_attributes)
 
             return response_util.error_response(
                 status_code=BadRequest,
@@ -113,7 +102,7 @@ def verifications():
     )
 
     return response_util.success_response(
-        message="Successfully verified user.", status_code=201, data=data,
+        message="Successfully verified user.", status_code=201, data=data
     ).to_api_response()
 
 
@@ -130,9 +119,7 @@ def verify_quarterly_contribution(
     )
 
     if employer_quarterly_contribution is None:
-        logger.error(
-            "Employer has no quarterly contribution data.", extra=log_attributes,
-        )
+        logger.error("Employer has no quarterly contribution data.", extra=log_attributes)
 
         return (
             response_util.error_response(
@@ -150,9 +137,7 @@ def verify_quarterly_contribution(
     )
     log_attributes = {**log_attributes, "withholding_amount_delta": withholding_amount_delta}
     if abs(withholding_amount_delta) > WITHHOLDING_THRESHOLD:
-        logger.info(
-            "Withholding amount is incorrect.", extra=log_attributes,
-        )
+        logger.info("Withholding amount is incorrect.", extra=log_attributes)
 
         return (
             response_util.error_response(
@@ -184,7 +169,7 @@ def register_verified_leave_admin_with_fineos(
             },
         )
         return response_util.error_response(
-            status_code=Conflict, errors=[], message="Employer does not have a fineos_employer_id.",
+            status_code=Conflict, errors=[], message="Employer does not have a fineos_employer_id."
         ).to_api_response()
 
     if not user_leave_administrator.fineos_web_id:

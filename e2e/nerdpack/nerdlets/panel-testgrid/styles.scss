@@ -1,0 +1,246 @@
+@import "../common/scss/variables";
+
+@mixin tryMessage($color, $bg) {
+  & {
+    td {
+      border-color: $bg;
+      background-color: $color;
+    }
+
+    .tryNumber,
+    .status {
+      background-color: $bg;
+      color: $color;
+    }
+  }
+}
+
+table.testGridTable {
+  margin-left: 10px;
+
+  td {
+    height: auto;
+  }
+
+  min-width: 900px;
+
+  td {
+    padding: 0 10px;
+  }
+
+  .clickable {
+    cursor: pointer;
+  }
+
+  .colProgress {
+    min-width: 150px;
+  }
+
+  thead th {
+    font-size: 14px;
+    font-weight: bold;
+    border-bottom: 1px #ddd solid;
+
+    .TestGridHeader {
+      .indexNumber {
+        display: flex;
+      }
+
+      .tag {
+        margin-left: 5px;
+      }
+
+      .date {
+        display: block;
+        font-size: 10px;
+        font-weight: normal;
+      }
+    }
+  }
+
+  tbody {
+    tr.highlight:hover {
+      td {
+        background: #eee;
+      }
+    }
+
+    .filename {
+      border-left: 5px solid;
+
+      &.na {
+        border-left-color: $COLOR_NA;
+      }
+
+      &.fail {
+        border-left-color: $COLOR_FAIL;
+      }
+
+      &.skip {
+        border-left-color: $COLOR_WARN;
+      }
+
+      &.flake {
+        border-left-color: $COLOR_FLAKE;
+      }
+
+      &.pass {
+        border-left-color: $COLOR_PASS;
+      }
+
+      text-wrap: none;
+      white-space: nowrap;
+      word-break: keep-all;
+    }
+
+    td.subTable {
+      padding: 0;
+    }
+  }
+
+  .runProgress {
+    background: $PROGRESS_DEFAULT_FILL;
+    width: 100%;
+    position: relative;
+    border-radius: 15px;
+    height: 30px;
+    min-width: 50px;
+    margin: 3px;
+
+    &.fail {
+      background: $PROGRESS_ERROR_FILL;
+    }
+
+    &.clickable {
+      cursor: pointer;
+
+      &:hover {
+        outline: 1px dotted #000;
+        outline-offset: 4px;
+      }
+    }
+
+    .progress {
+      left: 0;
+      position: absolute;
+      height: 30px;
+      border-radius: 15px;
+      text-align: center;
+      color: #000 !important;
+      line-height: 30px !important;
+      font-weight: bold;
+
+      &.fail {
+        @include COLOR_FILTER();
+        background: $COLOR_FAIL;
+      }
+
+      &.skip {
+        background: $COLOR_WARN;
+      }
+
+      &.flake {
+        @include COLOR_FILTER();
+        background: $COLOR_FLAKE;
+      }
+
+      &.pass {
+        @include COLOR_FILTER();
+        background: $COLOR_PASS;
+      }
+    }
+  }
+
+  table.runDetails {
+    border-bottom: 2px #ccc solid;
+    margin-bottom: 5px;
+
+    thead th {
+      border-bottom: 10px solid;
+
+      &.fail {
+        border-bottom-color: $COLOR_FAIL;
+      }
+
+      &.skip {
+        border-bottom-color: $COLOR_WARN;
+      }
+
+      &.flake {
+        border-bottom-color: $COLOR_FLAKE;
+      }
+
+      &.pass {
+        border-bottom-color: $COLOR_PASS;
+      }
+    }
+
+    td {
+      vertical-align: top;
+      padding: 3px;
+      background: #fff;
+
+      &.blockTitle {
+        position: relative;
+        vertical-align: middle;
+        padding: 5px 0;
+        background: #f7f7f7;
+      }
+    }
+
+    td.TestGridRowDetails {
+      padding: 0;
+    }
+
+    table.TestGridRowDetails {
+      margin-left: 5px;
+
+      tr td {
+        padding: 3px;
+        border-top: 5px solid #fff;
+
+        &.tryNumber {
+          padding: 10px;
+          font-weight: bold;
+          font-size: 12px;
+        }
+      }
+
+      .try {
+        .status {
+          vertical-align: middle;
+          width: 15px;
+
+          span {
+            font-weight: bold;
+            -ms-writing-mode: tb-rl;
+            -webkit-writing-mode: vertical-rl;
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            white-space: nowrap;
+            text-transform: uppercase;
+          }
+
+          &.fail {
+            border-top-color: $COLOR_FAIL;
+            background-color: $COLOR_FAIL;
+            color: #fff;
+            width: 20px;
+          }
+        }
+      }
+
+      .try_1 {
+        @include tryMessage($TRY1_COLOR, $TRY1_BG);
+      }
+
+      .pass.try_1 {
+        @include tryMessage($COLOR_PASS_LITE, $COLOR_PASS);
+      }
+
+      .try_2 {
+        @include tryMessage($TRY2_COLOR, $TRY2_BG);
+      }
+    }
+  }
+}

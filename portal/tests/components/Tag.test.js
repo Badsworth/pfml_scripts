@@ -3,7 +3,7 @@ import React from "react";
 import Tag from "../../src/components/core/Tag";
 
 describe("Tag", () => {
-  it.each(["error", "inactive", "pending", "success", "warning"])(
+  it.each(["error", "inactive", "success", "warning"])(
     "render tag with %s classes",
     (state) => {
       render(<Tag state={state} label="Foo" />);

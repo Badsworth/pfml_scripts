@@ -4,11 +4,10 @@ import {
 } from "../../models/PaymentPreference";
 import {
   DocumentType,
-  findDocumentsByLeaveReason,
   findDocumentsByTypes,
+  getLeaveCertificationDocs,
 } from "../../models/Document";
 import EmployerBenefit, {
-  EmployerBenefitFrequency,
   EmployerBenefitType,
 } from "../../models/EmployerBenefit";
 import {
@@ -91,16 +90,13 @@ export const Review = (
   const { t } = useTranslation();
   const { appLogic, claim, documents, isLoadingDocuments } = props;
 
-  const { appErrors, clearRequiredFieldErrors } = appLogic;
+  const { errors, clearRequiredFieldErrors } = appLogic;
   const hasLoadingDocumentsError = hasDocumentsLoadError(
-    appErrors,
+    errors,
     claim.application_id
   );
 
-  const certificationDocuments = findDocumentsByLeaveReason(
-    documents,
-    get(claim, "leave_details.reason")
-  );
+  const certificationDocuments = getLeaveCertificationDocs(documents);
   const idDocuments = findDocumentsByTypes(documents, [
     DocumentType.identityVerification,
   ]);
@@ -156,7 +152,7 @@ export const Review = (
   // page with required fields.
   const [showNewFieldError, setShowNewFieldError] = useState(false);
   useEffect(() => {
-    const missingFields = getMissingRequiredFields(appErrors);
+    const missingFields = getMissingRequiredFields(errors);
     if (missingFields.length) {
       tracker.trackEvent("Missing required fields", {
         missingFields: JSON.stringify(missingFields),
@@ -169,7 +165,7 @@ export const Review = (
       }
     }
   }, [
-    appErrors,
+    errors,
     showNewFieldError,
     setShowNewFieldError,
     clearRequiredFieldErrors,
@@ -974,25 +970,10 @@ export const EmployerBenefitList = (props: EmployerBenefitListProps) => {
       context: findKeyByValue(EmployerBenefitType, entry.benefit_type),
     });
 
-    const dates = formatDateRange(
-      entry.benefit_start_date,
-      entry.benefit_end_date
-    );
-
-    let amount;
+    let dates;
 
     if (entry.is_full_salary_continuous) {
-      amount = t("pages.claimsReview.employerBenefitIsFullSalaryContinuous");
-    } else {
-      amount = !isBlank(entry.benefit_amount_dollars)
-        ? t("pages.claimsReview.amountPerFrequency", {
-            context: findKeyByValue(
-              EmployerBenefitFrequency,
-              entry.benefit_amount_frequency
-            ),
-            amount: entry.benefit_amount_dollars,
-          })
-        : null;
+      dates = formatDateRange(entry.benefit_start_date, entry.benefit_end_date);
     }
 
     return (
@@ -1001,7 +982,7 @@ export const EmployerBenefitList = (props: EmployerBenefitListProps) => {
         label={label}
         type={type}
         dates={dates}
-        amount={amount}
+        amount={null}
         reviewRowLevel={reviewRowLevel}
       />
     );
@@ -1064,7 +1045,7 @@ export const OtherIncomeList = (props: OtherIncomeListProps) => {
 
 interface OtherLeaveEntryProps {
   amount?: string | null;
-  dates: string;
+  dates?: string;
   label: string;
   reviewRowLevel: "2" | "3" | "4" | "5" | "6";
   type?: string;

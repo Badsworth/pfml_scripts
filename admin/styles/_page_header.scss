@@ -19,15 +19,14 @@
   text-decoration: none;
 }
 
-.page__logo-link::before {
-  @include IconFontProps;
-  content: $IconPfmlLogo;
-  display: block;
-}
-
 .page__logo-link:hover,
 .page__logo-link:focus {
   text-decoration: none;
+}
+
+.pfml-logo-header {
+  display: block;
+  width: 2.65em;
 }
 
 .user-options__avatar {
@@ -51,31 +50,31 @@
   color: $Color-RevolutionGray;
   cursor: pointer;
   display: block;
-  padding: 0.43em 1.56em 0.43em 0;
+  padding: 0.43em 0;
   position: relative;
   text-decoration: none;
-}
-
-.user-options::after {
-  @include IconFontProps;
-  color: #fff;
-  content: $IconArrow4;
-  display: block;
-  font-size: 0.77em;
-  position: absolute;
-  right: 2px;
-  top: 16px;
-  transform: rotate(-90deg);
-  transition: transform 0.2s ease 0s;
-}
-
-.user-options--open::after {
-  transform: rotate(90deg);
 }
 
 .user-options__trigger {
   align-items: center;
   display: flex;
+  padding-right: 1.56em;
+  position: relative;
+}
+
+.user-options__trigger-icon {
+  color: #fff;
+  display: block;
+  position: absolute;
+  right: 0;
+  top: 5px;
+  transform: rotate(-90deg);
+  transition: transform 0.2s ease 0s;
+  width: 1.5em;
+}
+
+.user-options--open .user-options__trigger-icon {
+  transform: rotate(90deg);
 }
 
 .user-options__trigger:hover,
@@ -86,6 +85,7 @@
 .user-options__name {
   color: #fff;
   display: block;
+  letter-spacing: 0.05em;
   margin-left: 0.57em;
 }
 

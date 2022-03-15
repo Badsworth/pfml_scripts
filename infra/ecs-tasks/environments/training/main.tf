@@ -2,7 +2,8 @@ locals {
   environment_name = "training"
 }
 provider "aws" {
-  region = "us-east-1"
+  region  = "us-east-1"
+  version = "3.74.1"
 }
 
 terraform {
@@ -42,6 +43,9 @@ module "tasks" {
   fineos_aws_iam_role_external_id = "12345"
 
   fineos_eligibility_feed_output_directory_path       = "s3://fin-somdev-data-import/TRN"
+  fineos_data_export_path                             = "s3://fin-somdev-data-export/TRN/dataexports"
+  fineos_adhoc_data_export_path                       = "s3://fin-somdev-data-export/TRN/dataExtracts/AdHocExtract"
+  fineos_data_import_path                             = "s3://fin-somdev-data-import/TRN/peiupdate"
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/TRN/dataexports"
   fineos_error_export_path                            = "s3://fin-somdev-data-export/TRN/errorExtracts"
   fineos_report_export_path                           = "s3://fin-somdev-data-export/TRN/reportExtract"
@@ -51,6 +55,8 @@ module "tasks" {
   rmv_api_behavior                  = "partially_mocked"
 
   enable_register_admins_job = true
+
+
 
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com"]
 
@@ -67,6 +73,5 @@ module "tasks" {
   enable_1099_testfile_generation = "0"
   irs_1099_correction_ind         = "0"
 
-  enable_withholding_payments            = "1"
   enable_employer_reimbursement_payments = "0"
 }

@@ -13,6 +13,7 @@ const renderChecklist = (
       field: "first_name",
       message: "first_name is required",
       type: "required",
+      namespace: "applications",
     },
   ],
   customProps?: { [key: string]: unknown }
@@ -102,16 +103,19 @@ describe("Checklist", () => {
         field: "employment_status",
         message: "employment_status is required",
         type: "required",
+        namespace: "applications",
       },
       {
         field: "leave_details.employer_notified",
         message: "leave_details.employer_notified is required",
         type: "required",
+        namespace: "applications",
       },
       {
         field: "work_pattern.work_pattern_type",
         message: "work_pattern.work_pattern_type is required",
         type: "required",
+        namespace: "applications",
       },
     ];
     renderChecklist(new MockBenefitsApplicationBuilder().create(), warnings);
@@ -482,13 +486,13 @@ describe("Checklist", () => {
       );
     });
 
-    it("does not enable Review and Submit when there is a document type mismatch", () => {
+    it("does not enable Review and Submit when there is a no certification document", () => {
       const warnings: Issue[] = [];
       const customProps = {
         documents: [
           {
             application_id: "mock-claim-id",
-            document_type: DocumentType.certification[LeaveReason.pregnancy],
+            document_type: DocumentType.requestForInfoNotice,
           },
           {
             application_id: "mock-claim-id",

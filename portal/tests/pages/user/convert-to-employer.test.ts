@@ -8,8 +8,6 @@ import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { AppLogic } from "../../../src/hooks/useAppLogic";
 import BenefitsApplication from "src/models/BenefitsApplication";
 import ConvertToEmployer from "../../../src/pages/user/convert-to-employer";
-// @ts-expect-error ts-migrate(2614) FIXME: Module '"next/router"' has no exported member 'moc... Remove this comment to see the full error message
-import { mockRouter } from "next/router";
 import routes from "../../../src/routes";
 import userEvent from "@testing-library/user-event";
 
@@ -17,8 +15,9 @@ jest.mock("../../../src/hooks/useAppLogic");
 
 const getOptions = (cb?: (appLogic: AppLogic) => void) => {
   return {
+    pathname: routes.user.convertToEmployer,
     addCustomSetup: (appLogic: AppLogic) => {
-      appLogic.users.convertUser = jest.fn();
+      appLogic.users.convertUserToEmployer = jest.fn();
       appLogic.users.user = new User({
         user_id: "mock_user_id",
         consented_to_data_sharing: true,
@@ -35,7 +34,6 @@ const getOptions = (cb?: (appLogic: AppLogic) => void) => {
 };
 
 describe("ConvertToEmployer", () => {
-  mockRouter.pathname = routes.user.convert;
   const props = {};
   let options = getOptions();
 
@@ -48,9 +46,9 @@ describe("ConvertToEmployer", () => {
 
   it("can convert to employer account when user has no claims", async () => {
     const fein = "123456789";
-    const convertUser = jest.fn();
+    const convertUserToEmployer = jest.fn();
     options = getOptions((appLogic) => {
-      appLogic.users.convertUser = convertUser;
+      appLogic.users.convertUserToEmployer = convertUserToEmployer;
     });
     renderPage(ConvertToEmployer, options, props);
     userEvent.type(screen.getByRole("textbox"), fein);
@@ -58,7 +56,7 @@ describe("ConvertToEmployer", () => {
       userEvent.click(screen.getByRole("button", { name: "Convert account" }));
     });
 
-    expect(convertUser).toHaveBeenCalledWith("mock_user_id", {
+    expect(convertUserToEmployer).toHaveBeenCalledWith("mock_user_id", {
       employer_fein: fein,
     });
   });

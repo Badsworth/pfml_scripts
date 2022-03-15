@@ -12,6 +12,7 @@ import {
   getApplicationsByApplication_idDocuments,
 } from "../api";
 import assert from "assert";
+
 class ArtilleryClaimSubmitter extends PortalSubmitter {
   constructor(authenticator: AuthenticationManager, apiBaseUrl: string) {
     console.log(AuthenticationManager, apiBaseUrl);
@@ -45,6 +46,15 @@ class ArtilleryClaimSubmitter extends PortalSubmitter {
     logger?.debug("Attempting to upload Documents", {
       fineos_absence_id,
     });
+    const withoutExtension = (filepath: string) => {
+      const [filename] = filepath.split("/").slice(-1);
+      return filename.slice(0, -4);
+    };
+    // removes .pdf extension from filename to only include filesize
+    const [first, second] = claim.documents
+      .map((files) => files.name as string)
+      .map(withoutExtension);
+    logger?.info(`Uploading ${first} and ${second} file sizes`);
     await this.uploadDocuments(application_id, claim.documents, options);
     logger?.debug("Document upload complete!", {
       fineos_absence_id,

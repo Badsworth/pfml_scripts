@@ -116,7 +116,7 @@ exports[`Success renders content tailored to Caring Leave 1`] = `
       </li>
        
       <li>
-        After we’ve made a decision, you’ll receive an email notification with a link to details about the decision. Your employer will also get a copy of the decision.
+        We will notify you once we’ve made a decision. You’ll be able to read the details of the decision on this website. Your employer will also get a copy of the decision.
       </li>
       <li>
         Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.
@@ -333,7 +333,7 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
       </li>
        
       <li>
-        After we’ve made a decision, you’ll receive an email notification with a link to details about the decision. Your employer will also get a copy of the decision.
+        We will notify you once we’ve made a decision. You’ll be able to read the details of the decision on this website. Your employer will also get a copy of the decision.
       </li>
       <li>
         Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.
@@ -973,7 +973,7 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
       </li>
        
       <li>
-        After we’ve made a decision, you’ll receive an email notification with a link to details about the decision. Your employer will also get a copy of the decision.
+        We will notify you once we’ve made a decision. You’ll be able to read the details of the decision on this website. Your employer will also get a copy of the decision.
       </li>
       <li>
         Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.
@@ -1247,7 +1247,7 @@ exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
       </li>
        
       <li>
-        After we’ve made a decision, you’ll receive an email notification with a link to details about the decision. Your employer will also get a copy of the decision.
+        We will notify you once we’ve made a decision. You’ll be able to read the details of the decision on this website. Your employer will also get a copy of the decision.
       </li>
       <li>
         Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.
@@ -1455,7 +1455,7 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
       </li>
        
       <li>
-        After we’ve made a decision, you’ll receive an email notification with a link to details about the decision. Your employer will also get a copy of the decision.
+        We will notify you once we’ve made a decision. You’ll be able to read the details of the decision on this website. Your employer will also get a copy of the decision.
       </li>
       <li>
         Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.

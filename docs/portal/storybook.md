@@ -1,6 +1,6 @@
 # Storybook
 
-[Storybook](https://storybook.js.org/) is a tool for UI development. It makes development faster and easier by isolating components. This allows you to work on one component at a time. You can develop entire UIs without needing to run the Portal application, or navigating around the Portal flow. You can read more below about the process and collaboration goals behind our usage of Storybook.
+[Storybook](https://storybook.js.org/) is a tool for UI development and collaboration. It makes development faster and easier by isolating components. This allows you to work on one component at a time. You can preview entire UIs without needing to run the Portal application, or navigating around the Portal flow. You can read more below about the process and collaboration goals behind our usage of Storybook.
 
 The ultimate output is a static site that [currently gets deployed here](http://pfml-storybook.nava.pizza/). (Related: [Deploy docs](deployment.md))
 

@@ -41,6 +41,8 @@ class AppConfig:
     enable_document_multipart_upload: bool
     enable_1099_testfile_generation: bool
     enable_application_import: bool
+    disable_sending_emails: bool
+    enable_response_validation: bool
 
 
 def get_config() -> AppConfig:
@@ -73,4 +75,8 @@ def get_config() -> AppConfig:
         == "1",
         enable_1099_testfile_generation=os.environ.get("TEST_FILE_GENERATION_1099", "0") == "1",
         enable_application_import=os.environ.get("ENABLE_APPLICATION_IMPORT", "0") == "1",
+        # Sending emails is enabled by default. It must be disabled explicitly if
+        # desired eg for local development
+        disable_sending_emails=os.environ.get("DISABLE_SENDING_EMAILS", "0") == "1",
+        enable_response_validation=os.environ.get("ENABLE_RESPONSE_VALIDATION", "0") == "1",
     )

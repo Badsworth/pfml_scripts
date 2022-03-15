@@ -1,6 +1,6 @@
 import enum
 import uuid
-from typing import NamedTuple
+from typing import Any, List
 
 import massgov.pfml.delegated_payments.irs_1099.pfml_1099_util as pfml_1099_util
 import massgov.pfml.util.logging
@@ -40,7 +40,7 @@ class Populate1099Step(Step):
 
         logger.info("Successfully moved claimants to 1099 payments batch.")
 
-    def _populate_1099(self, batch: Pfml1099Batch, claimant_results: NamedTuple) -> None:
+    def _populate_1099(self, batch: Pfml1099Batch, claimant_results: List[Any]) -> None:
         logger.info("1099 Documents - Populate 1099 Step")
 
         # Create 1099 records for each claimant
@@ -88,13 +88,11 @@ class Populate1099Step(Step):
                 or claimant_row.ZIP_CODE is None
             ):
                 logger.info(
-                    "[%s]: Address could not be determined. %s: Line 1: %s, City: %s, State: %s, Zip: %s",
-                    claimant_row.employee_id,
-                    claimant_row.ADDRESS_SOURCE,
-                    claimant_row.ADDRESS_LINE_1,
-                    claimant_row.CITY,
-                    claimant_row.STATE,
-                    claimant_row.ZIP_CODE,
+                    "Address could not be determined.",
+                    extra={
+                        "claimant_row.employee_id": claimant_row.employee_id,
+                        "claimant_row.ADDRESS_SOURCE": claimant_row.ADDRESS_SOURCE,
+                    },
                 )
                 continue
 
@@ -108,7 +106,18 @@ class Populate1099Step(Step):
             if other_credits is None:
                 other_credits = 0
 
-            logger.info("[%s]: %s", claimant_row.employee_id, claimant_row.ADDRESS_SOURCE)
+            logger.info(
+                "Creating 1099 record.",
+                extra={
+                    "claimant_row.employee_id": claimant_row.employee_id,
+                    "claimant_row.ADDRESS_SOURCE": claimant_row.ADDRESS_SOURCE,
+                },
+            )
+
+            # Set the correction indicator for each 1099
+            correction_ind = False
+            if claimant_row.CORRECTION_IND:
+                correction_ind = True
 
             pfml_1099_payment = Pfml1099(
                 pfml_1099_id=uuid.uuid4(),
@@ -130,11 +139,9 @@ class Populate1099Step(Step):
                 state_tax_withholdings=state_tax_withholdings,
                 federal_tax_withholdings=federal_tax_withholdings,
                 overpayment_repayments=overpayment_repayments,
-                correction_ind=batch.correction_ind,
+                correction_ind=correction_ind,
             )
 
             self.db_session.add(pfml_1099_payment)
-            logger.debug(
-                "Created 1099.", extra={"pfml_1099_id": pfml_1099_payment.pfml_1099_id},
-            )
+            logger.debug("Created 1099.", extra={"pfml_1099_id": pfml_1099_payment.pfml_1099_id})
             self.increment(self.Metrics.IRS_1099_COUNT)

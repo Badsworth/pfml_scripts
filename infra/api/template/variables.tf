@@ -247,6 +247,12 @@ variable "fineos_aws_iam_role_external_id" {
   default     = null
 }
 
+variable "fineos_is_running_v21" {
+  description = "If the connected FINEOS environment is running the 21.3 upgrade (April 2022 deployment)"
+  type        = string
+  default     = "false"
+}
+
 variable "service_now_base_url" {
   description = "URL for Service Now post requests"
   type        = string

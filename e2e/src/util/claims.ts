@@ -8,8 +8,8 @@ import {
   LeavePeriods,
   Submission,
 } from "../types";
-import { parseISO, format, min } from "date-fns";
 import { isNotNull } from "./typeUtils";
+import { parseISO, format, min } from "date-fns";
 
 export function extractLeavePeriod(
   { leave_details }: ApplicationRequestBody,
@@ -138,7 +138,7 @@ export function extractLatestLeaveDate(
 
 export function extractLeavePeriodType(
   leaveDetails: ApplicationLeaveDetails
-): NonNullable<AbsencePeriodResponse["type"]> {
+): NonNullable<AbsencePeriodResponse["period_type"]> {
   const leavePeriodTypes = {
     intermittent_leave_periods: "Intermittent",
     continuous_leave_periods: "Continuous",

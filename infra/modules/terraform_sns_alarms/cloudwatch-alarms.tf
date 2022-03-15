@@ -1,143 +1,93 @@
-resource "aws_cloudwatch_metric_alarm" "sns_spending_limit_exceeded" {
-  alarm_name          = "sns-spending-limit-exceeded"
-  alarm_description   = "SNS spending reached/exceeded 100% of limit this month"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
+resource "aws_cloudwatch_metric_alarm" "sns_spending_limit" {
+  for_each            = var.sns_spending_thresholds
+  alarm_name          = "${local.prefix}sns-spending-limit-${each.key}"
+  alarm_description   = "SNS spending ${each.key} threshold"
+  comparison_operator = local.cloudwatch_comparison_operator
   evaluation_periods  = "1"
   metric_name         = "SMSMonthToDateSpentUSD"
-  namespace           = "AWS/SNS"
-  period              = "300"
+  namespace           = local.namespace
+  period              = local.default_aggregation_window
   statistic           = "Maximum"
-  threshold           = var.sns_monthly_spend_limit
-  treat_missing_data  = "notBreaching"
+  threshold           = each.value * var.sns_monthly_spend_limit
+  treat_missing_data  = local.treat_missing_data
   alarm_actions       = [aws_sns_topic.sms_monthly_spend_limit.arn]
+  ok_actions          = [aws_sns_topic.sms_monthly_spend_limit.arn]
 }
 
-resource "aws_cloudwatch_metric_alarm" "sns_spending_critical" {
-  alarm_name          = "sns-spending-critical"
-  alarm_description   = "SNS spending reached 90% of limit this month"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "1"
-  metric_name         = "SMSMonthToDateSpentUSD"
-  namespace           = "AWS/SNS"
-  period              = "300"
-  statistic           = "Maximum"
-  threshold           = 0.9 * var.sns_monthly_spend_limit
-  treat_missing_data  = "notBreaching"
-  alarm_actions       = [aws_sns_topic.sms_monthly_spend_limit.arn]
-}
-
-resource "aws_cloudwatch_metric_alarm" "sns_spending_warning" {
-  alarm_name          = "sns-spending-warning"
-  alarm_description   = "SNS spending reached 80% of limit this month"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "1"
-  metric_name         = "SMSMonthToDateSpentUSD"
-  namespace           = "AWS/SNS"
-  period              = "300"
-  statistic           = "Maximum"
-  threshold           = 0.8 * var.sns_monthly_spend_limit
-  treat_missing_data  = "notBreaching"
-  alarm_actions       = [aws_sns_topic.sms_monthly_spend_limit.arn]
-}
-
-resource "aws_cloudwatch_metric_alarm" "sns_spending_information" {
-  alarm_name          = "sns-spending-information"
-  alarm_description   = "SNS spending reached 50% of limit this month"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "1"
-  metric_name         = "SMSMonthToDateSpentUSD"
-  namespace           = "AWS/SNS"
-  period              = "300"
-  statistic           = "Maximum"
-  threshold           = 0.5 * var.sns_monthly_spend_limit
-  treat_missing_data  = "notBreaching"
-  alarm_actions       = [aws_sns_topic.sms_monthly_spend_limit.arn]
-}
-
-resource "aws_cloudwatch_metric_alarm" "sns_sms_failure_rate_critical" {
-  alarm_name          = "sns-sms-failure-rate-critical"
-  alarm_description   = "SMS success rate to phone numbers is below 50% over 2 consecutive periods of 12 hours"
+resource "aws_cloudwatch_metric_alarm" "sns_sms_failure_rate" {
+  for_each            = var.sns_sms_failure_rate
+  alarm_name          = "${local.prefix}sns-sms-failure-rate-${each.key}"
+  alarm_description   = "SMS failure rate to phone numbers ${each.key} for 2 hours"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = "2"
-  datapoints_to_alarm = "2"
+  datapoints_to_alarm = "1"
   metric_name         = "SMSSuccessRate"
-  namespace           = "AWS/SNS"
-  period              = 60 * 60 * 12
+  namespace           = local.namespace
+  period              = local.one_hour
   statistic           = "Average"
-  threshold           = 0.5
+  threshold           = each.value
+  treat_missing_data  = local.treat_missing_data
   alarm_actions       = [aws_sns_topic.sms_messages_success_rate.arn]
-  treat_missing_data  = "notBreaching"
+  ok_actions          = [aws_sns_topic.sms_messages_success_rate.arn]
 }
 
-resource "aws_cloudwatch_metric_alarm" "sns_sms_failure_rate_warning" {
-  alarm_name          = "sns-sms-failure-rate-warning"
-  alarm_description   = "SMS success rate to phone numbers is below 75% over 2 consecutive periods of 12 hours"
-  comparison_operator = "LessThanThreshold"
-  evaluation_periods  = "2"
-  datapoints_to_alarm = "2"
-  metric_name         = "SMSSuccessRate"
-  namespace           = "AWS/SNS"
-  period              = 60 * 60 * 12
-  statistic           = "Average"
-  threshold           = 0.75
-  alarm_actions       = [aws_sns_topic.sms_messages_success_rate.arn]
-  treat_missing_data  = "notBreaching"
-}
-
-resource "aws_cloudwatch_metric_alarm" "sns_sms_phone_carrier_unavailable_warning" {
-  alarm_name          = "sns-sms-phone-carrier-unavailable-warning"
-  alarm_description   = "More than 10 SMS failed because a phone carrier is unavailable over 3 hours"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
+resource "aws_cloudwatch_metric_alarm" "sns_sms_phone_carrier_unavailable" {
+  for_each            = var.carrier_unavailable_period
+  alarm_name          = "${local.prefix}sns-sms-phone-carrier-unavailable"
+  alarm_description   = "More than ${local.phone_carrier_unavailable_threshold} SMS messages failed because Phone carrier unreachable/unavailable over ${each.value} seconds."
+  comparison_operator = local.cloudwatch_comparison_operator
   evaluation_periods  = "1"
   metric_name         = aws_cloudwatch_log_metric_filter.sns_sms_phone_carrier_unavailable.metric_transformation[0].name
   namespace           = aws_cloudwatch_log_metric_filter.sns_sms_phone_carrier_unavailable.metric_transformation[0].namespace
-  period              = 60 * 60 * 3
-  statistic           = "Sum"
-  threshold           = 1
+  period              = each.value
+  statistic           = local.statistic
+  threshold           = local.phone_carrier_unavailable_threshold
+  treat_missing_data  = local.treat_missing_data
   alarm_actions       = [aws_sns_topic.sms_phone_carrier_unavailable.arn]
-  treat_missing_data  = "notBreaching"
+  ok_actions          = [aws_sns_topic.sms_phone_carrier_unavailable.arn]
 }
 
-# how can we exclude delivery.destination = '12064350128' this number is used for testing?
-# is this necessary given the evaluation_periods?
-resource "aws_cloudwatch_metric_alarm" "sns_sms_phone_carrier_unavailable_critical" {
-  alarm_name          = "sns-sms-phone-carrier-unavailable-critical"
-  alarm_description   = "More than 10 SMS failed because a phone carrier is unavailable over 6 hours"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "1"
-  metric_name         = aws_cloudwatch_log_metric_filter.sns_sms_phone_carrier_unavailable.metric_transformation[0].name
-  namespace           = aws_cloudwatch_log_metric_filter.sns_sms_phone_carrier_unavailable.metric_transformation[0].namespace
-  period              = 60 * 60 * 6
-  statistic           = "Sum"
-  threshold           = 1
-  alarm_actions       = [aws_sns_topic.sms_phone_carrier_unavailable.arn]
-  treat_missing_data  = "notBreaching"
-}
-
-resource "aws_cloudwatch_metric_alarm" "sns_sms_blocked_as_spam_warning" {
-  alarm_name          = "sns-sms-blocked-as-spam-warning"
-  alarm_description   = "More than 10 SMS have been blocked as spam over 12 hours"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
+resource "aws_cloudwatch_metric_alarm" "sns_sms_blocked_as_spam" {
+  alarm_name          = "${local.prefix}sns-sms-blocked-as-spam"
+  alarm_description   = "More than ${local.blocked_as_spam_threshold} SMS have been blocked as spam over 2 hours"
+  comparison_operator = local.cloudwatch_comparison_operator
   evaluation_periods  = "1"
   metric_name         = aws_cloudwatch_log_metric_filter.sns_sms_blocked_as_spam.metric_transformation[0].name
   namespace           = aws_cloudwatch_log_metric_filter.sns_sms_blocked_as_spam.metric_transformation[0].namespace
-  period              = 60 * 60 * 12
-  statistic           = "Sum"
-  threshold           = 10
+  period              = local.two_hours
+  statistic           = local.statistic
+  threshold           = local.blocked_as_spam_threshold
+  treat_missing_data  = local.treat_missing_data
   alarm_actions       = [aws_sns_topic.sms_blocked_as_spam.arn]
-  treat_missing_data  = "notBreaching"
+  ok_actions          = [aws_sns_topic.sms_blocked_as_spam.arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "sns_sms_rate_exceeded" {
-  alarm_name          = "sns-sms-rate-exceeded"
+  alarm_name          = "${local.prefix}sns-sms-rate-exceeded"
   alarm_description   = "At least 1 SNS SMS rate exceeded error in 5 minutes"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
+  comparison_operator = local.cloudwatch_comparison_operator
   evaluation_periods  = "1"
   metric_name         = aws_cloudwatch_log_metric_filter.sns_sms_rate_exceeded.metric_transformation[0].name
   namespace           = aws_cloudwatch_log_metric_filter.sns_sms_rate_exceeded.metric_transformation[0].namespace
-  period              = 60 * 5
-  statistic           = "Sum"
+  period              = local.default_aggregation_window
+  statistic           = local.statistic
   threshold           = 1
+  treat_missing_data  = local.treat_missing_data
   alarm_actions       = [aws_sns_topic.sns_sms_rate_exceeded.arn]
-  treat_missing_data  = "notBreaching"
+  ok_actions          = [aws_sns_topic.sns_sms_rate_exceeded.arn]
+}
+
+resource "aws_cloudwatch_metric_alarm" "sns_mfa_delivery_time_exceeded" {
+  alarm_name          = "${local.prefix}sns-mfa-delivery-time-exceeded"
+  alarm_description   = "SNS MFA Delivery Time exceeded threshold"
+  comparison_operator = local.cloudwatch_comparison_operator
+  evaluation_periods  = "1"
+  metric_name         = aws_cloudwatch_log_metric_filter.sns_mfa_delivery_time_exceeded.metric_transformation[0].name
+  namespace           = aws_cloudwatch_log_metric_filter.sns_mfa_delivery_time_exceeded.metric_transformation[0].namespace
+  period              = local.default_aggregation_window
+  statistic           = local.statistic
+  threshold           = 1
+  treat_missing_data  = local.treat_missing_data
+  alarm_actions       = [aws_sns_topic.sns_mfa_delivery_time_exceeded.arn]
+  ok_actions          = [aws_sns_topic.sns_mfa_delivery_time_exceeded.arn]
 }

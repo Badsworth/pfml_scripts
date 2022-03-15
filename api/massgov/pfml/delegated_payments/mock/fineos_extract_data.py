@@ -29,6 +29,10 @@ fake = faker.Faker()
 fake.seed_instance(1212)
 
 
+def random_unique_int(min=1, max=999_999_999):
+    return str(fake.unique.random_int(min=min, max=max))
+
+
 # We may want additional columns here from what we validate
 # so these field names extended from the constant values
 # This is mainly for new columns we want to implement logic for
@@ -46,6 +50,7 @@ VBI_1099DATA_SOM_FIELD_NAMES = payments_util.FineosExtractConstants.VBI_1099DATA
 # Payment files
 PEI_FIELD_NAMES = payments_util.FineosExtractConstants.VPEI.field_names
 PEI_PAYMENT_DETAILS_FIELD_NAMES = payments_util.FineosExtractConstants.PAYMENT_DETAILS.field_names
+PAYMENT_LINE_FIELD_NAMES = payments_util.FineosExtractConstants.PAYMENT_LINE.field_names
 PEI_CLAIM_DETAILS_FIELD_NAMES = payments_util.FineosExtractConstants.CLAIM_DETAILS.field_names
 REQUESTED_ABSENCE_FIELD_NAMES = (
     payments_util.FineosExtractConstants.VBI_REQUESTED_ABSENCE.field_names
@@ -126,6 +131,7 @@ class FineosPaymentData(MockData):
         include_vpei=True,
         include_claim_details=True,
         include_payment_details=True,
+        include_payment_lines=True,
         include_requested_absence=True,
         include_employee_feed=True,
         include_absence_case=True,
@@ -136,6 +142,7 @@ class FineosPaymentData(MockData):
         self.include_vpei = include_vpei
         self.include_claim_details = include_claim_details
         self.include_payment_details = include_payment_details
+        self.include_payment_lines = include_payment_lines
         self.include_requested_absence = include_requested_absence
         self.include_employee_feed = include_employee_feed
         self.include_absence_case = include_absence_case
@@ -143,7 +150,7 @@ class FineosPaymentData(MockData):
         self.kwargs = kwargs
 
         # Values used in various places below
-        absence_num = str(fake.unique.random_int())
+        absence_num = random_unique_int()
         self.ssn = self.get_value("ssn", fake.ssn().replace("-", ""))
 
         # Absence case values
@@ -151,9 +158,7 @@ class FineosPaymentData(MockData):
         self.notification_number = self.get_value("notification_number", f"NTN-{absence_num}")
 
         self.absence_period_class_id = self.get_value("absence_period_c_value", "14449")
-        self.absence_period_index_id = self.get_value(
-            "absence_period_i_value", str(fake.unique.random_int())
-        )
+        self.absence_period_index_id = self.get_value("absence_period_i_value", random_unique_int())
 
         self.claim_type = self.get_value("claim_type", "Family")
 
@@ -162,15 +167,13 @@ class FineosPaymentData(MockData):
         )
         self.absence_case_status = self.get_value("absence_case_status", "Approved")
 
-        self.leave_request_id = self.get_value("leave_request_id", str(fake.unique.random_int()))
+        self.leave_request_id = self.get_value("leave_request_id", random_unique_int())
         self.leave_request_decision = self.get_value("leave_request_decision", "Approved")
         self.leave_request_evidence = self.get_value("leave_request_evidence", "Satisfied")
         self.leave_request_start = self.get_value("leave_request_start", "2021-01-01 12:00:00")
         self.leave_request_end = self.get_value("leave_request_end", "2021-04-01 12:00:00")
 
-        self.employer_customer_num = self.get_value(
-            "employer_customer_num", str(fake.unique.random_int())
-        )
+        self.employer_customer_num = self.get_value("employer_customer_num", random_unique_int())
 
         self.absence_period_type = self.get_value("absence_period_type", "Time off period")
         self.absence_reason_qualifier_one = self.get_value(
@@ -209,7 +212,7 @@ class FineosPaymentData(MockData):
 
         # Payment method values (used for payment and employee files)
         self.address_1 = self.get_value(
-            "address_1", f"{fake.building_number()} {fake.street_name()} {fake.street_suffix()}",
+            "address_1", f"{fake.building_number()} {fake.street_name()} {fake.street_suffix()}"
         )
         self.payment_address_1 = self.get_value("payment_address_1", self.address_1)
         self.address_2 = self.get_value("address_2", "")
@@ -224,7 +227,12 @@ class FineosPaymentData(MockData):
 
         # Payment values
         self.c_value = self.get_value("c_value", "7326")
-        self.i_value = self.get_value("i_value", str(fake.unique.random_int()))
+        self.i_value = self.get_value("i_value", random_unique_int())
+
+        self.payment_details_c_value = self.get_value("payment_details_c_value", "7806")
+        self.payment_details_i_value = self.get_value(
+            "payment_details_i_value", random_unique_int()
+        )
 
         self.payment_date = self.get_value("payment_date", "2021-01-01 12:00:00")
         self.payment_amount = self.get_value("payment_amount", "100.00")
@@ -235,9 +243,15 @@ class FineosPaymentData(MockData):
         self.payee_identifier = self.get_value("payee_identifier", "Social Security Number")
         self.event_reason = self.get_value("event_reason", "Automatic Main Payment")
         self.amalgamationc = self.get_value("amalgamationc", "")  # Default blank
+        self.payment_type = self.get_value("payment_type", "")
 
         self.payment_start_period = self.get_value("payment_start", "2021-01-01 12:00:00")
         self.payment_end_period = self.get_value("payment_end", "2021-01-07 12:00:00")
+
+        self.payment_line_c_value = self.get_value("payment_line_c_value", "7692")
+        self.payment_line_i_value = self.get_value("payment_line_i_value", random_unique_int())
+        self.payment_line_type = self.get_value("payment_line_type", "Auto Gross Entitlement")
+        self.payment_line_amount = self.get_value("payment_line_amount", self.payment_amount)
 
     def get_vpei_record(self):
         vpei_record = OrderedDict()
@@ -260,6 +274,7 @@ class FineosPaymentData(MockData):
             vpei_record["PAYEEIDENTIFI"] = self.payee_identifier
             vpei_record["EVENTREASON"] = self.event_reason
             vpei_record["AMALGAMATIONC"] = self.amalgamationc
+            vpei_record["PAYMENTTYPE"] = self.payment_type
         return vpei_record
 
     def get_claim_details_record(self):
@@ -274,6 +289,9 @@ class FineosPaymentData(MockData):
     def get_payment_details_record(self):
         payment_detail_record = OrderedDict()
         if self.include_payment_details:
+            payment_detail_record["C"] = self.payment_details_c_value
+            payment_detail_record["I"] = self.payment_details_i_value
+
             payment_detail_record["PECLASSID"] = self.c_value
             payment_detail_record["PEINDEXID"] = self.i_value
 
@@ -284,6 +302,22 @@ class FineosPaymentData(MockData):
             payment_detail_record["BUSINESSNETBE_MONAMT"] = self.business_net_amount
 
         return payment_detail_record
+
+    def get_payment_line_record(self):
+        payment_line_record = OrderedDict()
+        if self.include_payment_lines:
+            payment_line_record["C"] = self.payment_line_c_value
+            payment_line_record["I"] = self.payment_line_i_value
+
+            payment_line_record["AMOUNT_MONAMT"] = self.payment_line_amount
+            payment_line_record["LINETYPE"] = self.payment_line_type
+
+            payment_line_record["C_PYMNTEIF_PAYMENTLINES"] = self.c_value
+            payment_line_record["I_PYMNTEIF_PAYMENTLINES"] = self.i_value
+            payment_line_record["PAYMENTDETAILCLASSID"] = self.payment_details_c_value
+            payment_line_record["PAYMENTDETAILINDEXID"] = self.payment_details_i_value
+
+        return payment_line_record
 
     def get_requested_absence_record(self):
         requested_absence_record = OrderedDict()
@@ -368,27 +402,23 @@ class FineosIAWWData(MockData):
     Parameters can be overriden by specifying them as kwargs
     """
 
-    def __init__(
-        self, **kwargs,
-    ):
+    def __init__(self, **kwargs):
         super().__init__(true, **kwargs)
         self.kwargs = kwargs
 
         self.c_value = self.get_value("c_value", "7326")
-        self.i_value = self.get_value("i_value", str(fake.unique.random_int()))
+        self.i_value = self.get_value("i_value", random_unique_int())
         self.leaveplan_c_value = self.get_value("leaveplan_c_value", "14437")
 
-        leaveplan_i_value = str(fake.unique.random_int())
+        leaveplan_i_value = random_unique_int()
         self.leaveplan_i_value_instruction = self.get_value(
             "leaveplan_i_value_instruction", leaveplan_i_value
         )
         self.leaveplan_i_value_request = self.get_value(
             "leaveplan_i_value_request", leaveplan_i_value
         )
-        self.leave_request_id_value = self.get_value(
-            "leave_request_id_value", str(fake.unique.random_int())
-        )
-        self.aww_value = self.get_value("aww_value", str(fake.unique.random_int()))
+        self.leave_request_id_value = self.get_value("leave_request_id_value", random_unique_int())
+        self.aww_value = self.get_value("aww_value", random_unique_int())
 
     def get_leave_plan_request_absence_record(self):
         leave_plan_request_absence_record = OrderedDict()
@@ -452,6 +482,12 @@ def create_fineos_payment_extract_files(
         payments_util.FineosExtractConstants.PAYMENT_DETAILS.file_name,
         PEI_PAYMENT_DETAILS_FIELD_NAMES,
     )
+    pei_payment_line_writer = _create_file(
+        folder_path,
+        date_prefix,
+        payments_util.FineosExtractConstants.PAYMENT_LINE.file_name,
+        PAYMENT_LINE_FIELD_NAMES,
+    )
     pei_claim_details_writer = _create_file(
         folder_path,
         date_prefix,
@@ -467,12 +503,14 @@ def create_fineos_payment_extract_files(
         pei_payment_details_writer.csv_writer.writerow(
             fineos_payments_data.get_payment_details_record()
         )
+        pei_payment_line_writer.csv_writer.writerow(fineos_payments_data.get_payment_line_record())
         pei_claim_details_writer.csv_writer.writerow(
             fineos_payments_data.get_claim_details_record()
         )
 
     # close the files
     pei_writer.file.close()
+    pei_payment_line_writer.file.close()
     pei_payment_details_writer.file.close()
     pei_claim_details_writer.file.close()
 
@@ -540,9 +578,10 @@ def generate_payment_extract_files(
         payee_identifier = "Social Security Number"
         event_reason = "Automatic Main Payment"
         amalgamationc = ""
+        payment_type = ""
 
         if scenario_descriptor.is_adhoc_payment:
-            amalgamationc = "Adhoc"
+            payment_type = "Adhoc"
 
         claim_type = scenario_descriptor.claim_type
 
@@ -608,6 +647,7 @@ def generate_payment_extract_files(
             event_reason=event_reason,
             payee_identifier=payee_identifier,
             amalgamationc=amalgamationc,
+            payment_type=payment_type,
             claim_type=claim_type,
             absence_period_c_value=scenario_data.absence_period_c_value,
             absence_period_i_value=scenario_data.absence_period_i_value,
@@ -645,6 +685,37 @@ def generate_payment_extract_files(
                         item
                     ]
                 fineos_payments_dataset.append(withholding_payment)
+
+        # TODO Need to refactor
+        if (
+            scenario_descriptor.is_employer_reimbursement_records_exists
+            and scenario_data.employer_reimbursement_payment_i_values
+        ):
+            for item in range(1):
+                employer_reimbursement_payment = copy.deepcopy(fineos_payments_data)
+                employer_reimbursement_payment.event_reason = "Automatic Alternate Payment"
+                employer_reimbursement_payment.payee_identifier = "Tax Identification Number"
+                if scenario_descriptor.is_employer_reimbursement_fineos_extract_address_valid:
+                    mock_address = MATCH_ADDRESS
+                else:
+                    mock_address = NO_MATCH_ADDRESS
+                employer_reimbursement_payment.payment_address_1 = mock_address["line_1"]
+                employer_reimbursement_payment.payment_address_2 = mock_address["line_2"]
+                employer_reimbursement_payment.city = mock_address["city"]
+                employer_reimbursement_payment.state = mock_address["state"]
+                employer_reimbursement_payment.zip_code = mock_address["zip"]
+
+                if item == 0:
+                    employer_reimbursement_payment.payment_amount = "300.00"
+                    employer_reimbursement_payment.i_value = (
+                        scenario_data.employer_reimbursement_payment_i_values[item]
+                    )
+                # if item == 1:
+                #     employer_reimbursement_payment.payment_amount = "350.00"
+                #     employer_reimbursement_payment.i_value = scenario_data.employer_reimbursement_payment_i_values[
+                #         item
+                #     ]
+                fineos_payments_dataset.append(employer_reimbursement_payment)
         fineos_payments_dataset.append(fineos_payments_data)
 
     # create the files

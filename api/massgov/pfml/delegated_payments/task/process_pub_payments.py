@@ -6,6 +6,7 @@ import massgov.pfml.db as db
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.delegated_payments.audit.delegated_payment_rejects import PaymentRejectsStep
+from massgov.pfml.delegated_payments.delegated_fineos_payment_extract import PaymentExtractStep
 from massgov.pfml.delegated_payments.delegated_fineos_pei_writeback import FineosPeiWritebackStep
 from massgov.pfml.delegated_payments.delegated_fineos_related_payment_post_processing import (
     RelatedPaymentsPostProcessingStep,
@@ -125,12 +126,10 @@ def _process_pub_payments(
             db_session=db_session, log_entry_db_session=log_entry_db_session
         ).run()
 
-    if payments_util.is_withholding_payments_enabled():
-        logger.info("Tax Withholding ENABLED")
-        if config.do_related_payment_post_processing:
-            RelatedPaymentsPostProcessingStep(
-                db_session=db_session, log_entry_db_session=log_entry_db_session
-            ).run()
+    if config.do_related_payment_post_processing:
+        RelatedPaymentsPostProcessingStep(
+            db_session=db_session, log_entry_db_session=log_entry_db_session
+        ).run()
 
     if config.create_pei_writeback:
         FineosPeiWritebackStep(
@@ -142,6 +141,7 @@ def _process_pub_payments(
             db_session=db_session,
             log_entry_db_session=log_entry_db_session,
             report_names=CREATE_PUB_FILES_REPORTS,
+            sources_to_clear_from_report_queue=[PaymentExtractStep],
         ).run()
 
     payments_util.create_success_file(start_time, "pub-payments-create-pub-files")

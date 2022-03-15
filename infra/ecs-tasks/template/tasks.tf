@@ -241,7 +241,6 @@ locals {
         { name : "PUB_PAYMENT_STARTING_CHECK_NUMBER", value : "106" },
         { name : "DFML_PUB_ROUTING_NUMBER", valueFrom : "/service/${local.app_name}/${var.environment_name}/dfml_pub_routing_number" },
         { name : "DFML_PUB_ACCOUNT_NUMBER", valueFrom : "/service/${local.app_name}/${var.environment_name}/dfml_pub_account_number" },
-        { "name" : "ENABLE_WITHHOLDING_PAYMENTS", "value" : var.enable_withholding_payments },
         { "name" : "ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS", "value" : var.enable_employer_reimbursement_payments }
       ]
     },
@@ -283,7 +282,6 @@ locals {
         { name : "FINEOS_1099_DATA_EXTRACT_MAX_HISTORY_DATE", value : "2022-01-01" },
         { name : "USE_EXPERIAN_SOAP_CLIENT", value : "1" },
         { name : "EXPERIAN_AUTH_TOKEN", valueFrom : "/service/${local.app_name}/common/experian-auth-token" },
-        { "name" : "ENABLE_WITHHOLDING_PAYMENTS", "value" : var.enable_withholding_payments },
         { "name" : "ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS", "value" : var.enable_employer_reimbursement_payments }
       ]
     },
@@ -483,9 +481,17 @@ locals {
       env = [
         local.db_access,
         local.cognito_access,
+        local.emails
       ]
     },
 
+    "backfill-benefit-years" = {
+      command   = ["backfill-benefit-years"]
+      task_role = null
+      env = [
+        local.db_access
+      ]
+    },
   }
 }
 

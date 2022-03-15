@@ -1,11 +1,12 @@
+import { MockEmployerClaimBuilder, renderPage } from "../../../test-utils";
 import { render, screen } from "@testing-library/react";
 import EmployerClaim from "../../../../src/models/EmployerClaim";
 import MockDate from "mockdate";
-import { MockEmployerClaimBuilder } from "../../../test-utils";
 import NewApplication from "../../../../src/pages/employers/applications/new-application";
 import React from "react";
 import User from "../../../../src/models/User";
 import { merge } from "lodash";
+import routes from "../../../../src/routes";
 import useAppLogic from "../../../../src/hooks/useAppLogic";
 import userEvent from "@testing-library/user-event";
 
@@ -48,6 +49,41 @@ describe("NewApplication", () => {
 
   beforeEach(() => {
     MockDate.set("2020-10-01");
+  });
+
+  it("redirects to status page", () => {
+    process.env.featureFlags = JSON.stringify({
+      employerShowMultiLeaveDashboard: true,
+    });
+    let goToPageForSpy!: jest.SpyInstance;
+
+    renderPage(
+      NewApplication,
+      {
+        addCustomSetup: (appLogic) => {
+          goToPageForSpy = jest.spyOn(appLogic.portalFlow, "goToPageFor");
+
+          // TODO (PORTAL-1560): Remove this claim mocking once the page is no longer using the HOC
+          const claim = new MockEmployerClaimBuilder()
+            .absenceId("mock-absence-id")
+            .create();
+          appLogic.employers.claim = claim;
+        },
+        pathname: routes.employers.newApplication,
+      },
+      {
+        query: {
+          absence_id: "mock-absence-id",
+        },
+      }
+    );
+
+    expect(goToPageForSpy).toHaveBeenCalledWith(
+      "REDIRECT",
+      {},
+      { absence_id: "mock-absence-id" },
+      { redirect: true }
+    );
   });
 
   it("redirects to the 'Not Reviewable' page if the claim is not reviewable", () => {

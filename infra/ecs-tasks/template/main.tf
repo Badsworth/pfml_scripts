@@ -13,7 +13,8 @@ terraform {
 
   required_providers {
     aws = {
-      source = "hashicorp/aws"
+      source  = "hashicorp/aws"
+      version = "3.74.1"
     }
     newrelic = {
       source = "newrelic/newrelic"
@@ -30,4 +31,9 @@ locals {
 
 module "constants" {
   source = "../../constants"
+}
+
+# Defined in pfml-aws/kms.tf
+data "aws_kms_key" "env_kms_key" {
+  key_id = "alias/massgov-pfml-${var.environment_name}-kms-key"
 }

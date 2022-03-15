@@ -20,7 +20,6 @@ defaults:
 
 env:
   CI: true
-  deploys_channel: "C01HEAJPE76" #mass-pfml-deploys-shared
   workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
 jobs:
@@ -58,10 +57,10 @@ jobs:
   # Check for test failures.
   get-test-dirs:
     runs-on: ubuntu-latest
-  
+
     outputs:
       matrix: ${{ steps.get-dirs.outputs.matrix }}
-    
+
     steps:
       - uses: actions/checkout@v2
 
@@ -72,14 +71,14 @@ jobs:
           cd tests/
           TEST_DIRS=$(ls -d */ | cut -f1 -d'/' | grep -v pycache | grep -v helpers | jq -R . | jq -s -c .)
           echo "::set-output name=matrix::$TEST_DIRS"
-          
+
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     if: always()
 
     needs: get-test-dirs
-    
+
     strategy:
       fail-fast: false
       matrix:
@@ -199,8 +198,9 @@ jobs:
         id: test-state
         run: echo "::set-output name=test-state::${{ env.WORKFLOW_CONCLUSION }}"
 
-  post-to-slack:
-    name: post failures to slack
+  # Run Terriyay
+  post-to-teams:
+    name: post failures to teams
     needs: [get-test-state]
     if: always() && (needs.get-test-state.outputs.test-state == 'failure' || needs.get-test-state.outputs.test-state == 'timed_out')
     runs-on: ubuntu-latest
@@ -216,21 +216,22 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
-      - name: Pull slackbot API token from SSM
+      - name: Pull teams uri from SSM
         uses: "marvinpinto/action-inject-ssm-secrets@latest"
         with:
-          ssm_parameter: "/admin/common/nava-slackbot-api-key"
-          env_variable_name: "slackbot_token"
+          ssm_parameter: "/admin/common/teams-deploy-uri"
+          env_variable_name: "teams_uri"
 
-      - name: Post to Slack
+      - name: Post to Teams
         run: |
-          SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
-          -H 'Content-Type: application/json;charset=utf-8' \
+          RESPONSE=$(curl -fsLS -X POST ${{ env.TEAMS_URI }} \
+          --header 'Content-Type: application/json' \
           --data '{
-            "channel": "${{ env.deploys_channel }}",
-            "attachments": [{
-              "title": "API tests failed in main (<${{ env.workflow_self_link }}|build logs>)",
-              "color": "danger"
-            }]
-          }' https://slack.com/api/chat.postMessage)
-
+            "@type": "MessageCard",
+            "themeColor": "FF0000",
+            "title": "API tests failed",
+            "text": "API tests failed in main ${{ env.workflow_self_link }}",
+            "sections": [{
+                "activityImage":"https://th.bing.com/th/id/R.ee8882f44294e8a6f1732a54343ff17e?rik=FAYIPD4sACftKw&riu=http%3a%2f%2f3.bp.blogspot.com%2f-u6MZBWbGcZI%2fUT4mft01YTI%2fAAAAAAAADpU%2fJubGsyGdL00%2fs1600%2ffailure.png&ehk=ranH%2bkeeo59wsILuyxVyNTIR2oUECprijedE01jHq34%3d&risl=&pid=ImgRaw&r=0"
+            }]'
+          )

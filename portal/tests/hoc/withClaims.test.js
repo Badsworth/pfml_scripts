@@ -90,8 +90,10 @@ describe("withClaims", () => {
       page_offset: "2",
       claim_status: "Approved,Pending",
       employer_id: "mock-employer-id",
+      is_reviewable: "yes",
       order_by: "employee",
       order_direction: "descending",
+      request_decision: "approved",
       search: "foo",
     };
 
@@ -104,17 +106,15 @@ describe("withClaims", () => {
       apiParams
     );
 
-    expect(spy).toHaveBeenLastCalledWith(
-      "2",
-      {
-        order_by: "employee",
-        order_direction: "descending",
-      },
-      {
-        claim_status: "Approved,Pending",
-        employer_id: "mock-employer-id",
-        search: "foo",
-      }
-    );
+    expect(spy).toHaveBeenLastCalledWith({
+      page_offset: "2",
+      claim_status: "Approved,Pending",
+      employer_id: "mock-employer-id",
+      is_reviewable: "yes",
+      order_by: "employee",
+      order_direction: "descending",
+      request_decision: "approved",
+      search: "foo",
+    });
   });
 });

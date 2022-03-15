@@ -36,7 +36,7 @@ exports[`Employer welcome renders page 1`] = `
         Welcome
       </h1>
       <p>
-        Thanks for joining the paid leave program. Massachusetts workers can now apply for paid family and medical leave.
+        Thanks for joining the paid leave program. Your employees in Massachusetts can apply for Paid Family and Medical Leave. You can review and respond to their applications, and you can see the status of their leave.
       </p>
       <h2
         class="font-heading-md text-bold"
@@ -55,7 +55,7 @@ exports[`Employer welcome renders page 1`] = `
         View all applications
       </h2>
       <p>
-        When you log into your account you can now use the 
+        When you log in to your account you can now use the 
         <a
           href="/employers/dashboard"
         >
@@ -82,7 +82,7 @@ exports[`Employer welcome renders page 1`] = `
         Check your email regularly
       </h2>
       <p>
-        When an employee applies for leave, you’ll receive email updates about their application status and any steps you need to take. We’ll include everyone who has an employer account with your company in case you’re out of the office.
+        When an employee applies for leave, you’ll receive email updates about their application status and any steps you need to take. We’ll include everyone who has an employer account with your organization in case you’re out of the office.
       </p>
       <h2
         class="font-heading-md text-bold"
@@ -102,7 +102,7 @@ exports[`Employer welcome renders page 1`] = `
         Respond to applications within 10 business days
       </h2>
       <p>
-        When an application is submitted, you have 10 business days to open the direct link from your email and review it online. You can comment on the application, approve or deny it, and report fraud if needed. Reviewing takes about 10 minutes. If we don’t hear from anyone at your company before the deadline, we’ll process the application solely based on the information the employee provided.
+        When an application is submitted, you have 10 business days to open the direct link from your email and review it online. You can comment on the application, approve or deny it, and report fraud if needed. Reviewing takes about 10 minutes. If we don’t hear from anyone at your organization before the deadline, we’ll process the application solely based on the information the employee provided.
       </p>
       <h2
         class="font-heading-md text-bold"

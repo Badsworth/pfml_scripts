@@ -1,10 +1,12 @@
 import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
-import { screen, within } from "@testing-library/react";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { AppLogic } from "../../../src/hooks/useAppLogic";
 import BenefitsApplication from "src/models/BenefitsApplication";
 import Index from "../../../src/pages/applications/index";
+import dayjs from "dayjs";
+import formatDate from "src/utils/formatDate";
 import routes from "../../../src/routes";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 const inProgressClaim = new MockBenefitsApplicationBuilder()
@@ -43,8 +45,57 @@ describe("Applications", () => {
     expect(goToSpy).toHaveBeenCalledWith("/applications/get-ready", {});
   });
 
-  it("displays Find Application action when feature flag is enabled", () => {
-    const linkName = "Find my application";
+  it("displays benefit year notice when FF is enabled and current benefit year exists", () => {
+    process.env.featureFlags = JSON.stringify({
+      splitClaimsAcrossBY: true,
+    });
+
+    const startDate = new Date();
+    const endDate = dayjs(startDate).add(1, "year");
+
+    renderPage(Index, {
+      pathname: routes.applications.index,
+      addCustomSetup: (appLogicHook) => {
+        setUpHelper(appLogicHook);
+        appLogicHook.benefitYears.loadBenefitYears = jest.fn();
+        appLogicHook.benefitYears.getCurrentBenefitYear = jest
+          .fn()
+          .mockReturnValue({
+            benefit_year_start_date: startDate.toUTCString(),
+            benefit_year_end_date: endDate.toDate().toUTCString(),
+            employee_id: "2a340cf8-6d2a-4f82-a075-73588d003f8f",
+            current_benefit_year: true,
+          });
+      },
+    });
+
+    const byText = new RegExp(
+      `is ${formatDate(startDate.toISOString()).short()} to ${formatDate(
+        endDate.toISOString()
+      ).short()}. Most Massachusetts employees are eligible for up to 26 weeks of combined family and medical leave per benefit year.`
+    );
+    expect(screen.getByText(/Your current/i)).toBeInTheDocument();
+    expect(screen.getByText(byText)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "benefit year" })).toHaveAttribute(
+      "href",
+      "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-overview-and-benefits#getting-paid-and-taxes-on-benefits-"
+    );
+
+    expect(
+      screen.getByRole("link", {
+        name: "application review and approval process",
+      })
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByRole("link", {
+        name: "application review and approval process",
+      })
+    ).toHaveAttribute("href", "https://mass.gov/pfml/application-timeline");
+  });
+
+  it("displays prompt for channel switching when feature flag is enabled", () => {
+    const detailsLabel = "Did you start an application by phone?";
     process.env.featureFlags = JSON.stringify({ channelSwitching: false });
 
     renderPage(Index, {
@@ -54,9 +105,8 @@ describe("Applications", () => {
       },
     });
 
-    expect(
-      screen.queryByRole("link", { name: linkName })
-    ).not.toBeInTheDocument();
+    const detailsText = screen.queryByText(detailsLabel);
+    expect(detailsText).not.toBeInTheDocument();
 
     process.env.featureFlags = JSON.stringify({ channelSwitching: true });
 
@@ -67,7 +117,7 @@ describe("Applications", () => {
       },
     });
 
-    expect(screen.queryByRole("link", { name: linkName })).toBeInTheDocument();
+    expect(screen.getByText(detailsLabel)).toBeInTheDocument();
   });
 
   it("passes mfaSetupSuccess value when it redirects to getReady", () => {
@@ -90,7 +140,7 @@ describe("Applications", () => {
     });
   });
 
-  it("user can view their in-progress + submitted applications", () => {
+  it("displays Application Card for each claim", () => {
     renderPage(
       Index,
       {
@@ -102,85 +152,18 @@ describe("Applications", () => {
             new ApiResourceCollection<BenefitsApplication>("application_id", [
               inProgressClaim,
               submittedClaim,
+              completedClaim,
             ]);
         },
       },
       { query: {} }
     );
 
-    expect(screen.getByText(/In-progress applications/)).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: "Application 1" })
-    ).toBeInTheDocument();
+    const applicationCards = screen.getAllByRole("article");
+    expect(applicationCards).toHaveLength(3);
   });
 
-  it("displays completed applications", () => {
-    renderPage(Index, {
-      pathname: routes.applications.index,
-      addCustomSetup: (appLogicHook) => {
-        setUpHelper(appLogicHook);
-        appLogicHook.documents.loadAll = jest.fn();
-        appLogicHook.benefitsApplications.benefitsApplications =
-          new ApiResourceCollection<BenefitsApplication>("application_id", [
-            completedClaim,
-          ]);
-      },
-    });
-
-    expect(screen.getByText(/Submitted applications/)).toBeInTheDocument();
-    expect(screen.getByText(/View your notices/)).toBeInTheDocument();
-  });
-
-  describe("When multiple claims of different statuses exist", () => {
-    beforeEach(() => {
-      renderPage(
-        Index,
-        {
-          pathname: routes.applications.index,
-          addCustomSetup: (appLogicHook) => {
-            setUpHelper(appLogicHook);
-            appLogicHook.documents.loadAll = jest.fn();
-            appLogicHook.benefitsApplications.benefitsApplications =
-              new ApiResourceCollection<BenefitsApplication>("application_id", [
-                inProgressClaim,
-                submittedClaim,
-                completedClaim,
-              ]);
-          },
-        },
-        { query: {} }
-      );
-    });
-
-    it("Displays Application Card for each claim", () => {
-      const applicationCards = screen.getAllByRole("article");
-      expect(applicationCards).toHaveLength(3);
-      expect(screen.getByText(/Application 1/)).toBeInTheDocument();
-      expect(
-        screen.getAllByRole("link", { name: "Continue application" })
-      ).toHaveLength(2);
-      expect(screen.getByText(/NTN-111-ABS-01/)).toBeInTheDocument();
-    });
-
-    it("Displays headers for each section", () => {
-      expect(screen.getByText(/In-progress applications/)).toBeInTheDocument();
-      expect(screen.getByText(/Submitted applications/)).toBeInTheDocument();
-    });
-
-    it("Displays claims in expected order", () => {
-      const [inProgClaim, subClaim, compClaim] = screen.getAllByRole("article");
-      expect(
-        within(inProgClaim).getByText(/Application 1/)
-      ).toBeInTheDocument();
-      expect(within(subClaim).getByText(/Application 2/)).toBeInTheDocument();
-      expect(within(compClaim).getByText(/NTN-111-ABS-01/)).toBeInTheDocument();
-    });
-  });
-
-  it("only loads documents for each claim once", () => {
-    const inProgressClaim2 = new MockBenefitsApplicationBuilder().create();
-    inProgressClaim2.application_id = "mock_application_id_two";
-
+  it("only loads documents for each submitted claim once", () => {
     const spy = jest.fn();
 
     renderPage(
@@ -192,14 +175,13 @@ describe("Applications", () => {
           appLogicHook.documents.loadAll = spy;
           appLogicHook.benefitsApplications.benefitsApplications =
             new ApiResourceCollection<BenefitsApplication>("application_id", [
-              inProgressClaim,
-              inProgressClaim2,
+              submittedClaim,
             ]);
         },
       },
       { query: {} }
     );
-    expect(spy).toHaveBeenCalledTimes(2);
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 
   it("displays success alert when uploaded absence id is present", () => {
@@ -230,13 +212,20 @@ describe("Applications", () => {
       Index,
       {
         pathname: routes.applications.index,
-        addCustomSetup: setUpHelper,
+        addCustomSetup: (appLogicHook) => {
+          setUpHelper(appLogicHook);
+          appLogicHook.documents.loadAll = jest.fn();
+          appLogicHook.benefitsApplications.benefitsApplications =
+            new ApiResourceCollection<BenefitsApplication>("application_id", [
+              submittedClaim,
+            ]);
+        },
       },
-      { query: { applicationAssociated: "mock_id" } }
+      { query: { applicationAssociated: submittedClaim.fineos_absence_id } }
     );
     expect(
       screen.getByText(
-        /Your application has been successfully linked to your account./
+        /Application NTN-111-ABS-03 has been added to your account./
       )
     ).toBeInTheDocument();
   });

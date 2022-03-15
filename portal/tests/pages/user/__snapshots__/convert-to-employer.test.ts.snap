@@ -27,7 +27,7 @@ exports[`ConvertToEmployer renders form when user has no claims 1`] = `
         class="usa-alert__text"
       >
         <p>
-          Converting your account from "employee" to "employer" is irreversible and will not be possible if any claims have been created, are in-progress, or are completed.
+          Converting your account from "employee" to "employer" is irreversible and will not be possible if any applications have been created, are in-progress, or are completed.
         </p>
       </div>
     </div>

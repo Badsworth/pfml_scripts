@@ -4,7 +4,7 @@ import {
   DAOEnvironmentComponentVersion,
 } from "../DAO";
 import { MutiQuery } from "../MultiQuery";
-import { Link, navigation, Spinner } from "nr1";
+import { Link, navigation, Spinner, Icon } from "nr1";
 import {
   COMPONENTS,
   ENVS,
@@ -15,12 +15,82 @@ import {
 import { E2EVisualIndicator } from "./E2EVisualIndicator";
 import { format as dateFormat } from "date-fns";
 
+/**
+ * @deprecated
+ */
+function RunIndicators({ runs, env, link, simpleView = false }) {
+  if (env === "infra-test" || env === "prod") {
+    return (
+      <span className="info">
+        <Icon type={Icon.TYPE.INTERFACE__INFO__INFO} />
+        E2E Suite not configured for this environment
+      </span>
+    );
+  }
+  // EXPECTED TO BE DOWN, REMOVE AFTER Feb 21, 2022
+  else if (env === "trn2") {
+    return (
+      <span class="warning">
+        <Icon type={Icon.TYPE.INTERFACE__STATE__WARNING} />
+        Env expected offline
+      </span>
+    );
+  }
+  return [
+    <Link to={link} className={"allLink"} ariaLabel="Compare Runs">
+      <Icon type={Icon.TYPE.HARDWARE_AND_SOFTWARE__HARDWARE__CLUSTER} />
+    </Link>,
+    runs.map((run) => (
+      <E2EVisualIndicator run={run} runId={run.runId} simpleView={simpleView} />
+    )),
+  ];
+}
+
+function EnvComponentVersions({ componentVersions, env }) {
+  return (
+    <>
+      {COMPONENTS.map((component) => {
+        const versionInfo = componentVersions[component];
+        if (!versionInfo) {
+          return <></>;
+        }
+
+        return (
+          <td className="versions">
+            <div className="version">
+              <Link
+                to={navigation.getOpenStackedNerdletLocation({
+                  id: "deployments",
+                  urlState: {
+                    environment: env,
+                    component: component,
+                  },
+                })}
+              >
+                {versionInfo[DAOEnvironmentComponentVersion.VERSION_ALIAS]}
+              </Link>
+              <span>
+                {versionInfo[DAOEnvironmentComponentVersion.TIMESTAMP_ALIAS] &&
+                  dateFormat(
+                    versionInfo[DAOEnvironmentComponentVersion.TIMESTAMP_ALIAS],
+                    "PPPp"
+                  )}
+              </span>
+            </div>
+          </td>
+        );
+      })}
+    </>
+  );
+}
+
 export class EnvironmentsTable extends React.Component {
   state = {
     limitRuns: 5,
     envs: ENVS,
     since: "",
     where: "",
+    simpleView: true,
   };
 
   static getDerivedStateFromProps(props) {
@@ -29,6 +99,7 @@ export class EnvironmentsTable extends React.Component {
       envs: setDefault(props.envs, ENVS),
       since: setDefault(props.since, "1 month ago UNTIL NOW"),
       where: setDefault(props.where, ""),
+      simpleView: setDefault(props.simpleView, true),
     };
   }
 
@@ -36,10 +107,6 @@ export class EnvironmentsTable extends React.Component {
     super(props);
     this.accountId = props.accountId;
   }
-
-  toggleShow = () => {
-    this.setState((state) => ({ open: !state.open }));
-  };
 
   render() {
     if (this.state.envs.length === 0) {
@@ -72,7 +139,7 @@ export class EnvironmentsTable extends React.Component {
 
           const byEnv = {};
           const envVersions = chartData.pop();
-          this.state.envs.map((env, i) => {
+          this.state.envs.forEach((env, i) => {
             if (!byEnv[env]) {
               byEnv[env] = [];
             }
@@ -104,68 +171,45 @@ export class EnvironmentsTable extends React.Component {
                       id: "e2e-tests",
                       urlState: { runIds: runidList },
                     });
+
                     return (
-                      <tr>
-                        <td className={"env"}>
-                          <Link
-                            to={navigation.getOpenStackedNerdletLocation({
-                              id: "env-timeline",
-                              urlState: {
-                                environment: env,
-                              },
-                            })}
-                          >
-                            {labelEnv(env)}
-                          </Link>
-                        </td>
-                        <td className={"e2e-run-history"}>
-                          <span className={"allLink"}>
-                            <Link to={link}>All</Link>
-                          </span>
-                          {byEnv[env].map((run) => (
-                            <E2EVisualIndicator
-                              run={{
-                                pass_rate: run.passPercent / 100,
-                                timestamp: run.timestamp,
-                                tag: run.tag.join(","),
-                                runUrl: run.runUrl,
-                              }}
-                              runIds={[run.runId]}
+                      <>
+                        {env === "infra-test" && (
+                          <tr className={"infra"}>
+                            <td colspan="2">
+                              Environment for Infra Deployments Only
+                            </td>
+                          </tr>
+                        )}
+                        <tr>
+                          <td className={"env"}>
+                            <Link
+                              to={navigation.getOpenStackedNerdletLocation({
+                                id: "env-timeline",
+                                urlState: {
+                                  environment: env,
+                                },
+                              })}
+                            >
+                              {labelEnv(env)}
+                            </Link>
+                          </td>
+                          <td className={"e2e-run-history"}>
+                            <RunIndicators
+                              runs={byEnv[env]}
+                              env={env}
+                              link={link}
+                              simpleView={this.state.simpleView}
                             />
-                          ))}
-                        </td>
-                        {COMPONENTS.map((component) => {
-                          if (envVersions[env] && envVersions[env][component]) {
-                            return (
-                              <td>
-                                <div className={"version"}>
-                                  <Link
-                                    to={navigation.getOpenStackedNerdletLocation(
-                                      {
-                                        id: "deployments",
-                                        urlState: {
-                                          environment: env,
-                                          component: component,
-                                        },
-                                      }
-                                    )}
-                                  >
-                                    {envVersions[env][component].status}
-                                  </Link>
-                                  <span>
-                                    {envVersions[env][component]?.timestamp
-                                      ? dateFormat(
-                                          envVersions[env][component].timestamp,
-                                          "PPPp"
-                                        )
-                                      : ""}
-                                  </span>
-                                </div>
-                              </td>
-                            );
-                          }
-                        })}
-                      </tr>
+                          </td>
+                          {envVersions[env] && (
+                            <EnvComponentVersions
+                              env={env}
+                              componentVersions={envVersions[env]}
+                            />
+                          )}
+                        </tr>
+                      </>
                     );
                   }
                 })}

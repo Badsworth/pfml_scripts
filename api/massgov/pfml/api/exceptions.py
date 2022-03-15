@@ -8,9 +8,7 @@ from massgov.pfml.api.validation.exceptions import IssueType, ValidationErrorDet
 class ObjectNotFound(NotFound):
     status_code = NotFound
 
-    def __init__(
-        self, description="Object not found", data=None,
-    ):
+    def __init__(self, description="Object not found", data=None):
         self.description = description
         self.data = data
 
@@ -28,7 +26,7 @@ class ObjectNotFound(NotFound):
 class ClaimWithdrawn(Forbidden):
     def to_api_response(self):
         issue = ValidationErrorDetail(
-            message="Claim has been withdrawn.", type=IssueType.fineos_claim_withdrawn,
+            message="Claim has been withdrawn.", type=IssueType.fineos_claim_withdrawn
         )
 
         return response_util.error_response(

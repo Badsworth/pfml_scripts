@@ -118,7 +118,7 @@ def test_set_employee_occupation_from_demographics_data(
 
         # Scenario where org unit id will be set on an existing occupation
         employee_without_existing_org_unit = EmployeeFactory(
-            fineos_customer_number="1234567", gender_id=Gender.WOMAN.gender_id,
+            fineos_customer_number="1234567", gender_id=Gender.WOMAN.gender_id
         )
 
         employee_without_existing_org_unit_occupation = EmployeeOccupationFactory(
@@ -547,8 +547,8 @@ def test_set_employee_occupation_from_demographics_data_short_feins(
         )
         assert len(eligibility_updates) == 1
 
-        assert {(eligibility_updates[0].employee_id, eligibility_updates[0].employer_id),} == {
-            (employee.employee_id, employer_one.employer_id),
+        assert {(eligibility_updates[0].employee_id, eligibility_updates[0].employer_id)} == {
+            (employee.employee_id, employer_one.employer_id)
         }
 
         # processing the occupation info shouldn't change FIEN in the DUA data,

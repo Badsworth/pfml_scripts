@@ -1,12 +1,13 @@
 .toggle {
   border-radius: 12px;
   color: #fff;
-  cursor: pointer;
-  font-size: 0.71em;
+  font-size: 0.57em;
   font-weight: 700;
   line-height: 1.6;
   padding: 0.46em 1.72em;
+  position: relative;
   text-align: center;
+  top: -3px;
 }
 
 .toggle--on {

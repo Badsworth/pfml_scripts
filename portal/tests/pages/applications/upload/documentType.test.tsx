@@ -2,6 +2,7 @@ import {
   BenefitsApplicationDocument,
   DocumentType,
 } from "../../../../src/models/Document";
+import { DocumentsLoadError, ValidationError } from "../../../../src/errors";
 import UploadDocument, {
   DocumentUploadProps,
   getStaticPaths,
@@ -10,7 +11,6 @@ import UploadDocument, {
 import { act, screen, waitFor } from "@testing-library/react";
 import { makeFile, renderPage } from "../../../test-utils";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
-import AppErrorInfo from "../../../../src/models/AppErrorInfo";
 import { AppLogic } from "../../../../src/hooks/useAppLogic";
 import LeaveReason from "../../../../src/models/LeaveReason";
 import { createMockBenefitsApplicationDocument } from "../../../../lib/mock-helpers/createMockDocument";
@@ -119,9 +119,16 @@ describe(UploadDocument, () => {
       await act(async () => await userEvent.click(submitButton));
 
       await waitFor(() => {
-        expect(appLogic?.appErrors[0].message).toEqual(
-          "Upload at least one file to continue."
-        );
+        expect(appLogic?.errors[0]).toBeInstanceOf(ValidationError);
+
+        if (appLogic?.errors[0] instanceof ValidationError) {
+          expect(appLogic?.errors[0].issues).toEqual([
+            expect.objectContaining({
+              field: "file",
+              type: "required",
+            }),
+          ]);
+        }
       });
       expect(goToNextPageSpy).not.toHaveBeenCalled();
     });
@@ -262,32 +269,33 @@ describe(UploadDocument, () => {
 
   it("renders alert when there is an error loading documents ", async () => {
     setup("state-id", (appLogic) => {
-      appLogic.appErrors = [
-        new AppErrorInfo({
-          meta: { application_id: "mock-claim-id" },
-          name: "DocumentsLoadError",
-        }),
-      ];
+      appLogic.errors = [new DocumentsLoadError("mock-claim-id")];
     });
 
     const alert = await screen.findByRole("alert");
     expect(alert).toMatchInlineSnapshot(`
-<div
-  class="usa-alert usa-alert--error usa-alert--no-icon margin-bottom-3"
-  role="alert"
-  tabindex="-1"
->
-  <div
-    class="usa-alert__body"
-  >
-    <div
-      class="usa-alert__text"
-    >
-      An error was encountered while checking your application for documents. If this continues to happen, call the Paid Family Leave Contact Center at (833) 344‑7365.
-    </div>
-  </div>
-</div>
-`);
+      <div
+        class="usa-alert usa-alert--error usa-alert--no-icon margin-bottom-3"
+        role="alert"
+        tabindex="-1"
+      >
+        <div
+          class="usa-alert__body"
+        >
+          <div
+            class="usa-alert__text"
+          >
+            An error was encountered while checking your application for documents. If this continues to happen, call the Paid Family Leave Contact Center at 
+            <a
+              href="tel:(833) 344-7365"
+            >
+              (833) 344‑7365
+            </a>
+            .
+          </div>
+        </div>
+      </div>
+    `);
   });
 
   it("calls attach function with 'true' flag when there is additionalDoc flag in query", async () => {

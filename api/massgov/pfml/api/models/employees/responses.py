@@ -1,3 +1,4 @@
+from datetime import date
 from typing import List, Optional, cast
 
 from pydantic import UUID4
@@ -11,6 +12,7 @@ from massgov.pfml.util.pydantic.types import MaskedDateStr, MassIdStr, TaxIdForm
 
 class EmployeeBasicResponse(PydanticBaseModel):
     employee_id: UUID4
+    fineos_customer_number: Optional[str]
     first_name: Optional[str]
     middle_name: Optional[str]
     last_name: Optional[str]
@@ -36,6 +38,7 @@ class EmployeeResponse(EmployeeBasicResponse):
     mass_id_number: Optional[MassIdStr]
     date_of_birth: Optional[MaskedDateStr]
     addresses: Optional[List[MaskedAddress]]
+    created_at: Optional[date]
 
     @classmethod
     def from_orm(cls, employee: Employee) -> "EmployeeResponse":
@@ -55,6 +58,7 @@ class EmployeeForPfmlCrmResponse(EmployeeBasicResponse):
     mass_id_number: Optional[MassIdStr]
     date_of_birth: Optional[MaskedDateStr]
     addresses: Optional[List[MaskedAddress]]
+    created_at: Optional[date]
 
     @classmethod
     def from_orm(cls, employee: Employee) -> "EmployeeForPfmlCrmResponse":

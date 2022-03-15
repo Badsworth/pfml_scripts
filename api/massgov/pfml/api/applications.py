@@ -1,15 +1,11 @@
 import base64
-import tempfile
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import connexion
-import newrelic.agent
-import puremagic
 from flask import Response, request
-from puremagic import PureError
 from pydantic import ValidationError
 from sqlalchemy import asc, desc
-from werkzeug.exceptions import BadRequest, Forbidden, NotFound, ServiceUnavailable, Unauthorized
+from werkzeug.exceptions import BadRequest, Forbidden, NotFound, ServiceUnavailable
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.services.applications as applications_service
@@ -17,12 +13,8 @@ import massgov.pfml.api.util.response as response_util
 import massgov.pfml.api.validation.application_rules as application_rules
 import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
-import massgov.pfml.util.pdf as pdf_util
 from massgov.pfml.api.authorization.flask import CREATE, EDIT, READ, ensure
 from massgov.pfml.api.claims import get_claim_from_db
-from massgov.pfml.api.constants.application import ID_DOC_TYPES
-from massgov.pfml.api.models.applications.common import ContentType as AllowedContentTypes
-from massgov.pfml.api.models.applications.common import DocumentType as IoDocumentTypes
 from massgov.pfml.api.models.applications.requests import (
     ApplicationImportRequestBody,
     ApplicationRequestBody,
@@ -31,43 +23,38 @@ from massgov.pfml.api.models.applications.requests import (
     TaxWithholdingPreferenceRequestBody,
 )
 from massgov.pfml.api.models.applications.responses import ApplicationResponse, DocumentResponse
+from massgov.pfml.api.models.common import OrderDirection
 from massgov.pfml.api.services.applications import get_document_by_id
+from massgov.pfml.api.services.document_upload import upload_document_to_fineos
 from massgov.pfml.api.services.fineos_actions import (
     complete_intake,
     create_other_leaves_and_other_incomes_eforms,
     download_document,
     get_documents,
     mark_documents_as_received,
-    mark_single_document_as_received,
     register_employee,
     send_tax_withholding_preference,
     send_to_fineos,
     submit_payment_preference,
-    upload_document,
 )
+from massgov.pfml.api.util.paginate.paginator import PaginationAPIContext, page_for_api_context
 from massgov.pfml.api.validation.employment_validator import (
     get_contributing_employer_or_employee_issue,
 )
 from massgov.pfml.api.validation.exceptions import (
-    IssueRule,
     IssueType,
     ValidationErrorDetail,
     ValidationException,
 )
-from massgov.pfml.db.models.applications import Application, Document, DocumentType, LeaveReason
+from massgov.pfml.db.models.applications import Application, DocumentType, LeaveReason
 from massgov.pfml.fineos.exception import (
     FINEOSClientError,
     FINEOSEntityNotFound,
     FINEOSFatalUnavailable,
-    FINEOSUnprocessableEntity,
 )
 from massgov.pfml.fineos.models.customer_api import Base64EncodedFileData
+from massgov.pfml.util.aws import cognito
 from massgov.pfml.util.logging.applications import get_application_log_attributes
-from massgov.pfml.util.paginate.paginator import (
-    ApplicationPaginationAPIContext,
-    OrderDirection,
-    page_for_api_context,
-)
 from massgov.pfml.util.sqlalchemy import get_or_404
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -76,7 +63,7 @@ UPLOAD_SIZE_CONSTRAINT = 4500000  # bytes
 
 FILE_TOO_LARGE_MSG = "File is too large."
 FILE_SIZE_VALIDATION_ERROR = ValidationErrorDetail(
-    message=FILE_TOO_LARGE_MSG, type=IssueType.file_size, field="file",
+    message=FILE_TOO_LARGE_MSG, type=IssueType.file_size, field="file"
 )
 
 LEAVE_REASON_TO_DOCUMENT_TYPE_MAPPING = {
@@ -111,17 +98,14 @@ def application_get(application_id):
 
 
 def applications_get():
-    if user := app.current_user():
-        user_id = user.user_id
-    else:
-        raise Unauthorized
-    with ApplicationPaginationAPIContext(Application, request=request) as pagination_context:
+    user = app.current_user()
+    with PaginationAPIContext(Application, request=request) as pagination_context:
         with app.db_session() as db_session:
             is_asc = pagination_context.order_direction == OrderDirection.asc.value
             sort_fn = asc if is_asc else desc
             application_query = (
                 db_session.query(Application)
-                .filter(Application.user_id == user_id)
+                .filter(Application.user_id == user.user_id)
                 .order_by(sort_fn(pagination_context.order_key))
             )
             page = page_for_api_context(pagination_context, application_query)
@@ -135,32 +119,62 @@ def applications_get():
     ).to_api_response()
 
 
+# TODO (PORTAL-1832): Once Portal sends requests to /application-imports, this method and
+# the /applications/import endpoint can be removed. It may also make sense to rename the
+# method below to application_imports() (swap the plural) at that time.
+def deprecated_applications_import():
+    return applications_import()
+
+
 def applications_import():
     if not app.get_app_config().enable_application_import:
         return response_util.error_response(
             status_code=Forbidden, message="Application import not currently available", errors=[]
         ).to_api_response()
 
-    application = Application()
+    application = Application(application_id=uuid4())
     ensure(CREATE, application)
 
-    if user := app.current_user():
-        application.user = user
-    else:
-        raise Unauthorized
+    user = app.current_user()
+    application.user = user
+
+    is_cognito_user_mfa_verified = cognito.is_mfa_phone_verified(application.user.email_address, app.get_app_config().cognito_user_pool_id)  # type: ignore
+    if not is_cognito_user_mfa_verified:
+        logger.info(
+            "application import failure - mfa not verified",
+            extra={
+                "absence_case_id": application.claim.fineos_absence_id
+                if application.claim
+                else None,
+                "user_id": application.user.user_id,
+            },
+        )
+        raise ValidationException(
+            errors=[
+                ValidationErrorDetail(
+                    field="mfa_delivery_preference",
+                    type=IssueType.required,
+                    message="User has not opted into MFA delivery preferences",
+                )
+            ]
+        )
 
     body = connexion.request.json
     application_import_request = ApplicationImportRequestBody.parse_obj(body)
+
     claim = get_claim_from_db(application_import_request.absence_case_id)
 
     application_rules.validate_application_import_request_for_claim(
-        application_import_request, claim,
+        application_import_request, claim
     )
-    error = applications_service.claim_is_valid_for_application_import(claim)
-    if error is not None:
-        return error.to_api_response()
+    assert application_import_request.absence_case_id is not None
 
     with app.db_session() as db_session:
+        error = applications_service.claim_is_valid_for_application_import(db_session, user, claim)
+        if error is not None:
+            return error.to_api_response()
+
+        db_session.add(application)
         fineos = massgov.pfml.fineos.create_client()
         # we have already check that the claim is not None in
         # claim_is_valid_for_application_import
@@ -168,7 +182,10 @@ def applications_import():
             fineos, application, claim, db_session  # type: ignore
         )
         fineos_web_id = register_employee(
-            fineos, claim.employee_tax_identifier, application.employer_fein, db_session,  # type: ignore
+            fineos, claim.employee_tax_identifier, application.employer_fein, db_session  # type: ignore
+        )
+        applications_service.set_application_absence_and_leave_period(
+            fineos, fineos_web_id, application, application_import_request.absence_case_id
         )
         applications_service.set_customer_detail_fields(
             fineos, fineos_web_id, application, db_session
@@ -176,14 +193,54 @@ def applications_import():
         applications_service.set_customer_contact_detail_fields(
             fineos, fineos_web_id, application, db_session
         )
-        applications_service.set_employment_status(fineos, fineos_web_id, application, user)
+        applications_service.set_employment_status_and_occupations(
+            fineos, fineos_web_id, application
+        )
         applications_service.set_payment_preference_fields(
             fineos, fineos_web_id, application, db_session
         )
-        db_session.add(application)
+        eform_cache: applications_service.EFORM_CACHE = {}
+        eform_summaries = fineos.customer_get_eform_summary(
+            fineos_web_id, application_import_request.absence_case_id
+        )
+        applications_service.set_other_leaves(
+            fineos,
+            fineos_web_id,
+            application,
+            db_session,
+            application_import_request.absence_case_id,
+            eform_summaries,
+            eform_cache,
+        )
+        applications_service.set_employer_benefits_from_fineos(
+            fineos,
+            fineos_web_id,
+            application,
+            db_session,
+            application_import_request.absence_case_id,
+            eform_summaries,
+            eform_cache,
+        )
+        applications_service.set_other_incomes_from_fineos(
+            fineos,
+            fineos_web_id,
+            application,
+            db_session,
+            application_import_request.absence_case_id,
+            eform_summaries,
+            eform_cache,
+        )
+        db_session.refresh(application)
         db_session.commit()
 
     log_attributes = get_application_log_attributes(application)
+    log_attributes["num_applications_on_account"] = str(
+        db_session.query(Application).filter(Application.user_id == user.user_id).count()
+    )
+    if claim:
+        time_elapsed = datetime_util.utcnow() - claim.created_at
+        minutes_elapsed = time_elapsed.total_seconds() / 60
+        log_attributes["minutes_between_claim_creation_and_import"] = str(minutes_elapsed)
     logger.info("applications_import success", extra=log_attributes)
 
     return response_util.success_response(
@@ -198,12 +255,7 @@ def applications_start():
 
     ensure(CREATE, application)
 
-    # this should always be the case at this point, but the type for
-    # current_user is still optional until we require authentication
-    if user := app.current_user():
-        application.user = user
-    else:
-        raise Unauthorized
+    application.user = app.current_user()
 
     with app.db_session() as db_session:
         db_session.add(application)
@@ -232,7 +284,7 @@ def applications_update(application_id):
             "applications_update failure - application already submitted", extra=log_attributes
         )
         message = "Application {} could not be updated. Application already submitted on {}".format(
-            existing_application.application_id, existing_application.submitted_time.strftime("%x"),
+            existing_application.application_id, existing_application.submitted_time.strftime("%x")
         )
         return response_util.error_response(
             status_code=Forbidden,
@@ -360,9 +412,11 @@ def applications_submit(application_id):
             logger.info(
                 "applications_submit failure - application already submitted", extra=log_attributes
             )
-            message = "Application {} could not be submitted. Application already submitted on {}".format(
-                existing_application.application_id,
-                existing_application.submitted_time.strftime("%x"),
+            message = (
+                "Application {} could not be submitted. Application already submitted on {}".format(
+                    existing_application.application_id,
+                    existing_application.submitted_time.strftime("%x"),
+                )
             )
             return response_util.error_response(
                 status_code=Forbidden,
@@ -474,7 +528,7 @@ def applications_complete(application_id):
         log_attributes = get_application_log_attributes(existing_application)
 
     logger.info(
-        "applications_complete - application documents marked as received", extra=log_attributes,
+        "applications_complete - application documents marked as received", extra=log_attributes
     )
 
     logger.info("applications_complete success", extra=log_attributes)
@@ -488,286 +542,15 @@ def applications_complete(application_id):
     ).to_api_response()
 
 
-def validate_content_type(content_type):
-    allowed_content_types = [item.value for item in AllowedContentTypes]
-    if content_type not in allowed_content_types:
-        message = "Incorrect file type: {}".format(content_type)
-        logger.warning(message)
-        validation_error = ValidationErrorDetail(
-            message=message,
-            type=IssueType.file_type,
-            rule=", ".join(allowed_content_types),
-            field="file",
-        )
-        raise ValidationException(errors=[validation_error], message=message, data={})
-
-
-# We need custom validation here since we get the content type from the uploaded file
-def get_valid_content_type(file):
-    """Use pure magic library to identify file type, use file mimetype as backup"""
-    try:
-        validate_content_type(file.mimetype)
-        content_type = puremagic.from_stream(file.stream, mime=True, filename=file.filename)
-        validate_content_type(content_type)
-        if content_type != file.mimetype:
-            message = "Detected content type and mime type do not match. Detected: {}, mimeType: {}".format(
-                content_type, file.mimetype
-            )
-            logger.warning(message)
-            validation_error = ValidationErrorDetail(
-                message=message,
-                type=IssueType.file_type_mismatch,
-                rule="Detected content type and mime type do not match.",
-                field="file",
-            )
-            raise ValidationException(errors=[validation_error], message=message, data={})
-
-        return content_type
-    except (ValueError, PureError):
-        # return the validated mime type in cases where pure magic can not detect the type
-        return file.mimetype
-
-
-def validate_file_name(file_name):
-    """Validate the file name has an extension"""
-    extension_index = file_name.rfind(".")
-    if extension_index < 1:
-        logger.warning("Missing extension on file name.")
-        message = "Missing extension on file name: {}".format(file_name)
-        validation_error = ValidationErrorDetail(
-            message=message,
-            type=IssueType.file_name_extension,
-            rule="File name extension required.",
-            field="file",
-        )
-        raise ValidationException(errors=[validation_error], message=message, data={})
-
-
-def validate_file_size(file_size_bytes: int) -> None:
-    """Validate the file size is below the known upload size constraint for files in FINEOS."""
-    if file_size_bytes > UPLOAD_SIZE_CONSTRAINT:
-        raise ValidationException(
-            errors=[FILE_SIZE_VALIDATION_ERROR], message=FILE_TOO_LARGE_MSG, data={}
-        )
-
-
-def has_previous_state_managed_paid_leave(existing_application, db_session):
-    # For now, if there are documents previously submitted for the application with the
-    # STATE_MANAGED_PAID_LEAVE_CONFIRMATION document type, that document type must also
-    # be used for subsequent documents uploaded to the application. If not, the document type
-    # from the request should be used instead.
-    existing_documents_with_old_doc_type = (
-        db_session.query(Document)
-        .filter(Document.application_id == existing_application.application_id)
-        .filter(
-            Document.document_type_id
-            == DocumentType.STATE_MANAGED_PAID_LEAVE_CONFIRMATION.document_type_id
-        )
-    ).all()
-
-    if len(existing_documents_with_old_doc_type) > 0:
-        return True
-
-    return False
-
-
 def document_upload(application_id, body, file):
-
     with app.db_session() as db_session:
         # Get the referenced application or return 404
-        existing_application = get_or_404(db_session, Application, application_id)
+        application = get_or_404(db_session, Application, application_id)
 
-        # Check if user can edit application
-        ensure(EDIT, existing_application)
+    # Parse the document details from the form body
+    document_details: DocumentRequestBody = DocumentRequestBody.parse_obj(body)
 
-        # Check if user can create a document associated with this application before making any API calls or
-        # persisting the document to the database.
-        document = Document()
-        document.user_id = existing_application.user_id
-        ensure(CREATE, document)
-
-        # Parse the document details from the form body
-        document_details: DocumentRequestBody = DocumentRequestBody.parse_obj(body)
-
-        # Validate the file name and type
-        content_type = ""
-        try:
-            if document_details.name:
-                validate_file_name(document_details.name)
-            validate_file_name(file.filename)
-            content_type = get_valid_content_type(file)
-        except ValidationException as ve:
-            return response_util.error_response(
-                status_code=BadRequest,
-                message="File validation error.",
-                errors=ve.errors,
-                data=document_details.dict(),
-            ).to_api_response()
-
-        # Get additional file meta data
-        file.seek(0)
-        file_content = file.read()
-        file_size = len(file_content)
-
-        file_name = document_details.name or file.filename
-        file_description = ""
-        if document_details.description:
-            file_description = document_details.description
-
-        try:
-            # If the file is a PDF larger than the upload size constraint,
-            # attempt to compress the PDF and update file meta data.
-            # A size constraint of 10MB is still enforced by the API gateway,
-            # so the API should not expect to receive anything above this size
-            if content_type == AllowedContentTypes.pdf.value and file_size > UPLOAD_SIZE_CONSTRAINT:
-                # tempfile.SpooledTemporaryFile writes the compressed file in-memory
-                with tempfile.SpooledTemporaryFile(mode="wb+") as compressed_file:
-                    file_size = pdf_util.compress_pdf(file, compressed_file)
-                    file_name = f"Compressed_{file_name}"
-
-                    compressed_file.seek(0)
-                    file_content = compressed_file.read()
-
-            # Validate file size, regardless of processing
-            validate_file_size(file_size)
-
-        except (pdf_util.PDFSizeError):
-            logger.warning("document_upload - file too large", exc_info=True)
-            return response_util.error_response(
-                status_code=BadRequest,
-                message="File validation error.",
-                errors=[FILE_SIZE_VALIDATION_ERROR],
-                data=document_details.dict(),
-            ).to_api_response()
-
-        except (pdf_util.PDFCompressionError):
-            newrelic.agent.notice_error(attributes={"document_id": document.document_id})
-            raise ValidationException(errors=[FILE_SIZE_VALIDATION_ERROR])
-
-        # use Certification Form when the feature flag for caring leave is active, but will otherwise use
-        # State manage Paid Leave Confirmation. If the document type is Certification Form,
-        # the API will map to the corresponding plan proof based on leave reason
-        document_type = document_details.document_type.value
-
-        if document_type == IoDocumentTypes.certification_form.value:
-            document_type = LEAVE_REASON_TO_DOCUMENT_TYPE_MAPPING[
-                existing_application.leave_reason.leave_reason_description
-            ].document_type_description
-
-        if document_type not in [doc_type.document_type_description for doc_type in ID_DOC_TYPES]:
-            # Check for existing STATE_MANAGED_PAID_LEAVE_CONFIRMATION documents, and reuse the doc type if there are docs
-            # Because existing claims where only part 1 has been submitted should continue using old doc type, submitted_time
-            # rather than existing docs should be examined
-
-            if has_previous_state_managed_paid_leave(existing_application, db_session) or (
-                existing_application.submitted_time
-                and existing_application.submitted_time
-                < app.get_app_config().new_plan_proofs_active_at
-            ):
-                document_type = (
-                    DocumentType.STATE_MANAGED_PAID_LEAVE_CONFIRMATION.document_type_description
-                )
-
-        log_attributes = {
-            **get_application_log_attributes(existing_application),
-            "document.file_size": file_size,
-            "document.content_type": content_type,
-            "document.document_type": document_type,
-        }
-
-        # Upload document to FINEOS
-        try:
-            fineos_document = upload_document(
-                existing_application,
-                document_type,
-                file_content,
-                file_name,
-                content_type,
-                file_description,
-                db_session,
-                with_multipart=app.get_config().enable_document_multipart_upload,
-            ).dict()
-            logger.info(
-                "document_upload - document uploaded to claims processing system",
-                extra=log_attributes,
-            )
-        except Exception as err:
-            logger.warning(
-                "document_upload failure - failure uploading document to claims processing system",
-                extra=log_attributes,
-                exc_info=True,
-            )
-
-            if isinstance(err, FINEOSUnprocessableEntity):
-                message = "Issue encountered while attempting to upload the document."
-                return response_util.error_response(
-                    status_code=BadRequest,
-                    message=message,
-                    errors=[
-                        ValidationErrorDetail(
-                            type=IssueType.fineos_client,
-                            message=message,
-                            rule=IssueRule.document_requirement_already_satisfied
-                            if "is not required for the case provided" in err.message  # noqa: B306
-                            else None,
-                        )
-                    ],
-                    data=document_details.dict(),
-                ).to_api_response()
-
-            # Bubble any other issues up to the API error handlers
-            raise
-
-        # Insert a document metadata row
-        document.application_id = existing_application.application_id
-        now = datetime_util.utcnow()
-        document.created_at = now
-        document.updated_at = now
-        document.document_type_id = DocumentType.get_id(document_type)
-        document.size_bytes = file_size
-        document.fineos_id = fineos_document["documentId"]
-        document.is_stored_in_s3 = False
-        document.name = file_name
-        document.description = file_description
-
-        db_session.add(document)
-
-        try:
-            if document_details.mark_evidence_received:
-                mark_single_document_as_received(existing_application, document, db_session)
-                logger.info(
-                    "document_upload - evidence marked as received", extra=log_attributes,
-                )
-        except Exception:
-            logger.warning(
-                "document_upload failure - failure marking evidence as received",
-                extra=log_attributes,
-                exc_info=True,
-            )
-
-            # We don't expect any errors here, raise an error if we get one.
-            # FINEOS Unavailability errors will bubble up and be returned as 503
-            # with a fineos_client issue type.
-            #
-            # Note that we expect the DB session to rollback here due to the raised exception,
-            # so the document is not saved and the claimant has the opportunity to try again.
-            # This behaviour will create multiple documents in FINEOS but will ensure that
-            # the evidence can eventually be marked as received without manual intervention.
-            raise
-
-        db_session.commit()
-
-        logger.info(
-            "document_upload success", extra=log_attributes,
-        )
-        document_response = DocumentResponse.from_orm(document)
-        document_response.content_type = content_type
-        # Return response
-        return response_util.success_response(
-            message="Successfully uploaded document",
-            data=document_response.dict(),
-            status_code=200,
-        ).to_api_response()
+    return upload_document_to_fineos(application, document_details, file)
 
 
 def documents_get(application_id):
@@ -781,7 +564,7 @@ def documents_get(application_id):
         # Check if application has been submitted to fineos
         if not existing_application.claim:
             return response_util.success_response(
-                message="Successfully retrieved documents", data=[], status_code=200,
+                message="Successfully retrieved documents", data=[], status_code=200
             ).to_api_response()
 
         documents = get_documents(existing_application, db_session)
@@ -789,7 +572,7 @@ def documents_get(application_id):
         documents_list = [doc.dict() for doc in documents]
 
         return response_util.success_response(
-            message="Successfully retrieved documents", data=documents_list, status_code=200,
+            message="Successfully retrieved documents", data=documents_list, status_code=200
         ).to_api_response()
 
 
@@ -915,8 +698,10 @@ def payment_preference_submit(application_id: UUID) -> Response:
             "payment_preference_submit failure - payment preference already submitted",
             extra=log_attributes,
         )
-        message = "Application {} could not be updated. Payment preference already submitted".format(
-            existing_application.application_id
+        message = (
+            "Application {} could not be updated. Payment preference already submitted".format(
+                existing_application.application_id
+            )
         )
         return response_util.error_response(
             status_code=Forbidden,

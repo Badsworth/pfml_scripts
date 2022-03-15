@@ -11,7 +11,6 @@ describe("updateAmendments", () => {
   const START_DATE = "start-date";
   const NEW_START_DATE = "new-start-date";
   const employerBenefit = new EmployerBenefit({
-    benefit_amount_dollars: 1000,
     benefit_end_date: END_DATE,
     benefit_start_date: START_DATE,
     benefit_type: EmployerBenefitType.shortTermDisability,

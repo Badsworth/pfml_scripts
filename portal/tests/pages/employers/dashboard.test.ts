@@ -1,12 +1,15 @@
 import Claim, { ClaimEmployee } from "../../../src/models/Claim";
-import User, { UserLeaveAdministrator } from "../../../src/models/User";
 import { cleanup, screen, within } from "@testing-library/react";
+import { createAbsencePeriod, renderPage } from "../../test-utils";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { AppLogic } from "../../../src/hooks/useAppLogic";
 import Dashboard from "../../../src/pages/employers/dashboard";
+import MockDate from "mockdate";
 import PaginationMeta from "../../../src/models/PaginationMeta";
+import User from "../../../src/models/User";
+import createMockClaim from "../../../lib/mock-helpers/createMockClaim";
+import { createMockManagedRequirement } from "../../../lib/mock-helpers/createMockManagedRequirement";
 import createMockUserLeaveAdministrator from "../../../lib/mock-helpers/createMockUserLeaveAdministrator";
-import { renderPage } from "../../test-utils";
 import routes from "../../../src/routes";
 import userEvent from "@testing-library/user-event";
 
@@ -18,6 +21,8 @@ jest.mock("../../../src/components/core/TooltipIcon", () => ({
   __esModule: true,
   default: () => null,
 }));
+
+const MOCK_CURRENT_ISO_DATE = "2021-05-01";
 
 const verifiedUserLeaveAdministrator = createMockUserLeaveAdministrator({
   employer_dba: "Work Inc",
@@ -34,26 +39,34 @@ const verifiableUserLeaveAdministrator = createMockUserLeaveAdministrator({
   verified: false,
 });
 
-const getClaims = (leaveAdmin: UserLeaveAdministrator) => {
-  return [
-    new Claim({
-      absence_periods: [],
-      created_at: "2021-01-15",
-      managed_requirements: [],
-      employee: new ClaimEmployee({
-        first_name: "Jane",
-        middle_name: null,
-        last_name: "Doe",
+const getClaim = (customAttrs: Partial<Claim> = {}) => {
+  // Stable data to support stable snapshots
+  return createMockClaim({
+    absence_periods: [
+      createAbsencePeriod({
+        absence_period_start_date: "2020-01-01",
+        absence_period_end_date: "2020-02-01",
+        reason: "Serious Health Condition - Employee",
+        request_decision: "Approved",
+        period_type: "Continuous",
       }),
-      employer: {
-        employer_dba: leaveAdmin.employer_dba,
-        employer_fein: leaveAdmin.employer_fein,
-        employer_id: leaveAdmin.employer_id,
-      },
-      fineos_absence_id: "NTN-111-ABS-01",
-      claim_status: "Approved",
+    ],
+    created_at: "2021-01-15",
+    managed_requirements: [],
+    employee: new ClaimEmployee({
+      first_name: "Jane",
+      middle_name: null,
+      last_name: "Doe",
     }),
-  ];
+    employer: {
+      employer_dba: verifiedUserLeaveAdministrator.employer_dba,
+      employer_fein: verifiedUserLeaveAdministrator.employer_fein,
+      employer_id: verifiedUserLeaveAdministrator.employer_id,
+    },
+    fineos_absence_id: "NTN-111-ABS-01",
+    claim_status: "Approved",
+    ...customAttrs,
+  });
 };
 
 const setup = (options?: {
@@ -121,6 +134,10 @@ const setup = (options?: {
 };
 
 describe("Employer dashboard", () => {
+  beforeAll(() => {
+    MockDate.set(MOCK_CURRENT_ISO_DATE);
+  });
+
   it("renders the page with expected content and pagination components", () => {
     const { container } = setup();
 
@@ -129,7 +146,7 @@ describe("Employer dashboard", () => {
 
   // TODO (PORTAL-1560): Remove this test, once the deprecated table component is removed
   it("deprecated: renders a table of claims with links if employer is registered in FINEOS", () => {
-    const claims = getClaims(verifiedUserLeaveAdministrator);
+    const claims = [getClaim()];
     const userAttrs = {
       // Set multiple employers so the table shows all possible columns
       user_leave_administrators: [
@@ -143,13 +160,28 @@ describe("Employer dashboard", () => {
     expect(screen.getByRole("table")).toMatchSnapshot();
   });
 
-  it("renders a table of claims", () => {
+  it("renders a table of claims, with links to status page", () => {
     process.env.featureFlags = JSON.stringify({
       employerShowMultiLeaveDashboard: true,
     });
-    const claims = getClaims(verifiedUserLeaveAdministrator);
+    const claims = [
+      getClaim({
+        managed_requirements: [
+          createMockManagedRequirement({
+            follow_up_date: MOCK_CURRENT_ISO_DATE,
+            // "Open" helps provide coverage of the link used on the Review button
+            status: "Open",
+          }),
+        ],
+      }),
+    ];
+
     const userAttrs = {
-      user_leave_administrators: [verifiedUserLeaveAdministrator],
+      user_leave_administrators: [
+        // Set multiple employers so the table shows all possible columns
+        verifiedUserLeaveAdministrator,
+        verifiableUserLeaveAdministrator,
+      ],
     };
 
     setup({ claims, userAttrs });
@@ -163,7 +195,15 @@ describe("Employer dashboard", () => {
       ...verifiableUserLeaveAdministrator,
       verified: true,
     };
-    const claims = getClaims(verifiedButNotInFineos);
+    const claims = [
+      getClaim({
+        employer: {
+          employer_dba: verifiedButNotInFineos.employer_dba,
+          employer_fein: verifiedButNotInFineos.employer_fein,
+          employer_id: verifiedButNotInFineos.employer_id,
+        },
+      }),
+    ];
 
     const userAttrs = {
       user_leave_administrators: [verifiedButNotInFineos],
@@ -182,7 +222,7 @@ describe("Employer dashboard", () => {
       process.env.featureFlags = JSON.stringify({
         employerShowMultiLeaveDashboard,
       });
-      let claims = getClaims(verifiedUserLeaveAdministrator);
+      let claims = [getClaim()];
       claims = claims.map((claim) => {
         claim.employee = null;
         return claim;
@@ -240,6 +280,50 @@ describe("Employer dashboard", () => {
         "Employer ID number",
         "Application start date",
         "Status",
+      ]
+    `);
+  });
+
+  it("renders Organization column only when user has more than one Employer", () => {
+    process.env.featureFlags = JSON.stringify({
+      employerShowMultiLeaveDashboard: true,
+    });
+
+    // Organization column should NOT show
+    setup({
+      userAttrs: {
+        user_leave_administrators: [verifiedUserLeaveAdministrator],
+      },
+    });
+
+    expect(screen.getAllByRole("columnheader").map((el) => el.textContent))
+      .toMatchInlineSnapshot(`
+      [
+        "Employee (Application ID)",
+        "Leave details",
+        "Review due date",
+      ]
+    `);
+
+    cleanup();
+
+    // Organization column should show
+    setup({
+      userAttrs: {
+        user_leave_administrators: [
+          verifiedUserLeaveAdministrator,
+          verifiableUserLeaveAdministrator,
+        ],
+      },
+    });
+
+    expect(screen.getAllByRole("columnheader").map((el) => el.textContent))
+      .toMatchInlineSnapshot(`
+      [
+        "Employee (Application ID)",
+        "Organization (FEIN)",
+        "Leave details",
+        "Review due date",
       ]
     `);
   });
@@ -377,29 +461,10 @@ describe("Employer dashboard", () => {
     });
   });
 
-  it("displays number of active filters in Show Filters button", () => {
-    const user_leave_administrators = [
-      createMockUserLeaveAdministrator({
-        verified: true,
-      }),
-    ];
-    setup({
-      query: {
-        claim_status: "Pending",
-        employer_id: user_leave_administrators[0].employer_id,
-      },
-      userAttrs: {
-        // Include multiple LA's so Employer filter shows
-        user_leave_administrators,
-      },
-    });
-
-    expect(
-      screen.getByRole("button", { name: "Show filters (2)" })
-    ).toBeInTheDocument();
-  });
-
   it("sets initial filter form state from query prop", () => {
+    process.env.featureFlags = JSON.stringify({
+      employerShowMultiLeaveDashboard: true,
+    });
     // Include multiple LA's so Employer filter shows
     const user_leave_administrators = [
       createMockUserLeaveAdministrator({
@@ -412,7 +477,7 @@ describe("Employer dashboard", () => {
 
     setup({
       query: {
-        claim_status: "Approved,Closed",
+        request_decision: "approved",
         employer_id: user_leave_administrators[0].employer_id,
       },
       userAttrs: {
@@ -427,12 +492,14 @@ describe("Employer dashboard", () => {
     ).toHaveValue(
       `${user_leave_administrators[0].employer_dba} (${user_leave_administrators[0].employer_fein})`
     );
-    expect(screen.getByRole("checkbox", { name: /approved/i })).toBeChecked();
-    expect(screen.getByRole("checkbox", { name: /closed/i })).toBeChecked();
-    expect(screen.getByRole("checkbox", { name: /denied/i })).not.toBeChecked();
+    expect(screen.getByRole("radio", { name: /approved/i })).toBeChecked();
+    expect(screen.getByRole("radio", { name: /denied/i })).not.toBeChecked();
   });
 
-  it("updates query params when user changes filter to Approved and Closed", () => {
+  it("updates query params when user changes filter to Approved", () => {
+    process.env.featureFlags = JSON.stringify({
+      employerShowMultiLeaveDashboard: true,
+    });
     const { updateQuerySpy } = setup({
       paginationMeta: {
         page_offset: 2,
@@ -440,17 +507,19 @@ describe("Employer dashboard", () => {
     });
 
     userEvent.click(screen.getByRole("button", { name: /show filters/i }));
-    userEvent.click(screen.getByRole("checkbox", { name: "Approved" }));
-    userEvent.click(screen.getByRole("checkbox", { name: "Closed" }));
+    userEvent.click(screen.getByRole("radio", { name: "Approved" }));
     userEvent.click(screen.getByRole("button", { name: /apply/i }));
 
     expect(updateQuerySpy).toHaveBeenCalledWith({
-      claim_status: "Approved,Closed",
+      request_decision: "approved",
       page_offset: "1",
     });
   });
 
   it("resets query params when user clicks Reset action", () => {
+    process.env.featureFlags = JSON.stringify({
+      employerShowMultiLeaveDashboard: true,
+    });
     const user_leave_administrators = [
       createMockUserLeaveAdministrator({
         verified: true,
@@ -462,7 +531,7 @@ describe("Employer dashboard", () => {
 
     const { updateQuerySpy } = setup({
       query: {
-        claim_status: "Approved",
+        request_decision: "approved",
         employer_id: user_leave_administrators[0].employer_id,
       },
       userAttrs: {
@@ -491,7 +560,7 @@ describe("Employer dashboard", () => {
 
     const { updateQuerySpy } = setup({
       query: {
-        claim_status: "Approved,Closed",
+        request_decision: "approved",
         employer_id: user_leave_administrators[0].employer_id,
       },
       userAttrs: {
@@ -507,7 +576,7 @@ describe("Employer dashboard", () => {
 
     expect(updateQuerySpy).toHaveBeenLastCalledWith({
       page_offset: "1",
-      claim_status: "Approved,Closed",
+      request_decision: "approved",
     });
   });
 
@@ -556,6 +625,17 @@ describe("Employer dashboard", () => {
     );
   });
 
+  it("defaults to Sort by New applications option when is enabled", () => {
+    process.env.featureFlags = JSON.stringify({
+      employerShowMultiLeaveDashboard: true,
+    });
+    setup();
+
+    expect(screen.getByRole("combobox", { name: /sort/i })).toHaveValue(
+      "latest_follow_up_date,descending"
+    );
+  });
+
   it("updates order_by and order_direction params when a sort choice is selected", () => {
     const { updateQuerySpy } = setup();
 
@@ -572,7 +652,7 @@ describe("Employer dashboard", () => {
 
   // TODO (PORTAL-1560): Remove or update this test, once the deprecated table component is removed
   it("deprecated: renders Review By status", () => {
-    const claims = getClaims(verifiedUserLeaveAdministrator);
+    const claims = [getClaim()];
     claims[0].managed_requirements = [
       {
         category: "",
@@ -591,5 +671,22 @@ describe("Employer dashboard", () => {
     setup({ claims, userAttrs });
 
     expect(screen.getByText("Review by 1/30/2050")).toBeInTheDocument();
+  });
+
+  // TODO (PORTAL-1560): Remove  this test
+  it("deprecated: renders status description section", () => {
+    setup();
+
+    expect(screen.getByText(/Status descriptions/)).toBeInTheDocument();
+  });
+
+  // TODO (PORTAL-1560): Remove  this test
+  it("deprecated: does not render status description section when employerShowMultiLeaveDashboard is enabled", () => {
+    process.env.featureFlags = JSON.stringify({
+      employerShowMultiLeaveDashboard: true,
+    });
+    setup();
+
+    expect(screen.queryByText(/Status descriptions/)).not.toBeInTheDocument();
   });
 });

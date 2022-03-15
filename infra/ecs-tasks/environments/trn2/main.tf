@@ -1,5 +1,6 @@
 provider "aws" {
-  region = "us-east-1"
+  region  = "us-east-1"
+  version = "3.74.1"
 }
 
 terraform {
@@ -49,6 +50,8 @@ module "tasks" {
   fineos_eligibility_feed_output_directory_path       = "s3://fin-somdev-data-import/TRN2"
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/TRN2/dataexports"
 
+  fineos_is_running_v21 = "true"
+
   # These can be kept blank.
   eolwd_moveit_sftp_uri   = ""
   pfml_error_reports_path = "s3://massgov-pfml-trn2-agency-transfer/error-reports/outbound"
@@ -88,6 +91,5 @@ module "tasks" {
   upload_max_files_to_fineos      = "10"
   enable_1099_testfile_generation = "0"
 
-  enable_withholding_payments            = "1"
   enable_employer_reimbursement_payments = "0"
 }

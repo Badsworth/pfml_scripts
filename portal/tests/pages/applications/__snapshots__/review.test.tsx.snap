@@ -15,9 +15,7 @@ exports[`Review Page EmployerBenefitList doesn't render missing data when amount
       </h4>
       <p
         class="text-base-darker margin-top-1"
-      >
-        8/12/2021 to 12/30/2021
-      </p>
+      />
       <ul
         class="usa-list margin-top-1"
       >
@@ -45,17 +43,12 @@ exports[`Review Page EmployerBenefitList renders all data fields when all data a
       </h4>
       <p
         class="text-base-darker margin-top-1"
-      >
-        8/12/2021 to 12/30/2021
-      </p>
+      />
       <ul
         class="usa-list margin-top-1"
       >
         <li>
           Accrued paid leave
-        </li>
-        <li>
-          $250.00 per month
         </li>
       </ul>
     </div>
@@ -73,17 +66,12 @@ exports[`Review Page EmployerBenefitList renders all data fields when all data a
       </h4>
       <p
         class="text-base-darker margin-top-1"
-      >
-        8/12/2021 to 12/30/2021
-      </p>
+      />
       <ul
         class="usa-list margin-top-1"
       >
         <li>
           Temporary disability insurance
-        </li>
-        <li>
-          $250.00 per month
         </li>
       </ul>
     </div>
@@ -110,9 +98,6 @@ exports[`Review Page EmployerBenefitList renders all data fields when all data a
         <li>
           Permanent disability insurance
         </li>
-        <li>
-          Full wage replacement
-        </li>
       </ul>
     </div>
   </div>
@@ -137,9 +122,6 @@ exports[`Review Page EmployerBenefitList renders all data fields when all data a
       >
         <li>
           Family or medical leave insurance
-        </li>
-        <li>
-          Full wage replacement
         </li>
       </ul>
     </div>
@@ -1264,17 +1246,12 @@ exports[`Review Page renders Review page with Part 1 content and edit links when
           </h4>
           <p
             class="text-base-darker margin-top-1"
-          >
-            1/1/2022 to 2/1/2022
-          </p>
+          />
           <ul
             class="usa-list margin-top-1"
           >
             <li>
               Family or medical leave insurance
-            </li>
-            <li>
-              $500.00 per week
             </li>
           </ul>
         </div>
@@ -1292,16 +1269,13 @@ exports[`Review Page renders Review page with Part 1 content and edit links when
           </h4>
           <p
             class="text-base-darker margin-top-1"
-          >
-            1/1/2022 to 2/1/2022
-          </p>
+          />
           <ul
             class="usa-list margin-top-1"
           >
             <li>
               Family or medical leave insurance
             </li>
-            
           </ul>
         </div>
       </div>
@@ -1327,9 +1301,6 @@ exports[`Review Page renders Review page with Part 1 content and edit links when
             <li>
               Temporary disability insurance
             </li>
-            <li>
-              Full wage replacement
-            </li>
           </ul>
         </div>
       </div>
@@ -1346,16 +1317,13 @@ exports[`Review Page renders Review page with Part 1 content and edit links when
           </h4>
           <p
             class="text-base-darker margin-top-1"
-          >
-            1/1/2022 to 2/1/2022
-          </p>
+          />
           <ul
             class="usa-list margin-top-1"
           >
             <li>
               Permanent disability insurance
             </li>
-            
           </ul>
         </div>
       </div>

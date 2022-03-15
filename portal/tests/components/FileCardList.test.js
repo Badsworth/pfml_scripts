@@ -1,7 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import ApiResourceCollection from "../../src/models/ApiResourceCollection";
-import AppErrorInfo from "../../src/models/AppErrorInfo";
 import { DocumentType } from "../../src/models/Document";
+import { DocumentsUploadError } from "../../src/errors";
 import FileCardList from "../../src/components/FileCardList";
 import React from "react";
 import TempFile from "../../src/models/TempFile";
@@ -142,20 +142,16 @@ describe("FileCardList", () => {
     expect(screen.getByText(/Document 3/)).toBeInTheDocument();
   });
 
-  it("passes through error messages as indicated", () => {
+  it("passes through errors", () => {
     renderComponent({
-      fileErrors: [
-        new AppErrorInfo(
-          { message: "Mock error message #1", meta: { file_id: "123" } },
-          { message: "Mock error message #2", meta: { file_id: "222" } }
-        ),
-      ],
+      fileErrors: [new DocumentsUploadError("mock_application_id", "123")],
       tempFiles: new ApiResourceCollection("id", [
         makeFileObjectHelper({ id: "123" }),
         makeFileObjectHelper({ id: "333" }),
       ]),
     });
-    expect(screen.getByText("Mock error message #1")).toBeInTheDocument();
-    expect(screen.queryByText("Mock error message #2")).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/encountered an error when uploading your file/)
+    ).toBeInTheDocument();
   });
 });

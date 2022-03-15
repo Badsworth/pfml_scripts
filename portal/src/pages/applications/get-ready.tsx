@@ -4,6 +4,7 @@ import withBenefitsApplications, {
 } from "../../hoc/withBenefitsApplications";
 import Alert from "../../components/core/Alert";
 import ButtonLink from "../../components/ButtonLink";
+import Details from "../../components/core/Details";
 import Heading from "../../components/core/Heading";
 import Icon from "../../components/core/Icon";
 import Link from "next/link";
@@ -12,11 +13,15 @@ import React from "react";
 import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
 import { getMaxBenefitAmount } from "src/utils/getMaxBenefitAmount";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
 export interface GetReadyProps extends WithBenefitsApplicationsProps {
-  query: { smsMfaConfirmed?: string };
+  query: {
+    smsMfaConfirmed?: string;
+    account_converted?: string;
+  };
 }
 
 export const GetReady = (props: GetReadyProps) => {
@@ -24,6 +29,7 @@ export const GetReady = (props: GetReadyProps) => {
   const { t } = useTranslation();
 
   const hasClaims = !claims.isEmpty;
+  const accountConverted = query?.account_converted === "true";
 
   const iconClassName =
     "margin-right-1 text-secondary text-middle margin-top-neg-05";
@@ -39,6 +45,15 @@ export const GetReady = (props: GetReadyProps) => {
 
   return (
     <React.Fragment>
+      {accountConverted && (
+        <Alert
+          className="margin-bottom-3"
+          heading={t("pages.getReady.convertHeading")}
+          state="success"
+        >
+          {t("pages.getReady.convertDescription")}
+        </Alert>
+      )}
       {hasClaims && (
         <Link href={appLogic.portalFlow.getNextPageRoute("SHOW_APPLICATIONS")}>
           <a className="display-inline-block margin-bottom-5">
@@ -196,11 +211,23 @@ export const GetReady = (props: GetReadyProps) => {
           }}
         />
         <ButtonLink
-          className="margin-top-3 margin-bottom-8"
+          className="margin-top-3 margin-bottom-3"
           href={appLogic.portalFlow.getNextPageRoute("START_APPLICATION")}
         >
           {t("pages.getReady.createClaimButton")}
         </ButtonLink>
+        {isFeatureEnabled("channelSwitching") && (
+          <Details label={t("pages.getReady.startByPhoneLabel")}>
+            <p>{t("pages.getReady.startByPhoneDescription")}</p>
+            <Link
+              href={appLogic.portalFlow.getNextPageRoute("IMPORT_APPLICATION")}
+            >
+              <a className="display-inline-block margin-bottom-5">
+                {t("pages.getReady.addApplication")}
+              </a>
+            </Link>
+          </Details>
+        )}
       </div>
     </React.Fragment>
   );

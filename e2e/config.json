@@ -20,11 +20,16 @@
     "DOR_IMPORT_URI": "s3://massgov-pfml-test-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-test-dor-fineos-etl",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
-    "HAS_ORGUNITS_SETUP": "true",
+    "HAS_ORGUNITS_SETUP": "false",
     "HAS_FINEOS_JANUARY_RELEASE": "true",
     "HAS_LARGE_FILE_COMPRESSION": "true",
     "HAS_EMPLOYER_REIMBURSEMENTS": "true",
-    "HAS_FEB_RELEASE": "true"
+    "HAS_FEB_RELEASE": "true",
+    "HAS_APRIL_UPGRADE": "false",
+    "MFA_ENABLED": "true",
+    "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-test-business-intelligence-tool",
+    "TWILIO_NUMBERS": "9592241488,6072089599",
+    "HAS_CHANNEL_SWITCHING": "true"
   },
   "stage": {
     "PORTAL_BASEURL": "https://paidleave-stage.mass.gov",
@@ -36,12 +41,21 @@
     "FINEOS_USERNAME": "CONTENT",
     "EMPLOYEES_FILE": "./employees/e2e-2022-01-03.json",
     "EMPLOYERS_FILE": "./employers/e2e-2022-01-03.json",
+    "ORGUNIT_EMPLOYEES_FILE": "./employees/e2e-2021-12-20-orgunits.employees.json",
+    "ORGUNIT_EMPLOYERS_FILE": "./employers/e2e-2021-12-20-orgunits.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-stage-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-stage-dor-fineos-etl",
-    "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false",
-    "HAS_FINEOS_JANUARY_RELEASE": "false",
+    "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
+    "HAS_ORGUNITS_SETUP": "false",
+    "HAS_FINEOS_JANUARY_RELEASE": "true",
     "HAS_LARGE_FILE_COMPRESSION": "true",
-    "HAS_FEB_RELEASE": "false"
+    "HAS_EMPLOYER_REIMBURSEMENTS": "true",
+    "HAS_FEB_RELEASE": "true",
+    "HAS_APRIL_UPGRADE": "false",
+    "MFA_ENABLED": "true",
+    "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-stage-business-intelligence-tool",
+    "TWILIO_NUMBERS": "5076072506,5074188158",
+    "HAS_CHANNEL_SWITCHING": "false"
   },
   "training": {
     "PORTAL_BASEURL": "https://paidleave-training.mass.gov",
@@ -53,12 +67,20 @@
     "COGNITO_CLIENTID": "2hr6bckdopamvq92jahr542p5p",
     "EMPLOYEES_FILE": "./employees/e2e-2022-01-03.json",
     "EMPLOYERS_FILE": "./employers/e2e-2022-01-03.json",
+    "ORGUNIT_EMPLOYEES_FILE": "./employees/e2e-2021-12-20-orgunits.employees.json",
+    "ORGUNIT_EMPLOYERS_FILE": "./employers/e2e-2021-12-20-orgunits.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-training-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-training-dor-fineos-etl",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
+    "HAS_ORGUNITS_SETUP": "false",
     "HAS_FINEOS_JANUARY_RELEASE": "true",
     "HAS_LARGE_FILE_COMPRESSION": "true",
-    "HAS_FEB_RELEASE": "false"
+    "HAS_FEB_RELEASE": "true",
+    "HAS_APRIL_UPGRADE": "false",
+    "MFA_ENABLED": "true",
+    "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-training-business-intelligence-tool",
+    "TWILIO_NUMBERS": "7853699328,8106349678",
+    "HAS_CHANNEL_SWITCHING": "false"
   },
   "trn2": {
     "PORTAL_BASEURL": "https://paidleave-trn2.dfml.eol.mass.gov",
@@ -75,7 +97,12 @@
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false",
     "HAS_FINEOS_JANUARY_RELEASE": "false",
     "HAS_LARGE_FILE_COMPRESSION": "true",
-    "HAS_FEB_RELEASE": "false"
+    "HAS_FEB_RELEASE": "false",
+    "HAS_APRIL_UPGRADE": "false",
+    "MFA_ENABLED": "true",
+    "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-trn2-business-intelligence-tool",
+    "TWILIO_NUMBERS": "7752564493,8063045739",
+    "HAS_CHANNEL_SWITCHING": "false"
   },
   "long": {
     "PORTAL_BASEURL": "https://paidleave-long.dfml.eol.mass.gov",
@@ -89,10 +116,16 @@
     "EMPLOYERS_FILE": "./employers/e2e-2022-01-03.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-long-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-long-dor-fineos-etl",
-    "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false",
-    "HAS_FINEOS_JANUARY_RELEASE": "false",
+    "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
+    "HAS_FINEOS_JANUARY_RELEASE": "true",
     "HAS_LARGE_FILE_COMPRESSION": "true",
-    "HAS_FEB_RELEASE": "false"
+    "HAS_EMPLOYER_REIMBURSEMENTS": "true",
+    "HAS_FEB_RELEASE": "true",
+    "HAS_APRIL_UPGRADE": "true",
+    "MFA_ENABLED": "true",
+    "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-long-business-intelligence-tool",
+    "TWILIO_NUMBERS": "7853699162,8045342087",
+    "HAS_CHANNEL_SWITCHING": "false"
   },
   "performance": {
     "PORTAL_BASEURL": "https://paidleave-performance.mass.gov",
@@ -111,10 +144,16 @@
     "DOR_IMPORT_URI": "s3://massgov-pfml-performance-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-performance-dor-fineos-etl",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
-    "HAS_ORGUNITS_SETUP": "false",
+    "HAS_ORGUNITS_SETUP": "true",
     "HAS_FINEOS_JANUARY_RELEASE": "true",
     "HAS_LARGE_FILE_COMPRESSION": "true",
-    "HAS_FEB_RELEASE": "false"
+    "HAS_EMPLOYER_REIMBURSEMENTS": "true",
+    "HAS_FEB_RELEASE": "true",
+    "HAS_APRIL_UPGRADE": "false",
+    "MFA_ENABLED": "true",
+    "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-performance-business-intelligence-tool",
+    "TWILIO_NUMBERS": "8045342047,8106349684",
+    "HAS_CHANNEL_SWITCHING": "false"
   },
   "uat": {
     "PORTAL_BASEURL": "https://paidleave-uat.mass.gov",
@@ -124,15 +163,24 @@
     "FINEOS_USERNAME": "OASIS",
     "COGNITO_POOL": "us-east-1_29j6fKBDT",
     "COGNITO_CLIENTID": "1ajh0c38bs21k60bjtttegspvp",
-    "EMPLOYEES_FILE": "./employees/e2e-2021-09-08.json",
-    "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
+    "EMPLOYEES_FILE": "./employees/e2e-2022-01-03.json",
+    "EMPLOYERS_FILE": "./employers/e2e-2022-01-03.json",
+    "ORGUNIT_EMPLOYEES_FILE": "./employees/e2e-2021-12-20-orgunits.employees.json",
+    "ORGUNIT_EMPLOYERS_FILE": "./employers/e2e-2021-12-20-orgunits.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-uat-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-uat-dor-fineos-etl",
     "HAS_FINEOS_SP": "true",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
+    "HAS_ORGUNITS_SETUP": "false",
     "HAS_FINEOS_JANUARY_RELEASE": "true",
     "HAS_LARGE_FILE_COMPRESSION": "true",
-    "HAS_FEB_RELEASE": "false"
+    "HAS_EMPLOYER_REIMBURSEMENTS": "true",
+    "HAS_FEB_RELEASE": "true",
+    "HAS_APRIL_UPGRADE": "false",
+    "MFA_ENABLED": "true",
+    "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-uat-business-intelligence-tool",
+    "TWILIO_NUMBERS": "7853699139,7754062155",
+    "HAS_CHANNEL_SWITCHING": "false"
   },
   "cps-preview": {
     "PORTAL_BASEURL": "https://paidleave-cps-preview.eol.mass.gov",
@@ -150,10 +198,15 @@
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-cps-preview-dor-fineos-etl",
     "HAS_FINEOS_JANUARY_RELEASE": "true",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
-    "HAS_ORGUNITS_SETUP": "false",
+    "HAS_ORGUNITS_SETUP": "true",
     "HAS_LARGE_FILE_COMPRESSION": "false",
     "HAS_EMPLOYER_REIMBURSEMENTS": "true",
-    "HAS_FEB_RELEASE": "false"
+    "HAS_FEB_RELEASE": "true",
+    "HAS_APRIL_UPGRADE": "false",
+    "MFA_ENABLED": "true",
+    "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-cps-preview-business-intelligence-tool",
+    "TWILIO_NUMBERS": "7652759074,8063045703",
+    "HAS_CHANNEL_SWITCHING": "false"
   },
   "breakfix": {
     "PORTAL_BASEURL": "https://paidleave-breakfix.eol.mass.gov",
@@ -166,13 +219,22 @@
     "TESTMAIL_NAMESPACE": "gqzap",
     "EMPLOYEES_FILE": "./employees/e2e-2022-01-03.json",
     "EMPLOYERS_FILE": "./employers/e2e-2022-01-03.json",
+    "ORGUNIT_EMPLOYEES_FILE": "./employees/e2e-2021-12-20-orgunits.employees.json",
+    "ORGUNIT_EMPLOYERS_FILE": "./employers/e2e-2021-12-20-orgunits.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-breakfix-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-breakfix-dor-fineos-etl",
     "HAS_FINEOS_SP": "true",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
+    "HAS_ORGUNITS_SETUP": "false",
     "HAS_FINEOS_JANUARY_RELEASE": "true",
     "HAS_LARGE_FILE_COMPRESSION": "false",
-    "HAS_FEB_RELEASE": "false"
+    "HAS_EMPLOYER_REIMBURSEMENTS": "true",
+    "HAS_FEB_RELEASE": "true",
+    "HAS_APRIL_UPGRADE": "false",
+    "MFA_ENABLED": "true",
+    "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-breakfix-business-intelligence-tool",
+    "TWILIO_NUMBERS": "8063045688,7752564489",
+    "HAS_CHANNEL_SWITCHING": "false"
   },
   "local": {
     "PORTAL_BASEURL": "http://localhost:3000",
@@ -183,6 +245,8 @@
     "FINEOS_BASEURL": "https://idt-claims-webapp.masspfml.fineos.com",
     "FINEOS_USERNAME": "CONTENT",
     "EMPLOYEES_FILE": "./employees/e2e-2021-09-08.json",
-    "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json"
+    "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
+    "MFA_ENABLED": "false",
+    "TWILIO_NUMBERS": "5076072506,5074188158"
   }
 }

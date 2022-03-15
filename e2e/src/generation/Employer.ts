@@ -3,9 +3,9 @@ import fs from "fs";
 import { formatISO } from "date-fns";
 import unique from "./unique";
 import { pipeline, Readable } from "stream";
-import JSONStream from "JSONStream";
 import { promisify } from "util";
 import shuffle from "./shuffle";
+import * as JSONStream from "../stream/json";
 
 const pipelineP = promisify(pipeline);
 
@@ -45,6 +45,7 @@ const employerSizeWheel = [
 ];
 
 type EmployerGenerationSpec = {
+  fein?: Employer["fein"];
   size?: Employer["size"];
   withholdings?: (number | null)[]; // quarters with 0 or null withholding amounts
   family_exemption?: boolean;
@@ -88,7 +89,7 @@ export class EmployerGenerator {
     // dba and name should be the same
 
     const name = this.generateCompanyName();
-    const fein = this.generateFEIN();
+    const fein = spec.fein ?? this.generateFEIN();
     const withholdings = this.generateWithholding(fein, spec.withholdings);
 
     return {

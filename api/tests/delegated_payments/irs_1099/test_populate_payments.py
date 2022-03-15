@@ -40,9 +40,7 @@ def test_populate_payments(populate_payments_step, local_test_db_session):
 
 
 def _payment_factory(
-    pub_individual_id,
-    test_db_session,
-    end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
+    pub_individual_id, test_db_session, end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT
 ) -> Payment:
     employee = factories.EmployeeFactory.create()
     employer = factories.EmployerFactory.create()

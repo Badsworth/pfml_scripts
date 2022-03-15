@@ -1,17 +1,23 @@
 import { LeaveReasonType } from "./LeaveReason";
+import { ValuesOf } from "../../types/common";
 import { groupBy } from "lodash";
 
-export type AbsencePeriodRequestDecision =
-  | "Approved"
-  | "Cancelled"
-  | "Denied"
-  | "In Review"
-  | "Pending"
+export const AbsencePeriodRequestDecision = {
+  approved: "Approved",
+  cancelled: "Cancelled",
+  denied: "Denied",
+  inReview: "In Review",
+  pending: "Pending",
   // Projected is (at least) used for Bonding Leave periods created automatically
   // for periods with Birth Disability as the reason qualifier
-  | "Projected"
-  | "Voided"
-  | "Withdrawn";
+  projected: "Projected",
+  voided: "Voided",
+  withdrawn: "Withdrawn",
+} as const;
+
+export type AbsencePeriodRequestDecisionEnum = ValuesOf<
+  typeof AbsencePeriodRequestDecision
+>;
 
 export type AbsencePeriodTypes =
   | "Continuous"
@@ -26,7 +32,7 @@ export class AbsencePeriod {
   reason: LeaveReasonType;
   reason_qualifier_one = "";
   reason_qualifier_two = "";
-  request_decision: AbsencePeriodRequestDecision;
+  request_decision: AbsencePeriodRequestDecisionEnum;
 
   constructor(attrs: Partial<AbsencePeriod> = {}) {
     Object.assign(this, attrs);

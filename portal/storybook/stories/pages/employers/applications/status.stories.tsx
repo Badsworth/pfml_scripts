@@ -8,6 +8,8 @@ import { MockEmployerClaimBuilder } from "lib/mock-helpers/mock-model-builder";
 import React from "react";
 import { Status } from "src/pages/employers/applications/status";
 import User from "src/models/User";
+import { createAbsencePeriod } from "lib/mock-helpers/createAbsencePeriod";
+import { faker } from "@faker-js/faker";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 export default {
@@ -100,6 +102,16 @@ export const Default = ({
     documentData.document_type = DocumentType.identityVerification;
   }
   const claim = claimBuilder.create();
+  claim.residential_address = {
+    city: "Boston",
+    line_1: "1234 My St.",
+    line_2: null,
+    state: "MA",
+    zip: "00000",
+  };
+  claim.employer_fein = "12-3456789";
+  claim.hours_worked_per_week = 40;
+  claim.absence_periods = [createAbsencePeriod()];
 
   let documentsMap;
   if (document === "None") {
@@ -114,10 +126,15 @@ export const Default = ({
       [
         claim.fineos_absence_id,
         new ApiResourceCollection<ClaimDocument>("fineos_document_id", [
-          { ...documentData },
           {
             ...documentData,
             document_type: DocumentType.requestForInfoNotice,
+            fineos_document_id: faker.datatype.uuid(),
+          },
+          {
+            ...documentData,
+            document_type: DocumentType.certification.medicalCertification,
+            fineos_document_id: faker.datatype.uuid(),
           },
         ]),
       ],

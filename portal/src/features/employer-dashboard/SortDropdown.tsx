@@ -1,6 +1,8 @@
 import Dropdown from "../../components/core/Dropdown";
+import { GetClaimsParams } from "../../api/ClaimsApi";
 import React from "react";
 import { compact } from "lodash";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
@@ -10,21 +12,30 @@ export interface PageQueryParam {
   value: number | null | string | string[];
 }
 
-interface SortDropdownProps {
-  order_by?: "absence_status" | "created_at" | "employee";
-  order_direction?: "ascending" | "descending";
+interface SortDropdownProps
+  extends Pick<GetClaimsParams, "order_by" | "order_direction"> {
   updatePageQuery: (params: PageQueryParam[]) => void;
 }
 
 export const SortDropdown = (props: SortDropdownProps) => {
   const { order_by, order_direction, updatePageQuery } = props;
-  const choices = new Map([
-    ["status", "absence_status,ascending"],
-    ["newest", "created_at,descending"],
-    ["oldest", "created_at,ascending"],
-    ["employee_az", "employee,ascending"],
-    ["employee_za", "employee,descending"],
-  ]);
+  const showMultiLeaveDash = isFeatureEnabled(
+    "employerShowMultiLeaveDashboard"
+  );
+  const choices = showMultiLeaveDash
+    ? new Map([
+        ["newest", "latest_follow_up_date,descending"],
+        ["oldest", "latest_follow_up_date,ascending"],
+        ["employee_az", "employee,ascending"],
+        ["employee_za", "employee,descending"],
+      ])
+    : new Map([
+        ["status", "absence_status,ascending"],
+        ["newest", "created_at,descending"],
+        ["oldest", "created_at,ascending"],
+        ["employee_az", "employee,ascending"],
+        ["employee_za", "employee,descending"],
+      ]);
 
   const { t } = useTranslation();
 

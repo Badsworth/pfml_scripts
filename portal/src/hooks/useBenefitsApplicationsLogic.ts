@@ -1,8 +1,8 @@
 import { Issue, NotFoundError, ValidationError } from "../errors";
 import ApiResourceCollection from "../models/ApiResourceCollection";
-import { AppErrorsLogic } from "./useAppErrorsLogic";
 import BenefitsApplication from "../models/BenefitsApplication";
 import BenefitsApplicationsApi from "../api/BenefitsApplicationsApi";
+import { ErrorsLogic } from "./useErrorsLogic";
 import { NullableQueryParams } from "../utils/routeWithParams";
 import PaginationMeta from "../models/PaginationMeta";
 import PaymentPreference from "../models/PaymentPreference";
@@ -14,10 +14,10 @@ import useCollectionState from "./useCollectionState";
 import { useState } from "react";
 
 const useBenefitsApplicationsLogic = ({
-  appErrorsLogic,
+  errorsLogic,
   portalFlow,
 }: {
-  appErrorsLogic: AppErrorsLogic;
+  errorsLogic: ErrorsLogic;
   portalFlow: PortalFlow;
 }) => {
   // State representing the collection of applications for the current user.
@@ -74,37 +74,12 @@ const useBenefitsApplicationsLogic = ({
   };
 
   /**
-   * Associate a claim created through the contact center with this user.
-   * `import` is a reserved variable name in JS, so...using `associate` here.
+   * Reset the state to force applications to be refetched the
+   * next time loadPage is called.
    */
-  const associate = async (formState: {
-    absence_case_id: string | null;
-    tax_identifier: string | null;
-  }) => {
-    appErrorsLogic.clearErrors();
-
-    try {
-      // Transform user input to conform to expected formatting for API
-      const postData = { ...formState };
-      postData.absence_case_id = postData.absence_case_id
-        ? postData.absence_case_id.toUpperCase().trim()
-        : null;
-
-      const { claim } = await applicationsApi.importClaim(postData);
-
-      // Reset the applications pagination state to force applications to be refetched,
-      // so that this newly associated application is listed
-      setPaginationMeta({});
-
-      portalFlow.goToNextPage(
-        {},
-        {
-          applicationAssociated: claim.fineos_absence_id,
-        }
-      );
-    } catch (error) {
-      appErrorsLogic.catchError(error);
-    }
+  const invalidateApplicationsCache = () => {
+    setIsLoadingClaims(undefined);
+    setPaginationMeta({});
   };
 
   /**
@@ -117,7 +92,7 @@ const useBenefitsApplicationsLogic = ({
     // determine what steps are completed.
     if (hasLoadedBenefitsApplicationAndWarnings(application_id)) return;
 
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
       const { claim, warnings } = await applicationsApi.getClaim(
@@ -137,7 +112,7 @@ const useBenefitsApplicationsLogic = ({
         return;
       }
 
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 
@@ -150,7 +125,7 @@ const useBenefitsApplicationsLogic = ({
     if (paginationMeta.page_offset === Number(pageOffset)) return;
 
     setIsLoadingClaims(true);
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
       const { claims, paginationMeta } = await applicationsApi.getClaims(
@@ -160,7 +135,7 @@ const useBenefitsApplicationsLogic = ({
       setPaginationMeta(paginationMeta);
       setIsLoadingClaims(false);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
       setIsLoadingClaims(false);
     }
   };
@@ -174,7 +149,7 @@ const useBenefitsApplicationsLogic = ({
     application_id: string,
     patchData: Partial<BenefitsApplication>
   ) => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
       const { claim, warnings } = await applicationsApi.updateClaim(
@@ -194,13 +169,13 @@ const useBenefitsApplicationsLogic = ({
       // for situations like leave periods, where the API passes us back
       // a leave_period_id field for making subsequent updates.
       if (issues.length) {
-        throw new ValidationError(issues, applicationsApi.i18nPrefix);
+        throw new ValidationError(issues);
       }
 
       const params = { claim_id: claim.application_id };
       portalFlow.goToNextPage({ claim }, params);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 
@@ -208,7 +183,7 @@ const useBenefitsApplicationsLogic = ({
    * Complete the claim in the API
    */
   const complete = async (application_id: string) => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
       const { claim } = await applicationsApi.completeClaim(application_id);
@@ -218,7 +193,7 @@ const useBenefitsApplicationsLogic = ({
       const params = { claim_id: claim.application_id };
       portalFlow.goToNextPage(context, params);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 
@@ -226,18 +201,19 @@ const useBenefitsApplicationsLogic = ({
    * Create the claim in the API. Handles errors and routing.
    */
   const create = async () => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
       const { claim } = await applicationsApi.createClaim();
 
-      addBenefitsApplication(claim);
+      // Reset so that this newly created claim is listed
+      invalidateApplicationsCache();
 
       const context = { claim };
       const params = { claim_id: claim.application_id };
       portalFlow.goToPageFor("CREATE_CLAIM", context, params);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 
@@ -245,7 +221,7 @@ const useBenefitsApplicationsLogic = ({
    * Submit the claim in the API and set application errors if any
    */
   const submit = async (application_id: string) => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
       const { claim } = await applicationsApi.submitClaim(application_id);
@@ -259,7 +235,7 @@ const useBenefitsApplicationsLogic = ({
       };
       portalFlow.goToNextPage(context, params);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 
@@ -267,7 +243,7 @@ const useBenefitsApplicationsLogic = ({
     application_id: string,
     paymentPreferenceData: Partial<PaymentPreference>
   ) => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
       const { claim, warnings } = await applicationsApi.submitPaymentPreference(
@@ -282,7 +258,7 @@ const useBenefitsApplicationsLogic = ({
       setClaimWarnings(application_id, warnings);
 
       if (issues.length) {
-        throw new ValidationError(issues, applicationsApi.i18nPrefix);
+        throw new ValidationError(issues);
       }
 
       const context = { claim };
@@ -293,7 +269,7 @@ const useBenefitsApplicationsLogic = ({
 
       portalFlow.goToNextPage(context, params);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 
@@ -301,7 +277,7 @@ const useBenefitsApplicationsLogic = ({
     application_id: string,
     data: TaxWithholdingPreference
   ) => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
       const { claim, warnings } =
@@ -315,7 +291,7 @@ const useBenefitsApplicationsLogic = ({
 
       const issues = getRelevantIssues([], warnings, []);
       if (issues.length) {
-        throw new ValidationError(issues, applicationsApi.i18nPrefix);
+        throw new ValidationError(issues);
       }
 
       const context = { claim };
@@ -325,16 +301,16 @@ const useBenefitsApplicationsLogic = ({
       };
       portalFlow.goToNextPage(context, params);
     } catch (err) {
-      appErrorsLogic.catchError(err);
+      errorsLogic.catchError(err);
     }
   };
 
   return {
-    associate,
     benefitsApplications,
     complete,
     create,
     hasLoadedBenefitsApplicationAndWarnings,
+    invalidateApplicationsCache,
     isLoadingClaims,
     load,
     loadPage,

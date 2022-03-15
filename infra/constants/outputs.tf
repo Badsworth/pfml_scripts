@@ -27,7 +27,6 @@ output "infra_admin_sso_arn" {
 #       https://lwd.atlassian.net/wiki/spaces/DD/pages/272072807/Tagging+Standards.
 output "environment_tags" {
   value = {
-    "adhoc"       = "test"
     "breakfix"    = "qa"
     "cps-preview" = "qa"
     "infra-test"  = "test"
@@ -72,7 +71,6 @@ output "environment_shorthand" {
 #
 output "smartronix_environment_tags" {
   value = {
-    "adhoc"       = "Adhoc"
     "breakfix"    = "Breakfix"
     "cps-preview" = "CPSPreview"
     "infra-test"  = "Sandbox"
@@ -109,7 +107,7 @@ output "nonprod_admin_roles" {
 }
 
 # Mapping of environments to pretty domains.
-# Note that the EOTSS-recommended format changed to use the eol.mass.gov domain.
+# Note that the EOTSS-recommended format changed to use the `dfml.eol.mass.gov` domain.
 #
 output "domains" {
   value = {
@@ -123,13 +121,14 @@ output "domains" {
     "test"        = "paidleave-test.mass.gov",
     "training"    = "paidleave-training.mass.gov",
     "uat"         = "paidleave-uat.mass.gov",
+    "trn2"        = "paidleave-trn2.dfml.eol.mass.gov"
   }
 }
 
 output "admin_domains" {
   value = {
     "breakfix"    = "paidleave-admin-breakfix.dfml.eol.mass.gov",
-    "cps-preview" = "paidleave-admin-cpspreview.dfml.eol.mass.gov",
+    "cps-preview" = "paidleave-admin-cps-preview.dfml.eol.mass.gov",
     "infra-test"  = "paidleave-admin-infra-test.dfml.eol.mass.gov",
     "long"        = "paidleave-admin-long.dfml.eol.mass.gov",
     "performance" = "paidleave-admin-performance.dfml.eol.mass.gov",
@@ -173,6 +172,7 @@ output "cert_domains" {
     "test"        = "paidleave-test.mass.gov",
     "training"    = "paidleave-performance.mass.gov",
     "uat"         = "paidleave-uat.mass.gov",
+    "trn2"        = "paidleave-trn2.dfml.eol.mass.gov"
   }
 }
 
@@ -191,7 +191,7 @@ output "admin_portal_cert_domains" {
     "training"    = "paidleave-admin-training.dfml.eol.mass.gov"
     "trn2"        = "paidleave-admin-trn2.dfml.eol.mass.gov",
     "test"        = "paidleave-admin-test.dfml.eol.mass.gov",
-    "uat"         = "paidleave-admin-test.dfml.eol.mass.gov",
+    "uat"         = "paidleave-admin-uat.dfml.eol.mass.gov",
   }
 }
 
@@ -207,7 +207,7 @@ output "slackbot_channels" {
 }
 
 output "bucket_replication_environment" {
-  value = "test"
+  value = "prod"
 }
 
 # Env Var mappings for ECS Tasks
@@ -236,12 +236,63 @@ output "admin_portal_waf_whitelist" {
     "75.134.71.16/32",   # Last Call Media WFH IP
     "68.204.24.240/32",  # Last Call Media WFH IP - Tyler
     "68.84.12.117/32",   # Last Call Media WFH IP - Niki Ramlogan
+    "71.227.169.195/32", # Last Call Media WFH IP - Jessi Murray
+    "73.39.112.119/32",  # Last Call Media WFH IP - Jim Ruggiero
+    "73.47.218.158/32",  # Chris Griffith WFH
     "47.200.176.201/32", # Ben WFH
     "47.199.161.99/32",  # Jamie WFH
     "76.202.246.67/32",  # Mark WFH
     "70.122.162.186/32", # Jake WFH
     "35.174.218.119/32", # PFML nat-0e7778fcf7a7fc067
     "3.234.51.136/32"    # PFML nat-022bece54348228b5
+  ]
+}
+
+# High risk country codes to block on WAFs
+output "high_risk_country_codes" {
+  value = [
+    "AF", # Afghanistan
+    "DZ", # Algeria
+    "BY", # Belarus
+    "BI", # Burundi
+    "CM", # Cameroon
+    "CF", # Central African Republic
+    "TD", # Chad
+    "CN", # China
+    "CO", # Colombia
+    "CD", # Democratic Republic of the Congo
+    "CU", # Cuba
+    "EG", # Egypt
+    "SV", # El Savador
+    "ER", # Eritrea
+    "HT", # Haiti
+    "HN", # Honduras
+    "HK", # Hong Kong
+    "IR", # Iran
+    "IQ", # Iraq
+    "IL", # Israel
+    "KE", # Kenya
+    "KP", # Korea (the Democratic People's Republic of)
+    "LB", # Lebanon
+    "LY", # Libya
+    "ML", # Mali
+    "MR", # Mauritania
+    "MX", # Mexico
+    "MM", # Myanmar 
+    "NE", # Niger
+    "NG", # Nigeria
+    "PK", # Pakistan
+    "PH", # Philippines
+    "RU", # Russia
+    "SA", # Saudi Arabia
+    "SO", # Somalia
+    "SS", # South Sudan
+    "SY", # Syria
+    "TH", # Thailand
+    "UA", # Ukraine
+    "VE", # Venezuela
+    "YE", # Yemen
+    "ZW", # Zimbabwe 
   ]
 }
 
@@ -276,4 +327,21 @@ output "newrelic_account_id" {
 output "newrelic_trusted_account_key" {
   description = "EOLWD's New Relic parent account number"
   value       = "1606654"
+}
+
+#
+# Import manually created s3 buckets for management in s3.tf
+#
+output "import_buckets" {
+  value = [
+    "aws-glue-assets-498823821309-us-east-1",
+    "aws-glue-scripts-498823821309-us-east-1",
+    "aws-glue-temporary-498823821309-us-east-1",
+    "massgov-pfml-demo-business-intelligence-tool",
+    "cf-templates-rvbkfcj4nho2-us-east-1",
+    "config-bucket-498823821309",
+    "test-eotss-aws-cloudopsteam-config-tags",
+    "smx-pfml-test-db-testing",
+    "massgov-pfml-test-experian-soap"
+  ]
 }

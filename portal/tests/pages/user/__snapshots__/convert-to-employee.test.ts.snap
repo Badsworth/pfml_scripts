@@ -1,0 +1,47 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ConvertToEmployee renders page when user is an employer 1`] = `
+<div>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+    tabindex="-1"
+  >
+    Convert to employee account
+  </h1>
+  <div
+    aria-labelledby="alert-heading1"
+    class="usa-alert usa-alert--warning margin-bottom-3"
+    role="region"
+    tabindex="-1"
+  >
+    <div
+      class="usa-alert__body"
+    >
+      <h2
+        class="usa-alert__heading font-heading-md text-bold"
+        id="alert-heading1"
+      >
+        This action is irreversible!
+      </h2>
+      <div
+        class="usa-alert__text"
+      >
+        <p>
+          Converting your account from "employer" to "employee" is irreversible and will not be possible if your account has been verified.
+        </p>
+      </div>
+    </div>
+  </div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <button
+      class="usa-button position-relative"
+      type="submit"
+    >
+      Convert account
+    </button>
+  </form>
+</div>
+`;

@@ -47,10 +47,10 @@ def upgrade():
             server_default=sa.text("now()"),
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(["claim_id"], ["claim.claim_id"],),
-        sa.ForeignKeyConstraint(["claim_type_id"], ["lk_claim_type.claim_type_id"],),
+        sa.ForeignKeyConstraint(["claim_id"], ["claim.claim_id"]),
+        sa.ForeignKeyConstraint(["claim_type_id"], ["lk_claim_type.claim_type_id"]),
         sa.ForeignKeyConstraint(
-            ["leave_request_decision_id"], ["lk_leave_request_decision.leave_request_decision_id"],
+            ["leave_request_decision_id"], ["lk_leave_request_decision.leave_request_decision_id"]
         ),
         sa.PrimaryKeyConstraint("absence_period_id"),
     )

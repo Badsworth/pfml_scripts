@@ -1,0 +1,24 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PaginatedClaimsTable renders a Review call to action when a managed requirement is open 1`] = `
+<td
+  data-label="Review due date"
+>
+  <a
+    class="usa-button margin-bottom-05"
+    href="/mocked-router"
+  >
+    Review Application
+  </a>
+  <br />
+  Respond by 5/1/2021
+</td>
+`;
+
+exports[`PaginatedClaimsTable renders the most recent review date when no managed requirement is open 1`] = `
+<td
+  data-label="Review due date"
+>
+  5/1/2021
+</td>
+`;

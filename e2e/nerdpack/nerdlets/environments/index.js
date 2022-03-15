@@ -6,13 +6,13 @@ import Navigation from "../common/components/Navigation";
 
 export default class PFMLEnvironmentsNerdlet extends React.PureComponent {
   render() {
-    const where = `tag LIKE '%Morning Run%'
+    const where = `(tag LIKE '%Morning Run%'
                     OR tag LIKE 'Deploy%'
-                    OR (tag LIKE 'Manual%' AND branch = 'main')`;
+                    OR (tag LIKE 'Manual%' AND branch = 'main')) AND group = 'Commit Stable'`;
     return (
       <PlatformStateContext.Consumer>
         {(platformState) => [
-          <Navigation />,
+          <Navigation active="environment-v1" />,
           <EnvironmentsTable
             accountId={platformState.accountId}
             where={where}

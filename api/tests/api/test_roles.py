@@ -11,7 +11,7 @@ def test_roles_delete_404(client, employer_auth_token):
     body = {"role": {"role_description": "Employer"}}
     body["user_id"] = user.user_id
     response = client.delete(
-        "/v1/roles", headers={"Authorization": f"Bearer {employer_auth_token}"}, json=body,
+        "/v1/roles", headers={"Authorization": f"Bearer {employer_auth_token}"}, json=body
     )
 
     assert response.status_code == 404
@@ -21,7 +21,7 @@ def test_roles_delete_convert_to_claimant_success(
     client, employer_user, employer_auth_token, test_db_session
 ):
     employer = EmployerFactory.create()
-    link = UserLeaveAdministrator(user_id=employer_user.user_id, employer_id=employer.employer_id,)
+    link = UserLeaveAdministrator(user_id=employer_user.user_id, employer_id=employer.employer_id)
     test_db_session.add(link)
     test_db_session.commit()
     body = {"role": {"role_description": "Employer"}}
@@ -30,9 +30,9 @@ def test_roles_delete_convert_to_claimant_success(
     assert len(employer_user.roles) == 1
     assert len(employer_user.user_leave_administrators) == 1
     response = client.delete(
-        "v1/roles", headers={"Authorization": f"Bearer {employer_auth_token}"}, json=body,
+        "v1/roles", headers={"Authorization": f"Bearer {employer_auth_token}"}, json=body
     )
-    assert response.status_code == 204
+    assert response.status_code == 200
     test_db_session.refresh(employer_user)
 
     assert len(employer_user.roles) == 0
@@ -56,7 +56,7 @@ def test_roles_delete_convert_to_claimant_already_in_fineos(
     assert len(employer_user.roles) == 1
     assert len(employer_user.user_leave_administrators) == 1
     response = client.delete(
-        "v1/roles", headers={"Authorization": f"Bearer {employer_auth_token}"}, json=body,
+        "v1/roles", headers={"Authorization": f"Bearer {employer_auth_token}"}, json=body
     )
     test_db_session.refresh(employer_user)
     errors = response.get_json().get("errors")
@@ -74,7 +74,7 @@ def test_roles_delete_convert_to_claimant_unsupported(
     client, employer_user, employer_auth_token, test_db_session
 ):
     employer = EmployerFactory.create()
-    link = UserLeaveAdministrator(user_id=employer_user.user_id, employer_id=employer.employer_id,)
+    link = UserLeaveAdministrator(user_id=employer_user.user_id, employer_id=employer.employer_id)
     test_db_session.add(link)
     test_db_session.commit()
     body = {"role": {"role_description": "Fake"}}
@@ -83,7 +83,7 @@ def test_roles_delete_convert_to_claimant_unsupported(
     assert len(employer_user.roles) == 1
     assert len(employer_user.user_leave_administrators) == 1
     response = client.delete(
-        "v1/roles", headers={"Authorization": f"Bearer {employer_auth_token}"}, json=body,
+        "v1/roles", headers={"Authorization": f"Bearer {employer_auth_token}"}, json=body
     )
     json = response.get_json()
 
@@ -111,7 +111,7 @@ def test_roles_delete_convert_to_claimant_already_verified(
     assert len(employer_user.roles) == 1
     assert len(employer_user.user_leave_administrators) == 1
     response = client.delete(
-        "v1/roles", headers={"Authorization": f"Bearer {employer_auth_token}"}, json=body,
+        "v1/roles", headers={"Authorization": f"Bearer {employer_auth_token}"}, json=body
     )
     test_db_session.refresh(employer_user)
     errors = response.get_json().get("errors")
@@ -129,7 +129,7 @@ def test_roles_delete_convert_to_claimant_unauthorized(
     client, employer_user, auth_token, test_db_session
 ):
     employer = EmployerFactory.create()
-    link = UserLeaveAdministrator(user_id=employer_user.user_id, employer_id=employer.employer_id,)
+    link = UserLeaveAdministrator(user_id=employer_user.user_id, employer_id=employer.employer_id)
     test_db_session.add(link)
     test_db_session.commit()
     body = {"role": {"role_description": "Employer"}}
@@ -138,7 +138,7 @@ def test_roles_delete_convert_to_claimant_unauthorized(
     assert len(employer_user.roles) == 1
     assert len(employer_user.user_leave_administrators) == 1
     response = client.delete(
-        "v1/roles", headers={"Authorization": f"Bearer {auth_token}"}, json=body,
+        "v1/roles", headers={"Authorization": f"Bearer {auth_token}"}, json=body
     )
     assert response.status_code == 403
     test_db_session.refresh(employer_user)

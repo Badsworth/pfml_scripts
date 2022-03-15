@@ -19,14 +19,14 @@ class PopulateMmarsPaymentsStep(Step):
     def _populate_mmars_payments(self) -> None:
         logger.info("1099 Documents - Populate 1099 Mmars Payments Step")
 
-        # Get all MMARS payment data for the 1099 batch
-        payment_results = pfml_1099_util.get_mmars_payments(self.db_session)
-
         # Get the current batch
         batch = pfml_1099_util.get_current_1099_batch(self.db_session)
         if batch is None:
             logger.error("No current batch exists. This should never happen.")
             raise Exception("Batch cannot be empty at this point.")
+
+        # Get all MMARS payment data for the 1099 batch
+        payment_results = pfml_1099_util.get_mmars_payments(self.db_session, batch)
 
         try:
             # Create 1099 payment record for each payment

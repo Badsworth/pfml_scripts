@@ -1,6 +1,6 @@
 import {
   ManagedRequirement,
-  getClosestReviewableFollowUpDate,
+  getSoonestReviewableFollowUpDate,
 } from "../models/ManagedRequirement";
 import { AbsenceCaseStatus } from "../models/Claim";
 import React from "react";
@@ -20,7 +20,7 @@ const AbsenceCaseStatusTag = ({
   const { t } = useTranslation();
   const mappedStatus = findKeyByValue(AbsenceCaseStatus, status);
   const closestReviewableFollowUpDate =
-    getClosestReviewableFollowUpDate(managedRequirements);
+    getSoonestReviewableFollowUpDate(managedRequirements);
 
   const getTagState = (status?: string | null) => {
     const successState = ["Approved"];
@@ -32,7 +32,7 @@ const AbsenceCaseStatusTag = ({
       if (errorState.includes(status)) return "error";
       if (inactiveState.includes(status)) return "inactive";
     }
-    return "pending";
+    return "warning";
   };
 
   if (closestReviewableFollowUpDate) {

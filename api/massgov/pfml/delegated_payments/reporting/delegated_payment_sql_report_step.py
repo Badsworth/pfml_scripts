@@ -2,7 +2,7 @@ import enum
 import os
 import pathlib
 import tempfile
-from typing import Iterable, List, Optional
+from typing import Iterable, List, Optional, Type
 
 import massgov.pfml.db as db
 import massgov.pfml.delegated_payments.delegated_config as payments_config
@@ -10,7 +10,12 @@ import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.execute_sql import execute_sql_statement_file_path
-from massgov.pfml.db.models.employees import ReferenceFile, ReferenceFileType
+from massgov.pfml.db.models.employees import (
+    ImportLog,
+    ImportLogReportQueue,
+    ReferenceFile,
+    ReferenceFileType,
+)
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports import (
     Report,
     ReportName,
@@ -24,6 +29,7 @@ logger = logging.get_logger(__name__)
 
 class ReportStep(Step):
     report_names: Iterable[ReportName]
+    sources_to_clear_from_report_queue: List[Type[Step]]
 
     class Metrics(str, enum.Enum):
         PROCESSED_REPORT_COUNT = "processed_report_count"
@@ -35,9 +41,13 @@ class ReportStep(Step):
         db_session: db.Session,
         log_entry_db_session: db.Session,
         report_names: Iterable[ReportName],
+        sources_to_clear_from_report_queue: Optional[List[Type[Step]]] = None,
     ) -> None:
         super().__init__(db_session=db_session, log_entry_db_session=log_entry_db_session)
         self.report_names = report_names
+        self.sources_to_clear_from_report_queue = (
+            sources_to_clear_from_report_queue if sources_to_clear_from_report_queue else []
+        )
 
     def run_step(self) -> None:
         report_names_str = ", ".join([r.value for r in self.report_names])
@@ -62,7 +72,7 @@ class ReportStep(Step):
 
             try:
                 self.generate_report(
-                    outbound_path, archive_path, report.report_name.value, report.sql_command,
+                    outbound_path, archive_path, report.report_name.value, report.sql_command
                 )
                 generated_reports.append(report.report_name.value)
                 self.increment(self.Metrics.REPORT_GENERATED_COUNT)
@@ -78,8 +88,10 @@ class ReportStep(Step):
                 f"Expected reports do not match generated reports - expected: {expected_reports_count}, generated: {len(generated_reports)}"
             )
 
+        self.clear_sources_from_report_queue()
+
     def generate_report(
-        self, outbound_path: str, archive_path: str, report_name: str, sql_command: str,
+        self, outbound_path: str, archive_path: str, report_name: str, sql_command: str
     ) -> None:
         logger.info("Generating report: %s", report_name)
 
@@ -121,3 +133,30 @@ class ReportStep(Step):
             outbound_file_path,
             archive_file_path,
         )
+
+    def clear_sources_from_report_queue(self):
+        if len(self.sources_to_clear_from_report_queue) == 0:
+            return
+
+        sources: List[str] = list(
+            set([source.__name__ for source in self.sources_to_clear_from_report_queue])
+        )
+
+        for source in sources:
+            import_log_ids = (
+                self.log_entry_db_session.query(ImportLog.import_log_id)
+                .join(ImportLogReportQueue)
+                .filter(ImportLog.source == source)
+                .all()
+            )
+
+            deleted_count = (
+                self.log_entry_db_session.query(ImportLogReportQueue)
+                .filter(ImportLogReportQueue.import_log_id.in_(import_log_ids))
+                .delete(synchronize_session=False)
+            )
+
+            logger.info(
+                "Cleared report queue import logs for provided sources",
+                extra={"source_name": source, "deleted_count": deleted_count},
+            )

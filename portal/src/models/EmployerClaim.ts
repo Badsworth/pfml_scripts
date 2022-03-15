@@ -3,7 +3,7 @@ import BaseBenefitsApplication, {
 } from "./BaseBenefitsApplication";
 import {
   ManagedRequirement,
-  getClosestReviewableFollowUpDate,
+  getSoonestReviewableManagedRequirement,
 } from "../models/ManagedRequirement";
 import { AbsencePeriod } from "./AbsencePeriod";
 import Address from "./Address";
@@ -43,6 +43,11 @@ class EmployerClaim extends BaseBenefitsApplication {
   // Todo(EMPLOYER-1453): remove V1 eform functionality
   uses_second_eform_version: boolean;
 
+  computed_start_dates: {
+    other_reason: string | null;
+    same_reason: string | null;
+  };
+
   leave_details: {
     continuous_leave_periods: BaseLeavePeriod[];
     employer_notification_date: string | null;
@@ -62,10 +67,7 @@ class EmployerClaim extends BaseBenefitsApplication {
   }
 
   get is_reviewable() {
-    const followUpDate = getClosestReviewableFollowUpDate(
-      this.managed_requirements
-    );
-    return followUpDate !== undefined;
+    return !!getSoonestReviewableManagedRequirement(this.managed_requirements);
   }
 
   get lastReviewedAt(): string | undefined {
@@ -88,6 +90,32 @@ class EmployerClaim extends BaseBenefitsApplication {
     }
 
     return false;
+  }
+
+  /**
+   * Returns earliest start date across all absence periods
+   */
+  get leaveStartDate() {
+    const startDates: string[] = this.absence_periods
+      .map((period) => period.absence_period_start_date)
+      .sort();
+
+    if (!startDates.length) return null;
+
+    return startDates[0];
+  }
+
+  /**
+   * Returns latest end date across all absence periods
+   */
+  get leaveEndDate() {
+    const endDates: string[] = this.absence_periods
+      .map((period) => period.absence_period_end_date)
+      .sort();
+
+    if (!endDates.length) return null;
+
+    return endDates[endDates.length - 1];
   }
 }
 

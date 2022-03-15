@@ -1,12 +1,15 @@
+#
+# This file contains the **trigger** for the E2E suite, not the tests themselves.
+#
+# It exists to provide a way to trigger the E2E workflow using workflow_dispatch rather than workflow_call.
+# We provide this for three reasons:
+#    1. Allowing manual triggers through the Github UI.
+#    2. Allowing external dispatch through the Github API.
+#    3. Legacy implementations in the deploy workflows that still use workflow_dispatch.
+#
+# @todo: Rename this file to e2e-dispatch.yml once we've cleared up the legacy implementations.
+
 name: End-to-End Test Suite
-#
-# This workflow runs Cypress tests in a parallel fashion.
-#
-# Tests are split into three categories:
-#
-# * Stable - tests that must pass before release.
-# * Unstable - tests that are advisory (for upcoming features) and should not block release.
-# * Ignored - tests that are not run at all in CI.
 
 on:
   # Manual runs.
@@ -18,15 +21,15 @@ on:
         default: "test"
         type: choice
         options:
-        - test
-        - stage
-        - performance
-        - cps-preview
-        - training
-        - uat
-        - breakfix
-        - long
-        - trn2
+          - test
+          - stage
+          - performance
+          - cps-preview
+          - training
+          - uat
+          - breakfix
+          - long
+          - trn2
         # Note: Infra-test is intentionally not E2E tested, as it shares a Fineos instance.
         # - infra-test
       cypress_tags:
@@ -35,227 +38,93 @@ on:
         default: "Manual - Other"
         type: choice
         options:
-        - Manual - PR Re-run
-        - Manual - PR Env Check
-        - Manual - Post Morning Run Check
-        - Manual - Post API Deployment Check
-        - Manual - Post Portal Deployment Check
-        - Manual - Post Fineos Deployment Check
-        - Manual - Environment Sanity Check
-        - Manual - New Dataset Check
-        - Manual - Web Portal Flow Content Check
-        - Manual - Post Database Refresh Check
-        - Manual - Other
-        - Manual - PR Re-run (all envs)
-        - Manual - PR Env Check (all envs)
-        - Manual - Post Morning Run Check (all envs)
-        - Manual - Environment Sanity Check (all envs)
-        - Manual - New Dataset Check (all envs)
-        - Manual - Other (all envs)
-        - Deploy-Fineos
-        - Deploy,Deploy-API
-        - Deploy,Deploy-Portal
-        - Deploy,Deploy-Infra
-        - Morning Run
-        - PR
+          - Manual - PR Re-run
+          - Manual - PR Env Check
+          - Manual - Post Morning Run Check
+          - Manual - Post API Deployment Check
+          - Manual - Post Portal Deployment Check
+          - Manual - Post Fineos Deployment Check
+          - Manual - Fineos Trigger
+          - Manual - Environment Sanity Check
+          - Manual - New Dataset Check
+          - Manual - Web Portal Flow Content Check
+          - Manual - Post Database Refresh Check
+          - Manual - Targeted Specs Check
+          - Manual - Other
+          - Manual - PR Re-run (all envs)
+          - Manual - PR Env Check (all envs)
+          - Manual - Post Morning Run Check (all envs)
+          - Manual - Environment Sanity Check (all envs)
+          - Manual - New Dataset Check (all envs)
+          - Manual - Other (all envs)
+          - Deploy,Deploy-Fineos
+          - Deploy,Deploy-API
+          - Deploy,Deploy-Portal
+          - Deploy,Deploy-Infra
+          - Morning Run
+          - PR
       title_override:
         description: "Title Override (replaces commit message in Cypress Dashboard)"
         required: false
+      run_stable:
+        description: |
+          🛑 REMEMBER TO UNCHECK IF YOU WANT TO RUN A SINGLE/GROUP OF TESTS -     
+          Run tests in stable group. This is checked by default 
+          and runs the core suite of tests that are needed to pass
+          prior to deployments.  
+        required: false
+        default: true
+        type: boolean
       run_unstable:
         description: "Run tests in unstable group"
         required: false
         default: false
         type: boolean
-      run_nightly:
-        description: "Run tests in nightly group"
+      run_morning:
+        description: "Run tests in morning group"
         required: false
         default: false
         type: boolean
-
-defaults:
-  run:
-    working-directory: e2e
-
-env:
-  E2E_ENVIRONMENT: ${{ github.event.inputs.target_environment }}
-  COMMIT_INFO_MESSAGE: |
-    ${{ github.event.inputs.title_override || format('Manual Run: {0}', github.event.inputs.target_environment) }}
-  # Setup any secret overrides that are necessary here.
-  # Most other environment variables will come from /e2e/config.json,
-  # as determined by the E2E_ENVIRONMENT variable.
-  E2E_FINEOS_PASSWORD: ${{ secrets.E2E_FINEOS_PASSWORD }}
-  E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
-  E2E_EMPLOYER_PORTAL_PASSWORD: ${{ secrets.E2E_EMPLOYER_PORTAL_PASSWORD }}
-  E2E_TESTMAIL_APIKEY: ${{ secrets.E2E_TESTMAIL_APIKEY }}
-  E2E_SSO_PASSWORD: ${{ secrets.E2E_SSO_PASSWORD }}
-  E2E_SSO_USERNAME: ${{ secrets.E2E_SSO_USERNAME }}
-  E2E_TWILIO_ACCOUNTSID: ${{ secrets.E2E_TWILIO_ACCOUNTSID }}
-  E2E_TWILIO_AUTHTOKEN: ${{ secrets.E2E_TWILIO_AUTHTOKEN }}
-  CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  # Caching/build performance - Move Cypress, Playwright binary storage to .npm to leverage caching.
-  CYPRESS_CACHE_FOLDER: /home/runner/.npm/.cypress-cache
-  PLAYWRIGHT_BROWSERS_PATH: /home/runner/.npm/.playwright-cache
-  PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 1 # We never actually need puppeteer chromium installed
-  TEST_RUN_ID: ${{ github.repository }}-${{ github.run_id }}-${{ github.run_attempt}}
-
-# Prevent this workflow from running more than 1x concurrently in any environment.
-# This prevents us from overloading the environment with requests, which causes false failures.
-# Cypress & Flood share the same concurrency key to prevent E2E and Flood running concurrently.
-concurrency: E2E-${{ github.event.inputs.target_environment }}
+      run_targeted:
+        description: |
+          ⬇️ Run a specific test, comma seperated (no space)
+          list of tests, or blob: Ex: cypress/specs/stable/feature/api_**            
+        required: false
+        default: false
+        type: boolean
+      targeted_pattern: 
+        description: "Input Pattern"   
+        required: false
+        default: "cypress/specs/<group>/<type>/**"
+        type: "string"
 
 jobs:
-  # Health check job. Ensures Fineos is online before proceeding with testing. This saves resources
-  # when we know we're going to get a high failure rate.
-  health-check:
-    name: Check Healthy Services ** ${{ github.event.inputs.target_environment }} **
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v2
-      - name: Check Fineos Online
-        run: |
-          fineos_url=$(cat config.json | jq -re '.["${{ env.E2E_ENVIRONMENT }}"].FINEOS_BASEURL')
-          status_code=$(curl -s -o /dev/null -w "%{http_code}" "$fineos_url")
-          echo "Received ${status_code} from ${fineos_url}"
-          test "$status_code" -lt 500
-  cypress:
-    name: Run Cypress Tests
-    needs: [health-check]
-    runs-on: ubuntu-latest
-    # At the job level, we extend timeout from 6 minutes to 30. We'll set tighter timeouts for steps below to prevent
-    # hung tests from spinning endlessly.
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        containers: [1, 2, 3, 4, 5, 6, 7]
-    steps:
-      - uses: actions/checkout@v2
-      - name: Setup Node
-        uses: actions/setup-node@v2
-        with: { node-version: "14.x" }
-      - name: "Install Node Modules"
-        uses: bahmutov/npm-install@v1
-        with:
-          working-directory: e2e
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-          role-to-assume: ci-run-deploys
-          role-duration-seconds: 3600
-      - name: Pull the newrelic API key from parameter store for reporting
-        uses: "marvinpinto/action-inject-ssm-secrets@latest"
-        with:
-          ssm_parameter: "/service/pfml-api/common/newrelic-license-key"
-          env_variable_name: "E2E_NEWRELIC_INGEST_KEY"
-
-      # Run Cypress tests.
-      - name: Cypress Tests (Commit Stable)
-        uses: cypress-io/github-action@v2
-        timeout-minutes: 15
-        with:
-          spec: "cypress/specs/stable/**"
-          record: true
-          parallel: true
-          install: false
-          working-directory: e2e
-          ci-build-id: ${{ env.TEST_RUN_ID }}
-          group: Commit Stable
-          tag: "${{ github.event.inputs.cypress_tags }},Env-${{ github.event.inputs.target_environment }}"
-          config: reporter=cypress/reporters/new-relic.js
-
-      # Run Cypress tests.
-      - name: Cypress Tests (Commit Unstable)
-        uses: cypress-io/github-action@v2
-        with:
-          spec: "cypress/specs/unstable/**"
-          record: true
-          parallel: true
-          working-directory: e2e
-          ci-build-id: ${{ env.TEST_RUN_ID }}
-          group: Unstable
-          install: false
-          tag: "${{ github.event.inputs.cypress_tags }},Env-${{ github.event.inputs.target_environment }}"
-          config: trashAssetsBeforeRuns=false,reporter=cypress/reporters/new-relic.js
-        # Always run this step if requested, even if stable tests fail.
-        if: github.event.inputs.run_unstable == 'true' && always()
-        # Do not allow this step to fail the job. It is informational, not mandatory.
-        continue-on-error: true
-        # Setting a step timeout here prevents a hung unstable test from timing out at the job level - it times out at
-        # the step level instead, allowing continue-on-error to do its job.
-        timeout-minutes: 15
-
-#      # Run Nightly Cypress tests (commented out until we have some).
-#      - name: Cypress Tests (Nightly)
-#        uses: cypress-io/github-action@v2
-#        timeout-minutes: 15
-#        with:
-#          spec: "cypress/specs/nightly/**"
-#          record: true
-#          parallel: true
-#          working-directory: e2e
-#          group: Nightly
-#          ci-build-id: ${{ env.TEST_RUN_ID }}
-#          install: false
-#          tag: "${{ github.event.inputs.cypress_tags }},Env-${{ github.event.inputs.target_environment }}"
-#          config: trashAssetsBeforeRuns=false,reporter=cypress/reporters/new-relic.js
-#        if: github.event.inputs.run_nightly == 'true' && always()
-
-      - name: "Archive screenshots"
-        uses: actions/upload-artifact@v2
-        if: always()
-        with:
-          # See https://github.com/actions/upload-artifact#uploading-to-the-same-artifact for an explanation of
-          # why we use a different name for each instance.
-          name: cypress-screenshots ${{ matrix.containers }}
-          path: e2e/cypress/screenshots
-          if-no-files-found: "ignore"
-
-  # Run Integration Tests.
-  run_integration_test:
-    name: Integration Tests
-    needs: [health-check]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Setup Node
-        uses: actions/setup-node@v2
-        with: { node-version: "14.x" }
-      - name: "Install Node Modules"
-        uses: bahmutov/npm-install@v1
-        with:
-          working-directory: e2e
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-          role-to-assume: ci-run-deploys
-          role-duration-seconds: 3600
-
-      # Pull the Server to Server API Oauth creds from parameter store
-      - name: Pull Client_ID from SSM
-        uses: "marvinpinto/action-inject-ssm-secrets@latest"
-        with:
-          ssm_parameter: "/service/pfml-api/${{ github.event.inputs.target_environment }}/cognito_internal_fineos_role_app_client_id"
-          env_variable_name: "E2E_API_FINEOS_CLIENT_ID"
-      - name: Pull Client_SECRET from SSM
-        uses: "marvinpinto/action-inject-ssm-secrets@latest"
-        with:
-          ssm_parameter: "/service/pfml-api/${{ github.event.inputs.target_environment }}/cognito_internal_fineos_role_app_client_secret"
-          env_variable_name: "E2E_API_FINEOS_CLIENT_SECRET"
-      - name: Pull the newrelic API key from parameter store for reporting
-        uses: "marvinpinto/action-inject-ssm-secrets@latest"
-        with:
-          ssm_parameter: "/service/pfml-api/common/newrelic-license-key"
-          env_variable_name: "E2E_NEWRELIC_INGEST_KEY"
-
-      - name: Integration Tests
-        run: npm run test:integration:ci -- --group=stable${{ github.event.inputs.run_unstable == 'true' && ' --group=unstable' || '' }}${{ github.event.inputs.run_nightly == 'true' && ' --group=nightly' || '' }}
+  trigger:
+    name: E2E Tests
+    # This workflow triggers tests from the same branch/commit it was triggered on.
+    # When we reuse this snippet from deployments, we will likely want to use the main branch.
+    uses: ./.github/workflows/e2e-tests.yml
+    with:
+      target_environment: ${{ github.event.inputs.target_environment }}
+      cypress_tags: ${{ github.event.inputs.cypress_tags }}
+      run_stable: ${{ github.event.inputs.run_stable == 'true' }}
+      run_unstable: ${{ github.event.inputs.run_unstable == 'true' }}
+      run_morning: ${{ github.event.inputs.run_morning == 'true' }}
+      title_override: ${{ github.event.inputs.title_override }}
+      run_targeted: ${{ github.event.inputs.run_targeted == 'true' }}
+      targeted_pattern: ${{ github.event.inputs.targeted_pattern }}
+    secrets:
+      E2E_FINEOS_PASSWORD: ${{ secrets.E2E_FINEOS_PASSWORD }}
+      E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
+      E2E_EMPLOYER_PORTAL_PASSWORD: ${{ secrets.E2E_EMPLOYER_PORTAL_PASSWORD }}
+      E2E_TESTMAIL_APIKEY: ${{ secrets.E2E_TESTMAIL_APIKEY }}
+      E2E_SSO_PASSWORD: ${{ secrets.E2E_SSO_PASSWORD }}
+      E2E_SSO_USERNAME: ${{ secrets.E2E_SSO_USERNAME }}
+      E2E_TWILIO_ACCOUNTSID: ${{ secrets.E2E_TWILIO_ACCOUNTSID }}
+      E2E_TWILIO_AUTHTOKEN: ${{ secrets.E2E_TWILIO_AUTHTOKEN }}
+      CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+      CYPRESS_RECORD_KEY_UNSTABLE: ${{ secrets.CYPRESS_RECORD_KEY_UNSTABLE }}
+      CYPRESS_RECORD_KEY_MORNING: ${{ secrets.CYPRESS_RECORD_KEY_MORNING }}
+      CYPRESS_RECORD_KEY_TARGETED: ${{ secrets.CYPRESS_RECORD_KEY_TARGETED }}
+      PFML_AWS_ACCESS_KEY_ID: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+      PFML_AWS_SECRET_ACCESS_KEY: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}

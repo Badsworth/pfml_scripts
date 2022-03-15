@@ -3,6 +3,7 @@ import withEmployerClaim, {
   WithEmployerClaimProps,
 } from "../../../hoc/withEmployerClaim";
 import Alert from "../../../components/core/Alert";
+import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/core/Button";
 import ConditionalContent from "../../../components/ConditionalContent";
@@ -12,15 +13,45 @@ import StatusRow from "../../../components/StatusRow";
 import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import formatDateRange from "../../../utils/formatDateRange";
-import { getClosestReviewableFollowUpDate } from "../../../models/ManagedRequirement";
+import { getSoonestReviewableFollowUpDate } from "../../../models/ManagedRequirement";
+import { isFeatureEnabled } from "../../../services/featureFlags";
 import { useTranslation } from "../../../locales/i18n";
 
-export const NewApplication = (props: WithEmployerClaimProps) => {
+interface PageProps extends WithEmployerClaimProps {
+  appLogic: AppLogic;
+  query: {
+    absence_id?: string;
+  };
+}
+
+export const NewApplication = (props: PageProps) => {
   const { t } = useTranslation();
   const {
     appLogic: { portalFlow },
     claim,
   } = props;
+  const [formState, setFormState] = useState({
+    hasReviewerVerified: "",
+  });
+
+  /**
+   * This page is deprecated, but was previously linked to in email notifications to leave admins,
+   * so we want to preserve the URL and redirect to the new destination.
+   */
+  if (isFeatureEnabled("employerShowMultiLeaveDashboard")) {
+    props.appLogic.portalFlow.goToPageFor(
+      "REDIRECT",
+      {},
+      { absence_id: props.query.absence_id },
+      { redirect: true }
+    );
+
+    return null;
+  }
+
+  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  // TODO (PORTAL-1560): Remove everything below here once we're skipping this page in production flows
+  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   // explicitly check for false as opposed to falsy values.
   // temporarily allows the redirect behavior to work even
@@ -54,10 +85,6 @@ export const NewApplication = (props: WithEmployerClaimProps) => {
     });
   };
 
-  const [formState, setFormState] = useState({
-    hasReviewerVerified: "",
-  });
-
   const updateFields = (fields: { [fieldName: string]: unknown }) => {
     setFormState({ ...formState, ...fields });
   };
@@ -74,7 +101,7 @@ export const NewApplication = (props: WithEmployerClaimProps) => {
         <Trans
           i18nKey="pages.employersClaimsNewApplication.instructionsFollowUpDate"
           values={{
-            date: getClosestReviewableFollowUpDate(claim.managed_requirements),
+            date: getSoonestReviewableFollowUpDate(claim.managed_requirements),
           }}
         />
       </Alert>
@@ -168,4 +195,5 @@ export const NewApplication = (props: WithEmployerClaimProps) => {
   );
 };
 
+// TODO (PORTAL-1560): Stop wrapping this page in an HOC and just let it redirect
 export default withEmployerClaim(NewApplication);

@@ -1,4 +1,3 @@
-import { compact } from "lodash";
 import dayjs from "dayjs";
 import formatDate from "../utils/formatDate";
 
@@ -16,34 +15,56 @@ export interface ManagedRequirement {
 }
 
 /**
- * @returns Follow-up date of the "soonest due" managed requirement.
- * Formatted for display to the user if `formattedDate` is `true`.
+ * @returns Follow-up date of the "latest due" managed requirement, regardless of status.
  */
-export function getClosestReviewableFollowUpDate(
-  managedRequirements: ManagedRequirement[],
-  formattedDate = true
-): string | undefined {
+export function getLatestFollowUpDate(
+  managedRequirements: ManagedRequirement[]
+): string | null {
+  const followUpDates = managedRequirements
+    .map((managedRequirement) => managedRequirement.follow_up_date)
+    .sort()
+    .reverse();
+
+  if (followUpDates.length === 0) return null;
+  return followUpDates[0];
+}
+
+/**
+ * @returns The "soonest due" Open managed requirement.
+ */
+export function getSoonestReviewableManagedRequirement(
+  managedRequirements: ManagedRequirement[]
+): ManagedRequirement | null {
   const today = dayjs().format("YYYY-MM-DD");
-  const followUpDates = compact(
-    managedRequirements.map((managedRequirement) => {
-      if (
+  const reviewableManagedRequirements = managedRequirements
+    .filter(
+      (managedRequirement) =>
         managedRequirement.status === "Open" &&
         managedRequirement.follow_up_date &&
         managedRequirement.follow_up_date >= today
-      ) {
-        return managedRequirement.follow_up_date;
-      }
-      return undefined;
-    })
-  );
+    )
+    .sort((a, b) => dayjs(a.follow_up_date).diff(dayjs(b.follow_up_date)));
 
-  if (followUpDates.length === 0) return;
-  const followUpDate = followUpDates.sort()[0];
+  if (reviewableManagedRequirements.length === 0) return null;
+  return reviewableManagedRequirements[0];
+}
+
+/**
+ * @returns Follow-up date of the "soonest due" managed requirement.
+ * Formatted for display to the user if `formattedDate` is `true`.
+ */
+export function getSoonestReviewableFollowUpDate(
+  managedRequirements: ManagedRequirement[],
+  formattedDate = true
+): string | null {
+  const closestReviewableManagedRequirement =
+    getSoonestReviewableManagedRequirement(managedRequirements);
+
+  if (!closestReviewableManagedRequirement) return null;
+  const followUpDate = closestReviewableManagedRequirement.follow_up_date;
 
   if (formattedDate) {
     return formatDate(followUpDate).short();
   }
   return followUpDate;
 }
-
-export default getClosestReviewableFollowUpDate;

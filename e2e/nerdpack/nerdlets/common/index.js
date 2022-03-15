@@ -1,5 +1,4 @@
 export const COMPONENTS = ["portal", "api", "fineos"];
-export const COMPONENTS_WIDTH = { portal: "20%", api: "20%", fineos: "30%" };
 export const ENVS = [
   "prod",
   "breakfix",
@@ -11,7 +10,13 @@ export const ENVS = [
   "long",
   "cps-preview",
   "test",
+  "infra-test",
 ];
+export const GROUPS = ["Stable", "Unstable", "Morning", "Integration"];
+export const ENV_NOT_CONFIGURED = ["prod", "infra-test"];
+export const ENV_OFFLINE = {
+  trn2: "Env expected offline",
+};
 
 export const extractGroup = (item, name) => {
   const group = item.metadata.groups.find((g) => g.name === name);
@@ -59,4 +64,17 @@ export function setDefault(val, def) {
     return def;
   }
   return val;
+}
+
+export function msToTime(duration) {
+  var milliseconds = Math.floor((duration % 1000) / 100),
+    seconds = Math.floor((duration / 1000) % 60),
+    minutes = Math.floor((duration / (1000 * 60)) % 60),
+    hours = Math.floor((duration / (1000 * 60 * 60)) % 24);
+
+  hours = hours < 10 ? "0" + hours : hours;
+  minutes = minutes < 10 ? "0" + minutes : minutes;
+  seconds = seconds < 10 ? "0" + seconds : seconds;
+
+  return hours + ":" + minutes + ":" + seconds + "." + milliseconds;
 }

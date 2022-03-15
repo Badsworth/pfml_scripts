@@ -1,0 +1,325 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ImportClaim conditionally renders MFA alert based on MFA preference and phone verification (Opt Out, ***-***-1234, true) 1`] = `
+<div
+  class="usa-alert__body"
+>
+  <h2
+    class="usa-alert__heading font-heading-md text-bold"
+    id="alert-heading18"
+  >
+    We need to verify your login.
+  </h2>
+  <div
+    class="usa-alert__text"
+  >
+    In order to add an existing application, you need to provide a phone number we can use to 
+    <a
+      href="/two-factor/sms/setup"
+    >
+      verify your login
+    </a>
+    . This number must match the one you gave the Contact Center when you applied.
+  </div>
+</div>
+`;
+
+exports[`ImportClaim conditionally renders MFA alert based on MFA preference and phone verification (SMS, ***-***-1234, false) 1`] = `
+<div
+  class="usa-alert__body"
+>
+  <h2
+    class="usa-alert__heading font-heading-md text-bold"
+    id="alert-heading12"
+  >
+    We need to verify your login.
+  </h2>
+  <div
+    class="usa-alert__text"
+  >
+    In order to add an existing application, you need to provide a phone number we can use to 
+    <a
+      href="/two-factor/sms/confirm"
+    >
+      verify your login
+    </a>
+    . This number must match the one you gave the Contact Center when you applied.
+  </div>
+</div>
+`;
+
+exports[`ImportClaim conditionally renders MFA alert based on MFA preference and phone verification (null, null, false) 1`] = `
+<div
+  class="usa-alert__body"
+>
+  <h2
+    class="usa-alert__heading font-heading-md text-bold"
+    id="alert-heading24"
+  >
+    We need to verify your login.
+  </h2>
+  <div
+    class="usa-alert__text"
+  >
+    In order to add an existing application, you need to provide a phone number we can use to 
+    <a
+      href="/two-factor/sms/setup"
+    >
+      verify your login
+    </a>
+    . This number must match the one you gave the Contact Center when you applied.
+  </div>
+</div>
+`;
+
+exports[`ImportClaim renders read-only phone number and link regardless of MFA preference (Opt Out, ***-***-1234, true) 1`] = `
+<div
+  class="usa-form-group"
+>
+  <label
+    class="usa-label text-bold font-heading-xs measure-5"
+  >
+    Cell phone number
+  </label>
+  <span
+    class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
+  >
+    This number must match the one you gave the Contact Center when you applied.
+  </span>
+  <div
+    class="margin-top-1"
+  >
+    ***-***-1234
+    <a
+      class="margin-left-2 display-inline-block"
+      href="/two-factor/sms/setup"
+    >
+      Verify your login
+    </a>
+  </div>
+</div>
+`;
+
+exports[`ImportClaim renders read-only phone number and link regardless of MFA preference (SMS, ***-***-1234, false) 1`] = `
+<div
+  class="usa-form-group"
+>
+  <label
+    class="usa-label text-bold font-heading-xs measure-5"
+  >
+    Cell phone number
+  </label>
+  <span
+    class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
+  >
+    This number must match the one you gave the Contact Center when you applied.
+  </span>
+  <div
+    class="margin-top-1"
+  >
+    ***-***-1234
+    <a
+      class="margin-left-2 display-inline-block"
+      href="/two-factor/sms/confirm"
+    >
+      Verify your login
+    </a>
+  </div>
+</div>
+`;
+
+exports[`ImportClaim renders read-only phone number and link regardless of MFA preference (SMS, ***-***-1234, true) 1`] = `
+<div
+  class="usa-form-group"
+>
+  <label
+    class="usa-label text-bold font-heading-xs measure-5"
+  >
+    Cell phone number
+  </label>
+  <span
+    class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
+  >
+    This number must match the one you gave the Contact Center when you applied.
+  </span>
+  <div
+    class="margin-top-1"
+  >
+    ***-***-1234
+    <a
+      class="margin-left-2 display-inline-block"
+      href="/user/settings"
+    >
+      Change your phone number
+    </a>
+  </div>
+</div>
+`;
+
+exports[`ImportClaim renders read-only phone number and link regardless of MFA preference (null, null, false) 1`] = `
+<div
+  class="usa-form-group"
+>
+  <label
+    class="usa-label text-bold font-heading-xs measure-5"
+  >
+    Cell phone number
+  </label>
+  <span
+    class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
+  >
+    This number must match the one you gave the Contact Center when you applied.
+  </span>
+  <div
+    class="margin-top-1"
+  >
+    (---) --- - ----
+    <a
+      class="margin-left-2 display-inline-block"
+      href="/two-factor/sms/setup"
+    >
+      Verify your login
+    </a>
+  </div>
+</div>
+`;
+
+exports[`ImportClaim renders the page 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+      tabindex="-1"
+    >
+      Add an existing application
+    </h1>
+    <p
+      class="usa-intro"
+    >
+      Some applications started on the phone can be added to this website. Once added, you can upload documents and see your application’s status and payments online.
+    </p>
+    <p
+      class="usa-intro"
+    >
+      We need some information to identify your application.
+    </p>
+    <div
+      aria-labelledby="alert-heading1"
+      class="usa-alert usa-alert--warning"
+      role="region"
+      tabindex="-1"
+    >
+      <div
+        class="usa-alert__body"
+      >
+        <h2
+          class="usa-alert__heading font-heading-md text-bold"
+          id="alert-heading1"
+        >
+          We need to verify your login.
+        </h2>
+        <div
+          class="usa-alert__text"
+        >
+          In order to add an existing application, you need to provide a phone number we can use to 
+          <a
+            href="/two-factor/sms/setup"
+          >
+            verify your login
+          </a>
+          . This number must match the one you gave the Contact Center when you applied.
+        </div>
+      </div>
+    </div>
+    <div
+      class="usa-form-group"
+    >
+      <label
+        class="usa-label text-bold font-heading-xs measure-5"
+      >
+        Cell phone number
+      </label>
+      <span
+        class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
+      >
+        This number must match the one you gave the Contact Center when you applied.
+      </span>
+      <div
+        class="margin-top-1"
+      >
+        (---) --- - ----
+        <a
+          class="margin-left-2 display-inline-block"
+          href="/two-factor/sms/setup"
+        >
+          Verify your login
+        </a>
+      </div>
+    </div>
+    <div
+      class="usa-form-group"
+    >
+      <label
+        class="usa-label text-bold font-heading-xs measure-5"
+        for="InputText2"
+        id="InputText2_label"
+      >
+        Social Security Number
+      </label>
+      <span
+        class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
+        id="InputText2_hint"
+      >
+        Don’t have a Social Security Number? Use your Individual Taxpayer Identification Number (ITIN).
+      </span>
+      <div
+        class=""
+      >
+        <input
+          aria-labelledby="InputText2_label InputText2_hint InputText2_error"
+          class="usa-input usa-input--medium"
+          id="InputText2"
+          inputmode="numeric"
+          name="tax_identifier"
+          type="text"
+          value=""
+        />
+      </div>
+    </div>
+    <div
+      class="usa-form-group"
+    >
+      <label
+        class="usa-label text-bold font-heading-xs measure-5"
+        for="InputText3"
+        id="InputText3_label"
+      >
+        Application ID
+      </label>
+      <span
+        class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
+        id="InputText3_hint"
+      >
+        Enter the application ID given to you when you applied by phone. It contains both numbers and letters and looks like NTN-123456-ABS-01.
+      </span>
+      <input
+        aria-labelledby="InputText3_label InputText3_hint InputText3_error"
+        class="usa-input usa-input--medium"
+        id="InputText3"
+        name="absence_case_id"
+        type="text"
+        value=""
+      />
+    </div>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Add application
+    </button>
+  </form>
+</div>
+`;

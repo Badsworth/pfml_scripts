@@ -13,7 +13,7 @@ def get_features_cache() -> FeaturesCache:
         features_file_path = getenv("FEATURES_FILE_PATH", "")
 
         features_cache = FeaturesCache(
-            file_path=features_file_path, ttl=60 * 15,  # hardcoded to 15 minutes
+            file_path=features_file_path, ttl=60 * 15  # hardcoded to 15 minutes
         )
 
     return features_cache

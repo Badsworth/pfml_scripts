@@ -9,6 +9,7 @@ from massgov.pfml.delegated_payments.address_validation import AddressValidation
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_report import (
     PaymentAuditReportStep,
 )
+from massgov.pfml.delegated_payments.delegated_fineos_1099_extract import Data1099ExtractStep
 from massgov.pfml.delegated_payments.delegated_fineos_claimant_extract import ClaimantExtractStep
 from massgov.pfml.delegated_payments.delegated_fineos_payment_extract import PaymentExtractStep
 from massgov.pfml.delegated_payments.delegated_fineos_pei_writeback import FineosPeiWritebackStep
@@ -44,6 +45,7 @@ CONSUME_FINEOS_PAYMENT = "consume-fineos-payment"
 CLAIMANT_EXTRACT = "claimant-extract"
 PAYMENT_EXTRACT = "payment-extract"
 CONSUME_FINEOS_1099_REQUEST_EXTRACT = "consume-fineos-1099-request"
+DATA_1099_EXTRACT = "data_1099_extract"
 VALIDATE_ADDRESSES = "validate-addresses"
 VALIDATE_MAX_WEEKLY_BENEFIT_AMOUNT = "validate-max-weekly-benefit-amount"
 PAYMENT_POST_PROCESSING = "payment-post-processing"
@@ -61,6 +63,7 @@ ALLOWED_VALUES = [
     CLAIMANT_EXTRACT,
     PAYMENT_EXTRACT,
     CONSUME_FINEOS_1099_REQUEST_EXTRACT,
+    DATA_1099_EXTRACT,
     VALIDATE_ADDRESSES,
     PAYMENT_POST_PROCESSING,
     RELATED_PAYMENT_PROCESSING,
@@ -77,6 +80,7 @@ class Configuration:
     do_claimant_extract: bool
     do_payment_extract: bool
     consume_fineos_1099_request: bool
+    do_1099_data_extract: bool
     validate_addresses: bool
     validate_max_weekly_benefit_amount: bool
     do_payment_post_processing: bool
@@ -107,6 +111,7 @@ class Configuration:
             self.do_claimant_extract = True
             self.do_payment_extract = True
             self.consume_fineos_1099_request = True
+            self.do_1099_data_extract = True
             self.validate_addresses = True
             self.validate_max_weekly_benefit_amount = True
             self.do_payment_post_processing = True
@@ -122,6 +127,7 @@ class Configuration:
             self.do_claimant_extract = CLAIMANT_EXTRACT in steps
             self.do_payment_extract = PAYMENT_EXTRACT in steps
             self.consume_fineos_1099_request = CONSUME_FINEOS_1099_REQUEST_EXTRACT in steps
+            self.do_1099_data_extract = DATA_1099_EXTRACT in steps
             self.validate_addresses = VALIDATE_ADDRESSES in steps
             self.validate_max_weekly_benefit_amount = VALIDATE_MAX_WEEKLY_BENEFIT_AMOUNT in steps
             self.do_payment_post_processing = PAYMENT_POST_PROCESSING in steps
@@ -171,10 +177,18 @@ def _process_fineos_extracts(
         ).run()
 
     if config.do_claimant_extract:
-        ClaimantExtractStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()
+        ClaimantExtractStep(
+            db_session=db_session,
+            log_entry_db_session=log_entry_db_session,
+            should_add_to_report_queue=True,
+        ).run()
 
     if config.do_payment_extract:
-        PaymentExtractStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()
+        PaymentExtractStep(
+            db_session=db_session,
+            log_entry_db_session=log_entry_db_session,
+            should_add_to_report_queue=True,
+        ).run()
 
     if config.consume_fineos_1099_request:
         FineosExtractStep(
@@ -182,6 +196,9 @@ def _process_fineos_extracts(
             log_entry_db_session=log_entry_db_session,
             extract_config=REQUEST_1099_EXTRACT_CONFIG,
         ).run()
+
+    if config.do_1099_data_extract:
+        Data1099ExtractStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()
 
     if config.validate_addresses:
         AddressValidationStep(
@@ -198,12 +215,10 @@ def _process_fineos_extracts(
             db_session=db_session, log_entry_db_session=log_entry_db_session
         ).run()
 
-    if payments_util.is_withholding_payments_enabled():
-        logger.info("Tax Withholding ENABLED")
-        if config.do_related_payment_processing:
-            RelatedPaymentsProcessingStep(
-                db_session=db_session, log_entry_db_session=log_entry_db_session
-            ).run()
+    if config.do_related_payment_processing:
+        RelatedPaymentsProcessingStep(
+            db_session=db_session, log_entry_db_session=log_entry_db_session
+        ).run()
 
     if config.make_audit_report:
         PaymentAuditReportStep(
@@ -220,6 +235,7 @@ def _process_fineos_extracts(
             db_session=db_session,
             log_entry_db_session=log_entry_db_session,
             report_names=PROCESS_FINEOS_EXTRACT_REPORTS,
+            sources_to_clear_from_report_queue=[ClaimantExtractStep],
         ).run()
 
     payments_util.create_success_file(start_time, "pub-payments-process-fineos")

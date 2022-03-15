@@ -1,4 +1,5 @@
 import { filterByApplication, getLegalNotices } from "../models/Document";
+import Alert from "./core/Alert";
 import { AppLogic } from "../hooks/useAppLogic";
 import BenefitsApplication from "../models/BenefitsApplication";
 import ButtonLink from "./ButtonLink";
@@ -7,44 +8,13 @@ import LeaveReason from "../models/LeaveReason";
 import LegalNoticeList from "./LegalNoticeList";
 import React from "react";
 import Spinner from "./core/Spinner";
-import Tag from "./core/Tag";
 import { WithUserProps } from "src/hoc/withUser";
 import { createRouteWithQuery } from "../utils/routeWithParams";
 import findKeyByValue from "../utils/findKeyByValue";
 import hasDocumentsLoadError from "../utils/hasDocumentsLoadError";
+import isBlank from "../utils/isBlank";
 import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
-
-interface HeaderSectionProps {
-  title: string;
-}
-
-/**
- * Main header for the top of status cards
- */
-const HeaderSection = ({ title }: HeaderSectionProps) => (
-  <Heading className="padding-top-3" level="3" size="2">
-    {title}
-  </Heading>
-);
-
-interface TitleAndDetailSectionItemProps {
-  details: string;
-  title: string;
-}
-
-/**
- * Group together details for status cards
- */
-const TitleAndDetailSectionItem = ({
-  details,
-  title,
-}: TitleAndDetailSectionItemProps) => (
-  <div className="padding-y-1">
-    <p>{title}</p>
-    <p className="margin-top-05 text-bold">{details}</p>
-  </div>
-);
 
 interface ManageDocumentSectionProps {
   claim: BenefitsApplication;
@@ -71,7 +41,7 @@ const ManageDocumentSection = ({ claim }: ManageDocumentSectionProps) => {
 
   return (
     <div className="border-top border-base-lighter">
-      <Heading className="padding-y-3" level="4">
+      <Heading className="padding-y-3" level="3" size="4">
         {t("components.applicationCard.otherActions")}
       </Heading>
       <ButtonLink
@@ -99,32 +69,30 @@ interface LegalNoticeSectionProps {
 }
 
 /**
- * Section to view legal notices for in-progress applications
+ * Section to view legal notices for in-progress applications.
+ * There are 2 main use cases for in-progress applications receiving notices:
+ *    1. Withdrawing a pending application –> Withdrawn notice
+ *    2. The contact center may deny in-progress application they can see that's open for a certain length of time -> Denial notice
  */
 const LegalNoticeSection = (props: LegalNoticeSectionProps) => {
   const { t } = useTranslation();
-  const isSubmitted = props.claim.status === "Submitted";
+  const showNotices = props.claim.status === "Submitted";
   const {
     documents: { loadAll, isLoadingClaimDocuments },
   } = props.appLogic;
 
   React.useEffect(() => {
-    loadAll(props.claim.application_id);
+    if (showNotices) {
+      loadAll(props.claim.application_id);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadAll]);
 
   const shouldShowSpinner =
     isLoadingClaimDocuments(props.claim.application_id) &&
-    !hasDocumentsLoadError(
-      props.appLogic.appErrors,
-      props.claim.application_id
-    );
+    !hasDocumentsLoadError(props.appLogic.errors, props.claim.application_id);
 
-  /**
-   * If application is not submitted,
-   * don't display section
-   */
-  if (!isSubmitted) return null;
+  if (!showNotices) return null;
 
   // check for spinner before documents length, since length is 0 while loading.
   if (shouldShowSpinner) {
@@ -164,34 +132,21 @@ const LegalNoticeSection = (props: LegalNoticeSectionProps) => {
 
 interface InProgressStatusCardProps {
   claim: BenefitsApplication;
-  number: number;
   appLogic: AppLogic;
 }
 
 /**
  * Status card for claim.status != "Completed" (In Progress)
  */
-const InProgressStatusCard = (props: InProgressStatusCardProps) => {
-  const { claim, number } = props;
+const InProgressStatusCardActions = (props: InProgressStatusCardProps) => {
+  const { claim } = props;
   const { t } = useTranslation();
 
+  const showSubmitAllPartsText = isBlank(props.claim.employer_fein);
   return (
     <React.Fragment>
-      <HeaderSection
-        title={t("components.applicationCard.heading", {
-          number,
-        })}
-      />
-      <Tag
-        state="warning"
-        label={t("components.applicationCard.inProgressTag")}
-      />
-      <p>{t("components.applicationCard.inProgressText")}</p>
-      {claim.employer_fein && (
-        <TitleAndDetailSectionItem
-          title={t("components.applicationCard.employerEIN")}
-          details={claim.employer_fein}
-        />
+      {showSubmitAllPartsText && (
+        <p>{t("components.applicationCard.inProgressText")}</p>
       )}
       <LegalNoticeSection {...props} />
       <div className="border-top border-base-lighter padding-top-2">
@@ -215,12 +170,8 @@ interface CompletedStatusCardProps {
 /**
  * Status card for claim.status = "Completed"
  */
-const CompletedStatusCard = ({ claim }: CompletedStatusCardProps) => {
+const CompletedStatusCardActions = ({ claim }: CompletedStatusCardProps) => {
   const { t } = useTranslation();
-
-  const leaveReasonText = t("components.applicationCard.leaveReasonValue", {
-    context: findKeyByValue(LeaveReason, claim.leave_details?.reason),
-  });
 
   const statusPageLink = createRouteWithQuery(
     routes.applications.status.claim,
@@ -229,16 +180,6 @@ const CompletedStatusCard = ({ claim }: CompletedStatusCardProps) => {
 
   return (
     <React.Fragment>
-      <HeaderSection title={leaveReasonText} />
-      <TitleAndDetailSectionItem
-        title={t("components.applicationCard.applicationID")}
-        details={claim.fineos_absence_id || ""}
-      />
-      <TitleAndDetailSectionItem
-        title={t("components.applicationCard.employerEIN")}
-        details={claim.employer_fein || ""}
-      />
-
       <div className="border-top border-base-lighter padding-y-2 margin-y-2 margin-bottom-0">
         <ButtonLink
           className="width-full display-flex flex-align-center flex-justify-center flex-column margin-right-0"
@@ -254,7 +195,7 @@ const CompletedStatusCard = ({ claim }: CompletedStatusCardProps) => {
 
 interface ApplicationCardProps extends WithUserProps {
   claim: BenefitsApplication;
-  number: number;
+  successfullyImported: boolean;
 }
 
 /**
@@ -264,22 +205,52 @@ interface ApplicationCardProps extends WithUserProps {
  * additional docs.
  */
 export const ApplicationCard = (props: ApplicationCardProps) => {
-  const {
-    claim: { status },
-  } = props;
+  const { t } = useTranslation();
+  const { claim, successfullyImported } = props;
 
   return (
     <div className="maxw-mobile-lg margin-bottom-3">
       <div
         className={`border-top-1 ${
-          status === "Completed" ? "border-primary" : "border-gold"
+          claim.status === "Completed" ? "border-primary" : "border-gold"
         }`}
       />
-      <article className="border-x border-bottom border-base-lighter padding-2 padding-top-0">
-        {status === "Completed" ? (
-          <CompletedStatusCard {...props} />
+      <article className="border-x border-bottom border-base-lighter padding-2 padding-top-3">
+        {successfullyImported && (
+          <Alert state="success">
+            <p>
+              {t("components.applicationCard.claimAssociatedSuccessfully", {
+                fineos_absence_id: claim.fineos_absence_id,
+              })}
+            </p>
+          </Alert>
+        )}
+        <Heading level="2">
+          {t("components.applicationCard.heading", {
+            context:
+              findKeyByValue(LeaveReason, claim.leave_details?.reason) ??
+              "noReason",
+          })}
+        </Heading>
+        {claim.fineos_absence_id && (
+          <p>
+            {t("components.applicationCard.applicationID")}
+            <br />
+            <strong>{claim.fineos_absence_id}</strong>
+          </p>
+        )}
+
+        {claim.employer_fein && (
+          <p>
+            {t("components.applicationCard.employerEIN")}
+            <br />
+            <strong>{claim.employer_fein}</strong>
+          </p>
+        )}
+        {claim.status === "Completed" ? (
+          <CompletedStatusCardActions {...props} />
         ) : (
-          <InProgressStatusCard {...props} />
+          <InProgressStatusCardActions {...props} />
         )}
       </article>
     </div>

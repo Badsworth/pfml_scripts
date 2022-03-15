@@ -11,7 +11,6 @@ on:
 
 env:
   nodeVersion: 16.x
-  slack_channel: "C015NB2V8DD" #mass-pfml-design-shared
   working-dir: ./portal
   cache-package-lock: ./portal/package-lock.json
   workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
@@ -46,11 +45,13 @@ jobs:
         run: node builds/bin/check-links.js
         working-directory: ${{ env.working-dir }}
 
-  post-failures-to-slack:
+  post-to-teams:
     needs: [check-links]
     if: always() && needs.check-links.result == 'failure'
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -60,45 +61,21 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
-      - name: Pull slackbot API token from SSM
+      - name: Pull teams uri from SSM
         uses: "marvinpinto/action-inject-ssm-secrets@latest"
         with:
-          ssm_parameter: "/admin/common/nava-slackbot-api-key"
-          env_variable_name: "slackbot_token"
+          ssm_parameter: "/admin/common/teams-deploy-uri"
+          env_variable_name: "teams_uri"
 
-      - name: Post to Slack
+      - name: post failures to teams
         run: |
-          SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
-          -H 'Content-Type: application/json;charset=utf-8' \
+          RESPONSE=$(curl -fsLS -X POST ${{ env.TEAMS_URI }} \
+          --header 'Content-Type: application/json' \
           --data '{
-            "channel": "${{ env.slack_channel }}",
-            "blocks": [
-              {
-                "type": "section",
-                "text": {
-                  "type": "mrkdwn",
-                  "text": ":warning: Link scanner identified broken external link(s) referenced in the Portal codebase."
-                }
-              },
-              {
-                "type": "divider"
-              },
-              {
-                "type": "section",
-                "text": {
-                  "type": "mrkdwn",
-                  "text": "${{ needs.check-links.outputs.badUrls }}"
-                }
-              },
-              {
-                "type": "divider"
-              },
-              {
-                "type": "section",
-                "text": {
-                  "type": "mrkdwn",
-                  "text": "*<${{ env.workflow_self_link }}|View the link scanner output here>*."
-                }
-              }
-            ]
-          }' https://slack.com/api/chat.postMessage)
+            "@type": "MessageCard",
+            "themeColor": "FF0000",
+            "title": "Link Scanner Warning",
+            "text": "Link Scanner identified broken external link(s) referenced in the Portal codebase in ${{ env.workflow_self_link }}.\n View the link scanner output here: ${{ needs.check-links.outputs.badUrls }}",
+            "sections": [{}]
+            }'
+          )

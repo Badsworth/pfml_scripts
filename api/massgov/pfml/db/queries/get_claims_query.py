@@ -1,7 +1,8 @@
 import re
 from datetime import date
 from enum import Enum
-from typing import Any, Callable, List, Optional, Set, Type, Union
+from typing import Any, Callable, List, Optional, Set, Type, Union, no_type_check
+from uuid import UUID
 
 from sqlalchemy import Column, and_, asc, desc, func, or_
 from sqlalchemy.orm import contains_eager
@@ -9,10 +10,17 @@ from sqlalchemy.sql.elements import UnaryExpression
 from sqlalchemy.sql.selectable import Alias
 
 from massgov.pfml import db
+from massgov.pfml.api.util.paginate.paginator import (
+    OrderDirection,
+    Page,
+    PaginationAPIContext,
+    page_for_api_context,
+)
+from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.applications import Application
 from massgov.pfml.db.models.base import Base
 from massgov.pfml.db.models.employees import (
-    AbsenceStatus,
+    AbsencePeriod,
     Claim,
     Employee,
     Employer,
@@ -21,12 +29,6 @@ from massgov.pfml.db.models.employees import (
     ManagedRequirementStatus,
     ManagedRequirementType,
     User,
-)
-from massgov.pfml.util.paginate.paginator import (
-    OrderDirection,
-    Page,
-    PaginationAPIContext,
-    page_for_api_context,
 )
 
 
@@ -81,7 +83,7 @@ class GetClaimsQuery:
         else:
             self.query = self.query.join(model, isouter=isouter)
 
-    def add_employers_filter(self, employers: list[Employer], user: User) -> None:
+    def add_leave_admin_filter(self, employers: list[Employer], user: User) -> None:
         employers_without_units = [
             e.employer_id for e in employers if not e.uses_organization_units
         ]
@@ -92,7 +94,7 @@ class GetClaimsQuery:
         )
 
         employers_without_units_filter = and_(
-            Claim.employer_id.in_(employers_without_units), Claim.organization_unit_id.is_(None),
+            Claim.employer_id.in_(employers_without_units), Claim.organization_unit_id.is_(None)
         )
         employers_with_units_filter = and_(
             Claim.employer_id.in_(employers_with_units),
@@ -112,11 +114,13 @@ class GetClaimsQuery:
             or_(employers_without_units_filter, employers_with_units_or_claims_notified_filter)
         )
 
-    def add_employees_filter(self, employee_ids: Set[str]) -> None:
+    def add_employers_filter(self, employer_ids: Set[UUID]) -> None:
+        self.query = self.query.filter(Claim.employer_id.in_(employer_ids))
+
+    def add_employees_filter(self, employee_ids: Set[UUID]) -> None:
         self.query = self.query.filter(Claim.employee_id.in_(employee_ids))
 
-    # TODO: current_user shouldn't be Optional - `get_claims` should throw an error instead
-    def add_user_owns_claim_filter(self, current_user: Optional[User]) -> None:
+    def add_user_owns_claim_filter(self, current_user: User) -> None:
         filter = Claim.application.has(Application.user_id == current_user.user_id)  # type: ignore
         self.query = self.query.filter(filter)
 
@@ -168,6 +172,22 @@ class GetClaimsQuery:
         filters = self.get_managed_requirement_status_filters(absence_statuses)
         if len(filters):
             self.query = self.query.filter(or_(*filters))
+
+    @no_type_check
+    def add_is_reviewable_filter(self, is_reviewable: str) -> None:
+        """
+        Filters claims by checking if they are reviewable or not.
+        """
+        if is_reviewable == "yes":
+            self.query = self.query.filter(Claim.soonest_open_requirement_date.isnot(None))
+        if is_reviewable == "no":
+            self.query = self.query.filter(Claim.soonest_open_requirement_date.is_(None))
+
+    def add_request_decision_filter(self, request_decisions: Set[int]) -> None:
+        filter = Claim.absence_periods.any(  # type: ignore
+            AbsencePeriod.leave_request_decision_id.in_(request_decisions)
+        )
+        self.query = self.query.filter(filter)
 
     def employee_search_sub_query(self) -> Alias:
         search_columns = [
@@ -240,26 +260,61 @@ class GetClaimsQuery:
             ManagedRequirement.claim_id == Claim.claim_id,
             ManagedRequirement.managed_requirement_type_id
             == ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
-            ManagedRequirement.managed_requirement_status_id
-            == ManagedRequirementStatus.OPEN.managed_requirement_status_id,
-            ManagedRequirement.follow_up_date >= date.today(),
         ]
         # use outer join to return claims without managed_requirements (one to many)
         self.join(ManagedRequirement, isouter=True, join_filter=and_(*filters))
         self.query = self.query.options(contains_eager("managed_requirements"))
 
-    def add_order_by(self, context: PaginationAPIContext) -> None:
+    def add_order_by(self, context: PaginationAPIContext, is_reviewable: Optional[str]) -> None:
         is_asc = context.order_direction == OrderDirection.asc.value
         sort_fn = asc_null_first if is_asc else desc_null_last
 
         if context.order_key is Claim.employee:
             self.add_order_by_employee(sort_fn)
 
+        elif context.order_by == "latest_follow_up_date":
+            self.add_order_by_follow_up_date(is_asc, is_reviewable)
+
         elif context.order_key is Claim.fineos_absence_status:
             self.add_order_by_absence_status(is_asc)
 
         elif context.order_by in Claim.__table__.columns:
             self.add_order_by_column(is_asc, context)
+
+    def add_order_by_follow_up_date(self, is_asc: bool, is_reviewable: Optional[str]) -> None:
+        """
+        For order_direction=ascending (user selects "Oldest"),
+        return non-open requirements first, then open,
+        all in ascending order.
+
+        For order_direction=descending (user selects "Newest"),
+        return open requirements first (sorted by those that need attention first),
+        then all the non-open claims in desc order.
+
+        More details in test_get_claims_with_order_by_follow_up_date_desc,
+        test_get_claims_with_order_by_follow_up_date_asc, and
+        test_get_claims_with_order_by_follow_up_date_asc_and_is_reviewable_yes
+        """
+        if is_asc:
+            if is_reviewable and is_reviewable == "yes":
+                # Only sort by one key, otherwise a subset (those with multiple managed requirements)
+                # get returned first (non-open), followed by all the rest (open requirements).
+                # When is_reviewable=="yes", all claims will have `soonest_open_requirement_date`.
+                order_keys = [
+                    asc(Claim.soonest_open_requirement_date),  # type:ignore
+                ]
+            else:
+                order_keys = [
+                    asc(Claim.latest_follow_up_date),  # type:ignore
+                    asc(Claim.soonest_open_requirement_date),  # type:ignore
+                ]
+        else:
+            order_keys = [
+                asc(Claim.soonest_open_requirement_date),  # type:ignore
+                desc_null_last(Claim.latest_follow_up_date),  # type:ignore
+            ]
+
+        self.query = self.query.order_by(*order_keys)
 
     def add_order_by_employee(self, sort_fn: Callable) -> None:
         order_keys = [

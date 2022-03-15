@@ -45,7 +45,7 @@ def transaction_file_step(
 
 @freeze_time("2021-01-01 12:00:00")
 def test_ach_file_creation(
-    transaction_file_step: TransactionFileCreatorStep, local_test_db_session, tmp_path, monkeypatch,
+    transaction_file_step: TransactionFileCreatorStep, local_test_db_session, tmp_path, monkeypatch
 ):
     # set environment variables
     archive_folder_path = str(tmp_path / "archive")
@@ -242,9 +242,7 @@ def test_get_eligible_eft_payments_error_states(
 
     local_test_db_session.commit()
 
-    with pytest.raises(
-        Exception, match=r"Non-ACH payment method detected in state log: .+",
-    ):
+    with pytest.raises(Exception, match=r"Non-ACH payment method detected in state log: .+"):
         transaction_file_step._get_eligible_eft_payments()
 
 

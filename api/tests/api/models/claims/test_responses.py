@@ -1,8 +1,13 @@
 import pytest
 
-from massgov.pfml.api.models.claims.responses import AbsencePeriodResponse
-from massgov.pfml.db.models.employees import AbsencePeriodType
-from massgov.pfml.db.models.factories import AbsencePeriodFactory
+from massgov.pfml.api.models.claims.responses import (
+    AbsencePeriodResponse,
+    ClaimForPfmlCrmResponse,
+    ClaimResponse,
+)
+from massgov.pfml.db.models.absences import AbsencePeriodType
+from massgov.pfml.db.models.factories import AbsencePeriodFactory, ClaimFactory
+from tests.helpers.api_responses import assert_structural_subset
 
 
 @pytest.mark.parametrize(
@@ -37,3 +42,11 @@ def test_absence_period_types_from_orm(
     response = AbsencePeriodResponse.from_orm(absence_period_record)
 
     assert response.period_type == output_period_type
+
+
+def test_response_structural_subset(initialize_factories_session):
+    claim = ClaimFactory.create()
+    service_now_response = ClaimForPfmlCrmResponse.from_orm(claim).dict()
+    full_response = ClaimResponse.from_orm(claim).dict()
+
+    assert_structural_subset(service_now_response, full_response)

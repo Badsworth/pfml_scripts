@@ -211,7 +211,7 @@ def process_date(date, s3_fineos, fineos_s3_path, bi_warehouse_path, include_ful
                         warehouse_table_name = os.path.splitext(wanted_extract)[0].lower()
                         source_file = os.path.join(fineos_s3_path, fineos_extract)
                         dest_file = os.path.join(
-                            bi_warehouse_path, warehouse_table_name, wanted_extract,
+                            bi_warehouse_path, warehouse_table_name, wanted_extract
                         )
 
                         logger.info("Copying %s to %s", source_file, dest_file)

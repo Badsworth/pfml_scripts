@@ -25,7 +25,7 @@ Use "request changes" sparingly, unless there's a blocking issue or major refact
 
 Include the JIRA ticket number in the title. For example: `PFML-123: Implement API endpoint`. A single JIRA ticket may be associated with multiple pull requests.
 
-    Every change should have an associated JIRA ticket unless it is a documentation change. This makes it easier to search for PRs and generates a link in the Jira ticket to the pull request, which provides the program with an audit trail for verifying the relevant code changes, approvals, and test cases.
+Every change should have an associated JIRA ticket unless it is a documentation change. This makes it easier to search for PRs and generates a link in the Jira ticket to the pull request, which provides the program with an audit trail for verifying the relevant code changes, approvals, and test cases.
 
   - For tickets that have subtasks, use the parent ticket's id in the title, and include the subtask in the PR description. 
 
@@ -50,11 +50,7 @@ for sections of code that may be confusing or worth debate.
 
 Assign the PR to be reviewed by people within your feature team if your changes are within the existing software architecture, uses existing patterns and tools, and you are confident that your changes follows the latest best practices. In this situation, your feature team is most likely to have the most context on the business requirements and whether your changes meets those requirements.
 
-Note that code review culture within each feature team may differ - Some teams are configured so that PR review requests are automatically assigned to a member of the team via a round robin algorithm, with the goal of equally distributing PR reviews across the team:
-- [`@pfml-acorn-street`](https://github.com/orgs/EOLWD/teams/pfml-acorn-street)
-- [`@pfml-beacon-hill`](https://github.com/orgs/EOLWD/teams/pfml-beacon-hill)
-- [`@pfml-dorchester`](https://github.com/orgs/EOLWD/teams/pfml-dorchester)
-- [`@pfml-newbury`](https://github.com/orgs/EOLWD/teams/pfml-newbury)
+Note that code review culture within each feature team may differ - Some teams are configured so that PR review requests are automatically assigned to a member of the team via a round robin algorithm, with the goal of equally distributing PR reviews across the team.
 
 ### Requesting reviews from subject matter experts
 

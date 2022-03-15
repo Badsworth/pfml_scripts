@@ -16,7 +16,7 @@ exports[`Success renders the page 1`] = `
     We’ll begin processing this application and your employee should hear from us within 14 calendar days. Once we’ve made a decision, you’ll receive an email with a direct link to details about the decision.
   </p>
   <p>
-    If your company has a paid disability, family, or medical leave policy for employees, you may qualify for 
+    If your organization has a paid disability, family, or medical leave policy for employees, you may qualify for 
     <a
       href="https://www.mass.gov/forms/request-reimbursement-for-your-employees-paid-leave-benefits"
       rel="noreferrer noopener"

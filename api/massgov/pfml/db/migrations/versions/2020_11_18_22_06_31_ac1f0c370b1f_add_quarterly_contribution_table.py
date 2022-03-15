@@ -25,8 +25,8 @@ def upgrade():
         sa.Column("employer_total_pfml_contribution", sa.Numeric(), nullable=False),
         sa.Column("dor_updated_date", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.Column("latest_import_log_id", sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(["employer_id"], ["employer.employer_id"],),
-        sa.ForeignKeyConstraint(["latest_import_log_id"], ["import_log.import_log_id"],),
+        sa.ForeignKeyConstraint(["employer_id"], ["employer.employer_id"]),
+        sa.ForeignKeyConstraint(["latest_import_log_id"], ["import_log.import_log_id"]),
         sa.PrimaryKeyConstraint("employer_id", "filing_period"),
         sa.UniqueConstraint(
             "employer_id",

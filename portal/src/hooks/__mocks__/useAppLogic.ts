@@ -9,10 +9,11 @@ import Claim from "../../models/Claim";
 import ClaimDetail from "../../models/ClaimDetail";
 import EmployerClaim from "../../models/EmployerClaim";
 import Flag from "../../models/Flag";
+import { Payment } from "src/models/Payment";
 import { uniqueId } from "lodash";
 
 export default jest.fn(() => ({
-  appErrors: [],
+  errors: [],
   auth: {
     createAccount: jest.fn(),
     createEmployerAccount: jest.fn(),
@@ -46,7 +47,6 @@ export default jest.fn(() => ({
     warningsLists: {},
   },
   claims: {
-    activeFilters: {},
     claimDetail: new ClaimDetail(),
     claims: new ApiResourceCollection<Claim>("fineos_absence_id"),
     clearClaims: jest.fn(),
@@ -90,6 +90,12 @@ export default jest.fn(() => ({
     submitClaimReview: jest.fn(),
     submitWithholding: jest.fn(),
   },
+  payments: {
+    loadPayments: jest.fn(),
+    loadedPaymentsData: new Payment(),
+    hasLoadedPayments: true,
+    isLoadingPayments: false,
+  },
   portalFlow: {
     getNextPageRoute: jest.fn(),
     goTo: jest.fn(),
@@ -102,7 +108,7 @@ export default jest.fn(() => ({
     removeOtherIncome: jest.fn(() => true),
     removePreviousLeave: jest.fn(() => true),
   },
-  setAppErrors: jest.fn(),
+  setErrors: jest.fn(),
   updateUser: jest.fn(),
   user: new User({
     user_id: "mock_user_id",

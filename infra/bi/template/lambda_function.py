@@ -6,7 +6,10 @@ import boto3.session
 import os
 import time
 import logging
+import sys
 from botocore.exceptions import ClientError
+
+#from S3.Client.exceptions.NoSuchKey
 
 s3 = boto3.client("s3")
 s3_resource = boto3.resource('s3')
@@ -16,14 +19,19 @@ s3_resource = boto3.resource('s3')
 environment = os.environ.get("ENVIRONMENT")
 
 def lambda_handler(event, context):
-
+    logger = logging.getLogger()
+    logger.setLevel(logging.WARNING)
+    handler = logging.StreamHandler(sys.stdout)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
     EachRowCount=[]
     RowCount=[]
     processedfileslist=[]
     ActualFileRowCount=0
     ProcessFileRowCount=0
     client = boto3.client('s3')
-    
+
     count=0
     Files=""
     csvSourceFilename=""
@@ -32,219 +40,358 @@ def lambda_handler(event, context):
     csv_Source_Absenceleavecases=""
     csv_Source_Taskreport=""
     DestinationPATHList=[]
-    processedfiles_vendor_details="processedfiles/VBI_REQUESTEDABSENCE/"
-    processedfiles_vendor_names="processedfiles/VBI_TASKREPORT_SOM/"
-    vendor_details="VBI_REQUESTEDABSENCE"
-    vendor_names="VBI_TASKREPORT_SOM"
-    DestinationBucketName=f"massgov-pfml-{environment}-redshift-daily-import"
+    object_list_in_DestinationFolder=[]
     s3object = boto3.resource('s3')
     # Here we create a new session per thread
     session = boto3.session.Session()
     s3_resource = session.resource('s3')
     if event:
         logging.warn("Event :%s", event)
-        time.sleep(10)
+        time.sleep(20)
+        new_bucket=""
         ActualFileRowCount=0
         vendor_detailsRowCount=0
         vendor_namesRowCount=0
         LenthOfObjectsInFile=0
         filenameLenghtcsv=0
+        PropertiesFileTotalLists=[]
         filename=""
+        mainSourceNamewithPath=''
         file_obj = event["Records"][0]
-        
-        
         bucket_name = str(file_obj['s3']['bucket']['name'])
         filename = str(file_obj['s3']['object']['key'])
+        mainSourceNamewithPath=filename
         filenameLength=len(filename.split("/"))
-        logging.warn("filenameLength::::%s",filenameLength)
-        for i in range(filenameLength):
-            filenameLenghtcsv=i
-        logging.warn("filename::::%s",filename)
-        csvSourceFilename=filename.split("/")[filenameLenghtcsv]
-        csvSourceFolder=filename.split("/")[0]
-        logging.warn("csvSourceFolder :%s", csvSourceFolder)
-        logging.warn("csvSourceFilename :%s", csvSourceFilename)
-        logging.warn("bucket_name :%s", bucket_name)
-        old_bucket = s3_resource.Bucket(bucket_name )
-        new_bucket = s3_resource.Bucket(DestinationBucketName )
-        fileObj = s3.get_object(Bucket =bucket_name, Key=filename)
-        file_content = fileObj["Body"].read().decode('utf-8')
+        ##################################Property File Reading################################################
+        properties_bucket_name=f"massgov-pfml-{environment}-redshift-daily-import"
+        properties_filename="processedfiles/sharepoint/FileConfig/pfml_bi_file_load_config.csv"
+        fromPropertyFile_FileName=""
+        fromPropertyFile_Bucket=""
+        fromPropertyFile_DestinationFolder=""
+        fromPropertyFile_Is_Active=""
+        fromPropertyFile_Refresh_Type=""
+        propertiesfileObj = s3.get_object(Bucket =properties_bucket_name, Key=properties_filename)
+        properties_file_content = propertiesfileObj["Body"].read().decode('utf-8')
+        properties_strfilecontent=str(properties_file_content)
+        properties_strfilecontentlist=properties_strfilecontent.splitlines()
+        properties_strfilecontentlist.pop(0)
+        logging.warn("properties_strfilecontentlist--Type:::::%s",type(properties_strfilecontentlist))
+        for row in range(0,len(properties_strfilecontentlist)):
+            FullRow=properties_strfilecontentlist[row]
+            FullRowlines=FullRow.split(",")
+            logging.warn("type(Properties-File-FullRowlines):::::::::%s",type(properties_strfilecontentlist))
+            PropertiesFileTotalLists.append(FullRowlines)
+            fromPropertyFile_FileName=FullRowlines[1]
+            logging.warn("FileName::FromProperties:::::::%s",fromPropertyFile_FileName)
+            fromPropertyFile_Bucket=FullRowlines[4]
+            logging.warn("Bucket:::::FromProperties:::::::::::::%s",fromPropertyFile_Bucket)
+            fromPropertyFile_DestinationFolder=FullRowlines[5]
+            logging.warn("DestinationFolder:::::FromProperties::::::::::::%s",fromPropertyFile_DestinationFolder)
+            fromPropertyFile_Is_Active=FullRowlines[7]
+            logging.warn("Controller(Y/N):::::FromProperties::::::::::::::::::%s",fromPropertyFile_Is_Active)
+            fromPropertyFile_Refresh_Type=FullRowlines[8]
+            logging.warn("CopyType(FULL/INC):::::FromProperties:::::::::%s",fromPropertyFile_Refresh_Type)
+        #######################################################################################################
+            #Below code is for reading upload bucket,file information
+            logging.warn("Event :: filenameLength::::::::::::%s",filenameLength)
+            for i in range(filenameLength):
+                filenameLenghtcsv=i
+            logging.warn("Event Uploaded:: filename:::::%s",filename)
+            csvSourceFilename=filename.split("/")[filenameLenghtcsv]
+            csvSourceFolder=filename.split("/")[0]
+            logging.warn("Event Uploaded::csvSourceFolder:::::%s",csvSourceFolder)
+            logging.warn("Event Uploaded::bucket_name:::::%s",bucket_name)
+            file_content=""
+            try:
+                new_bucket = s3_resource.Bucket(fromPropertyFile_Bucket )###^^^^
+                fileObj = s3.get_object(Bucket =bucket_name, Key=filename)
+                file_content = fileObj["Body"].read().decode('utf-8')
+            except Exception as e:
+                  logging.error('s3_resource.Bucket(fromPropertyFile_Bucket )&&&&s3.get_object :::::no such key in bucket')
 
-        strfilecontent=str(file_content)
-        strfilecontentlist=strfilecontent.splitlines()
+            strfilecontent=str(file_content)
+            strfilecontentlist=strfilecontent.splitlines()
+            ActualFileRowCount=len(strfilecontentlist)
+            logging.warn("Event Uploaded File contains Number of Rows in file length::::::%s",len(strfilecontentlist))
+            EachRowCount.append(file_content)
+            #logging.warn("Event Uploaded File::EachRowCount::::::::%s",EachRowCount)
+            #Check if file exists in Process Folder
+            #logging.warn("From Properties File:::Bucket Name:::::fromPropertyFile_Bucket::::::::%s",fromPropertyFile_Bucket)
+            #logging.warn("From Properties File::fromPropertyFile_DestinationFolder:::::::::::::%s",fromPropertyFile_DestinationFolder)
+            # destinationobject = s3.get_object(Bucket =fromPropertyFile_Bucket, Key=fromPropertyFile_FileName+'/'+fromPropertyFile_FileName)
+            try:
+                  #bucket = s3_resource.Bucket(fromPropertyFile_Bucket)
+                  object_listing = s3.list_objects_v2(Bucket=fromPropertyFile_Bucket,
+                                    Prefix=fromPropertyFile_DestinationFolder+'/')
+            except Exception as e:
+                  logging.error("s3.list_objects_v2(Bucket=fromPropertyFile_Bucket,Prefix=fromPropertyFile_DestinationFolder+/) :::::no such key in bucket!!!!!")
+            #Below code is for Objects exists in Destination bucket and folder
+            if "Contents" in object_listing:
+               for object in object_listing['Contents']:
+                 logging.warn("Files found in folder::$$$$::::::::%s",object['Key'])
+                 object_list_in_DestinationFolder.append(object['Key'].split("/")[2])
+                 logging.warn("Files found in folder::$$$$::::::::%s",object['Key'].split("/")[2])
+            else:
+                 logging.warn("No Files found in Folder:response[Contents]::$$$$%%%%%%%% :::::no such key in bucket!!!!!",object_listing)
+            objs = object_list_in_DestinationFolder
+            EventUploadedFile=fromPropertyFile_FileName
+            element_in_sublists = [EventUploadedFile in list for list in PropertiesFileTotalLists]
+            logging.warn("element_in_sublists:::::::%s",element_in_sublists)
+            PropertiesFile_in_lists = any(element_in_sublists)
+            logging.warn("PropertiesFile_in_lists::::$$$$$$$$$$$$:::%s",PropertiesFile_in_lists)
+            logging.warn("objs::******************$$$$$$$$$$$::::::***:%s",objs)
+            logging.warn("len(objs)::******************$$$$$$$$$$$::::::***:%s",len(objs))
+            #logging.warn("Event Uploaded::csvSourceFilename::::::%s",csvSourceFilename)
+            #logging.warn("fromPropertyFile_FileName::::::%s",fromPropertyFile_FileName)
+            if ((PropertiesFile_in_lists == True) and (fromPropertyFile_FileName in csvSourceFilename)):
+                logging.warn("Uploaded Files existed in properties destination Folder :::::key exists!!:::::::***:%s")
+                if ((fromPropertyFile_Is_Active == 'Y') and (fromPropertyFile_Refresh_Type == "FULL") ):
+                    logging.warn("From Properties File:::::fromPropertyFile_Is_Active::::***:%s",fromPropertyFile_Is_Active)
+                    try:
+                        #time.sleep(5)
+                        if(len(objs)>0 and csvSourceFilename.endswith('.csv')) :##T^^^^his condition for Checking file exists or not
+                        #if(("Contents" in objs) and (csvSourceFilename.endswith('.csv'))) :
+                            logging.warn("Event Uploaded::::bucket_name::^^^^%%%%$$$$$$::::::***:%s",bucket_name)
+                            logging.warn("Event Uploaded File Name::csvSourceFilename::::::::***:%s",csvSourceFilename)
+                            csvSourceFolderwithSlash=csvSourceFolder+"/"
+                            old_source = { 'Bucket': bucket_name,
+                                      'Key': csvSourceFilename}
 
-        ActualFileRowCount=len(strfilecontentlist)
-        logging.warn("Number of Rows in file::::%s",len(strfilecontentlist))
+                            #logging.warn("Event Uploaded::::old_source:::^^^%%%%$$$$:::::***:%s",old_source)
+                            #logging.warn("Event Uploaded::::csvSourceFolderwithSlash::::::::***:%s",csvSourceFolderwithSlash)
+                            #logging.warn("From Properties File::fromPropertyFile_DestinationFolder::::::::***:%s",fromPropertyFile_DestinationFolder)
+                            new_key = filename.replace(csvSourceFolderwithSlash, fromPropertyFile_DestinationFolder)
+                            new_key = fromPropertyFile_DestinationFolder+"/"+ csvSourceFilename
+                            new_obj = new_bucket.Object(new_key)
+                            #logging.warn("Event Uploaded:::File Name:::obj.key::::::::::::***:%s",csvSourceFilename)
+                            #logging.warn("Destination Folder+File path::::new_key::::::::::::***:%s",new_key)
+                            bucket = s3object.Bucket(fromPropertyFile_Bucket)
+                            objs = list(bucket.objects.filter(Prefix=fromPropertyFile_DestinationFolder))
+                            logging.warn("**************len(objs)***************::::::::::::***:%s",len(objs))
+                            for i in range(0, len(objs)):
+                             logging.warn("objs[i].key::filename::::::::::::***:%s",objs[i].key)
+                             if fromPropertyFile_FileName in objs[i].key:
+                                 filename=objs[i].key
+                                 logging.warn("Before if condition::::filename::::::::::::***:%s",filename)
+                                 if filename.endswith("csv") and fromPropertyFile_FileName in filename:#need to review this condition
+                                     fileObj = client.get_object(Bucket =fromPropertyFile_Bucket, Key=filename)
+                                     file_content = fileObj["Body"].read().decode('utf-8')
+                                 #    logging.warn("Event Uploaded::::file_content::::::::::::***:%s",str(file_content))
+                                     strfilecontent=str(file_content)
+                                     strfilecontentlist=strfilecontent.splitlines()
+                                     #logging.warn("Event Uploaded:::strfilecontentlist:::::::::::::::::***:%s",str(strfilecontentlist))
+                                     #Uploaed File length=len(strfilecontentlist)
+                                     Uploaded_File_RowCount=len(strfilecontentlist)
+                                     #logging.warn("Event Uploaded::::Number of Rows in file:::::::::::::::::***:%s",len(strfilecontentlist))
+                                     logging.warn("Event Uploaded::::ActualFileRowCount:::::::::::::::::***:%s",ActualFileRowCount)
+                                     logging.warn("Uploaded_File_RowCount:::::::::::::::::***:%s",Uploaded_File_RowCount)
+                                     if fromPropertyFile_Refresh_Type == "FULL":
+                                         logging.warn("fromPropertyFile_Refresh_Type == FULL then compare the new file count with old file count:***:%s")
+                                         if ActualFileRowCount >= Uploaded_File_RowCount:
+                                             #If New file Number of Row's is greater then old file then copy the New file
+                                             logging.warn("I AM IN ActualFileRowCount > Uploaded_File_RowCount:***:%s")
+                                             response = client.list_objects_v2(Bucket=fromPropertyFile_Bucket, Prefix=fromPropertyFile_DestinationFolder)
+                                             #logging.warn("response**in fromPropertyFile_Refresh_Type =FULL***/:*:%s",response)
+                                             for object in response['Contents']:
+                                               logging.warn("Deleting:***:%s",object['Key'])
+                                               #bucket = s3_resource.Bucket(fromPropertyFile_Bucket)
+                                               #bucket.objects.filter(Prefix=fromPropertyFile_DestinationFolder).delete()
+                                               client.delete_object(Bucket=fromPropertyFile_Bucket, Key=object['Key'])
+                                               logging.warn("File::::%s"+object['Key']+":::Deleted previous file processedfiles/*****/!!!!!!!!:***:%s")
+                                             old_source = { 'Bucket': bucket_name,'Key': mainSourceNamewithPath}
+                                             new_key = filename.replace(csvSourceFolderwithSlash, fromPropertyFile_DestinationFolder)
+                                             new_key = fromPropertyFile_DestinationFolder+"/"+ csvSourceFilename
+                                             logging.warn("Destination Folder+File path:::::new_key::::***:%s",new_key)
+                                             new_obj = new_bucket.Object(new_key)
+                                             #logging.warn("Event Uploaded:: :::new_obj::::***:%s",new_obj)
+                                             #logging.warn("Befoer Copy Object if Greater Then File:::::::***:%s")
+                                             #new_obj.copy(old_source)
+                                             s3_resource.meta.client.copy(old_source, fromPropertyFile_Bucket, new_key)
+                                             logging.warn("After Copy Object if Greater Then File:::::::***:%s")
+                                             result="Successfull."
+                                             emailsend(csvSourceFilename,result)
+                                             logging.warn("After Copy&&&Uploaded File &&&&& email sent::***:%s")
+                                             logging.warn("File::::%s"+csvSourceFilename+":::copied into processedfiles/VBI_**********/!!!!!!!!:***:%s")
+
+                                         else:
+                                             logging.warn("Event Uploaded::::ActualFileRowCount:::::::::::::::::***:%s",ActualFileRowCount)
+                                             logging.warn("Uploaded_File_RowCount:::::::::::::::::***:%s",Uploaded_File_RowCount)
+                                             result="Faild because of less record count."
+                                             emailsend(csvSourceFilename,result)
+                                             logging.warn("Event Uploaded:: file::ActualFileRowCount is less then processedfiles/VBI_*****/Destnation Row Count::::::::***:%s")
+
+                        #This code is for uploaded file not found
+                        elif ((len(objs) == 0)):###^^^^
+                        #elif ("Contents" not in  objs):
+                          logging.warn("key doesn't exist!::len(objs) == 0::***:%s",len(objs))
+                          response = client.list_objects_v2(Bucket=fromPropertyFile_Bucket, Prefix=fromPropertyFile_DestinationFolder)
+                          #logging.warn("response**in fromPropertyFile_Refresh_Type =FULL*$$$$$$$$$$$$**/:*:%s",response)
+                          csvSourceFolderwithSlash=csvSourceFolder+"/"
+                          old_source = { 'Bucket': bucket_name,
+                                      'Key': filename}
+                          #elif len(objs) == 1:##Need to review this condition
+                          #logging.warn("Event Uploaded:: filename file not found and len(objs) == 1 then copying new File::processedfiles/VBI_*****/:*:%s")
+                          #logging.warn("Event Uploaded::::csvSourceFolderwithSlash:*****/:*:%s",csvSourceFolderwithSlash)
+                          #logging.warn("From Properties File::fromPropertyFile_DestinationFolder*****/:*:%s",fromPropertyFile_DestinationFolder)
+                          new_key = filename.replace(csvSourceFolderwithSlash, fromPropertyFile_DestinationFolder)
+                          new_key = fromPropertyFile_DestinationFolder+"/"+ csvSourceFilename
+                          new_obj = new_bucket.Object(new_key)
+                          new_obj.copy(old_source)
+                          result="Successfull."
+                          emailsend(csvSourceFilename,result)
+                          logging.warn("Email sent &&& Copied File into processedfiles/VBI_*****/!!!!!!!!***csvSourceFilename**/:*:%s",csvSourceFilename)
+                          # new_obj.copy(old_source)
+                          logging.warn("Event Uploaded:::File Name:::obj.key:::*:%s",filename)
+                          logging.warn("Destination Folder+File path::::new_key:::::*:%s",new_key)
+
+                    except ClientError as e:
+                          logging.error("s3_resource.Bucket(fromPropertyFile_Bucket) :::::no such key in bucket!!!!!..%s",e)
+                #############################Flag=Y and RefreshType is  INC###############################
+
+                elif ((fromPropertyFile_Is_Active == 'Y') and (fromPropertyFile_Refresh_Type == "INC") ):
+                    logging.warn("IN Condition ::::fromPropertyFile_Is_Active == 'Y') and (fromPropertyFile_Refresh_Type == INC::::::::::::::::*:%s")
+                    logging.warn("From Properties File:::::fromPropertyFile_Is_Active:::::::::::::::::::*:%s",fromPropertyFile_Is_Active)
+                    logging.warn("From Properties File:::::fromPropertyFile_Refresh_Type:::::::::::::::::::*:%s",fromPropertyFile_Refresh_Type)
+
+                    try:
+                        #time.sleep(5)
+                        if(len(objs)>0 and filename.endswith('.csv')) :
+                            csvSourceFolderwithSlash=csvSourceFolder+"/"
+                            if filename.endswith('.csv'):
+                                old_source = { 'Bucket': bucket_name,
+                                          'Key': filename}
+
+                                if  fromPropertyFile_FileName in filename: #Enhance with Properties files
+                                    new_key = filename.replace(csvSourceFolderwithSlash, fromPropertyFile_DestinationFolder)
+                                    new_key = fromPropertyFile_DestinationFolder+"/"+ csvSourceFilename
+                                    new_obj = new_bucket.Object(new_key)
+                                    # new_obj.copy(old_source)
+                                    logging.warn("Event Uploaded:::File Name:::obj.key:::::::::::::::::::*:%s",filename)
+                                    logging.warn("Destination Folder+File path::::new_key::::::::::::::::::::*:%s",new_key)
+                                    # print("File::::"+csvSourceFilename+":::copied into processedfiles/vendor_names/!!!!!!!!")
+                                    bucket = s3object.Bucket(fromPropertyFile_Bucket)
+                                    objs = list(bucket.objects.filter(Prefix=fromPropertyFile_DestinationFolder))
+                                    logging.warn("**************len(objs)***************::::::::::::::::::::*:%s",len(objs))
+                                    for i in range(0, len(objs)):
+                                        logging.warn("objs[i].key::filename:::::::::::::::*:%s",objs[i].key)
+                                        if fromPropertyFile_FileName in objs[i].key:
+                                            filename=objs[i].key
+                                            logging.warn("Before if condition::vendor_names::filename:::::::::::::::*:%s",filename)
+                                            #If CSV File not exists then Copying the new file
+                                            logging.warn("fromPropertyFile_Refresh_Type == INC then copying new File::processedfiles/VBI_*****/::::::::*:%s")
+                                            new_obj.copy(old_source)
+                                            result="Successfull."
+                                            emailsend(csvSourceFilename,result)
+                                            logging.warn("Email sent_Event Uploaded:: filename:::obj.key:*****/::::::::*:%s",csvSourceFilename)
+                                            logging.warn("Destination Folder+File path::::new_key:*****/::::::::*:%s",new_key)
+
+                        #This code is for uploaded file not found
+                        elif (len(objs) == 0):
+                          logging.warn("key doesn't exist!:*****/:::len(objs) == 0:::::*:%s")
+                          csvSourceFolderwithSlash=csvSourceFolder+"/"
+                          old_source = { 'Bucket': bucket_name,
+                                      'Key': filename}
+                          new_key = filename.replace(csvSourceFolderwithSlash, fromPropertyFile_DestinationFolder)
+                          new_key = fromPropertyFile_DestinationFolder+"/"+ csvSourceFilename
+                          new_obj = new_bucket.Object(new_key)
+                          new_obj.copy(old_source)
+                          result="Successfull."
+                          emailsend(csvSourceFilename,result)
+                          # new_obj.copy(old_source)
+                          logging.warn("Email sent_Event Uploaded:: filename:::obj.key:*****/:copied into processedfiles/VBI_*****/!!!!!!!!:::::::*:%s",filename)
+                          logging.warn("Destination Folder+File path::::new_key:*****/::::::::*:%s",new_key)
+
+                    except ClientError as e:
+                          logging.error("Copy Error :::::no such key in bucket!!!!!..%s",e)
+                ###################################################r#######################################
+
+                elif fromPropertyFile_Is_Active == 'N':
+                         logging.warn("Is_Active is N:::::::*****:%s",fromPropertyFile_Is_Active)
 
 
-        EachRowCount.append(file_content)
- 
-        #Check if file exists in Process Folder
-        
-        result_vendor_details = s3.list_objects(Bucket = DestinationBucketName, Prefix=processedfiles_vendor_details)
-        folderandfilesLength=result_vendor_details.get("Contents")
-        logging.warn("Length of Contents::::result_vendor_details:::::%s",len(folderandfilesLength))
-        logging.warn("Contents::::result_vendor_details::%s",folderandfilesLength)
+            else:
+                 logging.warn("Uploaded file not found in  properties file:::processedfiles/VBI:*****:%s",)
 
-        logging.warn("len(folderandfilesLength):::LENGTH OF Destination Folder:::result_vendor_details:::%s",len(folderandfilesLength))
+def emailsend(filename,result):
+    #############################################Email########################################################
 
-        logging.warn("Source Contents for File:::result_vendor_details::%s",folderandfilesLength[0].get("Key"))
+    # Replace sender@example.com with your "From" address.
+    # This address must be verified with Amazon SES.
+    SENDER = "ravitejatella@gmail.com"
 
-        Folder_vendor_details_PATH=folderandfilesLength[0].get("Key")
-        logging.warn("Source Files======folderandfilesLength[1].get(Key)===>:result_vendor_details:::::%s",Folder_vendor_details_PATH)
-        if not Folder_vendor_details_PATH.endswith("csv"):
-           logging.warn("Folder_vendor_details::::::result_vendor_details:::::::%s",Folder_vendor_details_PATH)
-           DestinationPATHList.append(Folder_vendor_details_PATH)
+    # Replace recipient@example.com with a "To" address. If your account
+    # is still in the sandbox, this address must be verified.
+    RECIPIENT = "ravitejatella@gmail.com"
 
-        result_vendor_names = s3.list_objects(Bucket = DestinationBucketName, Prefix=processedfiles_vendor_names)
-        folderandfilesLength=result_vendor_names.get("Contents")
-        logging.warn("Lenghof Contents::_vendor_names:::%s",len(folderandfilesLength))
-        logging.warn("Contents:::_vendor_names:::%s",folderandfilesLength)
+    # Specify a configuration set. If you do not want to use a configuration
+    # set, comment the following variable, and the
+    # ConfigurationSetName=CONFIGURATION_SET argument below.
+    CONFIGURATION_SET = "ConfigSet"
 
-        logging.warn("len(folderandfilesLength):::LENGTH OF Destination Folder::_vendor_names:::::%s",len(folderandfilesLength))
+    # If necessary, replace us-west-2 with the AWS Region you're using for Amazon SES.
+    AWS_REGION = "us-east-1"
 
-        logging.warn("Source Contents for File:::_vendor_names:::%s",folderandfilesLength[0].get("Key"))
-        logging.warn("IIIIIIIIIIIIIIII_vendor_namesII %s",folderandfilesLength[0])
-        Folder_vendor_names_PATH=folderandfilesLength[0].get("Key")
-        logging.warn("Source Folder_vendor_names======folderandfilesLength[1].get(Key)===>:::::_vendor_names:::%s",Folder_vendor_names_PATH)
-        if not Folder_vendor_names_PATH.endswith("csv"):
-           logging.warn("Folder_vendor_names::::::::_vendor_names:::::%s",Folder_vendor_names_PATH)
-           DestinationPATHList.append(Folder_vendor_names_PATH)
-        copy_source = {
-                      'Bucket': bucket_name,
-                      'Key': csvSourceFilename
-                     }
-        logging.warn("bucket_name:::%s",bucket_name)#old Bucket
-        logging.warn("Source File Name::%s",filename)#obj.key
-        logging.warn("csvSourceFilename::::%s",csvSourceFilename)#old file name
-        logging.warn("Destination Path::Folder_vendor_details_PATH:::::%s",Folder_vendor_details_PATH)
-        logging.warn("Destination Path::Folder_vendor_names_PATH:::::%s",Folder_vendor_names_PATH)
-        try:
-            csvSourceFolderwithSlash=csvSourceFolder+"/"
-            if filename.endswith('.csv'):
-                old_source = { 'Bucket': bucket_name,
-                           'Key': filename}
-                 
-                if  vendor_names in filename:
-                    logging.warn("In vendor_names:::::::::::::::")
-                    # replace the prefix
-                    logging.warn("vendor_names csv file not found then copying new File:::")
-                    logging.warn("csvSourceFolderwithSlash::::%s",csvSourceFolderwithSlash)
-                    logging.warn("Folder_vendor_names_PATH:::%s",Folder_vendor_names_PATH)
-                    new_key = filename.replace(csvSourceFolderwithSlash, Folder_vendor_names_PATH)
-                    new_key = Folder_vendor_names_PATH+ csvSourceFilename
-                    new_obj = new_bucket.Object(new_key)
-                    logging.warn("obj.key::%s",filename)
-                    logging.warn("new_key::%s",new_key)
-                    bucket = s3object.Bucket(DestinationBucketName)
-                    objs = list(bucket.objects.filter(Prefix=Folder_vendor_names_PATH))
-                    logging.warn("**************len(objs)***vendor_names************ %s",len(objs))
-                    for i in range(0, len(objs)):
-                        logging.warn("%s", objs[i].key)
-                        logging.warn("objs[i].key::filename:::%s",objs[i].key)
-                        if vendor_names in objs[i].key:
-                            filename=objs[i].key
-                            logging.warn("Before if condition::vendor_names::filename:%s",filename)
-                            if filename.endswith("csv") and vendor_names in filename:
-                                fileObj = client.get_object(Bucket =DestinationBucketName, Key=filename)
-                                file_content = fileObj["Body"].read().decode('utf-8')
-                                strfilecontent=str(file_content)
-                                strfilecontentlist=strfilecontent.splitlines()
-                                # logging.warn("strfilecontentlist::vendor_names:::%s",str(strfilecontentlist))
-                                vendor_namesRowCount=len(strfilecontentlist)
-                                logging.warn("Number of Rows in file::vendor_names::%s",len(strfilecontentlist))
-                                vendor_namesRowCount=len(strfilecontentlist)
-                                logging.warn("ActualFileRowCount::::%s",ActualFileRowCount)
-                                logging.warn("vendor_detailsRowCount::::%s",vendor_namesRowCount)
-                                if ActualFileRowCount > vendor_namesRowCount:
-                                    #If New file Number of Row's is greater then old file then copy the New file  
-                                    logging.warn("I AM IN ActualFileRowCount > vendor_namesRowCount")
-                                    response = client.list_objects_v2(Bucket=DestinationBucketName, Prefix=Folder_vendor_names_PATH)
-                                    for object in response['Contents']:
-                                      logging.warn('Deleting: %s', object['Key'])
-                                      if (vendor_names in object['Key']) and object['Key'].endswith("csv"):
-                                         client.delete_object(Bucket=DestinationBucketName, Key=object['Key'])
-                                         print("File::::"+csvSourceFilename+":::Deleted into processedfiles/vendor_names/!!!!!!!!")
-                                    new_obj.copy(old_source)
-                                    logging.warn("obj.key::%s",filename)
-                                    logging.warn("new_key::%s",new_key)
-                                    print("File::::"+csvSourceFilename+":::copied into processedfiles/vendor_names/!!!!!!!!")
-                                else:
-                                    logging.warn("vendor_details csv File not found then copying NEW File:processedfiles/vendor_names/:::")
-                            elif filename.endswith("csv"):
-                                #If CSV File not exists then Copying the new file
-                                logging.warn("vendor_names csv file not found then copying new File::processedfiles/vendor_names/::::")
-                                new_obj.copy(old_source)
-                                logging.warn("obj.key::%s",filename)
-                                logging.warn("new_key::%s",new_key)
-                                print("File::::"+csvSourceFilename+":::copied into processedfiles/vendor_names/!!!!!!!!")
-                            
-                            elif len(objs) == 1:
-                                logging.warn("vendor_names csv file not found and len(objs) == 1 then copying new File::processedfiles/vendor_names/::::")
-                                new_obj.copy(old_source)
-                                logging.warn("obj.key::%s",filename)
-                                logging.warn("new_key::%s",new_key)
-                                print("File::::"+csvSourceFilename+":::copied into processedfiles/vendor_names/!!!!!!!!")
-                                
-                elif vendor_details in filename:
-                    logging.warn("In vendor_details:::::::::::::::")
-                    #replace the prefix
-                    logging.warn("vendor_details csv File not found then copying NEW File::::")
-                    logging.warn("csvSourceFolderwithSlash::::%s",csvSourceFolderwithSlash)
-                    logging.warn("Folder_vendor_details_PATH:::%s",Folder_vendor_details_PATH)
-                    new_key = filename.replace(csvSourceFolderwithSlash, Folder_vendor_details_PATH)
-                    new_key = Folder_vendor_details_PATH+ csvSourceFilename
-                    new_obj = new_bucket.Object(new_key)
-                    logging.warn("obj.key::%s",filename)
-                    logging.warn("new_key::%s",new_key)
-                    print("File::::"+csvSourceFilename+":::copied into processedfiles/vendor_details/!!!!!!!!")
-                    bucket = s3object.Bucket(DestinationBucketName)
-                    objs = list(bucket.objects.filter(Prefix=Folder_vendor_details_PATH))
-                    logging.warn("**************len(objs)*******vendor_details******** %s",len(objs))
-                    for i in range(0, len(objs)):
-                        logging.warn("%s",objs[i].key)
-                        logging.warn("Before if condition::vendor_names::filename::::objs[i].key:::%s",objs[i].key)
-                        if vendor_details in objs[i].key:
-                            filename=objs[i].key
-                            if filename.endswith("csv") and vendor_details in filename:
-                                fileObj = client.get_object(Bucket =DestinationBucketName, Key=filename)
-                                file_content = fileObj["Body"].read().decode('utf-8')
+    # The subject line for the email.
+    SUBJECT = "AWS Cloud S3 Bucket:redshiftbidailyloads Daily uploaded Files"
+    value=420
+    # The email body for recipients with non-HTML email clients.
+    BODY_TEXT = ("AWS Cloud S3 Bucket:redshiftbidailyloads Daily uploaded Files\r\n"
+                 "Today's files has been uploaded into AWS Cloud S3 Bucket:redshiftbidailyloads "
+                 )
+    #####################################################################################################
 
-                                strfilecontent=str(file_content)
-                                strfilecontentlist=strfilecontent.splitlines()
-                                # logging.warn("strfilecontentlist::vendor_details:::%s",str(strfilecontentlist))
-                                vendor_detailsRowCount=len(strfilecontentlist)
-                                logging.warn("Number of Rows in file::vendor_details::%s",len(strfilecontentlist)) 
-                                vendor_detailsRowCount=len(strfilecontentlist)
-                                logging.warn("ActualFileRowCount::::%s",ActualFileRowCount)
-                                logging.warn("vendor_detailsRowCount::::%s",vendor_detailsRowCount)
-                                if ActualFileRowCount > vendor_detailsRowCount:
-                                     logging.warn("I AM IN ActualFileRowCount > vendor_detailsRowCount:::::") 
-                                     response = client.list_objects_v2(Bucket=DestinationBucketName, Prefix=Folder_vendor_details_PATH)
-                                     for object in response['Contents']:
-                                       logging.warn('Deleting: %s', object['Key'])
-                                       if (vendor_details in object['Key']) and (object['Key'].endswith("csv")):
-                                          client.delete_object(Bucket=DestinationBucketName, Key=object['Key'])
-                                          print("File::::"+csvSourceFilename+":::Deleted into processedfiles/vendor_details/!!!!!!!!")
-                                     
-                                     new_obj.copy(old_source)
-                                     logging.warn("obj.key::%s",filename)
-                                     logging.warn("new_key::%s",new_key)
-                                     print("File::::"+csvSourceFilename+":::copied into processedfiles/vendor_details/!!!!!!!!")     
-                                else:
-                                    logging.warn("Uploaded file No.Of ROW's is less then exsting File No.Of ROW's processedfiles/vendor_details/")
-                            elif filename.endswith("csv"):
-                                logging.warn("vendor_details csv File not found then copying NEW File:processedfiles/vendor_details/:::")
-                                new_obj.copy(old_source)
-                                logging.warn("obj.key::%s",filename)
-                                logging.warn("new_key::%s",new_key)
-                                print("File::::"+csvSourceFilename+":::copied into processedfiles/vendor_details/!!!!!!!!") 
-                            
-                            elif len(objs) == 1:
-                                logging.warn("vendor_names csv file not found and len(objs) == 1 then copying new File::processedfiles/vendor_details/::::")
-                                new_obj.copy(old_source)
-                                logging.warn("obj.key::%s",filename)
-                                logging.warn("new_key::%s",new_key)
-                                print("File::::"+csvSourceFilename+":::copied into processedfiles/vendor_details/!!!!!!!!")    
-        except ClientError as e:
-              logging.warn("Copy ClientError::::%s",e)
+    value=filename
+
+    # The HTML body of the email.
+    BODY_HTML = """<html>
+    <head></head>
+    <body>
+      <h1>Amazon S3 Files Uploaded information</h1>
+      <p>AWS Cloud S3 Bucket:redshiftbidailyloads Daily uploaded File
+          """+str(value)+""" has been uploaded::+"""+ str(result) +"""</p>
+    </body>
+    </html>
+                """
+
+    # The character encoding for the email.
+    CHARSET = "UTF-8"
+
+    # Create a new SES resource and specify a region.
+    client = boto3.client('ses',region_name=AWS_REGION)
+
+    # Try to send the email.
+    try:
+        #Provide the contents of the email.
+        response = client.send_email(
+            Destination={
+                'ToAddresses': [
+                    RECIPIENT,
+                ],
+            },
+            Message={
+                'Body': {
+                    'Html': {
+                        'Charset': CHARSET,
+                        'Data': BODY_HTML,
+                    },
+                    'Text': {
+                        'Charset': CHARSET,
+                        'Data': BODY_TEXT,
+                    },
+                },
+                'Subject': {
+                    'Charset': CHARSET,
+                    'Data': SUBJECT,
+                },
+            },
+            Source=SENDER,
+            # If you are not using a configuration set, comment or delete the
+            # following line
+            #ConfigurationSetName=CONFIGURATION_SET,
+        )
+    # Display an error if something goes wrong.
+    except ClientError as e:
+        print(e.response['Error']['Message'])
+    else:
+        print("Email sent! Message ID:"),
+        print(response['MessageId'])

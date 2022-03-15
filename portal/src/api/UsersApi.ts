@@ -1,5 +1,6 @@
 import User, { UserLeaveAdministrator, UserRole } from "../models/User";
 import BaseApi from "./BaseApi";
+import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
 
 export default class UsersApi extends BaseApi {
@@ -7,7 +8,22 @@ export default class UsersApi extends BaseApi {
     return routes.api.users;
   }
 
-  get i18nPrefix() {
+  /**
+   * Figure out which feature flag headers to send to the back-end based on which feature flags
+   * are enabled on the front-end.
+   */
+  get featureFlagHeaders() {
+    const headers: { "X-FF-Sync-Cognito-Preferences"?: string } = {};
+
+    // todo (PORTAL-1828): Remove claimantSyncCognitoPreferences feature flag
+    if (isFeatureEnabled("claimantSyncCognitoPreferences")) {
+      headers["X-FF-Sync-Cognito-Preferences"] = "true";
+    }
+
+    return headers;
+  }
+
+  get namespace() {
     return "users";
   }
 
@@ -44,7 +60,10 @@ export default class UsersApi extends BaseApi {
     user_id: string,
     patchData: { [key: string]: unknown }
   ) => {
-    const { data } = await this.request<User>("PATCH", user_id, patchData);
+    // todo (PORTAL-1828): Remove claimantSyncCognitoPreferences feature flag
+    const { data } = await this.request<User>("PATCH", user_id, patchData, {
+      additionalHeaders: this.featureFlagHeaders,
+    });
     const roles = this.createUserRoles(data.roles);
     const user_leave_administrators = this.createUserLeaveAdministrators(
       data.user_leave_administrators
@@ -63,7 +82,7 @@ export default class UsersApi extends BaseApi {
   /**
    * Convert a user to an employer
    */
-  convertUser = async (
+  convertUserToEmployer = async (
     user_id: string,
     postData: { employer_fein: string }
   ) => {

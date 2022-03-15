@@ -18,6 +18,17 @@ describe("SortDropdown", () => {
     );
   });
 
+  it("defaults to Sort by New applications option when is enabled", () => {
+    process.env.featureFlags = JSON.stringify({
+      employerShowMultiLeaveDashboard: true,
+    });
+    setup();
+
+    expect(screen.getByRole("combobox", { name: /sort/i })).toHaveValue(
+      "latest_follow_up_date,descending"
+    );
+  });
+
   it("updates order_by and order_direction params when a sort choice is selected", () => {
     const { updatePageQuerySpy } = setup();
 

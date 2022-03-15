@@ -40,8 +40,6 @@ class AuditBatchStep(Step):
             self.db_session.add(new_batch)
 
             # Update existing batch with proper status if not already marked
-            # Need to handle additional scenarios
-            #   i.e. - What should happen when a batch is generated, but not yet mailed?
             if existing_batch is not None:
                 status = ""
                 status += (

@@ -38,7 +38,7 @@ def upgrade():
         sa.Column("benefit_year_start_date", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.Column("benefit_year_end_date", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=True),
-        sa.ForeignKeyConstraint(["agency_id"], ["lk_agency.agency_id"],),
+        sa.ForeignKeyConstraint(["agency_id"], ["lk_agency.agency_id"]),
         sa.PrimaryKeyConstraint("agency_reduction_payment_id"),
     )
     op.create_index(
@@ -91,7 +91,7 @@ def upgrade():
             ["agency_reduction_payment_id"],
             ["agency_reduction_payment.agency_reduction_payment_id"],
         ),
-        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"],),
+        sa.ForeignKeyConstraint(["reference_file_id"], ["reference_file.reference_file_id"]),
         sa.PrimaryKeyConstraint("reference_file_id", "agency_reduction_payment_id"),
     )
     # ### end Alembic commands ###

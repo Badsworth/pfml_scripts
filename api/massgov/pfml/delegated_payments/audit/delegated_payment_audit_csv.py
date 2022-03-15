@@ -1,7 +1,7 @@
-from dataclasses import dataclass
-from typing import Optional
+from dataclasses import dataclass, field
+from typing import List, Optional
 
-from massgov.pfml.db.models.payments import PaymentAuditReportType
+from massgov.pfml.db.models.payments import PaymentAuditReportDetails, PaymentAuditReportType
 from massgov.pfml.delegated_payments.reporting.delegated_abstract_reporting import AbstractRecord
 
 
@@ -23,6 +23,7 @@ class PaymentAuditCSV(AbstractRecord):
     state: Optional[str]
     zip: Optional[str]
     is_address_verified: Optional[str]
+    employer_name: Optional[str]
     payment_preference: Optional[str]
     scheduled_payment_date: Optional[str]
     payment_period_start_date: Optional[str]
@@ -59,6 +60,10 @@ class PaymentAuditCSV(AbstractRecord):
     rejected_notes: Optional[str] = None
     previously_paid_payment_count: str = "0"
     previously_paid_payments: Optional[str] = None
+    exceeds_26_weeks_total_leave_details: Optional[str] = None
+    payment_date_mismatch_details: Optional[str] = None
+    is_preapproved: Optional[str] = None
+    preapproval_issues: Optional[str] = None
 
 
 @dataclass
@@ -71,6 +76,9 @@ class PaymentAuditDetails:
     rejected_by_program_integrity: bool = False
     skipped_by_program_integrity: bool = False
     rejected_notes: Optional[str] = None
+    exceeds_26_weeks_total_leave_details: Optional[str] = None
+    payment_date_mismatch_details: Optional[str] = None
+    audit_report_details_list: List[PaymentAuditReportDetails] = field(default_factory=list)
 
 
 PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
@@ -88,6 +96,7 @@ PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
     state="State",
     zip="Zip",
     is_address_verified="Address Verified",
+    employer_name="Employer Name",
     payment_preference="Payment Preference",
     scheduled_payment_date="Scheduled Payment Date",
     payment_period_start_date="Payment Period Start",
@@ -124,4 +133,8 @@ PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
     rejected_notes="Reject Notes",
     previously_paid_payment_count="Previously Paid Payment Count",
     previously_paid_payments="List of Previously Paid Payments",
+    exceeds_26_weeks_total_leave_details=">26 weeks",
+    payment_date_mismatch_details=PaymentAuditReportType.PAYMENT_DATE_MISMATCH.payment_audit_report_type_description,
+    is_preapproved="Is Pre-approved",
+    preapproval_issues="Pre-approval Issues",
 )

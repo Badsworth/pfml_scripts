@@ -6,36 +6,119 @@ import {
   ClaimPage,
   PrimaryRelationshipDescription,
 } from "../../../actions/fineos.pages";
+import { LeaveType } from "../../../actions/portal";
 import { Submission } from "../../../../src/types";
 import {
   extractLeavePeriodType,
   getLeavePeriod,
 } from "../../../../src/util/claims";
 import { waitForAjaxComplete } from "../../../actions/fineos";
+import { LeaveReason } from "../../../../src/generation/Claim";
+import { config } from "../../../actions/common";
 
-/**
- * Because there's too many scenarios for us to reasonably handle during the `Reason of Absence` step,
- * specify the description here and use/expand it as needed.
- */
-// @todo Depending on what leave type you are taking this will need to be updated.
-const absenceDescription: AbsenceReasonDescription = {
-  relates_to: "Family",
-  // relates_to: "Employee",
-  reason: "Military Exigency Family",
-  // reason: "Military Caregiver",
-  qualifier_1: "Other Additional Activities",
-  // qualifier_1: "Active Duty",
-  // qualifier_2: "Sickness/Injury",
+const getLeaveType = (leaveReason: NonNullable<LeaveReason>): LeaveType => {
+  const mapping: {
+    [key in NonNullable<LeaveReason>]: LeaveType;
+  } = {
+    "Military Exigency Family": "Active duty",
+    "Child Bonding": "Bond with a child",
+    "Pregnancy/Maternity": "Medical leave for pregnancy or birth",
+    "Care for a Family Member": "Care for a family member",
+    "Military Caregiver": "Military family",
+    "Serious Health Condition - Employee": "Medical leave",
+  };
+  return mapping[leaveReason];
 };
 
-/**
- * Same as above, there's too many scenarios for us to reasonably handle when describing primary relationship,
- * specify the description here and use/expand it as needed.
- */
-// @todo If the Leave Type has Absence Relationship. This includes Child Bonding, Caring for a family member, and Out of work for another reason with Family.
-const _relationshipDescription: PrimaryRelationshipDescription = {
-  relationship_to_employee: "Sibling - Brother/Sister",
-  qualifier_1: "Biological",
+const getPrimaryRelationshipDescription = (
+  leaveReason: NonNullable<LeaveReason>
+): PrimaryRelationshipDescription | null => {
+  const mapping: {
+    [key in NonNullable<LeaveReason>]: PrimaryRelationshipDescription | null;
+  } = {
+    "Care for a Family Member": {
+      relationship_to_employee: "Sibling - Brother/Sister",
+      qualifier_1: "Biological",
+    },
+    "Child Bonding": {
+      relationship_to_employee: "Sibling - Brother/Sister",
+      qualifier_1: "Biological",
+    },
+    "Military Caregiver": {
+      relationship_to_employee: "Sibling - Brother/Sister",
+      qualifier_1: "Biological",
+    },
+    "Military Exigency Family": {
+      relationship_to_employee: "Sibling - Brother/Sister",
+      qualifier_1: "Biological",
+    },
+    "Pregnancy/Maternity": null,
+    "Serious Health Condition - Employee": null,
+  };
+
+  return mapping[leaveReason];
+};
+
+const getAbsenceDescription = (
+  leaveReason: NonNullable<LeaveReason>
+): AbsenceReasonDescription => {
+  const mapping: {
+    [key in NonNullable<LeaveReason>]: Omit<AbsenceReasonDescription, "reason">;
+  } = {
+    "Care for a Family Member": {
+      typeOfRequest: "Caring for a family member",
+      relates_to: "Family",
+      qualifier_1: "Serious Health Condition",
+    },
+    "Child Bonding": {
+      typeOfRequest:
+        "Bonding with a new child (adoption/ foster care/ newborn)",
+      relates_to: "Family",
+      qualifier_1: "Foster Care",
+    },
+    "Military Caregiver": {
+      typeOfRequest: "Out of work for another reason",
+      relates_to: "Family",
+    },
+    "Military Exigency Family": {
+      typeOfRequest: "Out of work for another reason",
+      relates_to: "Family",
+      qualifier_1: "Other Additional Activities",
+    },
+    "Pregnancy/Maternity": {
+      typeOfRequest: "Pregnancy, birth or related medical treatment",
+      relates_to: "Employee",
+      qualifier_1: "Birth Disability",
+    },
+    "Serious Health Condition - Employee": {
+      typeOfRequest:
+        "Sickness, treatment required for a medical condition or any other medical procedure",
+      relates_to: "Employee",
+      qualifier_1: "Not Work Related",
+      qualifier_2: "Sickness",
+    },
+  };
+
+  return {
+    reason: leaveReason,
+    ...mapping[leaveReason],
+  };
+};
+
+// It's safe to use 'any' for a user-defined type guard like this
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const isLeaveReason = (value: any): value is NonNullable<LeaveReason> => {
+  const mapping: {
+    [key in NonNullable<LeaveReason>]: true;
+  } = {
+    "Military Exigency Family": true,
+    "Child Bonding": true,
+    "Pregnancy/Maternity": true,
+    "Care for a Family Member": true,
+    "Military Caregiver": true,
+    "Serious Health Condition - Employee": true,
+  };
+  return value in mapping;
 };
 
 /**
@@ -54,9 +137,12 @@ describe("Submit a claim through Fineos intake process, verify the Absence Case"
           .startCreateNotification((occupationDetails) => {
             // @TODO CPS-906-P (CPS-1650)/Check that you can't submit 0 as amount of hours worked per week
             // Comment out everything after this to end the test.
-            occupationDetails.enterHoursWorkedPerWeek(0);
-            occupationDetails.clickNext();
-            fineos.assertErrorMessage("Hours worked per week must be entered");
+            // occupationDetails.enterHoursWorkedPerWeek(0);
+            // occupationDetails.clickNext();
+            if (config("HAS_APRIL_UPGRADE") === "true") {
+              occupationDetails.verifyOccupation();
+            }
+            // fineos.assertErrorMessage("Hours worked per week must be entered");
             // @TODO end of testing CPS-906-P (CPS-1650)
             // Adjust as needed
             if (claim.claim.hours_worked_per_week)
@@ -64,15 +150,32 @@ describe("Submit a claim through Fineos intake process, verify the Absence Case"
                 claim.claim.hours_worked_per_week
               );
 
+            if (!isLeaveReason(claim.claim.leave_details?.reason)) {
+              throw new Error(
+                `Unexpected leave reason: ${claim.claim.leave_details?.reason}`
+              );
+            }
+            const leaveReason = claim.claim.leave_details
+              ?.reason as NonNullable<LeaveReason>;
+            cy.stash("leaveReason", leaveReason);
+            const absenceDescription = getAbsenceDescription(leaveReason);
+            const primaryRelationshipDescription =
+              getPrimaryRelationshipDescription(leaveReason);
             //By returning something from the callback, you can bubble it up to outside scope.
             return occupationDetails.nextStep((notificationOptions) =>
               notificationOptions
                 // Request types
-                .chooseTypeOfRequest("Out of work for another reason")
+                .chooseTypeOfRequest(
+                  absenceDescription.typeOfRequest ??
+                    "Out of work for another reason"
+                )
                 .nextStep((reasonOfAbsence) => {
                   reasonOfAbsence.fillAbsenceReason(absenceDescription);
-                  // @TODO Fill absence relationship for caring leave or bonding claims
-                  // .fillAbsenceRelationship(relationshipDescription);
+                  if (primaryRelationshipDescription) {
+                    reasonOfAbsence.fillAbsenceRelationship(
+                      primaryRelationshipDescription
+                    );
+                  }
                   return reasonOfAbsence.nextStep((datesOfAbsence) => {
                     assertValidClaim(claim.claim);
                     const [startDate, endDate] = getLeavePeriod(
@@ -121,10 +224,18 @@ describe("Submit a claim through Fineos intake process, verify the Absence Case"
                         // @TODO comment out applyStandardWorkWeek() and return wrapUp.finishNotificationCreation() and below that line.
                         .applyStandardWorkWeek()
                         .nextStep((wrapUp) => {
+                          if (leaveReason === "Military Caregiver") {
+                            workAbsenceDetails.addMilitaryCaregiverDescription();
+                          }
                           wrapUp.selectWithholdingPreference(
-                            claim.claim.is_withholding_tax
+                            claim.is_withholding_tax
                           );
                           wrapUp.clickNext();
+
+                          if (leaveReason === "Pregnancy/Maternity") {
+                            // handle the extra step in pregnancy cases
+                            wrapUp.clickNext();
+                          }
                           // @TODO Uncomment the fineos.assertErrorMessage to check for error message
                           // fineos.assertErrorMessage("Work Pattern must be populated. Total hours per week in the Work Pattern must equal the Hours Worked Per Week field. Populate the Work Pattern and click Apply to Calendar before proceeding.")
                           // Bubble up Leave Case id number to outside scope
@@ -218,13 +329,17 @@ describe("Submit a claim through Fineos intake process, verify the Absence Case"
     portal.before();
     cy.unstash<DehydratedClaim>("claim").then(({ claim }) => {
       cy.unstash<Submission>("submission").then((submission) => {
-        assertValidClaim(claim);
-        portal.loginLeaveAdmin(claim.employer_fein);
-        // Access the review page
-        portal.visitActionRequiredERFormPage(submission.fineos_absence_id);
-        // Deny the claim
-        portal.assertLeaveType("Active duty");
-        portal.respondToLeaveAdminRequest(false, true, false, false);
+        cy.unstash<NonNullable<LeaveReason>>("leaveReason").then(
+          (leaveReason) => {
+            assertValidClaim(claim);
+            portal.loginLeaveAdmin(claim.employer_fein);
+            // Access the review page
+            portal.visitActionRequiredERFormPage(submission.fineos_absence_id);
+            // Deny the claim
+            portal.assertLeaveType(getLeaveType(leaveReason));
+            portal.respondToLeaveAdminRequest(false, true, false, false);
+          }
+        );
       });
     });
   });

@@ -93,7 +93,9 @@ class MaxWeeklyBenefitAmountValidationStep(Step):
                 logger.info(
                     "Payment %s failed max weekly benefits amount validation rule, adding to error log",
                     make_payment_log(payment_container.payment),
-                    extra=payment_container.get_traceable_details(),
+                    extra=payment_container.get_traceable_details(
+                        state=State.PAYMENT_FAILED_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION
+                    ),
                 )
 
                 additional_outcome_details = {}
@@ -124,13 +126,15 @@ class MaxWeeklyBenefitAmountValidationStep(Step):
                 logger.info(
                     "Payment %s passed max weekly benefit amount validation rules",
                     make_payment_log(payment_container.payment),
-                    extra=payment_container.get_traceable_details(),
+                    extra=payment_container.get_traceable_details(
+                        state=State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK
+                    ),
                 )
 
                 state_log_util.create_finished_state_log(
                     end_state=State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK,
                     outcome=state_log_util.build_outcome(
-                        "Completed max weekly benefit amount validation", validation_container=None,
+                        "Completed max weekly benefit amount validation", validation_container=None
                     ),
                     associated_model=payment_container.payment,
                     db_session=self.db_session,

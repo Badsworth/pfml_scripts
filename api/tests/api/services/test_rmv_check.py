@@ -478,7 +478,7 @@ def test_make_response_from_rmv_check_pass():
             check_residential_city=True,
             check_residential_zip_code=True,
             has_passed_required_checks=True,
-        ),
+        )
     )
 
     assert response.verified is True
@@ -488,8 +488,8 @@ def test_make_response_from_rmv_check_pass():
 def test_make_response_from_rmv_check_fail_due_to_rmv_not_found():
     response = make_response_from_rmv_check(
         RMVCheck(
-            rmv_error_code=RmvAcknowledgement.CUSTOMER_NOT_FOUND, has_passed_required_checks=False,
-        ),
+            rmv_error_code=RmvAcknowledgement.CUSTOMER_NOT_FOUND, has_passed_required_checks=False
+        )
     )
 
     assert response.verified is False
@@ -500,8 +500,7 @@ def test_make_response_from_rmv_check_fail_due_to_rmv_not_found():
 
     response = make_response_from_rmv_check(
         RMVCheck(
-            rmv_error_code=RmvAcknowledgement.CREDENTIAL_NOT_FOUND,
-            has_passed_required_checks=False,
+            rmv_error_code=RmvAcknowledgement.CREDENTIAL_NOT_FOUND, has_passed_required_checks=False
         )
     )
 
@@ -554,7 +553,7 @@ def test_make_response_from_rmv_check_fail_due_to_one_thing():
             check_residential_city=True,
             check_residential_zip_code=True,
             has_passed_required_checks=False,
-        ),
+        )
     )
 
     assert response.verified is False
@@ -573,7 +572,7 @@ def test_make_response_from_rmv_check_fail_due_to_multiple_thing():
             check_residential_city=True,
             check_residential_zip_code=False,
             has_passed_required_checks=False,
-        ),
+        )
     )
 
     assert response.verified is False

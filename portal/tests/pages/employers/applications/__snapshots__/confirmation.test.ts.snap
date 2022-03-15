@@ -28,7 +28,7 @@ exports[`Confirmation renders the component 1`] = `
       Please check with your human resources team and your colleagues to see who should respond.
     </li>
     <li>
-      If the right person at your company already has an employer account, they received the same email you did and can respond directly.
+      If the right person at your organization already has an employer account, they received the same email you did and can respond directly.
     </li>
     <li>
       Otherwise, please ask them to call us at 
@@ -41,7 +41,7 @@ exports[`Confirmation renders the component 1`] = `
     </li>
   </ul>
   <p>
-    If we do not hear from anyone at your company before the deadline, we will process the application solely based on the information the employee provided.
+    If we do not hear from anyone at your organization before the deadline, we will process the application solely based on the information the employee provided.
   </p>
   <div
     class="border-top-2px border-base-lighter margin-top-4 padding-top-4"

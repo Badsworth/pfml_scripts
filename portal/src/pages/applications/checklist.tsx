@@ -4,8 +4,8 @@ import BenefitsApplication, {
 } from "../../models/BenefitsApplication";
 import {
   DocumentType,
-  findDocumentsByLeaveReason,
   findDocumentsByTypes,
+  getLeaveCertificationDocs,
 } from "../../models/Document";
 import StepModel, { ClaimSteps } from "../../models/Step";
 import { camelCase, get } from "lodash";
@@ -62,11 +62,13 @@ export const ChecklistAlerts = ({ submitted }: ChecklistAlertsProps) => {
 export const Checklist = (props: ChecklistProps) => {
   const { t } = useTranslation();
   const { appLogic, claim, documents, isLoadingDocuments, query } = props;
-  const { appErrors } = appLogic;
-  const otherLeaveStartDate = formatDate(claim.otherLeaveStartDate).full();
+  const { errors } = appLogic;
+  const otherLeaveStartDate = formatDate(
+    claim.computed_start_dates.other_reason
+  ).full();
 
   const hasLoadingDocumentsError = hasDocumentsLoadError(
-    appErrors,
+    errors,
     claim.application_id
   );
 
@@ -74,10 +76,7 @@ export const Checklist = (props: ChecklistProps) => {
     DocumentType.identityVerification,
   ]);
 
-  const certificationDocuments = findDocumentsByLeaveReason(
-    documents,
-    get(claim, "leave_details.reason")
-  );
+  const certificationDocuments = getLeaveCertificationDocs(documents);
 
   const warnings =
     appLogic.benefitsApplications.warningsLists[claim.application_id];

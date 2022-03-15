@@ -4,16 +4,15 @@
 @import "../common/components/EnvironmentsTable";
 @import "../common/components/Filters";
 
+html {
+  height: auto;
+}
+
 .E2E-morning-run {
   h2 {
     margin-top: 20px;
     margin-bottom: 5px;
     border-bottom: 1px #666 solid;
-  }
-
-  .allLink {
-    font-size: 14px;
-    padding: 10px;
   }
 
   .filelist {

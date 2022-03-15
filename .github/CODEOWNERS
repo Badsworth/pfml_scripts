@@ -10,14 +10,13 @@
 /.github/actions/ @EOLWD/pfml-infra
 /.github/CODEOWNERS @EOLWD/pfml-infra
 
-/portal/ @EOLWD/pfml-portal
-#/admin/ @EOLWD/pfml-admin-portal
 /bin/ @EOLWD/pfml-infra
 /docs/portal/ @EOLWD/pfml-portal
 /e2e/ @EOLWD/pfml-e2e
 /infra/portal/ @EOLWD/pfml-portal @EOLWD/pfml-infra
 /infra/admin-portal/ @EOLWD/pfml-infra @EOLWD/pfml-admin-portal
-#/infra/bi/ @EOLWD/pfml-infra @EOLWD/pfml-business-intel
-#/pdf_api/ @EOLWD/pfml-pdf-api 
+/infra/bi/ @EOLWD/pfml-infra @EOLWD/pfml-business-intel
+/pdf_api/ @EOLWD/pfml-pdf-api 
 
 /api/**/delegated_payments/ @EOLWD/pfml-payments
+/api/**/irs_1099/ @EOLWD/pfml-pdf-api

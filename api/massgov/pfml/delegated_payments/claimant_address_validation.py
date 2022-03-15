@@ -19,12 +19,12 @@ from massgov.pfml.db.models.employees import (
     Claim,
     Employee,
     ExperianAddressPair,
-    GeoState,
     Payment,
     ReferenceFile,
     ReferenceFileType,
     StateLog,
 )
+from massgov.pfml.db.models.geo import GeoState
 from massgov.pfml.db.models.payments import FineosExtractEmployeeFeed, MmarsPaymentData
 from massgov.pfml.delegated_payments.address_validation import _get_experian_soap_client
 from massgov.pfml.delegated_payments.step import Step
@@ -173,7 +173,7 @@ class ClaimantAddressValidationStep(Step):
 
             employee_feed_data = list(
                 self.db_session.query(employee_subquery)
-                .join(Employee, employee_subquery.c.customerno == Employee.fineos_customer_number,)
+                .join(Employee, employee_subquery.c.customerno == Employee.fineos_customer_number)
                 .filter(employee_subquery.c.R == 1)
                 .filter(Employee.employee_id.in_(employees))
             )
@@ -441,7 +441,7 @@ class ClaimantAddressValidationStep(Step):
                 ),
                 Constants.MESSAGE_KEY: confidence,
                 # Constants.MESSAGE_KEY: msg,
-            },
+            }
         }
         return exp_outcome
 
@@ -550,7 +550,7 @@ class ClaimantAddressValidationStep(Step):
             "address1", employee_data, self.validation_container, address_required
         )
         address_line_two = payments_util.validate_db_input(
-            "address2", employee_data, self.validation_container, False,
+            "address2", employee_data, self.validation_container, False
         )
         city = payments_util.validate_db_input(
             "address4", employee_data, self.validation_container, address_required

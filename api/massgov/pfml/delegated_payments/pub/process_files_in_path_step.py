@@ -30,19 +30,35 @@ class ProcessFilesInPathStep(Step, metaclass=abc.ABCMeta):
     error_path: str
     reference_file: ReferenceFile
     more_files_to_process: bool
+    log_extra: Dict[str, Any]
 
     def __init__(
         self,
         db_session: massgov.pfml.db.Session,
         log_entry_db_session: massgov.pfml.db.Session,
         base_path: str,
+        should_add_to_report_queue: bool = False,
     ) -> None:
         """Constructor."""
         self.base_path = base_path
+
+        self.log_extra = {}
         self.compute_paths_from_base_path()
         self.more_files_to_process = True
 
-        super().__init__(db_session, log_entry_db_session)
+        super().__init__(db_session, log_entry_db_session, should_add_to_report_queue)
+
+    def cleanup_on_failure(self) -> None:
+        # If the reference file has been created, we can
+        # move the file we received to the error path.
+        if self.reference_file:
+            delegated_payments_util.move_reference_file(
+                self.db_session, self.reference_file, self.received_path, self.error_path
+            )
+            logger.error(
+                "Fatal error when processing file",
+                extra=self.log_extra | {"path": self.reference_file.file_location},
+            )
 
     def run_step(self) -> None:
         """List incoming directory and process the first file."""
@@ -54,7 +70,12 @@ class ProcessFilesInPathStep(Step, metaclass=abc.ABCMeta):
         if s3_objects:
             file = s3_objects.pop(0)
             path = os.path.join(self.received_path, file)
-            self.set_metrics({"input_path": path})
+
+            # Set the input path as a import log "metric"
+            # and also initialize the log extra to have it.
+            input_path_dict = {"input_path": path}
+            self.set_metrics(input_path_dict)
+            self.log_extra = input_path_dict
             self.process_file(path)
 
         self.more_files_to_process = s3_objects != []
@@ -71,7 +92,7 @@ class ProcessFilesInPathStep(Step, metaclass=abc.ABCMeta):
         date_folder = delegated_payments_util.get_date_folder()
 
         self.received_path = os.path.join(
-            self.base_path, delegated_payments_util.Constants.S3_INBOUND_RECEIVED_DIR,
+            self.base_path, delegated_payments_util.Constants.S3_INBOUND_RECEIVED_DIR
         )
         self.processed_path = os.path.join(
             self.base_path, delegated_payments_util.Constants.S3_INBOUND_PROCESSED_DIR, date_folder
@@ -110,12 +131,18 @@ class ProcessFilesInPathStep(Step, metaclass=abc.ABCMeta):
             reference_file_id=self.reference_file.reference_file_id,
         )
 
+        log_extra: Dict[str, Any] = {"pub_error_type": pub_error_type.pub_error_type_description}
+        log_extra |= self.log_extra  # Add the shared values
         if payment is not None:
             pub_error.payment_id = payment.payment_id
+            log_extra |= delegated_payments_util.get_traceable_payment_details(payment)
 
         if pub_eft is not None:
             pub_error.pub_eft_id = pub_eft.pub_eft_id
+            log_extra |= delegated_payments_util.get_traceable_pub_eft_details(pub_eft)
 
+        # Add a log message just to get the metrics attached and in New Relic
+        logger.info("Adding PUB Error Scenario", extra=log_extra)
         self.db_session.add(pub_error)
 
         return pub_error

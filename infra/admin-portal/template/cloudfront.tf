@@ -3,14 +3,9 @@ provider "aws" {
   alias  = "us-east-1"
 }
 
-resource "random_password" "s3_user_agent_password" {
-  length           = 16
-  special          = true
-  override_special = "_%@"
-  keepers = {
-    # Update the date to generate a new password
-    date_generated = "2020-04-22"
-  }
+# Cloudfront Origin Access Identity
+resource "aws_cloudfront_origin_access_identity" "admin_portal_web_origin_access_identity" {
+  comment = "PFML Admin Portal (${var.environment_name})"
 }
 
 resource "aws_cloudfront_distribution" "admin_portal_web_distribution" {
@@ -19,27 +14,18 @@ resource "aws_cloudfront_distribution" "admin_portal_web_distribution" {
   web_acl_id = aws_wafv2_web_acl.cloudfront_waf_acl.arn
 
   origin {
-    domain_name = aws_s3_bucket.admin_portal_web.website_endpoint
+    domain_name = aws_s3_bucket.admin_portal_web.bucket_regional_domain_name
     origin_id   = aws_s3_bucket.admin_portal_web.id
     # set as an environment variable during github workflow
     origin_path = var.cloudfront_origin_path
-    #origin_path = "/server/pages"
-
-    # see s3 bucket iam policy
-    custom_header {
-      name  = "User-Agent"
-      value = random_password.s3_user_agent_password.result
+    s3_origin_config {
+      origin_access_identity = aws_cloudfront_origin_access_identity.admin_portal_web_origin_access_identity.cloudfront_access_identity_path
     }
+  }
 
-    custom_origin_config {
-      http_port  = 80
-      https_port = 443
-      # this must be http-only because AWS doesn't support HTTPS for S3 website
-      # endpoints, see
-      # https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValuesOriginProtocolPolicy
-      origin_protocol_policy = "http-only"
-      origin_ssl_protocols   = ["TLSv1", "TLSv1.1", "TLSv1.2"]
-    }
+  logging_config {
+    bucket = data.aws_s3_bucket.cloudfront_access_logging.bucket_domain_name
+    prefix = var.environment_name
   }
 
   comment             = "PFML Admin Portal (${var.environment_name})"

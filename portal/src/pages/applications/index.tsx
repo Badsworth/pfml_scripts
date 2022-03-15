@@ -1,19 +1,21 @@
+import React, { useEffect } from "react";
 import withBenefitsApplications, {
   WithBenefitsApplicationsProps,
 } from "../../hoc/withBenefitsApplications";
 import withUser, { WithUserProps } from "../../hoc/withUser";
 import Alert from "../../components/core/Alert";
 import ApplicationCard from "../../components/ApplicationCard";
-import BenefitsApplication from "../../models/BenefitsApplication";
 import ButtonLink from "../../components/ButtonLink";
+import Details from "../../components/core/Details";
 import Heading from "../../components/core/Heading";
 import Lead from "../../components/core/Lead";
+import Link from "next/link";
 import MfaSetupSuccessAlert from "src/components/MfaSetupSuccessAlert";
 import { NullableQueryParams } from "src/utils/routeWithParams";
 import PaginationNavigation from "src/components/PaginationNavigation";
-import React from "react";
 import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
+import formatDate from "src/utils/formatDate";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import { pick } from "lodash";
 import routes from "../../routes";
@@ -22,6 +24,7 @@ import { useTranslation } from "../../locales/i18n";
 interface IndexProps extends WithUserProps {
   query: {
     applicationAssociated?: string;
+    page_offset?: string;
     uploadedAbsenceId?: string;
     smsMfaConfirmed?: string;
   };
@@ -33,10 +36,6 @@ interface IndexProps extends WithUserProps {
 export const Index = (props: IndexProps) => {
   const { appLogic, query } = props;
   const { t } = useTranslation();
-  const apiParams = {
-    order_direction: "ascending",
-    ...query,
-  } as const;
 
   const PaginatedApplicationCardsWithRedirect = withRedirectToGetReadyPage(
     PaginatedApplicationCards,
@@ -44,7 +43,11 @@ export const Index = (props: IndexProps) => {
   );
 
   const PaginatedApplicationCardsWithBenefitsApplications =
-    withBenefitsApplications(PaginatedApplicationCardsWithRedirect, apiParams);
+    withBenefitsApplications(PaginatedApplicationCardsWithRedirect, {
+      page_offset: query?.page_offset,
+    });
+
+  const applicationCardProps = { appLogic, query };
 
   return (
     <React.Fragment>
@@ -59,21 +62,17 @@ export const Index = (props: IndexProps) => {
           })}
         </Alert>
       )}
-      {query?.applicationAssociated && (
-        <Alert className="margin-bottom-3" state="success">
-          <p>{t("pages.applications.claimAssociatedSuccessfully")}</p>
-        </Alert>
-      )}
       {query?.smsMfaConfirmed && <MfaSetupSuccessAlert />}
 
       <div className="grid-row grid-gap-6">
         <div className="desktop:grid-col margin-bottom-2">
           <Title>{t("pages.applications.title")}</Title>
+          <ApplicationApprovalsInformation {...props} />
           <PaginatedApplicationCardsWithBenefitsApplications
-            appLogic={appLogic}
+            {...applicationCardProps}
           />
         </div>
-        <div className="desktop:grid-col-auto">
+        <div className="desktop:grid-col-4">
           <Heading level="2" className="usa-sr-only">
             {t("pages.applications.createApplicationHeading")}
           </Heading>
@@ -89,12 +88,18 @@ export const Index = (props: IndexProps) => {
           <br />
 
           {isFeatureEnabled("channelSwitching") && (
-            <ButtonLink
-              href={appLogic.portalFlow.getNextPageRoute("IMPORT_APPLICATION")}
-              variation="unstyled"
-            >
-              {t("pages.applications.findLink")}
-            </ButtonLink>
+            <Details label={t("pages.applications.startByPhoneLabel")}>
+              <p>{t("pages.applications.startByPhoneDescription")}</p>
+              <Link
+                href={appLogic.portalFlow.getNextPageRoute(
+                  "IMPORT_APPLICATION"
+                )}
+              >
+                <a className="display-inline-block margin-bottom-5">
+                  {t("pages.applications.addApplication")}
+                </a>
+              </Link>
+            </Details>
           )}
         </div>
       </div>
@@ -123,11 +128,86 @@ function withRedirectToGetReadyPage<T extends WithBenefitsApplicationsProps>(
   return ComponentWithRedirect;
 }
 
-const PaginatedApplicationCards = (props: WithBenefitsApplicationsProps) => {
-  const { appLogic, claims, paginationMeta } = props;
-  const { t } = useTranslation();
-  const inProgressClaims = BenefitsApplication.inProgress(claims.items);
-  const completedClaims = BenefitsApplication.completed(claims.items);
+const ApplicationApprovalsInformation = (props: WithUserProps) => {
+  const { appLogic } = props;
+  const { loadBenefitYears, getCurrentBenefitYear } = appLogic.benefitYears;
+
+  useEffect(() => {
+    loadBenefitYears();
+  }, [loadBenefitYears]);
+  const currentBenefitYear = getCurrentBenefitYear();
+
+  if (!isFeatureEnabled("splitClaimsAcrossBY") || !currentBenefitYear) {
+    return (
+      <Lead>
+        <Trans
+          i18nKey="pages.applications.claimsApprovalProcess"
+          components={{
+            "approval-process-link": (
+              <a
+                href={routes.external.massgov.approvalTimeline}
+                rel="noopener noreferrer"
+                target="_blank"
+              />
+            ),
+          }}
+        />
+      </Lead>
+    );
+  }
+
+  return (
+    <React.Fragment>
+      <p>
+        <Trans
+          i18nKey="pages.applications.your_benefit_year"
+          values={{
+            startDate: formatDate(
+              currentBenefitYear.benefit_year_start_date
+            ).short(),
+            endDate: formatDate(
+              currentBenefitYear.benefit_year_end_date
+            ).short(),
+          }}
+          components={{
+            "benefit-year-guide-link": (
+              <a
+                href={routes.external.massgov.benefitsGuide_benefitYears}
+                rel="noopener noreferrer"
+                target="_blank"
+              />
+            ),
+          }}
+        />
+      </p>
+      <p>
+        <Trans
+          i18nKey="pages.applications.can_submit_application_across_benefit_year"
+          components={{
+            "approval-process-link": (
+              <a
+                href={routes.external.massgov.approvalTimeline}
+                rel="noopener noreferrer"
+                target="_blank"
+              />
+            ),
+          }}
+        />
+      </p>
+    </React.Fragment>
+  );
+};
+
+interface QueryForApplicationAssociated {
+  applicationAssociated?: string;
+}
+
+const PaginatedApplicationCards = (
+  props: WithBenefitsApplicationsProps & {
+    query: QueryForApplicationAssociated;
+  }
+) => {
+  const { appLogic, claims, paginationMeta, query } = props;
 
   /**
    * Update the page's query string, to load a different page number,
@@ -145,61 +225,24 @@ const PaginatedApplicationCards = (props: WithBenefitsApplicationsProps) => {
     updatePageQuery(pageOffset);
   };
 
+  const associatedId = query?.applicationAssociated || "";
+
+  if (claims.isEmpty) return null;
+
   return (
     <React.Fragment>
-      {inProgressClaims.length > 0 && (
-        <React.Fragment>
-          <div className="measure-6">
-            <Lead>
-              <Trans
-                i18nKey="pages.applications.claimsApprovalProcess"
-                components={{
-                  "approval-process-link": (
-                    <a
-                      href={routes.external.massgov.approvalTimeline}
-                      rel="noopener noreferrer"
-                      target="_blank"
-                    />
-                  ),
-                }}
-              />
-            </Lead>
-          </div>
-          <Heading level="2">
-            {t("pages.applications.inProgressHeading")}
-          </Heading>
-          {inProgressClaims.map((claim, index) => {
-            return (
-              <ApplicationCard
-                key={claim.application_id}
-                appLogic={appLogic}
-                claim={claim}
-                number={index + 1}
-                user={props.user}
-              />
-            );
-          })}
-        </React.Fragment>
-      )}
+      {claims.items.map((claim) => {
+        return (
+          <ApplicationCard
+            key={claim.application_id}
+            appLogic={appLogic}
+            claim={claim}
+            user={props.user}
+            successfullyImported={associatedId === claim.fineos_absence_id}
+          />
+        );
+      })}
 
-      {completedClaims.length > 0 && (
-        <React.Fragment>
-          <Heading level="2">
-            {t("pages.applications.submittedHeading")}
-          </Heading>
-          {completedClaims.map((claim, index) => {
-            return (
-              <ApplicationCard
-                key={claim.application_id}
-                claim={claim}
-                number={index}
-                appLogic={props.appLogic}
-                user={props.user}
-              />
-            );
-          })}
-        </React.Fragment>
-      )}
       {paginationMeta.total_pages > 1 && (
         <PaginationNavigation
           pageOffset={paginationMeta.page_offset}

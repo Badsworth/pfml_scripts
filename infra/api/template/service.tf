@@ -49,8 +49,8 @@ resource "aws_ecs_task_definition" "app" {
     "${path.module}/container_definitions.json",
     {
       app_name                                   = local.app_name
-      cpu                                        = "768"
-      memory                                     = "1536"
+      cpu                                        = "2048"
+      memory                                     = "4096"
       db_host                                    = aws_db_instance.default.address
       db_name                                    = aws_db_instance.default.name
       db_username                                = "pfml_api"
@@ -75,6 +75,7 @@ resource "aws_ecs_task_definition" "app" {
       fineos_client_wscomposer_user_id           = var.fineos_client_wscomposer_user_id
       fineos_client_oauth2_url                   = var.fineos_client_oauth2_url
       fineos_client_oauth2_client_id             = var.fineos_client_oauth2_client_id
+      fineos_is_running_v21                      = var.fineos_is_running_v21
       pfml_email_address                         = var.pfml_email_address
       bounce_forwarding_email_address            = var.bounce_forwarding_email_address
       bounce_forwarding_email_address_arn        = var.bounce_forwarding_email_address_arn
@@ -95,8 +96,8 @@ resource "aws_ecs_task_definition" "app" {
     }
   )
 
-  cpu                      = "1024"
-  memory                   = "2048"
+  cpu                      = "2048"
+  memory                   = "4096"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
 

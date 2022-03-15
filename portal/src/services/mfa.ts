@@ -12,7 +12,7 @@ type CognitoMFAUser = CognitoUser & { preferredMFA: "NOMFA" | "SMS" };
 export const updateMFAPhoneNumber = async (phoneNumber: string) => {
   const user = await Auth.currentAuthenticatedUser();
 
-  tracker.trackFetchRequest("updateUserAttributes");
+  tracker.trackAuthRequest("updateUserAttributes");
   // TODO (PORTAL-1194): Convert phone number from user input to E164
   await Auth.updateUserAttributes(user, {
     phone_number: "+1" + phoneNumber.replaceAll("-", ""),
@@ -28,13 +28,16 @@ export const updateMFAPhoneNumber = async (phoneNumber: string) => {
 export const sendMFAConfirmationCode = async () => {
   try {
     const user = await Auth.currentAuthenticatedUser();
-    tracker.trackFetchRequest("verifyUserAttribute");
+    tracker.trackAuthRequest("verifyUserAttribute");
     // sends a verification code to the phone number via SMS
     await Auth.verifyUserAttribute(user, "phone_number");
     tracker.markFetchRequestEnd();
   } catch (error) {
     if (isCognitoError(error)) {
-      const issue = { type: "attemptsLimitExceeded_updatePhone" };
+      const issue = {
+        type: "attemptsLimitExceeded_updatePhone",
+        namespace: "auth",
+      };
       const cognitoError = new CognitoAuthError(error, issue);
       throw cognitoError;
     }
@@ -49,7 +52,7 @@ export const sendMFAConfirmationCode = async () => {
 export const verifyMFAPhoneNumber = async (code: string) => {
   const user = await Auth.currentAuthenticatedUser();
 
-  tracker.trackFetchRequest("verifyUserAttributeSubmit");
+  tracker.trackAuthRequest("verifyUserAttributeSubmit");
   await Auth.verifyUserAttributeSubmit(user, "phone_number", code);
   tracker.markFetchRequestEnd();
 };
@@ -80,7 +83,7 @@ const setMFAPreferenceOptOut = async (user: CognitoMFAUser) => {
     return;
   }
 
-  tracker.trackFetchRequest("setPreferredMFA");
+  tracker.trackAuthRequest("setPreferredMFA");
   await Auth.setPreferredMFA(user, "NOMFA");
   tracker.markFetchRequestEnd();
 };
@@ -92,7 +95,7 @@ const setMFAPreferenceOptOut = async (user: CognitoMFAUser) => {
  * @private
  */
 const setMFAPreferenceSMS = async (user: CognitoUser) => {
-  tracker.trackFetchRequest("setPreferredMFA");
+  tracker.trackAuthRequest("setPreferredMFA");
   await Auth.setPreferredMFA(user, "SMS");
   tracker.markFetchRequestEnd();
 };
@@ -103,53 +106,29 @@ const setMFAPreferenceSMS = async (user: CognitoUser) => {
  * returns Nothing, throws errors that are currently caught in useUsersLogic
  */
 export const getMfaValidationErrors = (phoneNumber: string | null) => {
-  // Throw a validation error if the field is empty
-  if (!phoneNumber) {
-    throw getNoNumberEnteredError();
-  }
   // Throw a validation error if the field looks like an international number
+  if (!phoneNumber) {
+    return;
+  }
   if (
     // 10 digits and 2 dashes
     phoneNumber.length > 12 &&
+    phoneNumber.length < 16 &&
     phoneNumber[0] !== "1"
   ) {
-    throw getInternationalNumberError();
+    const issue = {
+      field: "mfa_phone_number.phone_number",
+      type: "international_number",
+      namespace: "users",
+    };
+    throw new ValidationError([issue]);
   }
 };
-
-/**
- * Utility function to create the errors for mfa validation
- * @param field The field that should be highlighted when this error is thrown
- * @param type The error type in users.mfa_phone_number.phone_number (app/en-US.ts)
- * @returns ValidationErrors for various situations
- */
-const getPhoneNumberError = (field: string, type: string) => {
-  const validation_issue = { field, type };
-  return new ValidationError([validation_issue], "users");
-};
-
-/**
- * Function to generate the error asking you not to leave the field blank
- * @param field See comment for getPhoneNumberError
- * @param type See comment for getPhoneNumberError
- * @returns ValidationError for empty phoneNumber field
- */
-const getNoNumberEnteredError = () =>
-  getPhoneNumberError("mfa_phone_number.phone_number", "required");
-
-/**
- * Function to generate the error asking you not to enter an international number
- * @param field See comment for getPhoneNumberError
- * @param type See comment for getPhoneNumberError
- * @returns ValidationError for an international number
- */
-const getInternationalNumberError = () =>
-  getPhoneNumberError("mfa_phone_number.phone_number", "international_number");
 
 export const verifyMFACode = async (code: string) => {
   const user = Auth.currentAuthenticatedUser();
 
-  tracker.trackFetchRequest("confirmSignIn");
+  tracker.trackAuthRequest("confirmSignIn");
   await Auth.confirmSignIn(user, code, "SMS_MFA");
   tracker.markFetchRequestEnd();
 };

@@ -50,10 +50,7 @@ def init(app, dashboard_password):
 
 
 def process_entries(db_session: db.Session, batch_name: Optional[str] = None) -> dict:
-    data: dict = {
-        "filtered": [],
-        "processed": [],
-    }
+    data: dict = {"filtered": [], "processed": []}
 
     entries = import_jobs_get(db_session, batch_name)
 
@@ -86,7 +83,7 @@ def import_jobs_get(db_session, source=None):
     import_logs = query.order_by(ImportLog.import_log_id.desc()).limit(1000)
 
     import_logs_response = list(
-        map(lambda import_log: ImportLogResponse.from_orm(import_log).dict(), import_logs,)
+        map(lambda import_log: ImportLogResponse.from_orm(import_log).dict(), import_logs)
     )
 
     return import_logs_response

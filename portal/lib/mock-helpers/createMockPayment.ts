@@ -1,6 +1,6 @@
-import { PaymentDetail } from "../../src/models/ClaimDetail";
+import { PaymentDetail } from "../../src/models/Payment";
 import dayjs from "dayjs";
-import faker from "faker";
+import { faker } from "@faker-js/faker";
 import formatDate from "../../src/utils/formatDate";
 import { uniqueId } from "lodash";
 
@@ -17,39 +17,38 @@ import { uniqueId } from "lodash";
  */
 type PaymentStatus = "Cancelled" | "Delayed" | "Pending" | "Sent to bank";
 
-interface CreateMockPaymentProps {
-  payment_id?: string;
-  period_start_date?: string;
-  period_end_date?: string;
-  amount?: number | null;
-  sent_to_bank_date?: string | null;
-  payment_method?: string;
-  expected_send_date_start?: string | null;
-  expected_send_date_end?: string | null;
-  status?: PaymentStatus;
+// Creates random number up to limit {number} value
+interface GetRandomIntegerProps {
+  length?: number;
+  limit: number;
+  isString?: boolean;
 }
 
+const getRandomInteger = ({
+  length = 2,
+  limit,
+  isString = false,
+}: GetRandomIntegerProps) => {
+  const randomNumber = Math.floor(Math.random() * limit);
+
+  return isString ? `0${randomNumber + 1}`.slice(-length) : randomNumber;
+};
+
+// Define these here, rather than in the exported function so that they don't change
+// every time you change a storybook control.
+// Random date
+const randomMonth = getRandomInteger({ limit: 12, isString: true });
+const randomDay = getRandomInteger({ limit: 28, isString: true });
+const randomStartDate = `${new Date().getFullYear()}-${randomMonth}-${randomDay}`;
+// Random dollar amount
+const randomAmount = Number(getRandomInteger({ limit: 500, length: 3 }));
+
 export const createMockPayment = (
-  customDetails: CreateMockPaymentProps,
-  isConstant = false
+  customDetails: Partial<PaymentDetail>,
+  isConstant = false,
+  startDate: string = randomStartDate,
+  amount: number = randomAmount
 ): PaymentDetail => {
-  // Creates random number up to limit {number} value
-  interface GetRandomIntegerProps {
-    length?: number;
-    limit: number;
-    isString?: boolean;
-  }
-
-  const getRandomInteger = ({
-    length = 2,
-    limit,
-    isString = false,
-  }: GetRandomIntegerProps) => {
-    const randomNumber = Math.floor(Math.random() * limit);
-
-    return isString ? `0${randomNumber + 1}`.slice(-length) : randomNumber;
-  };
-
   // To use constant data (helps w/snapshots & similar)
   if (isConstant) {
     return {
@@ -61,14 +60,14 @@ export const createMockPayment = (
       payment_method: "Check",
       expected_send_date_start: "2021-11-15",
       expected_send_date_end: "2021-11-21",
+      cancellation_date: "",
       status: "Pending",
+      writeback_transaction_status: "Paid",
+      transaction_date: "2021-11-16",
+      transaction_date_could_change: false,
       ...customDetails,
     };
   }
-
-  // Random month/day for notice date
-  const randomMonth = getRandomInteger({ limit: 12, isString: true });
-  const randomDay = getRandomInteger({ limit: 28, isString: true });
 
   // Helper method to generate future dates
   const getFutureDate = (originalDate: string, skipDayCount: number) => {
@@ -78,7 +77,6 @@ export const createMockPayment = (
   };
 
   // Payment date configuration
-  const startDate = `${new Date().getFullYear()}-${randomMonth}-${randomDay}`;
   const endDate = getFutureDate(startDate, 6);
   const sendDate = endDate;
   const sendDateEnd = getFutureDate(sendDate, 3);
@@ -87,7 +85,7 @@ export const createMockPayment = (
     payment_id: uniqueId("1234"),
     period_start_date: startDate,
     period_end_date: endDate,
-    amount: Number(getRandomInteger({ limit: 500, length: 3 })),
+    amount,
     sent_to_bank_date: endDate,
     payment_method: faker.random.arrayElement<string>([
       "Check",
@@ -95,12 +93,17 @@ export const createMockPayment = (
     ]),
     expected_send_date_start: sendDate,
     expected_send_date_end: sendDateEnd,
+    // This should probably depend on the status below
+    cancellation_date: "",
     status: faker.random.arrayElement<PaymentStatus>([
       "Cancelled",
       "Delayed",
       "Pending",
       "Sent to bank",
     ]),
+    writeback_transaction_status: "Paid",
+    transaction_date: "2021-11-16",
+    transaction_date_could_change: false,
     ...customDetails,
   };
 };

@@ -13,7 +13,8 @@ from massgov.pfml.db.models.applications import (
     Notification,
     RMVCheck,
 )
-from massgov.pfml.db.models.employees import AzurePermission, Employee, Role, User
+from massgov.pfml.db.models.azure import AzurePermission
+from massgov.pfml.db.models.employees import Employee, Role, User
 from massgov.pfml.util.users import has_role_in
 
 
@@ -133,13 +134,9 @@ def documents(user: User, they: RuleList) -> None:
         lambda d: d.user_id == user.user_id and user.consented_to_data_sharing is True,
     )
 
-    they.can(
-        READ, Document, lambda d: d.user_id == user.user_id and can_download(user, d),
-    )
+    they.can(READ, Document, lambda d: d.user_id == user.user_id and can_download(user, d))
 
-    they.can(
-        READ, DocumentResponse, lambda d: d.user_id == user.user_id and can_download(user, d),
-    )
+    they.can(READ, DocumentResponse, lambda d: d.user_id == user.user_id and can_download(user, d))
 
 
 def notifications(user: User, they: RuleList) -> None:

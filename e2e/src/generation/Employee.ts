@@ -6,7 +6,7 @@ import { RandomSSN } from "ssn";
 import { add, formatISO } from "date-fns";
 import { promisify } from "util";
 import { pipeline, Readable } from "stream";
-import JSONStream from "JSONStream";
+import * as JSONStream from "../stream/json";
 import shuffle from "./shuffle";
 import { concat, collect } from "streaming-iterables";
 

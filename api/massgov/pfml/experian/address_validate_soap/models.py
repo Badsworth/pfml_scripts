@@ -98,8 +98,7 @@ class Engine(SnakeToCamelBaseModel):
 
 
 class SearchRequest(SnakeToCamelBaseModel):
-    """Corresponds to QASearch type
-    """
+    """Corresponds to QASearch type"""
 
     engine: Union[EngineEnum, Engine]
     search: str

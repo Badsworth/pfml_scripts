@@ -1,4 +1,3 @@
-@import 'icons';
 @import 'fonts';
 @import 'reset';
 @import 'colors';
@@ -10,17 +9,20 @@
 @import 'page_sidebar';
 @import 'page_main';
 @import '../src/components/Alert';
+@import '../src/components/Breadcrumb';
 @import '../src/components/ConfirmationDialog';
 @import '../src/components/SlideOut';
 @import '../src/components/Table';
 @import '../src/components/Search';
 @import '../src/components/Tag';
+@import '../src/components/ActionMenu';
 @import '../src/components/VerticalMenu';
 @import '../src/components/ActionCard';
 @import '../src/components/Toggle';
 @import '../src/components/Tooltip';
 @import '../src/components/Login';
 @import '../src/components/Loading';
+@import '../src/components/CheckBox';
 @import 'maintenance';
 @import 'features';
 @import 'users';

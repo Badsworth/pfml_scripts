@@ -15,7 +15,6 @@ import {
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { AppLogic } from "../../../../src/hooks/useAppLogic";
 import ConcurrentLeave from "../../../../src/models/ConcurrentLeave";
-import { EmployerBenefitFrequency } from "../../../../src/models/EmployerBenefit";
 import EmployerClaim from "../../../../src/models/EmployerClaim";
 import LeaveReason from "../../../../src/models/LeaveReason";
 import MockDate from "mockdate";
@@ -542,6 +541,7 @@ describe("Review", () => {
         name: "Temporary disability insurance Short-term or long-term disability",
       })
     );
+    userEvent.click(screen.getAllByRole("radio", { name: "Yes" })[0]);
     const [startMonthInput, endMonthInput] = screen.getAllByRole("textbox", {
       name: "Month",
     });
@@ -675,10 +675,11 @@ describe("Review", () => {
     setup();
 
     userEvent.click(screen.getAllByRole("button", { name: "Amend" })[2]);
-    const frequencyDropdown = screen.getByLabelText("Frequency");
-    fireEvent.change(frequencyDropdown, {
-      target: { value: EmployerBenefitFrequency.weekly },
-    });
+    userEvent.click(
+      screen.getByRole("radio", {
+        name: "Permanent disability insurance",
+      })
+    );
 
     userEvent.click(screen.getByRole("button", { name: "Submit" }));
     await waitFor(() => {
@@ -703,7 +704,15 @@ describe("Review", () => {
   });
 
   it("sets 'has_amendments' to true if previous leaves are amended", async () => {
-    setup(claimWithV2Eform);
+    const claim = new MockEmployerClaimBuilder()
+      .completed()
+      .reviewable()
+      .previousLeaves()
+      .eformsV2()
+      .create();
+
+    setup(claim);
+
     userEvent.click(screen.getAllByRole("button", { name: "Amend" })[1]);
 
     const [startMonthInput, endMonthInput] = screen.getAllByRole("textbox", {

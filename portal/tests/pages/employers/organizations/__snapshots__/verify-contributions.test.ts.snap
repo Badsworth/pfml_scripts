@@ -35,7 +35,7 @@ exports[`VerifyContributions renders the page 1`] = `
     >
       MassTaxConnect
     </a>
-     data when creating an account. This helps protect your employees and your company information.
+     data when creating an account. This helps protect your employees and your organization's information.
   </p>
   <details
     class="c-details"
@@ -48,7 +48,7 @@ exports[`VerifyContributions renders the page 1`] = `
     <div
       class="margin-bottom-2"
     >
-      Log into 
+      Log in to 
       <a
         href="https://mtc.dor.state.ma.us/mtc/_/"
         rel="noreferrer noopener"
@@ -88,7 +88,7 @@ exports[`VerifyContributions renders the page 1`] = `
           <strong>
             received
           </strong>
-          . For example, if you remitted your contributions for 3-31-2021, and the return has been processed and designated as ‘received’, you can use the amount from that period to verify your account. If you have not yet remitted your contributions or it is still being processed, use the amount from the most recent period for which you filed that has been processed.
+          . For example, if you sent your contributions for 3-31-2021, and the return has been processed and designated as ‘received’, you can use the amount from that period to verify your account. If you have not yet sent your contributions or it is still being processed, use the amount from the most recent period for which you filed that has been processed.
         </li>
         <li>
           Go into the return. Click 

@@ -1,0 +1,17 @@
+.breadcrumb {
+  align-items: center;
+  display: flex;
+  padding-bottom: 1em;
+}
+
+.breadcrumb__icon {
+  color: $Color-RevolutionGray;
+  width: 1.4em;
+}
+
+.breadcrumb__link {
+  color: $Color-GraniteGray-700;
+  cursor: pointer;
+  font-size: 0.857em;
+  text-transform: uppercase;
+}

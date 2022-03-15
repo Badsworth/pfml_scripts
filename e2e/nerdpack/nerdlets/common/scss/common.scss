@@ -1,0 +1,67 @@
+@import "../scss/variables";
+
+#root {
+  margin: 0;
+  padding: 0;
+}
+
+a {
+  color: $LINK_COLOR;
+
+  &:hover {
+    color: $LINK_COLOR_HOVER;
+  }
+}
+
+.closed {
+  display: none;
+}
+
+.pill {
+  padding: 2px 6px;
+  border-radius: 5px;
+  border: 1px $PILL_DEFAULT_COLOR solid;
+  font-weight: bold;
+  font-size: 9px;
+  margin-right: 5px;
+  background: $PILL_DEFAULT_FILL;
+  color: $PILL_DEFAULT_COLOR;
+
+  &.PASS {
+    background: $COLOR_PASS_LITE;
+    color: $COLOR_PASS;
+    border-color: $COLOR_PASS;
+  }
+
+  &.SKIPPED,
+  &.SKIP {
+    background: $COLOR_WARN;
+    color: #000;
+  }
+
+  &.EDM {
+    background: #ffeffd;
+    color: #ff00e0;
+    border-color: #ff00e0;
+  }
+
+  &.HIGH,
+  &.FAIL,
+  &.connection {
+    background: $COLOR_FAIL_LITE;
+    color: $COLOR_FAIL;
+    border-color: $COLOR_FAIL;
+  }
+
+  &.MEDIUM {
+    background: $COLOR_WARN_MEDIUM_LITE;
+    color: $COLOR_WARN_MEDIUM;
+    border-color: $COLOR_WARN_MEDIUM;
+  }
+
+  &.LOW {
+    background: $COLOR_WARN_LOW_LITE;
+    color: $COLOR_WARN_LOW;
+    border-color: $COLOR_WARN_LOW;
+  }
+}

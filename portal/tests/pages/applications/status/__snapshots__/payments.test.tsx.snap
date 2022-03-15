@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Payments Phase 2 Checkback date implementation does not render checkback dates for claims that have at least one payment row 1`] = `
+exports[`Payments Checkback date implementation does not render checkback dates for claims that have at least one payment row 1`] = `
 <section
   data-testid="your-payments-intro"
 >
@@ -8,7 +8,7 @@ exports[`Payments Phase 2 Checkback date implementation does not render checkbac
 </section>
 `;
 
-exports[`Payments Phase 2 Checkback date implementation does not render the Payments table when no payments are available and leave is intermittent 1`] = `
+exports[`Payments Checkback date implementation does not render the Payments table when no payments are available and leave is intermittent 1`] = `
 <section
   data-testid="your-payments-intro"
 >
@@ -30,47 +30,17 @@ exports[`Payments Phase 2 Checkback date implementation does not render the Paym
 </section>
 `;
 
-exports[`Payments Phase 2 Checkback date implementation renders intro text for continous leaves approved after fourteenth claim date if claim has reduced and continuous leaves 1`] = `
+exports[`Payments Checkback date implementation renders intro text for continous leaves approved after fourteenth claim date if claim has reduced and continuous leaves 1`] = `
 <section
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 9, 2021 to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, expect to be paid weekly.
+    Check back on November 11, 2021 to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, expect to be paid weekly.
   </p>
 </section>
 `;
 
-exports[`Payments Phase 2 Checkback date implementation renders intro text for continous leaves approved before fourteenth claim date if claim has reduced and continuous leaves 1`] = `
-<section
-  data-testid="your-payments-intro"
->
-  <p>
-    Check back on November 9, 2021 to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.
-  </p>
-</section>
-`;
-
-exports[`Payments Phase 2 Checkback date implementation renders intro text for continous leaves with retroactive claim date if claim has reduced and continuous leaves 1`] = `
-<section
-  data-testid="your-payments-intro"
->
-  <p>
-    Check back on January 18, 2022 to see when you can expect your first payment. You’ll receive one payment for your entire leave.
-  </p>
-</section>
-`;
-
-exports[`Payments Phase 2 Checkback date implementation renders intro text for continuous leaves approved after fourteenth claim date  1`] = `
-<section
-  data-testid="your-payments-intro"
->
-  <p>
-    Check back on November 9, 2021 to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, expect to be paid weekly.
-  </p>
-</section>
-`;
-
-exports[`Payments Phase 2 Checkback date implementation renders intro text for continuous leaves approved before fourteenth claim date  1`] = `
+exports[`Payments Checkback date implementation renders intro text for continous leaves approved before claim start date if claim has reduced and continuous leaves 1`] = `
 <section
   data-testid="your-payments-intro"
 >
@@ -80,17 +50,77 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for c
 </section>
 `;
 
-exports[`Payments Phase 2 Checkback date implementation renders intro text for continuous leaves with retroactive claim date  1`] = `
+exports[`Payments Checkback date implementation renders intro text for continous leaves approved before fourteenth claim date if claim has reduced and continuous leaves 1`] = `
 <section
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on January 18, 2022 to see when you can expect your first payment. You’ll receive one payment for your entire leave.
+    Check back on November 9, 2021 to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.
   </p>
 </section>
 `;
 
-exports[`Payments Phase 2 Checkback date implementation renders intro text for reduced schedule leaves approved after fourteenth claim date  1`] = `
+exports[`Payments Checkback date implementation renders intro text for continous leaves with retroactive claim date if claim has reduced and continuous leaves 1`] = `
+<section
+  data-testid="your-payments-intro"
+>
+  <p>
+    Check back on January 20, 2022 to see when you can expect your first payment. You’ll receive one payment for your entire leave.
+  </p>
+</section>
+`;
+
+exports[`Payments Checkback date implementation renders intro text for continuous leaves approved after fourteenth claim date  1`] = `
+<section
+  data-testid="your-payments-intro"
+>
+  <p>
+    Check back on November 11, 2021 to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, expect to be paid weekly.
+  </p>
+</section>
+`;
+
+exports[`Payments Checkback date implementation renders intro text for continuous leaves approved before claim start date  1`] = `
+<section
+  data-testid="your-payments-intro"
+>
+  <p>
+    Check back on November 9, 2021 to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.
+  </p>
+</section>
+`;
+
+exports[`Payments Checkback date implementation renders intro text for continuous leaves approved before fourteenth claim date  1`] = `
+<section
+  data-testid="your-payments-intro"
+>
+  <p>
+    Check back on November 9, 2021 to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.
+  </p>
+</section>
+`;
+
+exports[`Payments Checkback date implementation renders intro text for continuous leaves with retroactive claim date  1`] = `
+<section
+  data-testid="your-payments-intro"
+>
+  <p>
+    Check back on January 20, 2022 to see when you can expect your first payment. You’ll receive one payment for your entire leave.
+  </p>
+</section>
+`;
+
+exports[`Payments Checkback date implementation renders intro text for reduced schedule leaves approved after fourteenth claim date  1`] = `
+<section
+  data-testid="your-payments-intro"
+>
+  <p>
+    Check back on November 11, 2021 to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.
+  </p>
+</section>
+`;
+
+exports[`Payments Checkback date implementation renders intro text for reduced schedule leaves approved before claim start date  1`] = `
 <section
   data-testid="your-payments-intro"
 >
@@ -100,7 +130,7 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for r
 </section>
 `;
 
-exports[`Payments Phase 2 Checkback date implementation renders intro text for reduced schedule leaves approved before fourteenth claim date  1`] = `
+exports[`Payments Checkback date implementation renders intro text for reduced schedule leaves approved before fourteenth claim date  1`] = `
 <section
   data-testid="your-payments-intro"
 >
@@ -110,96 +140,14 @@ exports[`Payments Phase 2 Checkback date implementation renders intro text for r
 </section>
 `;
 
-exports[`Payments Phase 2 Checkback date implementation renders intro text for reduced schedule leaves with retroactive claim date  1`] = `
+exports[`Payments Checkback date implementation renders intro text for reduced schedule leaves with retroactive claim date  1`] = `
 <section
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on January 18, 2022 to see when you can expect your first payment. You’ll receive one payment for your entire leave.
+    Check back on January 20, 2022 to see when you can expect your first payment. You’ll receive one payment for your entire leave.
   </p>
 </section>
-`;
-
-exports[`Payments displays info alert if claimant has bonding-newborn but not pregnancy claims 1`] = `
-<div
-  aria-labelledby="alert-heading10"
-  class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
-  role="region"
-  tabindex="-1"
->
-  <div
-    class="usa-alert__body"
-  >
-    <h2
-      class="usa-alert__heading font-heading-xs text-bold"
-      id="alert-heading10"
-    >
-      If you are giving birth, you may also be eligible for paid medical leave
-    </h2>
-    <div
-      class="usa-alert__text"
-    >
-      <p>
-        You may be able to take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy or for your recovery from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at 
-        <a
-          href="tel:(833) 344-7365"
-        >
-          (833) 344‑7365
-        </a>
-         if you need 
-        <a
-          href="https://www.mass.gov/family-leave-bonding"
-          rel="noreferrer noopener"
-          target="_blank"
-        >
-          medical leave after giving birth
-        </a>
-        . You should not submit a second application.
-      </p>
-    </div>
-  </div>
-</div>
-`;
-
-exports[`Payments displays info alert if claimant has pregnancy but not bonding claims 1`] = `
-<div
-  aria-labelledby="alert-heading14"
-  class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
-  role="region"
-  tabindex="-1"
->
-  <div
-    class="usa-alert__body"
-  >
-    <h2
-      class="usa-alert__heading font-heading-xs text-bold"
-      id="alert-heading14"
-    >
-      You may also be eligible for paid family leave
-    </h2>
-    <div
-      class="usa-alert__text"
-    >
-      <p>
-        You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. 
-        <a
-          href="https://www.mass.gov/family-leave-bonding"
-          rel="noreferrer noopener"
-          target="_blank"
-        >
-          Family leave to bond with your child
-        </a>
-         can be easily added to your claim by calling our Contact Center at 
-        <a
-          href="tel:(833) 344-7365"
-        >
-          (833) 344‑7365
-        </a>
-        . You should not submit a second application.
-      </p>
-    </div>
-  </div>
-</div>
 `;
 
 exports[`Payments does not render payments if the is a 404 status 1`] = `
@@ -245,88 +193,92 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
     aria-multiselectable="true"
     class="usa-accordion usa-accordion--bordered"
   >
-    <h2
-      class="usa-accordion__heading margin-y-2"
-    >
-      <button
-        aria-controls="accordion30"
-        aria-expanded="false"
-        class="usa-accordion__button"
-        type="button"
-      >
-        What may cause a delayed or cancelled payment
-      </button>
-    </h2>
     <div
-      class="usa-accordion__content usa-prose"
-      data-testid="accordion30"
-      hidden=""
-      id="accordion30"
+      id="delays_accordion"
     >
-      <strong>
-        What may cause a delayed payment
-      </strong>
-      <p>
-        The exact day you receive payment can be delayed because of:
-      </p>
-      <ul>
-        <li>
-          State and federal holidays
-        </li>
-        <li>
-          Pay periods that end on weekends
-        </li>
-        <li>
-          Your bank’s processes
-        </li>
-        <li>
-          Changes to your leave’s start and end dates
-        </li>
-        <li>
-          Changes to your benefit amount due to additional income or benefits you or your employer reported
-        </li>
-        <li>
-          Other processing issues such as issues with bank account information or your address
-        </li>
-      </ul>
-      <p>
+      <h2
+        class="usa-accordion__heading margin-y-2"
+      >
+        <button
+          aria-controls="accordion40"
+          aria-expanded="false"
+          class="usa-accordion__button"
+          type="button"
+        >
+          What may cause a delayed or cancelled payment
+        </button>
+      </h2>
+      <div
+        class="usa-accordion__content usa-prose"
+        data-testid="accordion40"
+        hidden=""
+        id="accordion40"
+      >
         <strong>
-          What may cause a cancelled payment
+          What may cause a delayed payment
         </strong>
-      </p>
-      <p>
-        Payments can be cancelled because of:
-      </p>
-      <ul>
-        <li>
-          Paid time off taken on the same day you receive receive PFML benefits
-        </li>
-        <li>
-          Changes to your leave’s start and end dates
-        </li>
-        <li>
-          Changes to your benefit amount due to additional income or benefits you or your employer reported
-        </li>
-        <li>
-          Hours worked outside of the schedule you set up with your employer or during reported intermittent hours
-        </li>
-        <li>
-          If you believe we’ve cancelled your payments for an incorrect reason, you can 
-          <a
-            href="https://www.mass.gov/forms/request-an-appeal-for-paid-family-and-medical-leave"
-            rel="noreferrer noopener"
-            target="_blank"
-          >
-            appeal the DFML decision.
-          </a>
-        </li>
-      </ul>
+        <p>
+          The exact day you receive payment can be delayed because of:
+        </p>
+        <ul>
+          <li>
+            State and federal holidays
+          </li>
+          <li>
+            Pay periods that end on weekends
+          </li>
+          <li>
+            Your bank’s processes
+          </li>
+          <li>
+            Changes to your leave’s start and end dates
+          </li>
+          <li>
+            Changes to your benefit amount due to additional income or benefits you or your employer reported
+          </li>
+          <li>
+            Other processing issues such as issues with bank account information or your address
+          </li>
+        </ul>
+        <p>
+          <strong>
+            What may cause a cancelled payment
+          </strong>
+        </p>
+        <p>
+          Payments can be cancelled because of:
+        </p>
+        <ul>
+          <li>
+            Paid time off taken on the same day you receive receive PFML benefits
+          </li>
+          <li>
+            Changes to your leave’s start and end dates
+          </li>
+          <li>
+            Changes to your benefit amount due to additional income or benefits you or your employer reported
+          </li>
+          <li>
+            Hours worked outside of the schedule you set up with your employer or during reported intermittent hours
+          </li>
+          <li>
+            If you believe we’ve cancelled your payments for an incorrect reason, you can 
+            <a
+              href="https://www.mass.gov/forms/request-an-appeal-for-paid-family-and-medical-leave"
+              rel="noreferrer noopener"
+              target="_blank"
+            >
+              appeal the DFML decision.
+            </a>
+          </li>
+        </ul>
+      </div>
     </div>
     <h2
       class="usa-accordion__heading margin-y-2"
     >
       <button
-        aria-controls="accordion31"
+        aria-controls="accordion41"
         aria-expanded="false"
         class="usa-accordion__button"
         type="button"
@@ -336,9 +288,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
     </h2>
     <div
       class="usa-accordion__content usa-prose"
-      data-testid="accordion31"
+      data-testid="accordion41"
       hidden=""
-      id="accordion31"
+      id="accordion41"
     >
       <p>
         To see your maximum weekly benefit amount, view your approval notice in the 
@@ -367,10 +319,10 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       </p>
       <ul>
         <li>
-          You or your employer report additional other leave, income or benefits
+          You or your employer report other leave, income or benefits
         </li>
         <li>
-          You reach the maximum total amount that you can receive in PFML benefits across multiple applications.
+          You reach the maximum total amount that you can receive in PFML benefits across multiple applications
         </li>
         <li>
           You receive a payment for a pay period less than a full week
@@ -387,7 +339,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       class="usa-accordion__heading margin-y-2"
     >
       <button
-        aria-controls="accordion32"
+        aria-controls="accordion42"
         aria-expanded="false"
         class="usa-accordion__button"
         type="button"
@@ -397,9 +349,9 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
     </h2>
     <div
       class="usa-accordion__content usa-prose"
-      data-testid="accordion32"
+      data-testid="accordion42"
       hidden=""
-      id="accordion32"
+      id="accordion42"
     >
       <p>
         To make changes to your payment method or banking information, call the Contact Center at 
@@ -456,144 +408,104 @@ exports[`Payments renders the \`help\` section containing questions and feedback
 
 exports[`Payments renders the Payments table 1`] = `
 <table
-  class="usa-table usa-table--borderless width-full usa-table--stacked"
+  class="usa-table usa-table--borderless usa-table--stacked"
 >
   <thead>
     <tr>
       <th
         scope="col"
       >
-        Leave dates
+        Pay period
       </th>
       <th
         scope="col"
       >
-        Payment Method
+        Amount
       </th>
       <th
         scope="col"
       >
-        Estimated date
-      </th>
-      <th
-        scope="col"
-      >
-        Date processed
-      </th>
-      <th
-        scope="col"
-      >
-        Amount sent
+        Status
       </th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td
-        data-label="Leave dates"
+        class="tablet:width-card-lg"
+        data-label="Pay period"
       >
         11/8/2021 to 11/15/2021
       </td>
       <td
-        data-label="Payment Method"
-      >
-        Check
-      </td>
-      <td
-        data-label="Estimated date"
-      >
-        Sent
-      </td>
-      <td
-        data-label="Date processed"
-      >
-        11/15/2021
-      </td>
-      <td
-        data-label="Amount sent"
+        data-label="Amount"
       >
         $100.00
+      </td>
+      <td
+        data-label="Status"
+      >
+        Check mailed on November 15, 2021
       </td>
     </tr>
     <tr>
       <td
-        data-label="Leave dates"
+        class="tablet:width-card-lg"
+        data-label="Pay period"
       >
         11/8/2021 to 11/15/2021
       </td>
       <td
-        data-label="Payment Method"
+        data-label="Amount"
       >
-        Check
+        Processing
       </td>
       <td
-        data-label="Estimated date"
+        data-label="Status"
       >
-        11/15/2021 to 11/21/2021
-      </td>
-      <td
-        data-label="Date processed"
-      >
-        Pending
-      </td>
-      <td
-        data-label="Amount sent"
-      >
-        $100.00
+        Your payment will be sent by check between 11/15/2021 and 11/21/2021.
       </td>
     </tr>
     <tr>
       <td
-        data-label="Leave dates"
+        class="tablet:width-card-lg"
+        data-label="Pay period"
       >
         11/8/2021 to 11/15/2021
       </td>
       <td
-        data-label="Payment Method"
-      >
-        Check
-      </td>
-      <td
-        data-label="Estimated date"
+        data-label="Amount"
       >
         Delayed
       </td>
       <td
-        data-label="Date processed"
+        data-label="Status"
       >
-        Delayed
-      </td>
-      <td
-        data-label="Amount sent"
-      >
-        $100.00
+        See 
+        <a
+          href="#delays_accordion"
+        >
+          what may cause a delayed or cancelled payment
+        </a>
+        .
       </td>
     </tr>
     <tr>
       <td
-        data-label="Leave dates"
+        class="tablet:width-card-lg"
+        data-label="Pay period"
       >
         11/8/2021 to 11/15/2021
       </td>
       <td
-        data-label="Payment Method"
-      >
-        Check
-      </td>
-      <td
-        data-label="Estimated date"
-      >
-        Sent
-      </td>
-      <td
-        data-label="Date processed"
-      >
-        11/15/2021
-      </td>
-      <td
-        data-label="Amount sent"
+        data-label="Amount"
       >
         $100.00
+      </td>
+      <td
+        data-label="Status"
+      >
+        Check mailed on November 15, 2021
       </td>
     </tr>
     <tr>
@@ -603,9 +515,12 @@ exports[`Payments renders the Payments table 1`] = `
         The first seven (7) days of approved leave are unpaid
       </td>
       <td
-        colspan="4"
+        data-label="Amount"
       >
-        Learn more about the 
+        $0.00
+      </td>
+      <td>
+        You have an unpaid 7-day waiting period at the start of your leave. You won’t receive any PFML payments for leave you take during this time. Learn more about the 
         <a
           href="https://www.mass.gov/getting-paid"
           rel="noopener noreferrer"

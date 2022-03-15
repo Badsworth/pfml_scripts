@@ -13,6 +13,8 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import LkReferenceFileType, ReferenceFile, ReferenceFileType
 from massgov.pfml.delegated_payments.step import Step
+from massgov.pfml.util.collections.dict import make_keys_lowercase
+from massgov.pfml.util.csv import download_and_parse_csv
 
 logger = logging.get_logger(__name__)
 
@@ -117,7 +119,7 @@ class FineosExtractStep(Step):
         self.active_extract_data_date_str = None
 
     def get_import_type(self) -> str:
-        """ Use the reference file type description for an import log type distinction """
+        """Use the reference file type description for an import log type distinction"""
         return self.extract_config.reference_file_type.reference_file_type_description
 
     def run_step(self) -> None:
@@ -271,7 +273,7 @@ class FineosExtractStep(Step):
 
     def _download_and_index_data(self, extract_data: ExtractData, download_directory: str) -> None:
         for file_location, extract in extract_data.extract_path_mapping.items():
-            records = payments_util.download_and_parse_csv(file_location, download_directory)
+            records = download_and_parse_csv(file_location, download_directory)
 
             logger.info(
                 "Storing extract data from %s to %s with reference_file_id %s and import_log_id %s",
@@ -280,17 +282,38 @@ class FineosExtractStep(Step):
                 extract_data.reference_file.reference_file_id,
                 self.get_import_log_id(),
             )
-            for i, record in enumerate(records):
-                # Verify that the expected columns are present
-                if i == 0:
-                    payments_util.validate_columns_present(record, extract)
 
-                lower_key_record = payments_util.make_keys_lowercase(record)
+            unconfigured_columns = []
+
+            for i, record in enumerate(records):
+                lower_key_record = make_keys_lowercase(record)
+
+                if i == 0:
+                    # Verify that the expected columns are present
+                    payments_util.validate_columns_present(lower_key_record, extract)
+
+                    # Check if there are any fields that don't have a matching
+                    # column in the table model
+                    unconfigured_columns = payments_util.get_unconfigured_fineos_columns(
+                        lower_key_record, extract.table
+                    )
+                    if len(unconfigured_columns) > 0:
+                        logger.warning(
+                            "Unconfigured columns in FINEOS extract.",
+                            extra={
+                                "extract.table.__name__": extract.table.__name__,
+                                "fields": ",".join(unconfigured_columns),
+                            },
+                        )
+
                 staging_table_instance = payments_util.create_staging_table_instance(
                     lower_key_record,
                     extract.table,
                     extract_data.reference_file,
                     self.get_import_log_id(),
+                    # These were already logged when we checked the first record earlier,
+                    # so we don't need to log them again.
+                    ignore_properties=unconfigured_columns,
                 )
                 self.db_session.add(staging_table_instance)
                 self.increment(self.Metrics.RECORDS_PROCESSED_COUNT)

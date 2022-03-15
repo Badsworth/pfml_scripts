@@ -16,7 +16,7 @@ export default class EmployersApi extends BaseApi {
     return routes.api.employers;
   }
 
-  get i18nPrefix() {
+  get namespace() {
     return "employers";
   }
 
@@ -68,7 +68,7 @@ export default class EmployersApi extends BaseApi {
     }
 
     if (!response.ok) {
-      handleNotOkResponse(response, [], this.i18nPrefix);
+      handleNotOkResponse(response, [], this.namespace);
     }
 
     return blob;

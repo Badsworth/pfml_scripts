@@ -1,5 +1,4 @@
 import { fineos, fineosPages, portal } from "../../../actions";
-
 import {
   Submission,
   ValidConcurrentLeave,
@@ -13,6 +12,7 @@ import {
   isValidPreviousLeave,
 } from "../../../../src/util/typeUtils";
 import { config } from "../../../actions/common";
+import { calculatePaymentDatePreventingOP } from "../../../actions/fineos.pages";
 
 // Used for stashing generated benefit and leave
 type LeaveAdminchanges = {
@@ -104,7 +104,9 @@ describe("Claimant uses portal to report other leaves and benefits, receives cor
               claim.employer_benefits = [employerReportedBenefit];
               claim.concurrent_leave = employerReportedConcurrentLeave;
               assertValidClaim(claim);
-              fineosPages.ClaimPage.visit(submission.fineos_absence_id)
+              const claimPage = fineosPages.ClaimPage.visit(
+                submission.fineos_absence_id
+              )
                 .tasks((tasks) => {
                   // Check all of the appropriate tasks have been generated
                   tasks.assertTaskExists("Employee Reported Other Leave");
@@ -146,48 +148,71 @@ describe("Claimant uses portal to report other leaves and benefits, receives cor
                       paidBenefits.assertSitFitOptIn(true);
                     })
                     .acceptLeavePlan();
-                })
-                .approve()
-                .paidLeave((leaveCase) => {
-                  const { other_incomes, employer_benefits } = claim;
-                  assertIsTypedArray(other_incomes, isValidOtherIncome);
-                  assertIsTypedArray(employer_benefits, isValidEmployerBenefit);
-                  leaveCase.applyReductions({
-                    other_incomes,
-                    employer_benefits,
-                  });
                 });
+              if (config("HAS_APRIL_UPGRADE") === "true") {
+                claimPage.approve("Approved", true);
+              } else {
+                claimPage.approve("Approved", false);
+              }
+              claimPage.paidLeave((leaveCase) => {
+                const { other_incomes, employer_benefits } = claim;
+                assertIsTypedArray(other_incomes, isValidOtherIncome);
+                assertIsTypedArray(employer_benefits, isValidEmployerBenefit);
+                leaveCase.applyReductions({
+                  other_incomes,
+                  employer_benefits,
+                });
+              });
             }
           );
         });
       });
     });
-  it("Payments appear in paid leave case with the expected amounts", () => {
-    cy.dependsOnPreviousPass([approval]);
-    fineos.before();
-    cy.unstash<Submission>("submission").then((submission) => {
-      fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
-        (leaveCase) => {
-          if (config("HAS_FEB_RELEASE") === "true") {
-            leaveCase.assertPaymentsMade([]).assertAmountsPending([
-              // retroactive SIT/FIT appear in amounts pending with processing date of today
-              { net_payment_amount: 58.43, paymentInstances: 2 },
-              { net_payment_amount: 29.22, paymentInstances: 2 },
-              { net_payment_amount: 496.66, paymentInstances: 2 },
-            ]);
-          } else {
-            leaveCase
-              .assertPaymentsMade([{ net_payment_amount: 496.66 }])
-              .assertPaymentAllocations([{ net_payment_amount: 496.66 }])
-              .assertAmountsPending([
+  it(
+    "Payments appear in paid leave case with the expected amounts",
+    { retries: 0 },
+    () => {
+      cy.dependsOnPreviousPass([approval]);
+      fineos.before();
+      cy.unstash<Submission>("submission").then((submission) => {
+        fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
+          (leaveCase) => {
+            if (config("HAS_FEB_RELEASE") === "true") {
+              const paymentDates = Array<Date>(2).fill(
+                calculatePaymentDatePreventingOP()
+              );
+              leaveCase.assertPaymentsMade([]).assertAmountsPending([
                 // retroactive SIT/FIT appear in amounts pending with processing date of today
-                { net_payment_amount: 58.43, paymentInstances: 2 },
-                { net_payment_amount: 29.22, paymentInstances: 2 },
-                { net_payment_amount: 496.66 },
+                {
+                  net_payment_amount: 58.43,
+                  paymentInstances: 2,
+                  paymentProcessingDates: paymentDates,
+                },
+                {
+                  net_payment_amount: 29.22,
+                  paymentInstances: 2,
+                  paymentProcessingDates: paymentDates,
+                },
+                {
+                  net_payment_amount: 496.66,
+                  paymentInstances: 2,
+                  paymentProcessingDates: paymentDates,
+                },
               ]);
+            } else {
+              leaveCase
+                .assertPaymentsMade([{ net_payment_amount: 496.66 }])
+                .assertPaymentAllocations([{ net_payment_amount: 496.66 }])
+                .assertAmountsPending([
+                  // retroactive SIT/FIT appear in amounts pending with processing date of today
+                  { net_payment_amount: 58.43, paymentInstances: 2 },
+                  { net_payment_amount: 29.22, paymentInstances: 2 },
+                  { net_payment_amount: 496.66 },
+                ]);
+            }
           }
-        }
-      );
-    });
-  });
+        );
+      });
+    }
+  );
 });

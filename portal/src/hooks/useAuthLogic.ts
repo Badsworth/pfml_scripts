@@ -11,10 +11,11 @@ import {
   createRouteWithQuery,
 } from "../utils/routeWithParams";
 import { useMemo, useState } from "react";
-import { AppErrorsLogic } from "./useAppErrorsLogic";
+import { ErrorsLogic } from "./useErrorsLogic";
 import { PortalFlow } from "./usePortalFlow";
 import { RoleDescription } from "../models/User";
 import UsersApi from "../api/UsersApi";
+import { ValuesOf } from "../../types/common";
 import assert from "assert";
 import { compact } from "lodash";
 import { isFeatureEnabled } from "../services/featureFlags";
@@ -35,10 +36,10 @@ type CognitoMFAUser = CognitoUser & {
 } & MFAChallenge;
 
 const useAuthLogic = ({
-  appErrorsLogic,
+  errorsLogic,
   portalFlow,
 }: {
-  appErrorsLogic: AppErrorsLogic;
+  errorsLogic: ErrorsLogic;
   portalFlow: PortalFlow;
 }) => {
   const usersApi = useMemo(() => new UsersApi(), []);
@@ -60,6 +61,23 @@ const useAuthLogic = ({
    * @property isLoggedIn - Whether the user is logged in or not, or null if logged in status has not been checked yet
    */
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+
+  /**
+   * Check if the phone number used by the user for MFA has been verified.
+   * You can't rely on the presence of MFA preference or the phone number to signify this.
+   */
+  const isPhoneVerified = async () => {
+    const { attributes } = await Auth.currentAuthenticatedUser();
+    const phone_number_verified = attributes.phone_number_verified;
+
+    tracker.trackEvent("Checked phone_number_verified", {
+      // Useful for identifying how common it is for someone to not have
+      // a verified phone number on pages where we check this.
+      phone_number_verified,
+    });
+
+    return phone_number_verified;
+  };
 
   /**
    * Initiate the Forgot Password flow, sending a verification code when user exists.
@@ -87,7 +105,7 @@ const useAuthLogic = ({
    * @returns Whether the code was sent successfully or not
    */
   const sendForgotPasswordConfirmation = async (username = "") => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
     const trimmedUsername = username.trim();
 
     const validationIssues = combineValidationIssues(
@@ -95,24 +113,24 @@ const useAuthLogic = ({
     );
 
     if (validationIssues) {
-      appErrorsLogic.catchError(new ValidationError(validationIssues, "auth"));
+      errorsLogic.catchError(new ValidationError(validationIssues));
       return false;
     }
 
     try {
-      trackAuthRequest("forgotPassword");
+      tracker.trackAuthRequest("forgotPassword");
       await Auth.forgotPassword(trimmedUsername);
       tracker.markFetchRequestEnd();
 
       return true;
     } catch (error) {
       if (!isCognitoError(error)) {
-        appErrorsLogic.catchError(error);
+        errorsLogic.catchError(error);
         return false;
       }
 
       const authError = getForgotPasswordError(error);
-      appErrorsLogic.catchError(authError);
+      errorsLogic.catchError(authError);
       return false;
     }
   };
@@ -126,7 +144,7 @@ const useAuthLogic = ({
    * @param [next] Redirect url after login
    */
   const login = async (username = "", password: string, next?: string) => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
     const trimmedUsername = username.trim();
 
     const validationIssues = combineValidationIssues(
@@ -135,12 +153,12 @@ const useAuthLogic = ({
     );
 
     if (validationIssues) {
-      appErrorsLogic.catchError(new ValidationError(validationIssues, "auth"));
+      errorsLogic.catchError(new ValidationError(validationIssues));
       return;
     }
 
     try {
-      trackAuthRequest("signIn");
+      tracker.trackAuthRequest("signIn");
       const currentUser = await Auth.signIn(trimmedUsername, password);
       setCognitoUser(currentUser);
       tracker.markFetchRequestEnd();
@@ -162,7 +180,7 @@ const useAuthLogic = ({
       }
     } catch (error) {
       if (!isCognitoError(error)) {
-        appErrorsLogic.catchError(error);
+        errorsLogic.catchError(error);
         return;
       }
 
@@ -171,7 +189,7 @@ const useAuthLogic = ({
         return;
       }
       const authError = getLoginError(error);
-      appErrorsLogic.catchError(authError);
+      errorsLogic.catchError(authError);
     }
   };
 
@@ -182,26 +200,41 @@ const useAuthLogic = ({
    * @param [next] Redirect url after login
    */
   const verifyMFACodeAndLogin = async (code: string, next?: string) => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     const trimmedCode = code ? code.trim() : "";
     const validationIssues = combineValidationIssues(validateCode(trimmedCode));
     if (validationIssues) {
-      appErrorsLogic.catchError(new ValidationError(validationIssues, "mfa"));
+      errorsLogic.catchError(new ValidationError(validationIssues));
       return;
     }
 
     try {
-      trackAuthRequest("confirmSignIn");
+      tracker.trackAuthRequest("confirmSignIn");
       await Auth.confirmSignIn(cognitoUser, trimmedCode, "SMS_MFA");
       tracker.markFetchRequestEnd();
     } catch (error) {
       if (!isCognitoError(error)) {
-        appErrorsLogic.catchError(error);
+        errorsLogic.catchError(error);
         return;
       }
-      const issue = { field: "code", type: "invalidMFACode" };
-      appErrorsLogic.catchError(new CognitoAuthError(error, issue));
+      if (error.message.includes("User temporarily locked.")) {
+        errorsLogic.catchError(
+          new CognitoAuthError(error, {
+            field: "code",
+            type: "attemptsExceeded",
+            namespace: "auth",
+          })
+        );
+        return;
+      }
+      errorsLogic.catchError(
+        new CognitoAuthError(error, {
+          field: "code",
+          type: "invalidMFACode",
+          namespace: "auth",
+        })
+      );
       return;
     }
     finishLoginAndRedirect(next);
@@ -225,7 +258,7 @@ const useAuthLogic = ({
     //    - https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_GlobalSignOut.html
     //    - https://github.com/aws-amplify/amplify-js/issues/3435
     try {
-      trackAuthRequest("signOut");
+      tracker.trackAuthRequest("signOut");
       await Auth.signOut({ global: true });
       tracker.markFetchRequestEnd();
     } catch (error) {
@@ -248,10 +281,10 @@ const useAuthLogic = ({
   const _createAccountInApi = async (
     email_address: string,
     password: string,
-    role_description: typeof RoleDescription[keyof typeof RoleDescription],
+    role_description: ValuesOf<typeof RoleDescription>,
     employer_fein?: string
   ) => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
     const trimmedEmail = email_address.trim();
 
     const requestData = {
@@ -268,7 +301,7 @@ const useAuthLogic = ({
     try {
       await usersApi.createUser(requestData);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
       return;
     }
 
@@ -354,7 +387,7 @@ const useAuthLogic = ({
   };
 
   const resendVerifyAccountCode = async (username = "") => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
     const trimmedUsername = username.trim();
 
     const validationIssues = combineValidationIssues(
@@ -362,23 +395,23 @@ const useAuthLogic = ({
     );
 
     if (validationIssues) {
-      appErrorsLogic.catchError(new ValidationError(validationIssues, "auth"));
+      errorsLogic.catchError(new ValidationError(validationIssues));
       return;
     }
 
     try {
-      trackAuthRequest("resendSignUp");
+      tracker.trackAuthRequest("resendSignUp");
       await Auth.resendSignUp(trimmedUsername);
       tracker.markFetchRequestEnd();
 
       // TODO (CP-600): Show success message
     } catch (error) {
       if (!isCognitoError(error)) {
-        appErrorsLogic.catchError(error);
+        errorsLogic.catchError(error);
         return;
       }
 
-      appErrorsLogic.catchError(new CognitoAuthError(error));
+      errorsLogic.catchError(new CognitoAuthError(error));
     }
   };
 
@@ -387,7 +420,7 @@ const useAuthLogic = ({
    * and allow them to reset their password
    */
   const resetPassword = async (username = "", code = "", password = "") => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     const trimmedUsername = username.trim();
     const trimmedCode = code.trim();
@@ -399,7 +432,7 @@ const useAuthLogic = ({
     );
 
     if (validationIssues) {
-      appErrorsLogic.catchError(new ValidationError(validationIssues, "auth"));
+      errorsLogic.catchError(new ValidationError(validationIssues));
       return;
     }
 
@@ -417,19 +450,19 @@ const useAuthLogic = ({
     password = ""
   ) => {
     try {
-      trackAuthRequest("forgotPasswordSubmit");
+      tracker.trackAuthRequest("forgotPasswordSubmit");
       await Auth.forgotPasswordSubmit(username, code, password);
       tracker.markFetchRequestEnd();
 
       portalFlow.goToPageFor("SET_NEW_PASSWORD");
     } catch (error) {
       if (!isCognitoError(error)) {
-        appErrorsLogic.catchError(error);
+        errorsLogic.catchError(error);
         return;
       }
 
       const authError = getResetPasswordError(error);
-      appErrorsLogic.catchError(authError);
+      errorsLogic.catchError(authError);
     }
   };
 
@@ -439,7 +472,7 @@ const useAuthLogic = ({
    */
   const verifyAccountInCognito = async (username = "", code = "") => {
     try {
-      trackAuthRequest("confirmSignUp");
+      tracker.trackAuthRequest("confirmSignUp");
       await Auth.confirmSignUp(username, code);
       tracker.markFetchRequestEnd();
 
@@ -452,7 +485,7 @@ const useAuthLogic = ({
       );
     } catch (error) {
       if (!isCognitoError(error)) {
-        appErrorsLogic.catchError(error);
+        errorsLogic.catchError(error);
         return;
       }
 
@@ -474,7 +507,7 @@ const useAuthLogic = ({
       }
 
       const authError = getVerifyAccountError(error);
-      appErrorsLogic.catchError(authError);
+      errorsLogic.catchError(authError);
     }
   };
 
@@ -484,7 +517,7 @@ const useAuthLogic = ({
    * on the page.
    */
   const verifyAccount = async (username = "", code = "") => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     const trimmedUsername = username.trim();
     const trimmedCode = code.trim();
@@ -495,7 +528,7 @@ const useAuthLogic = ({
     );
 
     if (validationIssues) {
-      appErrorsLogic.catchError(new ValidationError(validationIssues, "auth"));
+      errorsLogic.catchError(new ValidationError(validationIssues));
       return;
     }
 
@@ -512,6 +545,7 @@ const useAuthLogic = ({
     logout,
     isCognitoError,
     isLoggedIn,
+    isPhoneVerified,
     requireLogin,
     resendVerifyAccountCode,
     resetPassword,
@@ -532,6 +566,7 @@ function validateUsername(username?: string) {
     return {
       field: "username",
       type: "required",
+      namespace: "auth",
     };
   }
 }
@@ -541,6 +576,7 @@ function validatePassword(password?: string) {
     return {
       field: "password",
       type: "required",
+      namespace: "auth",
     };
   }
 }
@@ -563,7 +599,7 @@ function getForgotPasswordError(error: CognitoError) {
   if (error.code === "NotAuthorizedException") {
     issue = getNotAuthorizedExceptionIssue(error, "forgotPassword");
   } else if (errorCodeToIssueMap[error.code]) {
-    issue = errorCodeToIssueMap[error.code];
+    issue = { ...errorCodeToIssueMap[error.code], namespace: "auth" };
   }
 
   return new CognitoAuthError(error, issue);
@@ -577,7 +613,10 @@ function getForgotPasswordError(error: CognitoError) {
  */
 function getLoginError(error: CognitoError) {
   let issue;
-  const invalidParameterIssue = { type: "invalidParametersFallback" };
+  const invalidParameterIssue = {
+    type: "invalidParametersFallback",
+    namespace: "auth",
+  };
 
   if (error.code === "NotAuthorizedException") {
     issue = getNotAuthorizedExceptionIssue(error, "login");
@@ -589,7 +628,11 @@ function getLoginError(error: CognitoError) {
     issue = invalidParameterIssue;
   } else if (error.code === "PasswordResetRequiredException") {
     // This error triggers when an admin initiates a password reset
-    issue = { field: "password", type: "resetRequiredException" };
+    issue = {
+      field: "password",
+      type: "resetRequiredException",
+      namespace: "auth",
+    };
   }
 
   return new CognitoAuthError(error, issue);
@@ -614,7 +657,7 @@ function getResetPasswordError(error: CognitoError) {
   };
 
   if (errorCodeToIssueMap[error.code]) {
-    issue = errorCodeToIssueMap[error.code];
+    issue = { ...errorCodeToIssueMap[error.code], namespace: "auth" };
   } else if (error.code === "InvalidPasswordException") {
     issue = getInvalidPasswordExceptionIssue(error);
   }
@@ -636,7 +679,7 @@ function getVerifyAccountError(error: CognitoError) {
   };
 
   if (errorCodeToIssueMap[error.code]) {
-    issue = errorCodeToIssueMap[error.code];
+    issue = { ...errorCodeToIssueMap[error.code], namespace: "auth" };
   }
 
   return new CognitoAuthError(error, issue);
@@ -676,10 +719,10 @@ function getInvalidPasswordExceptionIssue(error: CognitoError): Issue {
   if (error.message.match(/password cannot be used for security reasons/)) {
     // For this case, a password may already conform to the password format
     // requirements, so showing the password format error would be confusing
-    return { field: "password", type: "insecure" };
+    return { field: "password", type: "insecure", namespace: "auth" };
   }
 
-  return { field: "password", type: "invalid" };
+  return { field: "password", type: "invalid", namespace: "auth" };
 }
 
 /**
@@ -712,24 +755,16 @@ function getNotAuthorizedExceptionIssue(
     error.message.match(/Request not allowed due to security reasons/) ||
     error.message.match(/Unable to login because of security reasons/)
   ) {
-    return { type: `attemptBlocked_${context}` };
+    return { type: `attemptBlocked_${context}`, namespace: "auth" };
   }
   if (error.message.match(/Password attempts exceeded/)) {
-    return { type: "attemptsLimitExceeded_login" };
+    return { type: "attemptsLimitExceeded_login", namespace: "auth" };
   }
   if (error.message.match(/Incorrect username or password/)) {
-    return { type: "incorrectEmailOrPassword" };
+    return { type: "incorrectEmailOrPassword", namespace: "auth" };
   }
 
-  return { message: error.message };
-}
-
-/**
- * Ensure Cognito AJAX requests are traceable in New Relic
- * @param action - name of the Cognito method being called
- */
-function trackAuthRequest(action: string) {
-  tracker.trackFetchRequest(`cognito ${action}`);
+  return { message: error.message, namespace: "auth" };
 }
 
 export default useAuthLogic;

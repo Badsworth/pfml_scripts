@@ -12,7 +12,11 @@ from massgov.pfml.db.models.factories import (
     PreviousLeaveOtherReasonFactory,
     ReducedScheduleLeavePeriodFactory,
 )
-from massgov.pfml.util.logging.applications import get_application_log_attributes
+from massgov.pfml.fineos.models.customer_api.spec import AbsencePeriod
+from massgov.pfml.util.logging.applications import (
+    get_absence_period_log_attributes,
+    get_application_log_attributes,
+)
 
 
 def test_get_application_log_attributes(user, test_db_session, initialize_factories_session):
@@ -24,6 +28,7 @@ def test_get_application_log_attributes(user, test_db_session, initialize_factor
     log_attributes = get_application_log_attributes(application)
 
     expected_attributes = {
+        "absence_case_id": None,
         "application.absence_case_id": None,
         "application.application_id": str(application.application_id),
         "application.completed_time": None,
@@ -79,6 +84,7 @@ def test_get_application_log_attributes(user, test_db_session, initialize_factor
         "application.updated_at.timestamp": str(application.updated_at.timestamp()),
         "work_pattern.work_pattern_type": None,
         "application.is_withholding_tax": None,
+        "application.split_from_application_id": None,
     }
     assert log_attributes == expected_attributes
 
@@ -132,3 +138,36 @@ def test_get_leave_period_log_attributes(user, test_db_session, initialize_facto
     }
 
     assert log_atribute_subset == expected_attributes
+
+
+def test_get_absence_period_log_attributes(user, test_db_session):
+    absence_details = [
+        AbsencePeriod(
+            id="PL-14449-0000002237",
+            reason="Pregnancy/Maternity",
+            reasonQualifier1="Foster Care",
+            reasonQualifier2="",
+            absenceType="Episodic",
+            requestStatus="Pending",
+        ),
+        AbsencePeriod(
+            id="PL-14449-0000002238",
+            reason="Child Bonding",
+            reasonQualifier1="Foster Care",
+            reasonQualifier2="",
+            absenceType="Episodic",
+            requestStatus="Approved",
+        ),
+    ]
+    log_attributes = get_absence_period_log_attributes(absence_details, absence_details[1])
+
+    expected_attributes = {
+        "num_absence_periods": str(len(absence_details)),
+        "num_pending_leave_request_decision_status": "1",
+        "absence_period_0_reason": "Pregnancy/Maternity",
+        "absence_period_0_request_status": "Pending",
+        "imported_absence_period_1_reason": "Child Bonding",
+        "imported_absence_period_1_request_status": "Approved",
+    }
+
+    assert log_attributes == expected_attributes

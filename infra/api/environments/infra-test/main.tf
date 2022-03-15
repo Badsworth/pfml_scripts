@@ -68,6 +68,7 @@ module "api" {
   ]
   enable_application_fraud_check = "0"
   enable_application_import      = "1"
+  enable_employee_endpoints      = "1"
   release_version                = var.release_version
 
   cognito_user_pool_arn       = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/us-east-1_8OEJk2XeD"

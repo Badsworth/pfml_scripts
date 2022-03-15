@@ -1,8 +1,8 @@
 import pytest
 
 import massgov.pfml.experian.address_validate_soap.models as sm
-from massgov.pfml.db.models.employees import GeoState
 from massgov.pfml.db.models.factories import AddressFactory
+from massgov.pfml.db.models.geo import GeoState
 from massgov.pfml.experian.address_validate_soap.client import Client
 from massgov.pfml.experian.address_validate_soap.mock_caller import MockVerificationZeepCaller
 from massgov.pfml.experian.address_validate_soap.service import (
@@ -25,7 +25,7 @@ def validate_address(address, response):
 
 
 @pytest.mark.parametrize(
-    "verify_level", [(sm.VerifyLevel.VERIFIED), (sm.VerifyLevel.INTERACTION_REQUIRED)],
+    "verify_level", [(sm.VerifyLevel.VERIFIED), (sm.VerifyLevel.INTERACTION_REQUIRED)]
 )
 def test_search_fallback_with_address(verify_level):
     # These verify levels return an address in the response
@@ -88,7 +88,7 @@ def test_search_fallback_no_address_expected(verify_level):
 
 
 @pytest.mark.parametrize(
-    "verify_level", [(sm.VerifyLevel.VERIFIED), (sm.VerifyLevel.INTERACTION_REQUIRED)],
+    "verify_level", [(sm.VerifyLevel.VERIFIED), (sm.VerifyLevel.INTERACTION_REQUIRED)]
 )
 def test_add_mock_search_response_with_address(verify_level):
     mock_caller = MockVerificationZeepCaller(fallback_verify_level=verify_level)

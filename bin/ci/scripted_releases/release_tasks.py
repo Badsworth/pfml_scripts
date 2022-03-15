@@ -60,13 +60,16 @@ def update(args):
     with git_utils.rollback(old_head):
         git_utils.checkout(args.release_version)
         logger.info(f"Checked out '{args.release_version}'.")
-
+        # changes from https://github.com/EOLWD/pfml/pull/6161/files
+        git_utils.gitcmd.pull()
+        logger.info(f"Pulled updates")
+        
         if args.git_commits:
             logger.info("Now cherry picking commits...")
             git_utils.cherrypick("-x", args.git_commits)
         else:
-            logger.info(f"Now merging in {args.source_branch}...")
-            git_utils.merge(args.source_branch)
+            logger.info(f"Now merging in origin/{args.source_branch}...")
+            git_utils.merge(f"origin/{args.source_branch}")
 
         logger.info("Done.")
 
@@ -131,13 +134,16 @@ def hotfix(args):  # production hotfix, args are a branch name and a list of com
     with git_utils.rollback(old_head):
         git_utils.checkout(args.release_version)
         logger.info(f"Checked out '{args.release_version}'.")
+        
+        git_utils.gitcmd.pull()
+        logger.info(f"Pulled updates")
 
         if args.git_commits:
             logger.info("Now cherry picking commits...")
             git_utils.cherrypick("-x", args.git_commits)
         else:
-            logger.info(f"Now merging in {args.source_branch}...")
-            git_utils.merge(args.source_branch)
+            logger.info(f"Now merging in origin/{args.source_branch}...")
+            git_utils.merge(f"origin/{args.source_branch}")
 
         logger.info("Done.")
 

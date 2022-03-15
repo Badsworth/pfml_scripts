@@ -84,6 +84,7 @@ describe("BenefitsApplicationsApi", () => {
             {
               "field": "first_name",
               "message": "First name is required",
+              "namespace": "applications",
               "type": "required",
             },
           ],
@@ -114,7 +115,7 @@ describe("BenefitsApplicationsApi", () => {
       it("sends GET request to /applications", async () => {
         await claimsApi.getClaims();
         expect(fetch).toHaveBeenCalledWith(
-          `${process.env.apiUrl}/applications?page_offset=1`,
+          `${process.env.apiUrl}/applications?order_by=created_at&order_direction=descending&page_offset=1`,
           {
             body: null,
             headers: baseRequestHeaders,
@@ -174,14 +175,19 @@ describe("BenefitsApplicationsApi", () => {
     describe("unsuccessful request", () => {
       beforeEach(() => {
         global.fetch = mockFetch({
-          response: { data: null },
+          response: { data: null, errors: [{ type: "invalid" }] },
           status: 400,
           ok: false,
         });
       });
 
       it("throws error", async () => {
-        await expect(claimsApi.createClaim()).rejects.toThrow();
+        try {
+          await claimsApi.createClaim({});
+        } catch (error) {
+          expect(error).toBeInstanceOf(ValidationError);
+          expect(error.issues[0].namespace).toBe("applications");
+        }
       });
     });
   });
@@ -218,47 +224,6 @@ describe("BenefitsApplicationsApi", () => {
 
       expect(claimResponse).toBeInstanceOf(BenefitsApplication);
       expect(claimResponse).toEqual(claim);
-    });
-  });
-
-  describe("importClaim", () => {
-    it("sends POST request to /applications/import and resolves with BenefitsApplication", async () => {
-      const requestBody = {
-        absence_case_id: "mock-absence-id",
-        tax_identifier: "123-45-6789",
-      };
-      const mockResponse = new BenefitsApplication({
-        application_id: "mock-application_id",
-      });
-      global.fetch = mockFetch({
-        response: {
-          data: mockResponse,
-        },
-      });
-
-      const { claim: claimResponse } = await claimsApi.importClaim(requestBody);
-
-      expect(fetch).toHaveBeenCalledWith(
-        `${process.env.apiUrl}/applications/import`,
-        {
-          body: JSON.stringify(requestBody),
-          headers: baseRequestHeaders,
-          method: "POST",
-        }
-      );
-
-      expect(claimResponse).toBeInstanceOf(BenefitsApplication);
-      expect(claimResponse).toEqual(mockResponse);
-    });
-
-    it("throws error", async () => {
-      global.fetch = mockFetch({
-        response: { data: null, errors: [{ field: "tax_identifier" }] },
-        status: 400,
-        ok: false,
-      });
-
-      await expect(claimsApi.importClaim({})).rejects.toThrow(ValidationError);
     });
   });
 
@@ -337,6 +302,22 @@ describe("BenefitsApplicationsApi", () => {
 
       expect(claimResponse).toBeInstanceOf(BenefitsApplication);
       expect(claimResponse).toEqual(claim);
+    });
+
+    it("makes a request using the FF header when splitClaimsAcrossBY is true", async () => {
+      process.env.featureFlags = JSON.stringify({ splitClaimsAcrossBY: true });
+      await claimsApi.submitClaim(claim.application_id);
+      expect(fetch).toHaveBeenCalledWith(
+        `${process.env.apiUrl}/applications/${claim.application_id}/submit_application`,
+        {
+          body: null,
+          headers: {
+            ...baseRequestHeaders,
+            "X-FF-Split-Claims-Across-BY": "true",
+          },
+          method: "POST",
+        }
+      );
     });
   });
 

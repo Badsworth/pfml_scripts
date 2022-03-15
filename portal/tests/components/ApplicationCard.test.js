@@ -1,7 +1,7 @@
-import { render, screen } from "@testing-library/react";
-import AppErrorInfo from "../../src/models/AppErrorInfo";
+import { cleanup, render, screen } from "@testing-library/react";
 import { ApplicationCard } from "../../src/components/ApplicationCard";
 import { DocumentType } from "../../src/models/Document";
+import { DocumentsLoadError } from "../../src/errors";
 import { MockBenefitsApplicationBuilder } from "../test-utils";
 import React from "react";
 import User from "../../src/models/User";
@@ -34,130 +34,125 @@ const ApplicationCardWithAppLogic = ({
 };
 
 describe("ApplicationCard", () => {
-  it("with a completed application renders the component", () => {
+  it("renders In Progress heading and body when application lacks EIN and leave reason", () => {
+    const claim = new MockBenefitsApplicationBuilder().create();
+    const { container } = render(<ApplicationCardWithAppLogic claim={claim} />);
+    expect(container.firstChild).toMatchSnapshot();
+  });
+
+  it("only renders the 'submit all parts' text when application lacks EIN", () => {
+    let claim = new MockBenefitsApplicationBuilder().create();
+    render(<ApplicationCardWithAppLogic claim={claim} />);
+
+    expect(screen.getByText(/Submit all three parts/i)).toBeInTheDocument();
+    cleanup();
+
+    claim = new MockBenefitsApplicationBuilder().employed().create();
+    render(<ApplicationCardWithAppLogic claim={claim} />);
+
+    expect(
+      screen.queryByText(/Submit all three parts/i)
+    ).not.toBeInTheDocument();
+  });
+
+  it("renders leave reason as heading when set", () => {
+    const claim = new MockBenefitsApplicationBuilder()
+      .bondingBirthLeaveReason()
+      .create();
+    render(<ApplicationCardWithAppLogic claim={claim} />);
+
+    expect(
+      screen.getByRole("heading", { level: 2 }).textContent
+    ).toMatchInlineSnapshot(`"Leave to bond with a child"`);
+  });
+
+  it("renders EIN and absence case id when set", () => {
+    const claim = new MockBenefitsApplicationBuilder().submitted().create();
+
+    render(<ApplicationCardWithAppLogic claim={claim} />);
+
+    expect(screen.getByText(claim.employer_fein)).toBeInTheDocument();
+    expect(screen.getByText(claim.fineos_absence_id)).toBeInTheDocument();
+  });
+
+  it("renders status button and Other Actions when status is completed", () => {
     const claim = new MockBenefitsApplicationBuilder().completed().create();
     const { container } = render(<ApplicationCardWithAppLogic claim={claim} />);
 
     expect(container.firstChild).toMatchSnapshot();
   });
 
-  it("with a completed application renders a view status button", () => {
-    const claim = new MockBenefitsApplicationBuilder().completed().create();
-    render(<ApplicationCardWithAppLogic claim={claim} />);
+  it.each([
+    [
+      // "Started"
+      new MockBenefitsApplicationBuilder().create(),
+      false,
+    ],
+    [
+      // "Submitted"
+      new MockBenefitsApplicationBuilder().submitted().create(),
+      true,
+    ],
+    [
+      // "Completed"
+      new MockBenefitsApplicationBuilder().completed().create(),
+      false,
+    ],
+  ])(
+    "only loads documents when status is Submitted",
+    (claim, expectDocumentsLoad) => {
+      const loadAll = jest.fn();
+      render(
+        <ApplicationCardWithAppLogic
+          addAppLogicMocks={(appLogic) => {
+            appLogic.documents.loadAll = loadAll;
+            appLogic.documents.isLoadingClaimDocuments = () => true;
+          }}
+          claim={claim}
+          documents={[]}
+        />
+      );
 
-    const button = screen.getByRole("link", {
-      name: /View status updates and details/,
-    });
-    expect(button).toBeInTheDocument();
-  });
-
-  it("in progress claims don't show EIN in the title section", () => {
-    const claim = new MockBenefitsApplicationBuilder().submitted().create();
-    render(
-      <ApplicationCardWithAppLogic claim={claim} number={2} documents={[]} />
-    );
-    expect(
-      screen.getByRole("heading", { name: "Application 2" })
-    ).toBeInTheDocument();
-  });
-
-  it("shows a spinner while documents are loading", () => {
-    const claim = new MockBenefitsApplicationBuilder().submitted().create();
-
-    render(
-      <ApplicationCardWithAppLogic
-        addAppLogicMocks={(appLogic) => {
-          appLogic.documents.isLoadingClaimDocuments = () => true;
-        }}
-        claim={claim}
-        number={2}
-        documents={[]}
-      />
-    );
-
-    expect(
-      screen.queryByRole("progressbar", {
-        "aria-label": "Loading documents",
-      })
-    ).toBeInTheDocument();
-  });
+      if (expectDocumentsLoad) {
+        expect(loadAll).toHaveBeenCalledWith(claim.application_id);
+        expect(screen.queryByRole("progressbar")).toBeInTheDocument();
+      } else {
+        expect(loadAll).not.toHaveBeenCalled();
+        expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+      }
+    }
+  );
 
   it("does not show a spinner if there is a document load error", () => {
     const claim = new MockBenefitsApplicationBuilder().submitted().create();
-    const appErrors = [
-      new AppErrorInfo({
-        name: "DocumentsLoadError",
-        meta: {
-          application_id: "mock_application_id",
-        },
-      }),
-    ];
+    const errors = [new DocumentsLoadError("mock_application_id")];
 
     render(
       <ApplicationCardWithAppLogic
         addAppLogicMocks={(appLogic) => {
-          appLogic.appErrors = appErrors;
+          appLogic.errors = errors;
         }}
         claim={claim}
-        number={2}
         documents={[]}
       />
-    );
-
-    expect(
-      screen.queryByRole("progressbar", {
-        "aria-label": "Loading documents",
-      })
-    ).not.toBeInTheDocument();
-  });
-
-  it("does not show a spinner for completed applications", () => {
-    const claim = new MockBenefitsApplicationBuilder().completed().create();
-    render(
-      <ApplicationCardWithAppLogic claim={claim} number={2} documents={[]} />
     );
 
     expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
   });
 
-  it("can display legal notices", () => {
-    const claim = new MockBenefitsApplicationBuilder().completed().create();
-    render(
-      <ApplicationCardWithAppLogic
-        claim={claim}
-        number={2}
-        documents={[
-          {
-            application_id: "mock-claim-id",
-            document_type: DocumentType.appealAcknowledgment,
-          },
-          {
-            application_id: "mock-claim-id",
-            document_type: DocumentType.approvalNotice,
-            fineos_document_id: "mock-document-3",
-          },
-        ]}
-      />
-    );
-    expect(
-      screen.getByRole("link", { name: /View your notices/ })
-    ).toBeInTheDocument();
-  });
-
-  it("doesn't display notices if application is submitted", () => {
+  it("doesn't display View notices action if application is Submitted but not Completed", () => {
     const claim = new MockBenefitsApplicationBuilder().submitted().create();
     render(
       <ApplicationCardWithAppLogic
         claim={claim}
-        number={2}
         documents={[
           {
-            application_id: "mock-claim-id",
+            application_id: claim.application_id,
             document_type: DocumentType.appealAcknowledgment,
             fineos_document_id: "mock-document-1",
           },
           {
-            application_id: "mock-claim-id",
+            application_id: claim.application_id,
             document_type: DocumentType.approvalNotice,
             fineos_document_id: "mock-document-3",
           },

@@ -1,8 +1,9 @@
-import { extractLeavePeriod } from "util/claims";
+import { extractLeavePeriod } from "../../../../src/util/claims";
 import { portal, fineos, fineosPages } from "../../../actions";
 import { Submission } from "../../../../src/types";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { addBusinessDays, addWeeks } from "date-fns";
+import { config } from "../../../actions/common";
 
 describe("Submit medical application via the web portal: Adjudication Approval & payment checking", () => {
   const submissionTest =
@@ -76,29 +77,38 @@ describe("Submit medical application via the web portal: Adjudication Approval &
           claimPage.shouldHaveStatus("Availability", "Time Available");
           claimPage.shouldHaveStatus("Restriction", "Passed");
           claimPage.shouldHaveStatus("PlanDecision", "Accepted");
-          claimPage.approve().triggerNotice("Designation Notice");
+          if (config("HAS_APRIL_UPGRADE") === "true") {
+            claimPage.approve("Approved", true);
+          } else {
+            claimPage.approve("Approved", false);
+          }
+          claimPage.triggerNotice("Designation Notice");
         });
       });
     }
   );
 
-  it("Should be able to confirm the weekly payment amount for a reduced schedule", () => {
-    cy.dependsOnPreviousPass([approval]);
-    fineos.before();
-    cy.unstash<DehydratedClaim>("claim").then((claim) => {
-      cy.unstash<Submission>("submission").then((submission) => {
-        const payment = claim.metadata
-          ?.expected_weekly_payment as unknown as number;
-        fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
-          (leaveCase) => {
-            leaveCase
-              .assertAmountsPending([{ net_payment_amount: payment }])
-              .assertMatchingPaymentDates();
-          }
-        );
+  it(
+    "Should be able to confirm the weekly payment amount for a reduced schedule",
+    { retries: 0 },
+    () => {
+      cy.dependsOnPreviousPass([approval]);
+      fineos.before();
+      cy.unstash<DehydratedClaim>("claim").then((claim) => {
+        cy.unstash<Submission>("submission").then((submission) => {
+          const payment = claim.metadata
+            ?.expected_weekly_payment as unknown as number;
+          fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
+            (leaveCase) => {
+              leaveCase
+                .assertAmountsPending([{ net_payment_amount: payment }])
+                .assertMatchingPaymentDates();
+            }
+          );
+        });
       });
-    });
-  });
+    }
+  );
 
   it("Should display a checkback date of (leave start date + 2 weeks + 3 business days) on the payment status page", () => {
     cy.dependsOnPreviousPass([approval]);

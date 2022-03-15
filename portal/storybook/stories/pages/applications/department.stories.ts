@@ -1,10 +1,9 @@
 import { MockBenefitsApplicationBuilder } from "lib/mock-helpers/mock-model-builder";
 import OrganizationUnit from "src/models/OrganizationUnit";
 import generateClaimPageStory from "storybook/utils/generateClaimPageStory";
-import { updateCookieWithFlag } from "src/services/featureFlags";
 
 // Mock data
-const employerDepartmentList: OrganizationUnit[] = [
+const employerOrgUnitList: OrganizationUnit[] = [
   {
     organization_unit_id: "dep-1",
     name: "Department One",
@@ -39,32 +38,37 @@ const employerDepartmentList: OrganizationUnit[] = [
   },
 ];
 
+const singularDepartmentList = [employerOrgUnitList[0]];
+
 const longDepartmentList = [
-  employerDepartmentList[0],
-  employerDepartmentList[1],
-  employerDepartmentList[2],
-  employerDepartmentList[3],
-  employerDepartmentList[4],
-  employerDepartmentList[5],
+  employerOrgUnitList[0],
+  employerOrgUnitList[1],
+  employerOrgUnitList[2],
+  employerOrgUnitList[3],
+  employerOrgUnitList[4],
+  employerOrgUnitList[5],
 ];
 
 // Helper
-const claimWithUnits = (employeeDepartmentList: OrganizationUnit[]) =>
+const claimWithUnits = (
+  employeeDepartmentList: OrganizationUnit[],
+  employerDepartmentList?: OrganizationUnit[]
+) =>
   new MockBenefitsApplicationBuilder()
     .verifiedId()
     .employed()
     .employeeOrganizationUnits(employeeDepartmentList)
-    .employerOrganizationUnits(employerDepartmentList)
+    .employerOrganizationUnits(employerDepartmentList || employerOrgUnitList)
     .create();
 
 const mockClaims = {
+  Singular: claimWithUnits(singularDepartmentList),
+  SingularOnlyWorkarounds: claimWithUnits(
+    singularDepartmentList,
+    singularDepartmentList
+  ),
   Long: claimWithUnits(longDepartmentList),
 };
-
-// Workaround to pass render stories test
-// The department page is currently behind a feature flag
-// and causes the stories test to fail due to empty story component
-updateCookieWithFlag("claimantShowOrganizationUnits", "true");
 
 const { config, DefaultStory } = generateClaimPageStory(
   "department",

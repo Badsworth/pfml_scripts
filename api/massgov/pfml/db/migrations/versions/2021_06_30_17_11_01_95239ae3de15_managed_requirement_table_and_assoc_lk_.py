@@ -63,7 +63,7 @@ def upgrade():
             server_default=sa.text("now()"),
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(["claim_id"], ["claim.claim_id"],),
+        sa.ForeignKeyConstraint(["claim_id"], ["claim.claim_id"]),
         sa.ForeignKeyConstraint(
             ["managed_requirement_category_id"],
             ["lk_managed_requirement_category.managed_requirement_category_id"],
@@ -76,7 +76,7 @@ def upgrade():
             ["managed_requirement_type_id"],
             ["lk_managed_requirement_type.managed_requirement_type_id"],
         ),
-        sa.ForeignKeyConstraint(["respondent_user_id"], ["user.user_id"],),
+        sa.ForeignKeyConstraint(["respondent_user_id"], ["user.user_id"]),
         sa.PrimaryKeyConstraint("managed_requirement_id"),
         sa.UniqueConstraint("fineos_managed_requirement_id"),
     )

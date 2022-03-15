@@ -14,6 +14,7 @@ from massgov.pfml.api.models.claims.common import PreviousLeave
 from massgov.pfml.api.models.common import ConcurrentLeave
 from massgov.pfml.api.services.administrator_fineos_actions import (
     EformTypes,
+    _get_computed_start_dates,
     _get_leave_details,
     download_document_as_leave_admin,
     get_claim_as_leave_admin,
@@ -21,7 +22,8 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
     register_leave_admin_with_fineos,
 )
 from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
-from massgov.pfml.db.models.employees import AbsencePeriodType, UserLeaveAdministrator
+from massgov.pfml.db.models.absences import AbsencePeriodType
+from massgov.pfml.db.models.employees import UserLeaveAdministrator
 from massgov.pfml.db.models.factories import EmployerFactory
 from massgov.pfml.fineos import FINEOSClient
 from massgov.pfml.fineos.mock.eform import MOCK_EFORM_OTHER_INCOME_V1, MOCK_EFORM_OTHER_INCOME_V2
@@ -1009,9 +1011,7 @@ def mock_fineos_other_leaves_v2_eform():
         )
 
     def mock_eform_summary(*args, **kwargs):
-        return [
-            group_client_api.EFormSummary(eformId=12345, eformType=EformTypes.OTHER_LEAVES),
-        ]
+        return [group_client_api.EFormSummary(eformId=12345, eformType=EformTypes.OTHER_LEAVES)]
 
     mock_client = massgov.pfml.fineos.mock_client.MockFINEOSClient()
     mock_client.get_eform = mock_eform
@@ -1292,9 +1292,7 @@ def mock_fineos_other_leaves_v2_accrued_leave_different_employer_eform():
         )
 
     def mock_eform_summary(*args, **kwargs):
-        return [
-            group_client_api.EFormSummary(eformId=12345, eformType=EformTypes.OTHER_LEAVES),
-        ]
+        return [group_client_api.EFormSummary(eformId=12345, eformType=EformTypes.OTHER_LEAVES)]
 
     mock_client = massgov.pfml.fineos.mock_client.MockFINEOSClient()
     mock_client.get_eform = mock_eform
@@ -1306,9 +1304,7 @@ def mock_fineos_other_leaves_v2_accrued_leave_different_employer_eform():
 @pytest.fixture
 def mock_fineos_other_income_v1_eform():
     def mock_eform_summary(*args, **kwargs):
-        return [
-            group_client_api.EFormSummary(eformId=12345, eformType=EformTypes.OTHER_INCOME),
-        ]
+        return [group_client_api.EFormSummary(eformId=12345, eformType=EformTypes.OTHER_INCOME)]
 
     def mock_get_eform(*args, **kwargs):
         return group_client_api.EForm(
@@ -1706,6 +1702,53 @@ def test_get_claim_absence_period_types(input_period_type, output_period_type):
     assert claim.absence_periods[0].period_type == output_period_type
 
 
+def test_computed_start_dates_for_absence_with_no_reason():
+    period_decisions = group_client_api.PeriodDecisions.parse_obj(
+        {
+            "decisions": [
+                {
+                    "period": {
+                        "startDate": "2021-01-01",
+                        "endDate": "2021-01-31",
+                        "leaveRequest": {"reasonName": None},
+                    }
+                }
+            ]
+        }
+    )
+    computed_start_dates = _get_computed_start_dates(period_decisions.dict())
+    assert computed_start_dates.other_reason is None
+    assert computed_start_dates.same_reason is None
+
+
+def test_computed_start_dates_for_claim_with_no_leave_periods():
+    period_decisions = group_client_api.PeriodDecisions.parse_obj({"decisions": []})
+    computed_start_dates = _get_computed_start_dates(period_decisions.dict())
+    assert computed_start_dates.same_reason is None
+    assert computed_start_dates.other_reason is None
+
+
+def test_computed_start_dates_for_caring_leave_with_prior_year_after_launch():
+    period_decisions = group_client_api.PeriodDecisions.parse_obj(
+        {
+            "decisions": [
+                {
+                    "period": {
+                        "startDate": "2022-07-30",
+                        "endDate": "2021-01-31",
+                        "leaveRequest": {"reasonName": "Care for a Family Member"},
+                    }
+                }
+            ]
+        }
+    )
+    computed_start_dates = _get_computed_start_dates(period_decisions.dict())
+    assert computed_start_dates.same_reason == date(2021, 7, 25)
+    assert computed_start_dates.other_reason == date(2021, 7, 25)
+    assert computed_start_dates.same_reason.strftime("%A") == "Sunday"
+    assert computed_start_dates.other_reason.strftime("%A") == "Sunday"
+
+
 def test_get_claim_absence_period_grouped_by_reference():
     mock_period_decisions = group_client_api.PeriodDecisions.parse_obj(
         {
@@ -1783,7 +1826,7 @@ def test_get_claim_eform_type_contains_neither_version(mock_fineos_period_decisi
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.build()
     leave_details, _, _ = get_claim_as_leave_admin(
-        fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions,
+        fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions
     )
     assert leave_details.uses_second_eform_version is True
 
@@ -1796,9 +1839,7 @@ def test_get_claim_other_income_eform_type_contains_both_versions():
     )
     employer = EmployerFactory.build()
     with pytest.raises(ContainsV1AndV2Eforms):
-        get_claim_as_leave_admin(
-            fineos_user_id, absence_id, employer, fineos_client=client,
-        )
+        get_claim_as_leave_admin(fineos_user_id, absence_id, employer, fineos_client=client)
 
 
 def test_get_claim_other_leaves_v2_eform(mock_fineos_other_leaves_v2_eform):
@@ -1806,7 +1847,7 @@ def test_get_claim_other_leaves_v2_eform(mock_fineos_other_leaves_v2_eform):
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.build()
     leave_details, _, _ = get_claim_as_leave_admin(
-        fineos_user_id, absence_id, employer, fineos_client=mock_fineos_other_leaves_v2_eform,
+        fineos_user_id, absence_id, employer, fineos_client=mock_fineos_other_leaves_v2_eform
     )
 
     assert leave_details.uses_second_eform_version is True
@@ -1817,8 +1858,8 @@ def test_get_claim_other_leaves_v2_eform(mock_fineos_other_leaves_v2_eform):
             leave_end_date=date(2021, 1, 4),
             leave_reason="Pregnancy",
             previous_leave_id=None,
-            worked_per_week_minutes=None,
-            leave_minutes=None,
+            worked_per_week_minutes=15,
+            leave_minutes=45,
             type="same_reason",
         ),
         PreviousLeave(
@@ -1827,8 +1868,8 @@ def test_get_claim_other_leaves_v2_eform(mock_fineos_other_leaves_v2_eform):
             leave_end_date=date(2021, 1, 12),
             leave_reason="An illness or injury",
             previous_leave_id=None,
-            worked_per_week_minutes=None,
-            leave_minutes=None,
+            worked_per_week_minutes=30,
+            leave_minutes=30,
             type="same_reason",
         ),
         PreviousLeave(
@@ -1837,8 +1878,8 @@ def test_get_claim_other_leaves_v2_eform(mock_fineos_other_leaves_v2_eform):
             leave_end_date=date(2021, 1, 15),
             leave_reason="Caring for a family member with a serious health condition",
             previous_leave_id=None,
-            worked_per_week_minutes=None,
-            leave_minutes=None,
+            worked_per_week_minutes=45,
+            leave_minutes=15,
             type="other_reason",
         ),
         PreviousLeave(
@@ -1847,8 +1888,8 @@ def test_get_claim_other_leaves_v2_eform(mock_fineos_other_leaves_v2_eform):
             leave_end_date=date(2021, 1, 19),
             leave_reason="Bonding with my child after birth or placement",
             previous_leave_id=None,
-            worked_per_week_minutes=None,
-            leave_minutes=None,
+            worked_per_week_minutes=15,
+            leave_minutes=15,
             type="other_reason",
         ),
         PreviousLeave(
@@ -1857,8 +1898,8 @@ def test_get_claim_other_leaves_v2_eform(mock_fineos_other_leaves_v2_eform):
             leave_end_date=date(2021, 1, 22),
             leave_reason="Caring for a family member who serves in the armed forces",
             previous_leave_id=None,
-            worked_per_week_minutes=None,
-            leave_minutes=None,
+            worked_per_week_minutes=30,
+            leave_minutes=45,
             type="other_reason",
         ),
     ]
@@ -1902,8 +1943,8 @@ def test_get_claim_other_leaves_v2_accrued_leave_different_employer_eform(
             leave_end_date=date(2021, 3, 8),
             leave_reason="Pregnancy",
             previous_leave_id=None,
-            worked_per_week_minutes=None,
-            leave_minutes=None,
+            worked_per_week_minutes=0,
+            leave_minutes=0,
             type="same_reason",
         )
     ]
@@ -1915,7 +1956,7 @@ def test_get_claim_other_income(mock_fineos_other_income_v1_eform):
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.build()
     leave_details, _, _ = get_claim_as_leave_admin(
-        fineos_user_id, absence_id, employer, fineos_client=mock_fineos_other_income_v1_eform,
+        fineos_user_id, absence_id, employer, fineos_client=mock_fineos_other_income_v1_eform
     )
     assert leave_details.date_of_birth == "****-12-25"
     assert len(leave_details.employer_benefits) == 1
@@ -2031,10 +2072,46 @@ class TestGetDocumentsAsLeaveAdmin:
         )
 
     @pytest.fixture
+    def group_client_image_png(self):
+        return GroupClientDocument(
+            name="own serious health condition form",
+            documentId=2,
+            type="image",
+            caseId="123",
+            description="foo bar",
+            originalFilename="test.png",
+            fileExtension=".png",
+        )
+
+    @pytest.fixture
+    def group_client_image_jpeg(self):
+        return GroupClientDocument(
+            name="own serious health condition form",
+            documentId=3,
+            type="image",
+            caseId="123",
+            description="foo bar",
+            originalFilename="test.jpeg",
+            fileExtension=".jpeg",
+        )
+
+    @pytest.fixture
+    def group_client_image_jpg(self):
+        return GroupClientDocument(
+            name="own serious health condition form",
+            documentId=4,
+            type="image",
+            caseId="123",
+            description="foo bar",
+            originalFilename="test.jpg",
+            fileExtension=".jpg",
+        )
+
+    @pytest.fixture
     def group_client_doc_invalid_type(self):
         return GroupClientDocument(
             name="invalid type",
-            documentId=2,
+            documentId=5,
             type="document",
             caseId="234",
             description="foo bar",
@@ -2046,7 +2123,7 @@ class TestGetDocumentsAsLeaveAdmin:
     def group_client_doc_invalid_extension(self):
         return GroupClientDocument(
             name="approval notice",
-            documentId=3,
+            documentId=6,
             type="document",
             caseId="456",
             description="foo bar",
@@ -2058,18 +2135,24 @@ class TestGetDocumentsAsLeaveAdmin:
         self,
         mock_group_client_get_docs,
         group_client_document,
+        group_client_image_png,
+        group_client_image_jpeg,
+        group_client_image_jpg,
         group_client_doc_invalid_type,
         group_client_doc_invalid_extension,
     ):
         mock_group_client_get_docs.return_value = [
             group_client_document,
+            group_client_image_png,
+            group_client_image_jpeg,
+            group_client_image_jpg,
             group_client_doc_invalid_type,
             group_client_doc_invalid_extension,
         ]
         documents = get_documents_as_leave_admin("fake-user-id", "fake-absence-id")
         mock_group_client_get_docs.assert_called_once_with("fake-user-id", "fake-absence-id")
-        assert len(documents) == 1
-        assert documents[0].fineos_document_id == "1"
+        assert len(documents) == 4
+        assert [d.fineos_document_id for d in documents] == ["1", "2", "3", "4"]
 
 
 # testing class for download_document_as_leave_admin

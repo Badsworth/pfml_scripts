@@ -1,21 +1,10 @@
 from datetime import datetime
 from unittest import mock
 
-import pytest
-from freezegun import freeze_time
-
 from massgov.pfml.api.models.common import Phone
 from massgov.pfml.api.models.users.requests import UserUpdateRequest
 from massgov.pfml.api.services.users import update_user
-from massgov.pfml.db.models.factories import UserFactory
 from tests.conftest import get_mock_logger
-
-
-# Run `initialize_factories_session` for all tests,
-# so that it doesn't need to be manually included
-@pytest.fixture(autouse=True)
-def setup_factories(initialize_factories_session):
-    return
 
 
 class TestUpdateUser:
@@ -110,7 +99,7 @@ class TestUpdateUser:
 
     @mock.patch("massgov.pfml.api.services.users._update_mfa_preference_audit_trail")
     def test_audit_trail_not_updated_if_mfa_preference_isnt_updated(
-        self, mock_audit_trail, user, test_db_session,
+        self, mock_audit_trail, user, test_db_session
     ):
         update_request = UserUpdateRequest(mfa_delivery_preference="SMS")
         update_user(test_db_session, user, update_request)
@@ -122,9 +111,7 @@ class TestUpdateUser:
         assert mock_audit_trail.call_count == 1
 
     @mock.patch("massgov.pfml.api.services.users.logger", mock_logger)
-    def test_mfa_updated_logging(
-        self, user, test_db_session,
-    ):
+    def test_mfa_updated_logging(self, user, test_db_session):
         update_request = UserUpdateRequest(mfa_delivery_preference="SMS")
         update_user(test_db_session, user, update_request)
 
@@ -132,40 +119,9 @@ class TestUpdateUser:
             "MFA updated for user", extra={"mfa_preference": "SMS", "updated_by": "user"}
         )
 
-    @mock.patch("massgov.pfml.api.services.users.send_mfa_disabled_email")
-    @mock.patch("massgov.pfml.api.services.users.logger", mock_logger)
-    def test_mfa_disabled_logging(self, mock_send_mfa_disabled_email, user, test_db_session):
-        # enable MFA at some time in the past
-        enabled_at = "2022-01-15"
-        with freeze_time(enabled_at):
-            update_request = UserUpdateRequest(mfa_delivery_preference="SMS")
-            update_user(test_db_session, user, update_request)
-
-        # disable MFA
-        update_request = UserUpdateRequest(mfa_delivery_preference="Opt Out")
-        update_user(test_db_session, user, update_request)
-
-        self.mock_logger.info.assert_any_call(
-            "MFA disabled for user",
-            extra={
-                "last_enabled_at": mock.ANY,
-                "time_since_enabled_in_sec": mock.ANY,
-                "updated_by": "user",
-            },
-        )
-        assert (
-            self.mock_logger.info.call_args.kwargs["extra"]["last_enabled_at"].strftime("%Y-%m-%d")
-            == enabled_at
-        )
-
-    @pytest.fixture
-    def user(self, initialize_factories_session):
-        user = UserFactory.create(mfa_phone_number="+17654321")
-        return user
-
-    @mock.patch("massgov.pfml.api.services.users.send_mfa_disabled_email")
-    def test_mfa_disabled_email(
-        self, mock_send_mfa_disabled_email, user, test_db_session,
+    @mock.patch("massgov.pfml.api.services.users.handle_mfa_disabled")
+    def test_handle_mfa_disabled_called_when_mfa_disabled(
+        self, mock_handle_mfa_disabled, user, test_db_session
     ):
         # enable MFA
         update_request = UserUpdateRequest(mfa_delivery_preference="SMS")
@@ -175,13 +131,13 @@ class TestUpdateUser:
         update_request = UserUpdateRequest(mfa_delivery_preference="Opt Out")
         update_user(test_db_session, user, update_request)
 
-        mock_send_mfa_disabled_email.assert_called_once_with(user.email_address, "4321")
+        mock_handle_mfa_disabled.assert_called_once_with(user, mock.ANY, "user")
 
-    @mock.patch("massgov.pfml.api.services.users.send_mfa_disabled_email")
-    def test_mfa_disabled_email_not_sent_on_first_opt_out(
-        self, mock_send_mfa_disabled_email, user, test_db_session,
+    @mock.patch("massgov.pfml.api.services.users.handle_mfa_disabled")
+    def test_handle_mfa_disabled_not_called_on_first_opt_out(
+        self, mock_handle_mfa_disabled, user, test_db_session
     ):
         update_request = UserUpdateRequest(mfa_delivery_preference="Opt Out")
         update_user(test_db_session, user, update_request)
 
-        mock_send_mfa_disabled_email.assert_not_called()
+        mock_handle_mfa_disabled.assert_not_called()

@@ -1,5 +1,5 @@
 import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
-import { cleanup, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import PreviousLeavesSameReason from "../../../src/pages/applications/previous-leaves-same-reason";
 import { setupBenefitsApplications } from "../../test-utils/helpers";
 import userEvent from "@testing-library/user-event";
@@ -27,17 +27,7 @@ const setup = (
 };
 
 describe("PreviousLeavesSameReason", () => {
-  it("renders different legend and hint when claim is for Caring Leave", () => {
-    setup(
-      new MockBenefitsApplicationBuilder()
-        .continuous()
-        .caringLeaveReason()
-        .create()
-    );
-
-    expect(screen.getByRole("group")).toMatchSnapshot();
-
-    cleanup();
+  it("renders legend and hint with computed dates", () => {
     setup(
       new MockBenefitsApplicationBuilder()
         .continuous()
@@ -63,7 +53,10 @@ describe("PreviousLeavesSameReason", () => {
 
   it("sets previous_leaves_same_reason to null when has_previous_leaves_same_reason changes to false", async () => {
     const { updateSpy } = setup(
-      new MockBenefitsApplicationBuilder().previousLeavesSameReason().create()
+      new MockBenefitsApplicationBuilder()
+        .continuous()
+        .previousLeavesSameReason()
+        .create()
     );
 
     userEvent.click(screen.getByRole("radio", { name: /No/i }));

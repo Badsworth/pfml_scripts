@@ -9,7 +9,6 @@ import Hint from "../../components/core/Hint";
 import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import InputDate from "../../components/core/InputDate";
 import InputHours from "../../components/core/InputHours";
-import LeaveReason from "../../models/LeaveReason";
 import PreviousLeave from "../../models/PreviousLeave";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
@@ -53,12 +52,9 @@ export const PreviousLeavesSameReasonDetails = (
   );
 
   const leaveStartDate = formatDate(claim.leaveStartDate).full();
-  const otherLeaveStartDate = formatDate(claim.otherLeaveStartDate).full();
-
-  const isCaringLeave = get(claim, "leave_details.reason") === LeaveReason.care;
-  const previousLeaveStartDate = isCaringLeave
-    ? formatDate("2021-07-01").full()
-    : otherLeaveStartDate;
+  const previousLeaveStartDate = formatDate(
+    claim.computed_start_dates.same_reason
+  ).full();
 
   const handleSave = () => {
     return appLogic.benefitsApplications.update(
@@ -83,7 +79,7 @@ export const PreviousLeavesSameReasonDetails = (
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });
@@ -95,6 +91,7 @@ export const PreviousLeavesSameReasonDetails = (
         entry={entry}
         index={index}
         getFunctionalInputProps={getFunctionalInputProps}
+        minimumDate={previousLeaveStartDate}
       />
     );
   };
@@ -146,6 +143,7 @@ interface PreviousLeaveSameReasonDetailsCardProps {
   entry: PreviousLeave;
   getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
   index: number;
+  minimumDate: string;
 }
 
 export const PreviousLeaveSameReasonDetailsCard = (
@@ -195,6 +193,12 @@ export const PreviousLeaveSameReasonDetailsCard = (
         label={t(
           "pages.claimsPreviousLeavesSameReasonDetails.leaveStartDateLabel"
         )}
+        hint={t(
+          "pages.claimsPreviousLeavesSameReasonDetails.leaveStartDateHint",
+          {
+            minimumDate: props.minimumDate,
+          }
+        )}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
         yearLabel={t("components.form.dateInputYearLabel")}
@@ -206,6 +210,12 @@ export const PreviousLeaveSameReasonDetailsCard = (
         smallLabel
         label={t(
           "pages.claimsPreviousLeavesSameReasonDetails.leaveEndDateLabel"
+        )}
+        hint={t(
+          "pages.claimsPreviousLeavesSameReasonDetails.leaveEndDateHint",
+          {
+            minimumDate: props.minimumDate,
+          }
         )}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}

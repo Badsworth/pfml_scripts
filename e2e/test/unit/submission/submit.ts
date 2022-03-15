@@ -1,4 +1,3 @@
-import { mocked } from "ts-jest/utils";
 import { describe, it, expect } from "@jest/globals";
 import delay from "delay";
 import { GeneratedClaim } from "../../../src/generation/Claim";
@@ -25,7 +24,7 @@ jest.mock("../../../src/util/credentials", () => {
   return { getClaimantCredentials, getLeaveAdminCredentials };
 });
 // Create a typed mock object for getPortalSubmitter(). This only overrides the TS typing.
-const getPortalSubmitterMock = mocked(getPortalSubmitter);
+const getPortalSubmitterMock = jest.mocked(getPortalSubmitter);
 
 type MockRepsonse = {
   response: Record<string, unknown>;
@@ -158,7 +157,7 @@ describe("Portal backoff", () => {
 
   it("Skips claim submission when tracker.has() resolves to true", async () => {
     const claims = generateClaims(3);
-    mocked(tracker).has.mockImplementation(async () => true);
+    jest.mocked(tracker).has.mockImplementation(async () => true);
     const submitter = {
       submit: jest.fn(() => Promise.resolve(successResponse)),
     };

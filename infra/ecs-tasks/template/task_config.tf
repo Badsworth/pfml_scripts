@@ -12,7 +12,8 @@ locals {
     { name : "LOGGING_LEVEL", value : var.logging_level },
     { name : "FEATURES_FILE_PATH", value : "s3://massgov-pfml-${var.environment_name}-feature-gate/features.yaml" },
     { name : "NEW_RELIC_LICENSE_KEY", valueFrom : "/service/${local.app_name}/common/newrelic-license-key" },
-    { name : "NR_INSERT_API_KEY", valueFrom : "/admin/${local.app_name}/newrelic-insert-api-key" }
+    { name : "NR_INSERT_API_KEY", valueFrom : "/admin/${local.app_name}/newrelic-insert-api-key" },
+    { name : "FINEOS_IS_RUNNING_V21", value : var.fineos_is_running_v21 },
   ]
 
   # Provides access to the RDS database via admin username/password
@@ -83,6 +84,7 @@ locals {
     { name : "PUB_MOVEIT_OUTBOUND_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/pub/outbound" },
     { name : "PFML_PUB_ACH_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/pub/ach" },
     { name : "PFML_PUB_CHECK_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/pub/check" },
+    { name : "PFML_MANUAL_PUB_REJECT_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/pub/manual-reject" },
     { name : "PFML_ERROR_REPORTS_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/reports" },
     { name : "PFML_PAYMENT_REJECTS_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/audit" }
   ]
@@ -158,6 +160,7 @@ locals {
     { name : "PFML_1099_DOCUMENT_ARCHIVE_PATH", value : "s3://pfml-api-${var.environment_name}-1099-form-generator/1099" },
     { name : "UPLOAD_MAX_FILES_TO_FINEOS", value : var.upload_max_files_to_fineos },
     { name : "TEST_FILE_GENERATION_1099", value : var.enable_1099_testfile_generation },
-    { name : "IRS_1099_CORRECTION_IND", value : var.irs_1099_correction_ind }
+    { name : "IRS_1099_CORRECTION_IND", value : var.irs_1099_correction_ind },
+    { name : "IRS_1099_TAX_YEAR", value : var.irs_1099_tax_year }
   ]
 }

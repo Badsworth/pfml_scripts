@@ -1,5 +1,6 @@
 provider "aws" {
-  region = "us-east-1"
+  region  = "us-east-1"
+  version = "3.74.1"
 }
 
 terraform {
@@ -28,6 +29,8 @@ terraform {
 module "tasks" {
   source = "../../template"
 
+  logging_level = "massgov.pfml.fineos.fineos_client=DEBUG"
+
   environment_name         = "long"
   service_docker_tag       = local.service_docker_tag
   vpc_id                   = data.aws_vpc.vpc.id
@@ -48,6 +51,8 @@ module "tasks" {
   fineos_aws_iam_role_external_id                     = "12345"
   fineos_eligibility_feed_output_directory_path       = "s3://fin-somdev-data-import/DT4"
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/DT4/dataexports"
+
+  fineos_is_running_v21 = "true"
 
   # These can be kept blank.
   eolwd_moveit_sftp_uri   = ""
@@ -72,6 +77,11 @@ module "tasks" {
   payment_audit_report_outbound_folder_path = "s3://massgov-pfml-long-agency-transfer/audit/outbound"
   payment_audit_report_sent_folder_path     = "s3://massgov-pfml-long-agency-transfer/audit/sent"
 
+  enable_pub_automation_fineos                   = true
+  enable_pub_automation_create_pub_files         = true
+  enable_pub_automation_process_returns          = false
+  enable_pub_payments_copy_audit_report_schedule = true
+
   enable_register_admins_job = true
 
   rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
@@ -89,6 +99,5 @@ module "tasks" {
   enable_1099_testfile_generation = "0"
   irs_1099_correction_ind         = "0"
 
-  enable_withholding_payments            = "1"
   enable_employer_reimbursement_payments = "0"
 }

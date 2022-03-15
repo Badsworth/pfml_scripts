@@ -5,6 +5,7 @@ import {
   ReducedScheduleLeavePeriods,
   ApplicationRequestBody,
   AbsencePeriodResponse,
+  Phone,
 } from "../../src/_api";
 import {
   FineosCloseTaskStep,
@@ -51,11 +52,17 @@ import {
   parseISO,
   startOfWeek,
   subDays,
+  isBefore,
+  isAfter,
+  getHours,
+  addBusinessDays,
 } from "date-fns";
 import { DocumentUploadRequest } from "../../src/api";
 import { fineos } from ".";
 import { LeaveReason } from "../../src/generation/Claim";
 import { config } from "./common";
+import { FineosCorrespondanceType, FineosDocumentType } from "./fineos.enums";
+import { convertToTimeZone } from "date-fns-timezone";
 
 type StatusCategory =
   | "Applicability"
@@ -103,6 +110,13 @@ export class ClaimPage {
     cy.findByText("Absence Paid Leave Case", { selector: "a" }).click();
     cb(new PaidLeavePage());
     cy.findByText("Absence Case", { selector: "a" }).click();
+    return this;
+  }
+  // FINEOS April upgrade will adjust the in review process to which we don't have to click on the Adjudication
+  // buton on the Absence Hub tab.
+  adjudicateUpgrade(cb: (page: AdjudicationPage) => unknown): this {
+    cb(new AdjudicationPage());
+    cy.get("#footerButtonsBar input[value='OK']").click();
     return this;
   }
 
@@ -225,7 +239,7 @@ export class ClaimPage {
       }
       cy.wrap(el).click();
       waitForAjaxComplete();
-      cy.get('input[type="submit"][value="Continue"]').click();
+      cy.get('input[type="submit"][value="Continue"]').click({ force: true });
       cy.contains(".TreeNodeContainer", type, {
         timeout: 20000,
       })
@@ -236,18 +250,27 @@ export class ClaimPage {
     return this;
   }
 
-  approve(status: "Approved" | "Completed" = "Approved"): this {
+  approve(
+    status: "Approved" | "Completed" = "Approved",
+    upgrade: boolean | null | undefined = false
+  ): this {
     // This button turns out to be unclickable without force, because selecting
     // it seems to scroll it out of view. Force works around that.
-    cy.get('a[title="Approve the Pending Leaving Request"]').click({
-      force: true,
-    });
+    if (upgrade) {
+      cy.get('a[title="Approve the pending/in review leave request"]').click({
+        force: true,
+      });
+    } else {
+      cy.get('a[title="Approve the Pending Leaving Request"]').click({
+        force: true,
+      });
+    }
     waitForAjaxComplete();
     assertClaimStatus(status);
     return this;
   }
 
-  deny(reason: string, assertStatus = true): this {
+  deny(reason: string, assertStatus = true, upgrade: boolean): this {
     cy.get("input[type='submit'][value='Adjudicate']").click();
     // Make sure the page is fully loaded by waiting for the leave plan to show up.
     cy.get("table[id*='selectedLeavePlans'] tr")
@@ -255,8 +278,11 @@ export class ClaimPage {
       .click();
     cy.get("input[type='submit'][value='Reject']").click();
     clickBottomWidgetButton("OK");
-
-    cy.get('a[title="Deny the Pending Leave Request"]').click();
+    if (upgrade) {
+      cy.get('a[title="Deny the pending/in review leave request"]').click();
+    } else {
+      cy.get('a[title="Deny the Pending Leave Request"]').click();
+    }
     cy.get('span[id="leaveRequestDenialDetailsWidget"]')
       .find("select")
       .select(reason);
@@ -276,9 +302,7 @@ export class ClaimPage {
     return this;
   }
 
-  addCorrespondenceDocument(
-    action: DocumentUploadRequest["document_type"]
-  ): this {
+  addCorrespondenceDocument(action: FineosCorrespondanceType): this {
     const document = new DocumentsPage();
     cy.get("[id^=MENUBAR\\.CaseSubjectMenu]")
       .findByText("Correspondence")
@@ -305,6 +329,17 @@ export class ClaimPage {
       .find("select")
       .select(reason);
     cy.get('input[type="submit"][value="OK"]').click();
+    return this;
+  }
+
+  approveExtendedTime(): this {
+    waitForAjaxComplete();
+    cy.get("table[id$='leaveRequestListviewWidget']").within(() => {
+      cy.get("tr.ListRowSelected").click();
+    });
+    cy.get('a[title="Approve the Pending Leaving Request"]').click({
+      force: true,
+    });
     return this;
   }
 
@@ -373,12 +408,27 @@ export class ClaimPage {
     return this;
   }
 
-  reviewClaim(): this {
+  reviewClaim(upgrade: boolean): this {
     onTab("Leave Details");
     cy.contains("td", "Approved").click();
-    cy.get('input[title="Review a Leave Request"').click();
-    waitForAjaxComplete();
-    onTab("Absence Hub");
+    if (upgrade) {
+      // Note in the new workflow for putting a claim into Review we are going directly to the Adjudication
+      // instead of click on the Absence Hub. Then clicking the Adjudication button on the Absence Hub tab.
+      cy.findByText("Review").click();
+      cy.get('input[type="radio"][id*="secondOption"]').click();
+      cy.get(".ant-modal-footer").within(() => {
+        cy.findByText("OK", {
+          selector: "span",
+        }).click({
+          force: true,
+        });
+      });
+      waitForAjaxComplete();
+    } else {
+      cy.get('input[title="Review a Leave Request"').click();
+      waitForAjaxComplete();
+      onTab("Absence Hub");
+    }
     return this;
   }
 
@@ -980,6 +1030,13 @@ class TasksPage {
     waitForAjaxComplete();
     return this;
   }
+
+  returnSubTasksTab(): this {
+    cy.get(
+      'td[id$="_FINEOS.WorkManager.Activities.ViewTasks.AbsenceCase_TasksView_cell"]'
+    ).click();
+    return this;
+  }
 }
 
 /**
@@ -1037,7 +1094,7 @@ export class DocumentsPage {
    * @param businessType - name of the document type in fineos
    * @returns
    */
-  uploadDocument(documentType: DocumentUploadRequest["document_type"]): this {
+  uploadDocument(documentType: FineosDocumentType): this {
     this.startDocumentCreation(documentType);
     cy.get("input[type='file']").attachFile(
       `./${getFixtureDocumentName(documentType)}.pdf`
@@ -1047,9 +1104,7 @@ export class DocumentsPage {
     return this;
   }
 
-  uploadDocumentAlt(
-    documentType: DocumentUploadRequest["document_type"]
-  ): this {
+  uploadDocumentAlt(documentType: FineosDocumentType): this {
     cy.get("input[type='file']").attachFile(
       `./${getFixtureDocumentName(documentType)}.pdf`
     );
@@ -1172,6 +1227,14 @@ export class DocumentsPage {
     cy.get('span[id*="status_WRAPPER"]').find("select").select("Completed");
     waitForAjaxComplete();
     clickBottomWidgetButton("OK");
+    return this;
+  }
+
+  addDocument(documentName: string): this {
+    this.startDocumentCreation(documentName);
+    waitForAjaxComplete();
+    clickBottomWidgetButton("Next");
+    waitForAjaxComplete();
     return this;
   }
 
@@ -1648,7 +1711,11 @@ class PaidLeaveDocumentsPage {
 /**
  * Future or made payment.
  */
-type Payment = { net_payment_amount: number; paymentInstances?: number };
+type Payment = {
+  net_payment_amount: number;
+  paymentInstances?: number;
+  paymentProcessingDates?: Date[];
+};
 
 /**
  * Data needed to apply a reduction to a payment in a paid leave case.
@@ -1663,7 +1730,8 @@ type Reduction = {
 
 type PaidLeaveCorrespondenceDocument =
   | "Benefit Amount Change Notice"
-  | "Maximum Weekly Benefit Change Notice";
+  | "Maximum Weekly Benefit Change Notice"
+  | "Overpayment Notice - Full Balance Recovery";
 /**
  * Class representing the Absence Paid Leave Case,
  * Claim should be adjudicated and approved before trying to access this.
@@ -1885,38 +1953,61 @@ class PaidLeavePage {
   }
 
   /**
-   * Asserts there are pending payments for a given amount.
+   * Asserts there are pending payments for a given amount. Assertion for payment dates are also supported.
+   * Assertions for payment amounts and dates disregard payment ordering, which can sometimes vary by environment
    * @param amountsPending array of expected pending payments.
    * @returns
    */
   assertAmountsPending(amountsPending: Payment[]): this {
     this.onTab("Financials", "Payment History", "Amounts Pending");
     if (!amountsPending.length) return this;
-    // Get the table
     cy.contains("table.WidgetPanel", "Amounts Pending")
+      // Get the table
       .find("table.ListTable")
       .within(() => {
-        // Note: This method disregards payment ordering, which can sometimes vary by environment.
-        // If you really need ordering, I'd suggest we add expected payment dates to this function and
-        // do it that way.
         amountsPending.forEach((payment) => {
           if (payment.net_payment_amount) {
-            cy.get(`tbody tr`)
-              .find("td:nth-child(8)")
-              .then((els) => {
-                const payments = [...els]
-                  .map((el) => el.innerText)
-                  .filter(
-                    (text) =>
-                      text == numToPaymentFormat(payment.net_payment_amount)
+            // find row items that contain payment information
+            cy.get(`tbody tr`).within(() => {
+              // get all row items that contain a matching net payment amouns
+              cy.get(
+                `td:nth-child(8):contains(${numToPaymentFormat(
+                  payment.net_payment_amount
+                )})`
+              )
+                .parent()
+                .then((paymentRows) => {
+                  // validate the correct amount of payments appear for each payment amount.
+                  expect(paymentRows.length).to.equal(
+                    payment.paymentInstances ?? 1,
+                    `Expected ${payment.paymentInstances ?? 1} payment(s) of ${
+                      payment.net_payment_amount
+                    } - received ${paymentRows.length} instances`
                   );
-                expect(payments.length).to.equal(
-                  payment.paymentInstances ?? 1,
-                  `Expected ${payment.paymentInstances ?? 1} payment(s) of ${
-                    payment.net_payment_amount
-                  } - received ${payments.length} instances`
-                );
-              });
+                  if (payment.paymentProcessingDates) {
+                    // grab payment process date column text from payment row
+                    const actualProcessingDates = [...paymentRows].map(
+                      (el) => el.children[2].textContent
+                    );
+                    for (const expectedDate of payment.paymentProcessingDates) {
+                      const index = actualProcessingDates.findIndex(
+                        (date) => format(expectedDate, "MM/dd/yyyy") === date
+                      );
+                      expect(index).gt(
+                        -1,
+                        `Expected to find payment date of ${format(
+                          expectedDate,
+                          "MM/dd/yyyy"
+                        )} for payment amount ${numToPaymentFormat(
+                          payment.net_payment_amount
+                        )}`
+                      );
+                      // removing previously matched payment dates prevents a false prositive from occurring
+                      actualProcessingDates.splice(index, 1);
+                    }
+                  }
+                });
+            });
           }
         });
       });
@@ -2075,6 +2166,147 @@ class PaidLeavePage {
     });
     return this;
   }
+
+  /**
+   * Modifies payment processing date for the first payment under amounts pending.
+   * @param date - Optional date to set payment for payment processing. Defaults to new Date()
+   * @returns PaidLeavePage
+   */
+  editPaymentProcessingDate(date = new Date()): this {
+    this.onTab("Financials", "Payment History", "Amounts Pending");
+    waitForAjaxComplete();
+    cy.get('input[type="submit"][value="Edit"]').click();
+    waitForAjaxComplete();
+    cy.get(
+      'input[type="checkbox"][id$="overrideprocessingdate_CHECKBOX"]'
+    ).click({ force: true });
+    waitForAjaxComplete();
+    cy.wait(350);
+    cy.get('input[type="text"][id$="processingDate"]').type(
+      `{selectAll}{backspace}${format(date, "MM/dd/yyyy")}`,
+      { force: true }
+    );
+    clickBottomWidgetButton();
+    // confirm that payment processing date has been changed
+    cy.get(`td:nth-child(3):contains(${format(date, "MM/dd/yyyy")})`);
+    return this;
+  }
+
+  assertOverpaymentRecord(overpayments: OverpaymentRecord) {
+    this.onTab("Financials", "Payment History", "Overpayment Summary");
+    cy.get("table[id$='OverpaymentsListview']").within(() => {
+      cy.contains("td[id$='OverpaymentsListviewStatus0']", overpayments.status);
+      cy.contains(
+        "td[id$='OverpaymentsListviewBalancingAmount0']",
+        numToPaymentFormat(overpayments.amount)
+      );
+      cy.contains(
+        "td[id$='OverpaymentsListviewOverpaymentRecordAdjustment0']",
+        numToPaymentFormat(overpayments.adjustment)
+      );
+      cy.contains(
+        "td[id$='OverpaymentsListviewOutstandingAmount0']",
+        numToPaymentFormat(overpayments.outstandingAmount)
+      );
+    });
+  }
+
+  createOffsetRecoveryPlan(recoveryAmt: number): RecoveryPlanPage {
+    this.onTab("Financials", "Payment History", "Overpayment Summary");
+    waitForAjaxComplete();
+    cy.get("tr[class='ListRowSelected']").click({ force: true });
+    waitForAjaxComplete();
+    cy.get('input[type="submit"][value="Open"]').click({ force: true });
+    cy.get(
+      'input[type="submit"][value="Add"][id^="RecoveryPlanListviewWidget"]'
+    ).click();
+    waitForAjaxComplete();
+    cy.findByLabelText("Type").select("OffsetRecovery");
+    waitForAjaxComplete();
+    cy.wait(500);
+    cy.findByLabelText("Agreement Date").type(
+      `${format(new Date(), "MM/dd/yyyy")}{enter}`
+    );
+    waitForAjaxComplete();
+    cy.wait(500);
+    cy.get("input[type='text'][name$='Amount_per_Frequency']").type(
+      `{selectAll}{backspace}${numToPaymentFormat(recoveryAmt)}`
+    );
+    waitForAjaxComplete();
+    cy.get(
+      "input[type='submit'][id$='calculateEstimatedOffsetEndDate']"
+    ).click();
+    waitForAjaxComplete();
+    clickBottomWidgetButton();
+    waitForAjaxComplete();
+    return new RecoveryPlanPage();
+  }
+
+  getAmountsPending(): Cypress.Chainable<
+    Record<"netAmount" | "netPaymentAmount", string>[]
+  > {
+    this.onTab("Financials", "Payment History", "Amounts Pending");
+    waitForAjaxComplete();
+    // net amount
+    return cy.get("td[id$='benefit_amount_money0']").then(([...netPymt]) => {
+      // net payment amount
+      return cy.get("td[id$='payment_amount_money0']").then((netPymtCols) => {
+        return cy.wrap(
+          [...netPymtCols].reduce((acc, netPaymentAmountCol, idx) => {
+            const rowData = {
+              netAmount: netPymt[idx].textContent as string,
+              netPaymentAmount: netPaymentAmountCol.textContent as string,
+            };
+            acc.push(rowData);
+            return acc;
+          }, [] as Record<"netAmount" | "netPaymentAmount", string>[])
+        );
+      });
+    });
+  }
+}
+
+type OverpaymentRecord = {
+  status: string;
+  amount: number;
+  adjustment: number;
+  outstandingAmount: number;
+};
+
+type RecoveryPageCorrespondenceDropdownOptions =
+  | "OP-Full Balance Demand"
+  | "OP-Full Balance Recovery"
+  | "OP-Full Balance Recovery-Manual"
+  | "OP-Notice of Payoff"
+  | "OP-Payment Received";
+
+type RecoveryPlanDocuments =
+  | "Overpayment Notice-Full Balance Recovery"
+  | "Overpayment Notice-Full Balance Recovery-Manual";
+
+class RecoveryPlanPage {
+  addDocument(
+    correspondenceOption: RecoveryPageCorrespondenceDropdownOptions,
+    documentType: RecoveryPlanDocuments
+  ): this {
+    cy.contains("a", "Correspondence").click({ force: true });
+    waitForAjaxComplete();
+    cy.contains(correspondenceOption).click();
+    clickBottomWidgetButton("Next");
+    onTab("Documents");
+    assertHasDocument(documentType);
+    return this;
+  }
+  assertDocumentStatus(
+    documentType: RecoveryPlanDocuments,
+    status: PaidLeaveDocumentStatus
+  ) {
+    onTab("Documents");
+    waitForAjaxComplete();
+    cy.contains("tr", documentType).within(() => {
+      cy.contains("td", status);
+    });
+  }
 }
 
 export function numToPaymentFormat(num: number): string {
@@ -2082,6 +2314,60 @@ export function numToPaymentFormat(num: number): string {
   return `${new Intl.NumberFormat("en-US", {
     style: "decimal",
   }).format(num)}${decimal}`;
+}
+
+/**
+ * Function to determine payment processing dates when preventing overpayments.
+ * Note: This is intended to be used for this specific scenario, and won't be compatible with every payment under Amounts Pending
+ * Read more on preventing overpayments here: https://lwd.atlassian.net/browse/CPS-3115
+ * @returns Date
+ */
+export function calculatePaymentDatePreventingOP(approvalDate?: Date) {
+  const PFML_HOLIDAYS = [
+    "2022-02-21",
+    "2022-04-18",
+    "2022-05-30",
+    "2022-06-20",
+    "2022-07-04",
+    "2022-09-05",
+    "2022-10-10",
+    "2022-11-11",
+    "2022-11-24",
+    "2022-12-26",
+    "2023-01-02",
+    "2023-01-16",
+    "2023-02-20",
+    "2023-04-17",
+    "2023-05-29",
+    "2023-06-19",
+    "2023-07-04",
+    "2023-09-04",
+    "2023-10-09",
+    "2023-11-23",
+    "2023-12-25",
+  ] as const;
+  const estTimeHour = getHours(
+    convertToTimeZone(new Date(), {
+      timeZone: "America/New_York",
+    })
+  );
+  const isBeforeEndBusinessDay = estTimeHour < 17;
+  const afterNormalBusinessDays = addBusinessDays(
+    approvalDate ?? new Date(),
+    isBeforeEndBusinessDay ? 5 : 6
+  );
+  const hasHoliday = (holiday: Date) => {
+    return (
+      isAfter(holiday, subDays(new Date(), 1)) &&
+      isBefore(holiday, addDays(afterNormalBusinessDays, 1))
+    );
+  };
+  // account for holidays - which further delays the payment processing date
+  let totalHolidays = 0;
+  for (let i = 0; i < PFML_HOLIDAYS.length; i++) {
+    if (hasHoliday(parseISO(PFML_HOLIDAYS[i]))) totalHolidays += 1;
+  }
+  return addBusinessDays(afterNormalBusinessDays, totalHolidays);
 }
 
 class BenefitsExtensionPage {
@@ -2321,7 +2607,8 @@ export class ClaimantPage {
    * @param changes Object with one or more of propreties to edit.
    */
   editPersonalIdentification(
-    changes: Partial<PersonalIdentificationDetails>
+    changes: Partial<PersonalIdentificationDetails>,
+    upgrade: boolean
   ): this {
     cy.get(`#personalIdentificationCardWidget`)
       .findByTitle("Edit")
@@ -2333,10 +2620,18 @@ export class ClaimantPage {
         );
 
       if (changes.date_of_birth)
-        cy.findByLabelText(`Date of birth`)
-          .focus()
-          .type(`{selectAll}{backspace}${changes.date_of_birth}`)
-          .blur();
+        if (upgrade) {
+          // FINEOS upgrade keeps failing when using blur on the birth date in last few runs.
+          // Removing for the upgrade till we stablize these Cypress tests better.
+          cy.findByLabelText(`Date of birth`)
+            .focus()
+            .type(`{selectAll}{backspace}${changes.date_of_birth}`);
+        } else {
+          cy.findByLabelText(`Date of birth`)
+            .focus()
+            .type(`{selectAll}{backspace}${changes.date_of_birth}`)
+            .blur();
+        }
 
       if (changes.gender) cy.findByLabelText(`Gender`).select(changes.gender);
 
@@ -2353,7 +2648,9 @@ export class ClaimantPage {
     cy.findByText(`+ Add address`).click({ force: true });
     waitForAjaxComplete();
     cy.get(`#addressPopupWidget_PopupWidgetWrapper`).within(() => {
-      cy.findByLabelText(`Address line 1`).type(`${address.line_1}`);
+      cy.findByLabelText(`Address line 1`).type(`${address.line_1}`, {
+        force: true,
+      });
       if (address.line_2) {
         cy.findByLabelText(`Address line 2`).type(`${address.line_2}`);
       }
@@ -2362,6 +2659,61 @@ export class ClaimantPage {
       cy.findByLabelText(`Zip code`).type(`${address.zip}`);
       cy.findByTitle("OK").click({ force: true });
     });
+    return this;
+  }
+
+  setPhoneNumber(
+    phoneNumber: string,
+    verified = true,
+    phoneType: Exclude<Phone["phone_type"], null | undefined> = "Cell"
+  ): this {
+    const strippedPhoneNumber = phoneNumber.replace(/[^0-9]/g, "");
+    if (![10, 11].includes(strippedPhoneNumber.length)) {
+      throw new Error(`Invalid phone number: ${phoneNumber}`);
+    }
+
+    // Deletes existing contact, if it exists
+    cy.get("div#contactDetailsFrame")
+      .find("div.container.card span.header-title")
+      .each((el) => {
+        if (el.text() === phoneType) {
+          cy.wrap(
+            el.parent().parent().find("span.controls span[id$='deleteIcon']")
+          ).click({ force: true });
+          cy.get("input[id$='Delete_Contact_yes']").click({ force: true });
+        }
+      });
+
+    cy.get("a[id^='newContactDetailsCard'][id$='addPhoneContact']").click();
+
+    let internationalCode: string;
+    let areaCode: string;
+    let number: string;
+    if (strippedPhoneNumber.length === 11) {
+      internationalCode = strippedPhoneNumber[0];
+      areaCode = strippedPhoneNumber.slice(1, 4);
+      number = strippedPhoneNumber.slice(4);
+    } else {
+      internationalCode = "1";
+      areaCode = strippedPhoneNumber.slice(0, 3);
+      number = strippedPhoneNumber.slice(3);
+    }
+
+    cy.get("div#addPhonePopupWidget_PopupWidgetWrapper").within(() => {
+      cy.get("select[id$='contactMethod']").select(phoneType);
+
+      cy.get("input[id$='intCode']").clear().type(internationalCode);
+      cy.get("input[id$='areaCode']").clear().type(areaCode);
+      cy.get("input[id$='telephoneNumber']").clear().type(number);
+
+      cy.contains(
+        "span[id$='Label']",
+        verified ? "Verified" : "Unverified"
+      ).click();
+
+      cy.get("input[id$='okButtonBean']").click();
+    });
+
     return this;
   }
 
@@ -2390,13 +2742,17 @@ export class ClaimantPage {
    */
   createNotification(
     claim: ValidClaim,
-    withholdingPreference?: boolean
+    withholdingPreference?: boolean,
+    verifyOccupation?: boolean
   ): Cypress.Chainable<string> {
     if (!claim.leave_details.reason) throw new Error(`Missing leave reason.`);
     const reason = claim.leave_details.reason as NonNullable<LeaveReason>;
     // Start the process
     return this.startCreateNotification((occupationDetails) => {
       // "Occupation Details" step.
+      if (verifyOccupation) {
+        occupationDetails.verifyOccupation();
+      }
       if (claim.hours_worked_per_week)
         occupationDetails.enterHoursWorkedPerWeek(claim.hours_worked_per_week);
       return occupationDetails.nextStep((notificationOptions) => {
@@ -2629,6 +2985,11 @@ class OccupationDetails extends CreateNotificationStep {
       `${dateToMMddyyyy(dateJobEnded)}{enter}`
     );
   }
+
+  verifyOccupation(): this {
+    cy.get("[name$='_reverifyStatusLink']").click();
+    return this;
+  }
 }
 
 type TypeOfRequestOptions =
@@ -2659,21 +3020,40 @@ class NotificationOptions extends CreateNotificationStep {
 }
 
 /**
- * Maps to select inputs available to describe Absense Reason
+ * Maps to select inputs available to describe Absence Reason
+ * Add new options to discriminated unions as needed
  */
 export type AbsenceReasonDescription = {
-  relates_to?: string;
-  reason?: string;
-  qualifier_1?: string;
-  qualifier_2?: string;
+  relates_to?: "Employee" | "Family";
+  reason?:
+    | "Serious Health Condition - Employee"
+    | "Care for a Family Member"
+    | "Pregnancy/Maternity"
+    | "Child Bonding"
+    | "Military Exigency Family"
+    | "Military Caregiver";
+  qualifier_1?:
+    | "Not Work Related"
+    | "Serious Health Condition"
+    | "Birth Disability"
+    | "Foster Care"
+    | "Other Additional Activities"
+    | "Newborn"
+    | "Adoption"
+    | "Prenatal Care";
+  qualifier_2?: "Sickness";
+  typeOfRequest?: TypeOfRequestOptions;
 };
 /**
  * Maps to select inputs available to describe Primary Relationship
+ * Add new options to discriminated unions as needed
  */
 export type PrimaryRelationshipDescription = {
-  relationship_to_employee?: string;
-  qualifier_1?: string;
-  qualifier_2?: string;
+  relationship_to_employee?: "Sibling - Brother/Sister" | "Child";
+  qualifier_1?: "Biological";
+  // @todo - currently unused, uncomment when you need to set
+  // this field
+  // qualifier_2?: "Equivalent Family Member" | "Opposite Sex" | "Same Sex";
 };
 
 class ReasonOfAbsence extends CreateNotificationStep {
@@ -2705,8 +3085,10 @@ class ReasonOfAbsence extends CreateNotificationStep {
         );
       if (relationship.qualifier_1)
         this.chooseSelectOption("Qualifier 1", relationship.qualifier_1);
-      if (relationship.qualifier_2)
-        this.chooseSelectOption("Qualifier 2", relationship.qualifier_2);
+      // @todo - currently unused, uncomment when you need to set
+      // this field
+      // if (relationship.qualifier_2)
+      //   this.chooseSelectOption("Qualifier 2", relationship.qualifier_2);
     });
     return this;
   }
@@ -2743,7 +3125,7 @@ class DatesOfAbsence extends CreateNotificationStep {
    * @param type
    */
   toggleLeaveScheduleSlider(
-    type: NonNullable<AbsencePeriodResponse["type"]>
+    type: NonNullable<AbsencePeriodResponse["period_type"]>
   ): this {
     const scheduleSliderMap: Record<typeof type, string> = {
       Continuous: "One or more fixed time off periods",

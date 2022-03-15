@@ -63,31 +63,23 @@ class PaymentAuditReportStep(Step):
             self.db_session,
         )
 
-        if len(state_logs) > 0:
-            for item in state_logs:
-                state_logs_containers.append(item)
+        state_logs_containers += state_logs
 
-        if payments_util.is_withholding_payments_enabled():
-            logger.info("Tax Withholding ENABLED")
-            federal_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-                state_log_util.AssociatedClass.PAYMENT,
-                State.FEDERAL_WITHHOLDING_ORPHANED_PENDING_AUDIT,
-                self.db_session,
-            )
+        federal_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
+            state_log_util.AssociatedClass.PAYMENT,
+            State.FEDERAL_WITHHOLDING_ORPHANED_PENDING_AUDIT,
+            self.db_session,
+        )
 
-            if len(federal_withholding_state_logs) > 0:
-                for item in federal_withholding_state_logs:
-                    state_logs_containers.append(item)
+        state_logs_containers += federal_withholding_state_logs
 
-            state_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-                state_log_util.AssociatedClass.PAYMENT,
-                State.STATE_WITHHOLDING_ORPHANED_PENDING_AUDIT,
-                self.db_session,
-            )
+        state_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
+            state_log_util.AssociatedClass.PAYMENT,
+            State.STATE_WITHHOLDING_ORPHANED_PENDING_AUDIT,
+            self.db_session,
+        )
 
-            if len(state_withholding_state_logs) > 0:
-                for item in state_withholding_state_logs:
-                    state_logs_containers.append(item)
+        state_logs_containers += state_withholding_state_logs
 
         state_log_count = len(state_logs_containers)
         self.set_metrics({self.Metrics.SAMPLED_PAYMENT_COUNT: state_log_count})
@@ -163,34 +155,34 @@ class PaymentAuditReportStep(Step):
                 ),
             )
 
-            if payments_util.is_withholding_payments_enabled():
-                if (
-                    payment.payment_transaction_type_id
-                    == PaymentTransactionType.STANDARD.payment_transaction_type_id
-                ):
-                    linked_payments = _get_split_payments(self.db_session, payment)
-                    for payment in linked_payments:
-                        if payment.payment_transaction_type_id in [
-                            PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,
-                            PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id,
-                        ]:
-                            end_state = (
-                                State.STATE_WITHHOLDING_RELATED_PENDING_AUDIT
-                                if (
-                                    payment.payment_transaction_type_id
-                                    == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
-                                )
-                                else State.FEDERAL_WITHHOLDING_RELATED_PENDING_AUDIT
-                            )
-                            outcome = state_log_util.build_outcome(
-                                "Related Payment Audit report sent"
-                            )
-                            state_log_util.create_finished_state_log(
-                                associated_model=payment,
-                                end_state=end_state,
-                                outcome=outcome,
-                                db_session=self.db_session,
-                            )
+            if (
+                payment.payment_transaction_type_id
+                == PaymentTransactionType.STANDARD.payment_transaction_type_id
+            ):
+                linked_payments = _get_split_payments(self.db_session, payment)
+                for payment in linked_payments:
+                    if (
+                        payment.payment_transaction_type_id
+                        == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
+                    ):
+                        end_state = State.STATE_WITHHOLDING_RELATED_PENDING_AUDIT
+                    elif (
+                        payment.payment_transaction_type_id
+                        == PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
+                    ):
+                        end_state = State.FEDERAL_WITHHOLDING_RELATED_PENDING_AUDIT
+                    elif (
+                        payment.payment_transaction_type_id
+                        == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+                    ):
+                        end_state = State.EMPLOYER_REIMBURSEMENT_RELATED_PENDING_AUDIT
+                    outcome = state_log_util.build_outcome("Related Payment Audit report sent")
+                    state_log_util.create_finished_state_log(
+                        associated_model=payment,
+                        end_state=end_state,
+                        outcome=outcome,
+                        db_session=self.db_session,
+                    )
 
         logger.info("Done setting sampled payments to sent state: %i", len(state_logs))
 
@@ -218,18 +210,14 @@ class PaymentAuditReportStep(Step):
         other_claim_payments = _get_other_claim_payments_for_payment(
             payment, same_payment_period=True
         )
-        previous_states = [
-            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
-        ]
+        previous_states = [State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT]
         return _get_state_log_count_in_state(other_claim_payments, previous_states, self.db_session)
 
     def previously_skipped_payment_count(self, payment: Payment) -> int:
         other_claim_payments = _get_other_claim_payments_for_payment(
             payment, same_payment_period=True
         )
-        previous_states = [
-            State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
-        ]
+        previous_states = [State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE]
         return _get_state_log_count_in_state(other_claim_payments, previous_states, self.db_session)
 
     def previously_paid_payments(
@@ -299,7 +287,7 @@ class PaymentAuditReportStep(Step):
         payment_amount: decimal.Decimal = decimal.Decimal(0)
 
         if payment.payment_transaction_type_id in [
-            PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id,
+            PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
         ]:
             payment_amount = payment.amount
             return payment_amount
@@ -312,15 +300,17 @@ class PaymentAuditReportStep(Step):
 
         return payment_amount
 
+    # TODO Refactor this to one function for get all amount values.
     def calculate_state_withholding_amount(
         self, payment: Payment, link_payments: List[Payment]
     ) -> decimal.Decimal:
 
         payment_amount: decimal.Decimal = decimal.Decimal(0)
 
-        if payment.payment_transaction_type_id in [
-            PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,
-        ]:
+        if (
+            payment.payment_transaction_type_id
+            == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
+        ):
             payment_amount = payment.amount
             return payment_amount
 
@@ -332,6 +322,29 @@ class PaymentAuditReportStep(Step):
 
         return payment_amount
 
+    def calculate_employer_reimbursement_amount(
+        self, payment: Payment, link_payments: List[Payment]
+    ) -> decimal.Decimal:
+
+        payment_amount: decimal.Decimal = decimal.Decimal(0)
+
+        if (
+            payment.payment_transaction_type_id
+            == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+        ):
+            payment_amount = payment.amount
+            return payment_amount
+
+        for payment in link_payments:
+            if (
+                payment.payment_transaction_type_id
+                == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+            ):
+                payment_amount += payment.amount
+
+        return payment_amount
+
+    # TODO Refactor this to one function for get all i values.
     def get_federal_withholding_i_value(self, link_payments: List[Payment]) -> str:
         federal_withholding_i_values = []
 
@@ -351,6 +364,24 @@ class PaymentAuditReportStep(Step):
             ]:
                 state_withholding_i_values.append(payment.fineos_pei_i_value)
         return " ".join(str(v) for v in state_withholding_i_values)
+
+    def get_employer_reimbursement_i_value(
+        self, payment: Payment, link_payments: List[Payment]
+    ) -> str:
+        employer_reimbursement_i_values = []
+        if (
+            payment.payment_transaction_type_id
+            == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+        ):
+            return str(payment.fineos_pei_i_value)
+
+        for link_payment in link_payments:
+            if (
+                link_payment.payment_transaction_type_id
+                == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+            ):
+                employer_reimbursement_i_values.append(link_payment.fineos_pei_i_value)
+        return " ".join(str(v) for v in employer_reimbursement_i_values)
 
     def build_payment_audit_data_set(
         self, payments: Iterable[Payment]
@@ -377,16 +408,16 @@ class PaymentAuditReportStep(Step):
                 net_payment_amount = decimal.Decimal(0)
 
             linked_payments = _get_split_payments(self.db_session, payment)
-            federal_withholding_amount: decimal.Decimal = (
-                self.calculate_federal_withholding_amount(payment, linked_payments)
-                if payments_util.is_withholding_payments_enabled()
-                else decimal.Decimal(0)
+            federal_withholding_amount: decimal.Decimal = self.calculate_federal_withholding_amount(
+                payment, linked_payments
             )
-            state_withholding_amount: decimal.Decimal = (
-                self.calculate_state_withholding_amount(payment, linked_payments)
-                if payments_util.is_withholding_payments_enabled()
-                else decimal.Decimal(0)
+            state_withholding_amount: decimal.Decimal = self.calculate_state_withholding_amount(
+                payment, linked_payments
             )
+            employer_reimbursement_amount: decimal.Decimal = (
+                self.calculate_employer_reimbursement_amount(payment, linked_payments)
+            )
+
             payment_audit_data = PaymentAuditData(
                 payment=payment,
                 is_first_time_payment=is_first_time_payment,
@@ -398,37 +429,31 @@ class PaymentAuditReportStep(Step):
                     previously_paid_payments
                 ),
                 gross_payment_amount=str(
-                    net_payment_amount + federal_withholding_amount + state_withholding_amount
-                )
-                if payments_util.is_withholding_payments_enabled()
-                else "",
-                net_payment_amount=str(
-                    net_payment_amount if decimal.Decimal(net_payment_amount) > 0 else ""
-                )
-                if payments_util.is_withholding_payments_enabled()
-                else str(payment.amount),
+                    net_payment_amount
+                    + federal_withholding_amount
+                    + state_withholding_amount
+                    + employer_reimbursement_amount
+                ),
+                net_payment_amount=str(net_payment_amount if net_payment_amount > 0 else ""),
                 federal_withholding_amount=str(
-                    federal_withholding_amount
-                    if decimal.Decimal(federal_withholding_amount) > 0
-                    else ""
+                    federal_withholding_amount if federal_withholding_amount > 0 else ""
                 ),
                 state_withholding_amount=str(
-                    state_withholding_amount
-                    if decimal.Decimal(state_withholding_amount) > 0
-                    else ""
+                    state_withholding_amount if state_withholding_amount > 0 else ""
                 ),
-                federal_withholding_i_value=self.get_federal_withholding_i_value(linked_payments)
-                if payments_util.is_withholding_payments_enabled()
-                else "",
-                state_withholding_i_value=self.get_state_withholding_i_value(linked_payments)
-                if payments_util.is_withholding_payments_enabled()
-                else "",
+                employer_reimbursement_amount=str(
+                    employer_reimbursement_amount if employer_reimbursement_amount > 0 else ""
+                ),
+                federal_withholding_i_value=self.get_federal_withholding_i_value(linked_payments),
+                state_withholding_i_value=self.get_state_withholding_i_value(linked_payments),
+                employer_reimbursement_i_value=self.get_employer_reimbursement_i_value(
+                    payment, linked_payments
+                ),
             )
             payment_audit_data_set.append(payment_audit_data)
 
         logger.info(
-            "Done building payment audit data for sampled payments: %i",
-            len(payment_audit_data_set),
+            "Done building payment audit data for sampled payments: %i", len(payment_audit_data_set)
         )
 
         return payment_audit_data_set
@@ -492,7 +517,7 @@ def _get_state_log_count_in_state(
 
     audit_report_sent_state_other_payments = (
         db_session.query(StateLog)
-        .filter(StateLog.end_state_id.in_(state_ids), StateLog.payment_id.in_(payment_ids),)
+        .filter(StateLog.end_state_id.in_(state_ids), StateLog.payment_id.in_(payment_ids))
         .all()
     )
     return len(audit_report_sent_state_other_payments)

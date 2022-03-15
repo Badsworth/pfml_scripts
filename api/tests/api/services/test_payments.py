@@ -7,6 +7,7 @@ from freezegun.api import freeze_time
 from sqlalchemy.sql.expression import null
 
 import massgov.pfml.api.services.payments as payment_services
+from massgov.pfml.api.services.payments_services_util import WRITEBACK_SCENARIOS_MAPPER
 from massgov.pfml.db.models.employees import PaymentMethod, PaymentTransactionType
 from massgov.pfml.db.models.factories import ImportLogFactory, PaymentFactory
 from massgov.pfml.db.models.payments import FineosWritebackTransactionStatus
@@ -36,6 +37,7 @@ def test_get_payments_from_db_dedups_pei_i_value(test_db_session):
         fineos_extract_import_log=import_log_2,
         fineos_pei_i_value="9999",
         payment_transaction_type=payment.payment_transaction_type,
+        disb_method_id=PaymentMethod.ACH.payment_method_id,
     )
 
     assert import_log_2.import_log_id > import_log_1.import_log_id
@@ -58,6 +60,7 @@ def test_get_payments_from_db_filters_payments_with_flag(test_db_session):
         test_db_session,
         fineos_pei_i_value="1000",
         fineos_extract_import_log_id=import_log_1.import_log_id,
+        payment_method=PaymentMethod.ACH,
     )
     claim = payment_factory.get_or_create_claim()
     payment = payment_factory.get_or_create_payment()
@@ -75,6 +78,7 @@ def test_get_payments_from_db_filters_payments_with_flag(test_db_session):
         fineos_pei_i_value="1000",
         payment_transaction_type=payment.payment_transaction_type,
         exclude_from_payment_status=True,
+        disb_method_id=PaymentMethod.ACH.payment_method_id,
     )
 
     payment_containers, legacy_containers = payment_services.get_payments_from_db(
@@ -94,6 +98,7 @@ def test_get_payments_from_db_allows_multiple_pei_i_values(test_db_session):
         test_db_session,
         fineos_extract_import_log_id=import_log_1.import_log_id,
         fineos_pei_i_value="2000",
+        payment_method=PaymentMethod.ACH,
     )
     claim = payment_factory.get_or_create_claim()
     payment = payment_factory.get_or_create_payment()
@@ -104,6 +109,7 @@ def test_get_payments_from_db_allows_multiple_pei_i_values(test_db_session):
         fineos_extract_import_log=import_log_2,
         fineos_pei_i_value="1000",
         payment_transaction_type=payment.payment_transaction_type,
+        disb_method_id=PaymentMethod.ACH.payment_method_id,
     )
 
     payment_containers, legacy_containers = payment_services.get_payments_from_db(
@@ -123,7 +129,7 @@ def test_get_payments_from_db_allows_multiple_pei_i_values(test_db_session):
 
 
 def test_get_payments_from_db_legacy_payments_separated(test_db_session):
-    payment_factory = DelegatedPaymentFactory(test_db_session,)
+    payment_factory = DelegatedPaymentFactory(test_db_session, payment_method=PaymentMethod.ACH)
     claim = payment_factory.get_or_create_claim()
     payment_pub = payment_factory.get_or_create_payment()
 
@@ -131,6 +137,7 @@ def test_get_payments_from_db_legacy_payments_separated(test_db_session):
         test_db_session,
         claim=claim,  # Same claim
         payment_transaction_type=PaymentTransactionType.STANDARD_LEGACY_MMARS,
+        payment_method=PaymentMethod.ACH,
     )
     payment_legacy = legacy_payment_factory.get_or_create_payment()
 
@@ -151,7 +158,10 @@ def test_consolidate_successors_simple(test_db_session):
 
     payment_containers = []
     payment_factory = DelegatedPaymentFactory(
-        test_db_session, period_start_date=date(2021, 11, 1), period_end_date=date(2021, 11, 7)
+        test_db_session,
+        period_start_date=date(2021, 11, 1),
+        period_end_date=date(2021, 11, 7),
+        payment_method=PaymentMethod.ACH,
     )
 
     payment_containers.append(
@@ -180,7 +190,10 @@ def test_consolidate_successors_simple(test_db_session):
 def test_consolidate_successors_multiple_payments_in_period(test_db_session):
     payment_containers = []
     payment_factory = DelegatedPaymentFactory(
-        test_db_session, period_start_date=date(2021, 11, 1), period_end_date=date(2021, 11, 7)
+        test_db_session,
+        period_start_date=date(2021, 11, 1),
+        period_end_date=date(2021, 11, 7),
+        payment_method=PaymentMethod.ACH,
     )
 
     # The other payments we create have the same pay period, but all end up in the final list
@@ -230,6 +243,7 @@ def test_consolidate_successors_single_lineage(test_db_session):
         amount=Decimal("500.00"),
         period_start_date=date(2021, 11, 1),
         period_end_date=date(2021, 11, 7),
+        payment_method=PaymentMethod.ACH,
     )
 
     # The original payment
@@ -283,6 +297,7 @@ def test_consolidate_successors_double_lineage(test_db_session):
         amount=Decimal("500.00"),
         period_start_date=date(2021, 11, 1),
         period_end_date=date(2021, 11, 7),
+        payment_method=PaymentMethod.ACH,
     )
 
     payment_factory2 = DelegatedPaymentFactory(
@@ -292,6 +307,7 @@ def test_consolidate_successors_double_lineage(test_db_session):
         amount=Decimal("300.00"),
         period_start_date=date(2021, 11, 1),
         period_end_date=date(2021, 11, 7),
+        payment_method=PaymentMethod.ACH,
     )
 
     # The original payments (Note, they have different import log IDs)
@@ -322,7 +338,10 @@ def test_consolidate_successors_double_lineage(test_db_session):
 def test_consolidate_successors_payments_cancelled(test_db_session):
     payment_containers = []
     payment_factory = DelegatedPaymentFactory(
-        test_db_session, period_start_date=date(2021, 11, 1), period_end_date=date(2021, 11, 7),
+        test_db_session,
+        period_start_date=date(2021, 11, 1),
+        period_end_date=date(2021, 11, 7),
+        payment_method=PaymentMethod.ACH,
     )
 
     # The original payment
@@ -357,7 +376,10 @@ def test_consolidate_successors_cancellations_predate_payment(test_db_session):
     payment_containers = []
 
     payment_factory = DelegatedPaymentFactory(
-        test_db_session, period_start_date=date(2021, 11, 1), period_end_date=date(2021, 11, 7),
+        test_db_session,
+        period_start_date=date(2021, 11, 1),
+        period_end_date=date(2021, 11, 7),
+        payment_method=PaymentMethod.ACH,
     )
 
     original_payment = payment_factory.get_or_create_payment()
@@ -386,6 +408,7 @@ def test_consolidate_successors_zero_dollar(test_db_session):
         period_start_date=date(2021, 11, 1),
         period_end_date=date(2021, 11, 7),
         payment_transaction_type=PaymentTransactionType.ZERO_DOLLAR,
+        payment_method=PaymentMethod.ACH,
     )
     original_payment = payment_factory.get_or_create_payment()
     payment_containers.append(payment_services.PaymentContainer(original_payment))
@@ -405,7 +428,10 @@ def test_consolidate_successors_zero_dollar_and_regular(test_db_session):
 
     payment_containers = []
     payment_factory = DelegatedPaymentFactory(
-        test_db_session, period_start_date=date(2021, 11, 1), period_end_date=date(2021, 11, 7)
+        test_db_session,
+        period_start_date=date(2021, 11, 1),
+        period_end_date=date(2021, 11, 7),
+        payment_method=PaymentMethod.ACH,
     )
     original_payment = payment_factory.get_or_create_payment()
     payment_containers.append(payment_services.PaymentContainer(original_payment))
@@ -434,7 +460,10 @@ def test_consolidate_successors_just_cancellation(test_db_session):
     """
     payment_containers = []
     payment_factory = DelegatedPaymentFactory(
-        test_db_session, period_start_date=date(2021, 11, 1), period_end_date=date(2021, 11, 7)
+        test_db_session,
+        period_start_date=date(2021, 11, 1),
+        period_end_date=date(2021, 11, 7),
+        payment_method=PaymentMethod.ACH,
     )
     original_cancellation = payment_factory.create_cancellation_payment()
     payment_containers.append(payment_services.PaymentContainer(original_cancellation))
@@ -453,6 +482,7 @@ def test_consolidate_successors_cancelled_and_regular(test_db_session):
         amount=Decimal("500.00"),
         period_start_date=date(2021, 11, 1),
         period_end_date=date(2021, 11, 7),
+        payment_method=PaymentMethod.ACH,
     )
 
     payment_factory2 = DelegatedPaymentFactory(
@@ -462,6 +492,7 @@ def test_consolidate_successors_cancelled_and_regular(test_db_session):
         amount=Decimal("300.00"),
         period_start_date=date(2021, 11, 1),
         period_end_date=date(2021, 11, 7),
+        payment_method=PaymentMethod.ACH,
     )
 
     # Setup the two payments
@@ -549,6 +580,13 @@ def test_get_payments_with_status(test_db_session, caplog):
             log_dict[f"payment[{i}].payment_type"]
             == expected_payment.payment_transaction_type.payment_transaction_type_description
         )
+        if i != 3:
+            assert (
+                log_dict[f"payment[{i}].writeback_transaction_status"]
+                == FineosWritebackTransactionStatus.PAYMENT_AUDIT_IN_PROGRESS.transaction_status_description
+            )
+            assert log_dict[f"payment[{i}].transaction_date"] is None  # Wasn't sent
+            assert log_dict[f"payment[{i}].transaction_date_could_change"] is True
 
         # payment 3 is cancelled, so a few values are different
         if i == 3:
@@ -685,6 +723,35 @@ def test_get_payments_with_legacy_and_regular(test_db_session):
         expected_send_date_start=legacy_send_date,
         expected_send_date_end=legacy_send_date,
     )
+
+
+def test_writeback_statuses_configured():
+    """
+    This test just validates that any new writebacks created are
+    configured in the payment status endpoint. If you're seeing this
+    test fail, and added a new writeback, you'll need to configure it.
+
+    Likely, you've added a new error scenario, and setting the status
+    to "delayed" is likely fine. If the status is a more granular version
+    of an older status, consider using that one.
+    """
+    writeback_statuses = FineosWritebackTransactionStatus.get_all()
+
+    unconfigured_writeback_statuses = []
+    for writeback_status in writeback_statuses:
+        if writeback_status.transaction_status_id not in WRITEBACK_SCENARIOS_MAPPER:
+            unconfigured_writeback_statuses.append(writeback_status.transaction_status_description)
+
+    assert (
+        len(unconfigured_writeback_statuses) == 0
+    ), f"The following writeback statuses need to be configured in api/massgov/pfml/api/services/payments.py::WRITEBACK_SCENARIOS: {unconfigured_writeback_statuses}"
+
+    transaction_status_ids = set()
+    for writeback_status in writeback_statuses:
+        assert (
+            writeback_status.transaction_status_id not in transaction_status_ids
+        ), f"Writeback transaction status ID {writeback_status.transaction_status_id} is configured for two separate writeback statuses"
+        transaction_status_ids.add(writeback_status.transaction_status_id)
 
 
 def validate_payment_matches(

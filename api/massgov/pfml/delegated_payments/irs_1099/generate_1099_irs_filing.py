@@ -12,7 +12,6 @@ import massgov.pfml.delegated_payments.irs_1099.pfml_1099_util as pfml_1099_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import ReferenceFile, ReferenceFileType
-from massgov.pfml.db.models.payments import Pfml1099
 from massgov.pfml.delegated_payments.step import Step
 from massgov.pfml.util.datetime import get_now_us_eastern
 
@@ -82,21 +81,8 @@ class Generate1099IRSfilingStep(Step):
 
     def _generate_1099_irs_filing(self) -> None:
         logger.info("1099 Documents - Generate 1099.org file to be transmitted to IRS")
-
-        recent_batch_id = pfml_1099_util.get_current_1099_batch(self.db_session)
-        if recent_batch_id is None:
-            logger.error("No current batch exists.")
-        else:
-            try:
-                logger.info("recent_batch_id %s", recent_batch_id.pfml_1099_batch_id)
-                pfml_1099 = list(
-                    self.db_session.query(Pfml1099).filter(
-                        Pfml1099.pfml_1099_batch_id == recent_batch_id.pfml_1099_batch_id
-                    )
-                )
-            except Exception:
-                logger.exception("Error accessing 1099 data")
-                raise
+        pfml_1099 = pfml_1099_util.get_1099_records_to_file(self.db_session)
+        if len(pfml_1099) > 0:
             if pfml_1099_util.is_test_file() == "T":
                 pfml_1099 = pfml_1099[:11]
             self.total_b_record = len(pfml_1099)
@@ -120,6 +106,7 @@ class Generate1099IRSfilingStep(Step):
             entries += c_entries + k_entries + f_entries
             logger.info("Completed irs file data mapping")
             self._create_irs_file(entries)
+            pfml_1099_util.update_submission_date(self.db_session, pfml_1099[0].pfml_1099_batch_id)
             self.db_session.commit()
 
     def _create_t_template(self) -> str:
@@ -128,16 +115,16 @@ class Generate1099IRSfilingStep(Step):
             "{TST_FILE_IND:<1}{FOR_IND:<1}{TX_NAME:<80}{COMP_NAME:<80}{COMP_ADDR:<40}"
             "{COMP_CTY:<40}{COMP_ST:<2}{COMP_ZIP_CD:0<9}{B15:<15}{TOT_B_REC:08}"
             "{CONT_NM:<40}{CONT_PH:<15}{CONT_EMAIL:<50}{B91:<91}{SEQ_NO:08}{B10:<10}"
-            "{VEN_IND:<1}{VEN_INFO:<232}\n"
+            "{VEN_IND:<1}{VEN_INFO:<230}\r\n"
         )
         return temp
 
     def _create_a_template(self) -> str:
         temp = (
             "{A_REC_TYPE:<1}{TAX_YEAR:<4}{CSF_IND:<1}{B5:<5}{PYR_TIN:<9}"
-            "{PYR_NM_CTL:<4}{LAST_FILING_IND:<1}{TYPE_RET:<2}{AMT_CD:<16}{B8:<8}"
+            "{PYR_NM_CTL:<4}{LAST_FILING_IND:<1}{TYPE_RET:<2}{AMT_CD:<18}{B6:<6}"
             "{FE_IND:<1}{PYR_NM:<80}{TA_IND:<1}{PYR_ADDR:<40}{PYR_CTY:<40}"
-            "{PYR_ST:<2}{PYR_ZC:0<9}{PYR_PHONE:<15}{B260:<260}{SEQ_NO:08}{B243:<243}\n"
+            "{PYR_ST:<2}{PYR_ZC:0<9}{PYR_PHONE:<15}{B260:<260}{SEQ_NO:08}{B241:<241}\r\n"
         )
         return temp
 
@@ -148,33 +135,33 @@ class Generate1099IRSfilingStep(Step):
             "{B10:<10}{AMT_CD_1:0>12}{AMT_CD_2:0>12}{AMT_CD_3:0>12}{AMT_CD_4:0>12}"
             "{AMT_CD_5:0>12}{AMT_CD_6:0>12}{AMT_CD_7:0>12}{AMT_CD_8:0>12}{AMT_CD_9:0>12}"
             "{AMT_CD_A:0>12}{AMT_CD_B:0>12}{AMT_CD_C:0>12}{AMT_CD_D:0>12}{AMT_CD_E:0>12}"
-            "{AMT_CD_F:0>12}{AMT_CD_G:0>12}"
-            "{FE_IND:<1}{PAYEE_NM1:<40}{PAYEE_NM2:<40}{B40:<40}{PAYEE_ADDRESS:<40}"
+            "{AMT_CD_F:0>12}{AMT_CD_G:0>12}{AMT_CD_H:0>12}{AMT_CD_J:0>12}"
+            "{B16:<16}{FE_IND:<1}{PAYEE_NM1:<40}{PAYEE_NM2:<40}{PAYEE_ADDRESS:<40}"
             "{B40_1:<40}{PAYEE_CTY:<40}{PAYEE_ST:<2}{PAYEE_ZC:0<9}{B1:<1}"
             "{SEQ_NO:0>8}{B36:<36}{SEC_TIN_NOTICE:<1}{B2:<2}{TRADE_BUS_IND:<1}"
             "{TAX_YR_OF_REFUND:<4}{B111:<111}{SP_DATA_ENTRIES:<60}{ST_TAX:0>12}"
-            "{LOCAL_TAX:0>12}{CSF_CD:<2}{B2_1:<2}\n"
+            "{LOCAL_TAX:0>12}{CSF_CD:<2}\r\n"
         )
         return temp
 
     def _create_c_template(self) -> str:
         temp = (
-            "{C_REC_TYPE:<1}{TOT_B_REC:0>8}{B6:<6}{CTL_TOTAL_1:0>18}{CTL_TOTAL:0>270}{B196:<196}{SEQ_NO:08}"
-            "{B243:<243}\n"
+            "{C_REC_TYPE:<1}{TOT_B_REC:0>8}{B6:<6}{CTL_TOTAL_1:0>18}{CTL_TOTAL:0>306}{B160:<160}{SEQ_NO:08}"
+            "{B241:<241}\r\n"
         )
         return temp
 
     def _create_k_template(self) -> str:
         temp = (
-            "{K_REC_TYPE:<1}{TOT_B_REC:0>8}{B6:<6}{CTL_TOTAL_1:0>18}{CTL_TOTAL:0>270}{B196:<196}{SEQ_NO:08}"
-            "{B199:<199}{ST_TAX:0>18}{FED_TAX:0>18}{B4:<4}{CSF_CD:<2}{B2:<2}\n"
+            "{K_REC_TYPE:<1}{TOT_B_REC:0>8}{B6:<6}{CTL_TOTAL_1:0>18}{CTL_TOTAL:0>306}{B160:<160}{SEQ_NO:08}"
+            "{B199:<199}{ST_TAX:0>18}{FED_TAX:0>18}{B4:<4}{CSF_CD:<2}\r\n"
         )
         return temp
 
     def _create_f_template(self) -> str:
         temp = (
             "{F_REC_TYPE:<1}{TOT_A_REC:0>8}{ZERO_21:0<21}{B19:<19}{TOT_B_REC:0>8}{B442:<442}"
-            "{SEQ_NO:08}{B243:<243}"
+            "{SEQ_NO:08}{B241:<241}\r\n"
         )
         return temp
 
@@ -220,6 +207,7 @@ class Generate1099IRSfilingStep(Step):
             COMP_ST=Constants.COM_ST,
             COMP_ZIP_CD=Constants.COM_ZIP_CD,
             B15=Constants.BLANK_SPACE,
+            B16=Constants.BLANK_SPACE,
             TOT_B_REC=self.total_b_record,
             CONT_NM=Constants.CONT_NM,
             CONT_PH=Constants.CONT_PH,
@@ -245,7 +233,7 @@ class Generate1099IRSfilingStep(Step):
             LAST_FILING_IND=Constants.BLANK_SPACE,
             TYPE_RET=Constants.RETURN_TYPE,
             AMT_CD=Constants.AMT_CD,
-            B8=Constants.BLANK_SPACE,
+            B6=Constants.BLANK_SPACE,
             FE_IND=Constants.BLANK_SPACE,
             PYR_NM=Constants.COM_NM,
             TA_IND=Constants.TA_IND,
@@ -256,7 +244,7 @@ class Generate1099IRSfilingStep(Step):
             PYR_PHONE=Constants.PYR_PHONE,
             B260=Constants.BLANK_SPACE,
             SEQ_NO=a_seq,
-            B243=Constants.BLANK_SPACE,
+            B241=Constants.BLANK_SPACE,
         )
         a_record = template_str.format_map(a_dict)
         self.seq_number = self.seq_number + 1
@@ -267,6 +255,7 @@ class Generate1099IRSfilingStep(Step):
         b_seq = self.seq_number + 1
         logger.info("B sequence starts at %s", b_seq)
         for records in tax_data:
+
             b_dict = dict(
                 B_REC_TYPE=Constants.B_REC_TYPE,
                 TAX_YEAR=pfml_1099_util.get_tax_year(),
@@ -293,10 +282,12 @@ class Generate1099IRSfilingStep(Step):
                 AMT_CD_E=Constants.AMT_CD_1,
                 AMT_CD_F=Constants.AMT_CD_1,
                 AMT_CD_G=Constants.AMT_CD_1,
+                AMT_CD_H=Constants.AMT_CD_1,
+                AMT_CD_J=Constants.AMT_CD_1,
+                B16=Constants.BLANK_SPACE,
                 FE_IND=Constants.BLANK_SPACE,
                 PAYEE_NM1=self._get_full_name(records.first_name, records.last_name, "PAYEE_NM1"),
                 PAYEE_NM2=self._get_full_name(records.first_name, records.last_name, "PAYEE_NM2"),
-                B40=Constants.BLANK_SPACE,
                 PAYEE_ADDRESS=records.address_line_1.upper(),
                 B40_1=Constants.BLANK_SPACE,
                 PAYEE_CTY=records.city.upper(),
@@ -314,7 +305,6 @@ class Generate1099IRSfilingStep(Step):
                 ST_TAX=self._format_amount_fields(records.state_tax_withholdings),
                 LOCAL_TAX=self._format_amount_fields(records.federal_tax_withholdings),
                 CSF_CD=Constants.COMBINED_ST_FED_CD,
-                B2_1=Constants.BLANK_SPACE,
             )
             b_record = template_str.format_map(b_dict)
             b_seq = b_seq + 1
@@ -331,9 +321,9 @@ class Generate1099IRSfilingStep(Step):
             B6=Constants.BLANK_SPACE,
             CTL_TOTAL_1=ctl_total,
             CTL_TOTAL=Constants.ZERO,
-            B196=Constants.BLANK_SPACE,
+            B160=Constants.BLANK_SPACE,
             SEQ_NO=c_seq,
-            B243=Constants.BLANK_SPACE,
+            B241=Constants.BLANK_SPACE,
         )
         c_record = template_str.format_map(c_dict)
         self.seq_number += 1
@@ -353,14 +343,13 @@ class Generate1099IRSfilingStep(Step):
             B6=Constants.BLANK_SPACE,
             CTL_TOTAL_1=ctl_total,
             CTL_TOTAL=Constants.ZERO,
-            B196=Constants.BLANK_SPACE,
+            B160=Constants.BLANK_SPACE,
             SEQ_NO=k_seq,
             B199=Constants.BLANK_SPACE,
             ST_TAX=st_tax,
             FED_TAX=fed_tax,
             B4=Constants.BLANK_SPACE,
             CSF_CD=Constants.COMBINED_ST_FED_CD,
-            B2=Constants.BLANK_SPACE,
         )
         k_record = template_str.format_map(k_dict)
         self.seq_number += 1
@@ -376,7 +365,7 @@ class Generate1099IRSfilingStep(Step):
             TOT_B_REC=self.total_b_record,
             B442=Constants.BLANK_SPACE,
             SEQ_NO=f_seq,
-            B243=Constants.BLANK_SPACE,
+            B241=Constants.BLANK_SPACE,
         )
         f_record = template_str.format_map(f_dict)
         return f_record
@@ -421,7 +410,6 @@ class Generate1099IRSfilingStep(Step):
                 last_name = last_name_list[0].rstrip() + last_name_list[1]
         else:
             last_name = lname
-        logger.debug("Last name 4 chars is %s", last_name[0:4])
         last_name_four = last_name[0:4].upper()
         return last_name_four
 
@@ -473,6 +461,5 @@ class Generate1099IRSfilingStep(Step):
 
         final_string = re.sub("[^A-Za-z0-9-& ]+", "", name_string)
         if final_string != name_string:
-            logger.info("Removed special characters from name %s", name_string)
-            logger.info("Name is now %s", final_string)
+            logger.info("Removed special characters from name.")
         return final_string

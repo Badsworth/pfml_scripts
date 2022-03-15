@@ -7,7 +7,8 @@ import userEvent from "@testing-library/user-event";
 
 jest.mock("../../../src/hooks/useAppLogic");
 
-const updateUser = jest.fn();
+// Return a user object to indicate a successful update
+const updateUser = jest.fn().mockReturnValue(new User({}));
 const portalGoToPage = jest.fn();
 
 const renderWithUserParams = (
@@ -87,5 +88,17 @@ describe("ConsentToDataSharing", () => {
     await waitFor(() => {
       expect(portalGoToPage).not.toHaveBeenCalled();
     });
+  });
+
+  it("on submit, it does not redirect if we fail to update the user", async () => {
+    renderWithUserParams();
+    updateUser.mockImplementationOnce(() => undefined);
+
+    await waitFor(async () => {
+      await userEvent.click(
+        screen.getByRole("button", { name: "Agree and continue" })
+      );
+    });
+    expect(portalGoToPage).not.toHaveBeenCalled();
   });
 });

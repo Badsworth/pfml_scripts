@@ -5,7 +5,7 @@ from typing import Dict, List, Optional, cast
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.applications import BenefitsMetrics
-from massgov.pfml.db.models.employees import Claim, Employee, PaymentDetails
+from massgov.pfml.db.models.employees import AbsencePeriod, Employee, PaymentDetails
 from massgov.pfml.delegated_payments.abstract_step_processor import AbstractStepProcessor
 from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_util import (
     MaximumWeeklyBenefitsAuditMessageBuilder,
@@ -89,7 +89,7 @@ class MaximumWeeklyBenefitsStepProcessor(AbstractStepProcessor):
             )
 
     def _filter_payments_from_maximum_weekly_processing(
-        self, payment_containers: List[PaymentContainer],
+        self, payment_containers: List[PaymentContainer]
     ) -> List[PaymentContainer]:
         payment_containers_to_process = []
 
@@ -151,13 +151,19 @@ class MaximumWeeklyBenefitsStepProcessor(AbstractStepProcessor):
             prior_payment.payment_distribution = payment_distribution
             absence_case_id = prior_payment.payment.claim.fineos_absence_id
 
+            earliest_absence_period = (
+                payments_util.get_earliest_absence_period_for_payment_leave_request(
+                    self.db_session, prior_payment.payment
+                )
+            )
+
             for pay_period, payment_details in payment_distribution.items():
                 for payment_detail in payment_details:
                     pay_period.add_payment_from_details(
                         payment_detail, PaymentScenario.PREVIOUS_PAYMENT
                     )
                     pay_period.add_absence_case_id(str(absence_case_id))
-                    self._update_maximum_amount(pay_period, payment_detail.payment.claim)
+                    self._update_maximum_amount(pay_period, earliest_absence_period)
 
         return pay_periods
 
@@ -171,6 +177,12 @@ class MaximumWeeklyBenefitsStepProcessor(AbstractStepProcessor):
         pay_periods: dict[date, PayPeriodGroup] = {}
         for payment_container in payment_containers:
             absence_case_id = payment_container.payment.claim.fineos_absence_id
+            earliest_absence_period = (
+                payments_util.get_earliest_absence_period_for_payment_leave_request(
+                    self.db_session, payment_container.payment
+                )
+            )
+
             date_iter = cast(date, payment_container.payment.period_start_date) - timedelta(days=6)
 
             while date_iter <= cast(date, payment_container.payment.period_end_date):
@@ -182,9 +194,7 @@ class MaximumWeeklyBenefitsStepProcessor(AbstractStepProcessor):
                     if start_date not in pay_periods:
                         pay_periods[start_date] = PayPeriodGroup(start_date, end_date)
 
-                    self._update_maximum_amount(
-                        pay_periods[start_date], payment_container.payment.claim
-                    )
+                    self._update_maximum_amount(pay_periods[start_date], earliest_absence_period)
 
                     pay_periods[start_date].add_absence_case_id(str(absence_case_id))
 
@@ -192,11 +202,17 @@ class MaximumWeeklyBenefitsStepProcessor(AbstractStepProcessor):
 
         return sorted(pay_periods.values(), key=lambda pay_period: pay_period.start_date)
 
-    def _update_maximum_amount(self, pay_period: PayPeriodGroup, absence_case: Claim) -> None:
-        max_amount = (
-            self._get_maximum_amount_for_start_date(absence_case.absence_period_start_date)
-            if absence_case.absence_period_start_date
-            else Decimal(0)
+    def _update_maximum_amount(
+        self, pay_period: PayPeriodGroup, absence_period: Optional[AbsencePeriod]
+    ) -> None:
+        if not absence_period or not absence_period.absence_period_start_date:
+            self.increment(self.Metrics.MISSING_ABSENCE_PERIOD_COUNT)
+            logger.warning(
+                "Unable to update the max weekly amount for pay period due to missing absence period information"
+            )
+            return
+        max_amount = self._get_maximum_amount_for_start_date(
+            absence_period.absence_period_start_date
         )
 
         if max_amount > pay_period.maximum_weekly_amount:
@@ -204,11 +220,22 @@ class MaximumWeeklyBenefitsStepProcessor(AbstractStepProcessor):
             logger.info(
                 "Pay period maximum weekly amount updated",
                 extra={
-                    "pay_period_start_date": pay_period.start_date,
-                    "pay_period_end_date": pay_period.end_date,
+                    "pay_period_start_date": pay_period.start_date.isoformat(),
+                    "pay_period_end_date": pay_period.end_date.isoformat(),
                     "new_maximum_amount": max_amount,
-                    "absence_case_id": absence_case.fineos_absence_id,
-                    "fineos_customer_number": absence_case.employee.fineos_customer_number,
+                    "absence_case_id": absence_period.claim.fineos_absence_id
+                    if absence_period.claim
+                    else None,
+                    "fineos_customer_number": absence_period.claim.employee.fineos_customer_number
+                    if absence_period.claim and absence_period.claim.employee
+                    else None,
+                    "fineos_leave_request_id": absence_period.fineos_leave_request_id,
+                    "absence_period_start_date": absence_period.absence_period_start_date.isoformat()
+                    if absence_period.absence_period_start_date
+                    else None,
+                    "absence_period_end_date": absence_period.absence_period_end_date.isoformat()
+                    if absence_period.absence_period_end_date
+                    else None,
                 },
             )
 

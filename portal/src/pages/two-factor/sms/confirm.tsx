@@ -51,7 +51,7 @@ export const ConfirmSMS = (props: ConfirmSMSProps) => {
     const trimmedCode = formState.code ? formState.code.trim() : "";
     const validationIssues = validateCode(trimmedCode);
     if (validationIssues) {
-      appLogic.catchError(new ValidationError([validationIssues], "mfa"));
+      appLogic.catchError(new ValidationError([validationIssues]));
       return;
     }
 
@@ -72,13 +72,27 @@ export const ConfirmSMS = (props: ConfirmSMSProps) => {
         appLogic.catchError(error);
         return;
       }
-      const issue = { field: "code", type: "invalidMFACode" };
+      if (error.message.includes("limit exceeded")) {
+        appLogic.catchError(
+          new CognitoAuthError(error, {
+            field: "code",
+            type: "attemptsExceeded_confirmPhone",
+            namespace: "auth",
+          })
+        );
+        return;
+      }
+      const issue = {
+        field: "code",
+        type: "invalidMFACode",
+        namespace: "auth",
+      };
       appLogic.catchError(new CognitoAuthError(error, issue));
     }
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });

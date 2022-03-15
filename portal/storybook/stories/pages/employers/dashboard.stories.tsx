@@ -1,24 +1,18 @@
-import Claim, { AbsenceCaseStatusType, ClaimEmployee } from "src/models/Claim";
 import React, { useState } from "react";
-import User, { UserLeaveAdministrator } from "src/models/User";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
+import Claim from "src/models/Claim";
 import { Dashboard } from "src/pages/employers/dashboard";
 import { NullableQueryParams } from "src/utils/routeWithParams";
 import { Props } from "types/common";
-import dayjs from "dayjs";
-import faker from "faker";
+import User from "src/models/User";
+import createAbsencePeriod from "lib/mock-helpers/createAbsencePeriod";
+import createMockClaim from "lib/mock-helpers/createMockClaim";
+import { createMockManagedRequirement } from "lib/mock-helpers/createMockManagedRequirement";
+import createMockUserLeaveAdministrator from "lib/mock-helpers/createMockUserLeaveAdministrator";
+import { faker } from "@faker-js/faker";
 import routes from "src/routes";
 import { times } from "lodash";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
-
-function createUserLeaveAdministrator(attrs = {}) {
-  return new UserLeaveAdministrator({
-    employer_id: faker.datatype.uuid(),
-    employer_dba: faker.company.companyName(),
-    employer_fein: `${faker.finance.account(2)}-${faker.finance.account(7)}`,
-    ...attrs,
-  });
-}
 
 function createUser(attrs = {}) {
   return new User({
@@ -31,12 +25,12 @@ const verificationScenarios = {
   "All employers verified": {
     user: createUser({
       user_leave_administrators: [
-        createUserLeaveAdministrator({
+        createMockUserLeaveAdministrator({
           has_fineos_registration: true,
           has_verification_data: true,
           verified: true,
         }),
-        createUserLeaveAdministrator({
+        createMockUserLeaveAdministrator({
           has_fineos_registration: true,
           has_verification_data: true,
           verified: true,
@@ -47,7 +41,7 @@ const verificationScenarios = {
   "Single verified employer, not registered in FINEOS": {
     user: createUser({
       user_leave_administrators: [
-        createUserLeaveAdministrator({
+        createMockUserLeaveAdministrator({
           has_fineos_registration: false,
           has_verification_data: true,
           verified: true,
@@ -58,7 +52,7 @@ const verificationScenarios = {
   "All employers not verified + unverifiable": {
     user: createUser({
       user_leave_administrators: [
-        createUserLeaveAdministrator({
+        createMockUserLeaveAdministrator({
           has_verification_data: false,
           verified: false,
         }),
@@ -68,7 +62,7 @@ const verificationScenarios = {
   "All employers not verified + verifiable": {
     user: createUser({
       user_leave_administrators: [
-        createUserLeaveAdministrator({
+        createMockUserLeaveAdministrator({
           has_verification_data: true,
           verified: false,
         }),
@@ -78,12 +72,12 @@ const verificationScenarios = {
   "Mix of verified and verifiable employers": {
     user: createUser({
       user_leave_administrators: [
-        createUserLeaveAdministrator({
+        createMockUserLeaveAdministrator({
           has_fineos_registration: true,
           has_verification_data: true,
           verified: true,
         }),
-        createUserLeaveAdministrator({
+        createMockUserLeaveAdministrator({
           has_fineos_registration: true,
           has_verification_data: true,
           verified: false,
@@ -94,12 +88,12 @@ const verificationScenarios = {
   "Mix of verified and unverifiable employers": {
     user: createUser({
       user_leave_administrators: [
-        createUserLeaveAdministrator({
+        createMockUserLeaveAdministrator({
           has_fineos_registration: true,
           has_verification_data: true,
           verified: true,
         }),
-        createUserLeaveAdministrator({
+        createMockUserLeaveAdministrator({
           has_fineos_registration: true,
           has_verification_data: false,
           verified: false,
@@ -152,35 +146,31 @@ export const Default = (
   const claims =
     args.claims === "No claims"
       ? []
-      : times(
-          25,
-          (num) =>
-            new Claim({
-              absence_periods: [],
-              created_at: dayjs().subtract(num, "day").format("YYYY-MM-DD"),
-              fineos_absence_id: `NTN-101-ABS-${num}`,
-              claim_status: faker.helpers.randomize([
-                "Approved",
-                "Declined",
-                "Closed",
-                "Completed",
-                "Adjudication",
-                "Intake In Progress",
-              ]) as AbsenceCaseStatusType,
-              employee: new ClaimEmployee({
-                first_name: faker.name.firstName(),
-                last_name: faker.name.lastName(),
+      : times(25, () => {
+          const absence_periods = times(
+            faker.datatype.number({ min: 1, max: 3 }),
+            () => createAbsencePeriod()
+          );
+
+          const claim = createMockClaim({
+            absence_periods,
+            managed_requirements: [
+              createMockManagedRequirement({
+                follow_up_date: faker.date.future().toISOString(),
+                // Create an open managed requirement if any absence period is in a pending-like state
+                status: absence_periods.some(
+                  (period) =>
+                    period.request_decision === "In Review" ||
+                    period.request_decision === "Pending"
+                )
+                  ? "Open"
+                  : "Complete",
               }),
-              employer: {
-                employer_id: faker.datatype.uuid(),
-                employer_dba: faker.company.companyName(),
-                employer_fein: `${faker.finance.account(
-                  2
-                )}-${faker.finance.account(7)}`,
-              },
-              managed_requirements: [],
-            })
-        );
+            ],
+          });
+
+          return claim;
+        });
 
   const appLogic = useMockableAppLogic({
     claims: {

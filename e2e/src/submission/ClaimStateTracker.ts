@@ -2,9 +2,9 @@ import { ApplicationResponse } from "../api";
 import fs from "fs";
 import { GeneratedClaim } from "../generation/Claim";
 import { reduce } from "streaming-iterables";
-import * as ndjson from "ndjson";
-import multipipe from "multipipe";
+import * as ndjson from "../stream/ndjson";
 import { EOL } from "os";
+import { chain } from "stream-chain";
 
 export interface ClaimStateTrackerInterface {
   set(result: StateRecord): Promise<void>;
@@ -39,10 +39,10 @@ export default class ClaimStateTracker implements ClaimStateTrackerInterface {
 
   private async init(): Promise<StateMap> {
     try {
-      const stream = multipipe(
+      const stream = chain([
         fs.createReadStream(this.filename, "utf-8"),
-        ndjson.parse()
-      );
+        ndjson.parse(),
+      ]);
       const makeStateMap = reduce((map: StateMap, record: StateRecord) => {
         map[record.claim_id] = record;
         return map;

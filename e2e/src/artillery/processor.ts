@@ -9,7 +9,6 @@ import {
   ReceiveMessageCommand,
   DeleteMessageCommand,
 } from "@aws-sdk/client-sqs";
-import shuffle from "generation/shuffle";
 
 const { combine, printf, json, colorize } = format;
 
@@ -87,7 +86,6 @@ async function timeRequest<R>(
 type DoneCB = (err?: Error) => void;
 
 const sqs = new SQSClient({ region: "us-east-1" });
-const scenariosLST: string[] = ["LSTCHAP1", "LSTBHAP1", "LSTOLB1"];
 
 /**
  * Exported handler for a simple submission immediately followed by adjudication.
@@ -96,7 +94,7 @@ export const submitAndAdjudicate = wrap(
   async (_context: ArtilleryContext, ee: EventEmitter, logger: Logger) => {
     const claim = await interactor.generateClaim(
       ee,
-      shuffle(scenariosLST)[0],
+      interactor.getScenario(),
       logger.child({ stage: "generate" })
     );
     logger.info("Claim data:", getDataFromClaim(claim));
@@ -123,7 +121,7 @@ export const submitAndStore = wrap(
     const body = await timeRequest(context, ee, async () => {
       const claim = await interactor.generateClaim(
         ee,
-        shuffle(scenariosLST)[0],
+        interactor.getScenario(),
         logger
       );
       logger = logger.child({ claim_id: claim.id });

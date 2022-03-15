@@ -1,7 +1,7 @@
 from typing import List, Optional
 
 import massgov.pfml.db as db
-from massgov.pfml.api.models.users.requests import UserCreateRequest
+from massgov.pfml.api.models.users.requests import UserCreateRequest, UserUpdateRequest
 from massgov.pfml.api.util.deepgetattr import deepgetattr
 from massgov.pfml.api.validation.exceptions import IssueRule, IssueType, ValidationErrorDetail
 from massgov.pfml.db.models.applications import Application
@@ -83,7 +83,7 @@ def get_users_post_required_fields_issues(
         if val is None:
             issues.append(
                 ValidationErrorDetail(
-                    type=IssueType.required, message=f"{field} is required", field=field,
+                    type=IssueType.required, message=f"{field} is required", field=field
                 )
             )
 
@@ -123,5 +123,26 @@ def get_users_post_employer_issues(employer: Optional[Employer]) -> List[Validat
                 type=IssueType.require_contributing_employer,
             )
         )
+
+    return issues
+
+
+def get_users_patch_issues(user_patch_request: UserUpdateRequest) -> List[ValidationErrorDetail]:
+    """Validate that the patch request has all required fields"""
+    issues = []
+
+    if user_patch_request.mfa_phone_number:
+        required_fields = ["phone_number", "int_code", "phone_type"]
+        for field in required_fields:
+            if deepgetattr(user_patch_request, "mfa_phone_number.{}".format(field)) is None:
+                issues.append(
+                    ValidationErrorDetail(
+                        field="mfa_phone_number.{}".format(field),
+                        type=IssueType.required,
+                        message="{} is required when mfa_phone_number is included in request".format(
+                            field
+                        ),
+                    )
+                )
 
     return issues

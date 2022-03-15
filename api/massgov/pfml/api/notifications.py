@@ -21,13 +21,11 @@ from massgov.pfml.api.services.managed_requirements import (
 )
 from massgov.pfml.api.services.service_now_actions import send_notification_to_service_now
 from massgov.pfml.db.models.applications import Notification
-from massgov.pfml.db.models.employees import Claim, Employee, Employer, ManagedRequirementType
+from massgov.pfml.db.models.employees import Claim, Employee, Employer
 from massgov.pfml.db.queries.absence_periods import sync_customer_api_absence_periods_to_db
 from massgov.pfml.db.queries.managed_requirements import (
     commit_managed_requirements,
-    create_managed_requirement_from_fineos,
     create_or_update_managed_requirement_from_fineos,
-    get_managed_requirement_by_fineos_managed_requirement_id,
 )
 from massgov.pfml.util.logging.managed_requirements import (
     get_fineos_managed_requirement_log_attributes,
@@ -93,10 +91,7 @@ def notifications_post():
             )
 
             if employer:
-                log_attributes = {
-                    **log_attributes,
-                    "employer_id": str(employer.employer_id),
-                }
+                log_attributes = {**log_attributes, "employer_id": str(employer.employer_id)}
                 newrelic.agent.add_custom_parameter("employer_id", employer.employer_id)
         except MultipleResultsFound:
             return _err400_multiple_employer_feins_found(notification_request, log_attributes)
@@ -158,12 +153,7 @@ def notifications_post():
                     "Unable to find Employee or Employee has no tax_identifier, can't get absence periods"
                 )
             else:
-                absence_periods = get_absence_periods(
-                    employee.tax_identifier.tax_identifier,
-                    employer.employer_fein,
-                    notification_request.absence_case_id,
-                    db_session,
-                )
+                absence_periods = get_absence_periods(claim, db_session)
                 sync_customer_api_absence_periods_to_db(
                     absence_periods, claim, db_session, log_attributes
                 )
@@ -230,7 +220,8 @@ def _err400_employer_fein_not_found(notification_request, log_attributes):
             "request.method": flask.request.method if flask.has_request_context() else None,
             "request.uri": flask.request.path if flask.has_request_context() else None,
             "request.headers.x-amzn-requestid": flask.request.headers.get("x-amzn-requestid", None),
-            "absence-id": notification_request.absence_case_id
+            "absence-id": notification_request.absence_case_id,
+            "absence_case_id": notification_request.absence_case_id
             if flask.has_request_context()
             else None,
         },
@@ -256,7 +247,8 @@ def _err400_multiple_employer_feins_found(notification_request, log_attributes):
             "request.method": flask.request.method if flask.has_request_context() else None,
             "request.uri": flask.request.path if flask.has_request_context() else None,
             "request.headers.x-amzn-requestid": flask.request.headers.get("x-amzn-requestid", None),
-            "absence-id": notification_request.absence_case_id
+            "absence-id": notification_request.absence_case_id,
+            "absence_case_id": notification_request.absence_case_id
             if flask.has_request_context()
             else None,
         },
@@ -270,48 +262,14 @@ def _err400_multiple_employer_feins_found(notification_request, log_attributes):
     ).to_api_response()
 
 
-def handle_managed_requirements_create(
+def handle_managed_requirements(
     notification: NotificationRequest, claim_id: UUID, db_session: Session, log_attributes: dict
 ) -> None:
-    fineos_requirements = get_fineos_managed_requirements_from_notification(
-        notification, log_attributes
-    )
-    if len(fineos_requirements) == 0:
-        logger.info("No managed requirements returned by Fineos", extra=log_attributes)
-        return
-
-    for fineos_requirement in fineos_requirements:
-        log_attr = {
-            **log_attributes.copy(),
-            **get_fineos_managed_requirement_log_attributes(fineos_requirement),
-        }
-        try:
-            type_id = ManagedRequirementType.get_id(fineos_requirement.type)
-        except KeyError:
-            logger.warning(
-                "Managed Requirement unsupported lookup from Fineos Manged Requirement Creation aborted",
-                extra=log_attr,
-            )
-            continue
-        existing_requirement = get_managed_requirement_by_fineos_managed_requirement_id(
-            fineos_requirement.managedReqId, db_session
+    fineos_requirements = []
+    if notification.recipient_type == FineosRecipientType.LEAVE_ADMINISTRATOR:
+        fineos_requirements = get_fineos_managed_requirements_from_notification(
+            notification, log_attributes
         )
-        if existing_requirement is None:
-            create_managed_requirement_from_fineos(db_session, claim_id, fineos_requirement)
-        elif existing_requirement.managed_requirement_type_id != type_id:
-            logger.warning("Managed Requirement type mismatch", extra=log_attr)
-        else:
-            logger.info("Managed Requirement already exists, no record created", extra=log_attr)
-    commit_managed_requirements(db_session)
-    return
-
-
-def handle_managed_requirements_update(
-    notification: NotificationRequest, claim_id: UUID, db_session: Session, log_attributes: dict
-) -> None:
-    fineos_requirements = get_fineos_managed_requirements_from_notification(
-        notification, log_attributes
-    )
 
     if len(fineos_requirements) == 0:
         logger.info("No managed requirements returned by Fineos", extra=log_attributes)
@@ -326,24 +284,3 @@ def handle_managed_requirements_update(
         )
     commit_managed_requirements(db_session)
     return
-
-
-def handle_managed_requirements(
-    notification: NotificationRequest, claim_id: UUID, db_session: Session, log_attributes: dict
-) -> None:
-    update_triggers = [
-        FineosNotificationTrigger.DESIGNATION_NOTICE,
-        FineosNotificationTrigger.LEAVE_REQUEST_DECLINED,
-    ]
-
-    should_update_managed_requirements = notification.trigger in update_triggers and (
-        notification.recipient_type == FineosRecipientType.LEAVE_ADMINISTRATOR
-    )
-    should_create_managed_requirements = (
-        notification.trigger == FineosNotificationTrigger.EMPLOYER_CONFIRMATION_OF_LEAVE_DATA
-        and notification.recipient_type == FineosRecipientType.LEAVE_ADMINISTRATOR
-    )
-    if should_update_managed_requirements:
-        handle_managed_requirements_update(notification, claim_id, db_session, log_attributes)
-    elif should_create_managed_requirements:
-        handle_managed_requirements_create(notification, claim_id, db_session, log_attributes)

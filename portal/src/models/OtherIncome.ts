@@ -1,14 +1,13 @@
+import { ValuesOf } from "../../types/common";
+
 class OtherIncome {
   income_amount_dollars: number | null = null;
   income_end_date: string | null = null;
   income_start_date: string | null = null;
   other_income_id: string | null = null;
-  income_type: typeof OtherIncomeType[keyof typeof OtherIncomeType] | null =
-    null;
+  income_type: ValuesOf<typeof OtherIncomeType> | null = null;
 
-  income_amount_frequency:
-    | typeof OtherIncomeFrequency[keyof typeof OtherIncomeFrequency]
-    | null = null;
+  income_amount_frequency: ValuesOf<typeof OtherIncomeFrequency> | null = null;
 
   constructor(attrs: Partial<OtherIncome> = {}) {
     Object.assign(this, attrs);
