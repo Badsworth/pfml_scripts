@@ -51,7 +51,10 @@ export const PERF_APRIL_A: ScenarioSpecification = {
     claim: {
       label: "PERF_APRIL_D",
       work_pattern_spec: "standard",
-      intermittent_leave_spec: true,
+      intermittent_leave_spec: {
+        duration: 3,
+        duration_basis: "Days",
+      },
       reason: "Child Bonding",
       reason_qualifier: "Newborn",
       bondingDate: "past",
@@ -119,8 +122,5 @@ export const PERF_APRIL_A: ScenarioSpecification = {
       reason: "Serious Health Condition - Employee",
       leave_dates: [parseISO("2022-03-06"), parseISO("2022-04-24")],
       is_withholding_tax: false,
-      metadata: {
-        postSubmit: "",
-      },
     },
   };
