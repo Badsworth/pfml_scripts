@@ -12,6 +12,7 @@ export const PERF_APRIL_A: ScenarioSpecification = {
       is_withholding_tax: true,
       metadata: {
         postSubmit: "APPROVE",
+        amount: 20,
       },
     },
   };
@@ -27,6 +28,7 @@ export const PERF_APRIL_A: ScenarioSpecification = {
       is_withholding_tax: true,
       metadata: {
         postSubmit: "APPROVE",
+        amount: 20,
       },
     },
   };
@@ -42,6 +44,7 @@ export const PERF_APRIL_A: ScenarioSpecification = {
       is_withholding_tax: true,
       metadata: {
         postSubmit: "APPROVE",
+        amount: 5,
       },
     },
   };
@@ -62,6 +65,7 @@ export const PERF_APRIL_A: ScenarioSpecification = {
       is_withholding_tax: false,
       metadata: {
         postSubmit: "APPROVE",
+        amount: 10,
       },
     },
   };
@@ -78,6 +82,7 @@ export const PERF_APRIL_A: ScenarioSpecification = {
       is_withholding_tax: true,
       metadata: {
         postSubmit: "APPROVE",
+        amount: 12,
       },
     },
   };
@@ -94,6 +99,7 @@ export const PERF_APRIL_A: ScenarioSpecification = {
       is_withholding_tax: true,
       metadata: {
         postSubmit: "APPROVE",
+        amount: 5,
       },
     },
   };
@@ -109,6 +115,7 @@ export const PERF_APRIL_A: ScenarioSpecification = {
       is_withholding_tax: true,
       metadata: {
         postSubmit: "APPROVE",
+        amount: 5,
       },
     },
   };
@@ -122,5 +129,8 @@ export const PERF_APRIL_A: ScenarioSpecification = {
       reason: "Serious Health Condition - Employee",
       leave_dates: [parseISO("2022-03-06"), parseISO("2022-04-24")],
       is_withholding_tax: false,
+      metadata: {
+        amount: 10,
+      },
     },
   };
