@@ -75,7 +75,7 @@ pytest-xdist = "^2.2.1"
 rich = "^10.14.0"
 sadisplay = "^0.4.9"
 safety = "^1.9.0"
-sqlalchemy-stubs = {git = "https://github.com/dropbox/sqlalchemy-stubs", rev = "55470ceab8149db983411d5c094c9fe16343c58b"}
+sqlalchemy-stubs = {git = "https://github.com/dropbox/sqlalchemy-stubs", rev = "8495c229cf8a31d75fcea36090e07c0e4b867605"}
 types-PyYAML = "5.4.10"
 types-cryptography = "^3.3.5"
 types-enum34 = "1.1.0"
