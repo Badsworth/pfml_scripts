@@ -31,9 +31,9 @@ describe("BenefitYearsApi", () => {
     const current = true;
     const end_date_within = ["2022-01-08", "2022-03-01"];
     await benefitYearsApi.getBenefitYears({
-      employee_id: employee_id,
-      current: current,
-      end_date_within: end_date_within,
+      employee_id,
+      current,
+      end_date_within,
     });
 
     expect(global.fetch).toHaveBeenCalledWith(
@@ -43,9 +43,9 @@ describe("BenefitYearsApi", () => {
         method: "POST",
         body: JSON.stringify({
           terms: {
-            employee_id: employee_id,
-            current: current,
-            end_date_within: end_date_within,
+            employee_id,
+            current,
+            end_date_within,
           },
         }),
       })
