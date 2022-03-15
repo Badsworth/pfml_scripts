@@ -378,6 +378,16 @@ def test_applications_get_all_pagination_limit_double(client, user, auth_token):
 
 class TestApplicationsImport:
     @pytest.fixture
+    def claim(self, claim, test_db_session) -> Claim:
+        # delete the application that is pre-associated with the claim fixture
+        # so that we can test importing a new one
+        application = claim.application
+        test_db_session.delete(application)
+        test_db_session.commit()
+
+        return claim
+
+    @pytest.fixture
     def valid_request_body(self, claim: Claim) -> Dict[str, str]:
         return {
             "absence_case_id": claim.fineos_absence_id,
