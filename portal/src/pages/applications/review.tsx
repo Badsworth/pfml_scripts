@@ -100,7 +100,9 @@ export const Review = (
   const submissionWindow = dayjs().add(60, "day").format("YYYY-MM-DD");
 
   useEffect(() => {
-    loadCrossedBenefitYears(employeeId, startDate, endDate);
+    if (employeeId != null) {
+      loadCrossedBenefitYears(employeeId, startDate, endDate);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [employeeId, startDate, endDate]);
   const crossedBenefitYear = getCrossedBenefitYear();
