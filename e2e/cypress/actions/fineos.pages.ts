@@ -741,19 +741,15 @@ class CertificationPeriodsPage {
 
 class RequestInformationPage {
   private enterNewLeaveDates(newStartDate: string, newEndDate: string) {
-    cy.get(
-      "input[id='timeOffAbsencePeriodDetailsWidget_un41_startDate']"
-    ).click();
-    cy.get("input[id='timeOffAbsencePeriodDetailsWidget_un41_startDate']").type(
-      `{selectall}{backspace}${newStartDate}{enter}`
-    );
+    cy.get("input[id*='startDate']").first().click();
+    cy.get("input[id*='startDate']")
+      .first()
+      .type(`{selectall}{backspace}${newStartDate}{enter}`);
     waitForAjaxComplete();
-    cy.get(
-      "input[id='timeOffAbsencePeriodDetailsWidget_un41_endDate']"
-    ).click();
-    cy.get("input[id='timeOffAbsencePeriodDetailsWidget_un41_endDate']").type(
-      `{selectall}{backspace}${newEndDate}{enter}`
-    );
+    cy.get("input[id*='endDate']").first().click();
+    cy.get("input[id*='endDate']")
+      .first()
+      .type(`{selectall}{backspace}${newEndDate}{enter}`);
     waitForAjaxComplete();
     cy.get("input[type='button'][title='OK']").click();
     waitForAjaxComplete();
@@ -762,7 +758,7 @@ class RequestInformationPage {
   editRequestDates(newStartDate: string, newEndDate: string): ClaimPage {
     waitForAjaxComplete();
     cy.get(
-      "table[id$='timeOffAbsencePeriodsListviewWidget'][class='ListTable responsive-table']"
+      "table[id^='timeOffAbsencePeriodsListview'][class='ListTable responsive-table']"
     ).within(() => {
       cy.get("tr").then(
         ($el) => expect($el.hasClass("ListRowSelected")).to.be.true

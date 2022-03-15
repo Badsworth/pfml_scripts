@@ -782,6 +782,13 @@ class ChangeRequest(Base, TimestampMixin):
     def type(self) -> str:
         return self.change_request_type_instance.description
 
+    @typed_hybrid_property
+    def application(self):
+        if not self.claim:
+            return None
+
+        return self.claim.application  # type: ignore
+
 
 class Claim(Base, TimestampMixin):
     __tablename__ = "claim"
