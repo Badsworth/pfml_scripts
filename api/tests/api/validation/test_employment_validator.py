@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from massgov.pfml.api.validation.employment_validator import (
     get_contributing_employer_or_employee_issue,
 )
@@ -58,6 +60,26 @@ def test_employer_with_fineos_id_is_required(test_db_session, initialize_factori
         field="employer_fein",
         type=IssueType.require_contributing_employer,
         message="Confirm that you have the correct EIN, and that the Employer is contributing to Paid Family and Medical Leave.",
+    )
+
+
+def test_employer_is_not_fully_exempt(test_db_session, initialize_factories_session):
+    # Validation issue when Employer exists, but it's fully exempt
+    exemption_date = datetime.strptime("12/31/9999", "%m/%d/%Y").date()
+    employer = EmployerFactory.create(
+        family_exemption=True,
+        medical_exemption=True,
+        exemption_commence_date=exemption_date,
+        exemption_cease_date=exemption_date,
+    )
+
+    issue = get_contributing_employer_or_employee_issue(
+        test_db_session, employer.employer_fein, None
+    )
+
+    assert issue == ValidationErrorDetail(
+        field="employer_fein",
+        type=IssueType.require_non_exempt_employer,
     )
 
 
