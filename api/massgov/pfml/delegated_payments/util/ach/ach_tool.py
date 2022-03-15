@@ -46,7 +46,7 @@ def ach_reader():
 
 def parse_args():
     """Parse command line arguments and flags."""
-    parser = argparse.ArgumentParser(description="ACH file reader",)
+    parser = argparse.ArgumentParser(description="ACH file reader")
     parser.add_argument("file", nargs="+", help="ACH files")
     args = parser.parse_args()
     if not args.file:

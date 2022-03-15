@@ -18,7 +18,6 @@ import LeaveReason from "../../models/LeaveReason";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import findKeyByValue from "../../utils/findKeyByValue";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -82,7 +81,7 @@ export const IntermittentFrequency = (props: WithBenefitsApplicationProps) => {
     appLogic.benefitsApplications.update(claim.application_id, formState);
 
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });
@@ -131,11 +130,7 @@ export const IntermittentFrequency = (props: WithBenefitsApplicationProps) => {
       {(claim.isMedicalOrPregnancyLeave || claim.isCaringLeave) && (
         <Lead>
           {t("pages.claimsIntermittentFrequency.frequencyHint", {
-            context:
-              claim.isMedicalOrPregnancyLeave &&
-              isFeatureEnabled("updateMedicalCertForm")
-                ? "updateMedicalCertForm"
-                : contentContext,
+            context: contentContext,
           })}
         </Lead>
       )}

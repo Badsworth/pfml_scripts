@@ -9,8 +9,9 @@ https://docs.pytest.org/en/latest/fixture.html#conftest-py-sharing-fixture-funct
 import logging.config  # noqa: B1
 import os
 import uuid
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from typing import List
+from unittest.mock import MagicMock
 
 import _pytest.monkeypatch
 import boto3
@@ -27,8 +28,9 @@ import massgov.pfml.api.employees
 import massgov.pfml.db.models.employees as employee_models
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging
-from massgov.pfml.api.models.claims.responses import AbsencePeriodStatusResponse
+from massgov.pfml.api.models.claims.responses import AbsencePeriodResponse
 from massgov.pfml.db.models.factories import (
+    ChangeRequestFactory,
     ClaimFactory,
     EmployeeFactory,
     EmployerFactory,
@@ -37,6 +39,15 @@ from massgov.pfml.db.models.factories import (
 )
 
 logger = massgov.pfml.util.logging.get_logger("massgov.pfml.api.tests.conftest")
+
+
+def get_mock_logger():
+    mock_logger = MagicMock()
+    mock_logger.info = MagicMock()
+    mock_logger.warning = MagicMock()
+    mock_logger.error = MagicMock()
+
+    return mock_logger
 
 
 @pytest.fixture(scope="session")
@@ -121,8 +132,8 @@ def claim(employer, employee):
 
 @pytest.fixture
 def absence_period():
-    return AbsencePeriodStatusResponse(
-        fineos_leave_period_id="PL-14449-0000002237",
+    return AbsencePeriodResponse(
+        fineos_leave_request_id="PL-14449-0000002237",
         absence_period_start_date=date(2021, 1, 29),
         absence_period_end_date=date(2021, 1, 30),
         reason="Child Bonding",
@@ -135,16 +146,21 @@ def absence_period():
 
 
 @pytest.fixture
+def change_request(claim):
+    return ChangeRequestFactory.create(
+        claim_id=claim.claim_id,
+        change_request_type_id=employee_models.ChangeRequestType.MODIFICATION.change_request_type_id,
+    )
+
+
+@pytest.fixture
 def set_auth_public_keys(monkeypatch, auth_key):
     monkeypatch.setattr(authentication, "public_keys", auth_key)
 
 
 @pytest.fixture(scope="session")
 def auth_claims_unit():
-    claims = {
-        "exp": datetime.now() + timedelta(days=1),
-        "sub": "foo",
-    }
+    claims = {"exp": datetime.now() + timedelta(days=1), "sub": "foo"}
 
     return claims
 
@@ -166,7 +182,7 @@ def auth_claims(auth_claims_unit, user):
 @pytest.fixture
 def employer_claims(employer_user):
     claims = {
-        "exp": datetime.now() + timedelta(days=1),
+        "exp": datetime.now(timezone.utc) + timedelta(days=1),
         "sub": str(employer_user.sub_id),
     }
 
@@ -180,6 +196,12 @@ def consented_user(initialize_factories_session):
 
 
 @pytest.fixture
+def user_with_mfa(initialize_factories_session):
+    user = UserFactory.create(mfa_phone_number="+15109283075")
+    return user
+
+
+@pytest.fixture
 def fineos_user(initialize_factories_session):
     user = UserFactory.create(roles=[employee_models.Role.FINEOS])
     return user
@@ -187,7 +209,7 @@ def fineos_user(initialize_factories_session):
 
 @pytest.fixture
 def snow_user(initialize_factories_session):
-    user = UserFactory.create(roles=[employee_models.Role.SERVICE_NOW])
+    user = UserFactory.create(roles=[employee_models.Role.PFML_CRM])
     return user
 
 
@@ -222,22 +244,14 @@ def consented_user_claims(consented_user):
 
 @pytest.fixture
 def fineos_user_claims(fineos_user):
-    claims = {
-        "a": "b",
-        "exp": datetime.now() + timedelta(days=1),
-        "sub": str(fineos_user.sub_id),
-    }
+    claims = {"a": "b", "exp": datetime.now() + timedelta(days=1), "sub": str(fineos_user.sub_id)}
 
     return claims
 
 
 @pytest.fixture
 def snow_user_claims(snow_user):
-    claims = {
-        "a": "b",
-        "exp": datetime.now() + timedelta(days=1),
-        "sub": str(snow_user.sub_id),
-    }
+    claims = {"a": "b", "exp": datetime.now() + timedelta(days=1), "sub": str(snow_user.sub_id)}
 
     return claims
 
@@ -254,7 +268,7 @@ def azure_auth_keys():
                 "kty": "RSA",
                 "n": "iWBm-DQbycUqrPBSD5yk73zxyIr66hBUCyPCShW-btQ-nyBk1E-h4AvtqHpl4Y1aghQDTnn2gLHiRtV_XJtCpK1PEJ3SCqw6wGOEw5bbG7Q88KDvTMUF5k6gzRMHMBTD7lMNPIY-oCuh_Rwvg19hGBD2O6rA2sMHyTB-O2ZwL6M",
                 "use": "sig",
-            },
+            }
         ]
     }
 
@@ -329,6 +343,11 @@ def fineos_user_token(fineos_user_claims, auth_private_key):
 def snow_user_token(snow_user_claims, auth_private_key):
     encoded = jwt.encode(snow_user_claims, auth_private_key, algorithm=ALGORITHMS.RS256)
     return encoded
+
+
+@pytest.fixture
+def snow_user_headers(snow_user_token):
+    return {"Authorization": "Bearer {}".format(snow_user_token), "Mass-PFML-Agent-ID": "123"}
 
 
 @pytest.fixture
@@ -455,35 +474,117 @@ def mock_s3_bucket(mock_s3_bucket_resource):
 
 
 @pytest.fixture
+def mock_sftp_paths(monkeypatch):
+    source_directory_path = "dua/pending"
+    archive_directory_path = "dua/archive"
+    moveit_pickup_path = "upload/DFML/DUA/Inbound"
+
+    monkeypatch.setenv("DUA_TRANSFER_BASE_PATH", "local_s3/agency_transfer")
+    monkeypatch.setenv("OUTBOUND_DIRECTORY_PATH", source_directory_path)
+    monkeypatch.setenv("ARCHIVE_DIRECTORY_PATH", archive_directory_path)
+    monkeypatch.setenv("MOVEIT_SFTP_URI", "sftp://foo@bar.com")
+    monkeypatch.setenv("MOVEIT_SSH_KEY", "foo")
+
+    pending_directory = f"local_s3/agency_transfer/{source_directory_path}"
+    archive_directory = f"local_s3/agency_transfer/{archive_directory_path}"
+
+    paths = {
+        "pending_directory": pending_directory,
+        "archive_directory": archive_directory,
+        "moveit_pickup_path": moveit_pickup_path,
+    }
+
+    return paths
+
+
+@pytest.fixture
 def mock_sftp_client():
     class MockSftpClient:
         calls = []
         files = {}
+        _dirs = {}
+
+        def _append_dir(self, new_dir):
+            dirs = set(self._dirs)
+            dirs.add(new_dir)
+            self._dirs = list(dirs)
+            return self._dirs
+
+        def _remove_dir(self, dir):
+            dirs = set(self._dirs)
+            dirs.discard(dir)
+            self._dirs = list(dirs)
+            return self._dirs
+
+        def _rename_dir(self, olddir, newdir):
+            self._remove_dir(olddir)
+            self._append_dir(newdir)
 
         def get(self, src: str, dest: str):
             self.calls.append(("get", src, dest))
-            body = self.files.get(src)
-            if body is not None:
-                with open(dest, "w") as f:
-                    f.write(body)
+            if src in self._dirs:
+                try:
+                    os.mkdir(dest)
+                except FileExistsError:
+                    pass
+                target_dir = dest
+                dir_files = self.listdir(src)
+                for file in dir_files:
+                    self.get(f"{src}/{file}", f"{target_dir}/{file}")
+            else:
+                body = self.files.get(src)
+                if body is not None:
+                    with open(dest, "w") as f:
+                        f.write(body)
 
         def put(self, src: str, dest: str, confirm: bool):
+            """
+            This isn't recursive, i.e. you can put /dir and it will contain
+            - /dir/f1
+            - /dir/f2
+            - ...
+            But it will NOT contain
+            - /dir/subdir/file
+
+            For testing, if you put a single file to /dir/target.txt, it will not register
+            the directory.  You should put /dir
+            """
             self.calls.append(("put", src, dest))
-            with open(src) as f:
-                self.files[dest] = f.read()
+            if os.path.isfile(src):
+                with open(src) as f:
+                    self.files[dest] = f.read()
+            else:
+                self._append_dir(dest)
+                files = os.listdir(src)
+                for file in files:
+                    file_path = f"{src}/{file}"
+                    with open(file_path) as f:
+                        self.files[f"{dest}/{file}"] = f.read()
 
         def remove(self, filename: str):
             self.calls.append(("remove", filename))
-            body = self.files.get(filename)
-            if body is not None:
-                del self.files[filename]
+            if filename in self._dirs:
+                dir_files = self.listdir(filename)
+                for file in dir_files:
+                    self.remove(f"{filename}/{file}")
+                self._remove_dir(filename)
+            else:
+                body = self.files.get(filename)
+                if body is not None:
+                    del self.files[filename]
 
         def rename(self, oldpath: str, newpath: str):
             self.calls.append(("rename", oldpath, newpath))
-            body = self.files.get(oldpath)
-            if body is not None:
-                self.files[newpath] = body
-                del self.files[oldpath]
+            if oldpath in self._dirs:
+                dir_files = self.listdir(oldpath)
+                for file in dir_files:
+                    self.rename(f"{oldpath}/{file}", f"{newpath}/{file}")
+                self._rename_dir(oldpath, newpath)
+            else:
+                body = self.files.get(oldpath)
+                if body is not None:
+                    self.files[newpath] = body
+                    del self.files[oldpath]
 
         def listdir(self, dir: str):
             self.calls.append(("listdir", dir))
@@ -511,7 +612,7 @@ def mock_sftp_client():
 def setup_mock_sftp_client(monkeypatch, mock_sftp_client):
     # Mock SFTP client so we can inspect the method calls we make later in the test.
     monkeypatch.setattr(
-        file_util, "get_sftp_client", lambda uri, ssh_key_password, ssh_key: mock_sftp_client,
+        file_util, "get_sftp_client", lambda uri, ssh_key_password, ssh_key: mock_sftp_client
     )
 
 
@@ -937,3 +1038,6 @@ def sqlalchemy_query_counter():
             self.count += 1
 
     return SQLAlchemyQueryCounter
+
+
+pytest.register_assert_rewrite("tests.helpers")

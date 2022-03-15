@@ -78,6 +78,48 @@ resource "aws_cloudwatch_log_resource_policy" "ecs-tasks-events-log-publishing-p
   policy_name     = "ecs-tasks-events-log-publishing-policy"
 }
 
+# Configures API gateway resources authorized for S3 operations 
+# under the /files endpoint. 
+resource "aws_iam_role" "files_executor_role" {
+  for_each           = local.endpoints
+  name               = "massgov-pfml-${var.environment_name}-${each.key}-executor"
+  assume_role_policy = data.aws_iam_policy_document.api_gateway_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy" "files_executor_policy" {
+  for_each = local.endpoints
+  name     = "massgov-pfml-${var.environment_name}-${each.key}-policy"
+  role     = aws_iam_role.files_executor_role[each.key].id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:ListBucket"
+        ]
+        Resource = "${each.value.bucket}*"
+        Condition = {
+          StringLike = {
+            "s3:prefix" : "${each.value.object_prefix}*"
+          }
+        }
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:Put*",
+          "s3:List*",
+          "s3:Get*",
+          "s3:DeleteObject",
+          "s3:AbortMultipartUpload"
+        ]
+        Resource = "${each.value.bucket}/${each.value.object_prefix}*"
+      }
+    ]
+  })
+}
+
 # Allow pfmldata endpoint under API gateway to use S3 operations at specified resource locations. 
 data "aws_iam_policy_document" "pfmldata_executor_policy_document" {
   dynamic "statement" {
@@ -121,4 +163,42 @@ resource "aws_iam_role_policy" "pfmldata_executor_policy" {
   name   = "massgov-pfml-${var.environment_name}-data-executor-role-policy"
   role   = aws_iam_role.pfmldata_executor_role.id
   policy = data.aws_iam_policy_document.pfmldata_executor_policy_document.json
+}
+
+
+data "aws_iam_policy_document" "qlikdata_executor_policy_document" {
+  # Allow API gateway to read and delete files from dfml-qlikdownloads.
+  statement {
+    actions = [
+      "s3:GetObject",
+      "s3:DeleteObject",
+    ]
+
+    resources = [
+      "${aws_s3_bucket.pfml_reports.arn}/dfml-qlikdownloads",
+      "${aws_s3_bucket.pfml_reports.arn}/dfml-qlikdownloads/*"
+    ]
+  }
+
+  # Allow API gateway to add files to dfml-qlikuploads.
+  statement {
+    actions = [
+      "s3:PutObject",
+    ]
+
+    resources = [
+      "${aws_s3_bucket.pfml_reports.arn}/dfml-qlikuploads",
+      "${aws_s3_bucket.pfml_reports.arn}/dfml-qlikuploads/*"
+    ]
+  }
+}
+resource "aws_iam_role" "qlikdata_executor_role" {
+  name               = "massgov-pfml-${var.environment_name}-data-qlik-gateway-executor"
+  assume_role_policy = data.aws_iam_policy_document.api_gateway_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy" "qlikdata_executor_policy" {
+  name   = "massgov-pfml-${var.environment_name}-data-executor-role-policy"
+  role   = aws_iam_role.qlikdata_executor_role.id
+  policy = data.aws_iam_policy_document.qlikdata_executor_policy_document.json
 }

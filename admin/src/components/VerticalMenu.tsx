@@ -1,12 +1,15 @@
-import { useState, isValidElement } from "react";
+import { isValidElement, useState } from "react";
+
+import { DotsVerticalIcon } from "@heroicons/react/solid";
 import Link from "next/link";
+import { UrlObject } from "url";
 
 export type Option = {
   enabled: boolean;
   text: string;
   type: "button" | "link";
   onClick?: Function;
-  href?: string;
+  href?: string | UrlObject;
 };
 
 export type Props = {
@@ -62,11 +65,13 @@ export default function VerticalMenu({ options }: Props) {
   return (
     <div className="vertical-menu">
       <button
-        className="vertical-menu__icon pfml-icon--vmenu"
+        className="vertical-menu-trigger"
         onClick={toggleOpen}
         type="button"
         data-testid="vertical-menu-trigger"
-      ></button>
+      >
+        <DotsVerticalIcon className="vertical-menu-trigger__icon" />
+      </button>
 
       {open && (
         <ul className="vertical-menu__dropdown">

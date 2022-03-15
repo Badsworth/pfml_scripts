@@ -1,3 +1,4 @@
+import logging  # noqa: B1
 import os
 from datetime import datetime
 from unittest import mock
@@ -19,6 +20,7 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVpei,
     FineosExtractVpeiClaimDetails,
     FineosExtractVpeiPaymentDetails,
+    FineosExtractVpeiPaymentLine,
 )
 from massgov.pfml.delegated_payments.fineos_extract_step import (
     CLAIMANT_EXTRACT_CONFIG,
@@ -28,7 +30,6 @@ from massgov.pfml.delegated_payments.fineos_extract_step import (
     FineosExtractStep,
 )
 from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
-    FineosClaimantData,
     FineosIAWWData,
     FineosPaymentData,
     create_fineos_claimant_extract_files,
@@ -37,41 +38,55 @@ from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
     generate_payment_reconciliation_extract_files,
 )
 
+earlier_date_str = "2020-07-01-12-00-00"
 date_str = "2020-08-01-12-00-00"
 
 
-def create_malformed_file(extract, date_of_extract, folder_path):
-    bad_content_line_one = "Some,Other,Column,Names"
-    bad_content_line_two = "1,2,3,4"
-    bad_content = "\n".join([bad_content_line_one, bad_content_line_two])
+def create_malformed_file(extract, date_of_extract, folder_path, malformed_content=None):
+    if malformed_content is None:
+        malformed_content_line_one = "Some,Other,Column,Names"
+        malformed_content_line_two = "1,2,3,4"
+        malformed_content = "\n".join([malformed_content_line_one, malformed_content_line_two])
 
     date_prefix = date_of_extract.strftime("%Y-%m-%d-%H-%M-%S-")
 
     file_name = os.path.join(folder_path, f"{date_prefix}{extract.file_name}")
     with file_util.write_file(file_name) as outfile:
-        outfile.write(bad_content)
+        outfile.write(malformed_content)
 
 
 def upload_fineos_payment_data(
-    mock_fineos_s3_bucket, fineos_dataset, timestamp=date_str, malformed_extract=None
+    mock_fineos_s3_bucket,
+    fineos_dataset,
+    timestamp=date_str,
+    malformed_extract=None,
+    malformed_content=None,
 ):
     folder_path = os.path.join(f"s3://{mock_fineos_s3_bucket}", "DT2/dataexports/")
     date_of_extract = datetime.strptime(timestamp, "%Y-%m-%d-%H-%M-%S")
     create_fineos_payment_extract_files(fineos_dataset, folder_path, date_of_extract)
 
     if malformed_extract:
-        create_malformed_file(malformed_extract, date_of_extract, folder_path)
+        create_malformed_file(
+            malformed_extract, date_of_extract, folder_path, malformed_content=malformed_content
+        )
 
 
 def upload_fineos_claimant_data(
-    mock_fineos_s3_bucket, fineos_dataset, timestamp=date_str, malformed_extract=None
+    mock_fineos_s3_bucket,
+    fineos_dataset,
+    timestamp=date_str,
+    malformed_extract=None,
+    malformed_content=None,
 ):
     folder_path = os.path.join(f"s3://{mock_fineos_s3_bucket}", "DT2/dataexports/")
     date_of_extract = datetime.strptime(timestamp, "%Y-%m-%d-%H-%M-%S")
     create_fineos_claimant_extract_files(fineos_dataset, folder_path, date_of_extract)
 
     if malformed_extract:
-        create_malformed_file(malformed_extract, date_of_extract, folder_path)
+        create_malformed_file(
+            malformed_extract, date_of_extract, folder_path, malformed_content=malformed_content
+        )
 
 
 def validate_records(records, table, index_key, local_test_db_session):
@@ -118,7 +133,7 @@ def test_run_happy_path(
     monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
 
     payment_data = [FineosPaymentData(), FineosPaymentData(), FineosPaymentData()]
-    claimant_data = [FineosClaimantData(), FineosClaimantData(), FineosClaimantData()]
+    claimant_data = [FineosPaymentData(), FineosPaymentData(), FineosPaymentData()]
 
     upload_fineos_payment_data(mock_fineos_s3_bucket, payment_data)
     upload_fineos_claimant_data(mock_fineos_s3_bucket, claimant_data)
@@ -148,13 +163,14 @@ def test_run_happy_path(
         # Verify all files are present and in the expected processed paths
         expected_path_prefix = f"s3://{mock_s3_bucket}/cps/inbound/processed/"
         files = file_util.list_files(expected_path_prefix, recursive=True)
-        assert len(files) == 6
+        assert len(files) == 7
 
         claimant_prefix = f"{date_str}-claimant-extract/{date_str}"
         assert (
             f"{claimant_prefix}-{payments_util.Constants.REQUESTED_ABSENCE_SOM_FILE_NAME}" in files
         )
         assert f"{claimant_prefix}-{payments_util.Constants.EMPLOYEE_FEED_FILE_NAME}" in files
+        assert f"{claimant_prefix}-{payments_util.Constants.REQUESTED_ABSENCE_FILE_NAME}" in files
 
         payment_prefix = f"{date_str}-payment-extract/{date_str}"
         assert f"{payment_prefix}-{payments_util.Constants.PEI_EXPECTED_FILE_NAME}" in files
@@ -165,7 +181,6 @@ def test_run_happy_path(
         assert (
             f"{payment_prefix}-{payments_util.Constants.CLAIM_DETAILS_EXPECTED_FILE_NAME}" in files
         )
-        assert f"{payment_prefix}-{payments_util.Constants.REQUESTED_ABSENCE_FILE_NAME}" in files
 
         claimant_reference_file = (
             local_test_db_session.query(ReferenceFile)
@@ -199,12 +214,22 @@ def test_run_happy_path(
         )
 
         requested_absence_som_records = [
-            record.get_requested_absence_record() for record in claimant_data
+            record.get_requested_absence_som_record() for record in claimant_data
         ]
         validate_records(
             requested_absence_som_records,
             FineosExtractVbiRequestedAbsenceSom,
             "ABSENCE_CASENUMBER",
+            local_test_db_session,
+        )
+
+        requested_absence_records = [
+            record.get_requested_absence_record() for record in claimant_data
+        ]
+        validate_records(
+            requested_absence_records,
+            FineosExtractVbiRequestedAbsence,
+            "LEAVEREQUEST_ID",
             local_test_db_session,
         )
 
@@ -227,26 +252,25 @@ def test_run_happy_path(
             local_test_db_session,
         )
 
-        requested_absence_records = [
-            record.get_requested_absence_record() for record in payment_data
-        ]
+        payment_line_records = [record.get_payment_line_record() for record in payment_data]
         validate_records(
-            requested_absence_records,
-            FineosExtractVbiRequestedAbsence,
-            "LEAVEREQUEST_ID",
+            payment_line_records,
+            FineosExtractVpeiPaymentLine,
+            "I",
             local_test_db_session,
         )
 
         ### and verify the skipped files as well
         expected_path_prefix = f"s3://{mock_s3_bucket}/cps/inbound/skipped/"
         files = file_util.list_files(expected_path_prefix, recursive=True)
-        assert len(files) == 6
+        assert len(files) == 7
 
         claimant_prefix = f"{skipped_date_str}-claimant-extract/{skipped_date_str}"
         assert (
             f"{claimant_prefix}-{payments_util.Constants.REQUESTED_ABSENCE_SOM_FILE_NAME}" in files
         )
         assert f"{claimant_prefix}-{payments_util.Constants.EMPLOYEE_FEED_FILE_NAME}" in files
+        assert f"{claimant_prefix}-{payments_util.Constants.REQUESTED_ABSENCE_FILE_NAME}" in files
 
         payment_prefix = f"{skipped_date_str}-payment-extract/{skipped_date_str}"
         assert f"{payment_prefix}-{payments_util.Constants.PEI_EXPECTED_FILE_NAME}" in files
@@ -257,7 +281,9 @@ def test_run_happy_path(
         assert (
             f"{payment_prefix}-{payments_util.Constants.CLAIM_DETAILS_EXPECTED_FILE_NAME}" in files
         )
-        assert f"{payment_prefix}-{payments_util.Constants.REQUESTED_ABSENCE_FILE_NAME}" in files
+        assert (
+            f"{payment_prefix}-{payments_util.Constants.PAYMENT_LINE_EXPECTED_FILE_NAME}" in files
+        )
 
         # And the skipped reference files
         claimant_reference_file = (
@@ -470,7 +496,7 @@ def test_run_with_error_during_processing(
     assert f"{payment_prefix}-{payments_util.Constants.PEI_EXPECTED_FILE_NAME}" in files
     assert f"{payment_prefix}-{payments_util.Constants.PAYMENT_DETAILS_EXPECTED_FILE_NAME}" in files
     assert f"{payment_prefix}-{payments_util.Constants.CLAIM_DETAILS_EXPECTED_FILE_NAME}" in files
-    assert f"{payment_prefix}-{payments_util.Constants.REQUESTED_ABSENCE_FILE_NAME}" in files
+    assert f"{payment_prefix}-{payments_util.Constants.PAYMENT_LINE_EXPECTED_FILE_NAME}" in files
 
     # A reference file is present and pointing to the errored directory
     reference_files = local_test_db_session.query(ReferenceFile).all()
@@ -485,7 +511,7 @@ def test_run_with_error_during_processing(
     validate_records([], FineosExtractVpei, "I", local_test_db_session)
     validate_records([], FineosExtractVpeiClaimDetails, "LEAVEREQUESTI", local_test_db_session)
     validate_records([], FineosExtractVpeiPaymentDetails, "PEINDEXID", local_test_db_session)
-    validate_records([], FineosExtractVbiRequestedAbsence, "LEAVEREQUEST_ID", local_test_db_session)
+    validate_records([], FineosExtractVpeiPaymentLine, "I", local_test_db_session)
 
 
 def test_run_with_missing_fineos_file(
@@ -499,7 +525,7 @@ def test_run_with_missing_fineos_file(
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
 
-    claimant_data = [FineosClaimantData(), FineosClaimantData(), FineosClaimantData()]
+    claimant_data = [FineosPaymentData(), FineosPaymentData(), FineosPaymentData()]
     upload_fineos_claimant_data(mock_fineos_s3_bucket, claimant_data)
 
     # Delete the employee feed file
@@ -515,10 +541,7 @@ def test_run_with_missing_fineos_file(
         extract_config=CLAIMANT_EXTRACT_CONFIG,
     )
 
-    with pytest.raises(
-        Exception,
-        match="Error while copying fineos extracts - The following expected files were not found",
-    ):
+    with pytest.raises(Exception, match="Expected to find files"):
         fineos_extract_step.run()
 
     # No reference files created because it failed before that was created
@@ -534,6 +557,74 @@ def test_run_with_missing_fineos_file(
     validate_records([], FineosExtractVpeiClaimDetails, "LEAVEREQUESTI", local_test_db_session)
     validate_records([], FineosExtractVpeiPaymentDetails, "PEINDEXID", local_test_db_session)
     validate_records([], FineosExtractVbiRequestedAbsence, "LEAVEREQUEST_ID", local_test_db_session)
+    validate_records([], FineosExtractVpeiPaymentLine, "I", local_test_db_session)
+
+
+def test_run_with_missing_files_skipped_run(
+    mock_s3_bucket,
+    mock_fineos_s3_bucket,
+    set_exporter_env_vars,
+    local_test_db_session,
+    local_test_db_other_session,
+    monkeypatch,
+):
+    # Validate that if we're missing files that are going to be skipped
+    # that the process won't fail.
+    monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
+
+    prior_claimant_data = [FineosPaymentData(), FineosPaymentData()]
+    upload_fineos_claimant_data(
+        mock_fineos_s3_bucket, prior_claimant_data, timestamp=earlier_date_str
+    )
+
+    claimant_data = [FineosPaymentData(), FineosPaymentData(), FineosPaymentData()]
+    upload_fineos_claimant_data(mock_fineos_s3_bucket, claimant_data)
+
+    # Delete the employee feed file for the older skipped record
+    expected_fineos_path_prefix = f"s3://{mock_fineos_s3_bucket}/DT2/dataexports/"
+    file_util.delete_file(
+        expected_fineos_path_prefix
+        + f"{earlier_date_str}-{payments_util.Constants.EMPLOYEE_FEED_FILE_NAME}"
+    )
+
+    fineos_extract_step = FineosExtractStep(
+        db_session=local_test_db_session,
+        log_entry_db_session=local_test_db_other_session,
+        extract_config=CLAIMANT_EXTRACT_CONFIG,
+    )
+
+    fineos_extract_step.run()
+
+    # Verify that the skipped file ended up in the right place
+    expected_path_prefix = f"s3://{mock_s3_bucket}/cps/inbound/skipped/"
+    files = file_util.list_files(expected_path_prefix, recursive=True)
+    assert len(files) == 2
+
+    claimant_prefix = f"{earlier_date_str}-claimant-extract/{earlier_date_str}"
+    assert f"{claimant_prefix}-{payments_util.Constants.REQUESTED_ABSENCE_SOM_FILE_NAME}" in files
+    assert f"{claimant_prefix}-{payments_util.Constants.REQUESTED_ABSENCE_FILE_NAME}" in files
+
+    # Verify the unskipped file was still loaded properly
+    employee_feed_records = [record.get_employee_feed_record() for record in claimant_data]
+    validate_records(employee_feed_records, FineosExtractEmployeeFeed, "I", local_test_db_session)
+
+    requested_absence_som_records = [
+        record.get_requested_absence_som_record() for record in claimant_data
+    ]
+    validate_records(
+        requested_absence_som_records,
+        FineosExtractVbiRequestedAbsenceSom,
+        "ABSENCE_CASENUMBER",
+        local_test_db_session,
+    )
+
+    requested_absence_records = [record.get_requested_absence_record() for record in claimant_data]
+    validate_records(
+        requested_absence_records,
+        FineosExtractVbiRequestedAbsence,
+        "LEAVEREQUEST_ID",
+        local_test_db_session,
+    )
 
 
 @pytest.mark.parametrize(
@@ -553,7 +644,7 @@ def test_run_with_malformed_claimant_data(
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
 
-    claimant_data = [FineosClaimantData()]
+    claimant_data = [FineosPaymentData()]
     upload_fineos_claimant_data(
         mock_fineos_s3_bucket, claimant_data, malformed_extract=claimant_extract_file
     )
@@ -602,3 +693,59 @@ def test_run_with_malformed_payment_data(
             extract_config=PAYMENT_EXTRACT_CONFIG,
         )
         fineos_extract_step.run()
+
+
+# Test that if there are extra columns in the extract file,
+# we log those only once if they're in the header row
+def test_log_unconfigured_on_first_record(
+    mock_s3_bucket,
+    mock_fineos_s3_bucket,
+    set_exporter_env_vars,
+    local_test_db_session,
+    local_test_db_other_session,
+    monkeypatch,
+    caplog,
+):
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
+    monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
+
+    # We add one unexpected column in the header, and we plant it, plus yet
+    # another unexpected column, in two of the records. The first should only
+    # be logged once. The second should be logged twice: once for each time
+    # it shows up in a record.
+    malformed_extract = payments_util.FineosExtractConstants.CLAIM_DETAILS
+    malformed_content = (
+        "PECLASSID,PEINDEXID,ABSENCECASENU,LEAVEREQUESTI,EXTRACOL\n"
+        + "1,2,3,4,5\n"
+        + "1,2,3,4,5,6\n"
+        + "1,2,3,4,5,6"
+    )
+
+    payment_data = [FineosPaymentData()]
+    upload_fineos_payment_data(
+        mock_fineos_s3_bucket,
+        payment_data,
+        malformed_extract=malformed_extract,
+        malformed_content=malformed_content,
+    )
+
+    fineos_extract_step = FineosExtractStep(
+        db_session=local_test_db_session,
+        log_entry_db_session=local_test_db_other_session,
+        extract_config=PAYMENT_EXTRACT_CONFIG,
+    )
+
+    caplog.set_level(logging.INFO)  # noqa: B1
+    fineos_extract_step.run()
+
+    first_record_warnings = 0
+    after_first_warnings = 0
+    for record in caplog.records:
+        if record.msg == "Unconfigured columns in FINEOS extract.":
+            first_record_warnings += 1
+
+        if record.msg == "Unconfigured columns in FINEOS extract after first record.":
+            after_first_warnings += 1
+
+    assert first_record_warnings == 1
+    assert after_first_warnings == 2

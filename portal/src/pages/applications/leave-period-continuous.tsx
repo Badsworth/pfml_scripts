@@ -13,7 +13,6 @@ import LeaveReason from "../../models/LeaveReason";
 import QuestionPage from "../../components/QuestionPage";
 import { Trans } from "react-i18next";
 import findKeyByValue from "../../utils/findKeyByValue";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -81,7 +80,7 @@ export const LeavePeriodContinuous = (props: WithBenefitsApplicationProps) => {
   );
 
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });
@@ -135,11 +134,7 @@ export const LeavePeriodContinuous = (props: WithBenefitsApplicationProps) => {
         hint={
           claim.isMedicalOrPregnancyLeave || claim.isCaringLeave
             ? t("pages.claimsLeavePeriodContinuous.hasLeaveHint", {
-                context:
-                  claim.isMedicalOrPregnancyLeave &&
-                  isFeatureEnabled("updateMedicalCertForm")
-                    ? "updateMedicalCertForm"
-                    : contentContext,
+                context: contentContext,
               })
             : null
         }
@@ -162,11 +157,7 @@ export const LeavePeriodContinuous = (props: WithBenefitsApplicationProps) => {
           <Trans
             i18nKey="pages.claimsLeavePeriodContinuous.datesLead"
             tOptions={{
-              context:
-                claim.isMedicalOrPregnancyLeave &&
-                isFeatureEnabled("updateMedicalCertForm")
-                  ? "updateMedicalCertForm"
-                  : contentContext,
+              context: contentContext,
             }}
           />
         </Lead>

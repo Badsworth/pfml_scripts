@@ -79,6 +79,7 @@ export default function generateDocuments(
       throw new Error(`Invalid document type: ${type}`);
     }
     const generator = generators[type as keyof typeof generators];
+
     return generator.generateDocumentRequestBody(claim, docOptions ?? {});
   });
 }

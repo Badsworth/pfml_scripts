@@ -23,17 +23,16 @@ import massgov.pfml.util.batch.log
 from massgov.pfml.db.models.employees import (
     Address,
     AddressType,
-    Country,
     Employee,
     EmployeePushToFineosQueue,
     Employer,
     EmployerPushToFineosQueue,
     EmployerQuarterlyContribution,
-    GeoState,
     WagesAndContributions,
     WagesAndContributionsHistory,
 )
 from massgov.pfml.db.models.factories import EmployerQuarterlyContributionFactory
+from massgov.pfml.db.models.geo import Country, GeoState
 from massgov.pfml.dor.importer.import_dor import (
     PROCESSED_FOLDER,
     RECEIVED_FOLDER,
@@ -426,7 +425,7 @@ def test_employer_invalid_fein(test_db_session):
     report, report_log_entry = get_new_import_report(test_db_session)
     import_dor.import_employers(
         test_db_session,
-        [employer_data_invalid_type, employer_data_invalid_length,],
+        [employer_data_invalid_type, employer_data_invalid_length],
         report,
         report_log_entry.import_log_id,
     )
@@ -686,8 +685,10 @@ def test_employee_wage_data_create(test_db_session, dor_employer_lookups):
         employee_wage_data_payload, persisted_employee, report_log_entry.import_log_id
     )
 
-    persisted_wage_info = dor_persistence_util.get_wages_and_contributions_by_employee_id_and_filling_period(
-        test_db_session, employee_id, employer_id, employee_wage_data_payload["filing_period"],
+    persisted_wage_info = (
+        dor_persistence_util.get_wages_and_contributions_by_employee_id_and_filling_period(
+            test_db_session, employee_id, employer_id, employee_wage_data_payload["filing_period"]
+        )
     )
 
     assert persisted_wage_info is not None
@@ -878,11 +879,13 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
         updated_employee_wage_data_payload, persisted_employee, report_log_entry3.import_log_id
     )
 
-    persisted_wage_info = dor_persistence_util.get_wages_and_contributions_by_employee_id_and_filling_period(
-        test_db_session,
-        employee_id,
-        employer_id,
-        updated_employee_wage_data_payload["filing_period"],
+    persisted_wage_info = (
+        dor_persistence_util.get_wages_and_contributions_by_employee_id_and_filling_period(
+            test_db_session,
+            employee_id,
+            employer_id,
+            updated_employee_wage_data_payload["filing_period"],
+        )
     )
 
     assert persisted_wage_info is not None
@@ -1044,10 +1047,10 @@ def test_e2e_parse_and_persist(test_db_session, dor_employer_lookups):
     # import
     import_batches = [
         massgov.pfml.dor.importer.paths.ImportBatch(
-            upload_date="20200805", employer_file=employer_file_path, employee_file="",
+            upload_date="20200805", employer_file=employer_file_path, employee_file=""
         ),
         massgov.pfml.dor.importer.paths.ImportBatch(
-            upload_date="20200805", employer_file="", employee_file=employee_file_path,
+            upload_date="20200805", employer_file="", employee_file=employee_file_path
         ),
     ]
 
@@ -1099,10 +1102,10 @@ def test_e2e_parse_and_persist_empty_dba_city(test_db_session, dor_employer_look
     # import
     import_batches = [
         massgov.pfml.dor.importer.paths.ImportBatch(
-            upload_date="20200805", employer_file=employer_file_path, employee_file="",
+            upload_date="20200805", employer_file=employer_file_path, employee_file=""
         ),
         massgov.pfml.dor.importer.paths.ImportBatch(
-            upload_date="20200805", employer_file="", employee_file=employee_file_path,
+            upload_date="20200805", employer_file="", employee_file=employee_file_path
         ),
     ]
 

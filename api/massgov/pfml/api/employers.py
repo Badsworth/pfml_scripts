@@ -1,17 +1,14 @@
-from datetime import date
-
 import connexion
 import flask
-from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
-from werkzeug.exceptions import Conflict, NotFound, Unauthorized
+from werkzeug.exceptions import Conflict, NotFound
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import READ, requires
 from massgov.pfml.api.models.employers.requests import EmployerAddFeinRequest
-from massgov.pfml.api.models.employers.responses import EmployerAddFeinResponse
+from massgov.pfml.api.models.employers.responses import EmployerResponse
 from massgov.pfml.api.validation.employer_rules import (
     EmployerRequiresVerificationDataException,
     validate_employer_being_added,
@@ -22,11 +19,7 @@ from massgov.pfml.api.validation.exceptions import (
     ValidationErrorDetail,
     ValidationException,
 )
-from massgov.pfml.db.models.employees import (
-    Employer,
-    EmployerQuarterlyContribution,
-    UserLeaveAdministrator,
-)
+from massgov.pfml.db.models.employees import Employer, UserLeaveAdministrator
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -34,10 +27,6 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 @requires(READ, "EMPLOYER_API")
 def employer_get_most_recent_withholding_dates(employer_id: str) -> flask.Response:
     with app.db_session() as db_session:
-
-        current_date = date.today()
-        last_years_date = date(current_date.year - 1, current_date.month, current_date.day)
-
         employer = (
             db_session.query(Employer).filter(Employer.employer_id == employer_id).one_or_none()
         )
@@ -45,16 +34,7 @@ def employer_get_most_recent_withholding_dates(employer_id: str) -> flask.Respon
         if employer is None:
             raise NotFound(description="Employer not found")
 
-        contribution = (
-            db_session.query(EmployerQuarterlyContribution)
-            .filter(EmployerQuarterlyContribution.employer_id == employer_id)
-            .filter(EmployerQuarterlyContribution.employer_total_pfml_contribution > 0)
-            .filter(
-                EmployerQuarterlyContribution.filing_period.between(last_years_date, current_date)
-            )
-            .order_by(desc(EmployerQuarterlyContribution.filing_period))
-            .first()
-        )
+        contribution = employer.verification_data
 
         if contribution is None:
             raise PaymentRequired(description="No valid contributions found")
@@ -71,9 +51,6 @@ def employer_add_fein() -> flask.Response:
     add_fein_request = EmployerAddFeinRequest.parse_obj(connexion.request.json)
     current_user = app.current_user()
 
-    if current_user is None:
-        raise Unauthorized()
-
     if add_fein_request.employer_fein is None:
         raise ValidationException(
             errors=[
@@ -82,7 +59,7 @@ def employer_add_fein() -> flask.Response:
                     type=IssueType.required,
                     message="employer_fein is required",
                 )
-            ],
+            ]
         )
 
     with app.db_session() as db_session:
@@ -101,7 +78,7 @@ def employer_add_fein() -> flask.Response:
 
         if employer is not None:
             link = UserLeaveAdministrator(
-                user_id=current_user.user_id, employer_id=employer.employer_id,
+                user_id=current_user.user_id, employer_id=employer.employer_id
             )
             db_session.add(link)
 
@@ -127,5 +104,5 @@ def employer_add_fein() -> flask.Response:
         return response_util.success_response(
             message="Successfully added FEIN to user",
             status_code=201,
-            data=EmployerAddFeinResponse.from_orm(employer).dict(),
+            data=EmployerResponse.from_orm(employer).dict(),
         ).to_api_response()

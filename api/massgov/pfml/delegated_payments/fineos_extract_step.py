@@ -13,6 +13,8 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import LkReferenceFileType, ReferenceFile, ReferenceFileType
 from massgov.pfml.delegated_payments.step import Step
+from massgov.pfml.util.collections.dict import make_keys_lowercase
+from massgov.pfml.util.csv import download_and_parse_csv
 
 logger = logging.get_logger(__name__)
 
@@ -48,6 +50,12 @@ IAWW_EXTRACT_CONFIG = ExtractConfig(
     "fineos_data_export_path",
 )
 
+REQUEST_1099_EXTRACT_CONFIG = ExtractConfig(
+    payments_util.REQUEST_1099_EXTRACT_FILES,
+    ReferenceFileType.FINEOS_1099_DATA_EXTRACT,
+    "fineos_data_export_path",
+)
+
 
 class ExtractData:
     date_str: str
@@ -56,7 +64,13 @@ class ExtractData:
 
     reference_file: ReferenceFile
 
-    def __init__(self, s3_locations: List[str], date_str: str, extract_config: ExtractConfig):
+    def __init__(
+        self,
+        s3_locations: List[str],
+        date_str: str,
+        extract_config: ExtractConfig,
+        validate_all_files: bool = True,
+    ):
         self.date_str = date_str
         self.extract_path_mapping = {}
 
@@ -65,7 +79,7 @@ class ExtractData:
                 if s3_location.endswith(extract.file_name):
                     self.extract_path_mapping[s3_location] = extract
 
-        if len(extract_config.extracts) != len(self.extract_path_mapping):
+        if validate_all_files and len(extract_config.extracts) != len(self.extract_path_mapping):
             expected_file_names = [extract.file_name for extract in extract_config.extracts]
             error_msg = f"Expected to find files {expected_file_names}, but found {s3_locations}"
             raise Exception(error_msg)
@@ -90,6 +104,7 @@ class FineosExtractStep(Step):
     class Metrics(str, enum.Enum):
         FINEOS_PREFIX = "fineos_prefix"
         ARCHIVE_PATH = "archive_path"
+        FILE_TYPE = "file_type"
         RECORDS_PROCESSED_COUNT = "records_processed_count"
 
     def __init__(
@@ -103,11 +118,21 @@ class FineosExtractStep(Step):
         self.active_extract_data = None
         self.active_extract_data_date_str = None
 
+    def get_import_type(self) -> str:
+        """Use the reference file type description for an import log type distinction"""
+        return self.extract_config.reference_file_type.reference_file_type_description
+
     def run_step(self) -> None:
         logger.info(
             "Starting processing of %s files",
             self.extract_config.reference_file_type.reference_file_type_description,
         )
+        self.set_metrics(
+            {
+                self.Metrics.FILE_TYPE: self.extract_config.reference_file_type.reference_file_type_description
+            }
+        )
+
         with tempfile.TemporaryDirectory() as download_directory:
             self.process_extracts(pathlib.Path(download_directory))
 
@@ -143,12 +168,20 @@ class FineosExtractStep(Step):
             logger.info(
                 "Processing files in date group: %s", date_str, extra={"date_group": date_str}
             )
+            is_latest_extract = date_str == latest_date_str
 
-            extract_data = ExtractData(s3_file_locations, date_str, self.extract_config)
+            # We'll only validate all files present for the latest
+            # extract that we're going to actually store to the DB
+            extract_data = ExtractData(
+                s3_file_locations,
+                date_str,
+                self.extract_config,
+                validate_all_files=is_latest_extract,
+            )
             self.active_extract_data = extract_data
             self.active_extract_data_date_str = date_str
 
-            if date_str != latest_date_str:
+            if not is_latest_extract:
                 self.move_files_from_received_to_out_dir(
                     extract_data, payments_util.Constants.S3_INBOUND_SKIPPED_DIR
                 )
@@ -195,6 +228,7 @@ class FineosExtractStep(Step):
             expected_file_names,
             self.extract_config.reference_file_type,
             self.extract_config.source_folder_s3_config_key,
+            allow_missing=True,  # We'll check later
         )
         data_by_date = payments_util.group_s3_files_by_date(expected_file_names)
 
@@ -239,7 +273,7 @@ class FineosExtractStep(Step):
 
     def _download_and_index_data(self, extract_data: ExtractData, download_directory: str) -> None:
         for file_location, extract in extract_data.extract_path_mapping.items():
-            records = payments_util.download_and_parse_csv(file_location, download_directory)
+            records = download_and_parse_csv(file_location, download_directory)
 
             logger.info(
                 "Storing extract data from %s to %s with reference_file_id %s and import_log_id %s",
@@ -248,17 +282,38 @@ class FineosExtractStep(Step):
                 extract_data.reference_file.reference_file_id,
                 self.get_import_log_id(),
             )
-            for i, record in enumerate(records):
-                # Verify that the expected columns are present
-                if i == 0:
-                    payments_util.validate_columns_present(record, extract)
 
-                lower_key_record = payments_util.make_keys_lowercase(record)
+            unconfigured_columns = []
+
+            for i, record in enumerate(records):
+                lower_key_record = make_keys_lowercase(record)
+
+                if i == 0:
+                    # Verify that the expected columns are present
+                    payments_util.validate_columns_present(lower_key_record, extract)
+
+                    # Check if there are any fields that don't have a matching
+                    # column in the table model
+                    unconfigured_columns = payments_util.get_unconfigured_fineos_columns(
+                        lower_key_record, extract.table
+                    )
+                    if len(unconfigured_columns) > 0:
+                        logger.warning(
+                            "Unconfigured columns in FINEOS extract.",
+                            extra={
+                                "extract.table.__name__": extract.table.__name__,
+                                "fields": ",".join(unconfigured_columns),
+                            },
+                        )
+
                 staging_table_instance = payments_util.create_staging_table_instance(
                     lower_key_record,
                     extract.table,
                     extract_data.reference_file,
                     self.get_import_log_id(),
+                    # These were already logged when we checked the first record earlier,
+                    # so we don't need to log them again.
+                    ignore_properties=unconfigured_columns,
                 )
                 self.db_session.add(staging_table_instance)
                 self.increment(self.Metrics.RECORDS_PROCESSED_COUNT)

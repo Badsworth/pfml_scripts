@@ -2,6 +2,7 @@ import uuid
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Optional, Type, TypeVar, cast
 
+import defusedxml.ElementTree as etree
 import sqlalchemy.types as types
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.engine.interfaces import Dialect
@@ -22,7 +23,7 @@ else:
     StrEnumType = types.TypeDecorator
 
 # (PostgreSQLUUID) https://github.com/dropbox/sqlalchemy-stubs/issues/94
-PostgreSQLUUID = cast("types.TypeEngine[uuid.UUID]", UUID(as_uuid=True),)
+PostgreSQLUUID = cast("types.TypeEngine[uuid.UUID]", UUID(as_uuid=True))
 
 
 class StrEnum(StrEnumType):
@@ -56,3 +57,28 @@ class StrEnum(StrEnumType):
             return None
 
         return self._enum_type(value)
+
+
+class XMLType(types.UserDefinedType):
+    def get_col_spec(self):
+        return "XML"
+
+    def bind_processor(self, dialect):
+        def process(value):
+            if value is not None:
+                if isinstance(value, str):
+                    return value
+                else:
+                    return etree.tostring(value, encoding="unicode")
+            else:
+                return None
+
+        return process
+
+    def result_processor(self, dialect, coltype):
+        def process(value):
+            if value is not None:
+                value = etree.fromstring(value)
+            return value
+
+        return process

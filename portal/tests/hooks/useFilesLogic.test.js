@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react-hooks";
-import TempFileCollection from "../../src/models/TempFileCollection";
+import ApiResourceCollection from "../../src/models/ApiResourceCollection";
 import { ValidationError } from "../../src/errors";
 import { makeFile } from "../test-utils";
 import tracker from "../../src/services/tracker";
@@ -26,7 +26,7 @@ describe("useFilesLogic", () => {
   });
 
   it("returns collection and callback functions", () => {
-    expect(files).toBeInstanceOf(TempFileCollection);
+    expect(files).toBeInstanceOf(ApiResourceCollection);
     expect(typeof processFiles).toBe("function");
     expect(typeof removeFile).toBe("function");
   });
@@ -73,9 +73,15 @@ describe("useFilesLogic", () => {
       const error = catchError.mock.calls[0][0];
       expect(error).toBeInstanceOf(ValidationError);
       expect(error.issues).toMatchInlineSnapshot(`
-        Array [
-          Object {
-            "message": "We could not upload: file1. Files must be smaller than 4.5 MB.",
+        [
+          {
+            "extra": {
+              "disallowedFileNames": "file1",
+              "sizeLimit": 4.5,
+            },
+            "field": "file",
+            "namespace": "documents",
+            "type": "clientSideError_size",
           },
         ]
       `);
@@ -102,7 +108,7 @@ describe("useFilesLogic", () => {
       expect(files.items).toEqual([]);
 
       // After feature flag
-      process.env.featureFlags = { sendLargePdfToApi: true };
+      process.env.featureFlags = JSON.stringify({ sendLargePdfToApi: true });
       await act(async () => await processFiles([compressiblePdf]));
       expect(files.items).toEqual([
         { id: expect.any(String), file: compressiblePdf },
@@ -110,7 +116,7 @@ describe("useFilesLogic", () => {
     });
 
     it("prevents PDF files when sendLargePdfToApi feature flag is enabled and PDF is more than 10mb", async () => {
-      process.env.featureFlags = { sendLargePdfToApi: true };
+      process.env.featureFlags = JSON.stringify({ sendLargePdfToApi: true });
       const tooBigPdf = makeFile({ name: "file1", type: "application/pdf" });
       Object.defineProperty(tooBigPdf, "size", {
         get: () => 10000000,
@@ -121,9 +127,15 @@ describe("useFilesLogic", () => {
       const error = catchError.mock.calls[0][0];
       expect(error).toBeInstanceOf(ValidationError);
       expect(error.issues).toMatchInlineSnapshot(`
-        Array [
-          Object {
-            "message": "We could not upload: file1. Files must be smaller than 10 MB.",
+        [
+          {
+            "extra": {
+              "disallowedFileNames": "file1",
+              "sizeLimit": 10,
+            },
+            "field": "file",
+            "namespace": "documents",
+            "type": "clientSideError_size",
           },
         ]
       `);
@@ -141,9 +153,15 @@ describe("useFilesLogic", () => {
       const error = catchError.mock.calls[0][0];
       expect(error).toBeInstanceOf(ValidationError);
       expect(error.issues).toMatchInlineSnapshot(`
-        Array [
-          Object {
-            "message": "We could not upload: file1. Choose a PDF or an image file (.jpg, .jpeg, .png).",
+        [
+          {
+            "extra": {
+              "disallowedFileNames": "file1",
+              "sizeLimit": 4.5,
+            },
+            "field": "file",
+            "namespace": "documents",
+            "type": "clientSideError_type",
           },
         ]
       `);
@@ -170,9 +188,15 @@ describe("useFilesLogic", () => {
       const error = catchError.mock.calls[0][0];
       expect(error).toBeInstanceOf(ValidationError);
       expect(error.issues).toMatchInlineSnapshot(`
-        Array [
-          Object {
-            "message": "We could not upload: file1. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than 4.5 MB.",
+        [
+          {
+            "extra": {
+              "disallowedFileNames": "file1",
+              "sizeLimit": 4.5,
+            },
+            "field": "file",
+            "namespace": "documents",
+            "type": "clientSideError_sizeAndType",
           },
         ]
       `);

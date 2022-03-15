@@ -16,6 +16,7 @@ import {
   min as minDate,
   parseISO,
   subMonths,
+  subDays,
 } from "date-fns";
 import faker from "faker";
 import { ClaimSpecification, LeaveReason } from "./Claim";
@@ -82,6 +83,7 @@ export default function generateLeaveDetails(
   };
 
   const earliestStartDate = getEarliestStartDate(details);
+  const latestEndDate = getLatestEndDate(details);
 
   details.employer_notification_date = formatISO(
     generateNotificationDate(earliestStartDate, !!config.shortNotice),
@@ -103,20 +105,23 @@ export default function generateLeaveDetails(
         case "Newborn":
           details.child_birth_date = makeChildPlacementDate(
             config.bondingDate,
-            earliestStartDate
+            earliestStartDate,
+            latestEndDate
           );
           details.pregnant_or_recent_birth = true;
           break;
         case "Adoption":
           details.child_placement_date = makeChildPlacementDate(
             config.bondingDate ?? "past",
-            earliestStartDate
+            earliestStartDate,
+            latestEndDate
           );
           break;
         case "Foster Care":
           details.child_placement_date = makeChildPlacementDate(
             config.bondingDate ?? "past",
-            earliestStartDate
+            earliestStartDate,
+            latestEndDate
           );
           break;
         default:
@@ -193,6 +198,7 @@ type IntermittentLeaveSpec =
   | Partial<IntermittentLeavePeriods>
   | Partial<IntermittentLeavePeriods>[]
   | true;
+
 function generateIntermittentLeavePeriods(
   shortLeave: boolean,
   work_pattern: WorkPattern,
@@ -280,19 +286,39 @@ function getEarliestStartDate(details: ApplicationLeaveDetails): Date {
   return minDate(leaveDates);
 }
 
+function getLatestEndDate(details: ApplicationLeaveDetails): Date {
+  const leaveDates: Date[] = [];
+
+  const leavePeriods = [
+    details.continuous_leave_periods as ContinuousLeavePeriods[],
+    details.reduced_schedule_leave_periods as ReducedScheduleLeavePeriods[],
+    details.intermittent_leave_periods as IntermittentLeavePeriods[],
+  ];
+  leavePeriods.forEach((period) => {
+    if (period === undefined || period.length < 1) {
+      return;
+    }
+    leaveDates.push(parseISO(period[0].end_date as string));
+  });
+  if (leaveDates.length < 1)
+    throw new Error("No leave dates have been specified");
+  return maxDate(leaveDates);
+}
+
 function makeChildPlacementDate(
   spec: ClaimSpecification["bondingDate"],
-  leaveStart: Date
+  leaveStart: Date,
+  leaveEnd: Date
 ): string {
   switch (spec) {
     case "far-past":
       return formatISODate(
-        faker.date.between(subMonths(new Date(), 13), subMonths(new Date(), 12))
+        faker.date.between(subMonths(new Date(), 12), subMonths(new Date(), 11))
       );
     case "past":
       // Recent birth date.
       return formatISODate(
-        faker.date.between(subMonths(new Date(), 1), new Date())
+        faker.date.between(subMonths(leaveEnd, 1), subDays(leaveEnd, 1))
       );
     case "future":
       // A date after 01-02-2021, but no more than startDate

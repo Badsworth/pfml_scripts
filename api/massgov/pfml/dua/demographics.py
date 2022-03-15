@@ -1,10 +1,6 @@
-import csv
 import os
-import re
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
-
-from sqlalchemy.dialects.postgresql import insert
+from typing import List, Optional, Tuple
 
 import massgov.pfml.db as db
 import massgov.pfml.util.batch.log as batch_log
@@ -20,83 +16,26 @@ from massgov.pfml.db.models.employees import (
     ReferenceFile,
     ReferenceFileType,
 )
-from massgov.pfml.dua.config import DUAMoveItConfig, DUAS3Config
-from massgov.pfml.util.datetime import utcnow
-from massgov.pfml.util.sftp_s3_transfer import (
-    SftpS3TransferConfig,
-    copy_from_sftp_to_s3_and_archive_files,
-)
+from massgov.pfml.dua.config import DUAMoveItConfig, DUATransferConfig
+from massgov.pfml.dua.constants import Constants, Metrics
+from massgov.pfml.dua.util import download_files_from_moveit, load_rows_from_file_path
 
 logger = logging.get_logger(__name__)
-
-
-class Metrics:
-    DUA_DEMOGRAPHICS_FILE_DOWNLOADED_COUNT = "dua_demographics_file_downloaded_count"
-    PENDING_DUA_DEMOGRAPHICS_REFERENCE_FILES_COUNT = (
-        "pending_dua_demographics_reference_files_count"
-    )
-    SUCCESSFUL_DUA_DEMOGRAPHICS_REFERENCE_FILES_COUNT = (
-        "successful_dua_demographics_reference_files_count"
-    )
-    TOTAL_DUA_DEMOGRAPHICS_ROW_COUNT = "total_dua_demographics_row_count"
-    UNSUCCESSFUL_DUA_PAYMENT_REFERENCE_FILES_COUNT = (
-        "unsuccessful_dua_demographics_reference_files_count"
-    )
-    INSERTED_DUA_DEMOGRAPHICS_ROW_COUNT = "inserted_dua_demographics_row_count"
-    OCCUPATION_ORG_UNIT_SET_COUNT = "occupation_org_unit_set_count"
-    OCCUPATION_ORG_UNIT_SKIPPED_COUNT = "occupation_org_unit_skipped_count"
-    MISSING_DUA_REPORTING_UNIT_COUNT = "missing_dua_reporting_unit_count"
-    CREATED_EMPLOYEE_OCCUPATION_COUNT = "created_employee_occupation_count"
-    DUA_REPORTING_UNIT_MISSING_FINEOS_ORG_UNIT_COUNT = (
-        "dua_reporting_unit_missing_fineos_org_unit_count"
-    )
-
-
-class Constants:
-    CUSTOMER_ID_FIELD = "FINEOS"
-    EMPR_FEIN_FIELD = "FEIN"
-    DOB_FIELD = "BirthDt"
-    GENDER_CODE_FIELD = "GenderCd"
-    OCCUPATION_CODE_FIELD = "OccupationCode"
-    OCCUPATION_DESCRIPTION_FIELD = "OccupationDesc"
-    EMPR_REPORTING_UNIT_NO_FIELD = "EmployerUnitNumber"
-
-    DUA_DEMOGRAPHIC_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP = {
-        CUSTOMER_ID_FIELD: "fineos_customer_number",
-        DOB_FIELD: "date_of_birth",
-        GENDER_CODE_FIELD: "gender_code",
-        OCCUPATION_CODE_FIELD: "occupation_code",
-        OCCUPATION_DESCRIPTION_FIELD: "occupation_description",
-        EMPR_FEIN_FIELD: "employer_fein",
-        EMPR_REPORTING_UNIT_NO_FIELD: "employer_reporting_unit_number",
-    }
 
 
 def download_demographics_file_from_moveit(
     db_session: db.Session,
     log_entry: batch_log.LogEntry,
-    s3_config: DUAS3Config,
+    transfer_config: DUATransferConfig,
     moveit_config: DUAMoveItConfig,
 ) -> List[ReferenceFile]:
-    transfer_config = SftpS3TransferConfig(
-        s3_bucket_uri=s3_config.s3_bucket_uri,
-        source_dir=moveit_config.moveit_inbound_path,
-        archive_dir=moveit_config.moveit_archive_path,
-        dest_dir=s3_config.s3_pending_directory_path,
-        sftp_uri=moveit_config.moveit_sftp_uri,
-        ssh_key_password=moveit_config.moveit_ssh_key_password,
-        ssh_key=moveit_config.moveit_ssh_key,
-        regex_filter=re.compile(r"DUA_DFML_CLM_DEM_\d+.csv"),
+
+    file_name = r"DUA_DFML_CLM_DEM_\d+.csv"
+    reference_file_type_id = ReferenceFileType.DUA_DEMOGRAPHICS_FILE.reference_file_type_id
+
+    copied_reference_files = download_files_from_moveit(
+        db_session, transfer_config, moveit_config, file_name, reference_file_type_id
     )
-
-    copied_reference_files = copy_from_sftp_to_s3_and_archive_files(transfer_config, db_session)
-    for ref_file in copied_reference_files:
-        ref_file.reference_file_type_id = (
-            ReferenceFileType.DUA_DEMOGRAPHICS_FILE.reference_file_type_id
-        )
-
-    # Commit the ReferenceFile changes to the database.
-    db_session.commit()
 
     if len(copied_reference_files) == 0:
         logger.info("No new demographics file were detected in the SFTP server.")
@@ -117,11 +56,11 @@ def load_demographics_file(
     db_session: db.Session,
     ref_file: ReferenceFile,
     log_entry: batch_log.LogEntry,
-    s3_config: DUAS3Config,
+    transfer_config: DUATransferConfig,
     move_files: bool = False,
 ) -> Tuple[int, int]:
-    archive_dir = os.path.join(s3_config.s3_bucket_uri, s3_config.s3_archive_directory_path)
-    error_dir = os.path.join(s3_config.s3_bucket_uri, s3_config.s3_error_directory_path)
+    archive_dir = os.path.join(transfer_config.base_path, transfer_config.archive_directory_path)
+    error_dir = os.path.join(transfer_config.base_path, transfer_config.error_directory_path)
 
     log_entry.increment(Metrics.PENDING_DUA_DEMOGRAPHICS_REFERENCE_FILES_COUNT)
 
@@ -151,7 +90,7 @@ def load_demographics_file(
             ref_file.file_location = dest_path
 
         db_session.commit()
-        log_entry.increment(Metrics.UNSUCCESSFUL_DUA_PAYMENT_REFERENCE_FILES_COUNT)
+        log_entry.increment(Metrics.UNSUCCESSFUL_DUA_DEMOGRAPHICS_REFERENCE_FILES_COUNT)
 
         # Log exceptions but continue attempting to load other payment files into the database.
         logger.exception(
@@ -191,7 +130,11 @@ def set_employee_occupation_from_demographic_data(
     for row in demographic_data:
         fineos_customer_number = row.fineos_customer_number
         employer_reporting_unit_number = row.employer_reporting_unit_number
-        employer_fein = row.employer_fein
+        # some of the FEINs in the DUA data are missing their leading zeros/are
+        # not 9 digits long, so to have best chance to match against our
+        # Employer records (which all correctly have 9 digit FEINs) pad the left
+        # with zero
+        employer_fein = row.employer_fein.zfill(9)
 
         log_attributes = {
             "employee_fineos_customer_number": fineos_customer_number,
@@ -209,11 +152,21 @@ def set_employee_occupation_from_demographic_data(
             )
             continue
 
-        existing_employee = (
+        existing_employees = (
             db_session.query(Employee).filter(
                 Employee.fineos_customer_number == fineos_customer_number
             )
-        ).one_or_none()
+        ).all()
+        if len(existing_employees) > 1:
+            log_attributes["employee_duplicate_count"] = len(existing_employees)
+            logger.warning(
+                "Duplicate employees found for fineos_customer_number. Skipping",
+                extra=log_attributes,
+            )
+            log_entry.increment(Metrics.EMPLOYEE_SKIPPED_COUNT)
+            continue
+        else:
+            existing_employee = existing_employees[0] if len(existing_employees) == 1 else None
 
         existing_employer = (
             db_session.query(Employer).filter(Employer.employer_fein == employer_fein)
@@ -256,6 +209,13 @@ def set_employee_occupation_from_demographic_data(
             log_entry.increment(Metrics.DUA_REPORTING_UNIT_MISSING_FINEOS_ORG_UNIT_COUNT)
             continue
 
+        if found_reporting_unit.organization_unit.employer_id != existing_employer.employer_id:
+            log_attributes["dua_reporting_unit_id"] = found_reporting_unit.dua_reporting_unit_id
+            log_attributes["organization_unit_id"] = found_reporting_unit.organization_unit_id
+            logger.warning("FINEOS Org Unit is not for same employer", extra=log_attributes)
+            log_entry.increment(Metrics.DUA_REPORTING_UNIT_MISMATCHED_EMPLOYER_COUNT)
+            continue
+
         # Create an EmployeeOccupation if it doesn't exist
         if len(employee_occupations) == 0:
             employee_occupation = EmployeeOccupation()
@@ -286,53 +246,20 @@ def set_employee_occupation_from_demographic_data(
     db_session.commit()
 
 
-def _convert_dict_with_csv_keys_to_db_keys(csv_data: Dict[str, Any]) -> Dict[str, Any]:
-    # Load empty strings as empty values.
-    return {
-        Constants.DUA_DEMOGRAPHIC_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP[k]: "" if v == "" else v
-        for k, v in csv_data.items()
-    }
-
-
 def _load_demographic_rows_from_file_path(
-    file_location: str, db_session: db.Session,
+    file_location: str, db_session: db.Session
 ) -> Tuple[int, int]:
-    total_row_count = 0
-    inserted_row_count = 0
-
-    # filter out duplicate rows in same file
-    unique_rows = set()
-    rows_to_insert = []
 
     logger.info("Load demographic rows started", extra={"file_location": file_location})
 
     # Load to database.
-    with file_util.open_stream(file_location) as file:
-        for row in csv.DictReader(file):
-            total_row_count += 1
-
-            row_values = tuple(row.values())
-            if row_values not in unique_rows:
-                db_data = _convert_dict_with_csv_keys_to_db_keys(row)
-                db_data["created_at"] = utcnow()
-                unique_rows.add(tuple(row.values()))
-                rows_to_insert.append(db_data)
-
-        result = db_session.execute(
-            insert(DuaEmployeeDemographics.__table__)
-            .on_conflict_do_nothing()
-            .values(rows_to_insert)
-        )
-        inserted_row_count += result.rowcount
-
-    db_session.commit()
-    logger.info(
-        "Load demographic rows finished",
-        extra={
-            "file_location": file_location,
-            "total_row_count": total_row_count,
-            "inserted_row_count": inserted_row_count,
-        },
+    result = load_rows_from_file_path(
+        file_location,
+        db_session,
+        Constants.DUA_DEMOGRAPHIC_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP,
+        DuaEmployeeDemographics,
     )
 
-    return total_row_count, inserted_row_count
+    logger.info("Load demographic rows finished", extra={"file_location": file_location, **result})
+
+    return result["total_row_count"], result["inserted_row_count"]

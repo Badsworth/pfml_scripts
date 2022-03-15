@@ -1,0 +1,63 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ConcurrentLeave renders the component 1`] = `
+<div>
+  <h3
+    class="font-heading-sm text-bold"
+  >
+    Concurrent accrued paid leave
+  </h3>
+  <p>
+    Your employee has told us about the following accrued paid leave they plan to use concurrent with their paid leave from PFML. This includes paid vacation time, sick time, personal time, and other paid time off. It does not include a family or medical leave policy or a disability program.
+  </p>
+  <p>
+    Your employee won’t receive PFML payments for the first 7 calendar days of their PFML leave from 1/1/2022 to 1/7/2022. During those 7 days they may use accrued paid leave, and you and your employee 
+    <strong>
+      shouldn’t
+    </strong>
+     report it.
+  </p>
+  <table
+    class="usa-table usa-table--borderless width-full usa-table--stacked"
+  >
+    <thead>
+      <tr>
+        <th
+          scope="col"
+        >
+          Date range
+        </th>
+        <th />
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th
+          data-label="Date range"
+          scope="row"
+        >
+          3/1/2020 to 3/6/2020
+        </th>
+        <td>
+          <button
+            class="usa-button position-relative text-no-wrap usa-button--unstyled"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="usa-icon text-middle margin-right-05 margin-top-neg-05"
+              focusable="false"
+              role="img"
+            >
+              <use
+                xlink:href="/img/sprite.svg#edit"
+              />
+            </svg>
+            Amend
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+`;

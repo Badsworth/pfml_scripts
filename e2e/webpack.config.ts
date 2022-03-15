@@ -1,11 +1,10 @@
-import TsconfigPathsPlugin from "tsconfig-paths-webpack-plugin";
-
 module.exports = {
   mode: "development",
   resolve: {
-    // @see https://medium.com/better-programming/the-right-usage-of-aliases-in-webpack-typescript-4418327f47fa
-    plugins: [new TsconfigPathsPlugin()],
     extensions: [".ts", ".js"],
+    fallback: {
+      path: require.resolve("path-browserify"),
+    },
   },
   module: {
     rules: [

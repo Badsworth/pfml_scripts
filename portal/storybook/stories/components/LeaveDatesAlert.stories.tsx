@@ -3,7 +3,7 @@ import { Props } from "types/common";
 import React from "react";
 
 export default {
-  title: "Components/LeaveDatesAlert",
+  title: "Features/Applications/LeaveDatesAlert",
   component: LeaveDatesAlert,
   args: {
     endDate: "2021-03-31",

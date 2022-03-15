@@ -23,6 +23,37 @@ class ImportBatch:
     employee_file: str
 
 
+def get_pending_filing_files_to_process(path: str) -> List[str]:
+    import_files: List[str] = []
+
+    files_for_import = massgov.pfml.util.files.list_files(str(path))
+    files_for_import.sort()
+
+    for filename in files_for_import:
+        match = re.match(r"(DORDUADFML.*_)(\d+)", filename)
+
+        if match is not None:
+            if path.endswith("/"):
+                import_files.append("{}{}".format(path, filename))
+            else:
+                import_files.append("{}/{}".format(path, filename))
+
+    return import_files
+
+
+def get_exemption_file_to_process(path: str) -> str:
+    files_for_import = massgov.pfml.util.files.list_files(str(path))
+    files_for_import.sort()
+
+    for filename in files_for_import:
+        match = re.match(r"CompaniesReturningToStatePlan.*.csv", filename)
+
+        if match is not None:
+            return "{}{}".format(path, filename)
+
+    raise ValueError("Exemption file not found")
+
+
 def get_files_to_process(path: str) -> List[ImportBatch]:
     employer_files, employee_files = get_files_for_import(path)
     import_batches: List[ImportBatch] = []
@@ -86,7 +117,7 @@ def get_files_for_import(path: str) -> Tuple[Iterator[Any], Iterator[Any]]:
     return employer_files, employee_files
 
 
-def get_files_for_import_grouped_by_date(path: str,) -> Dict[str, Dict[str, str]]:
+def get_files_for_import_grouped_by_date(path: str) -> Dict[str, Dict[str, str]]:
     """Get the paths (s3 keys) of files in the received folder of the bucket"""
 
     files_by_date: Dict[str, Dict[str, str]] = {}

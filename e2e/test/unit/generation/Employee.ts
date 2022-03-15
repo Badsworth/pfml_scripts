@@ -19,11 +19,11 @@ const removeStorage = async () => {
 };
 
 const wageTests: [WageSpecification, number, number][] = [
-  ["ineligible", 0, 5399],
-  ["eligible", 5400, 100000],
+  ["ineligible", 0, 5699],
+  ["eligible", 5700, 100000],
   ["high", 90000, 100000],
   ["medium", 30000, 90000],
-  ["low", 5400, 30000],
+  ["low", 5700, 30000],
   [10000, 10000, 10000],
 ];
 

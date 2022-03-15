@@ -68,7 +68,7 @@ function withWithholding<T extends WithWithholdingProps>(
       <React.Fragment>
         {!withholding && shouldLoadWithholding && (
           <div className="margin-top-8 text-center">
-            <Spinner aria-valuetext={t("components.spinner.label")} />
+            <Spinner aria-label={t("components.spinner.label")} />
           </div>
         )}
         {withholding && (

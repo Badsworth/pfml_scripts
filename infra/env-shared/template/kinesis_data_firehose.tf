@@ -16,14 +16,14 @@ resource "aws_kinesis_firehose_delivery_stream" "aws_waf" {
   }
 }
 
-# Kinesis Data Firehose (KDF) data sources. Only one arn per resource is 
-# currently supported. 
+# Kinesis Data Firehose (KDF) data sources. Only one arn per resource is
+# currently supported.
 
 #------------------------------------------------------------------------------#
 #              AWS WAF Regional Rate Limit ACL (API Gateway)                   #
 #------------------------------------------------------------------------------#
-resource "aws_wafv2_web_acl_logging_configuration" "regional_rate_based_acl" {
-  count                   = var.enable_regional_rate_based_acl ? 1 : 0
+resource "aws_wafv2_web_acl_logging_configuration" "regional_api_acl" {
+  count                   = var.enable_regional_api_acl ? 1 : 0
   log_destination_configs = [aws_kinesis_firehose_delivery_stream.aws_waf.arn]
-  resource_arn            = aws_wafv2_web_acl.regional_rate_based_acl[0].arn
+  resource_arn            = aws_wafv2_web_acl.regional_api_acl.arn
 }

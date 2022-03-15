@@ -4,7 +4,6 @@ using iText.Kernel.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using PfmlPdfApi.Models;
 using PfmlPdfApi.Utilities;
@@ -15,6 +14,7 @@ namespace PfmlPdfApi.Services
 {
     public interface IPdfDocumentService
     {
+        Task<ResponseMessage<CreatedDocumentDto>> UpdateTemplate();
         Task<ResponseMessage<CreatedDocumentDto>> Generate(DocumentDto dto);
         Task<ResponseMessage<IList<CreatedDocumentDto>>> Merge(MergeDto dto);
     }
@@ -30,13 +30,33 @@ namespace PfmlPdfApi.Services
             template1099 = configuration.GetValue<string>("AppSettings:Template1099");
         }
 
+        public async Task<ResponseMessage<CreatedDocumentDto>> UpdateTemplate()
+        {
+            var response = new ResponseMessage<CreatedDocumentDto>(null);
+            string srcFileName = $"Assets/1099/{template1099}";
+            string desFileName = template1099;
+
+            try
+            {
+                var mStream = new MemoryStream(await File.ReadAllBytesAsync(srcFileName));
+                var fileCreated = await _amazonS3Service.CreateFileAsync(desFileName, mStream, "text/html");
+            }
+            catch (Exception ex)
+            {
+                response.Status = MessageConstants.MsgStatusFailed;
+                response.ErrorMessage = ex.Message;
+            }
+
+            return response;
+        }
+
         public async Task<ResponseMessage<CreatedDocumentDto>> Generate(DocumentDto dto)
         {
             var response = new ResponseMessage<CreatedDocumentDto>(null);
             string folderName = $"Batch-{dto.BatchId}";
             string formsFolderName = $"{folderName}/Forms";
             string subBatchFolderName = $"{formsFolderName}/{dto.Name.Split("/")[0]}";
-            string fileName = $"{subBatchFolderName}/{dto.Id}_{dto.Name.Split("/")[1]}.pdf";
+            string fileName = $"{subBatchFolderName}/{dto.Id}.pdf";
 
             try
             {
@@ -135,6 +155,7 @@ namespace PfmlPdfApi.Services
             template = template.Replace("[FED_TAX_WITHHELD]", dto.FederalTaxesWithheld.ToString());
             template = template.Replace("[NAME]", dto.Name.Split("/")[1]);
             template = template.Replace("[ADDRESS]", dto.Address);
+            template = template.Replace("[ADDRESS2]", dto.Address2);
             template = template.Replace("[CITY]", dto.City);
             template = template.Replace("[STATE]", dto.State);
             template = template.Replace("[ZIP]", dto.ZipCode);

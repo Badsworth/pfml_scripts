@@ -3,6 +3,7 @@
  * @file Document (AKA File) model and enum values
  */
 import LeaveReason from "./LeaveReason";
+import { ValuesOf } from "../../types/common";
 
 const CertificationType = {
   certificationForm: "Certification Form",
@@ -32,8 +33,8 @@ export const OtherDocumentType = {
 } as const;
 
 export type DocumentTypeEnum =
-  | typeof CertificationType[keyof typeof CertificationType]
-  | typeof OtherDocumentType[keyof typeof OtherDocumentType];
+  | ValuesOf<typeof CertificationType>
+  | ValuesOf<typeof OtherDocumentType>;
 
 /**
  * Enums for Document `document_type` field.  In the `certification` object, `certificationForm` is only used for uploads of certification forms; the API then sets the plan
@@ -69,6 +70,71 @@ export interface ClaimDocument {
   document_type: DocumentTypeEnum;
   fineos_document_id: string;
   name: string | null;
+}
+
+/**
+ * Get only documents associated with a given Application
+ */
+export function filterByApplication(
+  items: Array<BenefitsApplicationDocument | ClaimDocument>,
+  application_id: string
+) {
+  return items.filter((item) => {
+    return (
+      isBenefitsApplicationDocument(item) &&
+      item.application_id === application_id
+    );
+  });
+}
+
+/**
+ * Get only documents associated with a given selection of document_types
+ */
+export function findDocumentsByTypes<
+  T extends BenefitsApplicationDocument | ClaimDocument
+>(documents: T[], document_types: DocumentTypeEnum[]): T[] {
+  const lowerCaseDocumentTypes = document_types.map((documentType) =>
+    documentType.toLowerCase()
+  );
+
+  return documents.filter((document) => {
+    // Ignore casing differences by comparing lowercased enums
+    return lowerCaseDocumentTypes.includes(
+      document.document_type.toLowerCase()
+    );
+  });
+}
+
+/**
+ * Get only documents that are legal notices.
+ */
+export function getLegalNotices(
+  documents: Array<BenefitsApplicationDocument | ClaimDocument>
+) {
+  return findDocumentsByTypes(documents, [
+    DocumentType.appealAcknowledgment,
+    DocumentType.approvalNotice,
+    DocumentType.denialNotice,
+    DocumentType.requestForInfoNotice,
+    DocumentType.withdrawalNotice,
+    DocumentType.maximumWeeklyBenefitChangeNotice,
+    DocumentType.benefitAmountChangeNotice,
+    DocumentType.leaveAllotmentChangeNotice,
+    DocumentType.approvedTimeCancelled,
+    DocumentType.changeRequestApproved,
+    DocumentType.changeRequestDenied,
+  ]);
+}
+
+/**
+ * Get only documents that are certification documents for a specific leave.
+ * This excludes ID verification docs, which aren't **leave** certification,
+ * and also not a doc type we want to surface to leave admins.
+ */
+export function getLeaveCertificationDocs<
+  T extends BenefitsApplicationDocument | ClaimDocument
+>(documents: T[]) {
+  return findDocumentsByTypes(documents, Object.values(CertificationType));
 }
 
 export function isBenefitsApplicationDocument(

@@ -1,6 +1,6 @@
-import { ClaimEmployee, ClaimEmployer, ManagedRequirement } from "./Claim";
-
+import { ClaimEmployee, ClaimEmployer } from "./Claim";
 import { AbsencePeriod } from "./AbsencePeriod";
+import { ManagedRequirement } from "./ManagedRequirement";
 import dayjs from "dayjs";
 import { orderBy } from "lodash";
 
@@ -18,8 +18,6 @@ class ClaimDetail {
     employer_evidence: OutstandingEvidence[] | null;
   } | null = null;
 
-  payments: PaymentDetail[] = [];
-
   constructor(attrs?: Partial<ClaimDetail>) {
     if (!attrs) {
       return;
@@ -31,19 +29,11 @@ class ClaimDetail {
       this.employee = new ClaimEmployee(attrs.employee);
     }
 
-    this.absence_periods = this.absence_periods.map(
-      (absence_period) => new AbsencePeriod(absence_period)
-    );
-
-    /**
-     * Filtering to account for instances where a payment may be sent during the waiting week or prior to the leave start date
-     */
-
-    this.payments = this.payments.filter(
-      ({ period_start_date, status }) =>
-        (this.waitingWeek?.startDate &&
-          this.waitingWeek.startDate < period_start_date) ||
-        status === "Sent to bank"
+    this.absence_periods = orderBy(
+      this.absence_periods.map(
+        (absence_period) => new AbsencePeriod(absence_period)
+      ),
+      "absence_period_start_date"
     );
   }
 
@@ -91,6 +81,24 @@ class ClaimDetail {
     );
   }
 
+  get hasInReviewStatus() {
+    return this.absence_periods.some(
+      (absenceItem) => absenceItem.request_decision === "In Review"
+    );
+  }
+
+  get hasProjectedStatus() {
+    return this.absence_periods.some(
+      (absenceItem) => absenceItem.request_decision === "Projected"
+    );
+  }
+
+  get hasPendingStatus() {
+    return this.absence_periods.some(
+      (absenceItem) => absenceItem.request_decision === "Pending"
+    );
+  }
+
   get leaveDates(): AbsencePeriodDates[] {
     return this.absence_periods.map(
       ({ absence_period_start_date, absence_period_end_date }) => ({
@@ -123,30 +131,5 @@ interface OutstandingEvidence {
   document_name: string;
   is_document_received: boolean;
 }
-
-/**
- * Payment response associated with the Claim from API
- */
-export interface Payments {
-  absence_case_id: string;
-  payments: PaymentDetail[];
-}
-
-/**
- * Payment details associated with the Claim
- */
-export interface PaymentDetail {
-  payment_id: string;
-  period_start_date: string;
-  period_end_date: string;
-  amount: number | null;
-  sent_to_bank_date: string | null;
-  payment_method: string;
-  expected_send_date_start: string | null;
-  expected_send_date_end: string | null;
-  status: PaymentStatus;
-}
-
-type PaymentStatus = "Cancelled" | "Delayed" | "Pending" | "Sent to bank";
 
 export default ClaimDetail;

@@ -78,7 +78,7 @@ def test_base_query(initialize_factories_session, test_db_session):
         employee_qtr_wages=1000,
     )
     WagesAndContributionsFactory.create(
-        employee=employee5, employer=employer3, filing_period=date.today(), employee_qtr_wages=1000,
+        employee=employee5, employer=employer3, filing_period=date.today(), employee_qtr_wages=1000
     )
 
     res = base_query(test_db_session).all()
@@ -232,7 +232,7 @@ def expected_csv():
     Saving the file in vscode will ruin this encoding and cause the test to fail.
     """
     return open(
-        os.path.join(os.path.dirname(__file__), "test_files", "sequential_employment.csv"), "rb",
+        os.path.join(os.path.dirname(__file__), "test_files", "sequential_employment.csv"), "rb"
     ).read()
 
 

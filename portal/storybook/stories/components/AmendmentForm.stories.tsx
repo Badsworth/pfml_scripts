@@ -1,6 +1,6 @@
 /* eslint-disable no-alert */
 import React, { useState } from "react";
-import AmendmentForm from "src/components/employers/AmendmentForm";
+import AmendmentForm from "src/components/AmendmentForm";
 import InputDate from "src/components/core/InputDate";
 
 export default {

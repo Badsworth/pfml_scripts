@@ -9,7 +9,7 @@ on:
       - portal/**
 
 env:
-  nodeVersion: 15.x
+  nodeVersion: 16.x
   working-dir: ./portal
 
 jobs:

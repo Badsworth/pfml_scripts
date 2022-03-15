@@ -1,8 +1,8 @@
+import { ClaimDocument, DocumentType } from "../../models/Document";
 import User, { UserLeaveAdministrator } from "../../models/User";
-import DocumentCollection from "../../models/DocumentCollection";
-import { DocumentType } from "../../models/Document";
+import ApiResourceCollection from "../../models/ApiResourceCollection";
 import EmployerClaim from "../../models/EmployerClaim";
-import faker from "faker";
+import { faker } from "@faker-js/faker";
 import { uniqueId } from "lodash";
 
 const documentData = {
@@ -28,7 +28,7 @@ export const getClaimMock = jest.fn().mockResolvedValue((absenceId: string) => {
 });
 
 export const getDocumentsMock = jest.fn().mockResolvedValue({
-  documents: new DocumentCollection([
+  documents: new ApiResourceCollection<ClaimDocument>("fineos_document_id", [
     { ...documentData, fineos_document_id: uniqueId() },
     { ...documentData, fineos_document_id: uniqueId() },
     { ...documentData, fineos_document_id: uniqueId() },

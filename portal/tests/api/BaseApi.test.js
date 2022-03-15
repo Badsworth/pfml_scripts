@@ -24,7 +24,7 @@ describe("BaseApi", () => {
       return "/api";
     }
 
-    get i18nPrefix() {
+    get namespace() {
       return "testPrefix";
     }
   }
@@ -60,7 +60,7 @@ describe("BaseApi", () => {
   });
 
   it("excludes Authorization header when excludeAuthHeader option is true", async () => {
-    await testsApi.request("GET", "users", {}, {}, { excludeAuthHeader: true });
+    await testsApi.request("GET", "users", {}, { excludeAuthHeader: true });
 
     expect(fetch).toHaveBeenCalledWith(
       expect.any(String),
@@ -221,7 +221,9 @@ describe("BaseApi", () => {
       const body = null;
       const headers = { "X-Header": "X-Header-Value" };
 
-      await testsApi.request(method, "users", body, headers);
+      await testsApi.request(method, "users", body, {
+        additionalHeaders: headers,
+      });
 
       expect(fetch).toHaveBeenCalledWith(
         expect.any(String),
@@ -238,10 +240,9 @@ describe("BaseApi", () => {
       it("doesn't set the Content-Type header", async () => {
         const method = "PUT";
         const body = null;
-        const headers = {};
         const options = { multipartForm: true };
 
-        await testsApi.request(method, "users", body, headers, options);
+        await testsApi.request(method, "users", body, options);
 
         expect(fetch).toHaveBeenCalledWith(
           expect.any(String),
@@ -269,15 +270,15 @@ describe("BaseApi", () => {
 
       await expect(testsApi.request("GET", "users")).resolves
         .toMatchInlineSnapshot(`
-              Object {
-                "data": Object {
+              {
+                "data": {
                   "mock_response": true,
                 },
-                "meta": Object {
+                "meta": {
                   "method": "GET",
                   "resource": "/v1/users/current",
                 },
-                "warnings": Array [],
+                "warnings": [],
               }
             `);
     });
@@ -290,14 +291,17 @@ describe("BaseApi", () => {
             {
               field: "foo.0.bar.12.cat",
               type: "required",
+              namespace: "testPrefix",
             },
             {
               field: "beta[2].alpha[3].charlie",
               type: "required",
+              namespace: "testPrefix",
             },
             {
               field: "gamma.4",
               type: "required",
+              namespace: "testPrefix",
             },
           ],
         }),
@@ -382,7 +386,7 @@ describe("BaseApi", () => {
       } catch (error) {
         expect(error).toBeInstanceOf(ValidationError);
         expect(error.issues).toHaveLength(1);
-        expect(error.i18nPrefix).toBe("testPrefix");
+        expect(error.issues[0].namespace).toBe("testPrefix");
       }
     });
 

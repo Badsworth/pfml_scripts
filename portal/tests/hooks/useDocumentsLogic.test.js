@@ -1,17 +1,19 @@
-import { BadRequestError, ValidationError } from "../../src/errors";
+import {
+  BadRequestError,
+  DocumentsLoadError,
+  ValidationError,
+} from "../../src/errors";
 import { act, renderHook } from "@testing-library/react-hooks";
 import {
   attachDocumentMock,
   downloadDocumentMock,
   getDocumentsMock,
 } from "../../src/api/DocumentsApi";
-import AppErrorInfo from "../../src/models/AppErrorInfo";
-import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
-import DocumentCollection from "../../src/models/DocumentCollection";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { makeFile } from "../test-utils";
 import { uniqueId } from "lodash";
-import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import useDocumentsLogic from "../../src/hooks/useDocumentsLogic";
+import useErrorsLogic from "../../src/hooks/useErrorsLogic";
 import usePortalFlow from "../../src/hooks/usePortalFlow";
 
 jest.mock("../../src/api/DocumentsApi");
@@ -22,13 +24,13 @@ describe("useDocumentsLogic", () => {
   const application_id2 = "mock-application-id-2";
   const mockDocumentType = "Medical Certification";
   const mockFilename = "test_file.png";
-  let appErrorsLogic, documentsLogic;
+  let documentsLogic, errorsLogic;
 
   function setup() {
     renderHook(() => {
       const portalFlow = usePortalFlow();
-      appErrorsLogic = useAppErrorsLogic({ portalFlow });
-      documentsLogic = useDocumentsLogic({ appErrorsLogic });
+      errorsLogic = useErrorsLogic({ portalFlow });
+      documentsLogic = useDocumentsLogic({ errorsLogic });
     });
   }
 
@@ -37,12 +39,12 @@ describe("useDocumentsLogic", () => {
   });
 
   afterEach(() => {
-    appErrorsLogic = null;
+    errorsLogic = null;
     documentsLogic = null;
   });
 
-  it("returns documents as instance of DocumentCollection", () => {
-    expect(documentsLogic.documents).toBeInstanceOf(DocumentCollection);
+  it("returns documents as instance of ApiResourceCollection", () => {
+    expect(documentsLogic.documents).toBeInstanceOf(ApiResourceCollection);
   });
 
   describe("attach", () => {
@@ -157,20 +159,23 @@ describe("useDocumentsLogic", () => {
       let newDocument, previouslyLoadedDocuments;
 
       beforeEach(async () => {
-        previouslyLoadedDocuments = new DocumentCollection([
-          {
-            application_id,
-            fineos_document_id: 1,
-          },
-          {
-            application_id,
-            fineos_document_id: 2,
-          },
-          {
-            application_id,
-            fineos_document_id: 3,
-          },
-        ]);
+        previouslyLoadedDocuments = new ApiResourceCollection(
+          "fineos_document_id",
+          [
+            {
+              application_id,
+              fineos_document_id: 1,
+            },
+            {
+              application_id,
+              fineos_document_id: 2,
+            },
+            {
+              application_id,
+              fineos_document_id: 3,
+            },
+          ]
+        );
 
         getDocumentsMock.mockImplementationOnce(() => {
           return {
@@ -260,14 +265,7 @@ describe("useDocumentsLogic", () => {
           false
         );
       });
-      expect(appErrorsLogic.appErrors.items[0]).toEqual(
-        expect.objectContaining({
-          field: "file",
-          message: "Upload at least one file to continue.",
-          name: "ValidationError",
-          type: "required",
-        })
-      );
+      expect(errorsLogic.errors[0]).toBeInstanceOf(ValidationError);
     });
 
     it("updates the app errors, and includes the claim + file ids", async () => {
@@ -308,27 +306,27 @@ describe("useDocumentsLogic", () => {
         );
       });
 
-      const appErrorInfos = appErrorsLogic.appErrors.items;
+      const errorInfos = errorsLogic.errors;
 
-      expect(appErrorInfos).toHaveLength(2);
-      expect(appErrorInfos[0].name).toBe("DocumentsUploadError");
-      expect(appErrorInfos[0].meta).toMatchInlineSnapshot(`
-        Object {
-          "application_id": "mock-application-id-1",
-          "file_id": "2",
-        }
-      `);
-      expect(appErrorInfos[0].message).toMatchInlineSnapshot(
-        `"We encountered an error when uploading your file. Try uploading your file again. If this continues to happen, call the Contact Center at (833) 344‑7365."`
+      expect(errorInfos).toHaveLength(2);
+      expect(errorInfos[0]).toEqual(
+        expect.objectContaining({
+          name: "DocumentsUploadError",
+          file_id: "2",
+        })
+      );
+      expect(errorInfos[1]).toEqual(
+        expect.objectContaining({
+          name: "DocumentsUploadError",
+          file_id: "3",
+        })
       );
     });
   });
 
   it("clears prior errors", async () => {
     act(() => {
-      appErrorsLogic.setAppErrors(
-        new AppErrorInfoCollection([new AppErrorInfo()])
-      );
+      errorsLogic.setErrors([new Error()]);
     });
 
     attachDocumentMock.mockResolvedValueOnce({
@@ -354,7 +352,7 @@ describe("useDocumentsLogic", () => {
       await Promise.all(uploadPromises);
     });
 
-    expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+    expect(errorsLogic.errors).toHaveLength(0);
   });
 
   describe("loadAll", () => {
@@ -362,7 +360,7 @@ describe("useDocumentsLogic", () => {
       describe("when the API returns documents", () => {
         let loadedDocuments;
         beforeEach(async () => {
-          loadedDocuments = new DocumentCollection([
+          loadedDocuments = new ApiResourceCollection("fineos_document_id", [
             {
               application_id,
               fineos_document_id: 1,
@@ -408,7 +406,7 @@ describe("useDocumentsLogic", () => {
 
         it("merges previously loaded documents with newly loaded documents", async () => {
           const newApplicationId = "mock-application-id-2";
-          const newDocuments = new DocumentCollection([
+          const newDocuments = new ApiResourceCollection("fineos_document_id", [
             {
               application_id: newApplicationId,
               fineos_document_id: 4,
@@ -444,7 +442,7 @@ describe("useDocumentsLogic", () => {
           getDocumentsMock.mockResolvedValue({
             status: 200,
             success: true,
-            documents: new DocumentCollection([]),
+            documents: new ApiResourceCollection("fineos_document_id", []),
           });
         });
 
@@ -474,33 +472,27 @@ describe("useDocumentsLogic", () => {
           await documentsLogic.loadAll(application_id);
         });
 
-        expect(appErrorsLogic.appErrors.items[0].name).toEqual(
-          "DocumentsLoadError"
-        );
-        expect(appErrorsLogic.appErrors.items[0].meta).toEqual({
-          application_id,
-        });
+        expect(errorsLogic.errors[0]).toBeInstanceOf(DocumentsLoadError);
+        expect(errorsLogic.errors[0].application_id).toBe(application_id);
       });
     });
 
     it("clears prior errors", async () => {
       act(() => {
-        appErrorsLogic.setAppErrors(
-          new AppErrorInfoCollection([new AppErrorInfo()])
-        );
+        errorsLogic.setErrors([new Error()]);
       });
 
       await act(async () => {
         await documentsLogic.loadAll(application_id);
       });
 
-      expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+      expect(errorsLogic.errors).toHaveLength(0);
     });
 
     it("resolves race conditions", async () => {
       let resolveFirstLoad, resolveSecondLoad;
 
-      const documentSet1 = new DocumentCollection([
+      const documentSet1 = new ApiResourceCollection("fineos_document_id", [
         {
           application_id,
           fineos_document_id: 1,
@@ -515,7 +507,7 @@ describe("useDocumentsLogic", () => {
         },
       ]);
 
-      const documentSet2 = new DocumentCollection([
+      const documentSet2 = new ApiResourceCollection("fineos_document_id", [
         {
           application_id: application_id2,
           fineos_document_id: 4,
@@ -579,7 +571,7 @@ describe("useDocumentsLogic", () => {
       getDocumentsMock.mockResolvedValueOnce({
         status: 200,
         success: true,
-        documents: new DocumentCollection([
+        documents: new ApiResourceCollection("fineos_document_id", [
           {
             application_id,
             fineos_document_id: 1,
@@ -598,7 +590,7 @@ describe("useDocumentsLogic", () => {
       getDocumentsMock.mockResolvedValueOnce({
         status: 200,
         success: true,
-        documents: new DocumentCollection([]),
+        documents: new ApiResourceCollection("fineos_document_id", []),
       });
 
       await act(async () => {
@@ -612,9 +604,7 @@ describe("useDocumentsLogic", () => {
   describe("download", () => {
     it("clears prior errors", async () => {
       act(() => {
-        appErrorsLogic.setAppErrors(
-          new AppErrorInfoCollection([new AppErrorInfo()])
-        );
+        errorsLogic.setErrors([new Error()]);
       });
 
       const document = {
@@ -627,7 +617,7 @@ describe("useDocumentsLogic", () => {
         await documentsLogic.download(document);
       });
 
-      expect(appErrorsLogic.appErrors.items).toHaveLength(0);
+      expect(errorsLogic.errors).toHaveLength(0);
     });
 
     it("makes a request to the API", () => {
@@ -670,7 +660,7 @@ describe("useDocumentsLogic", () => {
         await documentsLogic.download();
       });
 
-      expect(appErrorsLogic.appErrors.items[0].name).toEqual("BadRequestError");
+      expect(errorsLogic.errors[0].name).toEqual("BadRequestError");
     });
   });
 });

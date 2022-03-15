@@ -1,0 +1,11 @@
+FineosEmployerID,DBA,Attention,Email,PhoneNumber,AddressLine1,AddressLine2,AddressCity,ZipCode,State,NAICS,NAICSDesc
+1234567,,,abc@abc.com,123-456-7890,123 main st,,boston,03323,ma,809245,Teacher registries
+1111111,12345678,,cap@cap.com,352-356-2323,423 k st,,baltimore,24234,md,654209,Chauffeur registries
+2222222,13453452,,,,2043 stream ave,,san antonio,24590,ca,523442,Internet job listing services
+3333333,,,,,391 susanna ln,,houston,13493,tx,131245,motion picture
+4444444,,,test@test.com,555-222-1345,8401 manchester rd,,salt city,99803,co,897421,Employment placement agency
+5555555,24367544,,example@example.com,534-255-2342,34 manor rd,,alabama,12340,ga,456789,Referral agencies
+6666666,23427986,,,432-452-2342,23 east-west wy,,fairfax,76890,va,123553,Babysitting bureaus
+7777777,84673690,,,,,,,,,,
+8848382,12377323,,,,,,,,,,
+2842236,92640283,,def@def.com,413-452-6042,103 dove rd,,worcester,02341,OH,874734,radio or television

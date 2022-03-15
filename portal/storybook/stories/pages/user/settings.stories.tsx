@@ -1,4 +1,3 @@
-import { Props } from "types/common";
 import React from "react";
 import { Settings } from "src/pages/user/settings";
 import User from "src/models/User";
@@ -14,14 +13,28 @@ export default {
         type: "boolean",
       },
     },
+    smsMfaConfirmed: {
+      control: {
+        type: "boolean",
+      },
+    },
+  },
+  args: {
+    mfaEnabled: false,
+    smsMfaConfirmed: false,
   },
 };
 
-export const Page = (
-  args: Props<typeof Settings> & { mfaEnabled: boolean }
-) => {
+export const Page = (args: {
+  mfaEnabled: boolean;
+  smsMfaConfirmed: boolean;
+}) => {
   const user = new User({
-    mfa_phone_number: "555-111-****",
+    mfa_phone_number: {
+      int_code: "1",
+      phone_number: "***-***-1234",
+      phone_type: "Cell",
+    },
     email_address: "mock@gmail.com",
     mfa_delivery_preference: args.mfaEnabled ? "SMS" : "Opt Out",
   });
@@ -31,5 +44,7 @@ export const Page = (
     },
   });
 
-  return <Settings appLogic={appLogic} user={user} />;
+  const query = args.smsMfaConfirmed ? { smsMfaConfirmed: "true" } : {};
+
+  return <Settings appLogic={appLogic} user={user} query={query} />;
 };

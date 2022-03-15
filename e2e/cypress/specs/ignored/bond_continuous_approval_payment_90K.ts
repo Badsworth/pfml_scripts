@@ -1,6 +1,7 @@
 import { fineos, fineosPages, portal } from "../../actions";
 import { Submission } from "../../../src/types";
 import { assertValidClaim } from "../../../src/util/typeUtils";
+import { config } from "../../actions/common";
 
 describe("Submit bonding application via the web portal: Adjudication Approval & payment checking", () => {
   const submissionTest =
@@ -16,7 +17,7 @@ describe("Submit bonding application via the web portal: Adjudication Approval &
 
         // Submit Claim
         portal.startClaim();
-        portal.submitClaimPartOne(application);
+        portal.submitClaimPartOne(application, false);
         portal.waitForClaimSubmission().then((data) => {
           cy.stash("submission", {
             application_id: data.application_id,
@@ -24,7 +25,11 @@ describe("Submit bonding application via the web portal: Adjudication Approval &
             timestamp_from: Date.now(),
           });
         });
-        portal.submitClaimPartsTwoThree(application, paymentPreference);
+        portal.submitClaimPartsTwoThree(
+          application,
+          paymentPreference,
+          claim.is_withholding_tax
+        );
       });
     });
 
@@ -69,7 +74,11 @@ describe("Submit bonding application via the web portal: Adjudication Approval &
           claimPage.shouldHaveStatus("Availability", "Time Available");
           claimPage.shouldHaveStatus("Restriction", "Passed");
           claimPage.shouldHaveStatus("PlanDecision", "Accepted");
-          claimPage.approve();
+          if (config("HAS_APRIL_UPGRADE") === "true") {
+            claimPage.approve("Approved", true);
+          } else {
+            claimPage.approve("Approved", false);
+          }
         });
       });
     }

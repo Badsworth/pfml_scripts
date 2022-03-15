@@ -12,7 +12,7 @@ Single-page Application page views and custom event tracking should be setup thr
 
 ## Environment Configuration
 
-Each Portal environment should have a corresponding Google Tag Manager environment. Once a Google Tag Manager environment exists, we need to set the Portal `gtmConfig.auth` and `gtmConfig.preview` environment variables based on that Google Tag Manager environment's values. You can find these values through the Google Tag Manager website in the Admin section by navigating to the environment and looking at the JavaScript snippet for that environment. Look for a URL with `gtm_auth` and `gtm_preview` query parameters. The values for those query parameters should be set as the corresponding Portal environment variables.
+Each Portal environment should have a corresponding Google Tag Manager environment. Once a Google Tag Manager environment exists, we need to set the Portal `gtmConfigAuth` and `gtmConfigPreview` environment variables based on that Google Tag Manager environment's values. You can find these values through the Google Tag Manager website in the Admin section by navigating to the environment and looking at the JavaScript snippet for that environment. Look for a URL with `gtm_auth` and `gtm_preview` query parameters. The values for those query parameters should be set as the corresponding Portal environment variables.
 
 ### Content Security Policy
 

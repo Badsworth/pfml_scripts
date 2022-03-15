@@ -1,11 +1,18 @@
-from typing import Dict, Optional
+from typing import Dict, List, Optional, Union
 
 import botocore
 
 import massgov.pfml.util.logging
 from massgov.pfml import db
 from massgov.pfml.cognito.exceptions import CognitoUserExistsValidationError
-from massgov.pfml.db.models.employees import Employer, Role, User, UserLeaveAdministrator, UserRole
+from massgov.pfml.db.models.employees import (
+    Employer,
+    LkRole,
+    Role,
+    User,
+    UserLeaveAdministrator,
+    UserRole,
+)
 from massgov.pfml.util.aws.cognito import create_cognito_account
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -18,7 +25,7 @@ def create_user(
     employer_for_leave_admin: Optional[Employer],
 ) -> User:
     """Create API records for a new user (claimant or leave admin)"""
-    user = User(sub_id=auth_id, email_address=email_address,)
+    user = User(sub_id=auth_id, email_address=email_address)
 
     try:
         db_session.add(user)
@@ -42,9 +49,31 @@ def create_user(
 def add_leave_admin_and_role(db_session: db.Session, user: User, employer: Employer) -> User:
     """A helper function to create the first user leave admin and role"""
     user_role = UserRole(user=user, role_id=Role.EMPLOYER.role_id)
-    user_leave_admin = UserLeaveAdministrator(user=user, employer=employer, fineos_web_id=None,)
+    user_leave_admin = UserLeaveAdministrator(user=user, employer=employer, fineos_web_id=None)
     db_session.add(user_role)
     db_session.add(user_leave_admin)
+    return user
+
+
+def remove_leave_admins_and_role(db_session: db.Session, user: User) -> User:
+    """A helper function to remove the employer role and leave admin link from the user"""
+    # user.user_leave_administrators.remove(la) causes a not-null violation
+    # since it tries to set the user_id to NULL.
+    row_count = (
+        db_session.query(UserLeaveAdministrator)
+        .filter(UserLeaveAdministrator.user_id == user.user_id)
+        .delete()
+    )
+    logger.info(
+        "deleted from link_user_leave_administrator",
+        extra=dict(count=row_count, user_id=user.user_id),
+    )
+    row_count = (
+        db_session.query(UserRole)
+        .filter(UserRole.user_id == user.user_id and UserRole.role_id == Role.EMPLOYER.role_id)
+        .delete()
+    )
+    logger.info("deleted from link_user_role", extra=dict(count=row_count, user_id=user.user_id))
     return user
 
 
@@ -113,3 +142,27 @@ def register_user(
     )
 
     return user
+
+
+def has_role_in(user: User, accepted_roles: List[LkRole]) -> bool:
+    accepted_role_ids = set(role.role_id for role in accepted_roles)
+    for role in user.roles:
+        if role.role_id in accepted_role_ids:
+            return True
+
+    return False
+
+
+def get_user_log_attributes(user: User) -> Dict[str, Union[bool, str, None]]:
+    attributes: Dict[str, Union[bool, str, None]] = {
+        "current_user.user_id": str(user.user_id),
+        "current_user.auth_id": str(user.sub_id),
+        "current_user.role_ids": ",".join(str(role.role_id) for role in user.roles),
+        "current_user.role_names": ",".join(str(role.role_description) for role in user.roles),
+    }
+
+    for role in user.roles:
+        attributes[f"current_user.has_role_id_{role.role_id}"] = True
+        attributes[f"current_user.has_role_{role.role_description}"] = True
+
+    return attributes

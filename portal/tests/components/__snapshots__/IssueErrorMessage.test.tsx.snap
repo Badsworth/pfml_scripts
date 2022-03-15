@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ErrorMessage supports a set of safelisted links and list markup 1`] = `"<ul class=\\"usa-list\\"><li>Message with a <a target=\\"_blank\\" rel=\\"noreferrer noopener\\" href=\\"https://www.mass.gov/intermittent-leave-instructions\\">link.</a></li></ul>"`;

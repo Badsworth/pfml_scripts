@@ -48,7 +48,6 @@ module "api" {
   #st_use_mock_dor_data            = false
   #st_decrypt_dor_data             = false
   #st_file_limit_specified         = true
-  enable_pdf_document_compression = false
   service_app_count               = 2
   service_max_app_count           = 2
   service_docker_tag              = local.service_docker_tag
@@ -60,15 +59,22 @@ module "api" {
   postgres_parameter_group_family = "postgres12"
   nlb_name                        = "${local.vpc}-nlb"
   nlb_port                        = 3506
-  cors_origins                    = ["https://zj5brufqrj.execute-api.us-east-1.amazonaws.com/infra-test"]
-  enable_application_fraud_check  = "0"
-  release_version                 = var.release_version
+  cors_origins = [
+    "https://zj5brufqrj.execute-api.us-east-1.amazonaws.com/infra-test",
+    "https://paidleave-infra-test.dfml.eol.mass.gov",
+    "https://paidleave-api-infra-test.dfml.eol.mass.gov",
+    # Allow requests from the Admin Portal
+    "https://paidleave-admin-infra-test.dfml.eol.mass.gov",
+  ]
+  enable_application_fraud_check = "0"
+  enable_application_import      = "1"
+  enable_employee_endpoints      = "1"
+  release_version                = var.release_version
 
-  # TODO: Fill this in after the portal is deployed.
-  cognito_user_pool_arn       = null
-  cognito_user_pool_id        = ""
-  cognito_user_pool_client_id = ""
-  cognito_user_pool_keys_url  = ""
+  cognito_user_pool_arn       = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/us-east-1_8OEJk2XeD"
+  cognito_user_pool_id        = "us-east-1_8OEJk2XeD"
+  cognito_user_pool_client_id = "5pf01ur8rsdoumtu3ta8jvqbsj"
+  cognito_user_pool_keys_url  = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_8OEJk2XeD/.well-known/jwks.json"
 
   # TODO: Connect to an RMV endpoint if desired. All nonprod environments are connected to the staging API
   #       in either a fully-mocked or partially-mocked setting.
@@ -92,8 +98,17 @@ module "api" {
   # TODO: This value is provided by FINEOS over Interchange.
   fineos_client_oauth2_client_id = ""
 
+  pfml_email_address                  = "PFML_DoNotReply@eol.mass.gov"
+  bounce_forwarding_email_address     = "PFML_DoNotReply@eol.mass.gov"
+  bounce_forwarding_email_address_arn = "arn:aws:ses:us-east-1:498823821309:identity/PFML_DoNotReply@eol.mass.gov"
+
   # TODO: Connect to ServiceNow. Usually in nonprod you'll connect to test.
-  service_now_base_url = "https://savilinxtest.servicenowservices.com"
+  service_now_base_url      = "https://savilinxtest.servicenowservices.com"
+  admin_portal_base_url     = "https://paidleave-admin-infra-test.dfml.eol.mass.gov"
+  azure_ad_authority_domain = "login.microsoftonline.com"
+  azure_ad_client_id        = "ecc75e15-cd60-4e28-b62f-d1bf80e05d4d"
+  azure_ad_parent_group     = "TSS-SG-PFML_ADMIN_PORTAL_NON_PROD"
+  azure_ad_tenant_id        = "3e861d16-48b7-4a0e-9806-8c04d81b7b2a"
 
   #dor_fineos_etl_schedule_expression = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour
 }

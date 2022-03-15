@@ -6,7 +6,6 @@ import {
   findCertificationDoc,
   getDocumentReviewTaskName,
 } from "../../../../src/util/documents";
-import { assertValidClaim } from "../../../../src/util/typeUtils";
 
 describe("Approval (notifications/notices)", () => {
   after(() => {
@@ -52,7 +51,11 @@ describe("Approval (notifications/notices)", () => {
         claimPage.shouldHaveStatus("Availability", "Time Available");
         claimPage.shouldHaveStatus("Restriction", "Passed");
         claimPage.shouldHaveStatus("PlanDecision", "Accepted");
-        claimPage.approve();
+        if (config("HAS_APRIL_UPGRADE") === "true") {
+          claimPage.approve("Approved", true);
+        } else {
+          claimPage.approve("Approved", false);
+        }
         claimPage
           .triggerNotice("Designation Notice")
           .documents((docPage) =>
@@ -109,7 +112,7 @@ describe("Approval (notifications/notices)", () => {
           portal.checkNoticeForLeaveAdmin(
             submission.fineos_absence_id,
             employeeFullName,
-            "approval"
+            "Approval notice (PDF)"
           );
           portal.downloadLegalNotice(submission.fineos_absence_id);
         });
@@ -124,16 +127,13 @@ describe("Approval (notifications/notices)", () => {
       cy.dependsOnPreviousPass([submit]);
       cy.unstash<Submission>("submission").then((submission) => {
         email
-          .getEmails(
-            {
-              address: "gqzap.notifications@inbox.testmail.app",
-              subjectWildcard: `Action required: Respond to *'s paid leave application`,
-              messageWildcard: submission.fineos_absence_id,
-              timestamp_from: submission.timestamp_from,
-              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-            },
-            30000
-          )
+          .getEmails({
+            address: "gqzap.notifications@inbox.testmail.app",
+            subjectWildcard: `Action required: Respond to *'s paid leave application`,
+            messageWildcard: submission.fineos_absence_id,
+            timestamp_from: submission.timestamp_from,
+            debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+          })
           .then(() => {
             cy.get(
               `a[href*="/employers/applications/new-application/?absence_id=${submission.fineos_absence_id}"]`
@@ -147,13 +147,9 @@ describe("Approval (notifications/notices)", () => {
     "Should generate an approval notification for the Leave Administrator",
     { retries: 0 },
     () => {
-      portal.before();
       cy.dependsOnPreviousPass([submit]);
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
-          assertValidClaim(claim);
-          portal.loginLeaveAdmin(claim.employer_fein);
-          portal.selectClaimFromEmployerDashboard(submission.fineos_absence_id);
           const subjectEmployer = email.getNotificationSubject(
             "approval (employer)",
             submission.fineos_absence_id
@@ -168,8 +164,7 @@ describe("Approval (notifications/notices)", () => {
                 timestamp_from: submission.timestamp_from,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
               },
-              // Reduced timeout, since we have multiple tests that run prior to this.
-              60000
+              90000
             )
             .then(() => {
               const dob =
@@ -198,17 +193,13 @@ describe("Approval (notifications/notices)", () => {
           submission.fineos_absence_id
         );
         // Check email for Claimant/Employee
-        email.getEmails(
-          {
-            address: "gqzap.notifications@inbox.testmail.app",
-            subject: subjectClaimant,
-            messageWildcard: submission.fineos_absence_id,
-            timestamp_from: submission.timestamp_from,
-            debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-          },
-          // Reduced timeout, since we have multiple tests that run prior to this.
-          30000
-        );
+        email.getEmails({
+          address: "gqzap.notifications@inbox.testmail.app",
+          subject: subjectClaimant,
+          messageWildcard: submission.fineos_absence_id,
+          timestamp_from: submission.timestamp_from,
+          debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+        });
         cy.contains(submission.fineos_absence_id);
         cy.get(`a[href*="${config("PORTAL_BASEURL")}/applications"]`);
       });

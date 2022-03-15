@@ -1,8 +1,10 @@
 import React, { useState } from "react";
+import classnames from "classnames";
 import useUniqueId from "../../hooks/useUniqueId";
 
 interface AccordionItemProps {
   children: React.ReactNode;
+  className?: string;
   heading: string;
 }
 
@@ -14,13 +16,13 @@ function AccordionItem(props: AccordionItemProps) {
   const id = useUniqueId("accordion");
   const [isExpanded, setExpanded] = useState(false);
 
-  function handleClick() {
+  const handleClick = () => {
     setExpanded(!isExpanded);
-  }
+  };
 
   return (
     <React.Fragment>
-      <h2 className="usa-accordion__heading">
+      <h2 className={classnames("usa-accordion__heading", props.className)}>
         <button
           className="usa-accordion__button"
           aria-expanded={isExpanded}

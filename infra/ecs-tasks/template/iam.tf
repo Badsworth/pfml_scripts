@@ -121,7 +121,9 @@ data "aws_iam_policy_document" "task_sql_export_s3_policy_doc" {
       "arn:aws:s3:::massgov-pfml-${var.environment_name}-execute-sql-export",
       "arn:aws:s3:::massgov-pfml-${var.environment_name}-execute-sql-export/*",
       "arn:aws:s3:::massgov-pfml-${var.environment_name}-business-intelligence-tool/api_db/accounts_created",
-      "arn:aws:s3:::massgov-pfml-${var.environment_name}-business-intelligence-tool/api_db/accounts_created/*"
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-business-intelligence-tool/api_db/accounts_created/*",
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-reports",
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-reports/*"
     ]
   }
 }
@@ -341,6 +343,42 @@ data "aws_iam_policy_document" "dor_import_execution_role_extras" {
   }
 }
 
+# ------------------------------------------------------------------------------------------------------
+# DOR Pending Filing Submission File task stuff
+# ------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "dor_pending_filing_sub_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-dor_pending_filing_sub-task-role"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "dor_pending_filing_sub_task_role_extras" {
+  role       = aws_iam_role.dor_pending_filing_sub_task_role.name
+  policy_arn = aws_iam_policy.dor_pending_filing_sub_task_role_extras.arn
+}
+
+resource "aws_iam_policy" "dor_pending_filing_sub_task_role_extras" {
+  name        = "${local.app_name}-${var.environment_name}-ecs-tasks-dor_pending_filing_sub-ecs-policy"
+  description = "All the things the DOR Pending Filing Submision File task needs to be allowed to do"
+  policy      = data.aws_iam_policy_document.dor_pending_filing_sub_task_role_extras.json
+}
+
+data "aws_iam_policy_document" "dor_pending_filing_sub_task_role_extras" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:PutObject",
+      "s3:GetObject",
+      "s3:ListBucket",
+      "s3:DeleteObject"
+    ]
+    resources = [
+      data.aws_s3_bucket.agency_transfer.arn,
+      "${data.aws_s3_bucket.agency_transfer.arn}/*"
+    ]
+  }
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # IAM role and policies for FINEOS Eligibility Feed export
 # ----------------------------------------------------------------------------------------------------------------------
@@ -394,6 +432,25 @@ data "aws_iam_policy_document" "fineos_feeds_role_policy" {
       var.fineos_aws_iam_role_arn,
     ]
   }
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for FINEOS import leave admin org units
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "fineos_import_la_org_units_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-fineos-import-la-org-units"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+# We may not always have a value for `fineos_aws_iam_role_arn` and a policy has
+# to list a resource, so make this part conditional with the count hack
+resource "aws_iam_role_policy" "fineos_import_la_org_units_task_fineos_role_policy" {
+  count = var.fineos_aws_iam_role_arn == "" ? 0 : 1
+
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-fineos-import-la-org-units-fineos-policy"
+  role   = aws_iam_role.fineos_import_la_org_units_task_role.id
+  policy = data.aws_iam_policy_document.fineos_feeds_role_policy[0].json
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -737,6 +794,58 @@ data "aws_iam_policy_document" "pub_payments_process_pub_returns_task_role_extra
   }
 }
 
+#####
+
+resource "aws_iam_role" "pub_payments_copy_audit_report_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-pub-payments-copy-audit-report"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy" "pub_payments_copy_audit_report_task_role_extras" {
+  name   = "${local.app_name}-${var.environment_name}-pub-payments-copy-audit-report-extras"
+  role   = aws_iam_role.pub_payments_copy_audit_report_task_role.id
+  policy = data.aws_iam_policy_document.pub_payments_copy_audit_report_task_role_extras.json
+}
+
+data "aws_iam_policy_document" "pub_payments_copy_audit_report_task_role_extras" {
+  statement {
+    sid = "AllowListingOfBucket"
+    actions = [
+      "s3:ListBucket"
+    ]
+
+    resources = [
+      data.aws_s3_bucket.agency_transfer.arn,
+      "${data.aws_s3_bucket.agency_transfer.arn}/*",
+      data.aws_s3_bucket.reports.arn,
+      "${data.aws_s3_bucket.reports.arn}/*"
+    ]
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "ReadWriteAccessToAgencyTransferBucket"
+    actions = [
+      "s3:ListBucket",
+      "s3:Get*",
+      "s3:List*",
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:AbortMultipartUpload"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/reports",
+      "${data.aws_s3_bucket.agency_transfer.arn}/reports/*",
+      "${data.aws_s3_bucket.reports.arn}/dfml-responses",
+      "${data.aws_s3_bucket.reports.arn}/dfml-responses/*"
+    ]
+
+    effect = "Allow"
+  }
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # IAM role and policies for pub-claimant-address-validation
 # ----------------------------------------------------------------------------------------------------------------------
@@ -1059,6 +1168,7 @@ data "aws_iam_policy_document" "reductions_workflow_task_role_extras" {
 
     resources = ["*"]
   }
+
 }
 
 resource "aws_iam_role" "reductions_workflow_execution_role" {
@@ -1219,6 +1329,149 @@ data "aws_iam_policy_document" "fineos_bucket_tool_task_policy_document" {
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for S3 buckets for SFTP (agency transfer) tool
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "sftp_tool_role" {
+  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-sftp-tool"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy" "sftp_tool_assume_role_policy" {
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-sftp-tool-assume-role-policy"
+  role   = aws_iam_role.sftp_tool_role.id
+  policy = data.aws_iam_policy_document.sftp_tool_task_policy_document.json
+}
+
+resource "aws_iam_role_policy" "sftp_tool_role_policy" {
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-sftp-tool-role-policy"
+  role   = aws_iam_role.sftp_tool_role.id
+  policy = data.aws_iam_policy_document.sftp_tool_task_policy_document.json
+}
+
+data "aws_iam_policy_document" "sftp_tool_task_policy_document" {
+  statement {
+    sid = "AllowListingOfBucket"
+    actions = [
+      "s3:ListBucket"
+    ]
+
+    resources = [
+      data.aws_s3_bucket.agency_transfer.arn
+    ]
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "AllowS3ReadOnBucket"
+    actions = [
+      "s3:Get*",
+      "s3:List*"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/",
+      "${data.aws_s3_bucket.agency_transfer.arn}/*"
+    ]
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "AllowS3WriteOnBucket"
+    actions = [
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:AbortMultipartUpload"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/",
+      "${data.aws_s3_bucket.agency_transfer.arn}/*"
+    ]
+
+    effect = "Allow"
+  }
+}
+
+resource "aws_iam_role" "sftp_tool_execution_role" {
+  name               = "${local.app_name}-${var.environment_name}-sftp-tool-execution-role"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "sftp_tool_execution_role_extras" {
+  role       = aws_iam_role.sftp_tool_execution_role.name
+  policy_arn = aws_iam_policy.sftp_tool_execution_role_extras.arn
+}
+
+resource "aws_iam_policy" "sftp_tool_execution_role_extras" {
+  name        = "${local.app_name}-${var.environment_name}-sftp-tool-execution-policy"
+  description = "A clone of the standard execution role with extra SSM permissions for SFTP agency transfer."
+  policy      = data.aws_iam_policy_document.sftp_tool_execution_role_extras.json
+}
+
+data "aws_iam_policy_document" "sftp_tool_execution_role_extras" {
+  # Allow ECS to log to Cloudwatch.
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:DescribeLogStreams"
+    ]
+
+    resources = [
+      "${aws_cloudwatch_log_group.ecs_tasks.arn}:*"
+    ]
+  }
+
+  # Allow ECS to authenticate with ECR and download images.
+  statement {
+    actions = [
+      "ecr:GetAuthorizationToken",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage",
+    ]
+
+    # ECS Fargate doesn't like it when you restrict the access to a single
+    # repository. Instead, it needs access to all of them.
+    resources = [
+      "*"
+    ]
+  }
+
+  # Allow ECS to access secrets from parameter store.
+  statement {
+    actions = [
+      "ssm:GetParameter",
+      "ssm:GetParameters",
+    ]
+
+    resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/common/*",
+      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}/*",
+      "${local.ssm_arn_prefix}/${local.app_name}-comptroller/${var.environment_name}/*",
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/admin/*",
+    ]
+  }
+
+  statement {
+    actions = [
+      "ssm:GetParametersByPath",
+    ]
+
+    resources = [
+      "${local.ssm_arn_prefix}/${local.app_name}/common",
+      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
+      "${local.ssm_arn_prefix}/${local.app_name}-comptroller/${var.environment_name}",
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/admin"
+    ]
+  }
+}
+
+
+# ----------------------------------------------------------------------------------------------------------------------
 # IAM role and policies for cps-errors-crawler
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -1246,7 +1499,7 @@ data "aws_iam_policy_document" "cps_errors_crawler_role_policy_document" {
     ]
 
     condition {
-      test     = "StringEquals"
+      test     = "StringLike"
       variable = "s3:prefix"
       values = [
         "cps-errors/received/",
@@ -1368,7 +1621,7 @@ data "aws_iam_policy_document" "evaluate_new_financial_eligibility" {
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
-# IAM role and policies for dua-import-employee-demographics
+# IAM role and policies for dua-import-employee-demographics, dua-import-employer, dua-import-employer-unit
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_iam_role" "dua_employee_workflow_task_role" {
@@ -1474,61 +1727,48 @@ data "aws_iam_policy_document" "dua_employee_workflow_execution_role_extras" {
   }
 }
 
-# ------------------------------------------------------------------------------------------------------
-# IAM Roles and Policies for Redshift Daily Import
-# ------------------------------------------------------------------------------------------------------
-locals {
-  nonprod_roles = [
-    "arn:aws:iam::018311717589:role/aws-service-role/redshift.amazonaws.com/AWSServiceRoleForRedshift",
-    "arn:aws:iam::018311717589:role/pfml-all-redshift-s3-daily-import-role",
-    "arn:aws:iam::018311717589:role/redshiftSpectrumRole"
-  ]
-  prod_roles = ["arn:aws:iam::018311717589:role/redshift-lwd-prod-cluster-edw-role"]
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for mfa-lockout-resolution
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "mfa_lockout_resolution_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-mfa-lockout-resolution-task-role"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
 }
-data "aws_iam_policy_document" "bi_imports_bucket_policy_document" {
+
+resource "aws_iam_role_policy" "mfa_lockout_resolution_role_policy" {
+  name   = "${local.app_name}-${var.environment_name}-mfa-lockout-resolution-role-policy"
+  role   = aws_iam_role.mfa_lockout_resolution_task_role.id
+  policy = data.aws_iam_policy_document.mfa_lockout_resolution.json
+}
+
+data "aws_iam_policy_document" "mfa_lockout_resolution" {
+  # Allow disabling MFA in Cognito and fixing opt in for SNS
   statement {
-    sid = "LWD RedShift Access to Bucket"
+    effect = "Allow"
+    actions = [
+      "cognito-idp:AdminSetUserMFAPreference",
+      "sns:CheckIfPhoneNumberIsOptedOut",
+      "sns:OptInPhoneNumber"
+    ]
+    resources = [
+      "arn:aws:cognito-idp:us-east-1:498823821309:userpool/${var.cognito_user_pool_id}",
+      "arn:aws:sns:us-east-1:498823821309:*",
+    ]
+  }
+
+  # Allow sending emails to claimants when MFA is disabled.
+  statement {
+    sid = "AllowSESSendEmail"
+    actions = [
+      "ses:SendEmail",
+      "ses:SendRawEmail",
+      "ses:SendTemplatedEmail"
+    ]
+
+    resources = ["*"]
 
     effect = "Allow"
-
-    principals {
-      type        = "AWS"
-      identifiers = var.environment_name == "prod" ? local.prod_roles : local.nonprod_roles
-    }
-
-    actions = [
-      "s3:ListBucket",
-      "s3:GetBucketLocation",
-      "s3:GetObject"
-    ]
-
-    resources = [
-      "arn:aws:s3:::massgov-pfml-${var.environment_name}-redshift-daily-import",
-      "arn:aws:s3:::massgov-pfml-${var.environment_name}-redshift-daily-import/*"
-    ]
   }
 }
 
-# KMS key policy for LWD account Redshift access to S3 bucket
-data "aws_iam_policy_document" "bi_imports_s3_kms_key_policy" {
-  statement {
-    sid    = "LWD account KMS Key decrypt"
-    effect = "Allow"
-    principals {
-      type        = "AWS"
-      identifiers = var.environment_name == "prod" ? local.prod_roles : local.nonprod_roles
-    }
-    principals {
-      type = "AWS"
-      identifiers = [
-        "arn:aws:iam::498823821309:root"
-      ]
-    }
-    actions = [
-      "kms:*"
-    ]
-    resources = [
-      "*"
-    ]
-  }
-}

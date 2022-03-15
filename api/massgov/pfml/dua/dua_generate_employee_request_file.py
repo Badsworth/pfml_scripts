@@ -6,8 +6,6 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List
 
-from pydantic import Field
-
 import massgov.pfml.util.batch.log as batch_log
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
@@ -18,10 +16,9 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     TaxIdentifier,
 )
-from massgov.pfml.dua.config import DUAMoveItConfig
+from massgov.pfml.dua.config import get_moveit_config, get_transfer_config
 from massgov.pfml.util.batch.log import LogEntry
 from massgov.pfml.util.bg import background_task
-from massgov.pfml.util.pydantic import PydanticBaseSettings
 from massgov.pfml.util.sftp_s3_transfer import (
     SftpS3TransferConfig,
     copy_to_sftp_and_archive_s3_files,
@@ -43,35 +40,10 @@ class Metrics(str, Enum):
 class Constants:
     # DUA_DFML_EMP_YYYYMMDD.csv
     FILE_PREFIX = "DFML_DUA_CLM_DEM_"
-
-    # S3 bucket names
-    S3_DFML_ARCHIVE_PATH = "dua/dfml/archive"
-    S3_DFML_INBOUND_PATH = "dua/dfml/inbound"
-    S3_DFML_OUTBOUND_PATH = "dua/dfml/outbound"
-    S3_DFML_ERROR_PATH = "dua/dfml/error"
-
     FINEOS_CUSTOMER_NUMBER = "FINEOS Customer ID"
     SSN = "SSN"
 
-    EMPLOYEE_LIST_FIELDS = [
-        FINEOS_CUSTOMER_NUMBER,
-        SSN,
-    ]
-
-
-class DuaEmployeeRequestConfig(PydanticBaseSettings):
-    s3_bucket_uri: str = Field(..., env="S3_BUCKET")
-    s3_dfml_archive_directory_path: str = Constants.S3_DFML_ARCHIVE_PATH
-    s3_dfml_outbound_directory_path: str = Constants.S3_DFML_OUTBOUND_PATH
-    s3_dfml_error_directory_path: str = Constants.S3_DFML_ERROR_PATH
-
-
-def get_s3_config() -> DuaEmployeeRequestConfig:
-    return DuaEmployeeRequestConfig()
-
-
-def get_moveit_config() -> DUAMoveItConfig:
-    return DUAMoveItConfig()
+    EMPLOYEE_LIST_FIELDS = [FINEOS_CUSTOMER_NUMBER, SSN]
 
 
 def get_employees_for_outbound(db_session: db.Session) -> List[Employee]:
@@ -117,7 +89,7 @@ def _write_employees_to_tempfile(employees: List[Dict]) -> pathlib.Path:
 def generate_and_upload_dua_employee_update_file(
     db_session: db.Session, log_entry: batch_log.LogEntry
 ) -> str:
-    s3_config = get_s3_config()
+    transfer_config = get_transfer_config()
 
     employees = get_employees_for_outbound(db_session)
     employee_info = _format_employees_for_outbound(employees)
@@ -127,9 +99,11 @@ def generate_and_upload_dua_employee_update_file(
 
     file_name = f"{Constants.FILE_PREFIX}{datetime.now().strftime('%Y%m%d')}.csv"
     s3_dest = os.path.join(
-        s3_config.s3_bucket_uri, s3_config.s3_dfml_outbound_directory_path, file_name
+        transfer_config.base_path, transfer_config.outbound_directory_path, file_name
     )
-    file_util.upload_to_s3(str(tempfile_path), s3_dest)
+
+    file_util.upload_file(str(tempfile_path), s3_dest)
+
     reference_file = ReferenceFile(
         file_location=str(s3_dest),
         reference_file_type_id=ReferenceFileType.DUA_DEMOGRAPHICS_REQUEST_FILE.reference_file_type_id,
@@ -142,13 +116,13 @@ def generate_and_upload_dua_employee_update_file(
 def copy_dua_files_from_s3_to_moveit(
     db_session: db.Session, log_entry: batch_log.LogEntry
 ) -> List[ReferenceFile]:
-    s3_config = get_s3_config()
+    transfer_config = get_transfer_config()
     moveit_config = get_moveit_config()
 
-    transfer_config = SftpS3TransferConfig(
-        s3_bucket_uri=s3_config.s3_bucket_uri,
-        source_dir=s3_config.s3_dfml_outbound_directory_path,
-        archive_dir=s3_config.s3_dfml_archive_directory_path,
+    sftp_s3_transfer_config = SftpS3TransferConfig(
+        s3_bucket_uri=transfer_config.base_path,
+        source_dir=transfer_config.outbound_directory_path,
+        archive_dir=transfer_config.archive_directory_path,
         dest_dir=moveit_config.moveit_outbound_path,
         sftp_uri=moveit_config.moveit_sftp_uri,
         ssh_key_password=moveit_config.moveit_ssh_key_password,
@@ -156,7 +130,7 @@ def copy_dua_files_from_s3_to_moveit(
         regex_filter=re.compile(r"DFML_DUA_CLM_DEM_\d+.csv"),
     )
 
-    copied_reference_files = copy_to_sftp_and_archive_s3_files(transfer_config, db_session)
+    copied_reference_files = copy_to_sftp_and_archive_s3_files(sftp_s3_transfer_config, db_session)
     for ref_file in copied_reference_files:
         ref_file.reference_file_type_id = (
             ReferenceFileType.DUA_DEMOGRAPHICS_REQUEST_FILE.reference_file_type_id

@@ -43,17 +43,17 @@ def main():
 
 
 def check_for_empty_output_dir(output_dir: str) -> None:
-    """ Throws an exception if the output directory is not empty """
+    """Throws an exception if the output directory is not empty"""
     if len(os.listdir(output_dir)) != 0:
         raise Exception("Output directory must be empty!")
 
 
 def create_csv(filename: str, row_queue: List, output_dir: str) -> None:
-    """ Creates a CSV with the required fields """
+    """Creates a CSV with the required fields"""
     output_csv_filename = f"{output_dir}/{filename}.csv"
     with smart_open.open(output_csv_filename, "w") as output_file:
         csv_output = csv.DictWriter(
-            output_file, fieldnames=OUTPUT_CSV_FIELDS, restval="", extrasaction="ignore",
+            output_file, fieldnames=OUTPUT_CSV_FIELDS, restval="", extrasaction="ignore"
         )
         csv_output.writeheader()
         for row in row_queue:
@@ -88,7 +88,7 @@ def upload_to_s3(
     aws_secret_access_key: str,
     aws_session_token: str,
 ) -> List[Dict]:
-    """ Uploads a CSV file to S3, gets a signed S3 URL to the file and returns a list of email and URL pairs """
+    """Uploads a CSV file to S3, gets a signed S3 URL to the file and returns a list of email and URL pairs"""
     emails_and_urls: List[Dict] = []
     folder_name = output_dir
     expiration_seconds = timedelta(days=int(expiration_days)).total_seconds()
@@ -149,7 +149,7 @@ def write_result_csv(emails_and_urls: list, output_dir: str) -> None:
     output_csv_filename = f"{output_dir}/results.csv"
     with smart_open.open(output_csv_filename, "w") as output_file:
         csv_output = csv.DictWriter(
-            output_file, fieldnames=RESULT_CSV_FIELDS, restval="", extrasaction="ignore",
+            output_file, fieldnames=RESULT_CSV_FIELDS, restval="", extrasaction="ignore"
         )
         csv_output.writeheader()
         for row in emails_and_urls:
@@ -157,7 +157,7 @@ def write_result_csv(emails_and_urls: list, output_dir: str) -> None:
 
 
 def parse_args():
-    """ Parses arguments sent via the command line """
+    """Parses arguments sent via the command line"""
     parser = argparse.ArgumentParser(
         description="Create individual CSVs to be mailed based on TPA/BMA CSV file contents"
     )

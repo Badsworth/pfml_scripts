@@ -36,6 +36,17 @@ export const parameters = {
     // Sort stories alphabetically
     storySort: {
       method: "alphabetical" as StorySortMethod,
+      order: [
+        "Welcome",
+        "Feature flags",
+        "Core Components",
+        "Components",
+        "Features",
+        "Templates",
+        "Pages",
+        "Guidance",
+        "Misc",
+      ],
     },
   },
 };

@@ -1,15 +1,22 @@
 export const COMPONENTS = ["portal", "api", "fineos"];
-export const COMPONENTS_WIDTH = { portal: "20%", api: "20%", fineos: "30%" };
 export const ENVS = [
   "prod",
   "breakfix",
   "training",
+  "trn2",
   "uat",
   "performance",
   "stage",
+  "long",
   "cps-preview",
   "test",
+  "infra-test",
 ];
+export const GROUPS = ["Stable", "Unstable", "Morning", "Integration"];
+export const ENV_NOT_CONFIGURED = ["prod", "infra-test"];
+export const ENV_OFFLINE = {
+  trn2: "Env expected offline",
+};
 
 export const extractGroup = (item, name) => {
   const group = item.metadata.groups.find((g) => g.name === name);
@@ -41,6 +48,12 @@ export const labelEnv = (name) => {
       return "Breakfix/PFX";
     case "uat":
       return "UAT";
+    case "long":
+      return "LONG/DT4";
+    case "training":
+      return "Training/TRN";
+    case "trn2":
+      return "Training2/TRN2";
     default:
       return name[0].toUpperCase() + name.substring(1);
   }

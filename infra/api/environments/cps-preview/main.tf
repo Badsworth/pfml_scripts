@@ -59,6 +59,8 @@ module "api" {
   cors_origins = [
     "https://paidleave-cps-preview.eol.mass.gov",
     "https://paidleave-api-cps-preview.eol.mass.gov",
+    # Allow requests from the Admin Portal
+    "https://paidleave-admin-cps-preview.dfml.eol.mass.gov",
   ]
   enable_application_fraud_check = "0"
   release_version                = var.release_version
@@ -91,8 +93,20 @@ module "api" {
   # TODO: This value is provided by FINEOS over Interchange.
   fineos_client_oauth2_client_id = "2gptm2870hlo9ouq70poib8d5g"
 
-  # TODO: Connect to ServiceNow.
-  service_now_base_url = "https://savilinxstage.servicenowservices.com"
+  pfml_email_address                  = "PFML_DoNotReply@eol.mass.gov"
+  bounce_forwarding_email_address     = "PFML_DoNotReply@eol.mass.gov"
+  bounce_forwarding_email_address_arn = "arn:aws:ses:us-east-1:498823821309:identity/PFML_DoNotReply@eol.mass.gov"
 
-  enable_pdf_document_compression = "0"
+  # TODO: Connect to ServiceNow.
+  service_now_base_url  = "https://savilinxpreview.servicenowservices.com"
+  admin_portal_base_url = "https://paidleave-admin-cps-preview.dfml.eol.mass.gov"
+
+  azure_ad_authority_domain = "login.microsoftonline.com"
+  azure_ad_client_id        = "ecc75e15-cd60-4e28-b62f-d1bf80e05d4d"
+  azure_ad_parent_group     = "TSS-SG-PFML_ADMIN_PORTAL_NON_PROD"
+  azure_ad_tenant_id        = "3e861d16-48b7-4a0e-9806-8c04d81b7b2a"
+
+  enable_document_multipart_upload = "1"
+  enable_application_import        = "1"
+  enable_employee_endpoints        = "1"
 }

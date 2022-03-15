@@ -69,6 +69,6 @@ def create_service_now_user():
     db_session_raw = db.init()
 
     with db.session_scope(db_session_raw) as db_session:
-        role_id = Role.SERVICE_NOW.role_id
+        role_id = Role.PFML_CRM.role_id
         config = SnowUserConfig()
         create_user_helper(db_session, config, role_id)

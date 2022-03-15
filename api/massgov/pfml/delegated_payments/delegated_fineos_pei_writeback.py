@@ -58,9 +58,7 @@ class PeiWritebackItem:
 
 WRITEBACK_FILE_SUFFIX = "-pei_writeback.csv"
 
-PEI_WRITEBACK_CSV_ENCODERS: csv_util.Encoders = {
-    date: lambda d: d.strftime("%Y-%m-%d %H:%M:%S"),
-}
+PEI_WRITEBACK_CSV_ENCODERS: csv_util.Encoders = {date: lambda d: d.strftime("%Y-%m-%d %H:%M:%S")}
 
 REQUIRED_FIELDS_FOR_EXTRACTED_PAYMENT = [
     "fineos_pei_c_value",
@@ -155,6 +153,10 @@ class FineosPeiWritebackStep(Step):
         for state_log in state_logs:
             try:
                 payment = state_log.payment
+                extra = payments_util.get_traceable_payment_details(
+                    payment, State.DELEGATED_ADD_TO_FINEOS_WRITEBACK
+                )
+                logger.info("Processing payment for PEI writeback", extra=extra)
 
                 missing_fields = []
 
@@ -165,7 +167,10 @@ class FineosPeiWritebackStep(Step):
 
                 if missing_fields:
                     error_msg = f"Payment {payment.payment_id} cannot be converted to PeiWritebackRecord for extracted payments because it is missing fields."
-                    logger.error(error_msg, extra={"missing_fields": missing_fields})
+                    extra["missing_fields"] = ",".join(
+                        missing_fields
+                    )  # New Relic won't handle a list well
+                    logger.error(error_msg, extra=extra)
                     raise Exception(error_msg)
 
                 transaction_status: Optional[
@@ -210,6 +215,18 @@ class FineosPeiWritebackStep(Step):
                     )
                 )
                 self.increment(self.Metrics.WRITEBACK_RECORD_COUNT)
+                extra["transaction_status"] = transaction_status.transaction_status_description
+                extra["transaction_status_date"] = transaction_status_date
+                extra["status"] = (
+                    transaction_status.writeback_record_status
+                    if transaction_status.writeback_record_status
+                    else "PendingActive"
+                )
+                logger.info(
+                    "Sent writeback transaction status of [%s] for payment to FINEOS",
+                    transaction_status.transaction_status_description,
+                    extra=extra,
+                )
 
             except Exception:
                 logger.exception(
@@ -221,7 +238,7 @@ class FineosPeiWritebackStep(Step):
         return pei_writeback_items
 
     def upload_writeback_csv_and_save_reference_files(
-        self, pei_writeback_items: List[PeiWritebackItem],
+        self, pei_writeback_items: List[PeiWritebackItem]
     ) -> None:
         """
         Upload PEI writeback CSV to FINEOS S3 bucket and PFML S3 bucket configured in payments_util

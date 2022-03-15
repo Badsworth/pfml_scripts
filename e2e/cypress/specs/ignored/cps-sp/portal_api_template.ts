@@ -1,5 +1,6 @@
 import { fineos, fineosPages, portal } from "../../../actions";
 import { Submission } from "../../../../src/types";
+import { config } from "../../../actions/common";
 
 describe("Submit a claim through Portal: Verify it creates an absence case in Fineos", () => {
   const submissionTest =
@@ -16,7 +17,7 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
 
         // Submit Claim
         portal.startClaim();
-        portal.submitClaimPartOne(application);
+        portal.submitClaimPartOne(application, false);
         portal.waitForClaimSubmission().then((data) => {
           cy.stash("submission", {
             application_id: data.application_id,
@@ -24,7 +25,11 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
             timestamp_from: Date.now(),
           });
         });
-        portal.submitClaimPartsTwoThree(application, paymentPreference);
+        portal.submitClaimPartsTwoThree(
+          application,
+          paymentPreference,
+          claim.is_withholding_tax
+        );
       });
     });
 
@@ -62,7 +67,11 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
             true
           );
         });
-        claimPage.approve();
+        if (config("HAS_APRIL_UPGRADE") === "true") {
+          claimPage.approve("Approved", true);
+        } else {
+          claimPage.approve("Approved", false);
+        }
       });
     });
   });

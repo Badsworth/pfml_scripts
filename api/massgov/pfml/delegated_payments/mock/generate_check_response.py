@@ -117,7 +117,7 @@ class PubCheckResponseGenerator:
 
         if payment is None:
             logger.warning(
-                "Skipping return because payment is emptry on data for scenario: %s",
+                "Skipping return because payment is empty on data for scenario: %s",
                 scenario_descriptor.scenario_name,
             )
             return

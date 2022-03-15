@@ -11,6 +11,7 @@
 import {
   BenefitsApplicationDocument,
   DocumentType,
+  findDocumentsByTypes,
 } from "../../../models/Document";
 import withClaimDocuments, {
   WithClaimDocumentsProps,
@@ -20,6 +21,7 @@ import AccordionItem from "../../../components/core/AccordionItem";
 import Alert from "../../../components/core/Alert";
 import ConditionalContent from "../../../components/ConditionalContent";
 import DocumentRequirements from "../../../components/DocumentRequirements";
+import { DocumentsUploadError } from "../../../errors";
 import FileCardList from "../../../components/FileCardList";
 import FileUploadDetails from "../../../components/FileUploadDetails";
 import Heading from "../../../components/core/Heading";
@@ -29,7 +31,6 @@ import QuestionPage from "../../../components/QuestionPage";
 import React from "react";
 import Spinner from "../../../components/core/Spinner";
 import { Trans } from "react-i18next";
-import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
 import hasDocumentsLoadError from "../../../utils/hasDocumentsLoadError";
 import routes from "../../../routes";
 import uploadDocumentsHelper from "../../../utils/uploadDocumentsHelper";
@@ -106,16 +107,13 @@ const CertificationUpload = ({ path }: CertificationUploadProps) => {
         />
       </Lead>
       <ConditionalContent visible={isBondingNewborn}>
-        <ul className="usa-list">
-          {t<string, string[]>(
-            "pages.claimsUploadDocumentType.leadListNewborn",
-            {
-              returnObjects: true,
-            }
-          ).map((listItem, index) => (
-            <li key={index}>{listItem}</li>
-          ))}
-        </ul>
+        <Trans
+          i18nKey="pages.claimsUploadDocumentType.leadListNewborn"
+          components={{
+            ul: <ul className="usa-list" />,
+            li: <li />,
+          }}
+        />
       </ConditionalContent>
       <DocumentRequirements type="certification" />
     </React.Fragment>
@@ -188,7 +186,7 @@ const IdentificationUpload = ({ path }: IdentificationUploadProps) => {
   );
 };
 
-interface DocumentUploadProps extends WithClaimDocumentsProps {
+export interface DocumentUploadProps extends WithClaimDocumentsProps {
   query: {
     claim_id: string;
     additionalDoc?: string;
@@ -206,7 +204,7 @@ interface DocumentUploadProps extends WithClaimDocumentsProps {
 
 export const DocumentUpload = (props: DocumentUploadProps) => {
   const { appLogic, documents, isLoadingDocuments, query } = props;
-  const { appErrors, portalFlow } = appLogic;
+  const { errors, portalFlow } = appLogic;
   const { t } = useTranslation();
   const { files, processFiles, removeFile } = useFilesLogic({
     clearErrors: appLogic.clearErrors,
@@ -215,7 +213,7 @@ export const DocumentUpload = (props: DocumentUploadProps) => {
   const [submissionInProgress, setSubmissionInProgress] = React.useState(false);
 
   const hasLoadingDocumentsError = hasDocumentsLoadError(
-    appErrors,
+    errors,
     query.claim_id
   );
 
@@ -273,12 +271,15 @@ export const DocumentUpload = (props: DocumentUploadProps) => {
     }
   };
 
-  const fileErrors = appErrors.items.filter(
-    (appErrorInfo) => appErrorInfo.meta && appErrorInfo.meta.file_id
-  );
+  const fileErrors = errors.filter(
+    (error) => error instanceof DocumentsUploadError
+  ) as DocumentsUploadError[];
 
   return (
     <QuestionPage
+      buttonLoadingMessage={t(
+        "pages.claimsUploadDocumentType.uploadingMessage"
+      )}
       title={t("pages.claimsUploadDocumentType.title", {
         context: isIdUpload ? "id" : "certification",
       })}
@@ -302,7 +303,7 @@ export const DocumentUpload = (props: DocumentUploadProps) => {
       {isLoadingDocuments && !hasLoadingDocumentsError && (
         <div className="margin-top-8 text-center">
           <Spinner
-            aria-valuetext={t("components.withClaimDocuments.loadingLabel")}
+            aria-label={t("components.withClaimDocuments.loadingLabel")}
           />
         </div>
       )}

@@ -15,7 +15,7 @@ interface IconProps {
 function Icon(props: IconProps) {
   const usaIconClass =
     typeof props.size === "number"
-      ? `usa-icon--size-${props.size}`
+      ? `usa-icon usa-icon--size-${props.size}`
       : "usa-icon";
   const className = classnames(usaIconClass, props.className);
 

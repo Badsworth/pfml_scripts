@@ -9,16 +9,21 @@ import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
-    Flow,
     Payment,
     PaymentMethod,
+    PaymentTransactionType,
     ReferenceFile,
     ReferenceFileType,
-    State,
     StateLog,
 )
-from massgov.pfml.db.models.factories import PaymentFactory
-from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
+from massgov.pfml.db.models.factories import LinkSplitPaymentFactory, PaymentFactory
+from massgov.pfml.db.models.payments import (
+    AUDIT_REJECT_NOTE_TO_WRITEBACK_TRANSACTION_STATUS,
+    AUDIT_SKIPPED_NOTE_TO_WRITEBACK_TRANSACTION_STATUS,
+    FineosWritebackDetails,
+    FineosWritebackTransactionStatus,
+)
+from massgov.pfml.db.models.state import Flow, State
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
     PaymentAuditCSV,
@@ -30,8 +35,6 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
 from massgov.pfml.delegated_payments.audit.delegated_payment_rejects import (
     ACCEPTED_OUTCOME,
     ACCEPTED_STATE,
-    AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS,
-    AUDIT_SKIPPED_NOTE_TO_WRITEBACK_STATUS,
     NOT_SAMPLED_PAYMENT_NEXT_STATE_BY_CURRENT_STATE,
     NOT_SAMPLED_PAYMENT_OUTCOME_BY_CURRENT_STATE,
     NOT_SAMPLED_STATE_TRANSITIONS,
@@ -130,11 +133,12 @@ def test_parse_payment_rejects_file_missing_columns(
         assert row.dua_additional_income_details is None
         assert row.dia_additional_income_details is None
         assert row.dor_fineos_name_mismatch_details is None
+        assert row.payment_date_mismatch_details is None
 
 
 def test_rejects_column_validation(test_db_session, payment_rejects_step):
     payment = DelegatedPaymentFactory(
-        test_db_session, payment_method=PaymentMethod.ACH,
+        test_db_session, payment_method=PaymentMethod.ACH
     ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT)
 
     payment_audit_data = PaymentAuditData(
@@ -143,6 +147,16 @@ def test_rejects_column_validation(test_db_session, payment_rejects_step):
         previously_rejected_payment_count=1,
         previously_errored_payment_count=1,
         previously_skipped_payment_count=0,
+        previously_paid_payment_count=0,
+        previously_paid_payments_string=None,
+        gross_payment_amount="",
+        net_payment_amount=str(payment.amount),
+        federal_withholding_amount="",
+        state_withholding_amount="",
+        federal_withholding_i_value="",
+        state_withholding_i_value="",
+        employer_reimbursement_amount="",
+        employer_reimbursement_i_value="",
     )
     payment_rejects_row = build_audit_report_row(
         payment_audit_data, get_now_us_eastern(), test_db_session
@@ -151,39 +165,33 @@ def test_rejects_column_validation(test_db_session, payment_rejects_step):
     payment_rejects_row.pfml_payment_id = None
     payment_rejects_row.rejected_by_program_integrity = "Y"
 
-    with pytest.raises(
-        PaymentRejectsException, match="Missing payment id column in rejects file.",
-    ):
+    with pytest.raises(PaymentRejectsException, match="Missing payment id column in rejects file."):
         payment_rejects_step.transition_audit_pending_payment_states([payment_rejects_row])
 
     payment_rejects_row.pfml_payment_id = payment.payment_id
     payment_rejects_row.rejected_by_program_integrity = None
 
-    with pytest.raises(
-        PaymentRejectsException, match="Missing rejection column in rejects file.",
-    ):
+    with pytest.raises(PaymentRejectsException, match="Missing rejection column in rejects file."):
         payment_rejects_step.transition_audit_pending_payment_states([payment_rejects_row])
 
     payment_rejects_row.rejected_by_program_integrity = "Y"
     payment_rejects_row.skipped_by_program_integrity = None
 
-    with pytest.raises(
-        PaymentRejectsException, match="Missing skip column in rejects file.",
-    ):
+    with pytest.raises(PaymentRejectsException, match="Missing skip column in rejects file."):
         payment_rejects_step.transition_audit_pending_payment_states([payment_rejects_row])
 
     payment_rejects_row.rejected_by_program_integrity = "Y"
     payment_rejects_row.skipped_by_program_integrity = "Y"
 
     with pytest.raises(
-        PaymentRejectsException, match="Unexpected state - rejects row both rejected and skipped.",
+        PaymentRejectsException, match="Unexpected state - rejects row both rejected and skipped."
     ):
         payment_rejects_step.transition_audit_pending_payment_states([payment_rejects_row])
 
 
 @pytest.mark.parametrize(
     "rejected_by_program_integrity, skipped_by_program_integrity",
-    [("", ""), ("N", "N"), ("Foo", "Foo"), ("Y", ""), ("", "Y"),],
+    [("", ""), ("N", "N"), ("Foo", "Foo"), ("Y", ""), ("", "Y")],
 )
 def test_valid_combination_of_reject_and_skip(
     test_db_session,
@@ -192,7 +200,7 @@ def test_valid_combination_of_reject_and_skip(
     skipped_by_program_integrity,
 ):
     payment = DelegatedPaymentFactory(
-        test_db_session, payment_method=PaymentMethod.ACH,
+        test_db_session, payment_method=PaymentMethod.ACH
     ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT)
 
     payment_audit_data = PaymentAuditData(
@@ -201,6 +209,16 @@ def test_valid_combination_of_reject_and_skip(
         previously_rejected_payment_count=1,
         previously_errored_payment_count=1,
         previously_skipped_payment_count=0,
+        previously_paid_payment_count=0,
+        previously_paid_payments_string=None,
+        gross_payment_amount="",
+        net_payment_amount=str(payment.amount),
+        federal_withholding_amount="",
+        state_withholding_amount="",
+        federal_withholding_i_value="",
+        state_withholding_i_value="",
+        employer_reimbursement_amount="",
+        employer_reimbursement_i_value="",
     )
 
     payment_rejects_row = build_audit_report_row(
@@ -230,7 +248,7 @@ def test_transition_audit_pending_payment_state(test_db_session, payment_rejects
     # test rejection
 
     payment_1 = DelegatedPaymentFactory(
-        test_db_session, payment_method=PaymentMethod.ACH,
+        test_db_session, payment_method=PaymentMethod.ACH
     ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT)
 
     payment_rejects_step.transition_audit_pending_payment_state(
@@ -274,7 +292,7 @@ def test_transition_audit_pending_payment_state(test_db_session, payment_rejects
 
     # test acceptance
     payment_2 = DelegatedPaymentFactory(
-        test_db_session, payment_method=PaymentMethod.ACH,
+        test_db_session, payment_method=PaymentMethod.ACH
     ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT)
 
     payment_rejects_step.transition_audit_pending_payment_state(payment_2, False, False)
@@ -298,7 +316,7 @@ def test_transition_audit_pending_payment_state(test_db_session, payment_rejects
 
     # test not a payment pending state exception
     payment_4 = DelegatedPaymentFactory(
-        test_db_session, payment_method=PaymentMethod.ACH,
+        test_db_session, payment_method=PaymentMethod.ACH
     ).get_or_create_payment_with_state(
         State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_NOT_SAMPLED
     )
@@ -311,7 +329,7 @@ def test_transition_audit_pending_payment_state(test_db_session, payment_rejects
 
     # test skip
     payment_5 = DelegatedPaymentFactory(
-        test_db_session, payment_method=PaymentMethod.ACH,
+        test_db_session, payment_method=PaymentMethod.ACH
     ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT)
 
     payment_rejects_step.transition_audit_pending_payment_state(payment_5, False, True)
@@ -359,7 +377,7 @@ def test_transition_audit_pending_payment_state(test_db_session, payment_rejects
     )
 
     payment_rejects_step.transition_audit_pending_payment_state(
-        payment_6, True, False, "InvalidPayment" + "\ufffd" + "PaidDate",
+        payment_6, True, False, "InvalidPayment" + "\ufffd" + "PaidDate"
     )
 
     payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
@@ -394,10 +412,11 @@ def test_convert_reject_notes_to_writeback_status_rejected_scenarios(
 ):
     test_cases = []
 
-    for (reject_note, expected_status) in AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS.items():
-        test_cases.append(
-            {"reject_notes": reject_note, "expected_status": expected_status,}
-        )
+    for (
+        reject_notes,
+        transaction_status,
+    ) in AUDIT_REJECT_NOTE_TO_WRITEBACK_TRANSACTION_STATUS.items():
+        test_cases.append({"reject_notes": reject_notes, "expected_status": transaction_status})
 
     # Close matches
     test_cases.append(
@@ -451,10 +470,11 @@ def test_convert_reject_notes_to_writeback_status_skipped_scenarios(
 ):
     test_cases = []
 
-    for (reject_note, expected_status) in AUDIT_SKIPPED_NOTE_TO_WRITEBACK_STATUS.items():
-        test_cases.append(
-            {"reject_notes": reject_note, "expected_status": expected_status,}
-        )
+    for (
+        reject_notes,
+        transaction_status,
+    ) in AUDIT_SKIPPED_NOTE_TO_WRITEBACK_TRANSACTION_STATUS.items():
+        test_cases.append({"reject_notes": reject_notes, "expected_status": transaction_status})
 
     # Close matches
     test_cases.append(
@@ -497,7 +517,7 @@ def test_transition_not_sampled_payment_audit_pending_states(test_db_session, pa
     payment_to_pending_state = {}
     for state_transition in NOT_SAMPLED_STATE_TRANSITIONS:
         payment = DelegatedPaymentFactory(
-            test_db_session, payment_method=PaymentMethod.ACH,
+            test_db_session, payment_method=PaymentMethod.ACH
         ).get_or_create_payment_with_state(state_transition.from_state)
         payment_to_pending_state[payment.payment_id] = state_transition.from_state
 
@@ -575,7 +595,7 @@ def test_process_rejects(
 
     # Create a few more payments in pending state (not sampled)
     not_sampled = DelegatedPaymentFactory(
-        test_db_session, payment_method=PaymentMethod.ACH,
+        test_db_session, payment_method=PaymentMethod.ACH
     ).get_or_create_payment_with_state(
         State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_NOT_SAMPLED
     )
@@ -650,9 +670,362 @@ def test_process_rejects_error(
 
     # check rejects file was moved to processed folder
     expected_errored_folder_path = os.path.join(
-        payment_rejects_errored_folder_path, get_now_us_eastern().strftime("%Y-%m-%d"),
+        payment_rejects_errored_folder_path, get_now_us_eastern().strftime("%Y-%m-%d")
     )
     assert_files(expected_errored_folder_path, [rejects_file_name_1, rejects_file_name_2])
+
+
+def test_transition_audit_pending_payment_state_withholdings(test_db_session, payment_rejects_step):
+
+    # Test Rejection of Primary
+    payment_1 = DelegatedPaymentFactory(
+        test_db_session, payment_method=PaymentMethod.ACH
+    ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT)
+
+    # Create a Federal Tax Withholding
+    withholding_payment_1 = DelegatedPaymentFactory(
+        test_db_session,
+        payment_method=PaymentMethod.ACH,
+        payment_transaction_type=PaymentTransactionType.FEDERAL_TAX_WITHHOLDING,
+    ).get_or_create_payment_with_state(State.FEDERAL_WITHHOLDING_RELATED_PENDING_AUDIT)
+
+    # Create the Payment Relationship
+    related_1 = LinkSplitPaymentFactory.create(
+        payment=payment_1, related_payment=withholding_payment_1
+    )
+
+    assert related_1 is not None
+
+    payment_rejects_step.transition_audit_pending_payment_state(
+        payment_1, True, False, "Example notes"
+    )
+
+    payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
+        payment_1, Flow.DELEGATED_PAYMENT, test_db_session
+    )
+
+    withholding_payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
+        withholding_payment_1, Flow.DELEGATED_PAYMENT, test_db_session
+    )
+
+    assert payment_state_log is not None
+    assert withholding_payment_state_log is not None
+
+    assert (
+        payment_state_log.end_state_id
+        == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT.state_id
+    )
+    assert payment_state_log.outcome["message"] == "Payment rejected with notes: Example notes"
+
+    assert withholding_payment_state_log.end_state_id == State.FEDERAL_WITHHOLDING_ERROR.state_id
+
+    expected_writeback_transaction_status = (
+        FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION
+    )
+    writeback_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
+        payment_1, Flow.DELEGATED_PEI_WRITEBACK, test_db_session
+    )
+    assert writeback_state_log is not None
+    assert writeback_state_log.end_state_id == State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id
+    assert (
+        writeback_state_log.outcome["message"]
+        == expected_writeback_transaction_status.transaction_status_description
+    )
+
+    writeback_details = (
+        test_db_session.query(FineosWritebackDetails)
+        .filter(FineosWritebackDetails.payment_id == payment_1.payment_id)
+        .one_or_none()
+    )
+    assert writeback_details is not None
+    assert (
+        writeback_details.transaction_status_id
+        == expected_writeback_transaction_status.transaction_status_id
+    )
+
+    expected_withholding_writeback_transaction_status = (
+        FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION
+    )
+    withholding_writeback_state_log: Optional[
+        StateLog
+    ] = state_log_util.get_latest_state_log_in_flow(
+        withholding_payment_1, Flow.DELEGATED_PEI_WRITEBACK, test_db_session
+    )
+    assert withholding_writeback_state_log is not None
+    assert (
+        withholding_writeback_state_log.end_state_id
+        == State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id
+    )
+    assert (
+        withholding_writeback_state_log.outcome["message"]
+        == expected_withholding_writeback_transaction_status.transaction_status_description
+    )
+
+    withholding_writeback_details = (
+        test_db_session.query(FineosWritebackDetails)
+        .filter(FineosWritebackDetails.payment_id == withholding_payment_1.payment_id)
+        .one_or_none()
+    )
+    assert withholding_writeback_details is not None
+    assert (
+        withholding_writeback_details.transaction_status_id
+        == expected_withholding_writeback_transaction_status.transaction_status_id
+    )
+
+    # Test Acceptance of Primary
+    payment_2 = DelegatedPaymentFactory(
+        test_db_session, payment_method=PaymentMethod.ACH
+    ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT)
+
+    # Create a Federal Tax Withholding
+    withholding_payment_2 = DelegatedPaymentFactory(
+        test_db_session,
+        payment_method=PaymentMethod.ACH,
+        payment_transaction_type=PaymentTransactionType.FEDERAL_TAX_WITHHOLDING,
+    ).get_or_create_payment_with_state(State.FEDERAL_WITHHOLDING_RELATED_PENDING_AUDIT)
+
+    # Create the Payment Relationship
+    related_2 = LinkSplitPaymentFactory.create(
+        payment=payment_2, related_payment=withholding_payment_2
+    )
+    assert related_2 is not None
+
+    payment_rejects_step.transition_audit_pending_payment_state(payment_2, False, False)
+
+    payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
+        payment_2, Flow.DELEGATED_PAYMENT, test_db_session
+    )
+
+    withholding_payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
+        withholding_payment_2, Flow.DELEGATED_PAYMENT, test_db_session
+    )
+
+    assert payment_state_log is not None
+    assert withholding_payment_state_log is not None
+
+    assert payment_state_log.end_state_id == ACCEPTED_STATE.state_id
+    assert payment_state_log.outcome["message"] == ACCEPTED_OUTCOME["message"]
+
+    assert (
+        withholding_payment_state_log.end_state_id == State.FEDERAL_WITHHOLDING_SEND_FUNDS.state_id
+    )
+    assert withholding_payment_state_log.outcome["message"] == ACCEPTED_OUTCOME["message"]
+
+    # Test Skip of Primary
+    payment_3 = DelegatedPaymentFactory(
+        test_db_session, payment_method=PaymentMethod.ACH
+    ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT)
+
+    # Create a Federal Tax Withholding
+    withholding_payment_3 = DelegatedPaymentFactory(
+        test_db_session,
+        payment_method=PaymentMethod.ACH,
+        payment_transaction_type=PaymentTransactionType.FEDERAL_TAX_WITHHOLDING,
+    ).get_or_create_payment_with_state(State.FEDERAL_WITHHOLDING_RELATED_PENDING_AUDIT)
+
+    # Create the Payment Relationship
+    related_3 = LinkSplitPaymentFactory.create(
+        payment=payment_3, related_payment=withholding_payment_3
+    )
+    assert related_3 is not None
+
+    payment_rejects_step.transition_audit_pending_payment_state(payment_3, False, True)
+
+    payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
+        payment_3, Flow.DELEGATED_PAYMENT, test_db_session
+    )
+
+    withholding_payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
+        withholding_payment_3, Flow.DELEGATED_PAYMENT, test_db_session
+    )
+
+    assert payment_state_log is not None
+    assert withholding_payment_state_log is not None
+
+    assert (
+        payment_state_log.end_state_id
+        == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE.state_id
+    )
+    assert payment_state_log.outcome["message"] == "Payment skipped"
+
+    assert (
+        withholding_payment_state_log.end_state_id
+        == State.FEDERAL_WITHHOLDING_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE.state_id
+    )
+    assert withholding_payment_state_log.outcome["message"] == "Record is skipped"
+
+    expected_writeback_transaction_status = FineosWritebackTransactionStatus.PENDING_PAYMENT_AUDIT
+    writeback_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
+        payment_3, Flow.DELEGATED_PEI_WRITEBACK, test_db_session
+    )
+    assert writeback_state_log is not None
+    assert writeback_state_log.end_state_id == State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id
+    assert (
+        writeback_state_log.outcome["message"]
+        == expected_writeback_transaction_status.transaction_status_description
+    )
+
+    writeback_details = (
+        test_db_session.query(FineosWritebackDetails)
+        .filter(FineosWritebackDetails.payment_id == payment_3.payment_id)
+        .one_or_none()
+    )
+    assert writeback_details is not None
+    assert (
+        writeback_details.transaction_status_id
+        == expected_writeback_transaction_status.transaction_status_id
+    )
+
+    expected_withholding_writeback_transaction_status = (
+        FineosWritebackTransactionStatus.PENDING_PAYMENT_AUDIT
+    )
+    withholding_writeback_state_log: Optional[
+        StateLog
+    ] = state_log_util.get_latest_state_log_in_flow(
+        withholding_payment_3, Flow.DELEGATED_PEI_WRITEBACK, test_db_session
+    )
+    assert withholding_writeback_state_log is not None
+    assert (
+        withholding_writeback_state_log.end_state_id
+        == State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id
+    )
+    assert (
+        withholding_writeback_state_log.outcome["message"]
+        == expected_withholding_writeback_transaction_status.transaction_status_description
+    )
+
+    withholding_writeback_details = (
+        test_db_session.query(FineosWritebackDetails)
+        .filter(FineosWritebackDetails.payment_id == withholding_payment_3.payment_id)
+        .one_or_none()
+    )
+    assert withholding_writeback_details is not None
+    assert (
+        withholding_writeback_details.transaction_status_id
+        == expected_withholding_writeback_transaction_status.transaction_status_id
+    )
+
+    # Test Rejection of Withholding
+    # Create a Federal Tax Withholding
+    withholding_payment_4 = DelegatedPaymentFactory(
+        test_db_session,
+        payment_method=PaymentMethod.ACH,
+        payment_transaction_type=PaymentTransactionType.FEDERAL_TAX_WITHHOLDING,
+    ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT)
+
+    payment_rejects_step.transition_audit_pending_payment_state(
+        withholding_payment_4, True, False, "Example notes"
+    )
+
+    withholding_payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
+        withholding_payment_4, Flow.DELEGATED_PAYMENT, test_db_session
+    )
+
+    assert withholding_payment_state_log is not None
+
+    assert (
+        withholding_payment_state_log.end_state_id
+        == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT.state_id
+    )
+    assert (
+        withholding_payment_state_log.outcome["message"]
+        == "Payment rejected with notes: Example notes"
+    )
+
+    expected_writeback_transaction_status = (
+        FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION
+    )
+    writeback_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
+        withholding_payment_4, Flow.DELEGATED_PEI_WRITEBACK, test_db_session
+    )
+    assert writeback_state_log is not None
+    assert writeback_state_log.end_state_id == State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id
+    assert (
+        writeback_state_log.outcome["message"]
+        == expected_writeback_transaction_status.transaction_status_description
+    )
+
+    writeback_details = (
+        test_db_session.query(FineosWritebackDetails)
+        .filter(FineosWritebackDetails.payment_id == withholding_payment_4.payment_id)
+        .one_or_none()
+    )
+    assert writeback_details is not None
+    assert (
+        writeback_details.transaction_status_id
+        == expected_writeback_transaction_status.transaction_status_id
+    )
+
+    # Test Acceptance of Withholding
+    # Create a Federal Tax Withholding
+    withholding_payment_5 = DelegatedPaymentFactory(
+        test_db_session,
+        payment_method=PaymentMethod.ACH,
+        payment_transaction_type=PaymentTransactionType.FEDERAL_TAX_WITHHOLDING,
+    ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT)
+
+    payment_rejects_step.transition_audit_pending_payment_state(withholding_payment_5, False, False)
+
+    withholding_payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
+        withholding_payment_5, Flow.DELEGATED_PAYMENT, test_db_session
+    )
+
+    assert withholding_payment_state_log is not None
+    assert (
+        withholding_payment_state_log.end_state_id == State.FEDERAL_WITHHOLDING_SEND_FUNDS.state_id
+    )
+    assert withholding_payment_state_log.outcome["message"] == ACCEPTED_OUTCOME["message"]
+
+    # Test Skip of Withholding
+    # Create a Federal Tax Withholding
+    withholding_payment_6 = DelegatedPaymentFactory(
+        test_db_session,
+        payment_method=PaymentMethod.ACH,
+        payment_transaction_type=PaymentTransactionType.FEDERAL_TAX_WITHHOLDING,
+    ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT)
+
+    payment_rejects_step.transition_audit_pending_payment_state(withholding_payment_6, False, True)
+
+    withholding_payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
+        withholding_payment_6, Flow.DELEGATED_PAYMENT, test_db_session
+    )
+
+    assert withholding_payment_state_log is not None
+
+    assert (
+        withholding_payment_state_log.end_state_id
+        == State.FEDERAL_WITHHOLDING_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE.state_id
+    )
+    assert withholding_payment_state_log.outcome["message"] == "Payment skipped"
+
+    expected_withholding_writeback_transaction_status = (
+        FineosWritebackTransactionStatus.PENDING_PAYMENT_AUDIT
+    )
+    withholding_writeback_state_log: Optional[
+        StateLog
+    ] = state_log_util.get_latest_state_log_in_flow(
+        withholding_payment_6, Flow.DELEGATED_PEI_WRITEBACK, test_db_session
+    )
+    assert withholding_writeback_state_log is not None
+    assert (
+        withholding_writeback_state_log.end_state_id
+        == State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id
+    )
+    assert (
+        withholding_writeback_state_log.outcome["message"]
+        == expected_withholding_writeback_transaction_status.transaction_status_description
+    )
+
+    withholding_writeback_details = (
+        test_db_session.query(FineosWritebackDetails)
+        .filter(FineosWritebackDetails.payment_id == withholding_payment_6.payment_id)
+        .one_or_none()
+    )
+    assert withholding_writeback_details is not None
+    assert (
+        withholding_writeback_details.transaction_status_id
+        == expected_withholding_writeback_transaction_status.transaction_status_id
+    )
 
 
 # Assertion helpers

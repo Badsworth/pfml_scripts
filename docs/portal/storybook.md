@@ -1,6 +1,6 @@
 # Storybook
 
-[Storybook](https://storybook.js.org/) is a tool for UI development. It makes development faster and easier by isolating components. This allows you to work on one component at a time. You can develop entire UIs without needing to run the Portal application, or navigating around the Portal flow. You can read more below about the process and collaboration goals behind our usage of Storybook.
+[Storybook](https://storybook.js.org/) is a tool for UI development and collaboration. It makes development faster and easier by isolating components. This allows you to work on one component at a time. You can preview entire UIs without needing to run the Portal application, or navigating around the Portal flow. You can read more below about the process and collaboration goals behind our usage of Storybook.
 
 The ultimate output is a static site that [currently gets deployed here](http://pfml-storybook.nava.pizza/). (Related: [Deploy docs](deployment.md))
 
@@ -16,14 +16,15 @@ npm run docs
 
 ### Adding a new story
 
-Each page in Storybook is generated from `*.stories.js` files located in [`portal/storybook/stories/`](../../portal/storybook/stories/). This file exports functions (["stories"](https://storybook.js.org/docs/react/get-started/whats-a-story)), each of which is rendered on the page. The functions can render any arbitrary React, so a Story can render a page, component, or plain HTML.
+Each page in Storybook is generated from `*.stories.tsx` files located in [`portal/storybook/stories/`](../../portal/storybook/stories/). This file exports functions (["stories"](https://storybook.js.org/docs/react/get-started/whats-a-story)), each of which is rendered on the page. The functions can render any arbitrary React, so a Story can render a page, component, or plain HTML.
 
 For example, here's a Storybook page with a single story that renders a preview of our Button component:
 
-```jsx
-// portal/storybook/stories/components/Button.stories.js
+```tsx
+// portal/storybook/stories/components/Button.stories.tsx
 import Button from "src/components/Button";
 import React from "react";
+import { Props } from "types/common";
 
 export default {
   // this determines where the story shows in the site's sidebar menu:
@@ -38,18 +39,23 @@ export default {
   },
 };
 
-export const Primary = (args) => {
+export const Primary = (args: Props<typeof Button>) => {
   return <Button {...args} />;
 };
 ```
 
-**[Learn more about writing stories →](https://storybook.js.org/docs/react/writing-stories/introduction)**
+- **[Learn more about writing stories →](https://storybook.js.org/docs/react/writing-stories/introduction)**
+- **[Learn more about Storybook `args` and `argTypes`](https://storybook.js.org/docs/react/writing-stories/args)**, which we use for providing prop and state controls in the Storybook UI.
 
 ### Previewing entire pages
 
 In Next.js, [a page is just a React component](https://nextjs.org/docs/basic-features/pages). This enables some pretty cool capabilities when combined with Storybook. Specifically, this means we can create a Story that renders a Page component, which allows us to preview an entire page without navigating through the entire application flow to preview the page.
 
-For the Create Claim flow, we're [generating a Storybook page for each page in the flow](../../portal/bin/generate-claims-page-stories.js). Engineers can override the generated story by adding a `*.stories.js` file for the page in the `storybook/stories/pages/applications` directory.
+An additional benefit of including a Story for a Page component is that this page will receive an automated accessibility scan as part of the tests generated for each story.
+
+#### Application flow
+
+For the "Create Application" claimant flow, we're [generating a Storybook page for each page in the flow](../../portal/bin/generate-claims-page-stories.js). Engineers can override the generated story by adding a `*.stories.tsx` file for the page in the `storybook/stories/pages/applications` directory.
 
 ### How Storybook interacts with our source code
 

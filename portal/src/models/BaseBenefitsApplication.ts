@@ -1,4 +1,4 @@
-import { compact, get, map } from "lodash";
+import { compact, get } from "lodash";
 import LeaveReason from "./LeaveReason";
 import formatDateRange from "../utils/formatDateRange";
 
@@ -97,40 +97,6 @@ abstract class BaseBenefitsApplication {
     return compact([this.first_name, this.middle_name, this.last_name]).join(
       " "
     );
-  }
-
-  /**
-   * Returns earliest start date across all leave periods
-   */
-  get leaveStartDate() {
-    const periods = [
-      get(this, "leave_details.continuous_leave_periods"),
-      get(this, "leave_details.intermittent_leave_periods"),
-      get(this, "leave_details.reduced_schedule_leave_periods"),
-    ].flat();
-
-    const startDates: string[] = map(compact(periods), "start_date").sort();
-
-    if (!startDates.length) return null;
-
-    return startDates[0];
-  }
-
-  /**
-   * Returns latest end date across all leave periods
-   */
-  get leaveEndDate() {
-    const periods = [
-      get(this, "leave_details.continuous_leave_periods"),
-      get(this, "leave_details.intermittent_leave_periods"),
-      get(this, "leave_details.reduced_schedule_leave_periods"),
-    ].flat();
-
-    const endDates: string[] = map(compact(periods), "end_date").sort();
-
-    if (!endDates.length) return null;
-
-    return endDates[endDates.length - 1];
   }
 }
 

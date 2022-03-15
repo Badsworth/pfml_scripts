@@ -1,35 +1,39 @@
 import {
-  AbsencePeriod,
-  AbsencePeriodRequestDecision,
-} from "../../../models/AbsencePeriod";
-import {
   BenefitsApplicationDocument,
   ClaimDocument,
   DocumentType,
   DocumentTypeEnum,
+  filterByApplication,
+  findDocumentsByTypes,
+  getLegalNotices,
 } from "../../../models/Document";
 import React, { useEffect } from "react";
-import Tag, { TagProps } from "../../../components/core/Tag";
-import { find, get, has, map } from "lodash";
+import {
+  getInfoAlertContext,
+  paymentStatusViewHelper,
+  showPaymentsTab,
+} from "./payments";
 import withUser, { WithUserProps } from "../../../hoc/withUser";
 
+import { AbsencePeriod } from "../../../models/AbsencePeriod";
+import AbsencePeriodStatusTag from "../../../components/AbsencePeriodStatusTag";
 import Alert from "../../../components/core/Alert";
 import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
 import ButtonLink from "../../../components/ButtonLink";
 import Heading from "../../../components/core/Heading";
+import HolidayAlert from "../../../components/status/HolidayAlert";
 import LeaveReason from "../../../models/LeaveReason";
 import LegalNoticeList from "../../../components/LegalNoticeList";
 import PageNotFound from "../../../components/PageNotFound";
+import { Payment } from "src/models/Payment";
 import Spinner from "../../../components/core/Spinner";
 import StatusNavigationTabs from "../../../components/status/StatusNavigationTabs";
 import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import { createRouteWithQuery } from "../../../utils/routeWithParams";
-import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
 import findKeyByValue from "../../../utils/findKeyByValue";
 import formatDate from "../../../utils/formatDate";
-import getLegalNotices from "../../../utils/getLegalNotices";
 import hasDocumentsLoadError from "../../../utils/hasDocumentsLoadError";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../routes";
@@ -49,21 +53,31 @@ export const Status = ({
 }) => {
   const { t } = useTranslation();
   const {
-    claims: { claimDetail, isLoadingClaimDetail, loadClaimDetail },
+    claims: { claimDetail, loadClaimDetail, isLoadingClaimDetail },
     documents: {
       documents: allClaimDocuments,
       download: downloadDocument,
       hasLoadedClaimDocuments,
       loadAll: loadAllClaimDocuments,
     },
+    holidays,
+    payments: { loadPayments, loadedPaymentsData },
   } = appLogic;
   const { absence_case_id, absence_id, uploaded_document_type } = query;
-  const application_id = get(claimDetail, "application_id");
+  const application_id = claimDetail?.application_id;
   const absenceId = absence_id || absence_case_id;
+  const hasDocuments = hasLoadedClaimDocuments(
+    claimDetail?.application_id || ""
+  );
+  const hasDocumentsError = hasDocumentsLoadError(
+    appLogic.errors,
+    claimDetail?.application_id || ""
+  );
 
   useEffect(() => {
     if (absenceId) {
       loadClaimDetail(absenceId);
+      loadPayments(absenceId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [absenceId]);
@@ -85,7 +99,7 @@ export const Status = ({
       const anchorId = document.getElementById(location.hash.substring(1));
       if (anchorId) anchorId.scrollIntoView();
     }
-  }, [isLoadingClaimDetail]);
+  }, [hasDocuments, hasDocumentsError, isLoadingClaimDetail]);
 
   /**
    * If there is no absence_id query parameter,
@@ -95,7 +109,7 @@ export const Status = ({
   if (!isAbsenceCaseId) return <PageNotFound />;
 
   // only hide page content if there is an error that's not DocumentsLoadError.
-  const hasNonDocumentsLoadError: boolean = appLogic.appErrors.items.some(
+  const hasNonDocumentsLoadError: boolean = appLogic.errors.some(
     (error) => error.name !== "DocumentsLoadError"
   );
   if (hasNonDocumentsLoadError) {
@@ -111,9 +125,7 @@ export const Status = ({
   if (isLoadingClaimDetail || !claimDetail) {
     return (
       <div className="text-center">
-        <Spinner
-          aria-valuetext={t("pages.claimsStatus.loadingClaimDetailLabel")}
-        />
+        <Spinner aria-label={t("pages.claimsStatus.loadingClaimDetailLabel")} />
       </div>
     );
   }
@@ -121,26 +133,30 @@ export const Status = ({
   const absenceDetails = AbsencePeriod.groupByReason(
     claimDetail.absence_periods
   );
-  const hasPendingStatus = claimDetail.absence_periods.some(
-    (absenceItem) => absenceItem.request_decision === "Pending"
-  );
-  const hasApprovedStatus = claimDetail.absence_periods.some(
-    (absenceItem) => absenceItem.request_decision === "Approved"
-  );
-  const documentsForApplication = allClaimDocuments.filterByApplication(
+
+  const documentsForApplication = filterByApplication(
+    allClaimDocuments.items,
     claimDetail.application_id
   );
 
+  const helper = paymentStatusViewHelper(
+    claimDetail,
+    allClaimDocuments,
+    loadedPaymentsData || new Payment()
+  );
+
+  const {
+    hasApprovedStatus,
+    hasPendingStatus,
+    hasInReviewStatus,
+    hasProjectedStatus,
+  } = helper;
+
+  const infoAlertContext = getInfoAlertContext(helper);
+
   const viewYourNotices = () => {
     const legalNotices = getLegalNotices(documentsForApplication);
-
-    const shouldShowSpinner =
-      !hasLoadedClaimDocuments(claimDetail.application_id) &&
-      !hasDocumentsLoadError(appLogic.appErrors, claimDetail.application_id);
-    const hasNothingToShow =
-      hasDocumentsLoadError(appLogic.appErrors, claimDetail.application_id) ||
-      legalNotices.length === 0;
-
+    const hasNothingToShow = hasDocumentsError || legalNotices.length === 0;
     interface SectionWrapperProps {
       children: React.ReactNode;
     }
@@ -148,12 +164,11 @@ export const Status = ({
       <div className={containerClassName}>{children}</div>
     );
 
-    if (shouldShowSpinner) {
-      // claim documents are loading.
+    if (!hasDocuments && !hasDocumentsError) {
       return (
         <SectionWrapper>
           <Spinner
-            aria-valuetext={t("pages.claimsStatus.loadingLegalNoticesLabel")}
+            aria-label={t("pages.claimsStatus.loadingLegalNoticesLabel")}
           />
         </SectionWrapper>
       );
@@ -213,31 +228,17 @@ export const Status = ({
     );
   };
 
-  const getInfoAlertContext = (absenceDetails: {
-    [key: string]: AbsencePeriod[];
-  }) => {
-    const hasBondingReason = has(absenceDetails, LeaveReason.bonding);
-    const hasPregnancyReason = has(absenceDetails, LeaveReason.pregnancy);
-    const hasNewBorn = claimDetail.absence_periods.some(
-      (absenceItem) =>
-        (absenceItem.reason_qualifier_one ||
-          absenceItem.reason_qualifier_two) === "Newborn"
-    );
-    if (hasBondingReason && !hasPregnancyReason && hasNewBorn) {
-      return "bonding";
-    }
-
-    if (hasPregnancyReason && !hasBondingReason) {
-      return "pregnancy";
-    }
-
-    return "";
-  };
-  const infoAlertContext = getInfoAlertContext(absenceDetails);
   const [firstAbsenceDetail] = Object.keys(absenceDetails);
+
+  // Determines if payment tab is displayed
+  const isPaymentsTab = showPaymentsTab(helper);
 
   return (
     <React.Fragment>
+      {isFeatureEnabled("showHolidayAlert") &&
+        isFeatureEnabled("claimantShowPaymentsPhaseThree") && (
+          <HolidayAlert holidaysLogic={holidays} />
+        )}
       {uploaded_document_type && (
         <Alert
           heading={t("pages.claimsStatus.uploadSuccessHeading", {
@@ -248,66 +249,71 @@ export const Status = ({
           state="success"
         >
           {t("pages.applications.uploadSuccessMessage", {
-            absenceId,
+            absence_id: absenceId,
           })}
         </Alert>
       )}
 
-      {!!infoAlertContext && (hasPendingStatus || hasApprovedStatus) && (
-        <Alert
-          className="margin-bottom-3"
-          data-test="info-alert"
-          heading={t("pages.claimsStatus.infoAlertHeading", {
-            context: infoAlertContext,
-          })}
-          headingLevel="2"
-          headingSize="4"
-          noIcon
-          state="info"
-        >
-          <Trans
-            i18nKey="pages.claimsStatus.infoAlertBody"
-            tOptions={{ context: infoAlertContext }}
-            components={{
-              "about-bonding-leave-link": (
-                <a
-                  href={routes.external.massgov.benefitsGuide_aboutBondingLeave}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                />
-              ),
-              "contact-center-phone-link": (
-                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-              ),
-            }}
-          />
-        </Alert>
-      )}
+      {!!infoAlertContext &&
+        (hasPendingStatus ||
+          hasApprovedStatus ||
+          hasInReviewStatus ||
+          hasProjectedStatus) && (
+          <Alert
+            className="margin-bottom-3"
+            data-test="info-alert"
+            heading={t("pages.claimsStatus.infoAlertHeading", {
+              context: infoAlertContext,
+            })}
+            headingLevel="2"
+            headingSize="4"
+            noIcon
+            state="info"
+          >
+            <p>
+              <Trans
+                i18nKey="pages.claimsStatus.infoAlertBody"
+                tOptions={{ context: infoAlertContext }}
+                components={{
+                  "about-bonding-leave-link": (
+                    <a
+                      href={
+                        routes.external.massgov.benefitsGuide_aboutBondingLeave
+                      }
+                      target="_blank"
+                      rel="noreferrer noopener"
+                    />
+                  ),
+                  "contact-center-phone-link": (
+                    <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                  ),
+                }}
+              />
+            </p>
+          </Alert>
+        )}
       <BackButton
         label={t("pages.claimsStatus.backButtonLabel")}
         href={routes.applications.index}
       />
       <div className="measure-6">
         <Title hidden>{t("pages.claimsStatus.applicationTitle")}</Title>
-        {isFeatureEnabled("claimantShowPayments") &&
-          hasApprovedStatus &&
-          claimDetail.has_paid_payments && (
-            <StatusNavigationTabs
-              activePath={appLogic.portalFlow.pathname}
-              absence_id={absenceId}
-            />
-          )}
+        {isPaymentsTab && (
+          <StatusNavigationTabs
+            activePath={appLogic.portalFlow.pathname}
+            absence_id={absenceId}
+          />
+        )}
 
         {/* Heading section */}
-
         <Heading level="2" size="1">
           {t("pages.claimsStatus.leaveReasonValueHeader", {
             context: findKeyByValue(LeaveReason, firstAbsenceDetail),
           })}
         </Heading>
 
-        <div className="bg-base-lightest padding-2 tablet:display-flex tablet:padding-bottom-0">
-          <div className="padding-bottom-3 padding-right-6">
+        <div className="bg-base-lightest tablet:display-flex padding-3">
+          <div className=" padding-right-6">
             <Heading weight="normal" level="2" size="4">
               {t("pages.claimsStatus.applicationID")}
             </Heading>
@@ -338,7 +344,7 @@ export const Status = ({
         <LeaveDetails
           absenceDetails={absenceDetails}
           absenceId={claimDetail.fineos_absence_id}
-          hasPaidPayments={claimDetail.has_paid_payments}
+          isPaymentsTab={isPaymentsTab}
         />
         {viewYourNotices()}
 
@@ -434,35 +440,22 @@ export const Status = ({
 
 export default withUser(Status);
 
-export const StatusTagMap: {
-  [status in AbsencePeriodRequestDecision]: TagProps["state"];
-} = {
-  Approved: "success",
-  Cancelled: "inactive",
-  Denied: "error",
-  "In Review": "pending",
-  Pending: "pending",
-  Projected: "pending",
-  Withdrawn: "inactive",
-  Voided: "inactive",
-} as const;
-
 interface LeaveDetailsProps {
   absenceDetails?: { [key: string]: AbsencePeriod[] };
   absenceId: string;
-  hasPaidPayments?: boolean;
+  isPaymentsTab?: boolean;
 }
 
 export const LeaveDetails = ({
   absenceDetails = {},
   absenceId,
-  hasPaidPayments,
+  isPaymentsTab,
 }: LeaveDetailsProps) => {
   const { t } = useTranslation();
 
   return (
     <React.Fragment>
-      {map(absenceDetails, (absenceItem, absenceItemName) => (
+      {Object.entries(absenceDetails).map(([absenceItemName, absenceItem]) => (
         <div key={absenceItemName} className={containerClassName}>
           <Heading level="2">
             {t("pages.claimsStatus.leaveReasonValue", {
@@ -496,35 +489,33 @@ export const LeaveDetails = ({
                       startDate: formatDate(absence_period_start_date).full(),
                     })}
                   </p>
-                  <Tag
-                    label={t("pages.claimsStatus.requestDecision", {
-                      context: request_decision,
-                    })}
-                    state={StatusTagMap[request_decision]}
-                  />
-                  <Trans
-                    i18nKey="pages.claimsStatus.leaveStatusMessage"
-                    tOptions={{ context: request_decision }}
-                    components={{
-                      "application-link": (
-                        <a
-                          href={routes.applications.getReady}
-                          rel="noopener noreferrer"
-                          target="_blank"
-                        />
-                      ),
-                      p: <p></p>,
-                      "request-appeal-link": (
-                        <a
-                          href={routes.external.massgov.requestAnAppealForPFML}
-                          rel="noopener noreferrer"
-                          target="_blank"
-                        />
-                      ),
-                      "request-decision-info": <p></p>,
-                    }}
-                  />
-                  {request_decision === "Approved" && hasPaidPayments && (
+                  <p>
+                    <AbsencePeriodStatusTag
+                      request_decision={request_decision}
+                    />
+                  </p>
+                  <div data-testid="leaveStatusMessage">
+                    <Trans
+                      i18nKey="pages.claimsStatus.leaveStatusMessage"
+                      tOptions={{ context: request_decision }}
+                      components={{
+                        "application-link": (
+                          <a href={routes.applications.getReady} />
+                        ),
+                        "request-appeal-link": (
+                          <a
+                            href={
+                              routes.external.massgov.requestAnAppealForPFML
+                            }
+                            rel="noopener noreferrer"
+                            target="_blank"
+                          />
+                        ),
+                      }}
+                    />
+                  </div>
+
+                  {request_decision === "Approved" && isPaymentsTab && (
                     <Trans
                       i18nKey="pages.claimsStatus.viewPaymentTimeline"
                       components={{
@@ -532,7 +523,7 @@ export const LeaveDetails = ({
                           <a
                             href={createRouteWithQuery(
                               "/applications/status/payments",
-                              { absenceId }
+                              { absence_id: absenceId }
                             )}
                           />
                         ),
@@ -575,8 +566,7 @@ export const Timeline = ({
       DocumentType.certification[absencePeriodReason],
     ]).length;
 
-  const bondingAbsencePeriod = find(
-    absencePeriods,
+  const bondingAbsencePeriod = absencePeriods.find(
     (absencePeriod) => absencePeriod.reason === LeaveReason.bonding
   );
   interface FollowUpStepsProps {
@@ -654,7 +644,7 @@ export const Timeline = ({
         components={{
           "timeline-link": (
             <a
-              href={routes.external.massgov.timeline}
+              href={routes.external.massgov.approvalTimeline}
               rel="noopener noreferrer"
               target="_blank"
             />

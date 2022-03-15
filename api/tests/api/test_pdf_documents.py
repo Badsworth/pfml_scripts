@@ -5,24 +5,13 @@ from unittest import mock
 import pytest
 
 import massgov.pfml.util.pdf as pdf_util
-from massgov.pfml.api.app import get_app_config
 from massgov.pfml.db.models.applications import LeaveReason
 from massgov.pfml.db.models.factories import ApplicationFactory, ClaimFactory
 
 
-@pytest.fixture(autouse=True)
-def enable_pdf_compression_env(monkeypatch):
-    new_env = monkeypatch.setenv("ENABLE_PDF_DOCUMENT_COMPRESSION", "1")
-    return new_env
-
-
 @pytest.fixture
 def valid_form_data():
-    return {
-        "document_type": "Passport",
-        "name": "passport.pdf",
-        "description": "Passport",
-    }
+    return {"document_type": "Passport", "name": "passport.pdf", "description": "Passport"}
 
 
 @pytest.fixture
@@ -36,9 +25,7 @@ def valid_form_data_with_file(valid_form_data):
 
 
 @pytest.fixture
-def document_upload(
-    client, consented_user, consented_user_token, valid_form_data_with_file,
-):
+def document_upload(client, consented_user, consented_user_token, valid_form_data_with_file):
     def _upload_document(file_data):
         claim = ClaimFactory.create(
             fineos_notification_id="NTN-111", fineos_absence_id="NTN-111-ABS-01"
@@ -107,10 +94,6 @@ def too_large_pdf_file(pdf_util_test_files):
     return pdf_util_test_files / "marsEv2.pdf"
 
 
-def test_configuration_set_from_env(app):
-    assert get_app_config(app).enable_pdf_document_compression
-
-
 # Check for regression against existing upload pattern
 @mock.patch("massgov.pfml.util.pdf.compress_pdf")
 def test_upload_does_not_attempt_compress_small_pdf(
@@ -137,9 +120,7 @@ def test_upload_forwards_compressed_file_to_fineos(
     mock_subprocess_run, document_upload, too_large_pdf_file, pdf_bytes_small
 ):
     mock_proc = mock.Mock()
-    mock_proc.configure_mock(
-        **{"returncode": 0, "stdout": pdf_bytes_small, "stderr": "",}
-    )
+    mock_proc.configure_mock(**{"returncode": 0, "stdout": pdf_bytes_small, "stderr": ""})
     mock_subprocess_run.return_value = mock_proc
 
     with too_large_pdf_file.open("rb") as pdf:

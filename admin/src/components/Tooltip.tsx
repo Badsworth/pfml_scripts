@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+
+import { InformationCircleIcon } from "@heroicons/react/solid";
 import { uniqueId } from "lodash";
 
 export type Props = {
@@ -30,7 +32,9 @@ const Tooltip = ({ position = "right", children }: Props) => {
         role="button"
         tabIndex={0}
         data-testid="tooltip-trigger"
-      ></span>
+      >
+        <InformationCircleIcon className="tooltip__trigger-icon" />
+      </span>
       <span
         id={tooltipID ?? ""}
         className="tooltip__container"

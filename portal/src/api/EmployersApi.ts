@@ -5,8 +5,8 @@ import BaseApi, {
   handleNotOkResponse,
 } from "./BaseApi";
 import User, { UserLeaveAdministrator } from "../models/User";
+import ApiResourceCollection from "../models/ApiResourceCollection";
 import { ClaimDocument } from "../models/Document";
-import DocumentCollection from "../models/DocumentCollection";
 import EmployerClaim from "../models/EmployerClaim";
 import Withholding from "../models/Withholding";
 import routes from "../routes";
@@ -16,7 +16,7 @@ export default class EmployersApi extends BaseApi {
     return routes.api.employers;
   }
 
-  get i18nPrefix() {
+  get namespace() {
     return "employers";
   }
 
@@ -68,7 +68,7 @@ export default class EmployersApi extends BaseApi {
     }
 
     if (!response.ok) {
-      handleNotOkResponse(response, [], this.i18nPrefix);
+      handleNotOkResponse(response, [], this.namespace);
     }
 
     return blob;
@@ -84,7 +84,10 @@ export default class EmployersApi extends BaseApi {
     );
 
     return {
-      documents: new DocumentCollection(data),
+      documents: new ApiResourceCollection<ClaimDocument>(
+        "fineos_document_id",
+        data
+      ),
     };
   };
 

@@ -20,7 +20,7 @@ interface VerifyAccountProps {
 
 export const VerifyAccount = (props: VerifyAccountProps) => {
   const { appLogic } = props;
-  const { appErrors, auth } = appLogic;
+  const { errors, auth } = appLogic;
   const { t } = useTranslation();
 
   const createAccountUsername = get(auth, "authData.createAccountUsername", "");
@@ -61,7 +61,7 @@ export const VerifyAccount = (props: VerifyAccountProps) => {
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors,
+    errors,
     formState,
     updateFields,
   });
@@ -72,7 +72,7 @@ export const VerifyAccount = (props: VerifyAccountProps) => {
         label={t("pages.authVerifyAccount.backToLoginLink")}
         href={routes.auth.login}
       />
-      {codeResent && appErrors.isEmpty && (
+      {codeResent && !errors.length && (
         <Alert
           className="margin-bottom-3 margin-top-0"
           heading={t("pages.authVerifyAccount.codeResentHeading")}

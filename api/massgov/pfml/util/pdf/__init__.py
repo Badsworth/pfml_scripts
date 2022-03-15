@@ -7,15 +7,18 @@ Context is provided in the referenced spec regarding settings and configurations
 
 import os
 import subprocess
+import time
 from typing import IO, Any, Dict, Optional, Union
 
 import massgov.pfml.util.logging as logging
 
 logger = logging.get_logger(__name__)
 
-PDF_SETTINGS = "/screen"
+PDF_SETTINGS = "/ebook"
 SUCCESS_MESSAGE = "PDF successfully compressed"
 ERROR_MESSAGE = "PDF could not be compressed"
+TIMEOUT_ERROR_MESSAGE = "pdf compression timeout before compression was completed"
+DEFAULT_TIMEOUT = 25
 
 
 class PDFUtilError(RuntimeError):
@@ -33,9 +36,12 @@ class PDFSizeError(PDFUtilError):
     """Size was not reduced while attempting to compress a PDF."""
 
 
-def pdf_compression_attrs(original_size: int, resulting_size: int) -> Dict[str, Union[str, int]]:
+def pdf_compression_attrs(
+    compression_time: float, original_size: int, resulting_size: int
+) -> Dict[str, Union[str, float, int]]:
     space = 1 - (resulting_size / original_size) if original_size > 0 else 0
     return {
+        "compression_time_seconds": compression_time,
         "original_size": original_size,
         "resulting_size": resulting_size,
         "space_saving": f"{space:.0%}",
@@ -47,7 +53,7 @@ def get_file_size(f: IO[Any]) -> int:
     return f.tell()
 
 
-def compress_pdf(source_file: IO[Any], dest_file: IO[Any]) -> int:
+def compress_pdf(source_file: IO[Any], dest_file: IO[Any], timeout: int = DEFAULT_TIMEOUT) -> int:
     gs_cli_command = [
         "gs",
         "-sDEVICE=pdfwrite",
@@ -61,12 +67,21 @@ def compress_pdf(source_file: IO[Any], dest_file: IO[Any]) -> int:
         "-_",
     ]
 
+    start_time = time.monotonic()
     source_file.seek(0)
     dest_file.seek(0)
+    try:
+        proc = subprocess.run(
+            gs_cli_command,
+            stdin=source_file,
+            stdout=dest_file,
+            stderr=subprocess.PIPE,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired:
+        raise PDFCompressionError(TIMEOUT_ERROR_MESSAGE)
 
-    proc = subprocess.run(
-        gs_cli_command, stdin=source_file, stdout=dest_file, stderr=subprocess.PIPE
-    )
+    compression_time = time.monotonic() - start_time
     if proc.returncode != 0:
         error_message = str(proc.stderr).strip()
         logger.warning(error_message)
@@ -75,9 +90,15 @@ def compress_pdf(source_file: IO[Any], dest_file: IO[Any]) -> int:
     original_size = get_file_size(source_file)
     resulting_size = get_file_size(dest_file)
     if resulting_size >= original_size:
-        logger.info(ERROR_MESSAGE, extra={**pdf_compression_attrs(original_size, resulting_size)})
+        logger.info(
+            ERROR_MESSAGE,
+            extra={**pdf_compression_attrs(compression_time, original_size, resulting_size)},
+        )
         raise PDFSizeError(ERROR_MESSAGE)
 
-    logger.info(SUCCESS_MESSAGE, extra={**pdf_compression_attrs(original_size, resulting_size)})
+    logger.info(
+        SUCCESS_MESSAGE,
+        extra={**pdf_compression_attrs(compression_time, original_size, resulting_size)},
+    )
 
     return resulting_size

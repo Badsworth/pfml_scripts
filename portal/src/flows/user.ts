@@ -10,25 +10,31 @@ import routes from "../routes";
 
 export default {
   states: {
-    [routes.user.settings]: {
+    [routes.user.convertToEmployer]: {
+      meta: {},
+      on: {
+        PREVENT_CONVERSION: routes.applications.getReady,
+      },
+    },
+    [routes.user.convertToEmployee]: {
+      meta: {},
+      on: {
+        PREVENT_CONVERSION: routes.employers.dashboard,
+      },
+    },
+    [routes.user.consentToDataSharing]: {
+      meta: {},
       on: {
         ENABLE_MFA: routes.twoFactor.smsIndex,
-        EDIT_MFA_PHONE: routes.twoFactor.smsSetup,
-      },
-    },
-    [routes.twoFactor.smsIndex]: {
-      on: {
-        CONTINUE: routes.twoFactor.smsSetup,
-      },
-    },
-    [routes.twoFactor.smsSetup]: {
-      on: {
-        CONTINUE: routes.twoFactor.smsConfirm,
-      },
-    },
-    [routes.twoFactor.smsConfirm]: {
-      on: {
+        // Route to Applications page to support users who are re-consenting.
+        // If they're new users with no claims, the Applications page will
+        // handle redirecting them
         CONTINUE: routes.applications.index,
+      },
+    },
+    [routes.user.settings]: {
+      on: {
+        EDIT_MFA_PHONE: routes.twoFactor.smsSetup,
       },
     },
   },

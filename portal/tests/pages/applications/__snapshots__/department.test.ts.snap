@@ -1,0 +1,273 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`DepartmentPage renders the confirmation page 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Employment information
+    </h1>
+    <fieldset
+      class="usa-fieldset margin-top-3 usa-form-group"
+    >
+      <legend
+        class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+      >
+        Confirm your department
+      </legend>
+      <span
+        class="display-block line-height-sans-5 measure-5 usa-intro"
+      >
+        Based on what you’ve entered, our records show you work at 
+        <strong>
+          Department One
+        </strong>
+        . Is this the department where you are applying to take leave?
+      </span>
+      <div
+        class="margin-top-3"
+      >
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice2"
+            name="radioOrgUnit"
+            type="radio"
+            value="department_one"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice2"
+          >
+            Yes
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice3"
+            name="radioOrgUnit"
+            type="radio"
+            value="no"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice3"
+          >
+            No
+          </label>
+        </div>
+      </div>
+    </fieldset>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Save and continue
+    </button>
+  </form>
+</div>
+`;
+
+exports[`DepartmentPage renders the page with a long list 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Employment information
+    </h1>
+    <fieldset
+      class="usa-fieldset margin-top-3"
+    >
+      <legend
+        class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+      >
+        Select the department where you are applying to take leave
+      </legend>
+      <p>
+        Failure to select the right department will delay your application.
+      </p>
+      <div
+        class="usa-form-group"
+      >
+        <label
+          class="usa-label text-bold font-heading-xs measure-5"
+          for="Dropdown4"
+          id="Dropdown4-label"
+        >
+          Select your department
+        </label>
+        <div
+          class="usa-combo-box"
+          data-default-value=""
+          data-enhanced="true"
+        >
+          <select
+            aria-hidden="true"
+            class="usa-select maxw-mobile-lg usa-sr-only usa-combo-box__select"
+            id=""
+            name="comboOrgUnit"
+            tabindex="-1"
+          >
+            <option
+              value=""
+            />
+            <option
+              value="department_one"
+            >
+              Department One
+            </option>
+            <option
+              value="department_two"
+            >
+              Department Two
+            </option>
+            <option
+              value="department_three"
+            >
+              Department Three
+            </option>
+            <option
+              value="department_four"
+            >
+              Department Four
+            </option>
+            <option
+              value="department_five"
+            >
+              Department Five
+            </option>
+            <option
+              value="department_six"
+            >
+              Department Six
+            </option>
+            <option
+              value="department_seven"
+            >
+              Department Seven
+            </option>
+            <option
+              value="department_eight"
+            >
+              Department Eight
+            </option>
+            <option
+              value="not_selected"
+            >
+              I'm not sure
+            </option>
+          </select>
+          <input
+            aria-autocomplete="list"
+            aria-describedby="Dropdown4--assistiveHint"
+            aria-expanded="false"
+            aria-labelledby="Dropdown4_label Dropdown4_hint Dropdown4_error"
+            aria-owns="Dropdown4--list"
+            autocapitalize="off"
+            autocomplete="off"
+            class="usa-combo-box__input"
+            id="Dropdown4"
+            role="combobox"
+            type="text"
+          />
+          
+    
+          <span
+            class="usa-combo-box__clear-input__wrapper"
+            tabindex="-1"
+          >
+            
+        
+            <button
+              aria-label="Clear the select contents"
+              class="usa-combo-box__clear-input"
+              type="button"
+            >
+               
+            </button>
+            
+      
+          </span>
+          
+      
+          <span
+            class="usa-combo-box__input-button-separator"
+          >
+             
+          </span>
+          
+      
+          <span
+            class="usa-combo-box__toggle-list__wrapper"
+            tabindex="-1"
+          >
+            
+        
+            <button
+              aria-label="Toggle the dropdown list"
+              class="usa-combo-box__toggle-list"
+              tabindex="-1"
+              type="button"
+            >
+               
+            </button>
+            
+      
+          </span>
+          
+      
+          <ul
+            aria-labelledby="Dropdown4-label"
+            class="usa-combo-box__list"
+            hidden=""
+            id="Dropdown4--list"
+            role="listbox"
+            tabindex="-1"
+          >
+            
+      
+          </ul>
+          
+      
+          <div
+            class="usa-combo-box__status usa-sr-only"
+            role="status"
+          />
+          
+      
+          <span
+            class="usa-sr-only"
+            id="Dropdown4--assistiveHint"
+          >
+            
+        When autocomplete results are available use up and down arrows to review and enter to select.
+        Touch device users, explore by touch or with swipe gestures.
+      
+          </span>
+        </div>
+      </div>
+    </fieldset>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Save and continue
+    </button>
+  </form>
+</div>
+`;

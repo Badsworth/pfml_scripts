@@ -1,7 +1,6 @@
 import { MockBenefitsApplicationBuilder } from "../test-utils";
 import Step from "../../src/models/Step";
 import claimantConfig from "../../src/flows/claimant";
-import { map } from "lodash";
 
 describe("Step Model", () => {
   const step = "step";
@@ -266,18 +265,18 @@ describe("Step Model", () => {
       );
 
       expect(steps.map((s) => s.name)).toMatchInlineSnapshot(`
-Array [
-  "VERIFY_ID",
-  "EMPLOYER_INFORMATION",
-  "LEAVE_DETAILS",
-  "OTHER_LEAVE",
-  "REVIEW_AND_CONFIRM",
-  "PAYMENT",
-  "TAX_WITHHOLDING",
-  "UPLOAD_ID",
-  "UPLOAD_CERTIFICATION",
-]
-`);
+        [
+          "VERIFY_ID",
+          "EMPLOYER_INFORMATION",
+          "LEAVE_DETAILS",
+          "OTHER_LEAVE",
+          "REVIEW_AND_CONFIRM",
+          "PAYMENT",
+          "TAX_WITHHOLDING",
+          "UPLOAD_ID",
+          "UPLOAD_CERTIFICATION",
+        ]
+      `);
     });
 
     it("sets #pages property for each Step", () => {
@@ -286,10 +285,12 @@ Array [
         { claim: new MockBenefitsApplicationBuilder().create() },
         []
       );
-      const machinePages = map(claimantConfig.states, (value, key) => ({
-        route: key,
-        meta: value.meta,
-      }));
+      const machinePages = Object.entries(claimantConfig.states).map(
+        (key, value) => ({
+          route: key,
+          meta: value.meta,
+        })
+      );
 
       steps.forEach((s) => {
         expect(s).toBeInstanceOf(Step);

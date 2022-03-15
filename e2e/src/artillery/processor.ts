@@ -94,7 +94,7 @@ export const submitAndAdjudicate = wrap(
   async (_context: ArtilleryContext, ee: EventEmitter, logger: Logger) => {
     const claim = await interactor.generateClaim(
       ee,
-      "LSTBHAP1",
+      interactor.getScenario(),
       logger.child({ stage: "generate" })
     );
     logger.info("Claim data:", getDataFromClaim(claim));
@@ -119,7 +119,11 @@ export const submitAndAdjudicate = wrap(
 export const submitAndStore = wrap(
   async (context: ArtilleryContext, ee: EventEmitter, logger: Logger) => {
     const body = await timeRequest(context, ee, async () => {
-      const claim = await interactor.generateClaim(ee, "LSTBHAP1", logger);
+      const claim = await interactor.generateClaim(
+        ee,
+        interactor.getScenario(),
+        logger
+      );
       logger = logger.child({ claim_id: claim.id });
       logger.info("Claim data:", getDataFromClaim(claim));
       const submission = await interactor.submitClaim(claim, ee, logger);

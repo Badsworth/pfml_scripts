@@ -1,19 +1,19 @@
 /* eslint sort-keys: ["error", "asc"] */
 import { compact, get } from "lodash";
+import { AbsencePeriod } from "./AbsencePeriod";
+import { ManagedRequirement } from "./ManagedRequirement";
+import { ValuesOf } from "../../types/common";
 
 /**
  * A record from the API's Claims table. Could be utilized by Leave Admin and Claimants.
  */
 class Claim {
-  absence_period_end_date: string | null = null;
-  absence_period_start_date: string | null = null;
+  absence_periods: AbsencePeriod[];
   claim_status: AbsenceCaseStatusType | null;
-  claim_type_description: string | null = null;
   created_at: string;
   employee: ClaimEmployee | null;
   employer: ClaimEmployer;
   fineos_absence_id: string;
-  fineos_notification_id: string;
   managed_requirements: ManagedRequirement[];
 
   constructor(attrs: Claim) {
@@ -50,21 +50,9 @@ export class ClaimEmployee {
  * Employer record associated to the Claim
  */
 export interface ClaimEmployer {
-  employer_dba: string;
+  employer_dba: string | null;
   employer_fein: string;
   employer_id: string;
-}
-
-/**
- * Managed requirements associated to the Claim
- */
-export interface ManagedRequirement {
-  category: string;
-  created_at: string;
-  follow_up_date: string | null;
-  responded_at: string | null;
-  status: "Open" | "Complete" | "Suppressed";
-  type: string;
 }
 
 /**
@@ -80,7 +68,6 @@ export const AbsenceCaseStatus = {
   declined: "Declined",
 } as const;
 
-export type AbsenceCaseStatusType =
-  typeof AbsenceCaseStatus[keyof typeof AbsenceCaseStatus];
+export type AbsenceCaseStatusType = ValuesOf<typeof AbsenceCaseStatus>;
 
 export default Claim;

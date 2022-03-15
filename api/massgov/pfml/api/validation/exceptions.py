@@ -70,6 +70,9 @@ class IssueRule(str, Enum):
     # Employee must have wages from the Employer
     require_employee = "require_employee"
 
+    def __str__(self):
+        return str(self.value)
+
 
 class IssueType(str, Enum):
     """
@@ -155,6 +158,16 @@ class IssueType(str, Enum):
     employer_requires_verification_data = "employer_requires_verification_data"
     # Leave admin user attempting to view data for an organization they don't have access to
     unauthorized_leave_admin = "unauthorized_leave_admin"
+    # User is trying to submit a modification on an unapproved claim
+    must_be_approved_claim = "must_be_approved_claim"
+    # User is trying to submit a withdrawal on an claim without either a pending or approved absence period
+    must_be_approved_or_pending_claim = "must_be_approved_or_pending_claim"
+    # User is trying to add start and end dates to a claim withdrawal
+    withdrawal_dates_must_be_null = "withdrawal_dates_must_be_null"
+    # User is trying to make an unsupported modification
+    not_medical_to_bonding_claim = "not_medical_to_bonding_claim"
+    # Start date is invalid for modification request type
+    change_start_date_is_unsupported = "change_start_date_is_unsupported"
     # Generic error indicating the error originated from our own business logic.
     # This was added when we began enforcing that `type` is an `IssueType`. Avoid using
     # this moving forward.
@@ -162,6 +175,9 @@ class IssueType(str, Enum):
     pfml = ""
     # Generic value error
     value_error = "value_error"
+
+    def __str__(self):
+        return str(self.value)
 
 
 @dataclass

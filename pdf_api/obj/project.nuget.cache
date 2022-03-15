@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "A638oIl9tgljRrbFRdl08Fl8+txViwt8pVjGNm3MaWXz1sve6Z89eC32x1nZY6CEznCnTfsWJPaGFZSYoa12ug==",
+  "dgSpecHash": "Z4QQMTZ/HnYoeYGERb7Nues4+dV+DjSwWIWxm26NWeQRsIjUEnfaCsW4EkwEvUAbNM9qHQcm6MO7pAHwcW2KYw==",
   "success": true,
   "projectFilePath": "/home/joelpelaez/src/pfml/pdf_api/PfmlPdfApi.csproj",
   "expectedPackageFiles": [
@@ -88,7 +88,8 @@
     "/home/joelpelaez/.nuget/packages/system.threading.threadpool/4.3.0/system.threading.threadpool.4.3.0.nupkg.sha512",
     "/home/joelpelaez/.nuget/packages/system.xml.readerwriter/4.3.0/system.xml.readerwriter.4.3.0.nupkg.sha512",
     "/home/joelpelaez/.nuget/packages/system.xml.xdocument/4.0.11/system.xml.xdocument.4.0.11.nupkg.sha512",
-    "/home/joelpelaez/.nuget/packages/system.xml.xmldocument/4.3.0/system.xml.xmldocument.4.3.0.nupkg.sha512"
+    "/home/joelpelaez/.nuget/packages/system.xml.xmldocument/4.3.0/system.xml.xmldocument.4.3.0.nupkg.sha512",
+    "/home/joelpelaez/.nuget/packages/microsoft.netcore.app.host.linux-x64/5.0.13/microsoft.netcore.app.host.linux-x64.5.0.13.nupkg.sha512"
   ],
   "logs": []
 }

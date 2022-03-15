@@ -129,7 +129,7 @@ export class ListErrorsRow extends React.Component {
             <span
               dangerouslySetInnerHTML={{
                 __html: DOMPurify.sanitize(
-                  item.errorMessage.replace(/[\r\n]+/g, "<br>"),
+                  item.errorMessage?.replace(/[\r\n]+/g, "<br>"),
                   {
                     ALLOWED_TAGS: ["br"],
                   }

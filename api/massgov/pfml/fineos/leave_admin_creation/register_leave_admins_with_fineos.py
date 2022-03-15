@@ -1,6 +1,3 @@
-import boto3
-
-import massgov.pfml.util.config as config
 import massgov.pfml.util.logging
 from massgov.pfml import db, fineos
 from massgov.pfml.api.services.administrator_fineos_actions import register_leave_admin_with_fineos
@@ -64,14 +61,7 @@ def find_admins_without_registration(db_session: db.Session) -> None:
     )
 
     if len(leave_admins_without_fineos) > 0:
-        fineos_client_config = fineos.factory.FINEOSClientConfig.from_env()
-        if fineos_client_config.oauth2_client_secret is None:
-            aws_ssm = boto3.client("ssm", region_name="us-east-1")
-            fineos_client_config.oauth2_client_secret = config.get_secret_from_env(
-                aws_ssm, "FINEOS_CLIENT_OAUTH2_CLIENT_SECRET"
-            )
-
-        fineos_client = fineos.create_client(fineos_client_config)
+        fineos_client = fineos.create_client()
 
     logger.info(
         "Leave admin records to process", extra={"To process": len(leave_admins_without_fineos)}

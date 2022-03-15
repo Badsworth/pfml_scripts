@@ -1,12 +1,11 @@
 import { Issue, ValidationError } from "../errors";
-import { AppErrorsLogic } from "./useAppErrorsLogic";
+import ApiResourceCollection from "../models/ApiResourceCollection";
 import Compressor from "compressorjs";
+import { ErrorsLogic } from "./useErrorsLogic";
 import TempFile from "../models/TempFile";
-import TempFileCollection from "../models/TempFileCollection";
 import bytesToMb from "../utils/bytesToMb";
 import { isFeatureEnabled } from "../services/featureFlags";
 import { snakeCase } from "lodash";
-import { t } from "../locales/i18n";
 import tracker from "../services/tracker";
 import useCollectionState from "./useCollectionState";
 
@@ -155,16 +154,20 @@ function getIssueForDisallowedFile(
       ? disallowedReasons.size
       : disallowedReason;
 
+  const issueType = `clientSideError_${context}`;
+
   return {
-    message: t("errors.documents.file.clientSideError", {
-      context,
+    field: "file",
+    namespace: "documents",
+    type: issueType,
+    extra: {
       sizeLimit:
         disallowedReason === disallowedReasons.apiGatewaySize
           ? bytesToMb(Number(process.env.fileSizeMaxBytesApiGateway))
           : bytesToMb(Number(process.env.fileSizeMaxBytesFineos)),
       disallowedFileNames:
         disallowedFile instanceof File ? disallowedFile.name : "",
-    }),
+    },
   };
 }
 
@@ -174,14 +177,14 @@ const useFilesLogic = ({
   clearErrors,
 }: {
   allowedFileTypes?: readonly string[];
-  catchError: AppErrorsLogic["catchError"];
-  clearErrors: AppErrorsLogic["clearErrors"];
+  catchError: ErrorsLogic["catchError"];
+  clearErrors: ErrorsLogic["clearErrors"];
 }) => {
   const {
     collection: files,
     addItems: addFiles,
     removeItem: removeFile,
-  } = useCollectionState(new TempFileCollection());
+  } = useCollectionState(new ApiResourceCollection<TempFile>("id"));
 
   /**
    * Async function handles file optimization and filter logic
@@ -197,8 +200,7 @@ const useFilesLogic = ({
     addFiles(allowedFiles.map((file) => new TempFile({ file })));
 
     if (issues.length > 0) {
-      const i18nPrefix = "files";
-      catchError(new ValidationError(issues, i18nPrefix));
+      catchError(new ValidationError(issues));
     }
   };
 

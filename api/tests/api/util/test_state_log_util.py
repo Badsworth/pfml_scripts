@@ -9,11 +9,9 @@ import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 from massgov.pfml.db.models.employees import (
     Claim,
     Employee,
-    Flow,
     LatestStateLog,
     Payment,
     ReferenceFile,
-    State,
     StateLog,
 )
 from massgov.pfml.db.models.factories import (
@@ -22,6 +20,7 @@ from massgov.pfml.db.models.factories import (
     PaymentFactory,
     ReferenceFileFactory,
 )
+from massgov.pfml.db.models.state import Flow, State
 from tests.helpers.state_log import default_outcome, setup_state_log
 
 ### Setup methods for various state log scenarios ###
@@ -49,7 +48,7 @@ def single_ended_payment(test_db_session):
 def simple_employee_with_end_state(test_db_session):
     return setup_state_log(
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        end_states=[State.ADD_TO_GAX, State.GAX_SENT, State.CONFIRM_PAYMENT,],
+        end_states=[State.ADD_TO_GAX, State.GAX_SENT, State.CONFIRM_PAYMENT],
         test_db_session=test_db_session,
     )
 
@@ -58,7 +57,7 @@ def simple_employee_with_end_state(test_db_session):
 def employee_stuck_state_log(test_db_session):
     return setup_state_log(
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        end_states=[State.CONFIRM_PAYMENT, State.CONFIRM_PAYMENT, State.CONFIRM_PAYMENT,],
+        end_states=[State.CONFIRM_PAYMENT, State.CONFIRM_PAYMENT, State.CONFIRM_PAYMENT],
         test_db_session=test_db_session,
     )
 
@@ -329,7 +328,7 @@ def test_get_latest_state_log_in_end_state(initialize_factories_session, test_db
     # This employee has 3 linked state logs that ends with a CONFIRM_PAYMENT
     test_setup = simple_employee_with_end_state(test_db_session)
     state_log = state_log_util.get_latest_state_log_in_end_state(
-        test_setup.associated_model, State.CONFIRM_PAYMENT, test_db_session,
+        test_setup.associated_model, State.CONFIRM_PAYMENT, test_db_session
     )
     assert test_setup.state_logs[2].state_log_id == state_log.state_log_id
 
@@ -354,7 +353,7 @@ def test_get_all_latest_state_logs_in_end_state(initialize_factories_session, te
     )
 
     submitted_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-        state_log_util.AssociatedClass.EMPLOYEE, State.CONFIRM_PAYMENT, test_db_session,
+        state_log_util.AssociatedClass.EMPLOYEE, State.CONFIRM_PAYMENT, test_db_session
     )
     assert len(submitted_state_logs) == 2
     submitted_state_log_ids = [state_log.state_log_id for state_log in submitted_state_logs]
@@ -363,7 +362,7 @@ def test_get_all_latest_state_logs_in_end_state(initialize_factories_session, te
 
     # Also verify that it does not return anything for non-latest state logs
     created_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-        state_log_util.AssociatedClass.EMPLOYEE, State.GAX_SENT, test_db_session,
+        state_log_util.AssociatedClass.EMPLOYEE, State.GAX_SENT, test_db_session
     )
     assert created_state_logs == []
 
@@ -510,14 +509,14 @@ def test_get_state_logs_stuck_in_state(initialize_factories_session, test_db_ses
     test_setup2 = simple_employee_with_end_state(test_db_session)
 
     stuck_state_logs = state_log_util.get_state_logs_stuck_in_state(
-        state_log_util.AssociatedClass.EMPLOYEE, State.CONFIRM_PAYMENT, 3, test_db_session, now,
+        state_log_util.AssociatedClass.EMPLOYEE, State.CONFIRM_PAYMENT, 3, test_db_session, now
     )
     assert len(stuck_state_logs) == 1
     assert stuck_state_logs[0].state_log_id == test_setup1.state_logs[-1].state_log_id
 
     # now let's get anything "stuck" for more than 0 days, should return the latest for all
     stuck_state_logs = state_log_util.get_state_logs_stuck_in_state(
-        state_log_util.AssociatedClass.EMPLOYEE, State.CONFIRM_PAYMENT, 0, test_db_session, now,
+        state_log_util.AssociatedClass.EMPLOYEE, State.CONFIRM_PAYMENT, 0, test_db_session, now
     )
     assert len(stuck_state_logs) == 2
     stuck_state_log_ids = [state_log.state_log_id for state_log in stuck_state_logs]
@@ -627,6 +626,9 @@ def test_build_outcome():
         payments_util.ValidationReason.MISSING_FIELD, "FIELD1"
     )
     validation_container.add_validation_issue(payments_util.ValidationReason.MISSING_IN_DB, "DB1")
+    validation_container.add_validation_issue(
+        payments_util.ValidationReason.FIELD_TOO_LONG, "DETAIL1", "FIELD2"
+    )
     complex_outcome = state_log_util.build_outcome("complex", validation_container)
     assert complex_outcome == {
         "message": "complex",
@@ -636,6 +638,7 @@ def test_build_outcome():
                 {"reason": "MissingDataset", "details": "DATASET1"},
                 {"reason": "MissingField", "details": "FIELD1"},
                 {"reason": "MissingInDB", "details": "DB1"},
+                {"reason": "FieldTooLong", "details": "DETAIL1", "field_name": "FIELD2"},
             ],
         },
     }
@@ -708,7 +711,7 @@ def test_create_finished_state_log_for_associated_model_without_id_fails(
             Flow.VENDOR_CHECK,
             "Employee model associated with StateLog has no employee_id",
         ),
-        (Payment(), Flow.PAYMENT, "Payment model associated with StateLog has no payment_id",),
+        (Payment(), Flow.PAYMENT, "Payment model associated with StateLog has no payment_id"),
         (
             Claim(),
             Flow.DELEGATED_CLAIM_VALIDATION,

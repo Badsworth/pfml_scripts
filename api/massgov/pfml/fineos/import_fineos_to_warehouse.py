@@ -92,6 +92,7 @@ fineos_warehouse_full_extracts = [
     "CPS_AbsenceCasesWithGT1LeavePlan.csv",
     "CPS_ServiceAgreementsWithGT3LeavePlans.csv",
     "OrphanedCases_list.csv",
+    "VBI_1099DATA_SOM.csv",
 ]
 
 # These extracts use a WHERE clause of records that have some date column > THE_LAST_RUN_START_TIME. So we will
@@ -103,6 +104,7 @@ fineos_warehouse_daily_extracts = [
     "VBI_ABSENCECASEByStage.csv",
     "EmployeeDataLoad_feed.csv",
     "VBI_TASKREPORT_SOM.csv",
+    "VBI_ORGUNIT_DETAILS_SOM.csv",
 ]
 
 
@@ -209,7 +211,7 @@ def process_date(date, s3_fineos, fineos_s3_path, bi_warehouse_path, include_ful
                         warehouse_table_name = os.path.splitext(wanted_extract)[0].lower()
                         source_file = os.path.join(fineos_s3_path, fineos_extract)
                         dest_file = os.path.join(
-                            bi_warehouse_path, warehouse_table_name, wanted_extract,
+                            bi_warehouse_path, warehouse_table_name, wanted_extract
                         )
 
                         logger.info("Copying %s to %s", source_file, dest_file)

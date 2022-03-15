@@ -36,8 +36,8 @@ def upgrade():
             server_default=sa.text("now()"),
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(["import_log_id"], ["import_log.import_log_id"],),
-        sa.ForeignKeyConstraint(["payment_id"], ["payment.payment_id"],),
+        sa.ForeignKeyConstraint(["import_log_id"], ["import_log.import_log_id"]),
+        sa.ForeignKeyConstraint(["payment_id"], ["payment.payment_id"]),
         sa.ForeignKeyConstraint(
             ["transaction_status_id"],
             ["lk_fineos_writeback_transaction_status.transaction_status_id"],

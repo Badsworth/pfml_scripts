@@ -1,0 +1,944 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ConcurrentLeaves renders the continuous page content 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Other leave, benefits, and income
+    </h1>
+    <fieldset
+      class="usa-fieldset margin-top-3 usa-form-group"
+    >
+      <legend
+        class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+      >
+        <h2
+          class="font-heading-lg text-bold"
+        >
+          Will you use any employer-sponsored paid time off during your leave period?
+        </h2>
+      </legend>
+      <span
+        class="display-block line-height-sans-5 measure-5 usa-intro"
+      >
+        <div
+          class="margin-bottom-5"
+        >
+          <div
+            aria-labelledby="alert-heading5"
+            class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-2 margin-bottom-0"
+            role="region"
+            tabindex="-1"
+          >
+            <div
+              class="usa-alert__body"
+            >
+              <h2
+                class="usa-alert__heading font-heading-md text-bold"
+                id="alert-heading5"
+              >
+                Your leave dates for paid leave from PFML
+              </h2>
+              <div
+                class="usa-alert__text"
+              >
+                1/1/2022 to 6/1/2022
+              </div>
+            </div>
+          </div>
+          <div
+            aria-labelledby="alert-heading6"
+            class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-0 margin-bottom-4"
+            role="region"
+            tabindex="-1"
+          >
+            <div
+              class="usa-alert__body"
+            >
+              <h2
+                class="usa-alert__heading font-heading-md text-bold"
+                id="alert-heading6"
+              >
+                Your 7-day waiting period dates
+              </h2>
+              <div
+                class="usa-alert__text"
+              >
+                1/1/2022 to 1/7/2022
+              </div>
+            </div>
+          </div>
+          <h3
+            class="font-heading-sm text-bold"
+          >
+            <svg
+              aria-hidden="true"
+              class="usa-icon usa-icon--size-3 text-secondary text-middle margin-right-1 margin-top-neg-05"
+              focusable="false"
+              role="img"
+            >
+              <use
+                xlink:href="/img/sprite.svg#check"
+              />
+            </svg>
+            What kinds of paid time off to report
+          </h3>
+          <div
+            class="margin-top-1 margin-left-4 margin-bottom-2"
+          >
+            Employer-sponsored paid vacation time, sick time, and personal time you plan to take during your paid leave from PFML.
+          </div>
+          <h3
+            class="font-heading-sm text-bold"
+          >
+            <svg
+              aria-hidden="true"
+              class="usa-icon usa-icon--size-3 text-error text-middle margin-right-1 margin-top-neg-05"
+              focusable="false"
+              role="img"
+            >
+              <use
+                xlink:href="/img/sprite.svg#close"
+              />
+            </svg>
+            Don’t report paid time off that you use during the 7-day waiting period
+          </h3>
+        </div>
+      </span>
+      <div
+        class="margin-top-3"
+      >
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice7"
+            name="has_concurrent_leave"
+            type="radio"
+            value="true"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice7"
+          >
+            Yes
+            <span
+              class="usa-hint text-base-dark"
+            >
+              <br />
+              I need to report employer-sponsored paid time off I will use after the 7-day waiting period.
+            </span>
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice8"
+            name="has_concurrent_leave"
+            type="radio"
+            value="false"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice8"
+          >
+            No
+            <span
+              class="usa-hint text-base-dark"
+            >
+              <br />
+              I don’t need to report any employer-sponsored paid time off after the 7-day waiting period, or I don’t know yet
+            </span>
+          </label>
+        </div>
+      </div>
+    </fieldset>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Save and continue
+    </button>
+  </form>
+</div>
+`;
+
+exports[`ConcurrentLeaves renders the intermittent reduced page content 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Other leave, benefits, and income
+    </h1>
+    <fieldset
+      class="usa-fieldset margin-top-3 usa-form-group"
+    >
+      <legend
+        class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+      >
+        <h2
+          class="font-heading-lg text-bold"
+        >
+          Will you use any employer-sponsored paid time off during your leave period?
+        </h2>
+      </legend>
+      <span
+        class="display-block line-height-sans-5 measure-5 usa-intro"
+      >
+        <div
+          class="margin-bottom-5"
+        >
+          <div
+            aria-labelledby="alert-heading13"
+            class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-2 margin-bottom-4"
+            role="region"
+            tabindex="-1"
+          >
+            <div
+              class="usa-alert__body"
+            >
+              <h2
+                class="usa-alert__heading font-heading-md text-bold"
+                id="alert-heading13"
+              >
+                Your leave dates for paid leave from PFML
+              </h2>
+              <div
+                class="usa-alert__text"
+              >
+                2/1/2022 to 7/1/2022
+              </div>
+            </div>
+          </div>
+          <h3
+            class="font-heading-sm text-bold"
+          >
+            <svg
+              aria-hidden="true"
+              class="usa-icon usa-icon--size-3 text-secondary text-middle margin-right-1 margin-top-neg-05"
+              focusable="false"
+              role="img"
+            >
+              <use
+                xlink:href="/img/sprite.svg#check"
+              />
+            </svg>
+            What kinds of paid time off to report
+          </h3>
+          <div
+            class="margin-top-1 margin-left-4 margin-bottom-2"
+          >
+            <div>
+              <p>
+                Employer-sponsored paid vacation time, sick time, and personal time that:
+              </p>
+              <ul>
+                <li>
+                  You are planning to use on days when you are also taking PFML leave.
+                </li>
+              </ul>
+              <p>
+                Or
+              </p>
+              <ul>
+                <li>
+                  You are planning to use for a PFML qualifying reason, even if it’s not the same reason you are applying for now.
+                </li>
+              </ul>
+            </div>
+          </div>
+          <details
+            class="c-details"
+          >
+            <summary
+              class="margin-bottom-2 text-primary text-underline font-ui-xs"
+            >
+              What are the qualifying reasons?
+            </summary>
+            <div
+              class="margin-bottom-2"
+            >
+              <ul
+                class="usa-list"
+              >
+                <li>
+                  You had a serious health condition, including illness, injury, or pregnancy.
+                </li>
+                <li>
+                  If you were sick, you were out of work for at least 3 days and needed continuing care from your health care provider or needed inpatient care.
+                </li>
+                <li>
+                  You bonded with your child after birth or placement.
+                </li>
+                <li>
+                  You needed to manage family affairs while a family member is on active duty in the armed forces.
+                </li>
+                <li>
+                  You needed to care for a family member who serves in the armed forces.
+                </li>
+                <li>
+                  You needed to care for a family member with a serious health condition.
+                </li>
+              </ul>
+            </div>
+          </details>
+          <h3
+            class="font-heading-sm text-bold"
+          >
+            <svg
+              aria-hidden="true"
+              class="usa-icon usa-icon--size-3 text-error text-middle margin-right-1 margin-top-neg-05"
+              focusable="false"
+              role="img"
+            >
+              <use
+                xlink:href="/img/sprite.svg#close"
+              />
+            </svg>
+            You don't need to report accrued paid leave that you use during the 7-day waiting period, which is 7 consecutive calendar days from the date of the first instance of leave from your employer
+          </h3>
+        </div>
+      </span>
+      <div
+        class="margin-top-3"
+      >
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice14"
+            name="has_concurrent_leave"
+            type="radio"
+            value="true"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice14"
+          >
+            Yes
+            <span
+              class="usa-hint text-base-dark"
+            >
+              <br />
+              I need to report employer-sponsored paid time off I will use after the 7-day waiting period.
+            </span>
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice15"
+            name="has_concurrent_leave"
+            type="radio"
+            value="false"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice15"
+          >
+            No
+            <span
+              class="usa-hint text-base-dark"
+            >
+              <br />
+              I don’t need to report any employer-sponsored paid time off after the 7-day waiting period, or I don’t know yet
+            </span>
+          </label>
+        </div>
+      </div>
+    </fieldset>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Save and continue
+    </button>
+  </form>
+</div>
+`;
+
+exports[`ConcurrentLeaves renders the page 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Other leave, benefits, and income
+    </h1>
+    <fieldset
+      class="usa-fieldset margin-top-3 usa-form-group"
+    >
+      <legend
+        class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+      >
+        <h2
+          class="font-heading-lg text-bold"
+        >
+          Will you use any employer-sponsored paid time off during your leave period?
+        </h2>
+      </legend>
+      <span
+        class="display-block line-height-sans-5 measure-5 usa-intro"
+      >
+        <div
+          class="margin-bottom-5"
+        >
+          <div
+            aria-labelledby="alert-heading1"
+            class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-2 margin-bottom-0"
+            role="region"
+            tabindex="-1"
+          >
+            <div
+              class="usa-alert__body"
+            >
+              <h2
+                class="usa-alert__heading font-heading-md text-bold"
+                id="alert-heading1"
+              >
+                Your leave dates for paid leave from PFML
+              </h2>
+              <div
+                class="usa-alert__text"
+              >
+                1/1/2022 to 6/1/2022
+              </div>
+            </div>
+          </div>
+          <div
+            aria-labelledby="alert-heading2"
+            class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-0 margin-bottom-4"
+            role="region"
+            tabindex="-1"
+          >
+            <div
+              class="usa-alert__body"
+            >
+              <h2
+                class="usa-alert__heading font-heading-md text-bold"
+                id="alert-heading2"
+              >
+                Your 7-day waiting period dates
+              </h2>
+              <div
+                class="usa-alert__text"
+              >
+                1/1/2022 to 1/7/2022
+              </div>
+            </div>
+          </div>
+          <h3
+            class="font-heading-sm text-bold"
+          >
+            <svg
+              aria-hidden="true"
+              class="usa-icon usa-icon--size-3 text-secondary text-middle margin-right-1 margin-top-neg-05"
+              focusable="false"
+              role="img"
+            >
+              <use
+                xlink:href="/img/sprite.svg#check"
+              />
+            </svg>
+            What kinds of paid time off to report
+          </h3>
+          <div
+            class="margin-top-1 margin-left-4 margin-bottom-2"
+          >
+            Employer-sponsored paid vacation time, sick time, and personal time you plan to take during your paid leave from PFML.
+          </div>
+          <h3
+            class="font-heading-sm text-bold"
+          >
+            <svg
+              aria-hidden="true"
+              class="usa-icon usa-icon--size-3 text-error text-middle margin-right-1 margin-top-neg-05"
+              focusable="false"
+              role="img"
+            >
+              <use
+                xlink:href="/img/sprite.svg#close"
+              />
+            </svg>
+            Don’t report paid time off that you use during the 7-day waiting period
+          </h3>
+        </div>
+      </span>
+      <div
+        class="margin-top-3"
+      >
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            checked=""
+            class="usa-radio__input"
+            id="InputChoice3"
+            name="has_concurrent_leave"
+            type="radio"
+            value="true"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice3"
+          >
+            Yes
+            <span
+              class="usa-hint text-base-dark"
+            >
+              <br />
+              I need to report employer-sponsored paid time off I will use after the 7-day waiting period.
+            </span>
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice4"
+            name="has_concurrent_leave"
+            type="radio"
+            value="false"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice4"
+          >
+            No
+            <span
+              class="usa-hint text-base-dark"
+            >
+              <br />
+              I don’t need to report any employer-sponsored paid time off after the 7-day waiting period, or I don’t know yet
+            </span>
+          </label>
+        </div>
+      </div>
+    </fieldset>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Save and continue
+    </button>
+  </form>
+</div>
+`;
+
+exports[`ConcurrentLeaves renders the page when the claim does not contain concurrent leave data 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Other leave, benefits, and income
+    </h1>
+    <fieldset
+      class="usa-fieldset margin-top-3 usa-form-group"
+    >
+      <legend
+        class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+      >
+        <h2
+          class="font-heading-lg text-bold"
+        >
+          Will you use any employer-sponsored paid time off during your leave period?
+        </h2>
+      </legend>
+      <span
+        class="display-block line-height-sans-5 measure-5 usa-intro"
+      >
+        <div
+          class="margin-bottom-5"
+        >
+          <div
+            aria-labelledby="alert-heading28"
+            class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-2 margin-bottom-0"
+            role="region"
+            tabindex="-1"
+          >
+            <div
+              class="usa-alert__body"
+            >
+              <h2
+                class="usa-alert__heading font-heading-md text-bold"
+                id="alert-heading28"
+              >
+                Your leave dates for paid leave from PFML
+              </h2>
+              <div
+                class="usa-alert__text"
+              >
+                1/1/2022 to 6/1/2022
+              </div>
+            </div>
+          </div>
+          <div
+            aria-labelledby="alert-heading29"
+            class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-0 margin-bottom-4"
+            role="region"
+            tabindex="-1"
+          >
+            <div
+              class="usa-alert__body"
+            >
+              <h2
+                class="usa-alert__heading font-heading-md text-bold"
+                id="alert-heading29"
+              >
+                Your 7-day waiting period dates
+              </h2>
+              <div
+                class="usa-alert__text"
+              >
+                1/1/2022 to 1/7/2022
+              </div>
+            </div>
+          </div>
+          <h3
+            class="font-heading-sm text-bold"
+          >
+            <svg
+              aria-hidden="true"
+              class="usa-icon usa-icon--size-3 text-secondary text-middle margin-right-1 margin-top-neg-05"
+              focusable="false"
+              role="img"
+            >
+              <use
+                xlink:href="/img/sprite.svg#check"
+              />
+            </svg>
+            What kinds of paid time off to report
+          </h3>
+          <div
+            class="margin-top-1 margin-left-4 margin-bottom-2"
+          >
+            Employer-sponsored paid vacation time, sick time, and personal time you plan to take during your paid leave from PFML.
+          </div>
+          <h3
+            class="font-heading-sm text-bold"
+          >
+            <svg
+              aria-hidden="true"
+              class="usa-icon usa-icon--size-3 text-error text-middle margin-right-1 margin-top-neg-05"
+              focusable="false"
+              role="img"
+            >
+              <use
+                xlink:href="/img/sprite.svg#close"
+              />
+            </svg>
+            Don’t report paid time off that you use during the 7-day waiting period
+          </h3>
+        </div>
+      </span>
+      <div
+        class="margin-top-3"
+      >
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice30"
+            name="has_concurrent_leave"
+            type="radio"
+            value="true"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice30"
+          >
+            Yes
+            <span
+              class="usa-hint text-base-dark"
+            >
+              <br />
+              I need to report employer-sponsored paid time off I will use after the 7-day waiting period.
+            </span>
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice31"
+            name="has_concurrent_leave"
+            type="radio"
+            value="false"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice31"
+          >
+            No
+            <span
+              class="usa-hint text-base-dark"
+            >
+              <br />
+              I don’t need to report any employer-sponsored paid time off after the 7-day waiting period, or I don’t know yet
+            </span>
+          </label>
+        </div>
+      </div>
+    </fieldset>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Save and continue
+    </button>
+  </form>
+</div>
+`;
+
+exports[`ConcurrentLeaves renders the reduced page content 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Other leave, benefits, and income
+    </h1>
+    <fieldset
+      class="usa-fieldset margin-top-3 usa-form-group"
+    >
+      <legend
+        class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+      >
+        <h2
+          class="font-heading-lg text-bold"
+        >
+          Will you use any employer-sponsored paid time off during your leave period?
+        </h2>
+      </legend>
+      <span
+        class="display-block line-height-sans-5 measure-5 usa-intro"
+      >
+        <div
+          class="margin-bottom-5"
+        >
+          <div
+            aria-labelledby="alert-heading9"
+            class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-2 margin-bottom-0"
+            role="region"
+            tabindex="-1"
+          >
+            <div
+              class="usa-alert__body"
+            >
+              <h2
+                class="usa-alert__heading font-heading-md text-bold"
+                id="alert-heading9"
+              >
+                Your leave dates for paid leave from PFML
+              </h2>
+              <div
+                class="usa-alert__text"
+              >
+                2/1/2022 to 7/1/2022
+              </div>
+            </div>
+          </div>
+          <div
+            aria-labelledby="alert-heading10"
+            class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-0 margin-bottom-4"
+            role="region"
+            tabindex="-1"
+          >
+            <div
+              class="usa-alert__body"
+            >
+              <h2
+                class="usa-alert__heading font-heading-md text-bold"
+                id="alert-heading10"
+              >
+                Your 7-day waiting period dates
+              </h2>
+              <div
+                class="usa-alert__text"
+              >
+                2/1/2022 to 2/7/2022
+              </div>
+            </div>
+          </div>
+          <h3
+            class="font-heading-sm text-bold"
+          >
+            <svg
+              aria-hidden="true"
+              class="usa-icon usa-icon--size-3 text-secondary text-middle margin-right-1 margin-top-neg-05"
+              focusable="false"
+              role="img"
+            >
+              <use
+                xlink:href="/img/sprite.svg#check"
+              />
+            </svg>
+            What kinds of paid time off to report
+          </h3>
+          <div
+            class="margin-top-1 margin-left-4 margin-bottom-2"
+          >
+            <div>
+              <p>
+                Employer-sponsored paid vacation time, sick time, and personal time that:
+              </p>
+              <ul>
+                <li>
+                  You are planning to use on days when you are also taking PFML leave.
+                </li>
+              </ul>
+              <p>
+                Or
+              </p>
+              <ul>
+                <li>
+                  You are planning to use for a PFML qualifying reason, even if it’s not the same reason you are applying for now.
+                </li>
+              </ul>
+            </div>
+          </div>
+          <details
+            class="c-details"
+          >
+            <summary
+              class="margin-bottom-2 text-primary text-underline font-ui-xs"
+            >
+              What are the qualifying reasons?
+            </summary>
+            <div
+              class="margin-bottom-2"
+            >
+              <ul
+                class="usa-list"
+              >
+                <li>
+                  You had a serious health condition, including illness, injury, or pregnancy.
+                </li>
+                <li>
+                  If you were sick, you were out of work for at least 3 days and needed continuing care from your health care provider or needed inpatient care.
+                </li>
+                <li>
+                  You bonded with your child after birth or placement.
+                </li>
+                <li>
+                  You needed to manage family affairs while a family member is on active duty in the armed forces.
+                </li>
+                <li>
+                  You needed to care for a family member who serves in the armed forces.
+                </li>
+                <li>
+                  You needed to care for a family member with a serious health condition.
+                </li>
+              </ul>
+            </div>
+          </details>
+          <h3
+            class="font-heading-sm text-bold"
+          >
+            <svg
+              aria-hidden="true"
+              class="usa-icon usa-icon--size-3 text-error text-middle margin-right-1 margin-top-neg-05"
+              focusable="false"
+              role="img"
+            >
+              <use
+                xlink:href="/img/sprite.svg#close"
+              />
+            </svg>
+            Don’t report paid time off that you use during the 7-day waiting period
+          </h3>
+        </div>
+      </span>
+      <div
+        class="margin-top-3"
+      >
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice11"
+            name="has_concurrent_leave"
+            type="radio"
+            value="true"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice11"
+          >
+            Yes
+            <span
+              class="usa-hint text-base-dark"
+            >
+              <br />
+              I need to report employer-sponsored paid time off I will use after the 7-day waiting period.
+            </span>
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice12"
+            name="has_concurrent_leave"
+            type="radio"
+            value="false"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice12"
+          >
+            No
+            <span
+              class="usa-hint text-base-dark"
+            >
+              <br />
+              I don’t need to report any employer-sponsored paid time off after the 7-day waiting period, or I don’t know yet
+            </span>
+          </label>
+        </div>
+      </div>
+    </fieldset>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Save and continue
+    </button>
+  </form>
+</div>
+`;

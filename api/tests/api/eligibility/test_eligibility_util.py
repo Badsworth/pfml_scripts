@@ -98,7 +98,7 @@ def test_fetch_state_metric_multiple_yrs(initialize_factories_session, test_db_s
     )
 
     UnemploymentMetricFactory.create(
-        effective_date=datetime.date(2018, 10, 1), unemployment_minimum_earnings=4700,
+        effective_date=datetime.date(2018, 10, 1), unemployment_minimum_earnings=4700
     )
 
     BenefitsMetricsFactory.create(
@@ -108,7 +108,7 @@ def test_fetch_state_metric_multiple_yrs(initialize_factories_session, test_db_s
     )
 
     UnemploymentMetricFactory.create(
-        effective_date=datetime.date(2021, 10, 1), unemployment_minimum_earnings=5200,
+        effective_date=datetime.date(2021, 10, 1), unemployment_minimum_earnings=5200
     )
 
     BenefitsMetricsFactory.create(
@@ -118,7 +118,7 @@ def test_fetch_state_metric_multiple_yrs(initialize_factories_session, test_db_s
     )
 
     UnemploymentMetricFactory.create(
-        effective_date=datetime.date(2022, 10, 1), unemployment_minimum_earnings=5300,
+        effective_date=datetime.date(2022, 10, 1), unemployment_minimum_earnings=5300
     )
 
     benefits_metrics_2019 = BenefitsMetricsFactory.create()

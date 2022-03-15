@@ -1,0 +1,12 @@
+FineosEmployerID,DUA,DBA,Attention,Email,PhoneNumber,AddressLine1,AddressLine2,AddressCity,ZipCode,State
+1234567,,,,abc@abc.com,123-456-7890,123 main st,,boston,03323,ma
+8923404,83945948,,,cap@cap.com,352-356-2323,423 k st,,baltimore,24234,md
+5234234,88237595,,,,,2043 stream ave,,san antonio,24590,ca
+0849234,,,,,,391 susanna ln,,houston,13493,tx
+9826434,,,,test@test.com,555-222-1345,8401 manchester rd,,salt city,99803,co
+7767234,82384549,,,example@example.com,534-255-2342,34 manor rd,,alabama,12340,ga
+9834534,28239847,,,test@example.com,432-452-2342,23 east-west wy,,fairfax,76890,va
+9845344,48268735,,,,,,,,,
+9482344,,,,,222-455-3423,,,,,
+4892343,,,,,542-908-2445,,,,,
+2738384,91988348,,,tim@example.com,482-558-3485,234 lunar ave,,seattle,47324,wa

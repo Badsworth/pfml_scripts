@@ -3,7 +3,7 @@ import Step from "src/components/Step";
 import StepList from "src/components/StepList";
 
 export default {
-  title: "Components/StepList/StepList",
+  title: "Features/Applications/StepList/StepList",
   component: StepList,
 };
 

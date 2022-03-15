@@ -1,5 +1,8 @@
 import logging  # noqa: B1
+from unittest import mock
+from unittest.mock import MagicMock
 
+import boto3
 import botocore
 import faker
 import pytest
@@ -27,7 +30,7 @@ def test_create_cognito_account(mock_cognito, mock_cognito_user_pool):
         cognito_client=mock_cognito,
     )
 
-    users = mock_cognito.list_users(UserPoolId=mock_cognito_user_pool["id"],)
+    users = mock_cognito.list_users(UserPoolId=mock_cognito_user_pool["id"])
 
     assert sub is not None
     assert users["Users"][0]["Username"] == email_address
@@ -277,7 +280,7 @@ def test_lookup_cognito_account_id_retries(
     def admin_get_user(*args, **kwargs):
         raise mock_cognito.exceptions.TooManyRequestsException(
             error_response={
-                "Error": {"Code": "TooManyRequestsException", "Message": "Too many requests",}
+                "Error": {"Code": "TooManyRequestsException", "Message": "Too many requests"}
             },
             operation_name="AdminGetUser",
         )
@@ -297,3 +300,89 @@ def test_lookup_cognito_account_id_retries(
             retry_log_count += 1
 
     assert retry_log_count == 3
+
+
+def test_lookup_user_mfa_status(monkeypatch, mock_cognito, mock_cognito_user_pool):
+    email_address = fake.email(domain="example.com")
+
+    def admin_get_user(Username: str = None, UserPoolId: str = None):
+        return {
+            "Username": Username,
+            "UserAttributes": [{"Name": "phone_number_verified", "Value": "true"}],
+        }
+
+    monkeypatch.setattr(mock_cognito, "admin_get_user", admin_get_user)
+
+    mfa_status = cognito_util.is_mfa_phone_verified(
+        email=email_address, cognito_user_pool_id=mock_cognito_user_pool["id"]
+    )
+
+    assert mfa_status is True
+
+
+def test_lookup_user_mfa_status_false(monkeypatch, mock_cognito, mock_cognito_user_pool):
+    email_address = fake.email(domain="example.com")
+
+    def admin_get_user(Username: str = None, UserPoolId: str = None):
+        return {
+            "Username": Username,
+            "UserAttributes": [{"Name": "phone_number_verified", "Value": "false"}],
+        }
+
+    monkeypatch.setattr(mock_cognito, "admin_get_user", admin_get_user)
+
+    mfa_status = cognito_util.is_mfa_phone_verified(
+        email=email_address, cognito_user_pool_id=mock_cognito_user_pool["id"]
+    )
+
+    assert mfa_status is False
+
+
+def test_lookup_user_mfa_status_with_no_attrs(monkeypatch, mock_cognito, mock_cognito_user_pool):
+    email_address = fake.email(domain="example.com")
+
+    def admin_get_user(Username: str = None, UserPoolId: str = None):
+        return {"Username": Username, "UserAttributes": []}
+
+    monkeypatch.setattr(mock_cognito, "admin_get_user", admin_get_user)
+
+    mfa_status = cognito_util.is_mfa_phone_verified(
+        email=email_address, cognito_user_pool_id=mock_cognito_user_pool["id"]
+    )
+
+    assert mfa_status is False
+
+
+class TestDisableUserMFA:
+    @pytest.fixture
+    def mock_cognito(self):
+        mock_cognito = MagicMock()
+        mock_cognito.admin_set_user_mfa_preference = MagicMock()
+        return mock_cognito
+
+    @mock.patch("massgov.pfml.util.aws.cognito.create_cognito_client")
+    def test_success(self, mock_create_cognito, mock_cognito):
+        mock_create_cognito.return_value = mock_cognito
+
+        cognito_util.disable_user_mfa("foo@bar.com")
+
+        mock_cognito.admin_set_user_mfa_preference.assert_called_with(
+            SMSMfaSettings={"Enabled": False}, Username="foo@bar.com", UserPoolId=mock.ANY
+        )
+
+    @mock.patch("massgov.pfml.util.aws.cognito.create_cognito_client")
+    def test_user_not_found_raises_exception(self, mock_create_cognito, mock_cognito, caplog):
+        mock_create_cognito.return_value = mock_cognito
+
+        user_not_found = boto3.client("cognito-idp", "us-east-1").exceptions.UserNotFoundException(
+            error_response={"Error": {"Code": "UserNotFoundException", "Message": ":("}},
+            operation_name="Foo",
+        )
+
+        mock_set_mfa_prefs = mock_cognito.admin_set_user_mfa_preference
+        mock_set_mfa_prefs.side_effect = user_not_found
+
+        with pytest.raises(Exception):
+            cognito_util.disable_user_mfa("foo@bar.com")
+
+        assert "User not found with email" in caplog.text

@@ -78,7 +78,6 @@ def future_date_of_birth_validator(date_of_birth, field):
 
 
 class ApplicationRequestBody(PydanticBaseModel):
-    application_nickname: Optional[str]
     tax_identifier: Optional[TaxIdUnformattedStr]
     organization_unit_id: Optional[UUID4]
     organization_unit_selection: Optional[OrganizationUnitSelection]
@@ -227,3 +226,8 @@ class PaymentPreferenceRequestBody(PydanticBaseModel):
 
 class TaxWithholdingPreferenceRequestBody(PydanticBaseModel):
     is_withholding_tax: Optional[bool]
+
+
+class ApplicationImportRequestBody(PydanticBaseModel):
+    absence_case_id: Optional[str]
+    tax_identifier: Optional[TaxIdUnformattedStr]

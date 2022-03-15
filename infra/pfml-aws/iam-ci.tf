@@ -70,6 +70,7 @@ data "aws_iam_policy_document" "ci_run_deploys_policy" {
       # Allow CI to read VPCs and subnets.
       "ec2:DescribeSubnets",
       "ec2:DescribeVpc*",
+      "ec2:DescribeRoute*",
 
       # Allow CI to read security groups.
       "ec2:DescribeSecurityGroups",

@@ -9,6 +9,7 @@ export default {
 };
 
 export const Page = (args: Props<typeof VerifySMS>) => {
+  const query = { next: "" };
   const appLogic = useMockableAppLogic();
-  return <VerifySMS {...args} appLogic={appLogic} />;
+  return <VerifySMS {...args} appLogic={appLogic} query={query} />;
 };

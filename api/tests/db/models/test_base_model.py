@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Text
+from sqlalchemy import TIMESTAMP, Column, Text
 from sqlalchemy.sql.sqltypes import Integer
 
 from massgov.pfml.db.models.base import Base, deprecated_column
@@ -10,6 +10,7 @@ class OriginalModel(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     text_field = Column(Text, nullable=True)
     uuid = Column(PostgreSQLUUID)
+    timestamp = Column(TIMESTAMP(timezone=True))
 
 
 class DeprecatedModel(Base):
@@ -17,6 +18,7 @@ class DeprecatedModel(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     text_field = deprecated_column(Text, nullable=True)
     uuid = deprecated_column(PostgreSQLUUID)
+    timestamp = deprecated_column(TIMESTAMP(timezone=True))
 
 
 def test_deprecated_column(local_test_db_session):
@@ -28,6 +30,7 @@ def test_deprecated_column(local_test_db_session):
 
     assert "text_field" in original_result.__dict__.keys()
     assert "uuid" in original_result.__dict__.keys()
+    assert "timestamp" in original_result.__dict__.keys()
 
     deprecated_entry = DeprecatedModel(id=1)
     local_test_db_session.add(deprecated_entry)
@@ -37,6 +40,7 @@ def test_deprecated_column(local_test_db_session):
 
     assert "text_field" not in deprecated_result.__dict__.keys()
     assert "uuid" not in deprecated_result.__dict__.keys()
+    assert "timestamp" not in deprecated_result.__dict__.keys()
 
     # The original implementation of deprecated_column accidentally removed the field completely. This test
     # ensures that the deprecated columns are still present if queried directly

@@ -25,7 +25,6 @@ export default function usePopup<P, U = unknown>(
   Component: React.ComponentType<P>,
   props?: P & Partial<CommonProps<U>>,
 ): PopupReturn<P, U> {
-  // console.log(P)
   // Whether Component is currently open or not
   const [isOpen, setIsOpen] = useState<boolean>(false);
   // Which data to render children with, optional
@@ -49,13 +48,14 @@ export default function usePopup<P, U = unknown>(
   // group all the extended functionality in extra props
   // order of props is very important here
   const extendedProps = { isOpen, data, ...props, open, close };
+  const Popup = (props: P) => {
+    return <Component {...props} {...extendedProps} />;
+  };
   return {
     data: data,
     isOpen: isOpen,
     close: close,
     open: open,
-    Popup: (props: P) => {
-      return <Component {...props} {...extendedProps} />;
-    },
+    Popup,
   };
 }

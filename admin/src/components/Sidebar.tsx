@@ -1,100 +1,84 @@
+import * as api from "../api";
+import * as heroIcons from "@heroicons/react/solid";
+
+import menus, { Menu } from "../menus";
+
 import Link from "next/link";
+import React from "react";
+import WithPermissions from "./WithPermissions";
+import classNames from "classnames";
 import routes from "../routes";
 import { useRouter } from "next/router";
-import classNames from "classnames";
 
-export default function Sidebar() {
+type Props = {
+  user: api.AdminUserResponse;
+};
+
+type RouteMenu = [string, Menu];
+
+export default function Sidebar({ user }: Props) {
   const router = useRouter();
+
+  function getMenus(isMainMenu: boolean) {
+    const sidebarMenus = Object.entries(menus);
+    return sidebarMenus
+      .reduce((allMenus, [page, menu]: RouteMenu) => {
+        const menuFilter = isMainMenu ? menu.isMainMenu : menu.isSettings;
+        if (menuFilter) {
+          allMenus.push([page, menu]);
+        }
+        return allMenus;
+      }, [] as RouteMenu[])
+      .map(([page, menu]: [string, Menu]) => {
+        const Icon =
+          menu?.heroIconName &&
+          heroIcons[menu.heroIconName as keyof typeof heroIcons];
+        const menuName = isMainMenu ? "menu" : "settings";
+        const MenuItem = (
+          <li className={`${menuName}__list-item`}>
+            <Link href={routes[page]}>
+              <a
+                className={classNames(
+                  `${menuName}__link`,
+                  `${menuName}__link--${page}`,
+                  {
+                    [`${menuName}__link--active`]:
+                      router.pathname == routes[page],
+                  },
+                )}
+                data-testid={`${page}-navigation-link`}
+              >
+                {Icon && (
+                  <Icon
+                    className={`${menuName}__link-icon ${menuName}__link-icon--${page}`}
+                  />
+                )}
+                <span>{menu.title}</span>
+              </a>
+            </Link>
+          </li>
+        );
+        return (
+          <React.Fragment key={page}>
+            {menu.permissions.length > 0 ? (
+              <WithPermissions user={user} permissions={menu.permissions}>
+                {MenuItem}
+              </WithPermissions>
+            ) : (
+              MenuItem
+            )}
+          </React.Fragment>
+        );
+      });
+  }
 
   return (
     <aside className="page__sidebar" tabIndex={0}>
       <nav className="menu">
-        <ul className="menu__list">
-          <li className="menu__list-item">
-            <Link href={routes.dashboard}>
-              <a
-                className={classNames("menu__link", "menu__link--dashboard", {
-                  "menu__link--active": router.pathname == routes.dashboard,
-                })}
-                data-testid="dashboard-navigation-link"
-              >
-                Dashboard
-              </a>
-            </Link>
-          </li>
-          <li className="menu__list-item">
-            <Link href={routes.users}>
-              <a
-                className={classNames("menu__link", "menu__link--user-lookup", {
-                  "menu__link--active": router.pathname == routes.users,
-                })}
-                data-testid="users-navigation-link"
-              >
-                User Lookup
-              </a>
-            </Link>
-          </li>
-          <li className="menu__list-item">
-            <Link href={routes.maintenance}>
-              <a
-                className={classNames("menu__link", "menu__link--maintenance", {
-                  "menu__link--active": router.pathname == routes.maintenance,
-                })}
-                data-testid="maintenance-navigation-link"
-              >
-                Maintenance
-              </a>
-            </Link>
-          </li>
-          <li className="menu__list-item">
-            <Link href={routes.features}>
-              <a
-                className={classNames("menu__link", "menu__link--features", {
-                  "menu__link--active": router.pathname == routes.features,
-                })}
-                data-testid="features-navigation-link"
-              >
-                Features
-              </a>
-            </Link>
-          </li>
-        </ul>
+        <ul className="menu__list">{getMenus(true)}</ul>
       </nav>
       <div className="settings">
-        <ul className="settings__list">
-          <li className="settings__list-item">
-            <Link href={routes.settings}>
-              <a
-                className={classNames(
-                  "settings__link",
-                  "settings__link--settings",
-                  {
-                    "menu__link--active": router.pathname == routes.settings,
-                  },
-                )}
-                data-testid="settings-navigation-link"
-              >
-                Settings
-              </a>
-            </Link>
-          </li>
-          <li className="settings__list-item">
-            <Link href={routes.help}>
-              <a
-                className={classNames(
-                  "settings__link",
-                  "settings__link--help",
-                  {
-                    "menu__link--active": router.pathname == routes.help,
-                  },
-                )}
-                data-testid="help-navigation-link"
-              >
-                Help
-              </a>
-            </Link>
-          </li>
-        </ul>
+        <ul className="settings__list">{getMenus(false)}</ul>
       </div>
       <div className="environment">
         <div className="environment__label">Environment</div>

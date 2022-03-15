@@ -40,6 +40,12 @@ resource "aws_ses_email_identity" "pfml_donotreply_state" {
   email = "PFML_DoNotReply@eol.state.ma.us"
 }
 
+resource "aws_ses_template" "disabled_mfa_template" {
+  name    = "MfaHasBeenDisabled"
+  subject = "SMS verification codes have been disabled for your account"
+  html    = file("../portal/template/emails/mfa-disabled.html")
+}
+
 # Create an IAM policy that only allows Cognito and payments tasks to send emails from the email address
 data "aws_iam_policy_document" "restrict_ses_senders" {
   for_each = local.email_identities
@@ -72,6 +78,7 @@ data "aws_iam_policy_document" "restrict_ses_senders" {
         "arn:aws:sts::${data.aws_caller_identity.current.account_id}:assumed-role/pfml-api-*-ecs-tasks-pub-payments-create-pub-files/*",
         "arn:aws:sts::${data.aws_caller_identity.current.account_id}:assumed-role/pfml-api-*-ecs-tasks-pub-payments-process-pub-returns/*",
         "arn:aws:sts::${data.aws_caller_identity.current.account_id}:assumed-role/pfml-api-*-ecs-tasks-reductions-workflow/*",
+        "arn:aws:sts::${data.aws_caller_identity.current.account_id}:assumed-role/pfml-api-*-ecs-tasks-mfa-lockout-resolution/*",
 
         # Duplicate the roles above but in the normal IAM format.
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/mass-pfml-dua-email-automation-lambda-role",
@@ -79,6 +86,7 @@ data "aws_iam_policy_document" "restrict_ses_senders" {
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/pfml-api-*-ecs-tasks-pub-payments-create-pub-files",
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/pfml-api-*-ecs-tasks-pub-payments-process-pub-returns",
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/pfml-api-*-ecs-tasks-reductions-workflow",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/pfml-api-*-ecs-tasks-mfa-lockout-resolution",
 
         # Add in existing AWS users with SES in their name, as of April 8, 2021.
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/pfml-ses-savilinx-sn-prod-user",

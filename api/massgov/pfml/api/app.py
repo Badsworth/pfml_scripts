@@ -14,6 +14,7 @@ import flask_cors
 import newrelic.api.time_trace
 from flask import Flask, current_app, g
 from sqlalchemy.orm import Session
+from werkzeug.exceptions import Unauthorized
 
 import massgov.pfml.api.authorization.flask
 import massgov.pfml.api.authorization.rules
@@ -54,10 +55,10 @@ def create_app(
 
     options = {"swagger_url": "/docs"}
 
-    validator_map = get_custom_validator_map()
-
     app = connexion.FlaskApp(__name__, specification_dir=get_project_root_dir(), options=options)
     add_error_handlers_to_app(app)
+
+    validator_map = get_custom_validator_map(config.enable_response_validation)
 
     app.add_api(
         openapi_filenames()[0],
@@ -97,6 +98,7 @@ def create_app(
     def push_db():
         g.db = db_session_factory
         g.start_time = time.monotonic()
+        g.connexion_flask_app = app
         massgov.pfml.util.logging.access.access_log_start(flask.request)
         newrelic.agent.add_custom_parameter(
             "api_release_version", os.environ.get("RELEASE_VERSION")
@@ -169,8 +171,11 @@ def db_session(close: bool = False) -> Generator[db.Session, None, None]:
         yield session_scoped
 
 
-def current_user() -> Optional[User]:
-    return g.get("current_user")
+def current_user() -> User:
+    current = g.get("current_user")
+    if current is None:
+        raise Unauthorized
+    return current
 
 
 def azure_user() -> Optional[AzureUser]:

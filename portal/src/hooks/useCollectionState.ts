@@ -1,46 +1,30 @@
-import BaseCollection from "../models/BaseCollection";
+import ApiResourceCollection, {
+  ApiResource,
+} from "../models/ApiResourceCollection";
 import { useState } from "react";
-
-// Gets the typeof for the class we're storing in the collection
-type InferCollectionItem<TCollection> = TCollection extends BaseCollection<
-  infer K
->
-  ? K
-  : unknown;
 
 /**
  * React hook for creating a state for a Collection of objects
  */
-const useCollectionState = <
-  TCollection extends BaseCollection<TItem>,
-  TItem = InferCollectionItem<TCollection>
->(
-  initialCollection: TCollection
+const useCollectionState = <TApiResource extends ApiResource>(
+  initialCollection: ApiResourceCollection<TApiResource>
 ) => {
   const [collection, setCollection] = useState(initialCollection);
 
-  const addItem = (item: TItem) => {
-    setCollection(
-      (prevCollection) => prevCollection.addItem(item) as TCollection
-    );
+  const addItem = (item: TApiResource) => {
+    setCollection((prevCollection) => prevCollection.setItem(item));
   };
 
-  const addItems = (items: TItem[]) => {
-    setCollection(
-      (prevCollection) => prevCollection.addItems(items) as TCollection
-    );
+  const addItems = (items: TApiResource[]) => {
+    setCollection((prevCollection) => prevCollection.setItems(items));
   };
 
-  const updateItem = (item: TItem) => {
-    setCollection(
-      (prevCollection) => prevCollection.updateItem(item) as TCollection
-    );
+  const updateItem = (item: TApiResource) => {
+    setCollection((prevCollection) => prevCollection.setItem(item));
   };
 
   const removeItem = (itemId: string) => {
-    setCollection(
-      (prevCollection) => prevCollection.removeItem(itemId) as TCollection
-    );
+    setCollection((prevCollection) => prevCollection.removeItem(itemId));
   };
 
   return {

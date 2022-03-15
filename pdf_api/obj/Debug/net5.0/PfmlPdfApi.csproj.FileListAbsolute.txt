@@ -84,7 +84,6 @@ C:/JPPData/Projects/Pfml/PfmlPdfApi/bin/Debug/net5.0/AWSSDK.S3.dll
 /home/joelpelaez/src/pfml/pdf_api/obj/Debug/net5.0/PfmlPdfApi.MvcApplicationPartsAssemblyInfo.cs
 /home/joelpelaez/src/pfml/pdf_api/obj/Debug/net5.0/PfmlPdfApi.MvcApplicationPartsAssemblyInfo.cache
 /home/joelpelaez/src/pfml/pdf_api/obj/Debug/net5.0/staticwebassets/PfmlPdfApi.StaticWebAssets.Manifest.cache
-/home/joelpelaez/src/pfml/pdf_api/obj/Debug/net5.0/staticwebassets/PfmlPdfApi.StaticWebAssets.xml
 /home/joelpelaez/src/pfml/pdf_api/obj/Debug/net5.0/scopedcss/bundle/PfmlPdfApi.styles.css
 /home/joelpelaez/src/pfml/pdf_api/obj/Debug/net5.0/PfmlPdfApi.RazorTargetAssemblyInfo.cache
 /home/joelpelaez/src/pfml/pdf_api/obj/Debug/net5.0/PfmlPdfApi.dll
@@ -140,3 +139,13 @@ C:/JPPData/Projects/Pfml/PfmlPdfApi/bin/Debug/net5.0/AWSSDK.S3.dll
 /home/joelpelaez/pfml/api/pdf_api/obj/Debug/net5.0/PfmlPdfApi.pdb
 /home/joelpelaez/pfml/api/pdf_api/obj/Debug/net5.0/PfmlPdfApi.genruntimeconfig.cache
 /home/joelpelaez/src/pfml/pdf_api/bin/Debug/net5.0/appsettings.Test.json
+/home/joelpelaez/src/pfml/pdf_api/bin/Debug/net5.0/appsettings.Breakfix.json
+/home/joelpelaez/src/pfml/pdf_api/bin/Debug/net5.0/appsettings.CPSPreview.json
+/home/joelpelaez/src/pfml/pdf_api/bin/Debug/net5.0/appsettings.Long.json
+/home/joelpelaez/src/pfml/pdf_api/bin/Debug/net5.0/appsettings.Performance.json
+/home/joelpelaez/src/pfml/pdf_api/bin/Debug/net5.0/appsettings.Sandbox.json
+/home/joelpelaez/src/pfml/pdf_api/bin/Debug/net5.0/appsettings.Staging.json
+/home/joelpelaez/src/pfml/pdf_api/bin/Debug/net5.0/appsettings.Training.json
+/home/joelpelaez/src/pfml/pdf_api/bin/Debug/net5.0/appsettings.UAT.json
+/home/joelpelaez/src/pfml/pdf_api/bin/Debug/net5.0/PfmlPdfApi.StaticWebAssets.xml
+/home/joelpelaez/src/pfml/pdf_api/obj/Debug/net5.0/PfmlPdfApi.csproj.CopyComplete

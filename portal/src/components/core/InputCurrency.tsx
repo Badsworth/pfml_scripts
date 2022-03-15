@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import InputNumber from "./InputNumber";
-import { maskValue } from "./Mask";
+import { maskValue } from "./NumberMask";
 
 interface InputCurrencyProps {
   /**

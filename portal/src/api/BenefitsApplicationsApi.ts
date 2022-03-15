@@ -1,6 +1,6 @@
-import BaseApi, { ApiMethod, ApiRequestBody } from "./BaseApi";
+import ApiResourceCollection from "../models/ApiResourceCollection";
+import BaseApi from "./BaseApi";
 import BenefitsApplication from "../models/BenefitsApplication";
-import BenefitsApplicationCollection from "../models/BenefitsApplicationCollection";
 import PaymentPreference from "../models/PaymentPreference";
 import TaxWithholdingPreference from "../models/TaxWithholdingPreference";
 import { isFeatureEnabled } from "../services/featureFlags";
@@ -11,43 +11,8 @@ export default class BenefitsApplicationsApi extends BaseApi {
     return routes.api.applications;
   }
 
-  get i18nPrefix() {
+  get namespace() {
     return "applications";
-  }
-
-  /**
-   * Pass feature flags to the API as headers to enable
-   * API functionality that can be toggled on/off.
-   */
-  private get featureFlagHeaders() {
-    const headers: { [key: string]: unknown } = {};
-
-    // Add any feature flag headers here. eg:
-    // if (isFeatureEnabled("claimantShowOtherLeaveStep")) {
-    //   headers["X-FF-Require-Other-Leaves"] = true;
-    // }
-
-    if (isFeatureEnabled("claimantShowTaxWithholding")) {
-      headers["X-FF-Tax-Withholding-Enabled"] = true;
-    }
-
-    return headers;
-  }
-
-  /**
-   * Send an authenticated API request, with feature flag headers
-   */
-  request<TResponseData>(
-    method: ApiMethod,
-    subPath?: string,
-    body?: ApiRequestBody
-  ) {
-    return super.request<TResponseData>(
-      method,
-      subPath,
-      body,
-      this.featureFlagHeaders
-    );
   }
 
   getClaim = async (application_id: string) => {
@@ -65,13 +30,25 @@ export default class BenefitsApplicationsApi extends BaseApi {
   /**
    * Fetches the list of claims for a user
    */
-  getClaims = async () => {
-    const { data } = await this.request<BenefitsApplication[]>("GET");
+  getClaims = async (pageOffset: string | number = 1) => {
+    const { data, meta } = await this.request<BenefitsApplication[]>(
+      "GET",
+      "",
+      {
+        order_by: "created_at",
+        order_direction: "descending",
+        page_offset: pageOffset,
+      }
+    );
 
     const claims = data.map((claimData) => new BenefitsApplication(claimData));
 
     return {
-      claims: new BenefitsApplicationCollection(claims),
+      claims: new ApiResourceCollection<BenefitsApplication>(
+        "application_id",
+        claims
+      ),
+      paginationMeta: meta?.paging ?? {},
     };
   };
 
@@ -119,9 +96,18 @@ export default class BenefitsApplicationsApi extends BaseApi {
    * to be submitted to the claims processing system.
    */
   submitClaim = async (application_id: string) => {
+    const splitClaimsAcrossByEnabled = Boolean(
+      isFeatureEnabled("splitClaimsAcrossBY")
+    );
     const { data } = await this.request<BenefitsApplication>(
       "POST",
-      `${application_id}/submit_application`
+      `${application_id}/submit_application`,
+      undefined,
+      {
+        additionalHeaders: splitClaimsAcrossByEnabled
+          ? { "X-FF-Split-Claims-Across-BY": "true" }
+          : {},
+      }
     );
 
     return {

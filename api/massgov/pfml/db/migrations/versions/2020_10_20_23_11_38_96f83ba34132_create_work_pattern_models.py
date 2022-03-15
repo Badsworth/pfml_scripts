@@ -37,9 +37,9 @@ def upgrade():
         sa.Column("work_week_starts_id", sa.Integer(), nullable=True),
         sa.Column("pattern_start_date", sa.Date(), nullable=True),
         sa.ForeignKeyConstraint(
-            ["work_pattern_type_id"], ["lk_work_pattern_type.work_pattern_type_id"],
+            ["work_pattern_type_id"], ["lk_work_pattern_type.work_pattern_type_id"]
         ),
-        sa.ForeignKeyConstraint(["work_week_starts_id"], ["lk_day_of_week.day_of_week_id"],),
+        sa.ForeignKeyConstraint(["work_week_starts_id"], ["lk_day_of_week.day_of_week_id"]),
         sa.PrimaryKeyConstraint("work_pattern_id"),
     )
     op.create_table(
@@ -49,8 +49,8 @@ def upgrade():
         sa.Column("week_number", sa.Integer(), nullable=False),
         sa.Column("hours", sa.Integer(), nullable=True),
         sa.Column("minutes", sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(["day_of_week_id"], ["lk_day_of_week.day_of_week_id"],),
-        sa.ForeignKeyConstraint(["work_pattern_id"], ["work_pattern.work_pattern_id"],),
+        sa.ForeignKeyConstraint(["day_of_week_id"], ["lk_day_of_week.day_of_week_id"]),
+        sa.ForeignKeyConstraint(["work_pattern_id"], ["work_pattern.work_pattern_id"]),
         sa.PrimaryKeyConstraint("work_pattern_id", "day_of_week_id", "week_number"),
     )
     op.add_column(

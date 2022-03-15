@@ -13,7 +13,6 @@ import LeaveReason from "../../models/LeaveReason";
 import QuestionPage from "../../components/QuestionPage";
 import { Trans } from "react-i18next";
 import findKeyByValue from "../../utils/findKeyByValue";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -86,7 +85,7 @@ export const LeavePeriodIntermittent = (
     claim.isContinuous || claim.isReducedSchedule;
 
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });
@@ -141,11 +140,7 @@ export const LeavePeriodIntermittent = (
           <Trans
             i18nKey="pages.claimsLeavePeriodIntermittent.hasLeaveHint"
             tOptions={{
-              context:
-                claim.isMedicalOrPregnancyLeave &&
-                isFeatureEnabled("updateMedicalCertForm")
-                  ? "updateMedicalCertForm"
-                  : contentContext,
+              context: contentContext,
             }}
             components={{ ul: <ul className="usa-list" />, li: <li /> }}
           />
@@ -198,11 +193,7 @@ export const LeavePeriodIntermittent = (
           <Trans
             i18nKey="pages.claimsLeavePeriodIntermittent.datesLead"
             tOptions={{
-              context:
-                claim.isMedicalOrPregnancyLeave &&
-                isFeatureEnabled("updateMedicalCertForm")
-                  ? "updateMedicalCertForm"
-                  : contentContext,
+              context: contentContext,
             }}
           />
         </Lead>

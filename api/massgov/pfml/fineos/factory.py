@@ -2,51 +2,37 @@
 # FINEOS client - factory.
 #
 
-import os
-from dataclasses import dataclass
 from typing import Optional
 
 import oauthlib.oauth2
 import requests_oauthlib
 
 import massgov.pfml.util.logging
+import massgov.pfml.util.pydantic
 
 from . import client, fineos_client, mock_client
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
-@dataclass
-class FINEOSClientConfig:
+class FINEOSClientConfig(massgov.pfml.util.pydantic.PydanticBaseSettings):
+    customer_api_url: Optional[str]
     integration_services_api_url: Optional[str]
     group_client_api_url: Optional[str]
-    customer_api_url: Optional[str]
     wscomposer_api_url: Optional[str]
-    wscomposer_user_id: Optional[str]
+    wscomposer_user_id: str = "CONTENT"
     oauth2_url: Optional[str]
     oauth2_client_id: Optional[str]
     oauth2_client_secret: Optional[str]
 
-    @classmethod
-    def from_env(cls) -> "FINEOSClientConfig":
-        return FINEOSClientConfig(
-            integration_services_api_url=os.environ.get(
-                "FINEOS_CLIENT_INTEGRATION_SERVICES_API_URL", None
-            ),
-            group_client_api_url=os.environ.get("FINEOS_CLIENT_GROUP_CLIENT_API_URL", None),
-            customer_api_url=os.environ.get("FINEOS_CLIENT_CUSTOMER_API_URL", None),
-            wscomposer_api_url=os.environ.get("FINEOS_CLIENT_WSCOMPOSER_API_URL", None),
-            wscomposer_user_id=os.environ.get("FINEOS_CLIENT_WSCOMPOSER_USER_ID", "CONTENT"),
-            oauth2_url=os.environ.get("FINEOS_CLIENT_OAUTH2_URL", None),
-            oauth2_client_id=os.environ.get("FINEOS_CLIENT_OAUTH2_CLIENT_ID", None),
-            oauth2_client_secret=os.environ.get("FINEOS_CLIENT_OAUTH2_CLIENT_SECRET", None),
-        )
+    class Config:
+        env_prefix = "FINEOS_CLIENT_"
 
 
 def create_client(config: Optional[FINEOSClientConfig] = None) -> client.AbstractFINEOSClient:
     """Factory to create the right type of client object for the given configuration."""
     if config is None:
-        config = FINEOSClientConfig.from_env()
+        config = FINEOSClientConfig()
 
     if config.customer_api_url:
         backend = oauthlib.oauth2.BackendApplicationClient(client_id=config.oauth2_client_id)

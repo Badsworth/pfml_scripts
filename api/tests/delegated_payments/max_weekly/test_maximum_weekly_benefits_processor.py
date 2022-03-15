@@ -15,7 +15,10 @@ from massgov.pfml.delegated_payments.weekly_max.max_weekly_benefit_amount_valida
 from massgov.pfml.delegated_payments.weekly_max.maximum_weekly_benefits_processor import (
     MaximumWeeklyBenefitsStepProcessor,
 )
-from tests.delegated_payments.postprocessing import _create_payment_container
+from tests.delegated_payments.postprocessing import (
+    _create_absence_periods,
+    _create_payment_container,
+)
 
 
 @pytest.fixture
@@ -33,6 +36,7 @@ def maximum_weekly_processor(max_weekly_benefit_amount_validation_step):
 
 
 def validate_payment_success(payment_container):
+    payment_container.get_payment_log_record()
     assert not payment_container.maximum_weekly_audit_report_msg
 
 
@@ -49,39 +53,39 @@ def test_get_maximum_amount_for_week(maximum_weekly_processor, local_test_db_ses
         BenefitsMetrics(date(2021, 2, 1), "312.50", "200.00"),
         BenefitsMetrics(date(2021, 1, 1), "156.25", "100.00"),
     ]
-    maximum_weekly_processor.maximum_amount_for_week = maximum_amounts
+    maximum_weekly_processor.benefits_metrics_cache = maximum_amounts
 
-    assert maximum_weekly_processor._get_maximum_amount_for_week(date(2021, 1, 1)) == Decimal(
+    assert maximum_weekly_processor._get_maximum_amount_for_start_date(date(2021, 1, 1)) == Decimal(
         "100.00"
     )
-    assert maximum_weekly_processor._get_maximum_amount_for_week(date(2021, 1, 15)) == Decimal(
-        "100.00"
-    )
-    assert maximum_weekly_processor._get_maximum_amount_for_week(date(2021, 1, 31)) == Decimal(
-        "100.00"
-    )
-    assert maximum_weekly_processor._get_maximum_amount_for_week(date(2021, 2, 1)) == Decimal(
+    assert maximum_weekly_processor._get_maximum_amount_for_start_date(
+        date(2021, 1, 15)
+    ) == Decimal("100.00")
+    assert maximum_weekly_processor._get_maximum_amount_for_start_date(
+        date(2021, 1, 31)
+    ) == Decimal("100.00")
+    assert maximum_weekly_processor._get_maximum_amount_for_start_date(date(2021, 2, 1)) == Decimal(
         "200.00"
     )
-    assert maximum_weekly_processor._get_maximum_amount_for_week(date(2021, 2, 2)) == Decimal(
+    assert maximum_weekly_processor._get_maximum_amount_for_start_date(date(2021, 2, 2)) == Decimal(
         "200.00"
     )
-    assert maximum_weekly_processor._get_maximum_amount_for_week(date(2021, 2, 28)) == Decimal(
-        "200.00"
-    )
-    assert maximum_weekly_processor._get_maximum_amount_for_week(date(2021, 3, 1)) == Decimal(
+    assert maximum_weekly_processor._get_maximum_amount_for_start_date(
+        date(2021, 2, 28)
+    ) == Decimal("200.00")
+    assert maximum_weekly_processor._get_maximum_amount_for_start_date(date(2021, 3, 1)) == Decimal(
         "300.00"
     )
-    assert maximum_weekly_processor._get_maximum_amount_for_week(date(2021, 6, 25)) == Decimal(
-        "300.00"
-    )
-    assert maximum_weekly_processor._get_maximum_amount_for_week(date(2031, 1, 1)) == Decimal(
+    assert maximum_weekly_processor._get_maximum_amount_for_start_date(
+        date(2021, 6, 25)
+    ) == Decimal("300.00")
+    assert maximum_weekly_processor._get_maximum_amount_for_start_date(date(2031, 1, 1)) == Decimal(
         "300.00"
     )
 
     # Will error if given a date before the earliest configured date.
     with pytest.raises(Exception, match="No maximum weekly amount configured for 2020-12-31"):
-        maximum_weekly_processor._get_maximum_amount_for_week(date(2020, 12, 31))
+        maximum_weekly_processor._get_maximum_amount_for_start_date(date(2020, 12, 31))
 
 
 def test_validate_payments_not_exceeding_cap(maximum_weekly_processor, local_test_db_session):
@@ -171,17 +175,20 @@ def test_validate_payments_not_exceeding_cap_in_same_claim(
     payment_container5 = _create_payment_container(
         employee, Decimal("850.00"), local_test_db_session, start_date=date(2021, 8, 5)  # Thursday
     )
-
     successful_containers = [payment_container1, payment_container2, payment_container3]
     failed_containers = [payment_container4, payment_container5]
-    maximum_weekly_processor.process(
-        employee, successful_containers + failed_containers,
-    )
+
+    # The successful containers will work on their own
+    maximum_weekly_processor.process(employee, successful_containers)
 
     for container in successful_containers:
         validate_payment_success(container)
 
-    for container in failed_containers:
+    # But if you run them with another claim, now they all need
+    # to meet the rule and they start failing
+    maximum_weekly_processor.process(employee, successful_containers + failed_containers)
+
+    for container in successful_containers + failed_containers:
         validate_payment_failed(container)
 
 
@@ -222,9 +229,7 @@ def test_validate_payments_not_exceeding_cap_many_overlap(
         payment_container4,
     ]
     failed_containers = [payment_container5, payment_container6]
-    maximum_weekly_processor.process(
-        employee, successful_containers + failed_containers,
-    )
+    maximum_weekly_processor.process(employee, successful_containers + failed_containers)
 
     for container in successful_containers:
         validate_payment_success(container)
@@ -279,9 +284,7 @@ def test_validate_payments_not_exceeding_cap_adhoc(maximum_weekly_processor, loc
     )
 
     containers = [payment_container1, payment_container2, payment_container3, payment_container4]
-    maximum_weekly_processor.process(
-        employee, containers,
-    )
+    maximum_weekly_processor.process(employee, containers)
     for container in containers:
         validate_payment_success(container)
 
@@ -330,9 +333,7 @@ def test_validate_payments_not_exceeding_cap_for_multiweek_payments(
     )
 
     containers = [payment_container1, payment_container2, payment_container3]
-    maximum_weekly_processor.process(
-        employee, containers,
-    )
+    maximum_weekly_processor.process(employee, containers)
     validate_payment_success(payment_container1)
     validate_payment_success(payment_container2)
     validate_payment_failed(payment_container3)
@@ -468,3 +469,199 @@ def test_validate_payments_not_exceeding_cap_other_payment_types(
     # caused any sort of interference
     validate_payment_success(payment_container1)
     validate_payment_success(payment_container2)
+
+
+def test_validate_payments_not_exceeding_cap_multiple_claims(
+    maximum_weekly_processor, local_test_db_session
+):
+    # This is validating a problem found in https://lwd.atlassian.net/browse/API-2245
+    # Before, the logic was letting all payments after
+    # the first auto-pass the validation if they were in the
+    # same claim + week, which isn't correct.
+    employee = EmployeeFactory.create()
+    claim1 = ClaimFactory.create(employee=employee)
+    claim2 = ClaimFactory.create(employee=employee)
+
+    # Claim 1
+    _create_payment_container(
+        employee,
+        Decimal("100.00"),
+        local_test_db_session,
+        has_processed_state=True,
+        claim=claim1,
+        start_date=date(2021, 12, 19),
+        length_of_period=1,
+    )
+
+    payment_container1 = _create_payment_container(
+        employee,
+        Decimal("700.00"),
+        local_test_db_session,
+        claim=claim1,
+        start_date=date(2021, 12, 20),
+        length_of_period=7,
+    )
+
+    # Claim 2
+    _create_payment_container(
+        employee,
+        Decimal("125.00"),
+        local_test_db_session,
+        has_processed_state=True,
+        claim=claim2,
+        start_date=date(2021, 12, 19),
+        length_of_period=1,
+    )
+
+    payment_container2 = _create_payment_container(
+        employee,
+        Decimal("725.00"),
+        local_test_db_session,
+        claim=claim2,
+        start_date=date(2021, 12, 20),
+        length_of_period=7,
+    )
+
+    # Run the logic
+    # Because $225.00 was paid previously
+    # both payments are expected to fail validation
+    maximum_weekly_processor.process(employee, [payment_container1, payment_container2])
+
+    validate_payment_failed(payment_container1)
+    validate_payment_failed(payment_container2)
+
+
+def test_validate_payments_use_correct_maximum_benefit(
+    maximum_weekly_processor, local_test_db_session
+):
+    # payments in 2022 for claims starting in 2022 have a maximum payment of $1084.31,
+    # so this should be paid in full
+    employee = EmployeeFactory.create()
+    payment_container1 = _create_payment_container(
+        employee, Decimal("750"), local_test_db_session, start_date=date(2022, 1, 14)
+    )
+    payment_container2 = _create_payment_container(
+        employee, Decimal("250"), local_test_db_session, start_date=date(2022, 1, 14)
+    )
+    maximum_weekly_processor.process(employee, [payment_container1, payment_container2])
+    validate_payment_success(payment_container1)
+
+    # payments in 2022 for absence periods starting in 2021 have a maximum payment of $850,
+    # so the second payment should be reduced
+    employee2 = EmployeeFactory.create()
+    claim3 = ClaimFactory.create(employee=employee2)
+    payment_container3 = _create_payment_container(
+        employee2,
+        Decimal("750"),
+        local_test_db_session,
+        start_date=date(2022, 1, 14),
+        claim=claim3,
+        add_single_absence_period=False,
+    )
+    _create_absence_periods(
+        claim3,
+        payment_container3.payment.fineos_leave_request_id,
+        absence_period_start_date=date(2021, 12, 2),
+    )
+
+    claim4 = ClaimFactory.create(employee=employee2)
+    payment_container4 = _create_payment_container(
+        employee2,
+        Decimal("250"),
+        local_test_db_session,
+        start_date=date(2022, 1, 14),
+        claim=claim4,
+        add_single_absence_period=False,
+    )
+    _create_absence_periods(
+        claim4,
+        payment_container4.payment.fineos_leave_request_id,
+        absence_period_start_date=date(2021, 12, 17),
+    )
+
+    maximum_weekly_processor.process(employee2, [payment_container3, payment_container4])
+    validate_payment_success(payment_container3)
+    validate_payment_failed(payment_container4)
+
+    # when payments are for claims in different years, the higher maximum amount applies,
+    # so this should be paid in full
+    employee3 = EmployeeFactory.create()
+    claim5 = ClaimFactory.create(employee=employee3)
+
+    payment_container5 = _create_payment_container(
+        employee3,
+        Decimal("750"),
+        local_test_db_session,
+        start_date=date(2022, 1, 14),
+        claim=claim5,
+        add_single_absence_period=False,
+    )
+    _create_absence_periods(
+        claim5,
+        payment_container5.payment.fineos_leave_request_id,
+        absence_period_start_date=date(2022, 1, 7),
+    )
+
+    maximum_weekly_processor.process(employee, [payment_container5])
+    validate_payment_success(payment_container5)
+
+    claim6 = ClaimFactory.create(employee=employee3)
+    payment_container6 = _create_payment_container(
+        employee3,
+        Decimal("250"),
+        local_test_db_session,
+        start_date=date(2022, 1, 14),
+        claim=claim6,
+        add_single_absence_period=False,
+    )
+    _create_absence_periods(
+        claim6,
+        payment_container6.payment.fineos_leave_request_id,
+        absence_period_start_date=date(2021, 12, 10),
+    )
+
+    maximum_weekly_processor.process(employee3, [payment_container6])
+    validate_payment_success(payment_container6)
+
+    # Multiple absence periods spanning the year, only earliest is used
+    employee4 = EmployeeFactory.create()
+    claim7 = ClaimFactory.create(employee=employee4)
+
+    payment_container7 = _create_payment_container(
+        employee4,
+        Decimal("900"),
+        local_test_db_session,
+        start_date=date(2022, 1, 14),
+        claim=claim7,
+        add_single_absence_period=False,
+    )
+    _create_absence_periods(
+        claim7,
+        payment_container7.payment.fineos_leave_request_id,
+        absence_period_start_date=date(2021, 12, 7),
+    )
+    _create_absence_periods(
+        claim7,
+        payment_container7.payment.fineos_leave_request_id,
+        absence_period_start_date=date(2022, 1, 7),
+    )
+
+    claim8 = ClaimFactory.create(employee=employee4)
+    payment_container8 = _create_payment_container(
+        employee4,
+        Decimal("100"),
+        local_test_db_session,
+        start_date=date(2022, 1, 14),
+        claim=claim8,
+        add_single_absence_period=False,
+    )
+    _create_absence_periods(
+        claim8,
+        payment_container8.payment.fineos_leave_request_id,
+        absence_period_start_date=date(2021, 12, 7),
+    )
+
+    maximum_weekly_processor.process(employee4, [payment_container7, payment_container8])
+
+    validate_payment_failed(payment_container7)
+    validate_payment_success(payment_container8)

@@ -34,23 +34,23 @@ module "tasks" {
   app_subnet_ids     = data.aws_subnet_ids.vpc_app.ids
 
   # TODO: Fill this in once the Portal is deployed.
-  cognito_user_pool_id                       = ""
+  cognito_user_pool_id = ""
 
   # TODO: These values are provided by FINEOS.
-  fineos_client_integration_services_api_url = ""
-  fineos_client_customer_api_url             = ""
-  fineos_client_group_client_api_url         = ""
-  fineos_client_wscomposer_api_url           = ""
-  fineos_client_oauth2_url                   = ""
-  fineos_client_oauth2_client_id             = ""
-  fineos_aws_iam_role_arn         = ""
-  fineos_aws_iam_role_external_id = ""
+  fineos_client_integration_services_api_url          = ""
+  fineos_client_customer_api_url                      = ""
+  fineos_client_group_client_api_url                  = ""
+  fineos_client_wscomposer_api_url                    = ""
+  fineos_client_oauth2_url                            = ""
+  fineos_client_oauth2_client_id                      = ""
+  fineos_aws_iam_role_arn                             = ""
+  fineos_aws_iam_role_external_id                     = ""
   fineos_eligibility_feed_output_directory_path       = ""
   fineos_import_employee_updates_input_directory_path = ""
 
   # These can be kept blank.
-  eolwd_moveit_sftp_uri    = ""
-  pfml_error_reports_path  = "s3://massgov-pfml-$ENV_NAME-agency-transfer/error-reports/outbound"
+  eolwd_moveit_sftp_uri   = ""
+  pfml_error_reports_path = "s3://massgov-pfml-$ENV_NAME-agency-transfer/error-reports/outbound"
 
   dfml_project_manager_email_address     = "mass-pfml-payments-test-email@navapbc.com"
   pfml_email_address                     = "PFML_DoNotReply@eol.mass.gov"
@@ -59,22 +59,29 @@ module "tasks" {
   dfml_business_operations_email_address = "mass-pfml-payments-test-email@navapbc.com"
 
   # TODO: Values from FINEOS.
-  fineos_data_export_path         = ""
-  fineos_adhoc_data_export_path   = ""
-  fineos_data_import_path         = ""
-  fineos_error_export_path        = ""
+  fineos_data_export_path       = ""
+  fineos_adhoc_data_export_path = ""
+  fineos_data_import_path       = ""
+  fineos_error_export_path      = ""
 
-  pfml_fineos_inbound_path        = "s3://massgov-pfml-$ENV_NAME-agency-transfer/cps/inbound"
-  pfml_fineos_outbound_path       = "s3://massgov-pfml-$ENV_NAME-agency-transfer/cps/outbound"
+  pfml_fineos_inbound_path  = "s3://massgov-pfml-$ENV_NAME-agency-transfer/cps/inbound"
+  pfml_fineos_outbound_path = "s3://massgov-pfml-$ENV_NAME-agency-transfer/cps/outbound"
 
   payment_audit_report_outbound_folder_path = "s3://massgov-pfml-$ENV_NAME-agency-transfer/audit/outbound"
   payment_audit_report_sent_folder_path     = "s3://massgov-pfml-$ENV_NAME-agency-transfer/audit/sent"
 
-  enable_register_admins_job         = true
+  enable_register_admins_job = true
 
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com"]
 
-  pdf_api_host             = "https://localhost:5001"
-  enable_generate_1099_pdf = "1"
-  enable_merge_1099_pdf    = "1"
+  pdf_api_host                    = "https://localhost:5000"
+  enable_generate_1099_pdf        = "1"
+  generate_1099_max_files         = "1000"
+  enable_merge_1099_pdf           = "1"
+  enable_upload_1099_pdf          = "1"
+  upload_max_files_to_fineos      = "10"
+  enable_1099_testfile_generation = "0"
+  irs_1099_correction_ind         = "0"
+
+  enable_employer_reimbursement_payments = "0"
 }

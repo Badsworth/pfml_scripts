@@ -1,26 +1,24 @@
 import { Issue, NotFoundError, ValidationError } from "../errors";
-import { AppErrorsLogic } from "./useAppErrorsLogic";
+import ApiResourceCollection from "../models/ApiResourceCollection";
 import BenefitsApplication from "../models/BenefitsApplication";
-import BenefitsApplicationCollection from "../models/BenefitsApplicationCollection";
 import BenefitsApplicationsApi from "../api/BenefitsApplicationsApi";
+import { ErrorsLogic } from "./useErrorsLogic";
 import { NullableQueryParams } from "../utils/routeWithParams";
+import PaginationMeta from "../models/PaginationMeta";
 import PaymentPreference from "../models/PaymentPreference";
 import { PortalFlow } from "./usePortalFlow";
 import TaxWithholdingPreference from "../models/TaxWithholdingPreference";
-import User from "../models/User";
 import getRelevantIssues from "../utils/getRelevantIssues";
 import routes from "../routes";
 import useCollectionState from "./useCollectionState";
 import { useState } from "react";
 
 const useBenefitsApplicationsLogic = ({
-  appErrorsLogic,
+  errorsLogic,
   portalFlow,
-  user,
 }: {
-  appErrorsLogic: AppErrorsLogic;
+  errorsLogic: ErrorsLogic;
   portalFlow: PortalFlow;
-  user?: User;
 }) => {
   // State representing the collection of applications for the current user.
   // Initialize to empty collection, but will eventually store the applications
@@ -31,12 +29,17 @@ const useBenefitsApplicationsLogic = ({
     addItem: addBenefitsApplication,
     updateItem: setBenefitsApplication,
     setCollection: setBenefitsApplications,
-  } = useCollectionState(new BenefitsApplicationCollection());
+  } = useCollectionState(
+    new ApiResourceCollection<BenefitsApplication>("application_id")
+  );
 
-  // Track whether the loadAll method has been called. Checking that claims
-  // is set isn't sufficient, since it may only include a subset of applications
-  // if loadAll hasn't been called yet
-  const [hasLoadedAll, setHasLoadedAll] = useState(false);
+  // Tracks loading state of claims when calling loadPage()
+  const [isLoadingClaims, setIsLoadingClaims] = useState<boolean>();
+
+  // Pagination info associated with the current collection of claims
+  const [paginationMeta, setPaginationMeta] = useState<
+    PaginationMeta | { [key: string]: never }
+  >({});
 
   const applicationsApi = new BenefitsApplicationsApi();
 
@@ -71,18 +74,25 @@ const useBenefitsApplicationsLogic = ({
   };
 
   /**
+   * Reset the state to force applications to be refetched the
+   * next time loadPage is called.
+   */
+  const invalidateApplicationsCache = () => {
+    setIsLoadingClaims(undefined);
+    setPaginationMeta({});
+  };
+
+  /**
    * Load a single claim
    */
   const load = async (application_id: string) => {
-    if (!user) throw new Error("Cannot load claim before user is loaded");
-
     // Skip API request if we already have the claim AND its validation warnings.
     // It's important we load the claim if warnings haven't been fetched yet,
     // since the Checklist needs those to be present in order to accurately
     // determine what steps are completed.
     if (hasLoadedBenefitsApplicationAndWarnings(application_id)) return;
 
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
       const { claim, warnings } = await applicationsApi.getClaim(
@@ -102,26 +112,31 @@ const useBenefitsApplicationsLogic = ({
         return;
       }
 
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 
   /**
-   * Load all claims for the authenticated user
+   * Load a page of claims for the authenticated user
+   * @param [pageOffset] - Page number to load
    */
-  const loadAll = async () => {
-    if (!user) throw new Error("Cannot load claims before user is loaded");
-    if (hasLoadedAll) return;
+  const loadPage = async (pageOffset: number | string = 1) => {
+    if (isLoadingClaims) return;
+    if (paginationMeta.page_offset === Number(pageOffset)) return;
 
-    appErrorsLogic.clearErrors();
+    setIsLoadingClaims(true);
+    errorsLogic.clearErrors();
 
     try {
-      const { claims } = await applicationsApi.getClaims();
-
+      const { claims, paginationMeta } = await applicationsApi.getClaims(
+        pageOffset
+      );
       setBenefitsApplications(claims);
-      setHasLoadedAll(true);
+      setPaginationMeta(paginationMeta);
+      setIsLoadingClaims(false);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
+      setIsLoadingClaims(false);
     }
   };
 
@@ -134,8 +149,7 @@ const useBenefitsApplicationsLogic = ({
     application_id: string,
     patchData: Partial<BenefitsApplication>
   ) => {
-    if (!user) return;
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
       const { claim, warnings } = await applicationsApi.updateClaim(
@@ -155,13 +169,13 @@ const useBenefitsApplicationsLogic = ({
       // for situations like leave periods, where the API passes us back
       // a leave_period_id field for making subsequent updates.
       if (issues.length) {
-        throw new ValidationError(issues, applicationsApi.i18nPrefix);
+        throw new ValidationError(issues);
       }
 
       const params = { claim_id: claim.application_id };
       portalFlow.goToNextPage({ claim }, params);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 
@@ -169,18 +183,17 @@ const useBenefitsApplicationsLogic = ({
    * Complete the claim in the API
    */
   const complete = async (application_id: string) => {
-    if (!user) return;
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
       const { claim } = await applicationsApi.completeClaim(application_id);
 
       setBenefitsApplication(claim);
-      const context = { claim, user };
+      const context = { claim };
       const params = { claim_id: claim.application_id };
       portalFlow.goToNextPage(context, params);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 
@@ -188,19 +201,19 @@ const useBenefitsApplicationsLogic = ({
    * Create the claim in the API. Handles errors and routing.
    */
   const create = async () => {
-    if (!user) return;
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
       const { claim } = await applicationsApi.createClaim();
 
-      addBenefitsApplication(claim);
+      // Reset so that this newly created claim is listed
+      invalidateApplicationsCache();
 
-      const context = { claim, user };
+      const context = { claim };
       const params = { claim_id: claim.application_id };
       portalFlow.goToPageFor("CREATE_CLAIM", context, params);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 
@@ -208,22 +221,21 @@ const useBenefitsApplicationsLogic = ({
    * Submit the claim in the API and set application errors if any
    */
   const submit = async (application_id: string) => {
-    if (!user) return;
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
       const { claim } = await applicationsApi.submitClaim(application_id);
 
       setBenefitsApplication(claim);
 
-      const context = { claim, user };
+      const context = { claim };
       const params = {
         claim_id: claim.application_id,
         "part-one-submitted": "true",
       };
       portalFlow.goToNextPage(context, params);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 
@@ -231,8 +243,7 @@ const useBenefitsApplicationsLogic = ({
     application_id: string,
     paymentPreferenceData: Partial<PaymentPreference>
   ) => {
-    if (!user) return;
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
       const { claim, warnings } = await applicationsApi.submitPaymentPreference(
@@ -247,10 +258,10 @@ const useBenefitsApplicationsLogic = ({
       setClaimWarnings(application_id, warnings);
 
       if (issues.length) {
-        throw new ValidationError(issues, applicationsApi.i18nPrefix);
+        throw new ValidationError(issues);
       }
 
-      const context = { claim, user };
+      const context = { claim };
       const params: NullableQueryParams = {
         claim_id: claim.application_id,
         "payment-pref-submitted": "true",
@@ -258,7 +269,7 @@ const useBenefitsApplicationsLogic = ({
 
       portalFlow.goToNextPage(context, params);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 
@@ -266,8 +277,7 @@ const useBenefitsApplicationsLogic = ({
     application_id: string,
     data: TaxWithholdingPreference
   ) => {
-    if (!user) return;
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
       const { claim, warnings } =
@@ -281,17 +291,17 @@ const useBenefitsApplicationsLogic = ({
 
       const issues = getRelevantIssues([], warnings, []);
       if (issues.length) {
-        throw new ValidationError(issues, applicationsApi.i18nPrefix);
+        throw new ValidationError(issues);
       }
 
-      const context = { claim, user };
+      const context = { claim };
       const params: NullableQueryParams = {
         claim_id: claim.application_id,
         "tax-pref-submitted": "true",
       };
       portalFlow.goToNextPage(context, params);
     } catch (err) {
-      appErrorsLogic.catchError(err);
+      errorsLogic.catchError(err);
     }
   };
 
@@ -299,10 +309,12 @@ const useBenefitsApplicationsLogic = ({
     benefitsApplications,
     complete,
     create,
-    hasLoadedAll,
     hasLoadedBenefitsApplicationAndWarnings,
+    invalidateApplicationsCache,
+    isLoadingClaims,
     load,
-    loadAll,
+    loadPage,
+    paginationMeta,
     update,
     submit,
     submitPaymentPreference,

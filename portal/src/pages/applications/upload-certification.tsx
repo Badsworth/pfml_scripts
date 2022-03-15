@@ -1,7 +1,4 @@
-import {
-  BenefitsApplicationDocument,
-  DocumentType,
-} from "../../models/Document";
+import { DocumentType, getLeaveCertificationDocs } from "../../models/Document";
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
@@ -11,6 +8,7 @@ import withClaimDocuments, {
 import Alert from "../../components/core/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import DocumentRequirements from "../../components/DocumentRequirements";
+import { DocumentsUploadError } from "../../errors";
 import FileCardList from "../../components/FileCardList";
 import FileUploadDetails from "../../components/FileUploadDetails";
 import Heading from "../../components/core/Heading";
@@ -21,7 +19,6 @@ import React from "react";
 import { ReasonQualifier } from "../../models/BenefitsApplication";
 import Spinner from "../../components/core/Spinner";
 import { Trans } from "react-i18next";
-import findDocumentsByLeaveReason from "../../utils/findDocumentsByLeaveReason";
 import findKeyByValue from "../../utils/findKeyByValue";
 import { get } from "lodash";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
@@ -44,13 +41,13 @@ export const UploadCertification = (props: UploadCertificationProps) => {
   const claimReason = claim.leave_details.reason;
   const claimReasonQualifier = claim.leave_details.reason_qualifier;
 
-  const { appErrors, portalFlow } = appLogic;
+  const { errors, portalFlow } = appLogic;
   const { files, processFiles, removeFile } = useFilesLogic({
     clearErrors: appLogic.clearErrors,
     catchError: appLogic.catchError,
   });
   const hasLoadingDocumentsError = hasDocumentsLoadError(
-    appErrors,
+    errors,
     claim.application_id
   );
   const [submissionInProgress, setSubmissionInProgress] = React.useState(false);
@@ -79,11 +76,7 @@ export const UploadCertification = (props: UploadCertificationProps) => {
       break;
   }
 
-  const certificationDocuments =
-    findDocumentsByLeaveReason<BenefitsApplicationDocument>(
-      documents,
-      get(claim, "leave_details.reason")
-    );
+  const certificationDocuments = getLeaveCertificationDocs(documents);
 
   const handleSave = async () => {
     if (files.isEmpty && certificationDocuments.length) {
@@ -117,12 +110,15 @@ export const UploadCertification = (props: UploadCertificationProps) => {
       );
     }
   };
-  const fileErrors = appErrors.items.filter(
-    (appErrorInfo) => appErrorInfo.meta && appErrorInfo.meta.file_id
-  );
+  const fileErrors = errors.filter(
+    (error) => error instanceof DocumentsUploadError
+  ) as DocumentsUploadError[];
 
   return (
     <QuestionPage
+      buttonLoadingMessage={t(
+        "pages.claimsUploadCertification.uploadingMessage"
+      )}
       title={t("pages.claimsUploadCertification.title")}
       onSave={handleSave}
     >
@@ -161,16 +157,13 @@ export const UploadCertification = (props: UploadCertificationProps) => {
           claimReasonQualifier === ReasonQualifier.newBorn
         }
       >
-        <ul className="usa-list">
-          {t<string, string[]>(
-            "pages.claimsUploadCertification.leadListNewborn",
-            {
-              returnObjects: true,
-            }
-          ).map((listItem, index) => (
-            <li key={index}>{listItem}</li>
-          ))}
-        </ul>
+        <Trans
+          i18nKey="pages.claimsUploadCertification.leadListNewborn"
+          components={{
+            ul: <ul className="usa-list" />,
+            li: <li />,
+          }}
+        />
       </ConditionalContent>
       <DocumentRequirements type="certification" />
       <FileUploadDetails />
@@ -190,9 +183,7 @@ export const UploadCertification = (props: UploadCertificationProps) => {
       {isLoadingDocuments && !hasLoadingDocumentsError && (
         <div className="margin-top-8 text-center">
           <Spinner
-            aria-valuetext={t(
-              "components.withBenefitsApplications.loadingLabel"
-            )}
+            aria-label={t("components.withBenefitsApplications.loadingLabel")}
           />
         </div>
       )}

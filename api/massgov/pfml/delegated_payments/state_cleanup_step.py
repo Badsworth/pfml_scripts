@@ -4,8 +4,11 @@ import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import LkState, State
-from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
+from massgov.pfml.db.models.payments import FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments.step import Step
+from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
+    create_payment_finished_state_log_with_writeback,
+)
 
 # This step moves various payment states
 # to the ADD_TO_PAYMENT_ERROR_REPORT state.
@@ -60,27 +63,20 @@ class StateCleanupStep(Step):
                     state_log.state_log_id,
                 )
 
-            state_log_util.create_finished_state_log(
-                payment, ERROR_STATE, ERROR_OUTCOME, self.db_session
-            )
-
-            writeback_transaction_status = FineosWritebackTransactionStatus.PENDING_PAYMENT_AUDIT
-            state_log_util.create_finished_state_log(
-                end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
-                associated_model=payment,
-                outcome=state_log_util.build_outcome(
-                    writeback_transaction_status.transaction_status_description
-                ),
-                import_log_id=self.get_import_log_id(),
-                db_session=self.db_session,
-            )
-
-            writeback_details = FineosWritebackDetails(
+            create_payment_finished_state_log_with_writeback(
                 payment=payment,
-                transaction_status_id=writeback_transaction_status.transaction_status_id,
+                payment_end_state=ERROR_STATE,
+                payment_outcome=ERROR_OUTCOME,
+                writeback_transaction_status=FineosWritebackTransactionStatus.PENDING_PAYMENT_AUDIT,
+                db_session=self.db_session,
                 import_log_id=self.get_import_log_id(),
             )
-            self.db_session.add(writeback_details)
+            logger.info(
+                "No audit file received for payment, moving to state [%s] to allow us to consume again",
+                ERROR_STATE.state_description,
+                extra=payments_util.get_traceable_payment_details(payment, ERROR_STATE),
+            )
+
         logger.info(
             "Successfully moved %i state logs from %s to %s",
             state_log_count,

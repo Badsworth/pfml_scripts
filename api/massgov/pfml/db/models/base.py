@@ -1,7 +1,7 @@
 import uuid
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, Type
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy import TIMESTAMP, Column, inspect
@@ -9,7 +9,6 @@ from sqlalchemy.ext.declarative import as_declarative
 from sqlalchemy.orm import deferred
 from sqlalchemy.sql.functions import now as sqlnow
 
-from massgov.pfml.db.models.common import PostgreSQLUUID
 from massgov.pfml.util.datetime import utcnow
 
 
@@ -18,8 +17,8 @@ def same_as_created_at(context):
 
 
 # This ensures that deprecated columns won't be read or included as part of an INSERT on the table
-def deprecated_column(type: Type, *args: Any, **kwargs: Any) -> Column:
-    if type == PostgreSQLUUID:
+def deprecated_column(type: Any, *args: Any, **kwargs: Any) -> Column:
+    if not callable(type):
         return deferred(Column(type.evaluates_none(), *args, **kwargs))
     else:
         return deferred(Column(type().evaluates_none(), *args, **kwargs))
@@ -56,17 +55,14 @@ def uuid_gen() -> uuid.UUID:
 
 
 def utc_timestamp_gen():
-    """ Generate a tz-aware timestamp pinned to UTC """
+    """Generate a tz-aware timestamp pinned to UTC"""
     return utcnow()
 
 
 # This is annotated as a @declarative_mixin when we upgrade to SQLAlchemy 1.4
 class TimestampMixin:
     created_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        server_default=sqlnow(),
+        TIMESTAMP(timezone=True), nullable=False, default=utc_timestamp_gen, server_default=sqlnow()
     )
 
     updated_at = Column(

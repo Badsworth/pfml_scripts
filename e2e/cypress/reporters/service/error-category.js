@@ -15,6 +15,7 @@ class ErrorCategory {
       INFRASTRUCTURE_CONNECTION: {
         TIMEOUT: "timeout-service",
         AUTH: "authentication",
+        AUTH_SSO: "authentication-sso",
         FAILURE400: "failure-400",
         FAILURE500: "failure-500",
         FAILURE503: "failure-503",
@@ -66,6 +67,9 @@ class ErrorCategory {
             .addRule(`CypressError`, `*cy.visit()*failed trying to load:*fineos.com*`)
             .addRule(`CypressError`, `*Timed out after waiting*`)
             .addRule(`CypressError`, `*cy.task('submitClaimToAPI')*timed out*`)
+
+          .setSubCategory(this.SUB_CATEGORY.INFRASTRUCTURE_CONNECTION.AUTH_SSO)
+            .addRule(`CypressError`, `*cy.task('completeSSOLoginFineos')\` failed*`)
 
           .setSubCategory(this.SUB_CATEGORY.INFRASTRUCTURE_CONNECTION.AUTH)
             .addRule(`CypressError`, `*cy.task('The application redirected * more than * times*`)

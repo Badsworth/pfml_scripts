@@ -1,10 +1,9 @@
 import abc
-import collections
 import enum
 import uuid
-from typing import Any, Dict, Optional, Set
+from datetime import datetime
+from typing import Any, Optional, Set
 
-import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import (
@@ -14,7 +13,8 @@ from massgov.pfml.db.models.employees import (
     PaymentReferenceFile,
     ReferenceFile,
 )
-from massgov.pfml.util.batch.log import LogEntry
+from massgov.pfml.util.batch.log import LogEntry, latest_import_log_for_metric
+from massgov.pfml.util.datetime.business_day import BusinessDay
 
 logger = logging.get_logger(__name__)
 
@@ -39,8 +39,14 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
     def cleanup_on_failure(self) -> None:
         pass
 
+    def get_import_type(self) -> str:
+        """Override in subclass steps to set the type of the import log"""
+        return ""
+
     def run(self) -> None:
-        with LogEntry(self.log_entry_db_session, self.__class__.__name__) as log_entry:
+        with LogEntry(
+            self.log_entry_db_session, self.__class__.__name__, self.get_import_type()
+        ) as log_entry:
             self.log_entry = log_entry
 
             self.initialize_metrics()
@@ -50,15 +56,6 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
                 self.__class__.__name__,
                 self.get_import_log_id(),
             )
-
-            # Flatten these prefixed with the "before" key since nested values in the
-            # metrics dictionary aren’t properly imported into New Relic
-            state_log_counts_before = state_log_util.get_state_counts(self.db_session)
-
-            before_map = {"before_state_log_counts": state_log_counts_before}
-            flattened_state_log_counts_before = flatten(before_map)
-
-            self.set_metrics(flattened_state_log_counts_before)
 
             try:
                 self.run_step()
@@ -77,22 +74,6 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
                 # perform any cleanup necessary by the step.
                 self.cleanup_on_failure()
                 raise
-
-            finally:
-                # Flatten these prefixed with the "after" key since nested values in the
-                # metrics dictionary aren’t properly imported into New Relic
-                state_log_counts_after = state_log_util.get_state_counts(self.db_session)
-
-                after_map = {"after_state_log_counts": state_log_counts_after}
-                flattened_state_log_counts_after = flatten(after_map)
-
-                self.set_metrics(flattened_state_log_counts_after)
-
-                # Calculate the difference in counts for the metrics
-                state_log_diff = calculate_state_log_count_diff(
-                    state_log_counts_before, state_log_counts_after
-                )
-                self.set_metrics(state_log_diff)
 
     @abc.abstractmethod
     def run_step(self) -> None:
@@ -130,7 +111,7 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
         self.payments_in_reference_file.add(payment.payment_id)
 
         payment_reference_file = PaymentReferenceFile(
-            payment=payment, reference_file=reference_file,
+            payment=payment, reference_file=reference_file
         )
         self.db_session.add(payment_reference_file)
 
@@ -144,50 +125,29 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
         self.employees_in_reference_file.add(employee.employee_id)
 
         employee_reference_file = EmployeeReferenceFile(
-            employee=employee, reference_file=reference_file,
+            employee=employee, reference_file=reference_file
         )
         self.db_session.add(employee_reference_file)
 
+    @classmethod
+    def check_if_processed_within_x_days(
+        cls, db_session: db.Session, metric: str, business_days: int
+    ) -> bool:
+        source = cls.__name__
+        found_import_log = latest_import_log_for_metric(
+            db_session=db_session, source=source, metric=metric
+        )
 
-def calculate_state_log_count_diff(
-    state_log_counts_before: Dict[str, int], state_log_counts_after: Dict[str, int]
-) -> Dict[str, int]:
-    # First, create a map of state log description to a tuple of before count/after count
-    # Note that a state log that isn't present means there was 0.
-    # We need to iterate over both so that we account for any that only appear before or after.
-    count_map = {}
-    for key, value in state_log_counts_before.items():
-        count_map[key] = [value, 0]
-
-    for key, value in state_log_counts_after.items():
-        if key not in count_map:
-            count_map[key] = [0, 0]
-
-        count_map[key][1] = value
-
-    # Calculate the diffs
-    diff_map = {}
-    for description, counts in count_map.items():
-        count_before = counts[0]
-        count_after = counts[1]
-
-        diff = count_after - count_before
-        # If it didn't change, don't bother adding it
-        if diff == 0:
-            continue
-
-        key_name = f"diff_state_log_counts_{description}"
-        diff_map[key_name] = diff
-
-    return diff_map
-
-
-def flatten(d, parent_key="", sep="_"):
-    items = []
-    for k, v in d.items():
-        new_key = parent_key + sep + k if parent_key else k
-        if isinstance(v, collections.abc.MutableMapping):
-            items.extend(flatten(v, new_key, sep=sep).items())
+        if found_import_log is None:
+            logger.error(f"No data was found for step {cls.__name__} with results for {metric}.")
         else:
-            items.append((new_key, v))
-    return dict(items)
+            business_day = BusinessDay(found_import_log.created_at)
+            days = business_day.days_between(datetime.utcnow())
+            if days <= business_days:
+                return True
+
+            logger.error(
+                f"Last time processing step {cls.__name__} with results for {metric} was greater than {business_days} days.",
+                extra={"import_log_created_at": found_import_log.created_at},
+            )
+        return False

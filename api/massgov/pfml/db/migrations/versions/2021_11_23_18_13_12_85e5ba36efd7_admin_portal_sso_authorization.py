@@ -23,7 +23,7 @@ def upgrade():
         sa.Column("azure_group_name", sa.Text(), nullable=False),
         sa.Column("azure_group_guid", sa.Text(), nullable=False),
         sa.Column("azure_group_parent_id", sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(["azure_group_parent_id"], ["lk_azure_group.azure_group_id"],),
+        sa.ForeignKeyConstraint(["azure_group_parent_id"], ["lk_azure_group.azure_group_id"]),
         sa.PrimaryKeyConstraint("azure_group_id"),
     )
     op.create_table(
@@ -50,9 +50,9 @@ def upgrade():
         ),
         sa.Column("azure_permission_id", sa.Integer(), nullable=False),
         sa.Column("azure_group_id", sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(["azure_group_id"], ["lk_azure_group.azure_group_id"],),
+        sa.ForeignKeyConstraint(["azure_group_id"], ["lk_azure_group.azure_group_id"]),
         sa.ForeignKeyConstraint(
-            ["azure_permission_id"], ["lk_azure_permission.azure_permission_id"],
+            ["azure_permission_id"], ["lk_azure_permission.azure_permission_id"]
         ),
         sa.PrimaryKeyConstraint("azure_permission_id", "azure_group_id"),
     )
@@ -78,9 +78,9 @@ def upgrade():
         sa.Column("azure_permission_id", sa.Integer(), nullable=True),
         sa.Column("azure_group_id", sa.Integer(), nullable=True),
         sa.Column("action", sa.Text(), nullable=False),
-        sa.ForeignKeyConstraint(["azure_group_id"], ["lk_azure_group.azure_group_id"],),
+        sa.ForeignKeyConstraint(["azure_group_id"], ["lk_azure_group.azure_group_id"]),
         sa.ForeignKeyConstraint(
-            ["azure_permission_id"], ["lk_azure_permission.azure_permission_id"],
+            ["azure_permission_id"], ["lk_azure_permission.azure_permission_id"]
         ),
         sa.PrimaryKeyConstraint("user_azure_permission_log_id"),
     )

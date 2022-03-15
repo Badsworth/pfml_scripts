@@ -18,6 +18,12 @@
         // Allow fireEvent.change() since userEvent.type() sometimes doesn't trigger a change event from what we've seen.
         "allowedMethods": ["change"]
       }
-    ]
+    ],
+    "testing-library/no-wait-for-multiple-assertions": "off",
+    "testing-library/prefer-presence-queries": "off",
+    "testing-library/no-wait-for-side-effects": "off",
+    "testing-library/no-render-in-setup": "off",
+    "testing-library/no-unnecessary-act": "off",
+    "testing-library/no-wait-for-snapshot": "off"
   }
 }

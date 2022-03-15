@@ -19,7 +19,7 @@ describe("Submit a bonding claim with other income and other leave - BHAP1", () 
 
         // Submit Claim
         portal.startClaim();
-        portal.submitClaimPartOne(application);
+        portal.submitClaimPartOne(application, false);
         portal.waitForClaimSubmission().then((data) => {
           cy.stash("submission", {
             application_id: data.application_id,
@@ -27,7 +27,11 @@ describe("Submit a bonding claim with other income and other leave - BHAP1", () 
             timestamp_from: Date.now(),
           });
         });
-        portal.submitClaimPartsTwoThree(application, paymentPreference);
+        portal.submitClaimPartsTwoThree(
+          application,
+          paymentPreference,
+          claim.is_withholding_tax
+        );
       });
     });
   // Check for Other Leave Document

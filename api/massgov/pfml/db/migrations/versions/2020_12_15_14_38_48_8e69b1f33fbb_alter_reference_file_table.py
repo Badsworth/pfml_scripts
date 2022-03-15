@@ -20,7 +20,7 @@ def upgrade():
         "reference_file", "reference_file_type_id", existing_type=sa.Integer(), nullable=True
     )
     op.create_index(
-        op.f("ix_reference_file_file_location"), "reference_file", ["file_location"], unique=True,
+        op.f("ix_reference_file_file_location"), "reference_file", ["file_location"], unique=True
     )
     pass
 

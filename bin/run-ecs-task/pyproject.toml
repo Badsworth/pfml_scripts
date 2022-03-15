@@ -1,0 +1,9 @@
+[tool.poetry]
+ name = "ad-hoc-query"
+ version = "0.0.5"
+ description = "script for automation of ad hoc query steps"
+ authors = ["Chris Ashton <chris.ashton@focusconsulting.io>, James Bursa <james@navapbc.com>"]
+
+ [tool.poetry.dependencies]
+ python = "^3.8"
+ jira = "^3.1.1"

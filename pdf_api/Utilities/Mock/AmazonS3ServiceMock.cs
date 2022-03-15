@@ -22,8 +22,23 @@ namespace PfmlPdfApi.Utilities.Mock
             return true;
         }
 
-        public async Task<bool> CreateFileAsync(string fileName, MemoryStream stream)
+        public async Task<bool> CreateFileAsync(string fileName, MemoryStream stream, string contentType = "application/pdf")
         {
+            if (fileName.Contains("/"))
+            {
+                var folders = fileName.Split("/");
+                var fullPath = $"{BASEFOLDER}//{_amazonS3Setting.Key}";
+
+                foreach (var folder in folders)
+                {
+                    if (!folder.EndsWith(".pdf"))
+                    {
+                        fullPath += $"//{folder}";
+                        var directory = Directory.CreateDirectory(fullPath);
+                    }
+                }
+            }
+
             var lstream = new MemoryStream(stream.ToArray());
             lstream.Seek(0, SeekOrigin.Begin);
 
@@ -42,7 +57,7 @@ namespace PfmlPdfApi.Utilities.Mock
         public async Task<IList<Stream>> GetFilesAsync(string folderName)
         {
             List<Stream> streamList = new List<Stream>();
-            string[] files = Directory.GetFiles($"{BASEFOLDER}//{_amazonS3Setting.Key}//{folderName}");
+            string[] files = Directory.GetFiles(folderName);
 
             foreach (var file in files)
             {
@@ -54,7 +69,7 @@ namespace PfmlPdfApi.Utilities.Mock
 
         public async Task<IList<string>> GetFoldersAsync(string folderName)
         {
-            string[] files = Directory.GetFiles($"{BASEFOLDER}//{_amazonS3Setting.Key}//{folderName}");
+            string[] files = Directory.GetDirectories($"{BASEFOLDER}/{_amazonS3Setting.Key}/{folderName}");
 
             return files.ToList();
         }

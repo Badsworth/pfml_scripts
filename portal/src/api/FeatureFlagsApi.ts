@@ -6,7 +6,7 @@ export default class FeatureFlagApi extends BaseApi {
     return "";
   }
 
-  get i18nPrefix() {
+  get namespace() {
     return "flags";
   }
 
@@ -15,13 +15,9 @@ export default class FeatureFlagApi extends BaseApi {
    * @returns {Promise<Array.<Object>>}
    */
   getFlags = async () => {
-    const { data } = await this.request<Flag[]>(
-      "GET",
-      "flags",
-      undefined,
-      {},
-      { excludeAuthHeader: true }
-    );
+    const { data } = await this.request<Flag[]>("GET", "flags", undefined, {
+      excludeAuthHeader: true,
+    });
 
     return data.map((flag) => {
       return new Flag(flag);

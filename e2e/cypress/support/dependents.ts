@@ -13,14 +13,20 @@ import { Runnable, Test, Context } from "mocha";
  * See https://github.com/mochajs/mocha/pull/4181, which is not available today (Cypress is currently
  * on an older Mocha version).
  */
-// Track results on a global level.
-const trackedResults: Record<string, Record<string, "passed" | "failed">> = {};
 
-const getRunnableId = (runnable: Runnable): string => {
+type TestState = {
+  status: "passed" | "failed";
+  attempts?: number;
+};
+
+// Track results on a global level.
+export const trackedResults: Record<string, Record<string, TestState>> = {};
+
+export const getRunnableId = (runnable: Runnable): string => {
   // @ts-ignore
   return runnable.id;
 };
-const getRunnableSuiteId = (runnable: Runnable): string => {
+export const getRunnableSuiteId = (runnable: Runnable): string => {
   if (!runnable.parent) {
     throw new Error("Unable to get parent suite");
   }
@@ -38,13 +44,22 @@ Cypress.on("test:after:run", (attr, runnable) => {
     if (!trackedResults[suiteId]) {
       trackedResults[suiteId] = {};
     }
-    trackedResults[suiteId][getRunnableId(runnable)] = runnable.state;
+    if (!trackedResults[suiteId][getRunnableId(runnable)]) {
+      trackedResults[suiteId][getRunnableId(runnable)] = {
+        status: runnable.state,
+      };
+    }
+    const attempts = trackedResults[suiteId][getRunnableId(runnable)].attempts;
+    trackedResults[suiteId][getRunnableId(runnable)] = {
+      status: runnable.state,
+      attempts: typeof attempts == "number" ? attempts + 1 : 1,
+    };
   }
 });
 
 type TestWithID = Test & { id: string };
 
-Cypress.Commands.add("dependsOnPreviousPass", (dependencies?: [Test]) => {
+Cypress.Commands.add("dependsOnPreviousPass", (dependencies?: Test[]) => {
   // @ts-ignore
   const runnable = cy.state("runnable") as Runnable;
   // When calculating whether this test's dependencies pass, only consider results
@@ -61,11 +76,11 @@ Cypress.Commands.add("dependsOnPreviousPass", (dependencies?: [Test]) => {
       // If we weren't passed explicit dependencies, all previous tests are considered dependencies,
       // so consider them all.
       if (!dependencies) {
-        return results.concat(result);
+        return results.concat(result.status);
       }
       // If we were passed dependencies, only consider the result if it's one of our dependencies.
       if (dependencies.find((dep) => (dep as TestWithID).id === id)) {
-        return results.concat(result);
+        return results.concat(result.status);
       }
       // Otherwise, ignore this result.
       return results;

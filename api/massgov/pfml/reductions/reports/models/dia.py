@@ -5,7 +5,8 @@ from typing import Optional, Tuple
 from pydantic import BaseModel, Extra, Field
 
 import massgov.pfml.reductions.dia as dia
-from massgov.pfml.db.models.employees import AbsenceStatus, Claim, DiaReductionPayment
+from massgov.pfml.db.models.absences import AbsenceStatus
+from massgov.pfml.db.models.employees import Claim, DiaReductionPayment
 
 
 class DFMLReportRow(BaseModel):

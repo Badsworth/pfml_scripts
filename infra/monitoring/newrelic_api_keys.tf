@@ -18,6 +18,8 @@ locals {
     "performance" : "https://perf-claims-webapp.masspfml.fineos.com"
     "training" : "https://trn-claims-webapp.masspfml.fineos.com"
     "cps-preview" : "https://dt3-claims-webapp.masspfml.fineos.com"
+    "trn2" : "https://trn2-claims-webapp.masspfml.fineos.com"
+    "long" : "https://dt4-claims-webapp.masspfml.fineos.com"
     // Note: Intentionally omitting UAT and prod for the moment due to SSO requirements.
   }
 }

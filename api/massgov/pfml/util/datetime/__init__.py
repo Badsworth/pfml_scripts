@@ -1,6 +1,6 @@
 import math
 from datetime import date, datetime, time, timezone
-from typing import NamedTuple, Optional, Union
+from typing import NamedTuple, Optional, Tuple, Union
 
 import pytz
 
@@ -77,3 +77,31 @@ def get_period_in_weeks(period_start: date, period_end: date) -> int:
     """
     weeks = math.ceil(get_period_in_days(period_start, period_end) / 7.0)
     return weeks
+
+
+def datetime_str_to_date(datetime_str: Optional[str]) -> Optional[date]:
+    if not datetime_str:
+        return None
+    return datetime.fromisoformat(datetime_str).date()
+
+
+def is_date_contained(container_range: Tuple[date, date], test_date: date) -> bool:
+    """
+    Determine if test_date is within container_range (inclusive)
+    """
+    c_start, c_end = container_range
+    return c_start <= test_date and test_date <= c_end
+
+
+def is_range_contained(container_range: Tuple[date, date], test_range: Tuple[date, date]) -> bool:
+    """
+    Determine if test_range is within container_range (inclusive)
+    """
+    c_start, c_end = container_range
+    t_start, t_end = test_range
+    return c_start <= t_start and t_end <= c_end
+
+
+def date_to_isoformat(date_obj: Optional[date]) -> Optional[str]:
+    # Minor util to handle cases where the date can be None
+    return date_obj.isoformat() if date_obj else None

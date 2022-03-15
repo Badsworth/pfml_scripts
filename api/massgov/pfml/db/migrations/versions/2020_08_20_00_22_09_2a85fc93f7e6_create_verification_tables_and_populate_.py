@@ -32,7 +32,7 @@ def upgrade():
         sa.Column("verification_ts", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.Column("related_id", postgresql.UUID(as_uuid=True), nullable=True),
         sa.ForeignKeyConstraint(
-            ["verification_type_id"], ["lk_verification_type.verification_type_id"],
+            ["verification_type_id"], ["lk_verification_type.verification_type_id"]
         ),
         sa.PrimaryKeyConstraint("verification_id"),
     )
@@ -45,7 +45,7 @@ def upgrade():
         sa.Column("expiration_ts", sa.TIMESTAMP(timezone=True), nullable=False),
         sa.Column("issue_ts", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.Column("remaining_uses", sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(["employer_id"], ["employer.employer_id"],),
+        sa.ForeignKeyConstraint(["employer_id"], ["employer.employer_id"]),
         sa.PrimaryKeyConstraint("verification_code_id"),
     )
     op.create_index(
@@ -68,7 +68,7 @@ def upgrade():
         sa.Column("message", sa.Text(), nullable=True),
         sa.Column("log_ts", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(
-            ["verification_code_id"], ["verification_code.verification_code_id"],
+            ["verification_code_id"], ["verification_code.verification_code_id"]
         ),
         sa.PrimaryKeyConstraint("verification_code_log_id"),
     )

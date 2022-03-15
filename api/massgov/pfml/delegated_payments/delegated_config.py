@@ -113,6 +113,13 @@ class PaymentsS3Config(PydanticBaseSettings):
         NOT_SET, description="This is where we store the copy of the Check files"
     )
 
+    # Where we store the manual PUB reject used to manually fail payments from PUB
+    # that are otherwise not returned by the bank due to the particular type of error.
+    # s3://massgov-pfml-prod-agency-transfer/pub/archive/manual-reject/
+    pfml_manual_pub_reject_archive_path: str = Field(
+        NOT_SET, description="This is where we store the copy of the manual PUB reject files"
+    )
+
     # PFML API stores a copy of all files that we generate for reporting
     # Ex: s3://massgov-pfml-prod-agency-transfer/error-reports/archive/
     pfml_error_reports_archive_path: str = Field(
@@ -123,6 +130,11 @@ class PaymentsS3Config(PydanticBaseSettings):
     # Ex s3://massgov-pfml-${environment_name}-agency-transfer/audit/archive
     pfml_payment_rejects_archive_path: str = Field(
         NOT_SET, description="This is where we store a copy of the payment reject response file"
+    )
+
+    # TODO: Add some description
+    pfml_1099_document_archive_path: str = Field(
+        NOT_SET, description="This is where we store all 1099 pdf documents"
     )
 
 
@@ -158,7 +170,11 @@ class PaymentsDateConfig(PydanticBaseSettings):
     )
     # PFML API will not process FINEOS IAWW data older than this date
     fineos_iaww_extract_max_history_date: str = Field(
-        NOT_SET, description="The earliest file we will copy from FINEOS for the IAWW extract",
+        NOT_SET, description="The earliest file we will copy from FINEOS for the IAWW extract"
+    )
+
+    fineos_1099_data_extract_max_history_date: str = Field(
+        NOT_SET, description="The earliest file we will copy from FINEOS for the 1099 extract"
     )
 
 

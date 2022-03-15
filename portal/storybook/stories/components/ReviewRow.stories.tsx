@@ -1,5 +1,5 @@
 /* eslint-disable no-alert */
-import AmendButton from "src/components/employers/AmendButton";
+import AmendButton from "src/features/employer-review/AmendButton";
 import React from "react";
 import ReviewHeading from "src/components/ReviewHeading";
 import ReviewRow from "src/components/ReviewRow";

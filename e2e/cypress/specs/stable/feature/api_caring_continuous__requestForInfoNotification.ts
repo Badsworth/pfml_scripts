@@ -145,17 +145,14 @@ describe("Request for More Information (notifications/notices)", () => {
     () => {
       cy.dependsOnPreviousPass([submission]);
       cy.unstash<Submission>("submission").then((submission) => {
-        email.getEmails(
-          {
-            address: "gqzap.notifications@inbox.testmail.app",
-            subject:
-              "Thank you for successfully submitting your Paid Family and Medical Leave Application",
-            timestamp_from: submission.timestamp_from,
-            messageWildcard: submission.fineos_absence_id,
-            debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-          },
-          30000
-        );
+        email.getEmails({
+          address: "gqzap.notifications@inbox.testmail.app",
+          subject:
+            "Thank you for successfully submitting your Paid Family and Medical Leave Application",
+          timestamp_from: submission.timestamp_from,
+          messageWildcard: submission.fineos_absence_id,
+          debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+        });
         cy.contains(submission.fineos_absence_id);
       });
     }
@@ -180,7 +177,7 @@ describe("Request for More Information (notifications/notices)", () => {
               "Fineos Claim ID": submission.fineos_absence_id,
             },
           },
-          60000
+          90000
         );
         cy.contains(submission.fineos_absence_id);
       });

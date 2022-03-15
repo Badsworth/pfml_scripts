@@ -13,7 +13,6 @@ def test_application(test_db_session, user):
     application_id = uuid.uuid4()
     application.application_id = application_id
     application.user_id = user.user_id
-    application.nickname = "My Leave Application"
     application.first_name = "John"
     application.last_name = "Doe"
 
@@ -23,7 +22,6 @@ def test_application(test_db_session, user):
     inserted_application = test_db_session.query(Application).get(application_id)
 
     assert inserted_application.application_id.version == 4
-    assert inserted_application.nickname == "My Leave Application"
     assert inserted_application.first_name == "John"
     assert inserted_application.last_name == "Doe"
 

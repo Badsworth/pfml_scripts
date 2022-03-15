@@ -3,7 +3,7 @@
  */
 
 import LeaveReason, { LeaveReasonType } from "./LeaveReason";
-import { compact, get, isNil, merge, sum, sumBy, zip } from "lodash";
+import { compact, get, merge, sum, sumBy, zip } from "lodash";
 
 import Address from "./Address";
 import BaseBenefitsApplication from "./BaseBenefitsApplication";
@@ -13,6 +13,7 @@ import OrganizationUnit from "./OrganizationUnit";
 import OtherIncome from "./OtherIncome";
 import PaymentPreference from "./PaymentPreference";
 import PreviousLeave from "./PreviousLeave";
+import { ValuesOf } from "../../types/common";
 import assert from "assert";
 import dayjs from "dayjs";
 import spreadMinutesOverWeek from "../utils/spreadMinutesOverWeek";
@@ -22,7 +23,6 @@ class BenefitsApplication extends BaseBenefitsApplication {
   fineos_absence_id: string | null = null;
   organization_unit_id: string | null = null;
   organization_unit_selection: "not_listed" | "not_selected" | null = null;
-  created_at: string;
 
   first_name: string | null = null;
   middle_name: string | null = null;
@@ -30,8 +30,9 @@ class BenefitsApplication extends BaseBenefitsApplication {
   concurrent_leave: ConcurrentLeave | null = null;
   employer_benefits: EmployerBenefit[] = [];
   date_of_birth: string | null = null;
+  employee_id: string | null = null;
   employer_fein: string | null = null;
-  gender: typeof Gender[keyof typeof Gender] | null = null;
+  gender: ValuesOf<typeof Gender> | null = null;
   has_concurrent_leave: boolean | null = null;
   has_continuous_leave_periods: boolean | null = null;
   has_employer_benefits: boolean | null = null;
@@ -55,9 +56,12 @@ class BenefitsApplication extends BaseBenefitsApplication {
   tax_identifier: string | null = null;
   work_pattern: Partial<WorkPattern> | null = null;
 
-  employment_status:
-    | typeof EmploymentStatus[keyof typeof EmploymentStatus]
-    | null = null;
+  employment_status: ValuesOf<typeof EmploymentStatus> | null = null;
+
+  computed_start_dates: {
+    other_reason?: string | null;
+    same_reason?: string | null;
+  };
 
   leave_details: {
     continuous_leave_periods: ContinuousLeavePeriod[];
@@ -70,19 +74,17 @@ class BenefitsApplication extends BaseBenefitsApplication {
     child_placement_date: string | null;
     has_future_child_date: boolean | null;
     pregnant_or_recent_birth: boolean | null;
-    reason: typeof LeaveReason[keyof typeof LeaveReason] | null;
+    reason: ValuesOf<typeof LeaveReason> | null;
     reason_qualifier: ReasonQualifierEnum | null;
   };
 
   phone: {
     int_code: string | null;
     phone_number: string | null;
-    phone_type: typeof PhoneType[keyof typeof PhoneType] | null;
+    phone_type: ValuesOf<typeof PhoneType> | null;
   };
 
-  status:
-    | typeof BenefitsApplicationStatus[keyof typeof BenefitsApplicationStatus]
-    | null = null;
+  status: ValuesOf<typeof BenefitsApplicationStatus> | null = null;
 
   // Organization unit data selected by the user (used in review page)
   organization_unit: OrganizationUnit | null;
@@ -165,6 +167,44 @@ class BenefitsApplication extends BaseBenefitsApplication {
           .includes(o.organization_unit_id)
     );
   }
+
+  /**
+   * Returns earliest start date across all leave periods
+   */
+  get leaveStartDate() {
+    const periods = [
+      get(this, "leave_details.continuous_leave_periods"),
+      get(this, "leave_details.intermittent_leave_periods"),
+      get(this, "leave_details.reduced_schedule_leave_periods"),
+    ].flat();
+
+    const startDates: string[] = compact(periods)
+      .map((period) => period.start_date)
+      .sort();
+
+    if (!startDates.length) return null;
+
+    return startDates[0];
+  }
+
+  /**
+   * Returns latest end date across all leave periods
+   */
+  get leaveEndDate() {
+    const periods = [
+      get(this, "leave_details.continuous_leave_periods"),
+      get(this, "leave_details.intermittent_leave_periods"),
+      get(this, "leave_details.reduced_schedule_leave_periods"),
+    ].flat();
+
+    const endDates: string[] = compact(periods)
+      .map((period) => period.end_date)
+      .sort();
+
+    if (!endDates.length) return null;
+
+    return endDates[endDates.length - 1];
+  }
 }
 
 /**
@@ -200,8 +240,7 @@ export const ReasonQualifier = {
   newBorn: "Newborn",
 } as const;
 
-export type ReasonQualifierEnum =
-  typeof ReasonQualifier[keyof typeof ReasonQualifier];
+export type ReasonQualifierEnum = ValuesOf<typeof ReasonQualifier>;
 
 export class ContinuousLeavePeriod {
   leave_period_id: string | null = null;
@@ -220,8 +259,7 @@ export class IntermittentLeavePeriod {
   // How many {days|hours} of work will you miss per absence?
   duration: number | null = null;
   // How long will an absence typically last?
-  duration_basis: typeof DurationBasis[keyof typeof DurationBasis] | null =
-    null;
+  duration_basis: ValuesOf<typeof DurationBasis> | null = null;
 
   // Estimate how many absences {per week|per month|over the next 6 months}
   frequency: number | null = null;
@@ -229,9 +267,8 @@ export class IntermittentLeavePeriod {
   // and can only ever be equal to 6
   frequency_interval: number | null = null;
   // How often might you need to be absent from work?
-  frequency_interval_basis:
-    | typeof FrequencyIntervalBasis[keyof typeof FrequencyIntervalBasis]
-    | null = null;
+  frequency_interval_basis: ValuesOf<typeof FrequencyIntervalBasis> | null =
+    null;
 
   constructor(attrs: Partial<IntermittentLeavePeriod>) {
     Object.assign(this, attrs);
@@ -243,9 +280,8 @@ export class CaringLeaveMetadata {
   family_member_first_name: string | null = null;
   family_member_last_name: string | null = null;
   family_member_middle_name: string | null = null;
-  relationship_to_caregiver:
-    | typeof RelationshipToCaregiver[keyof typeof RelationshipToCaregiver]
-    | null = null;
+  relationship_to_caregiver: ValuesOf<typeof RelationshipToCaregiver> | null =
+    null;
 
   constructor(attrs: Partial<CaringLeaveMetadata>) {
     Object.assign(this, attrs);
@@ -254,9 +290,7 @@ export class CaringLeaveMetadata {
 
 export class WorkPattern {
   work_pattern_days: WorkPatternDay[] | null = [];
-  work_pattern_type:
-    | typeof WorkPatternType[keyof typeof WorkPatternType]
-    | null = null;
+  work_pattern_type: ValuesOf<typeof WorkPatternType> | null = null;
 
   constructor(attrs: Partial<WorkPattern>) {
     Object.assign(this, attrs);
@@ -296,7 +330,6 @@ export class WorkPattern {
     minutesWorkedPerWeek: number,
     workPattern: WorkPattern | { [key: string]: never } = {}
   ) {
-    assert(!isNil(minutesWorkedPerWeek));
     const minutesOverWeek = spreadMinutesOverWeek(minutesWorkedPerWeek);
 
     const newWeek = zip(OrderedDaysOfWeek, minutesOverWeek).map(

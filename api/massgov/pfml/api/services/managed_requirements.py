@@ -13,7 +13,7 @@ from massgov.pfml.db.models.employees import (
     ManagedRequirementType,
 )
 from massgov.pfml.db.queries.managed_requirements import (
-    commit_managed_requirement_update,
+    commit_managed_requirements,
     get_managed_requirement_by_fineos_managed_requirement_id,
 )
 from massgov.pfml.fineos import create_client, exception
@@ -53,7 +53,7 @@ def get_fineos_managed_requirements_from_notification(
 
 
 def update_employer_confirmation_requirements(
-    db_session: Session, admin_user_id: UUID, fineos_managed_reqs: List[ManagedRequirementDetails],
+    db_session: Session, admin_user_id: UUID, fineos_managed_reqs: List[ManagedRequirementDetails]
 ) -> List[ManagedRequirement]:
 
     employer_confirmation_requirements = select_employer_confirmation_requirements(
@@ -65,19 +65,15 @@ def update_employer_confirmation_requirements(
         for req in employer_confirmation_requirements
     ]
 
-    records = [
-        commit_managed_requirement_update(db_session, valid_update)
-        for valid_update in managed_req_updates
-        if valid_update
-    ]
-
+    records = [valid_update for valid_update in managed_req_updates if valid_update]
+    commit_managed_requirements(db_session)
     updated_records = [updated for updated in records if updated]
 
     return updated_records
 
 
 def employer_confirmation_req_to_managed_req_update(
-    db_session: Session, admin_user_id: UUID, fineos_managed_req: ManagedRequirementDetails,
+    db_session: Session, admin_user_id: UUID, fineos_managed_req: ManagedRequirementDetails
 ) -> Optional[ManagedRequirement]:
 
     managed_req: Optional[ManagedRequirement]

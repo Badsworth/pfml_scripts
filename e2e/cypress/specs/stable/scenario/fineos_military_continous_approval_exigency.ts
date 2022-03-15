@@ -2,6 +2,7 @@ import { fineos, portal } from "../../../actions";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { ClaimantPage, ClaimPage } from "../../../actions/fineos.pages";
 import { Submission } from "../../../../src/types";
+import { config } from "../../../actions/common";
 describe("Create a new continuous leave, military caregiver claim in FINEOS", () => {
   const claimSubmission = it("Should be able to create a claim", () => {
     fineos.before();
@@ -10,7 +11,11 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
       cy.stash("claim", claim);
 
       ClaimantPage.visit(claim.claim.tax_identifier)
-        .createNotification(claim.claim)
+        .createNotification(
+          claim.claim,
+          claim.is_withholding_tax,
+          config("HAS_APRIL_UPGRADE") === "true"
+        )
         .then((fineos_absence_id) => {
           cy.log(fineos_absence_id);
           cy.stash("submission", { fineos_absence_id });
@@ -36,7 +41,11 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
         // Access the review page
         portal.visitActionRequiredERFormPage(submission.fineos_absence_id);
         // Deny the claim
-        portal.assertLeaveType("Active duty");
+        if (!claim.leave_details.reason)
+          throw Error("Unstashed claim missing leave reason");
+        portal.leaveAdminAssertClaimStatus([
+          { leave: claim.leave_details.reason, status: "Pending" },
+        ]);
         portal.respondToLeaveAdminRequest(false, true, false, false);
       });
     });

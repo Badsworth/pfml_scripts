@@ -12,7 +12,8 @@ locals {
     { name : "LOGGING_LEVEL", value : var.logging_level },
     { name : "FEATURES_FILE_PATH", value : "s3://massgov-pfml-${var.environment_name}-feature-gate/features.yaml" },
     { name : "NEW_RELIC_LICENSE_KEY", valueFrom : "/service/${local.app_name}/common/newrelic-license-key" },
-    { name : "NR_INSERT_API_KEY", valueFrom : "/admin/${local.app_name}/newrelic-insert-api-key" }
+    { name : "NR_INSERT_API_KEY", valueFrom : "/admin/${local.app_name}/newrelic-insert-api-key" },
+    { name : "FINEOS_IS_RUNNING_V21", value : var.fineos_is_running_v21 },
   ]
 
   # Provides access to the RDS database via admin username/password
@@ -65,6 +66,14 @@ locals {
     { name : "MOVEIT_SSH_KEY_PASSWORD", valueFrom : "/service/${local.app_name}-comptroller/${var.environment_name}/eolwd-moveit-ssh-key-password" }
   ]
 
+  # Generic baseline SFTP server - defaults to EOLWD settings for now
+  base_sftp_access = [
+    { name : "SFTP_URI", value : var.eolwd_moveit_sftp_uri },
+    { name : "SFTP_SSH_KEY", valueFrom : "/service/${local.app_name}-comptroller/${var.environment_name}/eolwd-moveit-ssh-key" },
+    { name : "SFTP_SSH_KEY_PASSWORD", valueFrom : "/service/${local.app_name}-comptroller/${var.environment_name}/eolwd-moveit-ssh-key-password" }
+  ]
+
+
   # S3 path configurations for PUB
   pub_s3_folders = [
     { name : "PFML_FINEOS_WRITEBACK_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/cps/pei-writeback" },
@@ -75,6 +84,7 @@ locals {
     { name : "PUB_MOVEIT_OUTBOUND_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/pub/outbound" },
     { name : "PFML_PUB_ACH_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/pub/ach" },
     { name : "PFML_PUB_CHECK_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/pub/check" },
+    { name : "PFML_MANUAL_PUB_REJECT_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/pub/manual-reject" },
     { name : "PFML_ERROR_REPORTS_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/reports" },
     { name : "PFML_PAYMENT_REJECTS_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/audit" }
   ]
@@ -92,6 +102,7 @@ locals {
   #
   # The paths may be made consistent in the future:
   # https://lwd.atlassian.net/browse/API-1626
+  # TODO (API 2200): refactor reductions_folders variable.
   reductions_folders = [
     { name : "MOVEIT_DIA_INBOUND_PATH", value : "/DFML/DIA/Inbound" },
     { name : "MOVEIT_DUA_INBOUND_PATH", value : "/DFML/DUA/Outbound" },
@@ -99,7 +110,13 @@ locals {
     { name : "MOVEIT_DUA_OUTBOUND_PATH", value : "/DFML/DUA/Inbound" },
     { name : "MOVEIT_DIA_ARCHIVE_PATH", value : "/DFML/DIA/Archive" },
     { name : "MOVEIT_DUA_ARCHIVE_PATH", value : "/DFML/DUA/Archive" },
-    { name : "S3_BUCKET", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/" }
+    { name : "S3_BUCKET", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/" },
+    { name : "DUA_TRANSFER_BASE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/" }
+  ]
+
+  # Cognito User Pool access
+  cognito_access = [
+    { name : "COGNITO_USER_POOL_ID", value : var.cognito_user_pool_id }
   ]
 
   # Basic configuration for sender email
@@ -137,6 +154,13 @@ locals {
   irs_1099_documents = [
     { name : "PDF_API_HOST", value : var.pdf_api_host },
     { name : "ENABLE_GENERATE_1099_PDF", value : var.enable_generate_1099_pdf },
-    { name : "ENABLE_MERGE_1099_PDF", value : var.enable_merge_1099_pdf }
+    { name : "GENERATE_1099_MAX_FILES", value : var.generate_1099_max_files },
+    { name : "ENABLE_MERGE_1099_PDF", value : var.enable_merge_1099_pdf },
+    { name : "ENABLE_UPLOAD_1099_PDF", value : var.enable_upload_1099_pdf },
+    { name : "PFML_1099_DOCUMENT_ARCHIVE_PATH", value : "s3://pfml-api-${var.environment_name}-1099-form-generator/1099" },
+    { name : "UPLOAD_MAX_FILES_TO_FINEOS", value : var.upload_max_files_to_fineos },
+    { name : "TEST_FILE_GENERATION_1099", value : var.enable_1099_testfile_generation },
+    { name : "IRS_1099_CORRECTION_IND", value : var.irs_1099_correction_ind },
+    { name : "IRS_1099_TAX_YEAR", value : var.irs_1099_tax_year }
   ]
 }

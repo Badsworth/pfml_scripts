@@ -7,6 +7,7 @@ import {
   isValidPreviousLeave,
 } from "../../../../src/util/typeUtils";
 import { fineos, fineosPages, portal } from "../../../actions";
+import { config } from "../../../actions/common";
 
 describe("Claimant can call call-center to submit a claim for leave with other leaves and benefits", () => {
   const claimSubmission =
@@ -20,7 +21,11 @@ describe("Claimant can call call-center to submit a claim for leave with other l
         );
 
         claimantPage
-          .createNotification(claim.claim)
+          .createNotification(
+            claim.claim,
+            claim.is_withholding_tax,
+            config("HAS_APRIL_UPGRADE") === "true"
+          )
           .then((fineos_absence_id) => {
             cy.stash("submission", {
               timestamp_from: Date.now(),

@@ -2,8 +2,8 @@ import { get, pick } from "lodash";
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
+import Heading from "../../components/core/Heading";
 import InputChoiceGroup from "../../components/core/InputChoiceGroup";
-import LeaveReason from "../../models/LeaveReason";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import formatDate from "../../utils/formatDate";
@@ -21,17 +21,15 @@ export const PreviousLeavesSameReason = (
 
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });
 
   const leaveStartDate = formatDate(claim.leaveStartDate).full();
-
-  const isCaringLeave = get(claim, "leave_details.reason") === LeaveReason.care;
-  const previousLeaveStartDate = isCaringLeave
-    ? formatDate("2021-07-01").full()
-    : formatDate("2021-01-01").full();
+  const previousLeaveStartDate = formatDate(
+    claim.computed_start_dates.same_reason
+  ).full();
 
   const handleSave = () => {
     const patchData = { ...formState };
@@ -69,16 +67,14 @@ export const PreviousLeavesSameReason = (
             hint: t("pages.claimsPreviousLeavesSameReason.hintNo"),
           },
         ]}
-        hint={
-          isCaringLeave
-            ? t("pages.claimsPreviousLeavesSameReason.sectionHint")
-            : null
+        label={
+          <Heading level="2" size="1">
+            {t("pages.claimsPreviousLeavesSameReason.sectionLabel", {
+              previousLeaveStartDate,
+              leaveStartDate,
+            })}
+          </Heading>
         }
-        label={t("pages.claimsPreviousLeavesSameReason.sectionLabel", {
-          context: isCaringLeave ? "caring" : undefined,
-          previousLeaveStartDate,
-          leaveStartDate,
-        })}
       />
     </QuestionPage>
   );

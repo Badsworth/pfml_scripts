@@ -29,7 +29,7 @@ function RunIdsQuery({ children, environment, accountId }) {
           return (
             <SectionMessage
               title={"There was an error executing the query"}
-              description={error}
+              description={error.message}
               type={SectionMessage.TYPE.CRITICAL}
             />
           );
@@ -66,8 +66,9 @@ function buildRuns(data) {
         environment: result.environment,
         runUrl: result.runUrl,
         status: "passed",
-        failedCount: 0,
+        passedCount: 0,
         failedPriority: null,
+        skippedCount: 0,
         connectionError: false,
         testCount: 0,
         categories: [],
@@ -75,13 +76,26 @@ function buildRuns(data) {
         branch: result.branch,
       };
     }
+
     seenTests.add(result.file);
-    if (result.status != "passed") {
+
+    if (result.status === "passed") {
+      collected[result.runId][result.file].passedCount++;
+    }
+    if (result.status === "pending") {
+      // don't set the overall status if we've already encountered a failure
+      if (collected[result.runId][result.file].status === "passed") {
+        collected[result.runId][result.file].status = "skipped";
+      }
+      collected[result.runId][result.file].skippedCount++;
+      result.category = "skipped";
+      result.errorPriority = "SKIPPED";
+    }
+    if (result.status === "failed") {
       let errorPriority = getErrorPriority(result.category, result.subCategory);
 
       //IF we did not pass this test, then populate the error fields
-      collected[result.runId][result.file].status = result.status;
-      collected[result.runId][result.file].failedCount++;
+      collected[result.runId][result.file].status = "failed";
       if (result.category == "infrastructure") {
         collected[result.runId][result.file].connectionError = true;
       }
@@ -116,15 +130,20 @@ function buildRuns(data) {
         collected[result.runId][result.file].failedPriority = errorPriority;
       }
     }
+
     // pre calculate all the things, and sort the data.
     collected[result.runId][result.file].testCount++;
-    collected[result.runId][result.file].passPercent = -(
-      Math.round(
-        (collected[result.runId][result.file].failedCount /
-          collected[result.runId][result.file].testCount) *
-          100
-      ) - 100
+    collected[result.runId][result.file].passPercent = Math.round(
+      (collected[result.runId][result.file].passedCount /
+        collected[result.runId][result.file].testCount) *
+        100
     );
+    collected[result.runId][result.file].skippedPercent = Math.round(
+      (collected[result.runId][result.file].skippedCount /
+        collected[result.runId][result.file].testCount) *
+        100
+    );
+
     collected[result.runId][result.file].results.push(result);
     collected[result.runId][result.file].results.sort((a, b) => {
       return a.timestamp - b.timestamp;
@@ -147,26 +166,28 @@ function buildRuns(data) {
     };
   });
   // Finally, build up the rows.
-  const rows = uniqueTests.map((file) => {
+  let rows = {};
+  uniqueTests.map((file) => {
     const cells = uniqueRuns.map(({ runId }) => {
       return results[runId][file];
     });
     let shortFile = file.replace("cypress/specs/", "");
-    return {
+    rows[file] = {
       file: file,
       results: cells,
       shortFile: shortFile,
       state: false,
     };
   });
-  return { rows, uniqueRuns };
+  return { rows, uniqueRuns, uniqueTests };
 }
 
-function RunQuery({ accountId, runIds, children }) {
+function RunQueryIntegration({ accountId, runIds, children }) {
   const query = `SELECT *
-                 FROM CypressTestResult SINCE 1 month ago
-                 WHERE runId IN (${runIds.map((i) => `'${i}'`).join(", ")})
-                   LIMIT MAX`;
+                  FROM IntegrationTestResult
+                  WHERE runId IN (${runIds.map((i) => `'${i}'`).join(", ")})
+                  ORDER BY timestamp DESC
+                  SINCE 1 month ago until now LIMIT MAX`;
 
   return (
     <NrqlQuery accountId={accountId} query={query}>
@@ -178,24 +199,153 @@ function RunQuery({ accountId, runIds, children }) {
           return (
             <SectionMessage
               title={"There was an error executing the query"}
-              description={error}
+              description={error.message}
               type={SectionMessage.TYPE.CRITICAL}
             />
           );
         }
         const runData = buildRuns(data);
         if (!runData) {
-          return (
-            <SectionMessage
-              title={"There was no results returned."}
-              description={error}
-              type={SectionMessage.TYPE.CRITICAL}
-            />
-          );
+          return children({ rows: [], uniqueRuns: [], uniqueTests: [] });
         }
         return children(runData);
       }}
     </NrqlQuery>
+  );
+}
+
+function RunQuery({ accountId, runIds, groupName, children }) {
+  const query = `SELECT *
+                 FROM CypressTestResult SINCE 1 month ago
+                 WHERE runId IN (${runIds
+                   .map((i) => `'${i}'`)
+                   .join(", ")}) AND group = '${groupName}'
+                 ORDER BY timestamp DESC
+                 LIMIT MAX`;
+  return (
+    <NrqlQuery accountId={accountId} query={query}>
+      {({ data, loading, error }) => {
+        if (loading) {
+          return <Spinner />;
+        }
+        if (error) {
+          return (
+            <SectionMessage
+              title={"There was an error executing the query"}
+              description={error.message}
+              type={SectionMessage.TYPE.CRITICAL}
+            />
+          );
+        }
+        const runData = buildRuns(data);
+        return children(runData);
+      }}
+    </NrqlQuery>
+  );
+}
+
+function GridTable({
+  title,
+  uniqueRuns,
+  rows,
+  uniqueTests,
+  accountId,
+  runIds,
+  charts,
+}) {
+  return (
+    <div>
+      <h2>{title}</h2>
+      {uniqueRuns.map(({ runId, environment, runUrl, branch }, i) => (
+        <div className={"run-notes"}>
+          <span>
+            {`${i + 1} Run ID: ${runId}, Environment: ${labelEnv(environment)}`}
+          </span>
+          <Link to={runUrl}>View in Cypress</Link>
+          {branch != "main" && (
+            <Link to={`https://github.com/EOLWD/pfml/compare/main...${branch}`}>
+              {branch}
+            </Link>
+          )}
+        </div>
+      ))}
+      <table className={"e2e-status"}>
+        <thead>
+          <tr>
+            <th></th>
+            <th>File</th>
+            {uniqueRuns.map(({ runId, environment, runUrl, timestamp }, i) => [
+              <th></th>,
+              <th width={"150px"} additionalValue={timestamp}>
+                <Tooltip
+                  text={`Run ID: ${runId}, Environment: ${environment}`}
+                  additionalInfoLink={{
+                    to: runUrl,
+                    label: "View in Cypress",
+                  }}
+                >
+                  {i + 1}
+                </Tooltip>
+              </th>,
+            ])}
+          </tr>
+        </thead>
+        <tbody>
+          {uniqueTests.map((file) => {
+            return <GridRow item={rows[file]}></GridRow>;
+          })}
+        </tbody>
+      </table>
+      {charts && (
+        <div className={`charts`}>
+          <PieChart
+            fullWidth
+            accountId={accountId}
+            query={`SELECT count(*)
+                    FROM CypressTestResult since 1 month ago
+                    WHERE runId IN (${runIds.map((i) => `'${i}'`).join(", ")})
+                      AND pass is false
+                      FACET category`}
+          ></PieChart>
+          <PieChart
+            fullWidth
+            accountId={accountId}
+            query={`SELECT count(*)
+                    FROM CypressTestResult since 1 month ago
+                    WHERE runId IN (${runIds.map((i) => `'${i}'`).join(", ")})
+                      AND pass is false
+                      FACET category
+                        , subCategory`}
+          ></PieChart>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const httpUrlRegex = new RegExp(
+  /(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b[-a-zA-Z0-9()@:%_\\+.~#?&//=]*)/
+);
+
+function RichErroMessage({ children }) {
+  return (
+    <>
+      {React.Children.map(children, (errorMessage) => {
+        if (typeof errorMessage !== "string") {
+          return errorMessage;
+        }
+        return errorMessage.split(httpUrlRegex).map((substring) => {
+          if (httpUrlRegex.test(substring)) {
+            return (
+              <a href={encodeURI(substring)} target="_blank">
+                {substring}
+              </a>
+            );
+          }
+          return substring;
+        });
+      })}
+    </>
   );
 }
 
@@ -218,17 +368,23 @@ class GridRow extends React.Component {
         this.maxRuns = i + 1;
       }
       if (!run?.results) {
+        //TODO: need an update to the data structure to account for missing run data so the test ID's line up with the parent row.
         return;
       }
       run.results.map((result) => {
-        if (!sub[result.test]) {
-          sub[result.test] = [];
+        let title = result.test;
+        if (!title) {
+          title = result.title;
         }
-        sub[result.test].push(result);
+        if (!sub[title]) {
+          sub[title] = [];
+        }
+        sub[title].push(result);
       });
     });
     this.sub = sub;
   };
+
   toggleShow = (id) => {
     if (id == null) {
       this.setState((state) => {
@@ -244,8 +400,48 @@ class GridRow extends React.Component {
     }
   };
 
+  getProgressStyles = (result) => {
+    let width;
+    switch (result.status) {
+      case "passed":
+        width = 100;
+        break;
+      case "failed":
+        width = result.passPercent;
+        break;
+      case "unknown":
+        width = `100`;
+        break;
+      case "skipped":
+      default:
+        width = 100 - result.skippedPercent;
+        break;
+    }
+    return { width: `${width}%` };
+  };
+
+  getOverallStatus = (result) => {
+    let status;
+    switch (result.status) {
+      case "passed":
+        status = "PASS";
+        break;
+      case "failed":
+        status = `${result.passPercent}%`;
+        break;
+      case "unknown":
+        status = `N/A`;
+        break;
+      case "skipped":
+      default:
+        status = `${100 - result.skippedPercent}%`;
+        break;
+    }
+    return status;
+  };
+
   render() {
-    if (!this.props.item.results[0]) {
+    if (!this.props.item.results) {
       return <span></span>;
     }
     return [
@@ -253,7 +449,9 @@ class GridRow extends React.Component {
         <td>
           <span
             className={`indicator ${
-              this.props.item.results[0].passPercent == 100 ? "pass" : "fail"
+              this.props.item.results[0]
+                ? this.props.item.results[0].status
+                : ""
             }`}
           ></span>
         </td>
@@ -267,7 +465,24 @@ class GridRow extends React.Component {
         </td>
         {this.props.item.results.map((result, i) => {
           if (!result) {
-            return;
+            return [
+              <td></td>,
+              <td>
+                <div
+                  className={"e2e-run-progress clickable"}
+                  onClick={() => {
+                    this.toggleShow(i);
+                  }}
+                >
+                  <div
+                    className={`progress na`}
+                    style={this.getProgressStyles({ status: "unknown" })}
+                  >
+                    {this.getOverallStatus({ status: "unknown" })}
+                  </div>
+                </div>
+              </td>,
+            ];
           }
           return [
             <td>
@@ -289,9 +504,9 @@ class GridRow extends React.Component {
               >
                 <div
                   className={`progress ${result?.status ?? "na"}`}
-                  style={{ width: `${result.passPercent}%` }}
+                  style={this.getProgressStyles(result)}
                 >
-                  {result?.failedCount != 0 ? `${result.passPercent}%` : "PASS"}
+                  {this.getOverallStatus(result)}
                 </div>
               </div>
             </td>,
@@ -316,7 +531,7 @@ class GridRow extends React.Component {
                   <tr>
                     {this.sub[key].map((r, i) => {
                       return (
-                        <td className={this.state[i].open ? "open" : "closed"}>
+                        <td className={this.state[i]?.open ? "open" : "closed"}>
                           <span>
                             <Link to={r.runUrl}>{i + 1}</Link>
                           </span>
@@ -344,7 +559,9 @@ class GridRow extends React.Component {
                               >
                                 <div className={"display-linebreak"}>
                                   {r.errorClass}:&nbsp;
-                                  {r.errorMessage}
+                                  <RichErroMessage>
+                                    {r.errorMessage}
+                                  </RichErroMessage>
                                 </div>
                               </td>
                             </tr>
@@ -364,85 +581,83 @@ class GridRow extends React.Component {
 }
 
 export default function TestGrid({ accountId, environment, runIds }) {
-  const children = ({ rows, uniqueRuns }) => {
-    return (
-      <div>
-        {uniqueRuns.map(({ runId, environment, runUrl, branch }, i) => (
-          <div className={"run-notes"}>
-            <span>
-              {`${i + 1} Run ID: ${runId}, Environment: ${labelEnv(
-                environment
-              )}`}
-            </span>
-            <Link to={runUrl}>View in Cypress</Link>
-            {branch != "main" && (
-              <Link
-                to={`https://github.com/EOLWD/pfml/compare/main...${branch}`}
-              >
-                {branch}
-              </Link>
-            )}
-          </div>
-        ))}
-        <table className={"e2e-status"}>
-          <thead>
-            <tr>
-              <th></th>
-              <th>File</th>
-              {uniqueRuns.map(
-                ({ runId, environment, runUrl, timestamp }, i) => [
-                  <th></th>,
-                  <th width={"150px"} additionalValue={timestamp}>
-                    <Tooltip
-                      text={`Run ID: ${runId}, Environment: ${environment}`}
-                      additionalInfoLink={{
-                        to: runUrl,
-                        label: "View in Cypress",
-                      }}
-                    >
-                      {i + 1}
-                    </Tooltip>
-                  </th>,
-                ]
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((item) => {
-              return <GridRow item={item}></GridRow>;
-            })}
-          </tbody>
-        </table>
-        <div className={`charts`}>
-          <PieChart
-            fullWidth
-            accountId={accountId}
-            query={`SELECT count(*)
-                    FROM CypressTestResult since 1 month ago
-                    WHERE runId IN (${runIds.map((i) => `'${i}'`).join(", ")})
-                      AND pass is false
-                      FACET category`}
-          ></PieChart>
-          <PieChart
-            fullWidth
-            accountId={accountId}
-            query={`SELECT count(*)
-                    FROM CypressTestResult since 1 month ago
-                    WHERE runId IN (${runIds.map((i) => `'${i}'`).join(", ")})
-                      AND pass is false
-                      FACET category
-                        , subCategory`}
-          ></PieChart>
-        </div>
-      </div>
-    );
-  };
   // If we have explicit run IDs we're trying to look at, just query for those directly.
   if (runIds) {
     return (
-      <RunQuery runIds={runIds} accountId={accountId}>
-        {children}
-      </RunQuery>
+      <RunQueryIntegration runIds={runIds} accountId={accountId}>
+        {(IntegrationRuns) => (
+          <RunQuery
+            runIds={runIds}
+            accountId={accountId}
+            groupName={"Commit Stable"}
+          >
+            {(CypressStableRuns) => (
+              <RunQuery
+                runIds={runIds}
+                accountId={accountId}
+                groupName={"Unstable"}
+              >
+                {(CypressUnstableRuns) => (
+                  <RunQuery
+                    runIds={runIds}
+                    accountId={accountId}
+                    groupName={"Morning"}
+                  >
+                    {(CypressMorningRuns) => {
+                      return [
+                        CypressMorningRuns && (
+                          <GridTable
+                            title={"Morning Tests"}
+                            uniqueRuns={CypressMorningRuns.uniqueRuns}
+                            rows={CypressMorningRuns.rows}
+                            uniqueTests={CypressMorningRuns.uniqueTests}
+                            accountId={accountId}
+                            runIds={runIds}
+                            charts={false}
+                          />
+                        ),
+                        CypressStableRuns && (
+                          <GridTable
+                            title={"Stable Tests"}
+                            uniqueRuns={CypressStableRuns.uniqueRuns}
+                            rows={CypressStableRuns.rows}
+                            uniqueTests={CypressStableRuns.uniqueTests}
+                            accountId={accountId}
+                            runIds={runIds}
+                            charts={false}
+                          />
+                        ),
+                        CypressUnstableRuns && (
+                          <GridTable
+                            title={"Unstable Tests"}
+                            uniqueRuns={CypressUnstableRuns.uniqueRuns}
+                            rows={CypressUnstableRuns.rows}
+                            uniqueTests={CypressUnstableRuns.uniqueTests}
+                            accountId={accountId}
+                            runIds={runIds}
+                            charts={false}
+                          />
+                        ),
+                        IntegrationRuns && (
+                          <GridTable
+                            title={"Integration Tests"}
+                            uniqueRuns={IntegrationRuns.uniqueRuns}
+                            rows={IntegrationRuns.rows}
+                            uniqueTests={IntegrationRuns.uniqueTests}
+                            accountId={accountId}
+                            runIds={runIds}
+                            charts={false}
+                          />
+                        ),
+                      ];
+                    }}
+                  </RunQuery>
+                )}
+              </RunQuery>
+            )}
+          </RunQuery>
+        )}
+      </RunQueryIntegration>
     );
   }
 
@@ -450,9 +665,80 @@ export default function TestGrid({ accountId, environment, runIds }) {
   return (
     <RunIdsQuery environment={environment} accountId={accountId}>
       {({ runIds }) => (
-        <RunQuery runIds={runIds} accountId={accountId}>
-          {children}
-        </RunQuery>
+        <RunQueryIntegration runIds={runIds} accountId={accountId}>
+          {(IntegrationRuns) => (
+            <RunQuery
+              runIds={runIds}
+              accountId={accountId}
+              groupName={"Commit Stable"}
+            >
+              {(CypressStableRuns) => (
+                <RunQuery
+                  runIds={runIds}
+                  accountId={accountId}
+                  groupName={"Unstable"}
+                >
+                  {(CypressUnstableRuns) => (
+                    <RunQuery
+                      runIds={runIds}
+                      accountId={accountId}
+                      groupName={"Morning"}
+                    >
+                      {(CypressMorningRuns) => {
+                        return [
+                          CypressMorningRuns && (
+                            <GridTable
+                              title={"Morning Tests"}
+                              uniqueRuns={CypressMorningRuns.uniqueRuns}
+                              rows={CypressMorningRuns.rows}
+                              uniqueTests={CypressMorningRuns.uniqueTests}
+                              accountId={accountId}
+                              runIds={runIds}
+                              charts={false}
+                            />
+                          ),
+                          CypressStableRuns && (
+                            <GridTable
+                              title={"Stable Tests"}
+                              uniqueRuns={CypressStableRuns.uniqueRuns}
+                              rows={CypressStableRuns.rows}
+                              uniqueTests={CypressStableRuns.uniqueTests}
+                              accountId={accountId}
+                              runIds={runIds}
+                              charts={false}
+                            />
+                          ),
+                          CypressUnstableRuns && (
+                            <GridTable
+                              title={"Unstable Tests"}
+                              uniqueRuns={CypressUnstableRuns.uniqueRuns}
+                              rows={CypressUnstableRuns.rows}
+                              uniqueTests={CypressUnstableRuns.uniqueTests}
+                              accountId={accountId}
+                              runIds={runIds}
+                              charts={false}
+                            />
+                          ),
+                          IntegrationRuns && (
+                            <GridTable
+                              title={"Integration Tests"}
+                              uniqueRuns={IntegrationRuns.uniqueRuns}
+                              rows={IntegrationRuns.rows}
+                              uniqueTests={IntegrationRuns.uniqueTests}
+                              accountId={accountId}
+                              runIds={runIds}
+                              charts={false}
+                            />
+                          ),
+                        ];
+                      }}
+                    </RunQuery>
+                  )}
+                </RunQuery>
+              )}
+            </RunQuery>
+          )}
+        </RunQueryIntegration>
       )}
     </RunIdsQuery>
   );

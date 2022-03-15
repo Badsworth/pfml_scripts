@@ -3,8 +3,12 @@ import {
   OtherIncome,
   PaymentPreferenceRequestBody,
   ReducedScheduleLeavePeriods,
+  ApplicationRequestBody,
+  AbsencePeriodResponse,
+  Phone,
 } from "../../src/_api";
 import {
+  FineosCloseTaskStep,
   FineosTasks,
   NonEmptyArray,
   PersonalIdentificationDetails,
@@ -26,6 +30,7 @@ import {
 } from "../../src/util/typeUtils";
 import {
   dateToMMddyyyy,
+  extractLeavePeriodType,
   getLeavePeriod,
   minutesToHoursAndMinutes,
 } from "../../src/util/claims";
@@ -47,10 +52,17 @@ import {
   parseISO,
   startOfWeek,
   subDays,
+  isBefore,
+  isAfter,
+  getHours,
+  addBusinessDays,
 } from "date-fns";
 import { DocumentUploadRequest } from "../../src/api";
 import { fineos } from ".";
 import { LeaveReason } from "../../src/generation/Claim";
+import { config } from "./common";
+import { FineosCorrespondanceType, FineosDocumentType } from "./fineos.enums";
+import { convertToTimeZone } from "date-fns-timezone";
 
 type StatusCategory =
   | "Applicability"
@@ -82,61 +94,79 @@ export class ClaimPage {
     visitClaim(id);
     return new ClaimPage();
   }
+
   addHistoricalAbsenceCase(): HistoricalAbsence {
     return HistoricalAbsence.create();
   }
+
   recordActualLeave<T>(cb: (page: RecordActualTime) => T): T {
     // Start the submission process.
     cy.findByText("Record Actual").click({ force: true });
     waitForAjaxComplete();
     return cb(new RecordActualTime());
   }
+
   paidLeave(cb: (page: PaidLeavePage) => unknown): this {
     cy.findByText("Absence Paid Leave Case", { selector: "a" }).click();
     cb(new PaidLeavePage());
     cy.findByText("Absence Case", { selector: "a" }).click();
     return this;
   }
+  // FINEOS April upgrade will adjust the in review process to which we don't have to click on the Adjudication
+  // buton on the Absence Hub tab.
+  adjudicateUpgrade(cb: (page: AdjudicationPage) => unknown): this {
+    cb(new AdjudicationPage());
+    cy.get("#footerButtonsBar input[value='OK']").click();
+    return this;
+  }
+
   adjudicate(cb: (page: AdjudicationPage) => unknown): this {
     cy.get('input[type="submit"][value="Adjudicate"]').click();
     cb(new AdjudicationPage());
     cy.get("#footerButtonsBar input[value='OK']").click();
     return this;
   }
+
   tasks(cb: (page: TasksPage) => unknown): this {
     onTab("Tasks");
     cb(new TasksPage());
     onTab("Absence Hub");
     return this;
   }
+
   appealDocuments(cb: (page: DocumentsPage) => unknown): this {
     onTab("Documents");
     cb(new DocumentsPage());
     return this;
   }
+
   appealTasks(cb: (page: TasksPage) => unknown): this {
     onTab("Tasks");
     cb(new TasksPage());
     return this;
   }
+
   documents(cb: (page: DocumentsPage) => unknown): this {
     onTab("Documents");
     cb(new DocumentsPage());
     onTab("Absence Hub");
     return this;
   }
+
   alerts(cb: (page: AlertsPage) => unknown): this {
     onTab("Alerts");
     cb(new AlertsPage());
     onTab("Absence Hub");
     return this;
   }
+
   availability(cb: (page: AvailabilityPage) => unknown): this {
     onTab("Availability");
     cb(new AvailabilityPage());
     onTab("Absence Hub");
     return this;
   }
+
   outstandingRequirements(
     cb: (page: OutstandingRequirementsPage) => unknown
   ): this {
@@ -145,22 +175,26 @@ export class ClaimPage {
     onTab("Absence Hub");
     return this;
   }
+
   notes(cb: (page: NotesPage) => unknown): this {
     onTab("Notes");
     cb(new NotesPage());
     onTab("Absence Hub");
     return this;
   }
+
   leaveDetails(cb: (page: LeaveDetailsPage) => unknown): this {
     onTab("Leave Details");
     cb(new LeaveDetailsPage());
     return this;
   }
+
   benefitsExtension(cb: (page: BenefitsExtensionPage) => unknown): this {
     cy.findByText("Add Time").click({ force: true });
     cb(new BenefitsExtensionPage());
     return this;
   }
+
   shouldHaveStatus(category: StatusCategory, expected: string): this {
     const selector =
       category === "PlanDecision"
@@ -174,6 +208,7 @@ export class ClaimPage {
     });
     return this;
   }
+
   triggerNotice(
     type:
       | "Designation Notice"
@@ -184,7 +219,10 @@ export class ClaimPage {
       | "Leave Cancellation Request"
       | "Preliminary Designation"
       | "SOM Generate Appeals Notice"
+      | "SOM Generate Employer Reimbursement Notice"
       | "Send Decision Notice"
+      | "Review Denial Notice"
+      | "Leave Allotment Change Notice"
   ): this {
     onTab("Task");
     onTab("Processes");
@@ -201,7 +239,7 @@ export class ClaimPage {
       }
       cy.wrap(el).click();
       waitForAjaxComplete();
-      cy.get('input[type="submit"][value="Continue"]').click();
+      cy.get('input[type="submit"][value="Continue"]').click({ force: true });
       cy.contains(".TreeNodeContainer", type, {
         timeout: 20000,
       })
@@ -211,17 +249,28 @@ export class ClaimPage {
 
     return this;
   }
-  approve(): this {
+
+  approve(
+    status: "Approved" | "Completed" = "Approved",
+    upgrade: boolean | null | undefined = false
+  ): this {
     // This button turns out to be unclickable without force, because selecting
     // it seems to scroll it out of view. Force works around that.
-    cy.get('a[title="Approve the Pending Leaving Request"]').click({
-      force: true,
-    });
+    if (upgrade) {
+      cy.get('a[title="Approve the pending/in review leave request"]').click({
+        force: true,
+      });
+    } else {
+      cy.get('a[title="Approve the Pending Leaving Request"]').click({
+        force: true,
+      });
+    }
     waitForAjaxComplete();
-    assertClaimStatus("Approved");
+    assertClaimStatus(status);
     return this;
   }
-  deny(reason: string, assertStatus = true): this {
+
+  deny(reason: string, assertStatus = true, upgrade: boolean): this {
     cy.get("input[type='submit'][value='Adjudicate']").click();
     // Make sure the page is fully loaded by waiting for the leave plan to show up.
     cy.get("table[id*='selectedLeavePlans'] tr")
@@ -229,14 +278,39 @@ export class ClaimPage {
       .click();
     cy.get("input[type='submit'][value='Reject']").click();
     clickBottomWidgetButton("OK");
-
-    cy.get('a[title="Deny the Pending Leave Request"]').click();
+    if (upgrade) {
+      cy.get('a[title="Deny the pending/in review leave request"]').click();
+    } else {
+      cy.get('a[title="Deny the Pending Leave Request"]').click();
+    }
     cy.get('span[id="leaveRequestDenialDetailsWidget"]')
       .find("select")
       .select(reason);
     cy.get('input[type="submit"][value="OK"]').click();
     // denying an extension for another reason will cause this assertion to fail
     assertStatus && assertClaimStatus("Declined");
+    return this;
+  }
+
+  addActivity(activity: string): this {
+    cy.get("[id^=MENUBAR\\.CaseSubjectMenu]")
+      .findByText("Add Activity")
+      .click({ force: true })
+      .parents("li")
+      .findByText(activity)
+      .click({ force: true });
+    return this;
+  }
+
+  addCorrespondenceDocument(action: FineosCorrespondanceType): this {
+    const document = new DocumentsPage();
+    cy.get("[id^=MENUBAR\\.CaseSubjectMenu]")
+      .findByText("Correspondence")
+      .click({ force: true })
+      .parents("li")
+      .findByText(action)
+      .click();
+    document.uploadDocumentAlt(action);
     return this;
   }
 
@@ -258,7 +332,18 @@ export class ClaimPage {
     return this;
   }
 
-  addAppeal(): this {
+  approveExtendedTime(): this {
+    waitForAjaxComplete();
+    cy.get("table[id$='leaveRequestListviewWidget']").within(() => {
+      cy.get("tr.ListRowSelected").click();
+    });
+    cy.get('a[title="Approve the Pending Leaving Request"]').click({
+      force: true,
+    });
+    return this;
+  }
+
+  addAppeal(stashAppealCase: boolean): this {
     // This button turns out to be unclickable without force, because selecting
     // it seems to scroll it out of view. Force works around that.
     cy.get('a[title="Add Sub Case"]').click({
@@ -269,6 +354,23 @@ export class ClaimPage {
       force: true,
     });
     waitForAjaxComplete();
+    if (stashAppealCase) {
+      fineos.findAppealNumber("Appeal").then((appeal_case_id) => {
+        cy.stash("appeal_case_id", appeal_case_id);
+      });
+    }
+    return this;
+  }
+
+  addLeaveAllotmentChangeNotice(): this {
+    cy.get('a[title="Correspondence"]').click({
+      force: true,
+    });
+    waitForAjaxComplete();
+    cy.findByLabelText("Leave Allotment Change Notice").click({
+      force: true,
+    });
+    cy.get("#footerButtonsBar input[value='Next']").click();
     return this;
   }
 
@@ -279,7 +381,7 @@ export class ClaimPage {
       .click({ force: true })
       .parents("li")
       .findByText("Employer")
-      .click();
+      .click({ force: true });
 
     //change radio to Organization
     cy.contains("label", "Organization").click();
@@ -305,14 +407,31 @@ export class ClaimPage {
     assertClaimStatus("Closed");
     return this;
   }
-  reviewClaim(): this {
+
+  reviewClaim(upgrade: boolean): this {
     onTab("Leave Details");
     cy.contains("td", "Approved").click();
-    cy.get('input[title="Review a Leave Request"').click();
-    waitForAjaxComplete();
-    onTab("Absence Hub");
+    if (upgrade) {
+      // Note in the new workflow for putting a claim into Review we are going directly to the Adjudication
+      // instead of click on the Absence Hub. Then clicking the Adjudication button on the Absence Hub tab.
+      cy.findByText("Review").click();
+      cy.get('input[type="radio"][id*="secondOption"]').click();
+      cy.get(".ant-modal-footer").within(() => {
+        cy.findByText("OK", {
+          selector: "span",
+        }).click({
+          force: true,
+        });
+      });
+      waitForAjaxComplete();
+    } else {
+      cy.get('input[title="Review a Leave Request"').click();
+      waitForAjaxComplete();
+      onTab("Absence Hub");
+    }
     return this;
   }
+
   recordCancellation(): this {
     const recordCancelledTime = () => {
       cy.contains("td", "Known").click();
@@ -444,34 +563,45 @@ class AdjudicationPage {
       this.activeTab = path.join(",");
     }
   }
+
   restrictions(cb: (page: RestrictionsPage) => unknown): this {
     this.onTab("Restrictions");
     cb(new RestrictionsPage());
     return this;
   }
+
   evidence(cb: (page: EvidencePage) => unknown): this {
     this.onTab("Evidence");
     cb(new EvidencePage());
     return this;
   }
+
   certificationPeriods(cb: (page: CertificationPeriodsPage) => unknown): this {
     this.onTab("Evidence", "Certification Periods");
     cb(new CertificationPeriodsPage());
     return this;
   }
+
+  requestEmploymentInformation() {
+    this.onTab("Request Information", "Employment Information");
+  }
+
   requestInformation(cb: (page: RequestInformationPage) => unknown): this {
     this.onTab("Request Information", "Request Details");
     cb(new RequestInformationPage());
     return this;
   }
+
   acceptLeavePlan() {
     this.onTab("Manage Request");
     cy.get("input[type='submit'][value='Accept']").click({ force: true });
   }
+
   rejectLeavePlan() {
     this.onTab("Manage Request");
     cy.get("input[type='submit'][value='Reject']").click({ force: true });
   }
+
   editPlanDecision(planDecision: PlanDecisions) {
     this.onTab("Manage Request");
     waitForAjaxComplete();
@@ -479,16 +609,23 @@ class AdjudicationPage {
     cy.findByLabelText("Leave Plan Status").select(planDecision);
     cy.get("#footerButtonsBar input[value='OK']").click();
   }
+
   availability(cb: (page: AvailabilityPage) => unknown): this {
     this.onTab("Availability");
     cb(new AvailabilityPage());
     this.onTab("Manage Request");
     return this;
   }
+
   paidBenefits(cb: (page: PaidBenefitsPage) => unknown): this {
     this.onTab("Paid Benefits");
     cb(new PaidBenefitsPage());
     this.onTab("Manage Request");
+    return this;
+  }
+
+  exitWithoutSaving(): this {
+    clickBottomWidgetButton("Cancel");
     return this;
   }
 }
@@ -499,6 +636,7 @@ type EvidenceStatus = {
   decision?: "Pending" | "Satisfied" | "Not Satisfied" | "Waived";
   reason?: string;
 };
+
 class EvidencePage {
   receive(
     evidenceType: string,
@@ -535,6 +673,7 @@ class EvidencePage {
     });
     return this;
   }
+
   /**
    * Checks that there's evidence with given status, which includes receipt, decision, reason.
    * @example
@@ -557,6 +696,7 @@ class EvidencePage {
       cy.contains("tr", evidenceType).should("contain.text", decision);
     if (reason) cy.contains("tr", evidenceType).should("contain.text", reason);
   }
+
   requestAdditionalInformation(
     documentType: string,
     incomplete: Record<string, string>,
@@ -577,6 +717,7 @@ class EvidencePage {
     return this;
   }
 }
+
 class CertificationPeriodsPage {
   prefill() {
     waitForAjaxComplete();
@@ -584,6 +725,7 @@ class CertificationPeriodsPage {
     cy.get("#PopupContainer input[value='Yes']").click();
     return this;
   }
+
   remove() {
     cy.get(
       "input[type='submit'][title='Remove all certification periods']"
@@ -596,6 +738,7 @@ class CertificationPeriodsPage {
     return this;
   }
 }
+
 class RequestInformationPage {
   private enterNewLeaveDates(newStartDate: string, newEndDate: string) {
     cy.get(
@@ -647,6 +790,7 @@ class RequestInformationPage {
     onTab("Request Details");
   }
 }
+
 class OutstandingRequirementsPage {
   add() {
     waitForAjaxComplete();
@@ -656,6 +800,7 @@ class OutstandingRequirementsPage {
     ).click();
     cy.get("#footerButtonsBar input[value='OK']").click();
   }
+
   complete(receipt: string, reason: string, hasAccess: boolean): this {
     if (hasAccess) {
       cy.wait("@ajaxRender");
@@ -679,6 +824,7 @@ class OutstandingRequirementsPage {
     }
     return this;
   }
+
   suppress(reason: string, notes: string, hasAccess: boolean): this {
     if (hasAccess) {
       cy.wait("@ajaxRender");
@@ -703,6 +849,7 @@ class OutstandingRequirementsPage {
     }
     return this;
   }
+
   removeOR(hasAccess: boolean): this {
     if (hasAccess) {
       cy.wait("@ajaxRender");
@@ -720,6 +867,7 @@ class OutstandingRequirementsPage {
     }
     return this;
   }
+
   reopen(hasAccess: boolean): this {
     if (hasAccess) {
       cy.wait("@ajaxRender");
@@ -768,6 +916,7 @@ class TasksPage {
     waitForAjaxComplete();
     return this;
   }
+
   select(task: string): this {
     // Find  task
     cy.contains("tbody", "This case and its subcases").within(() => {
@@ -778,6 +927,7 @@ class TasksPage {
     ).should("contain.text", task);
     return this;
   }
+
   /**Checks difference between creation date and target date of a task */
   checkSLADifference(task: FineosTasks, diffInDays: number): this {
     this.select(task);
@@ -800,6 +950,7 @@ class TasksPage {
     });
     return this;
   }
+
   assertIsAssignedToUser(task: FineosTasks, user: string): this {
     this.select(task);
     // Assert it's assigned to given user
@@ -809,6 +960,7 @@ class TasksPage {
     );
     return this;
   }
+
   assertIsAssignedToDepartment(task: FineosTasks, department: string): this {
     // Find  task
     this.select(task);
@@ -858,9 +1010,31 @@ class TasksPage {
     return this;
   }
 
+  closeWithAdditionalSelection(
+    name: FineosTasks,
+    selection: FineosCloseTaskStep
+  ): this {
+    cy.get(`table[id*="TasksForCaseWidget"]`).findByText(name).click();
+    waitForAjaxComplete();
+    cy.get('input[title="Close selected task"]').click({ force: true });
+    waitForAjaxComplete();
+    cy.contains("td", selection).click();
+    waitForAjaxComplete();
+    fineos.clickBottomWidgetButton("OK");
+    waitForAjaxComplete();
+    return this;
+  }
+
   all(): this {
     cy.get("input[type='radio'][value$='_allTasks']").click();
     waitForAjaxComplete();
+    return this;
+  }
+
+  returnSubTasksTab(): this {
+    cy.get(
+      'td[id$="_FINEOS.WorkManager.Activities.ViewTasks.AbsenceCase_TasksView_cell"]'
+    ).click();
     return this;
   }
 }
@@ -873,6 +1047,7 @@ export class DocumentsPage {
     assertHasDocument(documentName);
     return this;
   }
+
   changeDocType(
     oldDocType: DocumentUploadRequest["document_type"],
     newDocType:
@@ -913,12 +1088,13 @@ export class DocumentsPage {
         'table[id^="DocumentsForCaseListviewWidget_"][id$="_DocumentsViewControl"]'
       ).should("contain.text", newDocType);
   }
+
   /**
    * Goes through the document upload process and returns back to the documents page
    * @param businessType - name of the document type in fineos
    * @returns
    */
-  uploadDocument(documentType: DocumentUploadRequest["document_type"]): this {
+  uploadDocument(documentType: FineosDocumentType): this {
     this.startDocumentCreation(documentType);
     cy.get("input[type='file']").attachFile(
       `./${getFixtureDocumentName(documentType)}.pdf`
@@ -927,6 +1103,18 @@ export class DocumentsPage {
     this.assertDocumentExists(documentType);
     return this;
   }
+
+  uploadDocumentAlt(documentType: FineosDocumentType): this {
+    cy.get("input[type='file']").attachFile(
+      `./${getFixtureDocumentName(documentType)}.pdf`
+    );
+    clickBottomWidgetButton();
+    onTab("Documents");
+    this.assertDocumentExists(documentType);
+    onTab("Absence Hub");
+    return this;
+  }
+
   /**
    * Asserts the total amount of times a document has been uploaded to a case
    * @param type
@@ -1025,6 +1213,29 @@ export class DocumentsPage {
           : benefitOrIncome.benefit_amount_frequency
       }`
     );
+  }
+
+  setDocumentComplete(documentName: string): this {
+    cy.get(`table[id*='DocumentsForCaseListviewWidget']`)
+      .contains("a", documentName)
+      .first()
+      .parent()
+      .click({ force: true });
+    waitForAjaxComplete();
+    cy.findByDisplayValue("Properties").click();
+    waitForAjaxComplete();
+    cy.get('span[id*="status_WRAPPER"]').find("select").select("Completed");
+    waitForAjaxComplete();
+    clickBottomWidgetButton("OK");
+    return this;
+  }
+
+  addDocument(documentName: string): this {
+    this.startDocumentCreation(documentName);
+    waitForAjaxComplete();
+    clickBottomWidgetButton("Next");
+    waitForAjaxComplete();
+    return this;
   }
 
   /**
@@ -1323,6 +1534,39 @@ export class DocumentsPage {
       `${minutesTotal === 0 ? "00" : minutesTotal}`
     );
   }
+
+  adjustDocumentStatus(notice: string, status: string): this {
+    cy.get(
+      'table[id^="DocumentsForCaseListviewWidget_"][id$="_DocumentsViewControl"]'
+    )
+      .contains("tr", notice)
+      .click()
+      .should("have.class", "ListRowSelected");
+    // Open document properties
+    cy.findByTitle("Document Properties").click();
+    cy.get("span[id^='DocumentPropertiesWidget']")
+      .find("select[id$='status']")
+      .select(status);
+    fineos.clickBottomWidgetButton("OK");
+    return this;
+  }
+
+  checkDocumentFileExtension(notice: string, fileExtension: RegExp): this {
+    cy.get(
+      'table[id^="DocumentsForCaseListviewWidget_"][id$="_DocumentsViewControl"]'
+    )
+      .contains("tr", notice)
+      .click()
+      .should("have.class", "ListRowSelected");
+    // Open document properties
+    cy.findByTitle("Document Properties").click();
+    cy.get("span[id='DocumentPropertiesWidget']")
+      .find("span[id$='fileName']")
+      .invoke("text")
+      .should("match", fileExtension);
+    fineos.clickBottomWidgetButton("OK");
+    return this;
+  }
 }
 
 /**
@@ -1389,6 +1633,14 @@ class PaidBenefitsPage {
     cy.contains("td[id*='SIT/FIT Opt In']", isParticipating ? "true" : "false");
     return this;
   }
+
+  assertAutoPayStatus(assertValue: boolean): this {
+    cy.get("td[id*='AutoApproveProcessPayment']").then((td) => {
+      expect(td).to.have.text(assertValue ? "Yes" : "No");
+    });
+    return this;
+  }
+
   edit(): this {
     cy.get("input[type='submit'][value='Edit']").click();
     return this;
@@ -1405,10 +1657,65 @@ const reductionCategories = {
   ["Unemployment Insurance" as const]: "",
 };
 
+type PaidLeaveDocumentStatus = "Unknown" | "Completed" | "Draft";
+
+class PaidLeaveDocumentPropertiesPage {
+  fileNameShouldMatch(re: RegExp): PaidLeaveDocumentsPage {
+    cy.get("span[id='DocumentPropertiesWidget']")
+      .find("span[id$='fileName']")
+      .invoke("text")
+      .should("match", re);
+
+    fineos.clickBottomWidgetButton("OK");
+
+    return new PaidLeaveDocumentsPage();
+  }
+
+  setStatus(status: PaidLeaveDocumentStatus): PaidLeaveDocumentsPage {
+    cy.get("span[id^='DocumentPropertiesWidget']")
+      .find("select[id$='status']")
+      .select(status);
+
+    fineos.clickBottomWidgetButton("OK");
+
+    return new PaidLeaveDocumentsPage();
+  }
+}
+
+class PaidLeaveDocumentsPage {
+  assertDocumentExists(documentName: string): this {
+    assertHasDocument(documentName);
+    return this;
+  }
+
+  /**
+   * @param document - the name of the desired document
+   * @param cb - actions to take on the desired document's properties page
+   * @returns whatever `cb` returns
+   */
+  properties<T>(
+    document: string,
+    cb: (page: PaidLeaveDocumentPropertiesPage) => T
+  ): T {
+    cy.get("table[id*='DocumentsForCaseListviewWidget'] tbody")
+      .contains("tr", document)
+      .click();
+    cy.get("input[id$='DocumentProperties']").click();
+
+    waitForAjaxComplete();
+
+    return cb(new PaidLeaveDocumentPropertiesPage());
+  }
+}
+
 /**
  * Future or made payment.
  */
-type Payment = { net_payment_amount: number };
+type Payment = {
+  net_payment_amount: number;
+  paymentInstances?: number;
+  paymentProcessingDates?: Date[];
+};
 
 /**
  * Data needed to apply a reduction to a payment in a paid leave case.
@@ -1420,15 +1727,22 @@ type Reduction = {
   frequency_same_as_due: boolean;
   amount: number;
 };
+
+type PaidLeaveCorrespondenceDocument =
+  | "Benefit Amount Change Notice"
+  | "Maximum Weekly Benefit Change Notice"
+  | "Overpayment Notice - Full Balance Recovery";
 /**
  * Class representing the Absence Paid Leave Case,
  * Claim should be adjudicated and approved before trying to access this.
  */
 class PaidLeavePage {
   private activeTab: string;
+
   constructor() {
     this.activeTab = "General Claim";
   }
+
   private onTab(...path: string[]) {
     if (this.activeTab !== path.join(",")) {
       for (const part of path) {
@@ -1436,6 +1750,26 @@ class PaidLeavePage {
       }
       this.activeTab = path.join(",");
     }
+  }
+
+  tasks(cb: (page: TasksPage) => unknown): this {
+    onTab("Tasks");
+    cb(new TasksPage());
+    onTab("General Claim");
+    return this;
+  }
+
+  FinancialsBenefitAdjustmentsPage(
+    cb: (page: FinancialsBenefitAdjustmentsPage) => unknown
+  ): this {
+    this.onTab(
+      "Financials",
+      "Recurring Payments",
+      "Benefit Amount and Adjustments"
+    );
+    cb(new FinancialsBenefitAdjustmentsPage());
+    onTab("General Claim");
+    return this;
   }
 
   /**
@@ -1471,6 +1805,56 @@ class PaidLeavePage {
     });
 
     clickBottomWidgetButton();
+    return this;
+  }
+
+  createCorrespondenceDocument(
+    document: PaidLeaveCorrespondenceDocument
+  ): this {
+    cy.get("a[id$=Correspondencelink]")
+      .click({ scrollBehavior: false })
+      .parents("li")
+      .findByText(document)
+      .click({ scrollBehavior: false });
+
+    waitForAjaxComplete();
+
+    cy.get("span[id='footerButtonsBar']").find("input[id$='next']").click();
+
+    return this;
+  }
+
+  triggerPaidLeaveNotice(type: PaidLeaveCorrespondenceDocument): this {
+    this.onTab("Tasks", "Processes");
+
+    cy.contains(".TreeNodeElement", type).click({
+      force: true,
+    });
+    waitForAjaxComplete();
+    // When we're firing time triggers, there's always the possibility that the trigger has already happened
+    // by the time we get here. When this happens, the "Properties" button will be grayed out and unclickable.
+    cy.get('input[type="submit"][value="Properties"]').then((el) => {
+      if (el.is(":disabled")) {
+        cy.log("Skipping trigger because this time trigger has already fired");
+        return;
+      }
+      cy.wrap(el).click();
+
+      waitForAjaxComplete();
+
+      cy.get("span[id='ProcessPropertiesWidget']")
+        .find("input[id$='ContinueButton']")
+        .click();
+    });
+
+    this.onTab("General Claim");
+    return this;
+  }
+
+  documents(cb: (page: PaidLeaveDocumentsPage) => unknown): this {
+    this.onTab("Documents");
+    cb(new PaidLeaveDocumentsPage());
+    this.onTab("General Claim");
     return this;
   }
 
@@ -1561,36 +1945,75 @@ class PaidLeavePage {
     // Check the reduction has been added.
     cy.contains("table", "Benefit Adjustments").within(() => {
       cy.findByText(type).should("contain.text", type);
-      cy.findByText(`-${this.numToPaymentFormat(amount)}`).should(
+      cy.findByText(`-${numToPaymentFormat(amount)}`).should(
         "contain.text",
-        `-${this.numToPaymentFormat(amount)}`
+        `-${numToPaymentFormat(amount)}`
       );
     });
   }
 
   /**
-   * Asserts there are pending payments for a given amount.
+   * Asserts there are pending payments for a given amount. Assertion for payment dates are also supported.
+   * Assertions for payment amounts and dates disregard payment ordering, which can sometimes vary by environment
    * @param amountsPending array of expected pending payments.
    * @returns
    */
   assertAmountsPending(amountsPending: Payment[]): this {
     this.onTab("Financials", "Payment History", "Amounts Pending");
     if (!amountsPending.length) return this;
-    // Get the table
     cy.contains("table.WidgetPanel", "Amounts Pending")
+      // Get the table
       .find("table.ListTable")
       .within(() => {
-        amountsPending.forEach((payment, i) => {
-          // Note: We don't want to rely on row classes here, as they are added an indeterminate time after the page is
-          // rendered.
-          cy.get(`tr:nth-child(${i + 1})`).should(
-            "contain.text",
-            payment.net_payment_amount
-          );
+        amountsPending.forEach((payment) => {
+          if (payment.net_payment_amount) {
+            // find row items that contain payment information
+            cy.get(`tbody tr`).within(() => {
+              // get all row items that contain a matching net payment amouns
+              cy.get(
+                `td:nth-child(8):contains(${numToPaymentFormat(
+                  payment.net_payment_amount
+                )})`
+              )
+                .parent()
+                .then((paymentRows) => {
+                  // validate the correct amount of payments appear for each payment amount.
+                  expect(paymentRows.length).to.equal(
+                    payment.paymentInstances ?? 1,
+                    `Expected ${payment.paymentInstances ?? 1} payment(s) of ${
+                      payment.net_payment_amount
+                    } - received ${paymentRows.length} instances`
+                  );
+                  if (payment.paymentProcessingDates) {
+                    // grab payment process date column text from payment row
+                    const actualProcessingDates = [...paymentRows].map(
+                      (el) => el.children[2].textContent
+                    );
+                    for (const expectedDate of payment.paymentProcessingDates) {
+                      const index = actualProcessingDates.findIndex(
+                        (date) => format(expectedDate, "MM/dd/yyyy") === date
+                      );
+                      expect(index).gt(
+                        -1,
+                        `Expected to find payment date of ${format(
+                          expectedDate,
+                          "MM/dd/yyyy"
+                        )} for payment amount ${numToPaymentFormat(
+                          payment.net_payment_amount
+                        )}`
+                      );
+                      // removing previously matched payment dates prevents a false prositive from occurring
+                      actualProcessingDates.splice(index, 1);
+                    }
+                  }
+                });
+            });
+          }
         });
       });
     return this;
   }
+
   /**
    * Asserts there are payments made for a given amount.
    * @param paymentsMade array of expected made payments.
@@ -1607,12 +2030,13 @@ class PaidLeavePage {
           // rendered.
           cy.get(`tr:nth-child(${i + 1})`).should(
             "contain.text",
-            this.numToPaymentFormat(payment.net_payment_amount)
+            numToPaymentFormat(payment.net_payment_amount)
           );
         });
       });
     return this;
   }
+
   /**
    * Asserts there are alotted payments for a given amount.
    * @param allotedPayments array of expected alotted payments.
@@ -1631,7 +2055,7 @@ class PaidLeavePage {
       rest.forEach((payment, i) => {
         cy.get(`tr.ListRow${i + 2}`).should(
           "contain.text",
-          this.numToPaymentFormat(payment.net_payment_amount)
+          numToPaymentFormat(payment.net_payment_amount)
         );
       });
     });
@@ -1682,6 +2106,39 @@ class PaidLeavePage {
     return this;
   }
 
+  assertAutoPayStatus(assertValue: boolean): this {
+    this.onTab("Financials", "Recurring Payments", "Payment Details");
+    cy.get("input[value='Edit']").click();
+    waitForAjaxComplete();
+    cy.get("input[type='checkbox'][name*='AutoPay_CHECKBOX']").should(
+      assertValue ? "be.checked" : "not.be.checked"
+    );
+    clickBottomWidgetButton("Cancel");
+    return this;
+  }
+
+  changeAutoPayStatus(value: boolean): this {
+    this.onTab("Financials", "Recurring Payments", "Payment Details");
+    cy.get("input[value='Edit']").click();
+    waitForAjaxComplete();
+    if (value) {
+      cy.get("input[type='checkbox'][name*='AutoPay_CHECKBOX']").check();
+    } else {
+      cy.get("input[type='checkbox'][name*='AutoPay_CHECKBOX']").uncheck();
+    }
+    clickBottomWidgetButton();
+    return this;
+  }
+
+  approvePeriod(): this {
+    this.onTab("Financials", "Recurring Payments", "Periods");
+    cy.get("input[value='Edit']").click();
+    waitForAjaxComplete();
+    cy.findByLabelText("Status").select("Approved");
+    clickBottomWidgetButton();
+    return this;
+  }
+
   /**
    *  Asserts processing and end dates match.
    */
@@ -1710,12 +2167,207 @@ class PaidLeavePage {
     return this;
   }
 
-  private numToPaymentFormat(num: number): string {
-    const decimal = num % 1 ? "" : ".00";
-    return `${new Intl.NumberFormat("en-US", {
-      style: "decimal",
-    }).format(num)}${decimal}`;
+  /**
+   * Modifies payment processing date for the first payment under amounts pending.
+   * @param date - Optional date to set payment for payment processing. Defaults to new Date()
+   * @returns PaidLeavePage
+   */
+  editPaymentProcessingDate(date = new Date()): this {
+    this.onTab("Financials", "Payment History", "Amounts Pending");
+    waitForAjaxComplete();
+    cy.get('input[type="submit"][value="Edit"]').click();
+    waitForAjaxComplete();
+    cy.get(
+      'input[type="checkbox"][id$="overrideprocessingdate_CHECKBOX"]'
+    ).click({ force: true });
+    waitForAjaxComplete();
+    cy.wait(350);
+    cy.get('input[type="text"][id$="processingDate"]').type(
+      `{selectAll}{backspace}${format(date, "MM/dd/yyyy")}`,
+      { force: true }
+    );
+    clickBottomWidgetButton();
+    // confirm that payment processing date has been changed
+    cy.get(`td:nth-child(3):contains(${format(date, "MM/dd/yyyy")})`);
+    return this;
   }
+
+  assertOverpaymentRecord(overpayments: OverpaymentRecord) {
+    this.onTab("Financials", "Payment History", "Overpayment Summary");
+    cy.get("table[id$='OverpaymentsListview']").within(() => {
+      cy.contains("td[id$='OverpaymentsListviewStatus0']", overpayments.status);
+      cy.contains(
+        "td[id$='OverpaymentsListviewBalancingAmount0']",
+        numToPaymentFormat(overpayments.amount)
+      );
+      cy.contains(
+        "td[id$='OverpaymentsListviewOverpaymentRecordAdjustment0']",
+        numToPaymentFormat(overpayments.adjustment)
+      );
+      cy.contains(
+        "td[id$='OverpaymentsListviewOutstandingAmount0']",
+        numToPaymentFormat(overpayments.outstandingAmount)
+      );
+    });
+  }
+
+  createOffsetRecoveryPlan(recoveryAmt: number): RecoveryPlanPage {
+    this.onTab("Financials", "Payment History", "Overpayment Summary");
+    waitForAjaxComplete();
+    cy.get("tr[class='ListRowSelected']").click({ force: true });
+    waitForAjaxComplete();
+    cy.get('input[type="submit"][value="Open"]').click({ force: true });
+    cy.get(
+      'input[type="submit"][value="Add"][id^="RecoveryPlanListviewWidget"]'
+    ).click();
+    waitForAjaxComplete();
+    cy.findByLabelText("Type").select("OffsetRecovery");
+    waitForAjaxComplete();
+    cy.wait(500);
+    cy.findByLabelText("Agreement Date").type(
+      `${format(new Date(), "MM/dd/yyyy")}{enter}`
+    );
+    waitForAjaxComplete();
+    cy.wait(500);
+    cy.get("input[type='text'][name$='Amount_per_Frequency']").type(
+      `{selectAll}{backspace}${numToPaymentFormat(recoveryAmt)}`
+    );
+    waitForAjaxComplete();
+    cy.get(
+      "input[type='submit'][id$='calculateEstimatedOffsetEndDate']"
+    ).click();
+    waitForAjaxComplete();
+    clickBottomWidgetButton();
+    waitForAjaxComplete();
+    return new RecoveryPlanPage();
+  }
+
+  getAmountsPending(): Cypress.Chainable<
+    Record<"netAmount" | "netPaymentAmount", string>[]
+  > {
+    this.onTab("Financials", "Payment History", "Amounts Pending");
+    waitForAjaxComplete();
+    // net amount
+    return cy.get("td[id$='benefit_amount_money0']").then(([...netPymt]) => {
+      // net payment amount
+      return cy.get("td[id$='payment_amount_money0']").then((netPymtCols) => {
+        return cy.wrap(
+          [...netPymtCols].reduce((acc, netPaymentAmountCol, idx) => {
+            const rowData = {
+              netAmount: netPymt[idx].textContent as string,
+              netPaymentAmount: netPaymentAmountCol.textContent as string,
+            };
+            acc.push(rowData);
+            return acc;
+          }, [] as Record<"netAmount" | "netPaymentAmount", string>[])
+        );
+      });
+    });
+  }
+}
+
+type OverpaymentRecord = {
+  status: string;
+  amount: number;
+  adjustment: number;
+  outstandingAmount: number;
+};
+
+type RecoveryPageCorrespondenceDropdownOptions =
+  | "OP-Full Balance Demand"
+  | "OP-Full Balance Recovery"
+  | "OP-Full Balance Recovery-Manual"
+  | "OP-Notice of Payoff"
+  | "OP-Payment Received";
+
+type RecoveryPlanDocuments =
+  | "Overpayment Notice-Full Balance Recovery"
+  | "Overpayment Notice-Full Balance Recovery-Manual";
+
+class RecoveryPlanPage {
+  addDocument(
+    correspondenceOption: RecoveryPageCorrespondenceDropdownOptions,
+    documentType: RecoveryPlanDocuments
+  ): this {
+    cy.contains("a", "Correspondence").click({ force: true });
+    waitForAjaxComplete();
+    cy.contains(correspondenceOption).click();
+    clickBottomWidgetButton("Next");
+    onTab("Documents");
+    assertHasDocument(documentType);
+    return this;
+  }
+  assertDocumentStatus(
+    documentType: RecoveryPlanDocuments,
+    status: PaidLeaveDocumentStatus
+  ) {
+    onTab("Documents");
+    waitForAjaxComplete();
+    cy.contains("tr", documentType).within(() => {
+      cy.contains("td", status);
+    });
+  }
+}
+
+export function numToPaymentFormat(num: number): string {
+  const decimal = num % 1 ? "" : ".00";
+  return `${new Intl.NumberFormat("en-US", {
+    style: "decimal",
+  }).format(num)}${decimal}`;
+}
+
+/**
+ * Function to determine payment processing dates when preventing overpayments.
+ * Note: This is intended to be used for this specific scenario, and won't be compatible with every payment under Amounts Pending
+ * Read more on preventing overpayments here: https://lwd.atlassian.net/browse/CPS-3115
+ * @returns Date
+ */
+export function calculatePaymentDatePreventingOP(approvalDate?: Date) {
+  const PFML_HOLIDAYS = [
+    "2022-02-21",
+    "2022-04-18",
+    "2022-05-30",
+    "2022-06-20",
+    "2022-07-04",
+    "2022-09-05",
+    "2022-10-10",
+    "2022-11-11",
+    "2022-11-24",
+    "2022-12-26",
+    "2023-01-02",
+    "2023-01-16",
+    "2023-02-20",
+    "2023-04-17",
+    "2023-05-29",
+    "2023-06-19",
+    "2023-07-04",
+    "2023-09-04",
+    "2023-10-09",
+    "2023-11-23",
+    "2023-12-25",
+  ] as const;
+  const estTimeHour = getHours(
+    convertToTimeZone(new Date(), {
+      timeZone: "America/New_York",
+    })
+  );
+  const isBeforeEndBusinessDay = estTimeHour < 17;
+  const afterNormalBusinessDays = addBusinessDays(
+    approvalDate ?? new Date(),
+    isBeforeEndBusinessDay ? 5 : 6
+  );
+  const hasHoliday = (holiday: Date) => {
+    return (
+      isAfter(holiday, subDays(new Date(), 1)) &&
+      isBefore(holiday, addDays(afterNormalBusinessDays, 1))
+    );
+  };
+  // account for holidays - which further delays the payment processing date
+  let totalHolidays = 0;
+  for (let i = 0; i < PFML_HOLIDAYS.length; i++) {
+    if (hasHoliday(parseISO(PFML_HOLIDAYS[i]))) totalHolidays += 1;
+  }
+  return addBusinessDays(afterNormalBusinessDays, totalHolidays);
 }
 
 class BenefitsExtensionPage {
@@ -1802,6 +2454,139 @@ class BenefitsExtensionPage {
   }
 }
 
+export class FinancialsBenefitAdjustmentsPage {
+  addEmployerReimbursement(
+    benefit_start_date: string,
+    benefit_end_date: string,
+    amount_to_employer: number
+  ): this {
+    const type = "Employer Reimbursement";
+
+    cy.contains(
+      `input[name^="BalancedPayeeOffsetsAndDeductions"]`,
+      "Add"
+    ).click();
+
+    this.addAdjustment(
+      type,
+      benefit_start_date,
+      benefit_end_date,
+      amount_to_employer
+    );
+    this.validatePayeeAdjustmentAdded(type, amount_to_employer);
+    clickBottomWidgetButton();
+
+    // Check the Employer Reimbursement has been added
+    cy.contains("table", "Balanced Payee Adjustments").within(() => {
+      cy.findByText(type).should("contain.text", type);
+      cy.findByText(`-${numToPaymentFormat(amount_to_employer)}`).should(
+        "contain.text",
+        `-${numToPaymentFormat(amount_to_employer)}`
+      );
+    });
+    return this;
+  }
+
+  editAutoGrossEntitlementAmount(adjust_by_amount: number) {
+    const type = "Auto Gross Entitlement";
+
+    cy.get("[id*='BenefitAmountsRecurringListviewWidgetAbsence']")
+      .contains(type)
+      .click();
+    waitForAjaxComplete();
+    cy.get("[id*='BenefitAmountsRecurringListviewWidgetAbsence']")
+      .contains(type)
+      .siblings(`[id*="OffsetsAndDeductionsAmount"]`)
+      .invoke("text")
+      .then((value) => {
+        const current_ammount = parseFloat(value.replace(/[^0-9.]/g, ""));
+        cy.contains(
+          `input[name^="BenefitAmountOffsetsAndDeductionsListView"]`,
+          "Edit"
+        ).click();
+
+        const new_amount = current_ammount + adjust_by_amount;
+        this.editAdjustment(new_amount, null, null);
+        waitForAjaxComplete();
+
+        cy.get("[id*='BenefitAmountsRecurringListviewWidgetAbsence']")
+          .contains(type)
+          .siblings(`[id*="OffsetsAndDeductionsAmount"]`)
+          .should("contain.text", `${numToPaymentFormat(new_amount)}`);
+      });
+  }
+
+  private addAdjustment(
+    type: string,
+    start_date: string,
+    end_date: string,
+    amount: number
+  ) {
+    // Select the type of reduction.
+    cy.get("table[id^='SelectAutoIncreaseOptionListviewWidget'")
+      .findByText(type)
+      .click();
+    waitForAjaxComplete();
+
+    // Fill in the dates.
+    cy.findByLabelText("Start Date")
+      .focus()
+      .type(`${dateToMMddyyyy(start_date)}{enter}`);
+    cy.findByLabelText("Start Date").focus().should("have.focus");
+
+    cy.findByLabelText("End Date")
+      .focus()
+      .type(`${dateToMMddyyyy(end_date)}{enter}`);
+    cy.findByLabelText("End Date").should("have.focus");
+
+    // Fill in the income/benefit amount. The label for this field isn't connected so we have to use a more direct selector.
+    cy.get("input[type=text][id$=adjustmentAmountMoney]").type(
+      `{selectAll}{backspace}${amount}`
+    );
+    // Add the reduction
+    cy.findByDisplayValue("Add").click();
+  }
+
+  private editAdjustment(
+    amount: number | null,
+    start_date: string | null,
+    end_date: string | null
+  ) {
+    // Fill in the dates.
+    if (start_date) {
+      cy.findByLabelText("Start Date")
+        .focus()
+        .type(`{selectAll}{backspace}${dateToMMddyyyy(start_date)}{enter}`);
+      cy.findByLabelText("Start Date").focus().should("have.focus");
+    }
+
+    if (end_date) {
+      cy.findByLabelText("End Date")
+        .focus()
+        .type(`{selectAll}{backspace}${dateToMMddyyyy(end_date)}{enter}`);
+      cy.findByLabelText("End Date").should("have.focus");
+    }
+
+    if (amount) {
+      cy.get("input[type=text][id$=adjustmentAmountMoney]").type(
+        `{selectAll}{backspace}${amount}`
+      );
+    }
+    clickBottomWidgetButton();
+  }
+
+  private validatePayeeAdjustmentAdded(type: string, amount: number) {
+    // Check the reduction has been added.
+    cy.contains("table", "Payee Adjustments").within(() => {
+      cy.findByText(type).should("contain.text", type);
+      cy.findByText(`-${numToPaymentFormat(amount)}`).should(
+        "contain.text",
+        `-${numToPaymentFormat(amount)}`
+      );
+    });
+  }
+}
+
 export class ClaimantPage {
   static visit(ssn: string): ClaimantPage {
     ssn = ssn.replace(/-/g, "");
@@ -1816,12 +2601,14 @@ export class ClaimantPage {
 
     return new ClaimantPage();
   }
+
   /**
    * Changes the personal identification details of the claimant.
    * @param changes Object with one or more of propreties to edit.
    */
   editPersonalIdentification(
-    changes: Partial<PersonalIdentificationDetails>
+    changes: Partial<PersonalIdentificationDetails>,
+    upgrade: boolean
   ): this {
     cy.get(`#personalIdentificationCardWidget`)
       .findByTitle("Edit")
@@ -1833,10 +2620,18 @@ export class ClaimantPage {
         );
 
       if (changes.date_of_birth)
-        cy.findByLabelText(`Date of birth`)
-          .focus()
-          .type(`{selectAll}{backspace}${changes.date_of_birth}`)
-          .blur();
+        if (upgrade) {
+          // FINEOS upgrade keeps failing when using blur on the birth date in last few runs.
+          // Removing for the upgrade till we stablize these Cypress tests better.
+          cy.findByLabelText(`Date of birth`)
+            .focus()
+            .type(`{selectAll}{backspace}${changes.date_of_birth}`);
+        } else {
+          cy.findByLabelText(`Date of birth`)
+            .focus()
+            .type(`{selectAll}{backspace}${changes.date_of_birth}`)
+            .blur();
+        }
 
       if (changes.gender) cy.findByLabelText(`Gender`).select(changes.gender);
 
@@ -1853,7 +2648,9 @@ export class ClaimantPage {
     cy.findByText(`+ Add address`).click({ force: true });
     waitForAjaxComplete();
     cy.get(`#addressPopupWidget_PopupWidgetWrapper`).within(() => {
-      cy.findByLabelText(`Address line 1`).type(`${address.line_1}`);
+      cy.findByLabelText(`Address line 1`).type(`${address.line_1}`, {
+        force: true,
+      });
       if (address.line_2) {
         cy.findByLabelText(`Address line 2`).type(`${address.line_2}`);
       }
@@ -1862,6 +2659,61 @@ export class ClaimantPage {
       cy.findByLabelText(`Zip code`).type(`${address.zip}`);
       cy.findByTitle("OK").click({ force: true });
     });
+    return this;
+  }
+
+  setPhoneNumber(
+    phoneNumber: string,
+    verified = true,
+    phoneType: Exclude<Phone["phone_type"], null | undefined> = "Cell"
+  ): this {
+    const strippedPhoneNumber = phoneNumber.replace(/[^0-9]/g, "");
+    if (![10, 11].includes(strippedPhoneNumber.length)) {
+      throw new Error(`Invalid phone number: ${phoneNumber}`);
+    }
+
+    // Deletes existing contact, if it exists
+    cy.get("div#contactDetailsFrame")
+      .find("div.container.card span.header-title")
+      .each((el) => {
+        if (el.text() === phoneType) {
+          cy.wrap(
+            el.parent().parent().find("span.controls span[id$='deleteIcon']")
+          ).click({ force: true });
+          cy.get("input[id$='Delete_Contact_yes']").click({ force: true });
+        }
+      });
+
+    cy.get("a[id^='newContactDetailsCard'][id$='addPhoneContact']").click();
+
+    let internationalCode: string;
+    let areaCode: string;
+    let number: string;
+    if (strippedPhoneNumber.length === 11) {
+      internationalCode = strippedPhoneNumber[0];
+      areaCode = strippedPhoneNumber.slice(1, 4);
+      number = strippedPhoneNumber.slice(4);
+    } else {
+      internationalCode = "1";
+      areaCode = strippedPhoneNumber.slice(0, 3);
+      number = strippedPhoneNumber.slice(3);
+    }
+
+    cy.get("div#addPhonePopupWidget_PopupWidgetWrapper").within(() => {
+      cy.get("select[id$='contactMethod']").select(phoneType);
+
+      cy.get("input[id$='intCode']").clear().type(internationalCode);
+      cy.get("input[id$='areaCode']").clear().type(areaCode);
+      cy.get("input[id$='telephoneNumber']").clear().type(number);
+
+      cy.contains(
+        "span[id$='Label']",
+        verified ? "Verified" : "Unverified"
+      ).click();
+
+      cy.get("input[id$='okButtonBean']").click();
+    });
+
     return this;
   }
 
@@ -1888,12 +2740,19 @@ export class ClaimantPage {
    *    //Further actions here...
    *  })
    */
-  createNotification(claim: ValidClaim): Cypress.Chainable<string> {
+  createNotification(
+    claim: ValidClaim,
+    withholdingPreference?: boolean,
+    verifyOccupation?: boolean
+  ): Cypress.Chainable<string> {
     if (!claim.leave_details.reason) throw new Error(`Missing leave reason.`);
     const reason = claim.leave_details.reason as NonNullable<LeaveReason>;
     // Start the process
     return this.startCreateNotification((occupationDetails) => {
       // "Occupation Details" step.
+      if (verifyOccupation) {
+        occupationDetails.verifyOccupation();
+      }
       if (claim.hours_worked_per_week)
         occupationDetails.enterHoursWorkedPerWeek(claim.hours_worked_per_week);
       return occupationDetails.nextStep((notificationOptions) => {
@@ -1967,29 +2826,24 @@ export class ClaimantPage {
               assertValidClaim(claim);
               // Add all available leave periods.
               const [startDate, endDate] = getLeavePeriod(claim.leave_details);
+              const leavePeriodType = extractLeavePeriodType(
+                claim.leave_details
+              );
+              datesOfAbsence.toggleLeaveScheduleSlider(leavePeriodType);
               if (claim.has_continuous_leave_periods)
-                // @TODO adjust leave period/status as needed
-                datesOfAbsence
-                  .toggleLeaveScheduleSlider("continuos")
-                  .addFixedTimeOffPeriod({
-                    status: "Known",
-                    start: startDate,
-                    end: endDate,
-                  });
-              if (claim.has_intermittent_leave_periods)
-                datesOfAbsence
-                  // @TODO add method to add intermittent leave period
-                  .toggleLeaveScheduleSlider("intermittent");
+                datesOfAbsence.addFixedTimeOffPeriod({
+                  status: "Known",
+                  start: startDate,
+                  end: endDate,
+                });
               if (
                 claim.has_reduced_schedule_leave_periods &&
                 claim.leave_details.reduced_schedule_leave_periods
               )
-                datesOfAbsence
-                  .toggleLeaveScheduleSlider("reduced")
-                  .addReducedSchedulePeriod(
-                    "Known",
-                    claim.leave_details.reduced_schedule_leave_periods[0]
-                  );
+                datesOfAbsence.addReducedSchedulePeriod(
+                  "Known",
+                  claim.leave_details.reduced_schedule_leave_periods[0]
+                );
               return datesOfAbsence.nextStep((absenceDetails) => {
                 if (!claim?.work_pattern?.work_pattern_type)
                   throw new Error(`Missing work pattern`);
@@ -2001,6 +2855,24 @@ export class ClaimantPage {
                   )
                   .applyStandardWorkWeek();
                 return absenceDetails.nextStep((wrapUp) => {
+                  // tax withholdings
+                  if (
+                    config("FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION") ===
+                    "true"
+                  ) {
+                    fineos.waitForAjaxComplete();
+                    if (withholdingPreference) {
+                      cy.get(
+                        "input[type='checkbox'][name$='_somSITFITOptIn_CHECKBOX']"
+                      ).click();
+                    }
+                    // must be selected to proceed
+                    cy.get(
+                      "input[type='checkbox'][name$='_somSITFITVerification_CHECKBOX']"
+                    ).click();
+
+                    fineos.waitForAjaxComplete();
+                  }
                   // Fill military Caregiver description if needed.
                   if (reason === "Military Caregiver")
                     absenceDetails.addMilitaryCaregiverDescription();
@@ -2013,6 +2885,7 @@ export class ClaimantPage {
                     reason === "Child Bonding"
                   )
                     wrapUp.clickNext(20000);
+
                   return wrapUp.finishNotificationCreation();
                 });
               });
@@ -2021,6 +2894,7 @@ export class ClaimantPage {
       });
     });
   }
+
   /**
    * Starts the Fineos intake process and executes the given callback once navigated to first meaningful step of the intake.
    * @param cb
@@ -2053,6 +2927,7 @@ export class ClaimantPage {
     return this;
   }
 }
+
 /**Contains utilities used within multiple pages throughout the intake process */
 abstract class CreateNotificationStep {
   /**
@@ -2064,6 +2939,7 @@ abstract class CreateNotificationStep {
       .first()
       .click({ force: true });
   }
+
   /**
    * Safely selects an option for a <select> tag with a given label
    * @param label
@@ -2089,6 +2965,7 @@ class OccupationDetails extends CreateNotificationStep {
       { force: true }
     );
   }
+
   /**
    * Submits Occupation Details step and navigates to Notification Options step
    * @param cb
@@ -2108,6 +2985,11 @@ class OccupationDetails extends CreateNotificationStep {
       `${dateToMMddyyyy(dateJobEnded)}{enter}`
     );
   }
+
+  verifyOccupation(): this {
+    cy.get("[name$='_reverifyStatusLink']").click();
+    return this;
+  }
 }
 
 type TypeOfRequestOptions =
@@ -2117,6 +2999,7 @@ type TypeOfRequestOptions =
   | "Bonding with a new child (adoption/ foster care/ newborn)"
   | "Caring for a family member"
   | "Out of work for another reason";
+
 class NotificationOptions extends CreateNotificationStep {
   chooseTypeOfRequest(type: TypeOfRequestOptions): this {
     cy.contains("div", type).prev().find("input").click({ force: true });
@@ -2124,6 +3007,7 @@ class NotificationOptions extends CreateNotificationStep {
     cy.findByText("Request a Leave").should("be.visible");
     return this;
   }
+
   /**
    * Submits Notification Options step and navigates Reason Of Absence to step
    * @param cb
@@ -2134,23 +3018,44 @@ class NotificationOptions extends CreateNotificationStep {
     return cb(new ReasonOfAbsence());
   }
 }
+
 /**
- * Maps to select inputs available to describe Absense Reason
+ * Maps to select inputs available to describe Absence Reason
+ * Add new options to discriminated unions as needed
  */
 export type AbsenceReasonDescription = {
-  relates_to?: string;
-  reason?: string;
-  qualifier_1?: string;
-  qualifier_2?: string;
+  relates_to?: "Employee" | "Family";
+  reason?:
+    | "Serious Health Condition - Employee"
+    | "Care for a Family Member"
+    | "Pregnancy/Maternity"
+    | "Child Bonding"
+    | "Military Exigency Family"
+    | "Military Caregiver";
+  qualifier_1?:
+    | "Not Work Related"
+    | "Serious Health Condition"
+    | "Birth Disability"
+    | "Foster Care"
+    | "Other Additional Activities"
+    | "Newborn"
+    | "Adoption"
+    | "Prenatal Care";
+  qualifier_2?: "Sickness";
+  typeOfRequest?: TypeOfRequestOptions;
 };
 /**
  * Maps to select inputs available to describe Primary Relationship
+ * Add new options to discriminated unions as needed
  */
 export type PrimaryRelationshipDescription = {
-  relationship_to_employee?: string;
-  qualifier_1?: string;
-  qualifier_2?: string;
+  relationship_to_employee?: "Sibling - Brother/Sister" | "Child";
+  qualifier_1?: "Biological";
+  // @todo - currently unused, uncomment when you need to set
+  // this field
+  // qualifier_2?: "Equivalent Family Member" | "Opposite Sex" | "Same Sex";
 };
+
 class ReasonOfAbsence extends CreateNotificationStep {
   /**
    * Fills out the absence reason select fields with given data
@@ -2166,6 +3071,7 @@ class ReasonOfAbsence extends CreateNotificationStep {
       this.chooseSelectOption("Qualifier 2", desc.qualifier_2);
     return this;
   }
+
   /**
    * Fills out the Absence Relationships select fields with given data
    * @param relationship
@@ -2179,11 +3085,14 @@ class ReasonOfAbsence extends CreateNotificationStep {
         );
       if (relationship.qualifier_1)
         this.chooseSelectOption("Qualifier 1", relationship.qualifier_1);
-      if (relationship.qualifier_2)
-        this.chooseSelectOption("Qualifier 2", relationship.qualifier_2);
+      // @todo - currently unused, uncomment when you need to set
+      // this field
+      // if (relationship.qualifier_2)
+      //   this.chooseSelectOption("Qualifier 2", relationship.qualifier_2);
     });
     return this;
   }
+
   /**
    * Submits Reason Of Absence step and navigates Dates Of Absence to step
    * @param cb
@@ -2208,6 +3117,7 @@ type ContinuousLeavePeriod = {
   /**MM/DD/YYYY */
   return_to_work_date?: string;
 };
+
 class DatesOfAbsence extends CreateNotificationStep {
   /**
    * Toggles the control needed to render the Leave Period inputs according to `type`.
@@ -2215,18 +3125,19 @@ class DatesOfAbsence extends CreateNotificationStep {
    * @param type
    */
   toggleLeaveScheduleSlider(
-    type: "continuos" | "intermittent" | "reduced"
+    type: NonNullable<AbsencePeriodResponse["period_type"]>
   ): this {
     const scheduleSliderMap: Record<typeof type, string> = {
-      continuos: "One or more fixed time off periods",
-      intermittent: "Episodic / leave as needed",
-      reduced: "Reduced work schedule",
+      Continuous: "One or more fixed time off periods",
+      Intermittent: "Episodic / leave as needed",
+      "Reduced Schedule": "Reduced work schedule",
     };
     cy.contains("div.toggle-guidance-row", scheduleSliderMap[type])
       .find("span.slider")
       .click();
     return this;
   }
+
   addIntermittentLeavePeriod(start: string, end: string): this {
     // Since the widget also gets re-rendered from time to time, we need to re-query it frequently.
     const withinWidget = (cb: () => unknown) =>
@@ -2245,6 +3156,7 @@ class DatesOfAbsence extends CreateNotificationStep {
     });
     return this;
   }
+
   addFixedTimeOffPeriod(period: ContinuousLeavePeriod): this {
     // Since the widget also gets re-rendered from time to time, we need to re-query it frequently.
     const withinWidget = (cb: () => unknown) =>
@@ -2295,6 +3207,7 @@ class DatesOfAbsence extends CreateNotificationStep {
     });
     return this;
   }
+
   private enterReducedWorkHours(
     leave_details: ReducedScheduleLeavePeriods
   ): void {
@@ -2315,6 +3228,7 @@ class DatesOfAbsence extends CreateNotificationStep {
       cy.wrap(input).type(weekdayInfo[index].hours.toString());
     });
   }
+
   addReducedSchedulePeriod(
     absenceStatus: AbsenceStatus,
     reducedLeavePeriod: ReducedScheduleLeavePeriods
@@ -2353,6 +3267,7 @@ class DatesOfAbsence extends CreateNotificationStep {
 
     return this;
   }
+
   nextStep<T>(cb: (step: WorkAbsenceDetails) => T): T {
     this.clickNext(5000);
     return cb(new WorkAbsenceDetails());
@@ -2373,18 +3288,21 @@ class WorkAbsenceDetails extends CreateNotificationStep {
     wait();
     return this;
   }
+
   applyStandardWorkWeek(): this {
     cy.findByLabelText("Standard Work Week").click();
     wait();
     cy.get('input[value="Apply to Calendar"]').click({ force: true });
     return this;
   }
+
   addMilitaryCaregiverDescription(): this {
     cy.findByLabelText("Military Caregiver Description").type(
       "I am a parent military caregiver."
     );
     return this;
   }
+
   nextStep<T>(cb: (step: WrapUp) => T): T {
     this.clickNext(20000);
     return cb(new WrapUp());
@@ -2406,6 +3324,7 @@ class WrapUp extends CreateNotificationStep {
         return cy.wrap(match[0]);
       });
   }
+
   /**Captures the Leave Case id number and exits the notification creation process */
   finishNotificationCreation(): Cypress.Chainable<string> {
     return this.getLeaveCaseNumber().then((absenceId) => {
@@ -2413,6 +3332,18 @@ class WrapUp extends CreateNotificationStep {
       cy.contains(absenceId);
       return cy.wrap(absenceId);
     });
+  }
+
+  selectWithholdingPreference(withholdingPreference?: boolean) {
+    if (withholdingPreference) {
+      cy.get(
+        "input[type='checkbox'][name$='_somSITFITOptIn_CHECKBOX']"
+      ).click();
+    }
+    cy.get(
+      "input[type='checkbox'][name$='_somSITFITVerification_CHECKBOX']"
+    ).click();
+    return this;
   }
 }
 
@@ -2422,6 +3353,7 @@ type EpisodicLeavePeriodDescription = {
   timeSpanHoursStart: string;
   timeSpanHoursEnd: string;
 };
+
 class RecordActualTime {
   fillTimePeriod({
     startDate,
@@ -2470,6 +3402,7 @@ class RecordActualTime {
     });
     return this;
   }
+
   nextStep<T>(cb: (step: AdditionalReporting) => T): T {
     clickNext();
     waitForAjaxComplete();
@@ -2492,6 +3425,7 @@ type AdditionalDetails = {
   additional_notes?: string;
   reporting_party?: string;
 };
+
 export class AdditionalReporting {
   reportAdditionalDetails(details: AdditionalDetails): this {
     // Select the period
@@ -2512,12 +3446,14 @@ export class AdditionalReporting {
     waitForAjaxComplete();
     return this;
   }
+
   /**Returns back to the Claim page. */
   finishRecordingActualLeave(): void {
     clickNext();
     waitForAjaxComplete();
   }
 }
+
 class LeaveDetailsPage {
   /**
    * Function will redirect us to the claim adjudiction page
@@ -2528,15 +3464,27 @@ class LeaveDetailsPage {
     cy.get('input[type="submit"][value="Edit"]').click();
     return new AdjudicationPage();
   }
+
   rejectSelectPlan(): AdjudicationPage {
     cy.get("tr.ListRow2.planUndecided").click();
     waitForAjaxComplete();
     cy.get('input[type="submit"][value="Reject"]').click();
     return new AdjudicationPage();
   }
+
+  inReview(): AdjudicationPage {
+    cy.get('input[type="submit"][value="Review"]').click();
+    return new AdjudicationPage();
+  }
+
+  editLeave(): AdjudicationPage {
+    cy.get('input[type="submit"][value="Edit"]').click();
+    return new AdjudicationPage();
+  }
 }
 
 type NoteTypes = "Leave Request Review";
+
 class NotesPage {
   /** Adds a note of a given type and asserts it has been added succesfully. */
   addNote(type: NoteTypes, text: string) {
@@ -2553,6 +3501,7 @@ class NotesPage {
       });
     this.assertHasNote(type, text);
   }
+
   assertHasNote(type: NoteTypes, text: string) {
     cy.get(`#CaseNotesWidgetList`)
       .contains("div.WidgetListWidget", type)
@@ -2579,6 +3528,7 @@ export type FixedTimeOffPeriodDescription = {
   start: FixedAbsenceDateDescirtion;
   end: FixedAbsenceDateDescirtion;
 };
+
 class HistoricalAbsence {
   /**To be called from Absence Hub */
   static create(): HistoricalAbsence {
@@ -2625,6 +3575,7 @@ class HistoricalAbsence {
     waitForAjaxComplete();
     return new HistoricalAbsence();
   }
+
   private static fillAbsenceDescription(
     absenceDescription: AbsenceReasonDescription
   ): void {
@@ -2702,6 +3653,7 @@ class HistoricalAbsence {
     fineos.clickBottomWidgetButton("Close");
     waitForAjaxComplete();
   }
+
   editLeaveRequestDates(dates: Partial<FixedTimeOffPeriodDescription>) {
     fineos.onTab("Leave Details");
     cy.findByTitle("Edit Leave Request").click();
@@ -2718,6 +3670,7 @@ class HistoricalAbsence {
     fineos.clickBottomWidgetButton("OK");
     waitForAjaxComplete();
   }
+
   addFixedTimePeriod(dates: Partial<FixedTimeOffPeriodDescription>) {
     fineos.onTab("Leave Details");
     cy.findByTitle("Edit Leave Request").click();

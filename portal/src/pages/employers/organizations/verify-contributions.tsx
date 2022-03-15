@@ -46,7 +46,7 @@ export const VerifyContributions = (props: VerifyContributionsProps) => {
   });
 
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });
@@ -101,13 +101,6 @@ export const VerifyContributions = (props: VerifyContributionsProps) => {
             ),
             "dor-phone-link": (
               <a href={`tel:${t("shared.departmentOfRevenuePhoneNumber")}`} />
-            ),
-            "recent-filing-periods-link": (
-              <a
-                href={routes.external.massgov.preparingToVerifyEmployer}
-                target="_blank"
-                rel="noreferrer noopener"
-              />
             ),
             ol: <ol className="usa-list" />,
             li: <li />,

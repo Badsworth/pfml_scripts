@@ -1,6 +1,12 @@
 import { ConfigFunction } from "./config";
 import * as path from "path";
-import { S3Client, PutObjectCommandInput } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  PutObjectCommandInput,
+  ListObjectsV2Command,
+  ListObjectsV2CommandOutput,
+  ListObjectsV2CommandInput,
+} from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import {
   SFNClient,
@@ -13,6 +19,7 @@ import { URL } from "url";
 import delay from "delay";
 import pRetry from "p-retry";
 import chalk from "chalk";
+import { format } from "date-fns";
 
 type SfnEventName =
   | " dor_import "
@@ -28,14 +35,16 @@ export default class InfraClient {
     return new InfraClient(
       config("ENVIRONMENT"),
       config("DOR_IMPORT_URI"),
-      config("DOR_ETL_ARN")
+      config("DOR_ETL_ARN"),
+      config("S3_INTELLIGENCE_TOOL_BUCKET")
     );
   }
 
   constructor(
     private environment: string,
     private dor_import_uri: string,
-    private dor_etl_arn: string
+    private dor_etl_arn: string,
+    private s3_intelligence_tool_bucket: string
   ) {
     this.s3Client = new S3Client({
       region: "us-east-1",
@@ -74,6 +83,38 @@ export default class InfraClient {
         );
     });
     await Promise.all(uploads);
+  }
+
+  private async getS3Objects(
+    commandInput: ListObjectsV2CommandInput
+  ): Promise<ListObjectsV2CommandOutput> {
+    return await this.s3Client.send(new ListObjectsV2Command(commandInput));
+  }
+
+  async getFineosExtracts(date: Date) {
+    const objects = await this.getS3Objects({
+      Bucket: this.s3_intelligence_tool_bucket,
+      Prefix: `fineos/dataexports/${format(date, "yyyy-MM-dd")}`,
+      Delimiter: "/",
+    });
+    // Ignore non folder types that match - some envs will experience seemingly random .csv files at this level
+    if (!objects.CommonPrefixes)
+      throw Error(
+        `FINEOS extract data for ${format(
+          date,
+          "yyyy-MM-dd"
+        )} not found in S3 bucket "${
+          this.s3_intelligence_tool_bucket
+        }/fineos/dataexports"`
+      );
+    // grab objects only in folder for the date's extracts
+    const extractFolderPath = objects.CommonPrefixes[0].Prefix as string;
+    const [timestamp] = extractFolderPath.split("/").slice(-2, -1);
+    const { Contents } = await this.getS3Objects({
+      Bucket: this.s3_intelligence_tool_bucket,
+      Prefix: extractFolderPath + timestamp,
+    });
+    return Contents;
   }
 
   // "exitEvent" determines at which step we want to stop monitoring etl progress

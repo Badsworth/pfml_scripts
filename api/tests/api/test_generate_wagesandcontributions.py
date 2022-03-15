@@ -29,7 +29,7 @@ def test_full_generate_wagesandcontributions(test_db_session):
     wages = test_db_session.query(WagesAndContributions).first()
 
     assert employer.employer_fein == employer_fein
-    assert employer.fineos_employer_id == 1
+    assert type(employer.fineos_employer_id) is int
     assert employee.tax_identifier_id == tax_identifier.tax_identifier_id
     assert tax_identifier.tax_identifier == employee_ssn
     assert wages.employer_id == employer.employer_id

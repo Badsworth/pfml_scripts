@@ -1,74 +1,98 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ApplicationCard with a completed application renders the component 1`] = `
+exports[`ApplicationCard renders In Progress heading and body when application lacks EIN and leave reason 1`] = `
 <div
   class="maxw-mobile-lg margin-bottom-3"
 >
-  <aside
+  <div
+    class="border-top-1 border-gold"
+  />
+  <article
+    class="border-x border-bottom border-base-lighter padding-2 padding-top-3"
+  >
+    <h2
+      class="font-heading-md text-bold"
+    >
+      In-progress application
+    </h2>
+    <p>
+      Submit all three parts so that we can review your application.
+    </p>
+    <div
+      class="border-top border-base-lighter padding-top-2"
+    >
+      <a
+        class="usa-button display-flex flex-align-center flex-justify-center flex-column margin-right-0"
+        href="/applications/checklist?claim_id=mock_application_id"
+      >
+        <div>
+          Continue application
+        </div>
+      </a>
+    </div>
+  </article>
+</div>
+`;
+
+exports[`ApplicationCard renders status button and Other Actions when status is completed 1`] = `
+<div
+  class="maxw-mobile-lg margin-bottom-3"
+>
+  <div
     class="border-top-1 border-primary"
   />
   <article
-    class="border-x border-bottom border-base-lighter padding-2 padding-top-0"
+    class="border-x border-bottom border-base-lighter padding-2 padding-top-3"
   >
-    <h3
-      class="padding-top-3 font-heading-md text-bold"
+    <h2
+      class="font-heading-md text-bold"
     >
       Leave for an illness or injury
-    </h3>
-    <div
-      class="padding-y-1"
-    >
-      <p>
-        Application ID
-      </p>
-      <p
-        class="margin-top-05 text-bold"
-      >
+    </h2>
+    <p>
+      Application ID
+      <br />
+      <strong>
         NTN-111-ABS-01
-      </p>
-    </div>
-    <div
-      class="padding-y-1"
-    >
-      <p>
-        Employer Identification Number (EIN)
-      </p>
-      <p
-        class="margin-top-05 text-bold"
-      >
+      </strong>
+    </p>
+    <p>
+      Employer Identification Number (EIN)
+      <br />
+      <strong>
         12-3456789
-      </p>
-    </div>
+      </strong>
+    </p>
     <div
       class="border-top border-base-lighter padding-y-2 margin-y-2 margin-bottom-0"
     >
-      <button
-        class="usa-button position-relative width-full display-flex flex-align-center flex-justify-center flex-column margin-right-0"
-        type="button"
+      <a
+        class="usa-button width-full display-flex flex-align-center flex-justify-center flex-column margin-right-0"
+        href="/applications/status?absence_id=NTN-111-ABS-01"
       >
         View status updates and details
-      </button>
+      </a>
     </div>
     <div
       class="border-top border-base-lighter"
     >
-      <h4
+      <h3
         class="padding-y-3 font-heading-xs text-bold"
       >
         Other actions
-      </h4>
-      <button
-        class="usa-button position-relative display-block margin-bottom-3 usa-button--unstyled"
-        type="button"
+      </h3>
+      <a
+        class="usa-button display-block margin-bottom-3 usa-button--unstyled"
+        href="/applications/status?absence_id=NTN-111-ABS-01#view_notices"
       >
         View your notices
-      </button>
-      <button
-        class="usa-button position-relative display-block margin-bottom-2 usa-button--unstyled"
-        type="button"
+      </a>
+      <a
+        class="usa-button display-block margin-bottom-2 usa-button--unstyled"
+        href="/applications/status?absence_id=NTN-111-ABS-01#upload_documents"
       >
         Respond to a request for information
-      </button>
+      </a>
     </div>
   </article>
 </div>

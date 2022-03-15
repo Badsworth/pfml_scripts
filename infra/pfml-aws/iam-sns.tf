@@ -57,3 +57,38 @@ data "aws_iam_policy_document" "sns_assume_role_boilerplate" {
     }
   }
 }
+
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM Role to allow SNS text messages to write to CloudWatch Logs.
+# This role was originally created in the console. Bringing it over to Terraform
+
+resource "aws_iam_role" "sns_sms_deliveries" {
+  name               = "massgov-pfml-sns-sms-deliveries"
+  assume_role_policy = data.aws_iam_policy_document.sns_assume_role_boilerplate.json
+}
+
+resource "aws_iam_role_policy_attachment" "allow_sns_writes_to_cloudwatch" {
+  role       = aws_iam_role.sns_sms_deliveries.name
+  policy_arn = aws_iam_policy.allow_sns_writes_to_cloudwatch.arn
+}
+
+resource "aws_iam_policy" "allow_sns_writes_to_cloudwatch" {
+  name   = "massgov-pfml-sns-sms-deliveries"
+  policy = data.aws_iam_policy_document.allow_sns_writes_to_cloudwatch.json
+}
+
+data "aws_iam_policy_document" "allow_sns_writes_to_cloudwatch" {
+  # Allows SNS to call CloudWatch Logs on our behalf.
+  # Derives from manual set-up of this policy and its role in the AWS console.
+  statement {
+    effect = "Allow"
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:PutMetricFilter",
+      "logs:PutRetentionPolicy"
+    ]
+    resources = ["*"]
+  }
+}

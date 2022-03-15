@@ -15,6 +15,7 @@ type waitForClaimDocuments =
   import("./cypress/plugins/DocumentWaiter").default["waitForClaimDocuments"];
 type Email = import("./src/submission/TestMailClient").Email;
 type GetEmailsOpts = import("./src/submission/TestMailClient").GetEmailsOpts;
+type MFAOpts = import("./src/submission/TwilioClient").MFAOpts;
 type Result = import("pdf-parse").Result;
 type DehydratedClaim = import("./src/generation/Claim").DehydratedClaim;
 type Employer = import("./src/generation/Employer").Employer;
@@ -41,19 +42,21 @@ declare namespace Cypress {
       options?: Partial<Cypress.TypeOptions>
     ): Chainable<Element>;
     stash(key: string, value: unknown): null;
-    unstash<T extends unknown>(key: string): Chainable<T>;
+    unstash<T>(key: string): Chainable<T>;
     // Declare our custom tasks.
     stashLog(key: string, value: string | null | undefined): null;
     dependsOnPreviousPass(dependencies?: Mocha.Test[]): null;
+    tryCount(): Chainable<number>;
     task<T extends Scenarios>(
       event: "generateClaim",
-      scenario: T
+      arg: T | { scenario: T; employeePoolFileName: string }
     ): Chainable<
       ScenarioSpecs[T]["claim"] extends APIClaimSpec
         ? DehydratedClaim
         : GeneratedClaim
     >;
     task(event: "getAuthVerification", mail: string): Chainable<string>;
+    task(event: "mfaVerification", opts: MFAOpts): Chainable<string>;
     task(
       event: "completeSSOLoginFineos",
       credentials?: Credentials
@@ -103,5 +106,9 @@ declare namespace Cypress {
       waitParams: Parameters<waitForClaimDocuments>[0],
       options?: Partial<Timeoutable & Loggable>
     ): Chainable<boolean>;
+    task(
+      event: "findFirstApprovedClaim",
+      args: { applications: ApplicationResponse[]; credentials: Credentials }
+    ): Chainable<ApplicationResponse | 0>;
   }
 }

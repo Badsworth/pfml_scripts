@@ -1,93 +1,137 @@
-/* 
-  Note: Parts of the test are commented out due to functionality not being ready
-  for testing.  Once feature is ready for testing we'll remove comments
+/*
+  @Note: Parts of the test are commented out due to functionality not being ready
+  for testing.  Once feature is ready for testing we'll remove comments.
+
+  We can uncomment uploads when NAVA API team has completed implementation
+  for the new API upload using multipart: https://lwd.atlassian.net/browse/PORTAL-1390
 
   This file also contains other util functions/variables specifically for integration tests
 */
 
-export const pdf = [
-  [
-    "Should submit a PDF document with file size less than 4.5MB successfully",
-    "./cypress/fixtures/docTesting/small-150KB.pdf",
-    "Successfully uploaded document",
-    200,
-  ],
-  // [
-  //   "Should submit a PDF document with file size right at 4.5MB successfully",
-  //   "./cypress/fixtures/docTesting/limit-4.5MB.pdf",
-  //   "Successfully uploaded document",
-  //   200,
-  // ],
-  [
-    "Should submit a PDF document with file size larger than 4.5MB (10MB) unsuccessfully and return API error",
-    "./cypress/fixtures/docTesting/large-10MB.pdf",
-    "Request Entity Too Large",
-    413,
-  ],
-];
+import config from "../src/config";
 
-export const jpg = [
-  [
-    "Should submit a JPG document with file size less than 4.5MB successfully",
-    "./cypress/fixtures/docTesting/xsmall-220KB.jpg",
-    "Successfully uploaded document",
-    200,
-  ],
-  // [
-  //   "Should submit a JPG document with file size right at 4.5MB successfully",
-  //   "./cypress/fixtures/docTesting/limit-4.5MB.jpg",
-  //   "Successfully uploaded document",
-  //   200,
-  // ],
-  [
-    "Should submit a JPG document with file size larger than 4.5MB (15.5MB) unsuccessfully and return API error",
-    "./cypress/fixtures/docTesting/large-15.5MB.jpg",
-    "Request Entity Too Large",
-    413,
-  ],
-];
+export interface DocumentTestCase {
+  description: string;
+  filepath: string;
+  statusCode: 200 | 413 | 400;
+}
 
-export const png = [
-  [
-    "Should submit a PNG document with file size less than 4.5MB successfully",
-    "./cypress/fixtures/docTesting/small-2.7MB.png",
-    "Successfully uploaded document",
-    200,
-  ],
-  // [
-  //   "Should submit a PNG document with file size right at 4.5MB successfully",
-  //   "./cypress/fixtures/docTesting/limit-4.5MB.png",
-  //   "Successfully uploaded document",
-  //   200,
-  // ],
-  [
-    "Should submit a PNG document with file size larger than 4.5MB (15.5MB) unsuccessfully and return API error",
-    "./cypress/fixtures/docTesting/large-14MB.png",
-    "Request Entity Too Large",
-    413,
-  ],
-];
+type DocumentTestSpec =
+  | Array<DocumentTestCase>
+  | (() => Array<DocumentTestCase>);
 
-export const badFileTypes = [
-  [
-    "Should receive error when trying to submit an incorrect file type (.gif)",
-    "./cypress/fixtures/docTesting/small-275KB.gif",
-    "File validation error.",
-    400,
+/**
+ *  Idea here is to test the file size limit (4.5MB) w/each accepted
+ *  filetype: PDF/JPG/PNG in three different ways.
+ *    - smaller than limit
+ *    - right at limit ex. 4.4MB
+ *    - larger than limit
+ */
+export const documentTests: Record<string, DocumentTestSpec> = {
+  pdf: [
+    {
+      description:
+        "Should submit a PDF document with file size less than 4.5MB successfully",
+      filepath: "./cypress/fixtures/docTesting/small-150KB.pdf",
+      statusCode: 200,
+    },
+    {
+      description:
+        "Should submit a PDF document with file size larger than 4.5MB (10MB) unsuccessfully and return API error",
+      filepath: "./cypress/fixtures/docTesting/large-10MB.pdf",
+      statusCode: 413,
+    },
   ],
-  [
-    "Should receive error when trying to submit an incorrect file type (.bmp)",
-    "./cypress/fixtures/docTesting/small-1MB.bmp",
-    "File validation error.",
-    400,
+  jpg: [
+    {
+      description:
+        "Should submit a JPG document with file size less than 4.5MB successfully",
+      filepath: "./cypress/fixtures/docTesting/xsmall-220KB.jpg",
+      statusCode: 200,
+    },
+    {
+      description:
+        "Should submit a JPG document with file size larger than 4.5MB (15.5MB) unsuccessfully and return API error",
+      filepath: "./cypress/fixtures/docTesting/large-15.5MB.jpg",
+      statusCode: 413,
+    },
   ],
-  [
-    "Should receive error when trying to submit an incorrect file type (.svg)",
-    "./cypress/fixtures/docTesting/small-387KB.svg",
-    "File validation error.",
-    400,
+  png: [
+    {
+      description:
+        "Should submit a PNG document with file size less than 4.5MB successfully",
+      filepath: "./cypress/fixtures/docTesting/small-2.7MB.png",
+      statusCode: 200,
+    },
+    {
+      description:
+        "Should submit a PNG document with file size larger than 4.5MB (15.5MB) unsuccessfully and return API error",
+      filepath: "./cypress/fixtures/docTesting/large-14MB.png",
+      statusCode: 413,
+    },
   ],
-];
+  badFileTypes: [
+    {
+      description:
+        "Should receive error when trying to submit an incorrect file type (.gif)",
+      filepath: "./cypress/fixtures/docTesting/small-275KB.gif",
+      statusCode: 400,
+    },
+    {
+      description:
+        "Should receive error when trying to submit an incorrect file type (.svg)",
+      filepath: "./cypress/fixtures/docTesting/small-387KB.svg",
+      statusCode: 400,
+    },
+  ],
+  // Added logic to establish baseline of failures for Files right at limit
+  rightAtLimit: () => {
+    if (config("HAS_LARGE_FILE_COMPRESSION") === "true") {
+      // environments with large file compression allow for PDF uploads up to 10MB
+      return [
+        {
+          description:
+            "Should submit a PDF document with file size just under 10MB successfully",
+          filepath: "./cypress/fixtures/docTesting/limit-9.4MB.pdf",
+          statusCode: 200,
+        },
+        {
+          description:
+            "Should submit a JPG document with file size right at 4.5MB successfully",
+          filepath: "./cypress/fixtures/docTesting/limit-4.5MB.jpg",
+          statusCode: 200,
+        },
+        {
+          description:
+            "Should submit a PNG document with file size right at 4.5MB successfully",
+          filepath: "./cypress/fixtures/docTesting/limit-4.5MB.png",
+          statusCode: 200,
+        },
+      ];
+    }
+
+    return [
+      {
+        description:
+          "Should submit a PDF document with file size right at 4.5MB successfully",
+        filepath: "./cypress/fixtures/docTesting/limit-4.5MB.pdf",
+        statusCode: 200,
+      },
+      {
+        description:
+          "Should submit a JPG document with file size right at 4.5MB successfully",
+        filepath: "./cypress/fixtures/docTesting/limit-4.5MB.jpg",
+        statusCode: 200,
+      },
+      {
+        description:
+          "Should submit a PNG document with file size right at 4.5MB successfully",
+        filepath: "./cypress/fixtures/docTesting/limit-4.5MB.png",
+        statusCode: 200,
+      },
+    ];
+  },
+};
 
 export const id_proofing = [
   [

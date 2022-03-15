@@ -6,7 +6,7 @@ import { RandomSSN } from "ssn";
 import { add, formatISO } from "date-fns";
 import { promisify } from "util";
 import { pipeline, Readable } from "stream";
-import JSONStream from "JSONStream";
+import * as JSONStream from "../stream/json";
 import shuffle from "./shuffle";
 import { concat, collect } from "streaming-iterables";
 
@@ -45,15 +45,15 @@ function getWageBounds(spec: WageSpecification) {
   }
   switch (spec) {
     case "ineligible":
-      return [2000, 5399];
+      return [2000, 5699];
     case "eligible":
-      return [5400, 100000];
+      return [5700, 100000];
     case "high":
       return [90000, 100000];
     case "medium":
       return [30000, 90000];
     case "low":
-      return [5400, 30000];
+      return [5700, 30000];
     default:
       throw new Error(`Invalid wage specification: ${spec}`);
   }

@@ -1,3 +1,4 @@
+import path from "path";
 import { ScenarioSpecification } from "../generation/Scenario";
 import * as CypressScenarios from "./cypress";
 import { ClaimSpecification, EmployerResponseSpec } from "../generation/Claim";
@@ -62,11 +63,21 @@ const employerResponseLeavesAndBenefits: Partial<EmployerResponseSpec> = {
   ],
 };
 
-export const LSTOLB1: ScenarioSpecification = {
+const getDocPath = (filename: string) => path.join("forms", "lst", filename);
+
+export const LSTOLB1_150KB: ScenarioSpecification = {
   ...CypressScenarios.BHAP1,
   claim: {
     ...CypressScenarios.BHAP1.claim,
-    label: "PortalClaimSubmit",
+    label: "PortalClaimSubmit - Other Leaves/Benefits  - 150KB file size",
+    docs: {
+      FOSTERPLACEMENT: {
+        filename: getDocPath("150KB.pdf"),
+      },
+      MASSID: {
+        filename: getDocPath("150KB.pdf"),
+      },
+    },
     employerResponse: {
       hours_worked_per_week: 40,
       employer_decision: "Approve",
@@ -77,64 +88,186 @@ export const LSTOLB1: ScenarioSpecification = {
 };
 
 // Portal claim submission with eligible employee
-export const LSTBHAP1: ScenarioSpecification = {
+export const LSTBHAP_1MB: ScenarioSpecification = {
   ...CypressScenarios.BHAP1,
   claim: {
     ...CypressScenarios.BHAP1.claim,
-    label: "PortalClaimSubmit",
+    label: "PortalClaimSubmit - Bonding - 1MB file size",
     employerResponse: {
       hours_worked_per_week: 40,
       employer_decision: "Approve",
     },
+    docs: {
+      FOSTERPLACEMENT: {
+        filename: getDocPath("1MB.jpg"),
+      },
+      MASSID: {
+        filename: getDocPath("1MB.jpg"),
+      },
+    },
   },
 };
 
-export const LSTCHAP1: ScenarioSpecification = {
+export const LSTCHAP1_2MB: ScenarioSpecification = {
   employee: {
     wages: "eligible",
     mass_id: true,
   },
   claim: {
-    label: "CCAP90",
+    label: "PortalClaimSubmit - Caring - 2.7MB file sizes",
     reason: "Care for a Family Member",
     work_pattern_spec: "0,720,0,720,0,720,0",
-    docs: { MASSID: {}, CARING: {} },
+    docs: {
+      MASSID: {
+        filename: getDocPath("2.7MB.png"),
+      },
+      CARING: {
+        filename: getDocPath("2.7MB.png"),
+      },
+    },
     shortClaim: true,
     employerResponse: {
       hours_worked_per_week: 40,
       employer_decision: "Approve",
     },
+    is_withholding_tax: true,
   },
 };
 
-// Fineos claim submission with eligible employee
-export const LSTFBHAP1: ScenarioSpecification = {
+export const LSTOLB1_4MB: ScenarioSpecification = {
   ...CypressScenarios.BHAP1,
   claim: {
     ...CypressScenarios.BHAP1.claim,
-    label: "FineosClaimSubmit",
+    label: "PortalClaimSubmit - Other Leaves/Benefits  - 4.5MB file size",
+    docs: {
+      FOSTERPLACEMENT: {
+        filename: getDocPath("4.5MB.pdf"),
+      },
+      MASSID: {
+        filename: getDocPath("4.5MB.pdf"),
+      },
+    },
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+      ...employerResponseLeavesAndBenefits,
+    },
+    ...otherLeavesAndBenefitsProps,
+  },
+};
+
+// Portal claim submission with eligible employee
+export const LSTBHAP_5MB: ScenarioSpecification = {
+  ...CypressScenarios.BHAP1,
+  claim: {
+    ...CypressScenarios.BHAP1.claim,
+    label: "PortalClaimSubmit - Bonding - 5MB file size",
     employerResponse: {
       hours_worked_per_week: 40,
       employer_decision: "Approve",
     },
+    docs: {
+      FOSTERPLACEMENT: {
+        filename: getDocPath("5MB.pdf"),
+      },
+      MASSID: {
+        filename: getDocPath("5MB.pdf"),
+      },
+    },
   },
 };
 
-// Fineos claim submission with ineligible employee
-export const LSTFBHAP4: ScenarioSpecification = {
-  employee: { mass_id: true, wages: "ineligible" },
+export const LSTCHAP1_6MB: ScenarioSpecification = {
+  employee: {
+    wages: "eligible",
+    mass_id: true,
+  },
   claim: {
-    label: "FineosClaimSubmit",
+    label: "PortalClaimSubmit - Caring - 6MB file sizes",
+    reason: "Care for a Family Member",
+    work_pattern_spec: "0,720,0,720,0,720,0",
+    docs: {
+      MASSID: {
+        filename: getDocPath("6MB.pdf"),
+      },
+      CARING: {
+        filename: getDocPath("6MB.pdf"),
+      },
+    },
     shortClaim: true,
-    reason: "Child Bonding",
-    reason_qualifier: "Foster Care",
     employerResponse: {
       hours_worked_per_week: 40,
-      employer_decision: "Deny",
+      employer_decision: "Approve",
+    },
+    is_withholding_tax: true,
+  },
+};
+
+export const LSTOLB1_7MB: ScenarioSpecification = {
+  ...CypressScenarios.BHAP1,
+  claim: {
+    ...CypressScenarios.BHAP1.claim,
+    label: "PortalClaimSubmit - Other Leaves/Benefits  - 7MB file size",
+    docs: {
+      FOSTERPLACEMENT: {
+        filename: getDocPath("7MB.pdf"),
+      },
+      MASSID: {
+        filename: getDocPath("7MB.pdf"),
+      },
+    },
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+      ...employerResponseLeavesAndBenefits,
+    },
+    ...otherLeavesAndBenefitsProps,
+  },
+};
+
+// Portal claim submission with eligible employee
+export const LSTBHAP_8MB: ScenarioSpecification = {
+  ...CypressScenarios.BHAP1,
+  claim: {
+    ...CypressScenarios.BHAP1.claim,
+    label: "PortalClaimSubmit - Bonding - 8MB file size",
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
     },
     docs: {
-      MASSID: {},
-      FOSTERPLACEMENT: {},
+      FOSTERPLACEMENT: {
+        filename: getDocPath("8MB.pdf"),
+      },
+      MASSID: {
+        filename: getDocPath("8MB.pdf"),
+      },
     },
+  },
+};
+
+export const LSTCHAP1_9MB: ScenarioSpecification = {
+  employee: {
+    wages: "eligible",
+    mass_id: true,
+  },
+  claim: {
+    label: "PortalClaimSubmit - Caring - 9.4MB file sizes",
+    reason: "Care for a Family Member",
+    work_pattern_spec: "0,720,0,720,0,720,0",
+    docs: {
+      MASSID: {
+        filename: getDocPath("9.4MB.pdf"),
+      },
+      CARING: {
+        filename: getDocPath("9.4MB.pdf"),
+      },
+    },
+    shortClaim: true,
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+    },
+    is_withholding_tax: true,
   },
 };

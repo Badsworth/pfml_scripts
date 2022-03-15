@@ -10,17 +10,11 @@ from massgov.pfml.db.models.factories import ReferenceFileFactory
 def _setup_reductions_reporting(
     test_db_session, mock_s3_bucket, mock_ses, monkeypatch, initialize_factories_session
 ):
-    monkeypatch.setenv(
-        "S3_BUCKET", "s3://test_bucket",
-    )
+    monkeypatch.setenv("S3_BUCKET", "s3://test_bucket")
 
-    monkeypatch.setenv(
-        "S3_DFML_OUTBOUND_DIRECTORY_PATH", "reductions/dfml/outbound",
-    )
+    monkeypatch.setenv("S3_DFML_OUTBOUND_DIRECTORY_PATH", "reductions/dfml/outbound")
 
-    monkeypatch.setenv(
-        "S3_DFML_ARCHIVE_DIRECTORY_PATH", "reductions/dfml/archive",
-    )
+    monkeypatch.setenv("S3_DFML_ARCHIVE_DIRECTORY_PATH", "reductions/dfml/archive")
 
     s3 = boto3.client("s3")
     file_name = "test_file.csv"

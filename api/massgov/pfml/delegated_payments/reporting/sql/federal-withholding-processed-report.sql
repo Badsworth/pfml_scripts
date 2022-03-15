@@ -41,5 +41,5 @@ SELECT PBT.FINEOS_CUSTOMER_NUMBER "Customer Number",
        PBT.PAYMENT_ID "Payment ID"
 FROM PAYMENT_BATCH_TRANSACTIONS PBT
 WHERE PBT.IS_CURRENT = 'Y'
-  AND PBT.CURRENT_STATE_ID IN (198)
--- federal-withholding-processed-report (Federal Withholding send funds to IRS) (198)
+  AND PBT.CURRENT_STATE_ID IN (208)
+-- federal-withholding-processed-report (Federal Withholding send funds to IRS) (208)

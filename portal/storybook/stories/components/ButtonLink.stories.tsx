@@ -4,7 +4,7 @@ import React from "react";
 const href = "http://www.example.com";
 
 export default {
-  title: "Components/Buttons/ButtonLink",
+  title: "Components/ButtonLink",
   component: ButtonLink,
 };
 

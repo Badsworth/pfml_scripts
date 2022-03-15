@@ -138,6 +138,39 @@ describe("users API", () => {
     });
   });
 
+  describe("convertUserToEmployer", () => {
+    beforeEach(() => {
+      global.fetch = mockFetch({
+        response: getResponse(),
+        status: 201,
+        ok: true,
+      });
+    });
+
+    it("Calls successfully with expected return", async () => {
+      const resp = await usersApi.convertUserToEmployer("mock_user_id", {
+        employer_fein: "mock_fein",
+      });
+      expect(resp.user).toBeInstanceOf(User);
+      expect(resp.user.roles).toHaveLength(2);
+      expect(resp.user.user_leave_administrators).toHaveLength(2);
+
+      expect(fetch).toHaveBeenCalledWith(
+        `${process.env.apiUrl}/users/mock_user_id/convert_employer`,
+        {
+          body: JSON.stringify({
+            employer_fein: "mock_fein",
+          }),
+          headers: {
+            Authorization: `Bearer ${accessTokenJwt}`,
+            "Content-Type": "application/json",
+          },
+          method: "POST",
+        }
+      );
+    });
+  });
+
   describe("updateUser", () => {
     const user = new User({
       user_id: "mock-user_id",
@@ -175,9 +208,9 @@ describe("users API", () => {
           "email_address": undefined,
           "mfa_delivery_preference": null,
           "mfa_phone_number": null,
-          "roles": Array [
+          "roles": [
             UserRole {
-              "role": Object {
+              "role": {
                 "role_description": "Employer",
                 "role_id": 1,
               },
@@ -186,9 +219,21 @@ describe("users API", () => {
             },
           ],
           "user_id": "mock-user_id",
-          "user_leave_administrators": Array [],
+          "user_leave_administrators": [],
         }
       `);
+    });
+
+    // todo (PORTAL-1828): Remove claimantSyncCognitoPreferences feature flag
+    it("sends the X-FF-Sync-Cognito-Preferences header if the claimantSyncCognitoPreferences feature flag is set", async () => {
+      process.env.featureFlags = JSON.stringify({
+        claimantSyncCognitoPreferences: true,
+      });
+      await usersApi.updateUser(user.user_id, user);
+      expect(global.fetch).toHaveBeenCalled();
+      expect(
+        global.fetch.mock.calls[0][1]?.headers["X-FF-Sync-Cognito-Preferences"]
+      ).toBe("true");
     });
   });
 });

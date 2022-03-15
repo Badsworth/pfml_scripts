@@ -34,6 +34,5 @@ module "pfml" {
 
   # AWS WAF ACL settings
   enable_regional_rate_based_acl = false # rate limit off for load and stress testing
-  enable_fortinet_managed_rules  = true
-  enforce_fortinet_managed_rules = true # false = Count rule matches (override type = COUNT)
-}                                       # true  = Block rule matches (override type = NONE)
+  enforce_fortinet_managed_rules = true  # false = Count rule matches (override type = COUNT)
+}                                        # true  = Block rule matches (override type = NONE)

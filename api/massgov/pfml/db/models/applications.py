@@ -10,6 +10,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import backref, object_session, relationship
 
 import massgov.pfml.util.logging
+from massgov.pfml.db.models.base import deferred
 from massgov.pfml.db.models.employees import (
     Address,
     Claim,
@@ -28,7 +29,7 @@ from massgov.pfml.rmv.models import RmvAcknowledgement
 from massgov.pfml.util.decimals import round_nearest_hundredth
 
 from ..lookup import LookupTable
-from .base import Base, TimestampMixin, uuid_gen
+from .base import Base, TimestampMixin, deprecated_column, uuid_gen
 from .common import PostgreSQLUUID, StrEnum
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -270,7 +271,7 @@ class Application(Base, TimestampMixin):
     tax_identifier_id = Column(
         PostgreSQLUUID, ForeignKey("tax_identifier.tax_identifier_id"), index=True
     )
-    nickname = Column(Text)
+    nickname = deprecated_column(Text)
     requestor = Column(Integer)
     claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), nullable=True, unique=True)
     has_mailing_address = Column(Boolean)
@@ -315,8 +316,11 @@ class Application(Base, TimestampMixin):
     payment_preference_id = Column(
         PostgreSQLUUID, ForeignKey("application_payment_preference.payment_pref_id")
     )
-    start_time = Column(TIMESTAMP(timezone=True))
-    updated_time = Column(TIMESTAMP(timezone=True))
+    imported_from_fineos_at = Column(TIMESTAMP(timezone=True))
+
+    start_time = deferred(Column(TIMESTAMP(timezone=True)))
+    updated_time = deferred(Column(TIMESTAMP(timezone=True)))
+
     completed_time = Column(TIMESTAMP(timezone=True))
     submitted_time = Column(TIMESTAMP(timezone=True))
     has_employer_benefits = Column(Boolean)
@@ -329,6 +333,13 @@ class Application(Base, TimestampMixin):
     has_previous_leaves_other_reason = Column(Boolean)
     has_concurrent_leave = Column(Boolean)
     is_withholding_tax = Column(Boolean, nullable=True)
+
+    split_from_application_id = Column(
+        PostgreSQLUUID,
+        ForeignKey("application.application_id"),
+        nullable=True,
+        index=True,
+    )
 
     user = relationship(User)
     caring_leave_metadata = relationship("CaringLeaveMetadata", back_populates="application")
@@ -347,8 +358,12 @@ class Application(Base, TimestampMixin):
     residential_address = relationship(Address, foreign_keys=[residential_address_id])
     payment_preference = relationship("ApplicationPaymentPreference", back_populates="application")
     phone = relationship("Phone", back_populates="application", uselist=False)
-
     work_pattern = relationship("WorkPattern", back_populates="applications", uselist=False)
+    split_from_application = relationship(
+        "Application",
+        backref=backref("split_into_application", uselist=False),
+        remote_side=[application_id],
+    )
 
     # `uselist` default is True, but for mypy need to state it explicitly so it
     # detects the relationship as many-to-one
@@ -375,12 +390,12 @@ class Application(Base, TimestampMixin):
     employer_benefits = relationship("EmployerBenefit", back_populates="application", uselist=True)
     other_incomes = relationship("OtherIncome", back_populates="application", uselist=True)
     previous_leaves_other_reason = relationship(
-        "PreviousLeaveOtherReason", back_populates="application", uselist=True,
+        "PreviousLeaveOtherReason", back_populates="application", uselist=True
     )
     previous_leaves_same_reason = relationship(
-        "PreviousLeaveSameReason", back_populates="application", uselist=True,
+        "PreviousLeaveSameReason", back_populates="application", uselist=True
     )
-    concurrent_leave = relationship("ConcurrentLeave", back_populates="application", uselist=False,)
+    concurrent_leave = relationship("ConcurrentLeave", back_populates="application", uselist=False)
 
     @property
     def employee(self) -> Optional[Employee]:
@@ -425,7 +440,7 @@ class Application(Base, TimestampMixin):
     def employer_organization_units(self) -> list[OrganizationUnit]:
         if not self.employer:
             return []
-        units = self.employer.organization_units.all()
+        units = self.employer.organization_units
         logger.info(
             "Application found Employer's organization units",
             extra={
@@ -447,6 +462,17 @@ class Application(Base, TimestampMixin):
             )
         )
         return leave_periods
+
+    @hybrid_property
+    def split_into_application_id(self):
+        return self.split_into_application.application_id if self.split_into_application else None  # type: ignore
+
+    @hybrid_property
+    def fineos_absence_id(self) -> Optional[str]:
+        if not self.claim:
+            return None
+
+        return self.claim.fineos_absence_id
 
 
 class CaringLeaveMetadata(Base, TimestampMixin):
@@ -520,13 +546,13 @@ class ReducedScheduleLeavePeriod(Base, TimestampMixin):
     start_date = Column(Date)
     end_date = Column(Date)
     is_estimated = Column(Boolean, default=True, nullable=False)
-    thursday_off_minutes = Column(Integer)
-    friday_off_minutes = Column(Integer)
-    saturday_off_minutes = Column(Integer)
     sunday_off_minutes = Column(Integer)
     monday_off_minutes = Column(Integer)
     tuesday_off_minutes = Column(Integer)
     wednesday_off_minutes = Column(Integer)
+    thursday_off_minutes = Column(Integer)
+    friday_off_minutes = Column(Integer)
+    saturday_off_minutes = Column(Integer)
 
     application = relationship(Application, back_populates="reduced_schedule_leave_periods")
 
@@ -607,7 +633,7 @@ class WorkPatternDay(Base, TimestampMixin):
     def sort_order(self):
         """Set sort order of Sunday to 0"""
         day_of_week_is_sunday = self.day_of_week_id == 7
-        return case([(day_of_week_is_sunday, 0),], else_=self.day_of_week_id)  # type: ignore
+        return case([(day_of_week_is_sunday, 0)], else_=self.day_of_week_id)  # type: ignore
 
 
 class WorkPatternType(LookupTable):
@@ -801,6 +827,7 @@ class DocumentType(LookupTable):
     APPROVED_TIME_CANCELLED = LkDocumentType(19, "Approved Time Cancelled")
     CHANGE_REQUEST_APPROVED = LkDocumentType(20, "Change Request Approved")
     CHANGE_REQUEST_DENIED = LkDocumentType(21, "Change Request Denied")
+    IRS_1099G_TAX_FORM_FOR_CLAIMANTS = LkDocumentType(22, "1099G Tax Form for Claimants")
 
 
 class Document(Base, TimestampMixin):
@@ -869,9 +896,7 @@ class UnemploymentMetric(Base, TimestampMixin):
     effective_date = Column(Date, primary_key=True, nullable=False)
     unemployment_minimum_earnings = Column(Numeric, nullable=False)
 
-    def __init__(
-        self, effective_date: datetime.date, unemployment_minimum_earnings: str,
-    ):
+    def __init__(self, effective_date: datetime.date, unemployment_minimum_earnings: str):
         """Constructor that takes metric values as strings.
 
         This ensures that the decimals are precise. For example compare Decimal(1431.66) to
@@ -938,7 +963,7 @@ def sync_state_metrics(db_session):
             maximum_weekly_benefit_amount="850.00",
         ),
         UnemploymentMetric(
-            effective_date=datetime.date(2020, 10, 1), unemployment_minimum_earnings="5100.00",
+            effective_date=datetime.date(2020, 10, 1), unemployment_minimum_earnings="5100.00"
         ),
         BenefitsMetrics(
             effective_date=datetime.date(2021, 1, 1),
@@ -946,11 +971,11 @@ def sync_state_metrics(db_session):
             maximum_weekly_benefit_amount="850.00",
         ),
         UnemploymentMetric(
-            effective_date=datetime.date(2021, 1, 1), unemployment_minimum_earnings="5400.00",
+            effective_date=datetime.date(2021, 1, 1), unemployment_minimum_earnings="5400.00"
         ),
-        BenefitsMetrics(effective_date=datetime.date(2022, 1, 2), average_weekly_wage="1694.24",),
+        BenefitsMetrics(effective_date=datetime.date(2022, 1, 2), average_weekly_wage="1694.24"),
         UnemploymentMetric(
-            effective_date=datetime.date(2022, 1, 2), unemployment_minimum_earnings="5700.00",
+            effective_date=datetime.date(2022, 1, 2), unemployment_minimum_earnings="5700.00"
         ),
     ]
 

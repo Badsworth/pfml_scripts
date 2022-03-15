@@ -3,10 +3,22 @@
   padding: 1.9em 2.29em;
 
   @media screen and (min-width: 1024px) {
+    /*
     grid-column: 2 / 2;
     grid-row: 2 / 2;
+    */
     overflow-x: hidden;
     overflow-y: auto;
     position: relative;
   }
+}
+
+.page__main--login {
+  background-color: $Color-BerkshiresGreen-200;
+  flex: 1 1 auto;
+  padding: 3em 4em;
+}
+
+.page__main--loading {
+  padding: 0;
 }

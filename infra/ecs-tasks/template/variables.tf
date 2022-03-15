@@ -90,6 +90,12 @@ variable "fineos_import_employee_updates_input_directory_path" {
   default     = null
 }
 
+variable "fineos_is_running_v21" {
+  description = "If the connected FINEOS environment is running the 21.3 upgrade (April 2022 deployment)"
+  type        = string
+  default     = "false"
+}
+
 variable "logging_level" {
   description = "Logging level override"
   type        = string
@@ -254,6 +260,11 @@ variable "enable_pub_automation_claimant_address_validation" {
   default     = false
 }
 
+variable "enable_fineos_import_iaww" {
+  description = "Enable scheduling for fineos IAWW processing task"
+  default     = false
+}
+
 variable "enable_pub_automation_process_1099_documents" {
   description = "Enable scheduling for pub automation 1099 documents processing task"
   default     = false
@@ -288,8 +299,23 @@ variable "enable_generate_1099_pdf" {
   default     = "0"
 }
 
+variable "generate_1099_max_files" {
+  description = "Maximum number of 1099s to generate"
+  default     = "1000"
+}
+
 variable "enable_merge_1099_pdf" {
   description = "Enable merging of 1099 documents for printing"
+  default     = "0"
+}
+
+variable "enable_upload_1099_pdf" {
+  description = "Enable uploading of 1099 documents to Fineos API"
+  default     = "0"
+}
+
+variable "enable_employer_reimbursement_payments" {
+  description = "Enable employer reimbursement payments within the API system."
   default     = "0"
 }
 
@@ -297,6 +323,26 @@ variable "enable_pub_payments_copy_audit_report_schedule" {
   description = "Enable scheduling for 'pub-payments-copy-audit-report' ECS task"
   type        = bool
   default     = false
+}
+
+variable "upload_max_files_to_fineos" {
+  description = "max number of 1099 documents to upload to Fineos API"
+  default     = "10"
+}
+
+variable "enable_1099_testfile_generation" {
+  description = "Enable IRS 1099 test file generation"
+  default     = "0"
+}
+
+variable "irs_1099_correction_ind" {
+  description = "Declares if the 1099 batch should be a correction run"
+  default     = "0"
+}
+
+variable "irs_1099_tax_year" {
+  description = "Declares the tax year for the 1099 batch"
+  default     = "2000"
 }
 
 ########## Variables for Step Functions ################

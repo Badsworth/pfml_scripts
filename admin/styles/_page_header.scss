@@ -1,5 +1,3 @@
-
-
 .page__header {
   align-items: center;
   background: $Color-BerkshiresGreen-600;
@@ -21,31 +19,73 @@
   text-decoration: none;
 }
 
-.page__logo-link::before {
-  @include IconFontProps;
-  content: $IconPfmlLogo;
-  display: block;
-}
-
 .page__logo-link:hover,
 .page__logo-link:focus {
   text-decoration: none;
 }
 
-.user-options:hover,
-.user-options:focus {
-  text-decoration: none;
+.pfml-logo-header {
+  display: block;
+  width: 2.65em;
+}
+
+.user-options__avatar {
+  align-items: center;
+  background: #e5e5e5;
+  border-radius: 50%;
+  color: $Color-RevolutionGray;
+  display: flex;
+  font-weight: 600;
+  height: 32px;
+  justify-content: center;
+  text-transform: uppercase;
+  width: 32px;
+}
+
+.user-options__avatar:empty {
+  display: none;
 }
 
 .user-options {
+  color: $Color-RevolutionGray;
+  cursor: pointer;
+  display: block;
+  padding: 0.43em 0;
+  position: relative;
+  text-decoration: none;
+}
+
+.user-options__trigger {
   align-items: center;
   display: flex;
+  padding-right: 1.56em;
+  position: relative;
+}
+
+.user-options__trigger-icon {
+  color: #fff;
+  display: block;
+  position: absolute;
+  right: 0;
+  top: 5px;
+  transform: rotate(-90deg);
+  transition: transform 0.2s ease 0s;
+  width: 1.5em;
+}
+
+.user-options--open .user-options__trigger-icon {
+  transform: rotate(90deg);
+}
+
+.user-options__trigger:hover,
+.user-options__trigger:focus {
   text-decoration: none;
 }
 
 .user-options__name {
   color: #fff;
   display: block;
+  letter-spacing: 0.05em;
   margin-left: 0.57em;
 }
 
@@ -54,4 +94,31 @@
   display: block;
   height: 32px;
   width: 32px;
+}
+
+.user-options__dropdown {
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: $Box-Shadow;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  right: 0;
+  top: 100%;
+}
+
+.user-options__dropdown-item {
+  cursor: default;
+  line-height: 1.25em;
+  padding: 1.14em 1.29em;
+}
+
+.user-options__dropdown-item--border {
+  border-bottom: solid 1px $Color-GraniteGray-50;
+}
+
+.user-option {
+  color: $Color-GraniteGray-700;
+  cursor: pointer;
 }

@@ -1,34 +1,45 @@
 import enum
 import uuid
+from dataclasses import dataclass
 from datetime import date
-from typing import Any, Callable, Dict, List, Optional, cast
+from typing import Any, Callable, Dict, List, Optional, Tuple, cast
 
 from sqlalchemy.exc import SQLAlchemyError
 
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.api.util import state_log_util
+from massgov.pfml.db.models.absences import (
+    AbsencePeriodType,
+    AbsenceReason,
+    AbsenceReasonQualifierOne,
+    AbsenceReasonQualifierTwo,
+    AbsenceStatus,
+)
 from massgov.pfml.db.models.employees import (
     AbsencePeriod,
-    AbsenceStatus,
     BankAccountType,
     Claim,
     Employee,
     EmployeePubEftPair,
     Employer,
+    LeaveRequestDecision,
+    OrganizationUnit,
     PaymentMethod,
     PrenoteState,
     PubEft,
     ReferenceFile,
     ReferenceFileType,
-    State,
     TaxIdentifier,
 )
 from massgov.pfml.db.models.payments import (
     FineosExtractEmployeeFeed,
+    FineosExtractVbiRequestedAbsence,
     FineosExtractVbiRequestedAbsenceSom,
 )
+from massgov.pfml.db.models.state import State
 from massgov.pfml.delegated_payments.step import Step
+from massgov.pfml.util.datetime import datetime_str_to_date
 
 logger = logging.get_logger(__name__)
 
@@ -39,6 +50,19 @@ SKIPPED_FOLDER = "skipped"
 ERRORED_FOLDER = "errored"
 
 
+@dataclass
+class AbsencePair:
+    """Class containing the two raw VBI Requested Absence Records"""
+
+    # The SOM version is always present as we iterate over the dataset
+    requested_absence_som: FineosExtractVbiRequestedAbsenceSom
+
+    # While rare, it's possible to not find the non-SOM record
+    # This will be a validation issue, but won't prevent processing
+    # As of Jan 2022, we expect ~100 / 160,000 to be missing
+    requested_absence_additional: Optional[FineosExtractVbiRequestedAbsence]
+
+
 class AbsencePeriodContainer:
     class_id: int
     index_id: int
@@ -46,6 +70,11 @@ class AbsencePeriodContainer:
     is_id_proofed: Optional[bool]
     start_date: Optional[date]
     end_date: Optional[date]
+    raw_absence_period_type: Optional[str]
+    raw_absence_reason_qualifier_1: Optional[str]
+    raw_absence_reason_qualifier_2: Optional[str]
+    raw_absence_reason: Optional[str]
+    raw_leave_request_decision: Optional[str]
 
     def __init__(
         self,
@@ -55,15 +84,29 @@ class AbsencePeriodContainer:
         index_id: str,
         is_id_proofed: Optional[bool],
         leave_request_id: Optional[str],
+        raw_absence_period_type: Optional[str],
+        raw_absence_reason_qualifier_1: Optional[str],
+        raw_absence_reason_qualifier_2: Optional[str],
+        raw_absence_reason: Optional[str],
+        raw_leave_request_decision: Optional[str],
     ):
-        self.start_date = payments_util.datetime_str_to_date(start_date)
-        self.end_date = payments_util.datetime_str_to_date(end_date)
+        self.start_date = datetime_str_to_date(start_date)
+        self.end_date = datetime_str_to_date(end_date)
         self.class_id = int(class_id)
         self.index_id = int(index_id)
         self.is_id_proofed = is_id_proofed
         self.leave_request_id = int(leave_request_id) if leave_request_id else None
 
+        self.raw_absence_period_type = raw_absence_period_type
+        self.raw_absence_reason_qualifier_1 = raw_absence_reason_qualifier_1
+        self.raw_absence_reason_qualifier_2 = raw_absence_reason_qualifier_2
+        self.raw_absence_reason = raw_absence_reason
+        self.raw_leave_request_decision = raw_leave_request_decision
+
     def _members(self):
+        # _members only contains the values from the SOM version of the
+        # file as we want to dedupe records from that file with this,
+        # and aren't concerned with the non-SOM file
         return (
             self.start_date,
             self.end_date,
@@ -91,6 +134,17 @@ class AbsencePeriodContainer:
             )
         )
 
+    def get_log_extra(self) -> Dict[str, Any]:
+        return {
+            "absence_period_class_id": self.class_id,
+            "absence_period_index_id": self.index_id,
+            "absence_period_start_date": self.start_date.isoformat() if self.start_date else None,
+            "absence_period_end_date": self.end_date.isoformat() if self.end_date else None,
+            "fineos_leave_request_id": self.leave_request_id,
+            "absence_period_type": self.raw_absence_period_type,
+            "leave_request_decision": self.raw_leave_request_decision,
+        }
+
 
 class ClaimantData:
     """
@@ -117,6 +171,7 @@ class ClaimantData:
     employee_first_name: Optional[str] = None
     employee_middle_name: Optional[str] = None
     employee_last_name: Optional[str] = None
+    organization_unit_name: Optional[str] = None
     date_of_birth: Optional[str] = None
     payment_method: Optional[str] = None
 
@@ -130,7 +185,7 @@ class ClaimantData:
     def __init__(
         self,
         absence_case_id: str,
-        requested_absences: List[FineosExtractVbiRequestedAbsenceSom],
+        requested_absences: List[AbsencePair],
         employee_record: Optional[FineosExtractEmployeeFeed],
         count_incrementer: Optional[Callable[[str], None]] = None,
     ):
@@ -143,15 +198,36 @@ class ClaimantData:
         self._process_requested_absences(requested_absences)
         self._process_employee_feed(employee_record)
 
-    def _process_requested_absences(
-        self, requested_absences: List[FineosExtractVbiRequestedAbsenceSom]
-    ) -> None:
+    def increment(self, metric: str) -> None:
+        if self.count_incrementer:
+            self.count_incrementer(metric)
+
+    def _process_requested_absences(self, requested_absences: List[AbsencePair]) -> None:
 
         start_dates: List[str] = []
         end_dates = []
 
+        # Keep track of all the values across all absence periods
+        # Used for validation at end of function as we expect these to be the same
+        employer_customer_numbers = []
+        claimant_customer_numbers = []
+        absence_case_statuses = []
+        organization_unit_names = []
+
+        # We dedupe absence periods as sometimes the extracts
+        # exact duplicates and it causes performance issues
         absence_period_set = set()
-        for requested_absence in requested_absences:
+        for requested_absence_pair in requested_absences:
+            requested_absence = requested_absence_pair.requested_absence_som
+            requested_absence_additional = requested_absence_pair.requested_absence_additional
+
+            # Add the raw values of a few fields to lists for later validation
+            employer_customer_numbers.append(requested_absence.employer_customerno)
+            claimant_customer_numbers.append(requested_absence.employee_customerno)
+            absence_case_statuses.append(requested_absence.absence_casestatus)
+            if requested_absence.orgunit_name:  # skip records with empty org unit name
+                organization_unit_names.append(requested_absence.orgunit_name)
+
             # If any of the requested absence records are ID proofed, then
             # we consider the entire claim valid
             evidence_result_type = requested_absence.leaverequest_evidenceresulttype
@@ -181,6 +257,64 @@ class ClaimantData:
                 "LEAVEREQUEST_ID", requested_absence, self.validation_container, True
             )
 
+            # Values exclusive to the "additional" requested absence record
+            raw_absence_period_type = None
+            raw_absence_reason_qualifier_1 = None
+            raw_absence_reason_qualifier_2 = None
+            raw_absence_reason = None
+            raw_leave_request_decision = None
+            if requested_absence_additional:
+                raw_absence_period_type = payments_util.validate_db_input(
+                    "ABSENCEPERIOD_TYPE",
+                    requested_absence_additional,
+                    self.validation_container,
+                    True,
+                    custom_validator_func=payments_util.lookup_validator(AbsencePeriodType),
+                )
+
+                raw_absence_reason_qualifier_1 = payments_util.validate_db_input(
+                    "ABSENCEREASON_QUALIFIER1",
+                    requested_absence_additional,
+                    self.validation_container,
+                    True,
+                    custom_validator_func=payments_util.lookup_validator(AbsenceReasonQualifierOne),
+                )
+
+                # 2 isn't required as only ~half of claims have a 2nd qualifier
+                raw_absence_reason_qualifier_2 = payments_util.validate_db_input(
+                    "ABSENCEREASON_QUALIFIER2",
+                    requested_absence_additional,
+                    self.validation_container,
+                    False,
+                    custom_validator_func=payments_util.lookup_validator(AbsenceReasonQualifierTwo),
+                )
+
+                raw_absence_reason = payments_util.validate_db_input(
+                    "ABSENCEREASON_NAME",
+                    requested_absence_additional,
+                    self.validation_container,
+                    True,
+                    custom_validator_func=payments_util.lookup_validator(AbsenceReason),
+                )
+
+                raw_leave_request_decision = payments_util.validate_db_input(
+                    "LEAVEREQUEST_DECISION",
+                    requested_absence_additional,
+                    self.validation_container,
+                    True,
+                    custom_validator_func=payments_util.lookup_validator(LeaveRequestDecision),
+                )
+
+            else:
+                msg = "Could not find VBI_REQUESTEDABSENCE record to pair with VBI_REQUESTEDABSENCE_SOM data, cannot populate all absence period data"
+                logger.info(msg, extra=self.get_traceable_details())
+                self.validation_container.add_validation_issue(
+                    payments_util.ValidationReason.MISSING_DATASET, msg
+                )
+                self.increment(
+                    ClaimantExtractStep.Metrics.NO_ADDITIONAL_REQUESTED_ABSENCE_FOUND_COUNT
+                )
+
             if class_id is None or index_id is None:
                 log_attributes = {
                     "absence_period_class_id": requested_absence.absenceperiod_classid,
@@ -190,11 +324,9 @@ class ClaimantData:
                     "Unable to extract class_id and/or index_id from requested_absence.",
                     extra=log_attributes,
                 )
-
-                if self.count_incrementer:
-                    self.count_incrementer(
-                        ClaimantExtractStep.Metrics.ABSENCE_PERIOD_CLASS_ID_OR_INDEX_ID_NOT_FOUND_COUNT
-                    )
+                self.increment(
+                    ClaimantExtractStep.Metrics.ABSENCE_PERIOD_CLASS_ID_OR_INDEX_ID_NOT_FOUND_COUNT
+                )
 
                 continue
 
@@ -210,6 +342,11 @@ class ClaimantData:
                 index_id=index_id,
                 is_id_proofed=is_absence_period_id_proofed,
                 leave_request_id=fineos_leave_request_id,
+                raw_absence_period_type=raw_absence_period_type,
+                raw_absence_reason_qualifier_1=raw_absence_reason_qualifier_1,
+                raw_absence_reason_qualifier_2=raw_absence_reason_qualifier_2,
+                raw_absence_reason=raw_absence_reason,
+                raw_leave_request_decision=raw_leave_request_decision,
             )
 
             # The absence period data has many duplicate records
@@ -230,21 +367,18 @@ class ClaimantData:
             self.absence_end_date = max(end_dates)
 
         else:
-            if self.count_incrementer:
-                self.count_incrementer(
-                    ClaimantExtractStep.Metrics.START_DATE_OR_END_DATE_NOT_FOUND_COUNT
-                )
+            self.increment(ClaimantExtractStep.Metrics.START_DATE_OR_END_DATE_NOT_FOUND_COUNT)
 
         # Ideally, we would be able to distinguish and separate out the
         # various leave requests that make up a claim, but we don't
         # have this concept in our system at the moment. Until we support
         # that, we're leaving these other fields alone and always choosing the
         # latest one to keep the behavior identical, but incorrect
-        requested_absence = requested_absences[-1]
+        requested_absence = requested_absences[-1].requested_absence_som
 
         # Note this should be identical regardless of absence case
         self.fineos_notification_id = payments_util.validate_db_input(
-            "NOTIFICATION_CASENUMBER", requested_absence, self.validation_container, True
+            "NOTIFICATION_CASENUMBER", requested_absence, self.validation_container, False
         )
         self.claim_type_raw = payments_util.validate_db_input(
             "ABSENCEREASON_COVERAGE", requested_absence, self.validation_container, True
@@ -268,6 +402,51 @@ class ClaimantData:
             "EMPLOYER_CUSTOMERNO", requested_absence, self.validation_container, True
         )
 
+        self.organization_unit_name = None
+        org_unit_names_set = set(organization_unit_names)
+        if len(org_unit_names_set) == 1:
+            self.organization_unit_name = list(org_unit_names_set)[0]
+
+        # Sanity test that the fields we expect to be the exact same
+        # for every requested absence record are in fact the same.
+        # If we've encountered a strange scenario, set the value to
+        # None so it won't get attached to the claim (this likely indicates a FINEOS issue)
+        if (dupe_number := len(set(employer_customer_numbers))) > 1:
+            self.validation_container.add_validation_issue(
+                payments_util.ValidationReason.UNEXPECTED_RECORD_VARIANCE,
+                f"Expected only a single employer customer number for claim, and received {dupe_number}: {employer_customer_numbers}",
+            )
+            self.employer_customer_number = None
+            self.increment(ClaimantExtractStep.Metrics.MULTIPLE_EMPLOYER_FOR_CLAIM_ISSUE_COUNT)
+
+        if (dupe_number := len(set(claimant_customer_numbers))) > 1:
+            self.validation_container.add_validation_issue(
+                payments_util.ValidationReason.UNEXPECTED_RECORD_VARIANCE,
+                f"Expected only a single employee customer number for claim, and received {dupe_number}: {claimant_customer_numbers}",
+            )
+            self.fineos_customer_number = None
+            self.increment(ClaimantExtractStep.Metrics.MULTIPLE_CLAIMANT_FOR_CLAIM_ISSUE_COUNT)
+
+        if (dupe_number := len(set(absence_case_statuses))) > 1:
+            self.validation_container.add_validation_issue(
+                payments_util.ValidationReason.UNEXPECTED_RECORD_VARIANCE,
+                f"Expected only a single absence case status for claim, and received {dupe_number}: {absence_case_statuses}",
+            )
+            self.absence_case_status = None
+            self.increment(
+                ClaimantExtractStep.Metrics.MULTIPLE_ABSENCE_STATUSES_FOR_CLAIM_ISSUE_COUNT
+            )
+
+        if (dupe_number := len(org_unit_names_set)) > 1:
+            self.validation_container.add_validation_issue(
+                payments_util.ValidationReason.UNEXPECTED_RECORD_VARIANCE,
+                f"Expected only a single organization unit name for claim, and received {dupe_number}: {organization_unit_names}",
+            )
+            self.organization_unit_name = None
+            self.increment(
+                ClaimantExtractStep.Metrics.MULTIPLE_ORGANIZATION_UNIT_NAMES_FOR_CLAIM_ISSUE_COUNT
+            )
+
     def _process_employee_feed(
         self, employee_feed_record: Optional[FineosExtractEmployeeFeed]
     ) -> None:
@@ -287,13 +466,8 @@ class ClaimantData:
             self.validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISSING_DATASET, error_msg
             )
-            logger.warning(
-                "Skipping: %s", error_msg, extra=self.get_traceable_details(),
-            )
-            if self.count_incrementer:
-                self.count_incrementer(
-                    ClaimantExtractStep.Metrics.NO_EMPLOYEE_FEED_RECORDS_FOUND_COUNT
-                )
+            logger.warning("Skipping: %s", error_msg, extra=self.get_traceable_details())
+            self.increment(ClaimantExtractStep.Metrics.NO_EMPLOYEE_FEED_RECORDS_FOUND_COUNT)
 
             # Can't process subsequent records as they pull from employee_feed
             return
@@ -332,10 +506,7 @@ class ClaimantData:
             self.validation_container.add_validation_issue(
                 payments_util.ValidationReason.INVALID_VALUE, message
             )
-            if self.count_incrementer:
-                self.count_incrementer(
-                    ClaimantExtractStep.Metrics.NO_DEFAULT_PAYMENT_PREFERENCE_COUNT
-                )
+            self.increment(ClaimantExtractStep.Metrics.NO_DEFAULT_PAYMENT_PREFERENCE_COUNT)
             return
 
         self.payment_method = payments_util.validate_db_input(
@@ -364,7 +535,7 @@ class ClaimantData:
             )
 
             self.account_nbr = payments_util.validate_db_input(
-                "ACCOUNTNO", employee_feed, self.validation_container, eft_required, max_length=17,
+                "ACCOUNTNO", employee_feed, self.validation_container, eft_required, max_length=17
             )
 
             self.account_type = payments_util.validate_db_input(
@@ -382,6 +553,8 @@ class ClaimantData:
         return {
             "absence_case_id": self.absence_case_id,
             "fineos_customer_number": self.fineos_customer_number,
+            "absence_start_date": self.absence_start_date,
+            "absence_end_date": self.absence_end_date,
         }
 
 
@@ -406,15 +579,38 @@ class ClaimantExtractStep(Step):
         PROCESSED_REQUESTED_ABSENCE_COUNT = "processed_requested_absence_count"
         VALID_CLAIM_COUNT = "valid_claim_count"
         VBI_REQUESTED_ABSENCE_SOM_RECORD_COUNT = "vbi_requested_absence_som_record_count"
+        PAYMENT_REQUESTED_ABSENCE_RECORD_COUNT = "payment_requested_absence_record_count"
         NO_EMPLOYEE_FEED_RECORDS_FOUND_COUNT = "no_employee_feed_records_found_count"
         NO_DEFAULT_PAYMENT_PREFERENCE_COUNT = "no_default_payment_preference_count"
         EMPLOYER_NOT_FOUND_COUNT = "employer_not_found_count"
         EMPLOYER_FOUND_COUNT = "employer_found_count"
+        ORG_UNIT_NOT_FOUND_COUNT = "org_unit_not_found_count"
+        ORG_UNIT_FOUND_COUNT = "org_unit_found_count"
         ABSENCE_PERIOD_CLASS_ID_OR_INDEX_ID_NOT_FOUND_COUNT = (
             "absence_period_class_id_or_index_id_not_found_count"
         )
         START_DATE_OR_END_DATE_NOT_FOUND_COUNT = "start_date_or_end_date_not_found_count"
         DUPLICATE_ABSENCE_PERIOD_COUNT = "duplicate_absence_period_count"
+
+        MULTIPLE_EMPLOYER_FOR_CLAIM_ISSUE_COUNT = "multiple_employer_for_claim_issue_count"
+        MULTIPLE_CLAIMANT_FOR_CLAIM_ISSUE_COUNT = "multiple_claimant_for_claim_issue_count"
+        MULTIPLE_ABSENCE_STATUSES_FOR_CLAIM_ISSUE_COUNT = (
+            "multiple_absence_statuses_for_claim_issue_count"
+        )
+        MULTIPLE_ORGANIZATION_UNIT_NAMES_FOR_CLAIM_ISSUE_COUNT = (
+            "multiple_organization_unit_names_for_claim_issue_count"
+        )
+
+        EMPLOYER_CHANGED_COUNT = "employer_changed_count"
+        EMPLOYEE_CHANGED_COUNT = "employee_changed_count"
+
+        MULTIPLE_ADDITIONAL_REQUESTED_ABSENCE_FOUND_COUNT = (
+            "multiple_additional_requested_absence_found_count"
+        )
+        NO_ADDITIONAL_REQUESTED_ABSENCE_FOUND_COUNT = "no_additional_requested_absence_found_count"
+        ADDITIONAL_REQUESTED_ABSENCE_CI_MISSING_COUNT = (
+            "additional_requested_absence_ci_missing_count"
+        )
 
     def run_step(self) -> None:
         self.process_claimant_extract_data()
@@ -475,6 +671,59 @@ class ClaimantExtractStep(Step):
 
         return employee_feed_mapping
 
+    def get_vbi_requested_absence_map(
+        self, reference_file: ReferenceFile
+    ) -> Dict[Tuple[str, str], FineosExtractVbiRequestedAbsence]:
+        """
+        NOTE: This is a separate similarly named requested absence file we get from
+        FINEOS that we use in the payment extract that has additional columns in it
+        that we want for absence periods. Ideally we'd use just one of these files,
+        but despite matching on many core columns, they differ on a few key ones
+        """
+        requested_absence_records = (
+            self.db_session.query(FineosExtractVbiRequestedAbsence)
+            .filter(
+                FineosExtractVbiRequestedAbsence.reference_file_id
+                == reference_file.reference_file_id
+            )
+            .all()
+        )
+
+        requested_absence_mapping: Dict[Tuple[str, str], FineosExtractVbiRequestedAbsence] = {}
+        for requested_absence_record in requested_absence_records:
+            self.increment(self.Metrics.PAYMENT_REQUESTED_ABSENCE_RECORD_COUNT)
+
+            c_value = requested_absence_record.absenceperiod_classid
+            i_value = requested_absence_record.absenceperiod_indexid
+
+            # Shouldn't happen, but making mypy happy
+            if c_value is None or i_value is None:
+                logger.warning(
+                    "One of the C/I values for VBI_REQUESTEDABSENCE is None: %s,%s",
+                    c_value,
+                    i_value,
+                )
+                self.increment(self.Metrics.ADDITIONAL_REQUESTED_ABSENCE_CI_MISSING_COUNT)
+                continue
+
+            id = (c_value, i_value)
+
+            # As of Jan 2022, there are 3 records I found
+            # that had duplicate records where the only difference
+            # was the employer in the file. We don't use employer data
+            # so this isn't an issue, but keep track of a metric
+            # so we can follow this over time especially with future file changes
+            if id in requested_absence_mapping:
+                logger.warning(
+                    "Found multiple records for requested absences in VBI_REQUESTEDABSENCE for C/I values: %s",
+                    id,
+                )
+                self.increment(self.Metrics.MULTIPLE_ADDITIONAL_REQUESTED_ABSENCE_FOUND_COUNT)
+
+            requested_absence_mapping[id] = requested_absence_record
+
+        return requested_absence_mapping
+
     def process_records_to_db(self) -> None:
         reference_file = (
             self.db_session.query(ReferenceFile)
@@ -487,7 +736,7 @@ class ClaimantExtractStep(Step):
         )
         if not reference_file:
             raise Exception(
-                "This would only happen the first time you run in an env and have no extracts, make sure FINEOS has created extracts"
+                "No claimant files consumed. This would only happen the first time you run in an env and have no extracts, make sure FINEOS has created extracts"
             )
         if reference_file.processed_import_log_id:
             logger.warning(
@@ -507,20 +756,36 @@ class ClaimantExtractStep(Step):
         )
 
         employee_feed_map = self.get_employee_feed_map(reference_file)
+        requested_absence_map = self.get_vbi_requested_absence_map(reference_file)
 
-        # We grab the first record from the list so we
-        # can setup the grouping logic without dealing with nulls
-        record_iter = iter(records)
-        record = next(record_iter, None)
-        if record:
-            records_in_same_absence_case = [record]
-            curr_absence_case_number = record.absence_casenumber
-            self.increment(self.Metrics.VBI_REQUESTED_ABSENCE_SOM_RECORD_COUNT)
+        # Process the records
+        if records:
+            records_in_same_absence_case: List[AbsencePair] = []
+            # Initialize the absence case number to the first one
+            curr_absence_case_number = records[0].absence_casenumber
 
             # We want to group all records from the same absence case
             # We know they are adjacent because the query sorted them
-            for record in record_iter:
+            for record in records:
                 self.increment(self.Metrics.VBI_REQUESTED_ABSENCE_SOM_RECORD_COUNT)
+
+                c_value = record.absenceperiod_classid
+                i_value = record.absenceperiod_indexid
+
+                if c_value is None or i_value is None:
+                    # This shouldn't happen, but it's here to make mypy happy
+                    logger.warning(
+                        "One of the C/I values for VBI_REQUESTEDABSENCE_SOM is None: %s,%s",
+                        c_value,
+                        i_value,
+                    )
+                    additional_requested_absence = None
+                else:
+                    additional_requested_absence = requested_absence_map.get(
+                        (c_value, i_value), None
+                    )
+                absence_pair = AbsencePair(record, additional_requested_absence)
+
                 if curr_absence_case_number != record.absence_casenumber:
                     # We've reached the end of a chunk of absence cases,
                     # and need to process them + setup the next chunk
@@ -532,12 +797,12 @@ class ClaimantExtractStep(Step):
                     )
 
                     # Setup the next pass
-                    records_in_same_absence_case = [record]
+                    records_in_same_absence_case = [absence_pair]
                     curr_absence_case_number = record.absence_casenumber
 
                 else:
                     # The absence case matches and belongs to the current set
-                    records_in_same_absence_case.append(record)
+                    records_in_same_absence_case.append(absence_pair)
 
             # Process the last record
             self.process_absence_case(
@@ -551,12 +816,12 @@ class ClaimantExtractStep(Step):
     def process_absence_case(
         self,
         absence_case_id: str,
-        requested_absences: List[FineosExtractVbiRequestedAbsenceSom],
+        requested_absences: List[AbsencePair],
         employee_feed_map: Dict[str, FineosExtractEmployeeFeed],
         reference_file: ReferenceFile,
     ) -> None:
         self.increment(self.Metrics.PROCESSED_REQUESTED_ABSENCE_COUNT)
-        customerno = requested_absences[0].employee_customerno
+        customerno = requested_absences[0].requested_absence_som.employee_customerno
 
         # Just here to make type checker happy, shouldn't realistically happen
         # But if the customer number isn't set, the error log will let us know
@@ -566,7 +831,7 @@ class ClaimantExtractStep(Step):
             employee_record = None
             logger.error(
                 "No employee customer number found for requested absence record %s",
-                requested_absences[0].vbi_requested_absence_som_id,
+                requested_absences[0].requested_absence_som.vbi_requested_absence_som_id,
             )
 
         claimant_data = ClaimantData(
@@ -598,6 +863,7 @@ class ClaimantExtractStep(Step):
             if claim is not None:
                 employee_pfml_entry = self.update_employee_info(claimant_data, claim)
                 self.attach_employer_to_claim(claimant_data, claim)
+                self.attach_organization_unit_to_claim(claimant_data, claim)
 
                 # Add / update entry on absence period table
                 for absence_period_info in claimant_data.absence_period_data:
@@ -621,9 +887,11 @@ class ClaimantExtractStep(Step):
         return None
 
     def create_or_update_claim(self, claimant_data: ClaimantData) -> Claim:
-        claim_pfml: Optional[Claim] = self.db_session.query(Claim).filter(
-            Claim.fineos_absence_id == claimant_data.absence_case_id
-        ).one_or_none()
+        claim_pfml: Optional[Claim] = (
+            self.db_session.query(Claim)
+            .filter(Claim.fineos_absence_id == claimant_data.absence_case_id)
+            .one_or_none()
+        )
 
         if claim_pfml is None:
             claim_pfml = Claim(claim_id=uuid.uuid4())
@@ -662,12 +930,12 @@ class ClaimantExtractStep(Step):
             )
 
         if claimant_data.absence_start_date is not None:
-            claim_pfml.absence_period_start_date = payments_util.datetime_str_to_date(
+            claim_pfml.absence_period_start_date = datetime_str_to_date(
                 claimant_data.absence_start_date
             )
 
         if claimant_data.absence_end_date is not None:
-            claim_pfml.absence_period_end_date = payments_util.datetime_str_to_date(
+            claim_pfml.absence_period_end_date = datetime_str_to_date(
                 claimant_data.absence_end_date
             )
 
@@ -678,11 +946,6 @@ class ClaimantExtractStep(Step):
                 extra=claimant_data.get_traceable_details(),
             )
             self.increment(self.Metrics.EVIDENCE_NOT_ID_PROOFED_COUNT)
-
-            claimant_data.validation_container.add_validation_issue(
-                payments_util.ValidationReason.CLAIM_NOT_ID_PROOFED,
-                "Claim has not been ID proofed, LEAVEREQUEST_EVIDENCERESULTTYPE is not Satisfied",
-            )
 
         claim_pfml.is_id_proofed = claimant_data.is_claim_id_proofed
 
@@ -697,7 +960,10 @@ class ClaimantExtractStep(Step):
         self, absence_period_info: AbsencePeriodContainer, claim: Claim, claimant_data: ClaimantData
     ) -> Optional[AbsencePeriod]:
 
-        log_attributes = claimant_data.get_traceable_details()
+        log_attributes: Dict[str, Any] = {
+            **claimant_data.get_traceable_details(),
+            **absence_period_info.get_log_extra(),
+        }
 
         # Add / update entry on absence period table
         logger.info("Updating Absence Period Table", extra=log_attributes)
@@ -719,8 +985,6 @@ class ClaimantExtractStep(Step):
                     **log_attributes,
                     "claim.claim_id": claim.claim_id,
                     "db_absence_period.claim_id": db_absence_period.claim_id,
-                    "absence_period_class_id": absence_period_info.class_id,
-                    "absence_period_index_id": absence_period_info.index_id,
                 },
             )
 
@@ -732,6 +996,7 @@ class ClaimantExtractStep(Step):
             return None
 
         if db_absence_period is None:
+            logger.info("Absence period not found, creating it", extra=log_attributes)
             db_absence_period = AbsencePeriod()
             db_absence_period.claim_id = claim.claim_id
             db_absence_period.fineos_absence_period_class_id = absence_period_info.class_id
@@ -749,6 +1014,32 @@ class ClaimantExtractStep(Step):
 
         if absence_period_info.leave_request_id is not None:
             db_absence_period.fineos_leave_request_id = absence_period_info.leave_request_id
+
+        if absence_period_info.raw_absence_period_type is not None:
+            db_absence_period.absence_period_type_id = AbsencePeriodType.get_id(
+                absence_period_info.raw_absence_period_type
+            )
+
+        if absence_period_info.raw_absence_reason_qualifier_1 is not None:
+            db_absence_period.absence_reason_qualifier_one_id = AbsenceReasonQualifierOne.get_id(
+                absence_period_info.raw_absence_reason_qualifier_1
+            )
+
+        # This field is optional and can be blank, so None/blank are skipped
+        if absence_period_info.raw_absence_reason_qualifier_2:
+            db_absence_period.absence_reason_qualifier_two_id = AbsenceReasonQualifierTwo.get_id(
+                absence_period_info.raw_absence_reason_qualifier_2
+            )
+
+        if absence_period_info.raw_absence_reason is not None:
+            db_absence_period.absence_reason_id = AbsenceReason.get_id(
+                absence_period_info.raw_absence_reason
+            )
+
+        if absence_period_info.raw_leave_request_decision is not None:
+            db_absence_period.leave_request_decision_id = LeaveRequestDecision.get_id(
+                absence_period_info.raw_leave_request_decision
+            )
 
         return db_absence_period
 
@@ -771,7 +1062,8 @@ class ClaimantExtractStep(Step):
                 self.increment(self.Metrics.TAX_IDENTIFIER_MISSING_IN_DB_COUNT)
                 claimant_data.validation_container.add_validation_issue(
                     payments_util.ValidationReason.MISSING_IN_DB,
-                    f"tax_identifier: {claimant_data.employee_tax_identifier}",
+                    claimant_data.employee_tax_identifier,
+                    "tax_identifier",
                 )
             else:
                 employee_pfml_entry = (
@@ -783,7 +1075,8 @@ class ClaimantExtractStep(Step):
                     self.increment(self.Metrics.EMPLOYEE_NOT_FOUND_IN_DATABASE_COUNT)
                     claimant_data.validation_container.add_validation_issue(
                         payments_util.ValidationReason.MISSING_IN_DB,
-                        f"tax_identifier: {claimant_data.employee_tax_identifier}",
+                        claimant_data.employee_tax_identifier,
+                        "employee",
                     )
 
         except SQLAlchemyError as e:
@@ -798,15 +1091,13 @@ class ClaimantExtractStep(Step):
         if employee_pfml_entry is None:
             # We added validation issues above for the scenarios that cause this
             logger.warning(
-                f"Employee in employee file with customer nbr {claimant_data.fineos_customer_number} not found in PFML DB.",
+                f"Employee in employee file with customer nbr {claimant_data.fineos_customer_number} not found in PFML DB."
             )
             return None
 
         # Use employee feed entry to update PFML DB
         if claimant_data.date_of_birth is not None:
-            employee_pfml_entry.date_of_birth = payments_util.datetime_str_to_date(
-                claimant_data.date_of_birth
-            )
+            employee_pfml_entry.date_of_birth = datetime_str_to_date(claimant_data.date_of_birth)
 
         if claimant_data.fineos_customer_number is not None:
             employee_pfml_entry.fineos_customer_number = claimant_data.fineos_customer_number
@@ -820,6 +1111,16 @@ class ClaimantExtractStep(Step):
 
         self.update_eft_info(claimant_data, employee_pfml_entry)
 
+        if claim.employee and claim.employee_id != employee_pfml_entry.employee_id:
+            self.increment(self.Metrics.EMPLOYEE_CHANGED_COUNT)
+            logger.warning(
+                "Employee for claim %s is changing from %s to %s",
+                claimant_data.absence_case_id,
+                claim.employee.fineos_customer_number,
+                claimant_data.fineos_customer_number,
+                extra=claimant_data.get_traceable_details(),
+            )
+
         # Associate claim with employee in case it is a new claim.
         claim.employee_id = employee_pfml_entry.employee_id
         # NOTE: fix to address test issues with query cache using a claim with the employee_id not set in other steps
@@ -831,7 +1132,7 @@ class ClaimantExtractStep(Step):
 
         return employee_pfml_entry
 
-    def update_eft_info(self, claimant_data: ClaimantData, employee_pfml_entry: Employee,) -> None:
+    def update_eft_info(self, claimant_data: ClaimantData, employee_pfml_entry: Employee) -> None:
         """Updates EFT info and starts prenoting process if necessary"""
 
         if claimant_data.should_do_eft_operations:
@@ -853,20 +1154,18 @@ class ClaimantExtractStep(Step):
             # If we found a match, do not need to create anything
             # but do need to add an error to the report if the EFT
             # information is invalid
+            extra = claimant_data.get_traceable_details()
             if existing_eft:
-                self.increment(self.Metrics.EFT_FOUND_COUNT)
-                logger.info(
-                    "Found existing EFT info for claimant in prenote state %s",
-                    existing_eft.prenote_state.prenote_state_description,
-                    extra={
-                        "employee_id": employee_pfml_entry.employee_id,
-                        "pub_eft_id": existing_eft.pub_eft_id,
-                    },
+                extra |= payments_util.get_traceable_pub_eft_details(
+                    existing_eft, employee_pfml_entry
                 )
+                self.increment(self.Metrics.EFT_FOUND_COUNT)
+                logger.info("Found existing EFT info for claimant", extra=extra)
                 if existing_eft.prenote_state_id == PrenoteState.REJECTED.prenote_state_id:
+                    msg = "EFT prenote was rejected - cannot pay with this account info"
+                    logger.info(msg, extra=extra)
                     claimant_data.validation_container.add_validation_issue(
-                        payments_util.ValidationReason.EFT_PRENOTE_REJECTED,
-                        "EFT prenote was rejected - cannot pay with this account info",
+                        payments_util.ValidationReason.EFT_PRENOTE_REJECTED, msg
                     )
                     self.increment(self.Metrics.EFT_REJECTED_COUNT)
 
@@ -874,13 +1173,10 @@ class ClaimantExtractStep(Step):
                 self.increment(self.Metrics.NEW_EFT_COUNT)
                 # This EFT info is new, it needs to be linked to the employee
                 # and added to the EFT prenoting flow
-                logger.info(
-                    "Initiating DELEGATED_EFT flow for employee",
-                    extra={
-                        "end_state_id": State.DELEGATED_EFT_SEND_PRENOTE.state_id,
-                        "employee_id": employee_pfml_entry.employee_id,
-                    },
+                extra |= payments_util.get_traceable_pub_eft_details(
+                    new_eft, employee_pfml_entry, state=State.DELEGATED_EFT_SEND_PRENOTE
                 )
+                logger.info("Initiating DELEGATED_EFT prenote flow for employee", extra=extra)
 
                 employee_pub_eft_pair = EmployeePubEftPair(
                     employee_id=employee_pfml_entry.employee_id, pub_eft_id=new_eft.pub_eft_id
@@ -917,16 +1213,67 @@ class ClaimantExtractStep(Step):
             )
             claimant_data.validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISSING_IN_DB,
-                f"employer customer number: {claimant_data.employer_customer_number}",
+                claimant_data.employer_customer_number,
+                "employer_customer_number",
             )
             self.increment(self.Metrics.EMPLOYER_NOT_FOUND_COUNT)
             return None
+
+        # Log a warning if the claim is changing employers
+        if claim.employer and claim.employer_id != employer_pfml_entry.employer_id:
+            self.increment(self.Metrics.EMPLOYER_CHANGED_COUNT)
+            logger.warning(
+                "Employer for claim %s is changing from %s to %s",
+                claimant_data.absence_case_id,
+                claim.employer.fineos_employer_id,
+                claimant_data.employer_customer_number,
+                extra=claimant_data.get_traceable_details(),
+            )
 
         self.increment(self.Metrics.EMPLOYER_FOUND_COUNT)
         claim.employer_id = employer_pfml_entry.employer_id
         logger.info(
             "Attached employer %s to claim %s",
             claimant_data.employer_customer_number,
+            claimant_data.absence_case_id,
+            extra=claimant_data.get_traceable_details(),
+        )
+
+    def attach_organization_unit_to_claim(self, claimant_data: ClaimantData, claim: Claim) -> None:
+        """Connects the claim to its FINEOS organization unit"""
+        if not claim.employer_id or not claimant_data.organization_unit_name:
+            return None
+
+        organization_unit = (
+            self.db_session.query(OrganizationUnit)
+            .filter(
+                OrganizationUnit.name == claimant_data.organization_unit_name,
+                OrganizationUnit.employer_id == claim.employer_id,
+            )
+            .one_or_none()
+        )
+
+        if not organization_unit:
+            # Didn't import this organization unit from FINEOS yet
+            logger.warning(
+                "Organization unit %s not found in DB for claim %s",
+                claimant_data.organization_unit_name,
+                claimant_data.absence_case_id,
+                extra=claimant_data.get_traceable_details(),
+            )
+            claimant_data.validation_container.add_validation_issue(
+                payments_util.ValidationReason.MISSING_IN_DB,
+                claimant_data.organization_unit_name,
+                "organization_unit_name",
+            )
+            self.increment(self.Metrics.ORG_UNIT_NOT_FOUND_COUNT)
+            return None
+
+        self.increment(self.Metrics.ORG_UNIT_FOUND_COUNT)
+        claim.organization_unit_id = organization_unit.organization_unit_id
+        logger.info(
+            "Attached organization unit %s to claim %s",
+            claimant_data.organization_unit_name,
             claimant_data.absence_case_id,
             extra=claimant_data.get_traceable_details(),
         )
@@ -948,6 +1295,19 @@ class ClaimantExtractStep(Step):
                 db_session=self.db_session,
             )
             self.increment(self.Metrics.ERRORED_CLAIM_COUNT)
+
+            # For claims that failed validation, log their reason codes
+            # and field names so that we can collect metrics  on the
+            # most common error types
+            extra = claimant_data.get_traceable_details()
+            for (
+                reason,
+                field_name,
+            ) in claimant_data.validation_container.get_reasons_with_field_names():
+                # Replaced each iteration
+                extra["validation_reason"] = str(reason)
+                extra["field_name"] = field_name
+                logger.info("Claim failed validation", extra=extra)
 
         else:
             state_log_util.create_finished_state_log(

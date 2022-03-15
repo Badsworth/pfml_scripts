@@ -8,7 +8,7 @@ import {
   BenefitsApplicationDocument,
   DocumentTypeEnum,
 } from "../models/Document";
-import DocumentCollection from "../models/DocumentCollection";
+import ApiResourceCollection from "../models/ApiResourceCollection";
 import assert from "assert";
 import routes from "../routes";
 
@@ -17,7 +17,7 @@ export default class DocumentsApi extends BaseApi {
     return routes.api.applications;
   }
 
-  get i18nPrefix() {
+  get namespace() {
     return "documents";
   }
 
@@ -50,7 +50,6 @@ export default class DocumentsApi extends BaseApi {
       "POST",
       `${application_id}/documents`,
       formData,
-      undefined,
       { multipartForm: true }
     );
 
@@ -69,7 +68,10 @@ export default class DocumentsApi extends BaseApi {
     );
 
     return {
-      documents: new DocumentCollection(data),
+      documents: new ApiResourceCollection<BenefitsApplicationDocument>(
+        "fineos_document_id",
+        data
+      ),
     };
   };
 
@@ -98,7 +100,7 @@ export default class DocumentsApi extends BaseApi {
     }
 
     if (!response.ok) {
-      handleNotOkResponse(response, [], this.i18nPrefix);
+      handleNotOkResponse(response, [], this.namespace);
     }
 
     return blob;

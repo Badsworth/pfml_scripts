@@ -10,7 +10,7 @@ include = ["openapi.yaml", "newrelic.ini"]
 alembic = "^1.4.2"
 boto3 = "^1.13.7"
 boto3_extensions = "^0.14.1"
-connexion = {extras = ["swagger-ui"], version = "^2.7.0", optional = true}
+connexion = {extras = ["swagger-ui"], version = "^2.11.1"}
 cryptography = "^3.4.4"
 csvsorter = "^1.4"
 ebcdic = "^1.1.1"
@@ -22,13 +22,13 @@ Flask-HTTPAuth = { version = "^4.2.0", optional = true }
 gunicorn = { version = "^20.0.4", optional = true }
 # Locking indirect lxml dependency to version that addresses CVE-2021-28957. Can remove when Zeep
 # pins lxml dependency to version that addresses CVE-2021-28957.
-lxml = { version = "^4.6.3", optional = true }
+lxml = { version = "^4.6.5", optional = true }
 newrelic = "~6.4.0.157"
 paramiko = "^2.7.2"
 phonenumbers = "^8.12.13"
 psycopg2-binary = "^2.8.5"
 puremagic = "^1.10"
-pydantic = {extras = ["dotenv"], version = "^1.8.1"}
+pydantic = {extras = ["dotenv"], version = "~1.8.2"}
 pydash = "^4.7.6"
 python = "^3.9"
 python-dateutil = "^2.8.1"
@@ -44,14 +44,15 @@ strict-rfc3339 = "^0.7"
 tenacity = "^6.2.0"
 xmlschema = "^1.2.2"
 zeep = { version = "^3.4.0", optional = true }
-Flask = "^1.1.0"
+Flask = "^2.0.3"
 SQLAlchemy-Utils = "^0.37.8"
 msal = "^1.16.0"
+email-validator = "^1.1.3"
 
 [tool.poetry.dev-dependencies]
 bandit = "^1.6.2"
-black = "^19.10b0"
-click = "^7.1.2"
+black = "^22.1.0"
+click = "^8.0.4"
 coverage = "^5.0.4"
 datamodel-code-generator = "^0.11.11"
 flake8 = "^3.7.9"
@@ -59,7 +60,7 @@ flake8-alfred = "^1.1.1"
 flake8-bugbear = "^20.1.4"
 freezegun = "^0.3.15"
 isort = "^4.3.21"
-moto = "^1.3.14"
+moto = {extras = ["all"], version = "^3.0.3"}
 mypy = "^0.910"
 oyaml = "^1.0"
 pydot = "^1.4.2"
@@ -75,7 +76,6 @@ rich = "^10.14.0"
 sadisplay = "^0.4.9"
 safety = "^1.9.0"
 sqlalchemy-stubs = {git = "https://github.com/dropbox/sqlalchemy-stubs", rev = "55470ceab8149db983411d5c094c9fe16343c58b"}
-types-Flask = "^1.1.3"
 types-PyYAML = "5.4.10"
 types-cryptography = "^3.3.5"
 types-enum34 = "1.1.0"
@@ -85,6 +85,7 @@ types-python-dateutil = "2.8.0"
 types-pytz = "2021.1.2"
 types-requests = "2.25.6"
 types-six = "1.16.1"
+Pillow = "^9.0.0"
 
 [tool.poetry.extras]
 # These are packages only used by the API component itself. Historically, these
@@ -109,11 +110,16 @@ db-check-model-parity = "massgov.pfml.db.migrations.run:check_model_parity"
 db-create-fineos-user = "massgov.pfml.db.create_api_user:create_fineos_user"
 db-create-servicenow-user = "massgov.pfml.db.create_api_user:create_service_now_user"
 dua-generate-and-send-employee-request-file = "massgov.pfml.dua.dua_generate_employee_request_file:main"
+dua-generate-and-send-employer-request-file = "massgov.pfml.dua.dua_generate_employer_request_file:main"
 dua-backfill-employee-gender = "massgov.pfml.dua.gender_backfill:main"
 execute-sql = "massgov.pfml.db.execute_sql:execute_sql"
 register-leave-admins-with-fineos = "massgov.pfml.fineos.leave_admin_creation.register_leave_admins_with_fineos:main"
 dor-generate = "massgov.pfml.dor.mock.generate:main"
 dor-import = "massgov.pfml.dor.importer.import_dor:handler"
+mfa-lockout-resolution = "massgov.pfml.mfa.task.mfa_lockout_resolution:main"
+dor_create_pending_filing_submission = "massgov.pfml.dor.pending_filing.pending_filing_submission:handler"
+dor-pending-filing-response-import = "massgov.pfml.dor.pending_filing.pending_filing_response:handler"
+dor-pending-filing-response-import-cli = "massgov.pfml.dor.pending_filing.pending_filing_response:main"
 generate-wagesandcontributions = "massgov.pfml.api.generate_wagesandcontributions:main"
 evaluate-new-eligibility = "massgov.pfml.evaluate_new_eligibility.report:evaluate_new_eligibility"
 load-employers-to-fineos = "massgov.pfml.fineos.employer_load:handler"
@@ -131,6 +137,7 @@ fineos-daily-generate = "massgov.pfml.fineos.mock.generate:main"
 fineos-import-employee-updates = "massgov.pfml.fineos.import_fineos_updates:handler"
 fineos-bucket-tool = "massgov.pfml.fineos.tool.bucket:main"
 fineos-update-xsds = "massgov.pfml.fineos.wscomposer.fineos_update_xsds:handler"
+fineos-import-la-units = "massgov.pfml.fineos.import_fineos_leave_admin_org_units:handler"
 cps-errors-crawler = "massgov.pfml.fineos.etl.cps_errors_crawler:main"
 import-fineos-to-warehouse = "massgov.pfml.fineos.import_fineos_to_warehouse:handler"
 reductions-process-agency-data = "massgov.pfml.reductions.process_agency_data:main"
@@ -141,8 +148,12 @@ delegated-payment-check-response-generate = "massgov.pfml.delegated_payments.moc
 report-sequential-employment = "massgov.pfml.report.sequential_employment:main"
 update-gender-data-from-rmv = "massgov.pfml.rmv.update_gender_data:main"
 dua-import-employee-demographics = "massgov.pfml.dua.import_employee_demographics:main"
+dua-import-employer = "massgov.pfml.dua.import_employer:main"
+dua-import-employer-unit = "massgov.pfml.dua.import_employer_unit:main"
 pub-payments-process-1099-documents = "massgov.pfml.delegated_payments.task.process_1099_documents:main"
 pub-claimant-address-validation = "massgov.pfml.delegated_payments.task.process_claimant_address_validation:main"
+sftp-tool = "massgov.pfml.sftp.utility:main"
+backfill-benefit-years = "massgov.pfml.api.eligibility.task.backfill_benefit_years:main"
 
 [tool.black]
 line-length = 100

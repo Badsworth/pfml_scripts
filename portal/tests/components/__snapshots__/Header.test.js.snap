@@ -20,7 +20,7 @@ exports[`Header Header log-in behavior renders header with user's information fo
 
 exports[`Header Header log-in behavior renders header with user's information for a logged-in claimant 2`] = `
 <span
-  class="display-inline-block margin-right-1"
+  class="display-inline-block"
   data-testid="email_address"
 >
   email@address.com

@@ -1,0 +1,1286 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Status LeaveDetails renders page separated by keys if object of absenceDetails has more keys 1`] = `
+<div>
+  <div
+    class="border-bottom border-base-lighter padding-y-4"
+  >
+    <h2
+      class="font-heading-md text-bold"
+    >
+      Leave to bond with a child schedule
+    </h2>
+    <div
+      class="margin-top-4"
+    >
+      <h3
+        class="font-heading-sm text-bold"
+      >
+        Reduced leave
+      </h3>
+      <p>
+        From June 1, 2021 to June 8, 2021
+      </p>
+      <p>
+        <span
+          class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-success-dark bg-success-lighter"
+        >
+          Approved
+        </span>
+      </p>
+      <div
+        data-testid="leaveStatusMessage"
+      >
+        <strong>
+          This leave was approved.
+        </strong>
+        <p>
+          View your approval notice below for more details about your benefit amount, and how to appeal if your benefits appear incorrect. Learn more about the 
+          <a
+            href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            appeal process
+          </a>
+          .
+        </p>
+      </div>
+    </div>
+  </div>
+  <div
+    class="border-bottom border-base-lighter padding-y-4"
+  >
+    <h2
+      class="font-heading-md text-bold"
+    >
+      Medical leave schedule
+    </h2>
+    <div
+      class="margin-top-4"
+    >
+      <h3
+        class="font-heading-sm text-bold"
+      >
+        Reduced leave
+      </h3>
+      <p>
+        From August 1, 2021 to August 8, 2021
+      </p>
+      <p>
+        <span
+          class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-base-darkest bg-warning-lighter"
+        >
+          Pending
+        </span>
+      </p>
+      <div
+        data-testid="leaveStatusMessage"
+      >
+        <strong>
+          This leave is being reviewed.
+        </strong>
+      </div>
+    </div>
+  </div>
+  <div
+    class="border-bottom border-base-lighter padding-y-4"
+  >
+    <h2
+      class="font-heading-md text-bold"
+    >
+      Medical leave schedule
+    </h2>
+    <div
+      class="margin-top-4"
+    >
+      <h3
+        class="font-heading-sm text-bold"
+      >
+        Continuous leave
+      </h3>
+      <p>
+        From August 1, 2021 to August 8, 2021
+      </p>
+      <p>
+        <span
+          class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-base-darker bg-base-lightest"
+        >
+          Withdrawn
+        </span>
+      </p>
+      <div
+        data-testid="leaveStatusMessage"
+      >
+        <strong>
+          This leave was withdrawn.
+        </strong>
+        <p>
+          You have withdrawn your application from the review process. If you want to apply for paid leave again, you can begin another application.
+        </p>
+        <p>
+          <a
+            href="/applications/get-ready"
+          >
+            Start another application
+          </a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Status LeaveDetails renders page with one section if absenceDetails has only one key 1`] = `
+<div>
+  <div
+    class="border-bottom border-base-lighter padding-y-4"
+  >
+    <h2
+      class="font-heading-md text-bold"
+    >
+      Medical leave schedule
+    </h2>
+    <div
+      class="margin-top-4"
+    >
+      <h3
+        class="font-heading-sm text-bold"
+      >
+        Continuous leave
+      </h3>
+      <p>
+        From August 1, 2021 to August 8, 2021
+      </p>
+      <p>
+        <span
+          class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-base-darker bg-base-lightest"
+        >
+          Withdrawn
+        </span>
+      </p>
+      <div
+        data-testid="leaveStatusMessage"
+      >
+        <strong>
+          This leave was withdrawn.
+        </strong>
+        <p>
+          You have withdrawn your application from the review process. If you want to apply for paid leave again, you can begin another application.
+        </p>
+        <p>
+          <a
+            href="/applications/get-ready"
+          >
+            Start another application
+          </a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Status displays a description for the Approved request decision 1`] = `
+<div
+  data-testid="leaveStatusMessage"
+>
+  <strong>
+    This leave was approved.
+  </strong>
+  <p>
+    View your approval notice below for more details about your benefit amount, and how to appeal if your benefits appear incorrect. Learn more about the 
+    <a
+      href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
+      rel="noopener noreferrer"
+      target="_blank"
+    >
+      appeal process
+    </a>
+    .
+  </p>
+</div>
+`;
+
+exports[`Status displays a description for the Cancelled request decision 1`] = `
+<div
+  data-testid="leaveStatusMessage"
+>
+  <strong>
+    This leave was cancelled.
+  </strong>
+  <p>
+    This application will no longer be processed. If you want to apply for paid leave again, you can begin another application.
+  </p>
+  <p>
+    <a
+      href="/applications/get-ready"
+    >
+      Start another application
+    </a>
+  </p>
+</div>
+`;
+
+exports[`Status displays a description for the Denied request decision 1`] = `
+<div
+  data-testid="leaveStatusMessage"
+>
+  <strong>
+    This leave was denied.
+  </strong>
+  <p>
+    View your denial notice below for more details and an explanation of the appeal process.
+  </p>
+  <p>
+    If you would like to appeal, you must submit your request within 10 calendar days of the date on your denial notice. Learn more about the 
+    <a
+      href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
+      rel="noopener noreferrer"
+      target="_blank"
+    >
+      appeal process
+    </a>
+    .
+  </p>
+</div>
+`;
+
+exports[`Status displays a description for the In Review request decision 1`] = `
+<div
+  data-testid="leaveStatusMessage"
+>
+  <strong>
+    We’re reviewing your requested changes or appeal for this leave.
+  </strong>
+</div>
+`;
+
+exports[`Status displays a description for the Pending request decision 1`] = `
+<div
+  data-testid="leaveStatusMessage"
+>
+  <strong>
+    This leave is being reviewed.
+  </strong>
+</div>
+`;
+
+exports[`Status displays a description for the Projected request decision 1`] = `
+<div
+  data-testid="leaveStatusMessage"
+>
+  <strong>
+    This leave is being reviewed.
+  </strong>
+</div>
+`;
+
+exports[`Status displays a description for the Voided request decision 1`] = `
+<div
+  data-testid="leaveStatusMessage"
+>
+  <strong>
+    This leave was cancelled.
+  </strong>
+  <p>
+    This application will no longer be processed. If you want to apply for paid leave again, you can begin another application.
+  </p>
+  <p>
+    <a
+      href="/applications/get-ready"
+    >
+      Start another application
+    </a>
+  </p>
+</div>
+`;
+
+exports[`Status displays a description for the Withdrawn request decision 1`] = `
+<div
+  data-testid="leaveStatusMessage"
+>
+  <strong>
+    This leave was withdrawn.
+  </strong>
+  <p>
+    You have withdrawn your application from the review process. If you want to apply for paid leave again, you can begin another application.
+  </p>
+  <p>
+    <a
+      href="/applications/get-ready"
+    >
+      Start another application
+    </a>
+  </p>
+</div>
+`;
+
+exports[`Status manage your application displays manage approved application link if any of the claim statuses on an application are Approved 1`] = `
+<a
+  data-testid="manageApprovedApplicationLink"
+  href="https://www.mass.gov/info-details/managing-your-approved-paid-family-or-medical-leave-claim"
+  rel="noopener noreferrer"
+  target="_blank"
+>
+  examples of how to manage your approved application.
+</a>
+`;
+
+exports[`Status manage your application is displayed if any of the claim statuses on an application are Pending and none are Approved 1`] = `
+<div
+  class="padding-y-4"
+  data-testid="manageApplication"
+>
+  <div>
+    <h2
+      class="font-heading-md text-bold"
+    >
+      Manage your application
+    </h2>
+    <h3
+      class="margin-top-3 font-heading-sm text-bold"
+    >
+      Make changes
+    </h3>
+    <p>
+      To make changes to your application, call the Contact Center at 
+      <a
+        href="tel:(833) 344-7365"
+      >
+        (833) 344‑7365
+      </a>
+      . If you request a change to your start and end dates, we may need to review your application again.
+    </p>
+  </div>
+  <h3
+    class="font-heading-sm text-bold"
+  >
+    Report other benefits or income
+  </h3>
+  <p>
+    If your plans for other benefits or income during your paid leave have changed, call the Contact Center at 
+    <a
+      href="tel:(833) 344-7365"
+    >
+      (833) 344‑7365
+    </a>
+    . Report changes to:
+  </p>
+  <ul
+    class="usa-list"
+  >
+    <li>
+      Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer sponsored parental leave on a different schedule than you expected, report this change.
+    </li>
+    <li>
+      Income from other sources during your leave. For example, if you got approved for a disability benefit or a worker’s compensation claim after you submitted your application, report this change.
+    </li>
+  </ul>
+</div>
+`;
+
+exports[`Status renders the page if the only errors are DocumentsLoadError 1`] = `
+<div>
+  <a
+    class="usa-button margin-bottom-5 usa-button--unstyled"
+    href="/applications"
+  >
+    <svg
+      class="margin-right-05"
+      height="12"
+      viewBox="0 0 448 512"
+      width="12"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"
+        fill="currentColor"
+      />
+    </svg>
+    Back to your applications
+  </a>
+  <div
+    class="measure-6"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2 usa-sr-only"
+      tabindex="-1"
+    >
+      Application details
+    </h1>
+    <nav
+      class="border-bottom border-base-lighter margin-bottom-0 display-flex width-full"
+    >
+      <a
+        class="display-inline-block padding-y-2 margin-bottom-neg-1px text-no-underline width-card text-base-dark hover:text-primary hover:text-underline"
+        href="/applications/status?absence_id=mock-absence-case-id"
+      >
+        Application
+      </a>
+      <a
+        class="display-inline-block padding-y-2 margin-bottom-neg-1px text-no-underline width-card text-base-dark hover:text-primary hover:text-underline"
+        href="/applications/status/payments?absence_id=mock-absence-case-id"
+      >
+        Payments
+      </a>
+    </nav>
+    <h2
+      class="font-heading-lg text-bold"
+    >
+      Leave to bond with a child
+    </h2>
+    <div
+      class="bg-base-lightest tablet:display-flex padding-3"
+    >
+      <div
+        class=" padding-right-6"
+      >
+        <h2
+          class="font-heading-xs text-normal"
+        >
+          Application ID
+        </h2>
+        <p
+          class="text-bold"
+        >
+          mock-absence-case-id
+        </p>
+      </div>
+      <div>
+        <h2
+          class="font-heading-xs text-normal"
+        >
+          Employer Identification Number (EIN)
+        </h2>
+        <p
+          class="text-bold"
+        >
+          12-1234567
+        </p>
+      </div>
+    </div>
+    <div
+      class="border-bottom border-base-lighter padding-y-4"
+    >
+      <h2
+        class="font-heading-md text-bold"
+      >
+        Leave to bond with a child schedule
+      </h2>
+      <div
+        class="margin-top-4"
+      >
+        <h3
+          class="font-heading-sm text-bold"
+        >
+          Continuous leave
+        </h3>
+        <p>
+          From October 21, 2021 to December 30, 2021
+        </p>
+        <p>
+          <span
+            class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-success-dark bg-success-lighter"
+          >
+            Approved
+          </span>
+        </p>
+        <div
+          data-testid="leaveStatusMessage"
+        >
+          <strong>
+            This leave was approved.
+          </strong>
+          <p>
+            View your approval notice below for more details about your benefit amount, and how to appeal if your benefits appear incorrect. Learn more about the 
+            <a
+              href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              appeal process
+            </a>
+            .
+          </p>
+        </div>
+        <p>
+          See your payment status and estimated payment date on your payments page.
+        </p>
+        <p>
+          <a
+            href="/applications/status/payments?absence_id=mock-absence-case-id"
+          >
+            Track your payments
+          </a>
+        </p>
+      </div>
+    </div>
+    <div
+      class="border-bottom border-base-lighter padding-y-4"
+    >
+      <h2
+        class="font-heading-md text-bold"
+        id="view_notices"
+      >
+        View your notices
+      </h2>
+      <p
+        class="padding-bottom-2 margin-top-05"
+      >
+        When you click the notice link, the file will download to your device.
+      </p>
+      <ul
+        class="add-list-reset"
+      >
+        <li
+          class="grid-row flex-row flex-justify-start flex-align-start margin-bottom-1 text-primary"
+        >
+          <svg
+            aria-hidden="true"
+            class="usa-icon usa-icon--size-3 margin-right-1"
+            fill="currentColor"
+            focusable="false"
+            role="img"
+          >
+            <use
+              xlink:href="/img/sprite.svg#file_present"
+            />
+          </svg>
+          <div>
+            <button
+              class="usa-button position-relative text-bold usa-button--unstyled"
+              type="button"
+            >
+              Approval notice (PDF)
+            </button>
+            <div
+              class="text-base-dark"
+            >
+              Posted 4/5/2020.
+            </div>
+          </div>
+        </li>
+      </ul>
+    </div>
+    <div
+      class="border-bottom border-base-lighter padding-y-4"
+      id="upload_documents"
+    >
+      <h2
+        class="font-heading-md text-bold"
+      >
+        Respond to requests for information
+      </h2>
+      <div>
+        We have made a final decision for this application. Your final decision notice has more details about the appeals process.
+        <p
+          class="margin-top-1"
+        >
+          If you would like to appeal the final decision, you can do so using mail, fax, or our 
+          <a
+            href="https://www.mass.gov/forms/request-an-appeal-for-paid-family-and-medical-leave"
+            rel="noreferrer noopener"
+            target="_blank"
+          >
+            online appeals form
+          </a>
+          .
+        </p>
+      </div>
+    </div>
+    <div
+      class="padding-y-4"
+      data-testid="manageApplication"
+    >
+      <div>
+        <h2
+          class="font-heading-md text-bold"
+        >
+          Manage your application
+        </h2>
+        <h3
+          class="margin-top-3 font-heading-sm text-bold"
+        >
+          Make changes
+        </h3>
+        <p>
+          To make changes to your application, call the Contact Center at 
+          <a
+            href="tel:(833) 344-7365"
+          >
+            (833) 344‑7365
+          </a>
+          . If you request a change to your start and end dates, we may need to review your application again.
+        </p>
+        <p>
+          See more 
+          <a
+            data-testid="manageApprovedApplicationLink"
+            href="https://www.mass.gov/info-details/managing-your-approved-paid-family-or-medical-leave-claim"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            examples of how to manage your approved application.
+          </a>
+        </p>
+      </div>
+      <h3
+        class="font-heading-sm text-bold"
+      >
+        Report other benefits or income
+      </h3>
+      <p>
+        If your plans for other benefits or income during your paid leave have changed, call the Contact Center at 
+        <a
+          href="tel:(833) 344-7365"
+        >
+          (833) 344‑7365
+        </a>
+        . Report changes to:
+      </p>
+      <ul
+        class="usa-list"
+      >
+        <li>
+          Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer sponsored parental leave on a different schedule than you expected, report this change.
+        </li>
+        <li>
+          Income from other sources during your leave. For example, if you got approved for a disability benefit or a worker’s compensation claim after you submitted your application, report this change.
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Status renders the page with claim detail 1`] = `
+<div>
+  <a
+    class="usa-button margin-bottom-5 usa-button--unstyled"
+    href="/applications"
+  >
+    <svg
+      class="margin-right-05"
+      height="12"
+      viewBox="0 0 448 512"
+      width="12"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"
+        fill="currentColor"
+      />
+    </svg>
+    Back to your applications
+  </a>
+  <div
+    class="measure-6"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2 usa-sr-only"
+      tabindex="-1"
+    >
+      Application details
+    </h1>
+    <nav
+      class="border-bottom border-base-lighter margin-bottom-0 display-flex width-full"
+    >
+      <a
+        class="display-inline-block padding-y-2 margin-bottom-neg-1px text-no-underline width-card text-base-dark hover:text-primary hover:text-underline"
+        href="/applications/status?absence_id=mock-absence-case-id"
+      >
+        Application
+      </a>
+      <a
+        class="display-inline-block padding-y-2 margin-bottom-neg-1px text-no-underline width-card text-base-dark hover:text-primary hover:text-underline"
+        href="/applications/status/payments?absence_id=mock-absence-case-id"
+      >
+        Payments
+      </a>
+    </nav>
+    <h2
+      class="font-heading-lg text-bold"
+    >
+      Leave to bond with a child
+    </h2>
+    <div
+      class="bg-base-lightest tablet:display-flex padding-3"
+    >
+      <div
+        class=" padding-right-6"
+      >
+        <h2
+          class="font-heading-xs text-normal"
+        >
+          Application ID
+        </h2>
+        <p
+          class="text-bold"
+        >
+          mock-absence-case-id
+        </p>
+      </div>
+      <div>
+        <h2
+          class="font-heading-xs text-normal"
+        >
+          Employer Identification Number (EIN)
+        </h2>
+        <p
+          class="text-bold"
+        >
+          12-1234567
+        </p>
+      </div>
+    </div>
+    <div
+      class="border-bottom border-base-lighter padding-y-4"
+    >
+      <h2
+        class="font-heading-md text-bold"
+      >
+        Leave to bond with a child schedule
+      </h2>
+      <div
+        class="margin-top-4"
+      >
+        <h3
+          class="font-heading-sm text-bold"
+        >
+          Continuous leave
+        </h3>
+        <p>
+          From October 21, 2021 to December 30, 2021
+        </p>
+        <p>
+          <span
+            class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-success-dark bg-success-lighter"
+          >
+            Approved
+          </span>
+        </p>
+        <div
+          data-testid="leaveStatusMessage"
+        >
+          <strong>
+            This leave was approved.
+          </strong>
+          <p>
+            View your approval notice below for more details about your benefit amount, and how to appeal if your benefits appear incorrect. Learn more about the 
+            <a
+              href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              appeal process
+            </a>
+            .
+          </p>
+        </div>
+        <p>
+          See your payment status and estimated payment date on your payments page.
+        </p>
+        <p>
+          <a
+            href="/applications/status/payments?absence_id=mock-absence-case-id"
+          >
+            Track your payments
+          </a>
+        </p>
+      </div>
+    </div>
+    <div
+      class="border-bottom border-base-lighter padding-y-4"
+    >
+      <h2
+        class="font-heading-md text-bold"
+        id="view_notices"
+      >
+        View your notices
+      </h2>
+      <p
+        class="padding-bottom-2 margin-top-05"
+      >
+        When you click the notice link, the file will download to your device.
+      </p>
+      <ul
+        class="add-list-reset"
+      >
+        <li
+          class="grid-row flex-row flex-justify-start flex-align-start margin-bottom-1 text-primary"
+        >
+          <svg
+            aria-hidden="true"
+            class="usa-icon usa-icon--size-3 margin-right-1"
+            fill="currentColor"
+            focusable="false"
+            role="img"
+          >
+            <use
+              xlink:href="/img/sprite.svg#file_present"
+            />
+          </svg>
+          <div>
+            <button
+              class="usa-button position-relative text-bold usa-button--unstyled"
+              type="button"
+            >
+              Approval notice (PDF)
+            </button>
+            <div
+              class="text-base-dark"
+            >
+              Posted 4/5/2020.
+            </div>
+          </div>
+        </li>
+      </ul>
+    </div>
+    <div
+      class="border-bottom border-base-lighter padding-y-4"
+      id="upload_documents"
+    >
+      <h2
+        class="font-heading-md text-bold"
+      >
+        Respond to requests for information
+      </h2>
+      <div>
+        We have made a final decision for this application. Your final decision notice has more details about the appeals process.
+        <p
+          class="margin-top-1"
+        >
+          If you would like to appeal the final decision, you can do so using mail, fax, or our 
+          <a
+            href="https://www.mass.gov/forms/request-an-appeal-for-paid-family-and-medical-leave"
+            rel="noreferrer noopener"
+            target="_blank"
+          >
+            online appeals form
+          </a>
+          .
+        </p>
+      </div>
+    </div>
+    <div
+      class="padding-y-4"
+      data-testid="manageApplication"
+    >
+      <div>
+        <h2
+          class="font-heading-md text-bold"
+        >
+          Manage your application
+        </h2>
+        <h3
+          class="margin-top-3 font-heading-sm text-bold"
+        >
+          Make changes
+        </h3>
+        <p>
+          To make changes to your application, call the Contact Center at 
+          <a
+            href="tel:(833) 344-7365"
+          >
+            (833) 344‑7365
+          </a>
+          . If you request a change to your start and end dates, we may need to review your application again.
+        </p>
+        <p>
+          See more 
+          <a
+            data-testid="manageApprovedApplicationLink"
+            href="https://www.mass.gov/info-details/managing-your-approved-paid-family-or-medical-leave-claim"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            examples of how to manage your approved application.
+          </a>
+        </p>
+      </div>
+      <h3
+        class="font-heading-sm text-bold"
+      >
+        Report other benefits or income
+      </h3>
+      <p>
+        If your plans for other benefits or income during your paid leave have changed, call the Contact Center at 
+        <a
+          href="tel:(833) 344-7365"
+        >
+          (833) 344‑7365
+        </a>
+        . Report changes to:
+      </p>
+      <ul
+        class="usa-list"
+      >
+        <li>
+          Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer sponsored parental leave on a different schedule than you expected, report this change.
+        </li>
+        <li>
+          Income from other sources during your leave. For example, if you got approved for a disability benefit or a worker’s compensation claim after you submitted your application, report this change.
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Status renders the page with claim detail when there is absence_case_id in query 1`] = `
+<div>
+  <a
+    class="usa-button margin-bottom-5 usa-button--unstyled"
+    href="/applications"
+  >
+    <svg
+      class="margin-right-05"
+      height="12"
+      viewBox="0 0 448 512"
+      width="12"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"
+        fill="currentColor"
+      />
+    </svg>
+    Back to your applications
+  </a>
+  <div
+    class="measure-6"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2 usa-sr-only"
+      tabindex="-1"
+    >
+      Application details
+    </h1>
+    <nav
+      class="border-bottom border-base-lighter margin-bottom-0 display-flex width-full"
+    >
+      <a
+        class="display-inline-block padding-y-2 margin-bottom-neg-1px text-no-underline width-card text-base-dark hover:text-primary hover:text-underline"
+        href="/applications/status?absence_id=mock-absence-case-id"
+      >
+        Application
+      </a>
+      <a
+        class="display-inline-block padding-y-2 margin-bottom-neg-1px text-no-underline width-card text-base-dark hover:text-primary hover:text-underline"
+        href="/applications/status/payments?absence_id=mock-absence-case-id"
+      >
+        Payments
+      </a>
+    </nav>
+    <h2
+      class="font-heading-lg text-bold"
+    >
+      Leave to bond with a child
+    </h2>
+    <div
+      class="bg-base-lightest tablet:display-flex padding-3"
+    >
+      <div
+        class=" padding-right-6"
+      >
+        <h2
+          class="font-heading-xs text-normal"
+        >
+          Application ID
+        </h2>
+        <p
+          class="text-bold"
+        >
+          mock-absence-case-id
+        </p>
+      </div>
+      <div>
+        <h2
+          class="font-heading-xs text-normal"
+        >
+          Employer Identification Number (EIN)
+        </h2>
+        <p
+          class="text-bold"
+        >
+          12-1234567
+        </p>
+      </div>
+    </div>
+    <div
+      class="border-bottom border-base-lighter padding-y-4"
+    >
+      <h2
+        class="font-heading-md text-bold"
+      >
+        Leave to bond with a child schedule
+      </h2>
+      <div
+        class="margin-top-4"
+      >
+        <h3
+          class="font-heading-sm text-bold"
+        >
+          Continuous leave
+        </h3>
+        <p>
+          From October 21, 2021 to December 30, 2021
+        </p>
+        <p>
+          <span
+            class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-success-dark bg-success-lighter"
+          >
+            Approved
+          </span>
+        </p>
+        <div
+          data-testid="leaveStatusMessage"
+        >
+          <strong>
+            This leave was approved.
+          </strong>
+          <p>
+            View your approval notice below for more details about your benefit amount, and how to appeal if your benefits appear incorrect. Learn more about the 
+            <a
+              href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              appeal process
+            </a>
+            .
+          </p>
+        </div>
+        <p>
+          See your payment status and estimated payment date on your payments page.
+        </p>
+        <p>
+          <a
+            href="/applications/status/payments?absence_id=mock-absence-case-id"
+          >
+            Track your payments
+          </a>
+        </p>
+      </div>
+    </div>
+    <div
+      class="border-bottom border-base-lighter padding-y-4"
+    >
+      <h2
+        class="font-heading-md text-bold"
+        id="view_notices"
+      >
+        View your notices
+      </h2>
+      <p
+        class="padding-bottom-2 margin-top-05"
+      >
+        When you click the notice link, the file will download to your device.
+      </p>
+      <ul
+        class="add-list-reset"
+      >
+        <li
+          class="grid-row flex-row flex-justify-start flex-align-start margin-bottom-1 text-primary"
+        >
+          <svg
+            aria-hidden="true"
+            class="usa-icon usa-icon--size-3 margin-right-1"
+            fill="currentColor"
+            focusable="false"
+            role="img"
+          >
+            <use
+              xlink:href="/img/sprite.svg#file_present"
+            />
+          </svg>
+          <div>
+            <button
+              class="usa-button position-relative text-bold usa-button--unstyled"
+              type="button"
+            >
+              Approval notice (PDF)
+            </button>
+            <div
+              class="text-base-dark"
+            >
+              Posted 4/5/2020.
+            </div>
+          </div>
+        </li>
+      </ul>
+    </div>
+    <div
+      class="border-bottom border-base-lighter padding-y-4"
+      id="upload_documents"
+    >
+      <h2
+        class="font-heading-md text-bold"
+      >
+        Respond to requests for information
+      </h2>
+      <div>
+        We have made a final decision for this application. Your final decision notice has more details about the appeals process.
+        <p
+          class="margin-top-1"
+        >
+          If you would like to appeal the final decision, you can do so using mail, fax, or our 
+          <a
+            href="https://www.mass.gov/forms/request-an-appeal-for-paid-family-and-medical-leave"
+            rel="noreferrer noopener"
+            target="_blank"
+          >
+            online appeals form
+          </a>
+          .
+        </p>
+      </div>
+    </div>
+    <div
+      class="padding-y-4"
+      data-testid="manageApplication"
+    >
+      <div>
+        <h2
+          class="font-heading-md text-bold"
+        >
+          Manage your application
+        </h2>
+        <h3
+          class="margin-top-3 font-heading-sm text-bold"
+        >
+          Make changes
+        </h3>
+        <p>
+          To make changes to your application, call the Contact Center at 
+          <a
+            href="tel:(833) 344-7365"
+          >
+            (833) 344‑7365
+          </a>
+          . If you request a change to your start and end dates, we may need to review your application again.
+        </p>
+        <p>
+          See more 
+          <a
+            data-testid="manageApprovedApplicationLink"
+            href="https://www.mass.gov/info-details/managing-your-approved-paid-family-or-medical-leave-claim"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            examples of how to manage your approved application.
+          </a>
+        </p>
+      </div>
+      <h3
+        class="font-heading-sm text-bold"
+      >
+        Report other benefits or income
+      </h3>
+      <p>
+        If your plans for other benefits or income during your paid leave have changed, call the Contact Center at 
+        <a
+          href="tel:(833) 344-7365"
+        >
+          (833) 344‑7365
+        </a>
+        . Report changes to:
+      </p>
+      <ul
+        class="usa-list"
+      >
+        <li>
+          Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer sponsored parental leave on a different schedule than you expected, report this change.
+        </li>
+        <li>
+          Income from other sources during your leave. For example, if you got approved for a disability benefit or a worker’s compensation claim after you submitted your application, report this change.
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Status timeline is displayed if there is a pending absence period 1`] = `
+<div
+  class="border-bottom border-base-lighter padding-y-4"
+  data-testid="timeline"
+>
+  <h2
+    class="font-heading-md text-bold"
+  >
+    Timeline
+  </h2>
+  <p>
+    Your employer has 
+    <strong>
+      10 business days
+    </strong>
+     to respond to your application.
+  </p>
+  <p>
+    We have 
+    <strong>
+      14 calendar days
+    </strong>
+     after receiving your completed application to make a decision to approve, deny or request more information.
+  </p>
+  <p>
+    Your application is complete when:
+  </p>
+  <ul
+    class="usa-list"
+  >
+    <li>
+      You have submitted all required documents
+    </li>
+    <li>
+      Your employer has responded or their deadline passes
+    </li>
+  </ul>
+  <p>
+    The process may take longer if we request more information to complete your application or if you request changes to your application.
+  </p>
+  <p>
+    Learn more about the 
+    <a
+      href="https://mass.gov/pfml/application-timeline"
+      rel="noopener noreferrer"
+      target="_blank"
+    >
+      application approval process.
+    </a>
+  </p>
+</div>
+`;
+
+exports[`Status timeline when there is a pending bonding absence period and claimant has not uploaded certification documents shows follow up steps 1`] = `
+<div
+  class="border-bottom border-base-lighter padding-y-4"
+  data-testid="timeline"
+>
+  <h2
+    class="font-heading-md text-bold"
+  >
+    What you need to do
+  </h2>
+  <p>
+    Once your child is born, submit proof of birth so that we can review your application. Learn more about 
+    <a
+      href="https://www.mass.gov/info-details/required-documents-for-your-paid-family-and-medical-leave-pfml-application#for-family-leave-applications-"
+      rel="noopener noreferrer"
+      target="_blank"
+    >
+      proof of birth documents
+    </a>
+     we accept.
+  </p>
+  <a
+    class="usa-button"
+    href="/applications/upload/proof-of-birth?claim_id=mock-application-id&absence_id=mock-absence-case-id"
+  >
+    Upload proof of birth
+  </a>
+</div>
+`;

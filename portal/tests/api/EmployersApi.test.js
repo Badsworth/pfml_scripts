@@ -1,5 +1,5 @@
 import Address from "../../src/models/Address";
-import DocumentCollection from "../../src/models/DocumentCollection";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import EmployerClaim from "../../src/models/EmployerClaim";
 import EmployersApi from "../../src/api/EmployersApi";
 import { mockAuth } from "../test-utils";
@@ -234,7 +234,7 @@ describe("EmployersApi", () => {
       it("resolves with documents", async () => {
         const response = await employersApi.getDocuments(absenceId);
 
-        expect(response.documents).toBeInstanceOf(DocumentCollection);
+        expect(response.documents).toBeInstanceOf(ApiResourceCollection);
         expect(response.documents.items).toEqual(mockDocumentCollection);
       });
     });

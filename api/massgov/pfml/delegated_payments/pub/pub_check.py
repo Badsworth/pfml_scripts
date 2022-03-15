@@ -20,9 +20,12 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
 )
-from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
+from massgov.pfml.db.models.payments import FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments.check_issue_file import CheckIssueEntry, CheckIssueFile
 from massgov.pfml.delegated_payments.ez_check import EzCheckFile, EzCheckHeader, EzCheckRecord
+from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
+    create_payment_finished_state_log_with_writeback,
+)
 from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = logging.get_logger(__name__)
@@ -87,9 +90,13 @@ def create_check_file(
         check_number = max(db_check_num, int(starting_check_number))
 
     for payment in eligible_check_payments:
+        extra = payments_util.get_traceable_payment_details(payment)
+
         try:
             if count_incrementer:
                 count_incrementer("check_payment_count")
+
+            logger.info("Adding check payment to PUB check files", extra=extra)
             check_number += 1
             payment.check = PaymentCheck(check_number=check_number)
             ez_check_record = _convert_payment_to_ez_check_record(payment, check_number)
@@ -105,10 +112,12 @@ def create_check_file(
             )
         except payments_util.ValidationIssueException as e:
             msg = ", ".join([str(issue) for issue in e.issues])
-            logger.exception("Error converting payment into PUB EZ check format: " + msg)
+            logger.exception(
+                "Error converting payment into PUB EZ check format: " + msg, extra=extra
+            )
             encountered_exception = True
         except Exception:
-            logger.exception("Error converting payment into PUB EZ check format")
+            logger.exception("Error converting payment into PUB EZ check format", extra=extra)
             encountered_exception = True
 
     if encountered_exception:
@@ -128,27 +137,24 @@ def create_check_file(
         check_issue_file.add_entry(record.positive_pay_record)
 
         outcome = state_log_util.build_outcome("Payment added to PUB EZ Check file")
-        state_log_util.create_finished_state_log(
-            associated_model=payment,
-            end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
-            outcome=outcome,
-            db_session=db_session,
+
+        logger.info(
+            "Added payment to check file",
+            extra=payments_util.get_traceable_payment_details(
+                payment, State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT
+            ),
         )
 
-        transaction_status = FineosWritebackTransactionStatus.PAID
-        state_log_util.create_finished_state_log(
-            end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
-            outcome=outcome,
-            associated_model=payment,
-            import_log_id=import_log_id,
-            db_session=db_session,
-        )
-        writeback_details = FineosWritebackDetails(
+        create_payment_finished_state_log_with_writeback(
             payment=payment,
-            transaction_status_id=transaction_status.transaction_status_id,
+            payment_end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
+            payment_outcome=outcome,
+            writeback_transaction_status=FineosWritebackTransactionStatus.PAID,
+            writeback_outcome=outcome,
+            db_session=db_session,
             import_log_id=import_log_id,
         )
-        db_session.add(writeback_details)
+
         payments_util.create_payment_log(payment, import_log_id, db_session)
 
     return ez_check_file, check_issue_file

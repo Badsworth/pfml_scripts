@@ -2,8 +2,12 @@ import {
   BankAccountType,
   PaymentPreferenceMethod,
 } from "../../models/PaymentPreference";
+import {
+  DocumentType,
+  findDocumentsByTypes,
+  getLeaveCertificationDocs,
+} from "../../models/Document";
 import EmployerBenefit, {
-  EmployerBenefitFrequency,
   EmployerBenefitType,
 } from "../../models/EmployerBenefit";
 import {
@@ -23,7 +27,7 @@ import OtherIncome, {
 import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
 import React, { useEffect, useState } from "react";
 import Step, { ClaimSteps } from "../../models/Step";
-import { compact, get, isBoolean, isNil } from "lodash";
+import { compact, get } from "lodash";
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
@@ -34,7 +38,6 @@ import withClaimDocuments, {
 import Address from "../../models/Address";
 import Alert from "../../components/core/Alert";
 import BackButton from "../../components/BackButton";
-import { DocumentType } from "../../models/Document";
 import Heading from "../../components/core/Heading";
 import HeadingPrefix from "../../components/core/HeadingPrefix";
 import Lead from "../../components/core/Lead";
@@ -48,8 +51,6 @@ import { Trans } from "react-i18next";
 import WeeklyTimeTable from "../../components/WeeklyTimeTable";
 import claimantConfigs from "../../flows/claimant";
 import convertMinutesToHours from "../../utils/convertMinutesToHours";
-import findDocumentsByLeaveReason from "../../utils/findDocumentsByLeaveReason";
-import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDate from "../../utils/formatDate";
 import formatDateRange from "../../utils/formatDateRange";
@@ -89,16 +90,13 @@ export const Review = (
   const { t } = useTranslation();
   const { appLogic, claim, documents, isLoadingDocuments } = props;
 
-  const { appErrors, clearRequiredFieldErrors } = appLogic;
+  const { errors, clearRequiredFieldErrors } = appLogic;
   const hasLoadingDocumentsError = hasDocumentsLoadError(
-    appErrors,
+    errors,
     claim.application_id
   );
 
-  const certificationDocuments = findDocumentsByLeaveReason(
-    documents,
-    get(claim, "leave_details.reason")
-  );
+  const certificationDocuments = getLeaveCertificationDocs(documents);
   const idDocuments = findDocumentsByTypes(documents, [
     DocumentType.identityVerification,
   ]);
@@ -154,7 +152,7 @@ export const Review = (
   // page with required fields.
   const [showNewFieldError, setShowNewFieldError] = useState(false);
   useEffect(() => {
-    const missingFields = getMissingRequiredFields(appErrors.items);
+    const missingFields = getMissingRequiredFields(errors);
     if (missingFields.length) {
       tracker.trackEvent("Missing required fields", {
         missingFields: JSON.stringify(missingFields),
@@ -167,7 +165,7 @@ export const Review = (
       }
     }
   }, [
-    appErrors.items,
+    errors,
     showNewFieldError,
     setShowNewFieldError,
     clearRequiredFieldErrors,
@@ -396,7 +394,7 @@ export const Review = (
           level={reviewRowLevel}
           label={t("pages.claimsReview.workPatternDaysVariableLabel")}
         >
-          {!isNil(workPattern.minutesWorkedPerWeek) &&
+          {!isBlank(workPattern.minutesWorkedPerWeek) &&
             t("pages.claimsReview.workPatternVariableTime", {
               context:
                 convertMinutesToHours(workPattern.minutesWorkedPerWeek)
@@ -787,7 +785,7 @@ export const Review = (
               </ReviewRow>
             </React.Fragment>
           )}
-          {isBoolean(claim.is_withholding_tax) && (
+          {typeof claim.is_withholding_tax === "boolean" && (
             <React.Fragment>
               <ReviewHeading level={reviewHeadingLevel}>
                 {t("pages.claimsReview.stepHeading", { context: "tax" })}
@@ -824,7 +822,7 @@ export const Review = (
           )}
           {isLoadingDocuments && !hasLoadingDocumentsError && (
             <div className="margin-top-8 text-center">
-              <Spinner aria-valuetext={t("components.spinner.label")} />
+              <Spinner aria-label={t("components.spinner.label")} />
             </div>
           )}
           {!isLoadingDocuments && !hasLoadingDocumentsError && (
@@ -972,25 +970,10 @@ export const EmployerBenefitList = (props: EmployerBenefitListProps) => {
       context: findKeyByValue(EmployerBenefitType, entry.benefit_type),
     });
 
-    const dates = formatDateRange(
-      entry.benefit_start_date,
-      entry.benefit_end_date
-    );
-
-    let amount;
+    let dates;
 
     if (entry.is_full_salary_continuous) {
-      amount = t("pages.claimsReview.employerBenefitIsFullSalaryContinuous");
-    } else {
-      amount = !isBlank(entry.benefit_amount_dollars)
-        ? t("pages.claimsReview.amountPerFrequency", {
-            context: findKeyByValue(
-              EmployerBenefitFrequency,
-              entry.benefit_amount_frequency
-            ),
-            amount: entry.benefit_amount_dollars,
-          })
-        : null;
+      dates = formatDateRange(entry.benefit_start_date, entry.benefit_end_date);
     }
 
     return (
@@ -999,7 +982,7 @@ export const EmployerBenefitList = (props: EmployerBenefitListProps) => {
         label={label}
         type={type}
         dates={dates}
-        amount={amount}
+        amount={null}
         reviewRowLevel={reviewRowLevel}
       />
     );
@@ -1062,7 +1045,7 @@ export const OtherIncomeList = (props: OtherIncomeListProps) => {
 
 interface OtherLeaveEntryProps {
   amount?: string | null;
-  dates: string;
+  dates?: string;
   label: string;
   reviewRowLevel: "2" | "3" | "4" | "5" | "6";
   type?: string;

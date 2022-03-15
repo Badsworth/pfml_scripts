@@ -7,6 +7,7 @@ import React from "react";
 import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
 import User from "../../models/User";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import tracker from "../../services/tracker";
 import useThrottledHandler from "../../hooks/useThrottledHandler";
@@ -20,21 +21,27 @@ interface ConsentToDataSharingProps {
 
 export const ConsentToDataSharing = (props: ConsentToDataSharingProps) => {
   const { t } = useTranslation();
-  const { appLogic, user } = props;
+  const { appLogic } = props;
   const { updateUser } = appLogic.users;
-
-  const handleSave = () =>
-    updateUser(user.user_id, {
-      consented_to_data_sharing: true,
-    });
 
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
-    await handleSave();
-    tracker.trackEvent("User consented to data sharing", {});
+    const user = await updateUser(props.user.user_id, {
+      consented_to_data_sharing: true,
+    });
+
+    // Only navigate away if there are no errors. The user is only returned if there are no errors.
+    if (user !== undefined) {
+      tracker.trackEvent("User consented to data sharing", {});
+      if (isFeatureEnabled("claimantShowMFA") && !user.hasEmployerRole) {
+        appLogic.portalFlow.goToPageFor("ENABLE_MFA");
+      } else {
+        appLogic.portalFlow.goToNextPage({});
+      }
+    }
   });
 
-  const roleContext = user.hasEmployerRole ? "employer" : "user";
+  const roleContext = props.user.hasEmployerRole ? "employer" : "user";
 
   return (
     <form onSubmit={handleSubmit} className="usa-form" method="post">
@@ -50,17 +57,14 @@ export const ConsentToDataSharing = (props: ConsentToDataSharingProps) => {
           })}
         >
           <p>{t("pages.userConsentToDataSharing.applicationUsageIntro")}</p>
-          <ul className="usa-list">
-            {t<string, string[]>(
-              "pages.userConsentToDataSharing.applicationUsageList",
-              {
-                returnObjects: true,
-                context: roleContext,
-              }
-            ).map((listItemContent, index) => (
-              <li key={index}>{listItemContent}</li>
-            ))}
-          </ul>
+          <Trans
+            i18nKey="pages.userConsentToDataSharing.applicationUsageList"
+            tOptions={{ context: roleContext }}
+            components={{
+              ul: <ul className="usa-list" />,
+              li: <li />,
+            }}
+          />
         </AccordionItem>
 
         <AccordionItem

@@ -1,4 +1,5 @@
-import { get, isNil, omitBy } from "lodash";
+import { get, omitBy } from "lodash";
+
 import routes from "../routes";
 
 // A param with a null/undefined value will be excluded from the query string ultimately created
@@ -18,15 +19,24 @@ export const createRouteWithQuery = (
   nullableParams: NullableQueryParams = {},
   hash = ""
 ) => {
-  const formattedHash = hash ? `/#${hash}` : "";
   // Remove null and undefined
-  const params = omitBy(nullableParams, isNil);
-  let queryString = new URLSearchParams(
-    params as { [name: string]: string }
-  ).toString();
+  const params = omitBy(
+    nullableParams,
+    (value) => value === null || value === undefined
+  );
 
-  // Include prefixes (e.g., ?, #) if args/values exist
-  if (queryString) queryString = `?${queryString}`;
+  // Include '?' query prefix if params exist
+  const isParams = Boolean(Object.keys(params).length);
+  const queryPrefix = isParams ? "?" : "";
+
+  // Construct query string (or empty string if no params)
+  const queryString = `${queryPrefix}${new URLSearchParams(
+    params as { [name: string]: string }
+  ).toString()}`;
+
+  // Only use '/' hash prefix without query string
+  const hashPrefix = hash && queryString ? "" : "/";
+  const formattedHash = hash ? `${hashPrefix}#${hash}` : "";
 
   return `${route}${queryString}${formattedHash}`;
 };

@@ -8,10 +8,15 @@
 #   poetry run python3 -i -m massgov.pfml.tool.console.interactive
 #
 
+import itertools
 import logging  # noqa: B1
 import sys
+import time
 from typing import Union
 
+import PIL.Image
+import rich
+import rich.panel
 import rich.pretty
 import sqlalchemy.orm
 
@@ -64,7 +69,7 @@ def interactive_console() -> dict:
     print(INTRO.format(**locals()))
 
     if type(fineos) == massgov.pfml.fineos.MockFINEOSClient:
-        print("WARNING: using mock FINEOS client - set FINEOS_ env vars to use a real client\n")
+        print("WARNING: using mock FINEOS client - edit local.env to use a real client\n")
 
     sys.ps1 = "\npfml >>> "
     sys.ps2 = "pfml ... "
@@ -75,6 +80,7 @@ def interactive_console() -> dict:
     variables.update(vars(massgov.pfml.db.models.industry_codes))
     variables.update(vars(massgov.pfml.db.models.payments))
     variables.update(vars(massgov.pfml.db.models.verifications))
+    variables["who_am_i"] = pfml_mascot
 
     return variables
 
@@ -90,6 +96,27 @@ def connect_to_database() -> Union[sqlalchemy.orm.scoped_session, Exception]:
         db = err
     logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)  # noqa: B1
     return db
+
+
+def pfml_mascot(image_path="massgov/pfml/tool/console/terrier_gong.png"):
+    image = PIL.Image.open(image_path).resize((99, 48))
+    chars = itertools.cycle("PFML")
+
+    for y in range(image.height):
+        for x in range(image.width):
+            r, g, b, a = image.getpixel((x, y))
+            rich.print(f"[rgb({r},{g},{b})]{next(chars)}", end="")
+            time.sleep(0.001)
+        rich.print("")
+
+    rich.print(
+        rich.panel.Panel(
+            "[bold]We were the cool kids who helped build MAʼs first ever "
+            "digitally native, human-centered government service ~ PFML Class of 2021",
+            padding=1,
+            width=99,
+        )
+    )
 
 
 if __name__ == "__main__":

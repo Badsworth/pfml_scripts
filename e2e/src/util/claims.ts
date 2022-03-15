@@ -1,11 +1,15 @@
-import { ApplicationLeaveDetails, ApplicationRequestBody } from "../_api";
+import {
+  ApplicationLeaveDetails,
+  ApplicationRequestBody,
+  AbsencePeriodResponse,
+} from "../_api";
 import {
   ApplicationSubmissionResponse,
   LeavePeriods,
   Submission,
 } from "../types";
-import { parseISO, format, min } from "date-fns";
 import { isNotNull } from "./typeUtils";
+import { parseISO, format, min } from "date-fns";
 
 export function extractLeavePeriod(
   { leave_details }: ApplicationRequestBody,
@@ -130,6 +134,23 @@ export function extractLatestLeaveDate(
     .map((dateStr) => parseISO(dateStr));
 
   return min(dates);
+}
+
+export function extractLeavePeriodType(
+  leaveDetails: ApplicationLeaveDetails
+): NonNullable<AbsencePeriodResponse["period_type"]> {
+  const leavePeriodTypes = {
+    intermittent_leave_periods: "Intermittent",
+    continuous_leave_periods: "Continuous",
+    reduced_schedule_leave_periods: "Reduced Schedule",
+  } as const;
+  let key: keyof typeof leavePeriodTypes;
+  for (key in leavePeriodTypes) {
+    const leavePeriodField = leaveDetails[key];
+    if (leavePeriodField && leavePeriodField.length > 0)
+      return leavePeriodTypes[key];
+  }
+  throw Error("Couldn't determine leave period type");
 }
 
 /**

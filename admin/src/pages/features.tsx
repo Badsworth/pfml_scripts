@@ -5,6 +5,7 @@ import StatusIcon from "../components/StatusIcon";
 import React from "react";
 import Toggle from "../components/Toggle";
 import VerticalMenu from "../components/VerticalMenu";
+import { StaticPropsPermissions } from "../menus";
 
 export default function Features() {
   const [showConfirmationDialog, setShowConfirmationDialog] =
@@ -135,4 +136,12 @@ export default function Features() {
       />
     </div>
   );
+}
+
+export async function getStaticProps(): Promise<StaticPropsPermissions> {
+  return {
+    props: {
+      permissions: ["MAINTENANCE_READ"],
+    },
+  };
 }

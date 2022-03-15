@@ -13,7 +13,7 @@ from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import (
 
 @pytest.fixture
 def concurrent_leave():
-    return ConcurrentLeave(leave_start_date="2021-06-01", leave_end_date="2021-06-30",)
+    return ConcurrentLeave(leave_start_date="2021-06-01", leave_end_date="2021-06-30")
 
 
 @pytest.fixture
@@ -225,10 +225,7 @@ class TestCaringLeaveReviewV1:
 
     def test_why_inaccurate_attribute(self, eform):
         why_inaccurate_attr = eform.get_attribute("WhyInaccurate")
-        expected_attr = {
-            "name": "WhyInaccurate",
-            "stringValue": "I dunno",
-        }
+        expected_attr = {"name": "WhyInaccurate", "stringValue": "I dunno"}
         assert why_inaccurate_attr == expected_attr
 
 

@@ -1,14 +1,14 @@
+import { BenefitsApplicationDocument, DocumentType } from "src/models/Document";
 import {
   claimArgTypes,
   claimArgs,
   createClaimFromArgs,
 } from "storybook/utils/claimArgTypes";
-import DocumentCollection from "src/models/DocumentCollection";
-import { DocumentType } from "src/models/Document";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
 import React from "react";
 import { Review } from "src/pages/applications/review";
 import User from "src/models/User";
-import faker from "faker";
+import { faker } from "@faker-js/faker";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 export default {
@@ -25,6 +25,7 @@ export default {
   args: {
     ...claimArgs,
     isLoadingDocuments: false,
+    "Withhold taxes": true,
   },
 };
 
@@ -41,7 +42,7 @@ export const DefaultStory = (
       fineos_document_id: faker.datatype.uuid(),
       name: "",
       user_id: "mock-user-id",
-      application_id: "mock-applicatoin-id",
+      application_id: "mock-application-id",
     },
     {
       document_type: DocumentType.certification.medicalCertification,
@@ -51,13 +52,16 @@ export const DefaultStory = (
       fineos_document_id: faker.datatype.uuid(),
       name: "",
       user_id: "mock-user-id",
-      application_id: "mock-applicatoin-id",
+      application_id: "mock-application-id",
     },
   ];
 
   const appLogic = useMockableAppLogic({
     documents: {
-      documents: new DocumentCollection(documents),
+      documents: new ApiResourceCollection<BenefitsApplicationDocument>(
+        "fineos_document_id",
+        documents
+      ),
     },
   });
 

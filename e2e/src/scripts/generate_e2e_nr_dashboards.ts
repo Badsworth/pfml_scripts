@@ -9,7 +9,16 @@ import {
 const accountId = parseInt(config("NEWRELIC_ACCOUNTID"));
 const client = new NewRelicClient(config("NEWRELIC_APIKEY"), accountId);
 
-const envs = ["stage", "test", "performance", "cps-preview", "uat", "training"];
+const envs = [
+  "stage",
+  "test",
+  "performance",
+  "cps-preview",
+  "uat",
+  "training",
+  "trn2",
+  "long",
+];
 
 type Query = {
   query: string;

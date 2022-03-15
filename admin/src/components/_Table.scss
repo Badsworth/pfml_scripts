@@ -34,13 +34,16 @@
     padding: 0.5em 1.75em;
   }
 
-  /* stylelint-disable */
-  tr:last-child &__col {
+  &__col--last-row {
     border: 0;
   }
-  /* stylelint-enable */
-}
 
-.table__col--tall {
-  padding: 1.5em 1.714em;
+  /* Last cell in each column */
+  &__col--last-cell {
+    text-align: right;
+  }
+
+  &__col--tall {
+    padding: 1.5em 1.714em;
+  }
 }

@@ -20,12 +20,14 @@ from massgov.pfml.db.models.payments import (
     AuditReportAction,
     LkPaymentAuditReportType,
     PaymentAuditReportDetails,
-    PaymentAuditReportType,
 )
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
     PaymentAuditCSV,
     PaymentAuditDetails,
+)
+from massgov.pfml.delegated_payments.audit.delegated_payment_preapproval_util import (
+    get_payment_preapproval_status,
 )
 from massgov.pfml.delegated_payments.pub.pub_check import _format_check_memo
 from massgov.pfml.delegated_payments.reporting.delegated_abstract_reporting import (
@@ -34,12 +36,6 @@ from massgov.pfml.delegated_payments.reporting.delegated_abstract_reporting impo
     ReportGroup,
 )
 from massgov.pfml.util.datetime import get_now_us_eastern, get_period_in_weeks
-
-# Specify an override for the notes to put if the
-# description on the audit report type doesn't match the message
-AUDIT_REPORT_NOTES_OVERRIDE = {
-    PaymentAuditReportType.DEPRECATED_MAX_WEEKLY_BENEFITS.payment_audit_report_type_id: "Weekly benefit amount exceeds $850"
-}
 
 
 class PaymentAuditRowError(Exception):
@@ -55,6 +51,16 @@ class PaymentAuditData:
     previously_errored_payment_count: int
     previously_rejected_payment_count: int
     previously_skipped_payment_count: int
+    previously_paid_payment_count: int
+    previously_paid_payments_string: Optional[str]
+    gross_payment_amount: str
+    net_payment_amount: str
+    federal_withholding_amount: str
+    state_withholding_amount: str
+    federal_withholding_i_value: str
+    state_withholding_i_value: str
+    employer_reimbursement_amount: str
+    employer_reimbursement_i_value: str
 
 
 def write_audit_report(
@@ -139,6 +145,9 @@ def build_audit_report_row(
         )
 
     audit_report_details = get_payment_audit_report_details(payment, audit_report_time, db_session)
+    preapproval_status = get_payment_preapproval_status(
+        payment, audit_report_details.audit_report_details_list, db_session
+    )
 
     payment_audit_row = PaymentAuditCSV(
         pfml_payment_id=str(payment.payment_id),
@@ -154,23 +163,24 @@ def build_audit_report_row(
         state=address.geo_state.geo_state_description if address and address.geo_state else None,
         zip=address.zip_code if address else None,
         is_address_verified=is_address_verified,
+        employer_name=None,
         payment_preference=get_payment_preference(payment),
         scheduled_payment_date=payment.payment_date.isoformat() if payment.payment_date else None,
         payment_period_start_date=payment_period_start_date,
         payment_period_end_date=payment_period_end_date,
         payment_period_weeks=str(payment_period_weeks),
-        gross_payment_amount=None,
-        payment_amount=str(payment.amount),
-        federal_withholding_amount=None,
-        state_withholding_amount=None,
-        employer_reimbursement_amount=None,
+        gross_payment_amount=str(payment_audit_data.gross_payment_amount),
+        payment_amount=str(payment_audit_data.net_payment_amount),
+        federal_withholding_amount=str(payment_audit_data.federal_withholding_amount),
+        state_withholding_amount=str(payment_audit_data.state_withholding_amount),
+        employer_reimbursement_amount=str(payment_audit_data.employer_reimbursement_amount),
         child_support_amount=None,
         absence_case_number=claim.fineos_absence_id,
         c_value=payment.fineos_pei_c_value,
         i_value=payment.fineos_pei_i_value,
-        federal_withholding_i_value=None,
-        state_withholding_i_value=None,
-        employer_reimbursement_i_value=None,
+        federal_withholding_i_value=str(payment_audit_data.federal_withholding_i_value),
+        state_withholding_i_value=str(payment_audit_data.state_withholding_i_value),
+        employer_reimbursement_i_value=str(payment_audit_data.employer_reimbursement_i_value),
         child_support_i_value=None,
         employer_id=str(employer.fineos_employer_id) if employer else None,
         absence_case_creation_date=payment.absence_case_creation_date.isoformat()
@@ -201,6 +211,12 @@ def build_audit_report_row(
         ],
         skipped_by_program_integrity=bool_to_str[audit_report_details.skipped_by_program_integrity],
         rejected_notes=audit_report_details.rejected_notes,
+        previously_paid_payment_count=str(payment_audit_data.previously_paid_payment_count),
+        previously_paid_payments=payment_audit_data.previously_paid_payments_string,
+        exceeds_26_weeks_total_leave_details=audit_report_details.exceeds_26_weeks_total_leave_details,
+        payment_date_mismatch_details=audit_report_details.payment_date_mismatch_details,
+        is_preapproved=bool_to_str[preapproval_status.is_preapproved()],
+        preapproval_issues=preapproval_status.get_preapproval_issue_description(),
     )
 
     return payment_audit_row
@@ -278,29 +294,30 @@ def get_payment_audit_report_details(
             staged_audit_report_detail.audit_report_type.payment_audit_report_type_description
         )
 
+        audit_report_column = (
+            staged_audit_report_detail.audit_report_type.payment_audit_report_column
+        )
+
         audit_report_action = (
             staged_audit_report_detail.audit_report_type.payment_audit_report_action
         )
 
         # Set the message in the correct column if the audit report action
         # dictates that we should populate a column
-        if AuditReportAction.should_populate_column(audit_report_action):
-            key = f"{audit_report_type.lower()}_details".replace(" ", "_")
+        if audit_report_column:
             details_dict = cast(Dict[str, Any], staged_audit_report_detail.details)
-            audit_report_details[key] = details_dict["message"]
+            audit_report_details[audit_report_column] = details_dict["message"]
 
         # The notes we add are based on the audit report description
         # unless an override is specified above for that particular type
-        notes_to_add = AUDIT_REPORT_NOTES_OVERRIDE.get(
-            staged_audit_report_detail.audit_report_type_id, audit_report_type
-        )
-        if AuditReportAction.is_rejected(audit_report_action):
+        notes_to_add = audit_report_type
+        if audit_report_action == AuditReportAction.REJECTED:
             rejected = True
             program_integrity_notes.append(f"{notes_to_add} (Rejected)")
-        elif AuditReportAction.is_skipped(audit_report_action):
+        elif audit_report_action == AuditReportAction.SKIPPED:
             skipped = True
             program_integrity_notes.append(f"{notes_to_add} (Skipped)")
-        elif AuditReportAction.is_informational(audit_report_action):
+        elif audit_report_action == AuditReportAction.INFORMATIONAL:
             program_integrity_notes.append(f"{notes_to_add}")
 
         # Mark the details row as processed
@@ -315,5 +332,6 @@ def get_payment_audit_report_details(
         rejected_by_program_integrity=rejected,
         skipped_by_program_integrity=(not rejected and skipped),
         rejected_notes=rejected_notes,
+        audit_report_details_list=staged_audit_report_details_list,
         **audit_report_details,
     )

@@ -15,7 +15,7 @@ export const Default = () => {
    * Reads the feature flag values and generates the choice objects for the field component
    */
   const getFeatureFlagChoices = () => {
-    const flags = featureFlags("");
+    const flags = JSON.parse(featureFlags(""));
     return Object.keys(flags).map((featureName) => ({
       label: featureName,
       value: featureName,

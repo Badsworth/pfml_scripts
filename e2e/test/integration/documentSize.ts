@@ -14,13 +14,35 @@ import { getClaimantCredentials } from "../../src/util/credentials";
 import { ClaimGenerator } from "../../src/generation/Claim";
 import * as scenarios from "../../src/scenarios";
 import config from "../../src/config";
-import * as data from "../util";
+import { documentTests, DocumentTestCase } from "../util";
 import * as path from "path";
 import pRetry from "p-retry";
 
 const defaultClaimantCredentials = getClaimantCredentials();
 let application_id: string;
 let pmflApiOptions: RequestOptions;
+
+const getExpectedResponseText = (
+  statusCode: DocumentTestCase["statusCode"]
+): Partial<{
+  statusText: string;
+  message: string;
+}> => {
+  if (statusCode === 200) {
+    return { message: "Successfully uploaded document" };
+  }
+
+  if (statusCode === 400) {
+    return { message: "File validation error." };
+  }
+
+  if (statusCode === 413) {
+    return { statusText: "Request Entity Too Large" };
+  }
+
+  const exhaustiveCheck: never = statusCode;
+  return exhaustiveCheck;
+};
 
 /**
  * @group stable
@@ -69,24 +91,21 @@ describe("API Documents Test of various file sizes", () => {
     );
   }, 120000);
 
-  /**
-   *  Idea here is to test the file size limit (4.5MB) w/each accepted
-   *  filetype: PDF/JPG/PNG in three different ways.
-   *    - smaller than limit
-   *    - right at limit ex. 4.4MB
-   *    - larger than limit
-   */
+  const tests: Parameters<typeof test["each"]>[0] = [];
 
-  const tests = [...data.pdf, ...data.jpg, ...data.png, ...data.badFileTypes];
+  Object.values(documentTests).forEach((testSpec) => {
+    const testCases = typeof testSpec === "function" ? testSpec() : testSpec;
+
+    tests.push(
+      ...testCases.map((testCase) => [testCase.description, testCase])
+    );
+  });
 
   test.each(tests)(
     "%s",
-    async (
-      description: string,
-      filepath: string,
-      message: string,
-      statusCode: number
-    ) => {
+    async (description: string, testCase: DocumentTestCase) => {
+      const { filepath, statusCode } = testCase;
+
       const document: DocumentUploadRequest = {
         document_type: "State managed Paid Leave Confirmation",
         description: description,
@@ -112,8 +131,10 @@ describe("API Documents Test of various file sizes", () => {
       }
 
       expect(docRes.status).toBe(statusCode);
-      if (statusCode === 413) {
-        expect(docRes.statusText).toBe("Request Entity Too Large");
+
+      const { statusText, message } = getExpectedResponseText(statusCode);
+      if (statusText) {
+        expect(docRes.statusText).toBe(statusText);
       } else {
         expect(docRes.data.message).toBe(message);
       }

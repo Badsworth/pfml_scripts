@@ -15,8 +15,8 @@ import sqlalchemy
 import massgov.pfml.reductions.dia as dia
 import massgov.pfml.util.csv as csv_util
 import massgov.pfml.util.files as file_util
+from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.employees import (
-    AbsenceStatus,
     DiaReductionPayment,
     ReferenceFile,
     ReferenceFileType,
@@ -41,9 +41,7 @@ from massgov.pfml.util.batch.log import LogEntry
 fake = faker.Faker()
 
 
-DIA_PAYMENT_LIST_ENCODERS: csv_util.Encoders = {
-    date: lambda d: d.strftime("%Y%m%d"),
-}
+DIA_PAYMENT_LIST_ENCODERS: csv_util.Encoders = {date: lambda d: d.strftime("%Y%m%d")}
 
 
 def _random_csv_filename() -> str:
@@ -309,7 +307,7 @@ def test_copy_to_sftp_and_archive_s3_files(
 
 
 def test_create_list_of_claimants(
-    initialize_factories_session, monkeypatch, mock_s3_bucket, test_db_session,
+    initialize_factories_session, monkeypatch, mock_s3_bucket, test_db_session
 ):
     s3_bucket_uri = "s3://" + mock_s3_bucket
     dest_dir = "reductions/dia/outbound"
@@ -361,7 +359,7 @@ def test_create_list_of_claimants(
 
 
 def test_create_list_of_claimants_skips_claims_with_missing_data(
-    initialize_factories_session, monkeypatch, mock_s3_bucket, test_db_session,
+    initialize_factories_session, monkeypatch, mock_s3_bucket, test_db_session
 ):
     s3_bucket_uri = "s3://" + mock_s3_bucket
     dest_dir = "reductions/dia/outbound"
@@ -409,9 +407,9 @@ def test_create_list_of_claimants_skips_claims_with_missing_data(
     dest_filepath_and_prefix = os.path.join(dest_dir, Constants.CLAIMAINT_LIST_FILENAME_PREFIX)
     assert s3_filename.startswith(dest_filepath_and_prefix)
 
-    # Confirm the file we uploaded to S3 contains a single row for each claim and no header row.
-    with smart_open.open(full_s3_filepath) as s3_file:
-        assert 0 == len(list(s3_file))
+    # Confirm the file we uploaded to S3 is a 0-byte file.
+    resp = s3.head_object(Bucket=mock_s3_bucket, Key=s3_filename)
+    assert resp["ContentLength"] == 0
 
     ref_file = (
         test_db_session.query(ReferenceFile)

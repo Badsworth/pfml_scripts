@@ -20,9 +20,10 @@ module.exports = {
     "prettier",
     "plugin:jsx-a11y/recommended",
     "plugin:react/recommended",
+    "plugin:you-dont-need-lodash-underscore/all",
   ],
   plugins: ["jest", "jsdoc", "lodash", "todo-plz", "jsx-a11y", "react-hooks"],
-  parser: "babel-eslint",
+  parser: "@babel/eslint-parser",
   parserOptions: {
     ecmaVersion: 2018,
     sourceType: "module",
@@ -75,7 +76,7 @@ module.exports = {
         "@typescript-eslint/no-parameter-properties": "error",
         "@typescript-eslint/no-unused-vars": [
           "error",
-          { argsIgnorePattern: "^_" },
+          { argsIgnorePattern: "^_", ignoreRestSiblings: true },
         ],
         // conflicts with @typescript-eslint/strict-boolean-expressions:
         "no-extra-boolean-cast": "off",
@@ -203,6 +204,23 @@ module.exports = {
         ],
       },
     },
+    {
+      files: ["lib/**", "src/**", "storybook/**"],
+      rules: {
+        "no-restricted-imports": [
+          "error",
+          {
+            patterns: [
+              {
+                group: ["**/tests/*"],
+                message:
+                  "Test files should not be imported in files outside of the tests/ directory. Code shared between Storybook and Tests should be in the lib/ directory.",
+              },
+            ],
+          },
+        ],
+      },
+    },
   ],
   rules: {
     camelcase: "off",
@@ -249,6 +267,8 @@ module.exports = {
         terms: ["TODO"],
       },
     ],
+    // We use _.get() a lot to get deeply nested nullable values
+    "you-dont-need-lodash-underscore/get": "off",
   },
   settings: {
     jest: {

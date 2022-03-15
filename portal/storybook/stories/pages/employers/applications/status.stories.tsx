@@ -1,9 +1,15 @@
-import { BenefitsApplicationDocument, DocumentType } from "src/models/Document";
-import DocumentCollection from "src/models/DocumentCollection";
-import { MockEmployerClaimBuilder } from "tests/test-utils/mock-model-builder";
+import {
+  BenefitsApplicationDocument,
+  ClaimDocument,
+  DocumentType,
+} from "src/models/Document";
+import ApiResourceCollection from "src/models/ApiResourceCollection";
+import { MockEmployerClaimBuilder } from "lib/mock-helpers/mock-model-builder";
 import React from "react";
 import { Status } from "src/pages/employers/applications/status";
 import User from "src/models/User";
+import { createAbsencePeriod } from "lib/mock-helpers/createAbsencePeriod";
+import { faker } from "@faker-js/faker";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 export default {
@@ -96,28 +102,51 @@ export const Default = ({
     documentData.document_type = DocumentType.identityVerification;
   }
   const claim = claimBuilder.create();
+  claim.residential_address = {
+    city: "Boston",
+    line_1: "1234 My St.",
+    line_2: null,
+    state: "MA",
+    zip: "00000",
+  };
+  claim.employer_fein = "12-3456789";
+  claim.hours_worked_per_week = 40;
+  claim.absence_periods = [createAbsencePeriod()];
 
   let documentsMap;
   if (document === "None") {
     documentsMap = new Map([
-      [claim.fineos_absence_id, new DocumentCollection()],
+      [
+        claim.fineos_absence_id,
+        new ApiResourceCollection<ClaimDocument>("fineos_document_id"),
+      ],
     ]);
   } else if (document === "Multiple") {
     documentsMap = new Map([
       [
         claim.fineos_absence_id,
-        new DocumentCollection([
-          { ...documentData },
+        new ApiResourceCollection<ClaimDocument>("fineos_document_id", [
           {
             ...documentData,
             document_type: DocumentType.requestForInfoNotice,
+            fineos_document_id: faker.datatype.uuid(),
+          },
+          {
+            ...documentData,
+            document_type: DocumentType.certification.medicalCertification,
+            fineos_document_id: faker.datatype.uuid(),
           },
         ]),
       ],
     ]);
   } else {
     documentsMap = new Map([
-      [claim.fineos_absence_id, new DocumentCollection([{ ...documentData }])],
+      [
+        claim.fineos_absence_id,
+        new ApiResourceCollection<ClaimDocument>("fineos_document_id", [
+          { ...documentData },
+        ]),
+      ],
     ]);
   }
 

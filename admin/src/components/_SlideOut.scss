@@ -34,7 +34,7 @@
   align-items: flex-start;
   border-bottom: 1px solid $Color-GraniteGray-50;
   display: flex;
-  padding: 1.857em 1.714em;
+  padding: 1.2em 1.3em 1.2em 1.714em;
 }
 
 .slide-out__content {
@@ -64,18 +64,14 @@
   cursor: pointer;
   display: flex;
   flex: none;
-  height: 24px;
   justify-content: center;
   margin-top: 0.35em;
-  width: 24px;
 }
 
-.slide-out__btn-close::before {
-  @include IconFontProps;
+.slide-out__btn-close-icon {
   color: $Color-GraniteGray-300;
-  content: $IconX;
-  font-weight: 700;
   line-height: 1;
+  width: 1.7em;
 }
 
 .slide-out__body {
@@ -83,7 +79,6 @@
   line-height: 1.33em;
   padding-top: 1.86em;
 }
-
 
 .slide-out__paragraph:nth-of-type(n+1) {
   color: $Color-GraniteGray-700;
@@ -96,7 +91,6 @@
   transform: translateY(-50%);
 }
 
-
 @keyframes animateSlideOutPanelIn {
   from {
     transform: translateX(100%);
@@ -106,7 +100,6 @@
     transform: translateX(0);
   }
 }
-
 
 @keyframes animateSlideOutBackgroundIn {
   from {

@@ -34,8 +34,8 @@ def upgrade():
         ),
         sa.Column("payment_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("related_payment_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.ForeignKeyConstraint(["payment_id"], ["payment.payment_id"],),
-        sa.ForeignKeyConstraint(["related_payment_id"], ["payment.payment_id"],),
+        sa.ForeignKeyConstraint(["payment_id"], ["payment.payment_id"]),
+        sa.ForeignKeyConstraint(["related_payment_id"], ["payment.payment_id"]),
         sa.PrimaryKeyConstraint("payment_id", "related_payment_id"),
     )
     # ### end Alembic commands ###

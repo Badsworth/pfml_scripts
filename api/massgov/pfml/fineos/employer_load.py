@@ -3,11 +3,12 @@ from dataclasses import asdict
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseSettings, Field
+from pydantic import Field
 
 import massgov.pfml.fineos.employers
 import massgov.pfml.util.batch.log
 import massgov.pfml.util.logging as logging
+import massgov.pfml.util.pydantic
 from massgov.pfml import db, fineos
 from massgov.pfml.util.bg import background_task
 
@@ -19,7 +20,7 @@ class EmployerLoadMode(Enum):
     UPDATES = "updates"
 
 
-class EmployerLoadConfig(BaseSettings):
+class EmployerLoadConfig(massgov.pfml.util.pydantic.PydanticBaseSettings):
     mode: EmployerLoadMode = Field(EmployerLoadMode.ONLY_NEW, env="EMPLOYER_LOAD_MODE")
     update_employer_number_limit: Optional[int] = Field(
         None, env="EMPLOYER_UPDATE_LIMIT"
@@ -27,7 +28,7 @@ class EmployerLoadConfig(BaseSettings):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Load Employers to FINEOS",)
+    parser = argparse.ArgumentParser(description="Load Employers to FINEOS")
     parser.add_argument(
         "--process-id",
         help="Identifier for the update process task. Need when multiple tasks are running simultaneously.",

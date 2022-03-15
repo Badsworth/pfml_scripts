@@ -1,12 +1,15 @@
 import { AppLogic } from "../../../hooks/useAppLogic";
 
-import Button from "../../../components/core/Button";
 import InputChoiceGroup from "../../../components/core/InputChoiceGroup";
 import PageNotFound from "../../../components/PageNotFound";
 import React from "react";
+import ThrottledButton from "src/components/ThrottledButton";
 import { Trans } from "react-i18next";
+import User from "src/models/User";
+import { ValidationError } from "../../../errors";
 import { get } from "lodash";
 import { isFeatureEnabled } from "../../../services/featureFlags";
+import tracker from "../../../services/tracker";
 import useFormState from "../../../hooks/useFormState";
 import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../../locales/i18n";
@@ -14,6 +17,7 @@ import withUser from "../../../hoc/withUser";
 
 interface IndexSMSProps {
   appLogic: AppLogic;
+  user: User;
 }
 
 export const IndexSMS = (props: IndexSMSProps) => {
@@ -24,13 +28,41 @@ export const IndexSMS = (props: IndexSMSProps) => {
     enterMFASetupFlow: null,
   });
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const showNoValueSelectedError = (appLogic: AppLogic) => {
+    const validation_issue = {
+      field: "enterMFASetupFlow",
+      type: "required",
+      namespace: "mfa",
+    };
+    appLogic.catchError(new ValidationError([validation_issue]));
+  };
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    // Show an error and dont leave the page when no value selected
     event.preventDefault();
-    // Do nothing for now
+    appLogic.clearErrors();
+    if (formState.enterMFASetupFlow === null) {
+      showNoValueSelectedError(appLogic);
+      return;
+    }
+
+    if (formState.enterMFASetupFlow === true) {
+      tracker.trackEvent("User entered MFA setup flow");
+      await appLogic.portalFlow.goToPageFor("EDIT_MFA_PHONE");
+    } else {
+      tracker.trackEvent("User opted out of MFA", {
+        selectedOption: formState.enterMFASetupFlow.toString(),
+      });
+
+      await appLogic.users.updateUser(props.user.user_id, {
+        mfa_delivery_preference: "Opt Out",
+      });
+      appLogic.portalFlow.goToPageFor("CONTINUE");
+    }
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
-    appErrors: appLogic.appErrors,
+    errors: appLogic.errors,
     formState,
     updateFields,
   });
@@ -39,7 +71,7 @@ export const IndexSMS = (props: IndexSMSProps) => {
   if (!isFeatureEnabled("claimantShowMFA")) return <PageNotFound />;
 
   return (
-    <form className="usa-form" onSubmit={handleSubmit} method="post">
+    <form className="usa-form">
       <InputChoiceGroup
         {...getFunctionalInputProps("enterMFASetupFlow")}
         label={t("pages.authTwoFactorSmsIndex.title")}
@@ -55,12 +87,21 @@ export const IndexSMS = (props: IndexSMSProps) => {
             label: t("pages.authTwoFactorSmsIndex.optOut"),
             value: "false",
           },
+          {
+            checked: get(formState, "enterMFASetupFlow") === "no_sms_phone",
+            label: t("pages.authTwoFactorSmsIndex.optOutNoSms"),
+            value: "no_sms_phone",
+          },
         ]}
         type="radio"
       />
-      <Button type="submit" className="display-block">
+      <ThrottledButton
+        type="submit"
+        className="display-block"
+        onClick={handleSubmit}
+      >
         {t("pages.authTwoFactorSmsIndex.saveButton")}
-      </Button>
+      </ThrottledButton>
     </form>
   );
 };

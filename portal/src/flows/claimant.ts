@@ -34,7 +34,6 @@ import { fields as familyMemberRelationshipFields } from "../pages/applications/
 import { fields as genderFields } from "../pages/applications/gender";
 import { get } from "lodash";
 import { fields as intermittentFrequencyFields } from "../pages/applications/intermittent-frequency";
-import { isFeatureEnabled } from "../services/featureFlags";
 import { fields as leavePeriodContinuousFields } from "../pages/applications/leave-period-continuous";
 import { fields as leavePeriodIntermittentFields } from "../pages/applications/leave-period-intermittent";
 import { fields as leavePeriodReducedScheduleFields } from "../pages/applications/leave-period-reduced-schedule";
@@ -79,9 +78,8 @@ export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
   isMedicalOrPregnancyLeave: ({ claim }) =>
     claim?.isMedicalOrPregnancyLeave === true,
   isBondingLeave: ({ claim }) => claim?.isBondingLeave === true,
-  // TODO (PFMLPB-2615): Remove isFeatureEnabled check once feature flag is obsolete
+  // TODO (PFMLPB-3195): Remove isFeatureEnabled check once feature flag is obsolete
   hasEmployerWithDepartments: ({ claim }) =>
-    isFeatureEnabled("claimantShowOrganizationUnits") &&
     get(claim, "employment_status") === EmploymentStatus.employed &&
     get(claim, "employer_organization_units", []).length > 0,
   isEmployed: ({ claim }) =>
@@ -103,7 +101,6 @@ export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.fixed,
   isVariableWorkPattern: ({ claim }) =>
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.variable,
-  isMFAEnabled: () => isFeatureEnabled("claimantShowMFA"),
 };
 
 /**
@@ -156,14 +153,9 @@ const claimantFlow: {
     [routes.applications.getReady]: {
       meta: {},
       on: {
-        CONSENT_TO_DATA_SHARING: routes.user.consentToDataSharing,
+        IMPORT_APPLICATION: routes.applications.importClaim,
         START_APPLICATION: routes.applications.start,
         SHOW_APPLICATIONS: routes.applications.index,
-        /* We need this to trigger test coverage on
-         * the routes.user.convert page, which is
-         * otherwise isolated.
-         */
-        CONVERT_EMPLOYER: routes.user.convert,
       },
     },
     [routes.applications.start]: {
@@ -172,38 +164,20 @@ const claimantFlow: {
         CREATE_CLAIM: routes.applications.checklist,
       },
     },
-    [routes.user.convert]: {
-      meta: {},
+    [routes.applications.importClaim]: {
       on: {
-        PREVENT_CONVERSION: routes.applications.getReady,
-        /* We cannot move between 2 different flows due to
-         * claimant test only using claimant state, therefore,
-         * we have no access to redirect to employer pages
-         */
-        // CONTINUE: routes.employers.organizations,
-      },
-    },
-    [routes.user.consentToDataSharing]: {
-      meta: {},
-      on: {
-        CONTINUE: [
-          {
-            target: routes.twoFactor.smsIndex,
-            cond: "isMFAEnabled",
-          },
-          {
-            // Route to Applications page to support users who are re-consenting.
-            // If they're new users with no claims, the Applications page will
-            // handle redirecting them.
-            target: routes.applications.index,
-          },
-        ],
+        CONTINUE: routes.applications.index,
+        EDIT_PHONE: routes.user.settings,
+        ENABLE_MFA: routes.twoFactor.smsSetup,
+        VERIFY_PHONE: routes.twoFactor.smsConfirm,
       },
     },
     [routes.applications.index]: {
       meta: {},
       on: {
         CONTINUE: routes.applications.uploadDocsOptions,
+        IMPORT_APPLICATION: routes.applications.importClaim,
+        NEW_APPLICATION: routes.applications.getReady,
         PAYMENT: routes.applications.status.payments,
         STATUS: routes.applications.status.claim,
       },

@@ -1,5 +1,8 @@
-import DocumentCollection from "../../models/DocumentCollection";
-import { DocumentType } from "../../models/Document";
+import {
+  BenefitsApplicationDocument,
+  DocumentType,
+} from "../../models/Document";
+import ApiResourceCollection from "../../models/ApiResourceCollection";
 import { uniqueId } from "xstate/lib/utils";
 
 const documentData = {
@@ -34,23 +37,26 @@ export const getDocumentsMock = jest.fn((application_id) => {
   return Promise.resolve({
     success: true,
     status: 200,
-    documents: new DocumentCollection([
-      {
-        ...documentData,
-        application_id,
-        fineos_document_id: uniqueId(),
-      },
-      {
-        ...documentData,
-        application_id,
-        fineos_document_id: uniqueId(),
-      },
-      {
-        ...documentData,
-        application_id,
-        fineos_document_id: uniqueId(),
-      },
-    ]),
+    documents: new ApiResourceCollection<BenefitsApplicationDocument>(
+      "fineos_document_id",
+      [
+        {
+          ...documentData,
+          application_id,
+          fineos_document_id: uniqueId(),
+        },
+        {
+          ...documentData,
+          application_id,
+          fineos_document_id: uniqueId(),
+        },
+        {
+          ...documentData,
+          application_id,
+          fineos_document_id: uniqueId(),
+        },
+      ]
+    ),
   });
 });
 

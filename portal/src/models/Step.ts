@@ -1,10 +1,9 @@
 import { BenefitsApplicationDocument, ClaimDocument } from "./Document";
 import claimantFlow, { ClaimantFlowState } from "../flows/claimant";
-import { get, groupBy, isBoolean, isEmpty, isNull, map } from "lodash";
+import { get, groupBy, isEmpty } from "lodash";
 import BenefitsApplication from "./BenefitsApplication";
 import { Issue } from "../errors";
 import getRelevantIssues from "../utils/getRelevantIssues";
-import { isFeatureEnabled } from "../services/featureFlags";
 
 interface Context {
   [key: string]: unknown;
@@ -175,7 +174,7 @@ export default class Step {
     warnings?: Issue[]
   ) => {
     const { claim } = context;
-    const pages = map(machineConfigs.states, (state, key) =>
+    const pages = Object.entries(machineConfigs.states).map(([key, state]) =>
       Object.assign({ route: key, meta: state.meta })
     );
     const pagesByStep = groupBy(pages, "meta.step");
@@ -250,8 +249,8 @@ export default class Step {
     const taxWithholding = new Step({
       name: ClaimSteps.taxWithholding,
       completeCond: (context) =>
-        isBoolean(get(context.claim, "is_withholding_tax")),
-      editable: isNull(claim.is_withholding_tax),
+        typeof get(context.claim, "is_withholding_tax") === "boolean",
+      editable: claim.is_withholding_tax === null,
       group: 2,
       pages: pagesByStep[ClaimSteps.taxWithholding],
       dependsOn: [
@@ -264,10 +263,6 @@ export default class Step {
       context,
     });
 
-    // TODO(PORTAL-1001): - Remove Feature Flag
-    const taxWithholdingEnabled = isFeatureEnabled(
-      "claimantShowTaxWithholding"
-    );
     const uploadDependsOn = [
       verifyId,
       employerInformation,
@@ -275,10 +270,9 @@ export default class Step {
       otherLeave,
       reviewAndConfirm,
       payment,
+      taxWithholding,
     ];
-    if (taxWithholdingEnabled) {
-      uploadDependsOn.push(taxWithholding);
-    }
+
     const uploadId = new Step({
       completeCond: (context) => {
         return (

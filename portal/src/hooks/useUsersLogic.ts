@@ -1,48 +1,70 @@
+import {
+  getMfaValidationErrors,
+  setMFAPreference,
+  updateMFAPhoneNumber,
+} from "src/services/mfa";
 import routes, { isApplicationsRoute, isEmployersRoute } from "../routes";
 import { useMemo, useState } from "react";
-import { AppErrorsLogic } from "./useAppErrorsLogic";
-import BenefitsApplication from "../models/BenefitsApplication";
+import { ErrorsLogic } from "./useErrorsLogic";
 import { PortalFlow } from "./usePortalFlow";
+import RolesApi from "../api/RolesApi";
 import User from "../models/User";
 import UsersApi from "../api/UsersApi";
+import { isFeatureEnabled } from "../services/featureFlags";
 
 /**
  * Hook that defines user state
  */
 const useUsersLogic = ({
-  appErrorsLogic,
+  errorsLogic,
   isLoggedIn,
   portalFlow,
 }: {
-  appErrorsLogic: AppErrorsLogic;
+  errorsLogic: ErrorsLogic;
   isLoggedIn: boolean;
   portalFlow: PortalFlow;
 }) => {
   const usersApi = useMemo(() => new UsersApi(), []);
+  const rolesApi = useMemo(() => new RolesApi(), []);
   const [user, setUser] = useState<User>();
 
   /**
    * Update user through a PATCH request to /users
    * @param user_id - ID of user being updated
    * @param patchData - User fields to update
-   * @param [claim] - Update user in the context of a claim to determine the next page route.
    */
   const updateUser = async (
     user_id: User["user_id"],
-    patchData: Partial<User>,
-    claim?: BenefitsApplication
+    patchData: Partial<User>
   ) => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
+      // Extract mfa related pieces
+      const { mfa_delivery_preference, mfa_phone_number } = patchData;
+      // Before triggering backend validations and updating the user, do mfa service level validation
+      if (mfa_phone_number) {
+        getMfaValidationErrors(mfa_phone_number?.phone_number);
+      }
+      // Get api validation errors and update the user
       const { user } = await usersApi.updateUser(user_id, patchData);
-      setUser(user);
 
-      const context = claim ? { claim, user } : { user };
-      const params = claim ? { claim_id: claim.application_id } : {};
-      portalFlow.goToNextPage(context, params);
+      // Update Cognito unless the API will be doing that synchronization
+      // todo (PORTAL-1828): Remove claimantSyncCognitoPreferences feature flag
+      if (
+        mfa_delivery_preference &&
+        !isFeatureEnabled("claimantSyncCognitoPreferences")
+      ) {
+        await setMFAPreference(mfa_delivery_preference);
+      }
+      if (mfa_phone_number?.phone_number)
+        await updateMFAPhoneNumber(mfa_phone_number.phone_number);
+      // Change internal state
+      setUser(user);
+      // Return the user only if the update did not throw any errors
+      return user;
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 
@@ -57,12 +79,12 @@ const useUsersLogic = ({
     // Caching logic: if user has already been loaded, just reuse the cached user
     if (user) return;
 
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
     try {
       const { user } = await usersApi.getCurrentUser();
       setUser(user);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
     }
   };
 
@@ -111,26 +133,54 @@ const useUsersLogic = ({
    * @param user_id - ID of user being converted
    * @param postData - User fields to update - role and leave admin
    */
-  const convertUser = async (
+  const convertUserToEmployer = async (
     user_id: User["user_id"],
     postData: { employer_fein: string }
   ) => {
-    appErrorsLogic.clearErrors();
+    errorsLogic.clearErrors();
 
     try {
-      const { user } = await usersApi.convertUser(user_id, postData);
+      const { user } = await usersApi.convertUserToEmployer(user_id, postData);
+      portalFlow.goTo(
+        routes.employers.organizations,
+        {
+          account_converted: "true",
+        },
+        { redirect: true }
+      );
       setUser(user);
-
-      portalFlow.goTo(routes.employers.organizations, {
-        account_converted: "true",
-      });
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      errorsLogic.catchError(error);
+    }
+  };
+
+  /**
+   * Delete the user's employer role and leave admin associations through a DELETE to /roles
+   * @param user_id - ID of user being converted
+   * @param postData - User fields to update - role and leave admin
+   */
+  const convertUserToEmployee = async (user_id: User["user_id"]) => {
+    errorsLogic.clearErrors();
+
+    try {
+      await rolesApi.deleteEmployerRole(user_id);
+      const { user } = await usersApi.getCurrentUser();
+      portalFlow.goTo(
+        routes.applications.getReady,
+        {
+          account_converted: "true",
+        },
+        { redirect: true }
+      );
+      setUser(user);
+    } catch (error) {
+      errorsLogic.catchError(error);
     }
   };
 
   return {
-    convertUser,
+    convertUserToEmployer,
+    convertUserToEmployee,
     user,
     updateUser,
     loadUser,

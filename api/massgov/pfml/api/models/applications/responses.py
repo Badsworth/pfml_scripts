@@ -19,7 +19,15 @@ from massgov.pfml.api.models.applications.common import (
     WorkPattern,
 )
 from massgov.pfml.api.models.claims.common import PreviousLeave
-from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit, MaskedPhone
+from massgov.pfml.api.models.common import (
+    ComputedStartDates,
+    ConcurrentLeave,
+    EmployerBenefit,
+    MaskedPhoneResponse,
+    get_computed_start_dates,
+    get_earliest_start_date,
+    get_leave_reason,
+)
 from massgov.pfml.db.models.applications import Application, ApplicationPaymentPreference, Document
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import (
@@ -40,8 +48,8 @@ class ApplicationResponse(PydanticBaseModel):
     application_id: UUID4
     organization_unit_id: Optional[UUID4]
     organization_unit_selection: Optional[OrganizationUnitSelection]
-    application_nickname: Optional[str]
     tax_identifier: Optional[MaskedTaxIdFormattedStr]
+    employee_id: Optional[UUID4]
     employer_fein: Optional[FEINFormattedStr]
     fineos_absence_id: Optional[str]
     first_name: Optional[str]
@@ -73,7 +81,7 @@ class ApplicationResponse(PydanticBaseModel):
     employer_organization_units: List[OrganizationUnit]
     has_other_incomes: Optional[bool]
     other_incomes: Optional[List[OtherIncome]]
-    phone: Optional[MaskedPhone]
+    phone: Optional[MaskedPhoneResponse]
     previous_leaves_other_reason: Optional[List[PreviousLeave]]
     previous_leaves_same_reason: Optional[List[PreviousLeave]]
     concurrent_leave: Optional[ConcurrentLeave]
@@ -82,12 +90,15 @@ class ApplicationResponse(PydanticBaseModel):
     has_previous_leaves_same_reason: Optional[bool]
     has_concurrent_leave: Optional[bool]
     is_withholding_tax: Optional[bool]
+    imported_from_fineos_at: Optional[datetime]
     updated_at: datetime
+    computed_start_dates: Optional[ComputedStartDates]
+    split_from_application_id: Optional[UUID4]
+    split_into_application_id: Optional[UUID4]
 
     @classmethod
     def from_orm(cls, application: Application) -> "ApplicationResponse":
         application_response = super().from_orm(application)
-        application_response.application_nickname = application.nickname
         if application.mailing_address is not None:
             application_response.mailing_address = MaskedAddress.from_orm(
                 application.mailing_address
@@ -103,7 +114,7 @@ class ApplicationResponse(PydanticBaseModel):
             )
 
         if application.phone is not None:
-            application_response.phone = MaskedPhone.from_orm(application.phone)
+            application_response.phone = MaskedPhoneResponse.from_orm(application.phone)
 
         if application.completed_time:
             application_response.status = ApplicationStatus.Completed
@@ -115,9 +126,19 @@ class ApplicationResponse(PydanticBaseModel):
         if application.claim is not None:
             application_response.fineos_absence_id = application.claim.fineos_absence_id
 
+        if application.employee is not None:
+            application_response.employee_id = application.employee.employee_id
+
         application_response.updated_time = application_response.updated_at
+        application_response.computed_start_dates = _get_computed_start_dates(application)
 
         return application_response
+
+
+def _get_computed_start_dates(application: Application) -> ComputedStartDates:
+    earliest_start_date = get_earliest_start_date(application)
+    leave_reason = get_leave_reason(application)
+    return get_computed_start_dates(earliest_start_date, leave_reason)
 
 
 def build_payment_preference(
