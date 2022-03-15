@@ -1,12 +1,18 @@
 import { Tooltip } from "nr1";
 import React from "react";
-import { labelEnv } from "../common";
+import { labelEnv, msToTime, setDefault } from "../common";
 import { E2EQuery } from "../common/components/E2EQuery";
 import { DAO, DAORunDetails } from "../common/DAO";
 import { Tags } from "../common/components/Tags";
 import { format } from "date-fns";
+import RichErroMessage from "../common/components/RichErroMessage";
 
+//TODO: MOVE GridRow TO OWN FILE AFTER PR
 class GridRow extends React.Component {
+  state = {
+    open: false,
+  };
+
   constructor(props) {
     super(props);
     this.spec = props.spec;
@@ -44,7 +50,7 @@ class GridRow extends React.Component {
   progressClass(runOverview) {
     if (runOverview.status === null) {
       return "na";
-    } else if (runOverview.percent === "pass") {
+    } else if (runOverview.status === "pass") {
       if (runOverview.totalTries > runOverview.totalBlocks) {
         return "flake";
       }
@@ -105,20 +111,37 @@ class GridRow extends React.Component {
     }, null);
   }
 
+  toggleShow(id) {
+    if (id == null) {
+      this.setState((state) => {
+        return (state.open = !state.open);
+      });
+    } else {
+      this.setState((state) => {
+        if (!state[id]) {
+          state[id] = { open: false };
+        }
+        return (state[id].open = !state[id].open);
+      });
+    }
+  }
+
   render() {
     if (!this.spec) {
       return <span></span>;
     }
     return [
-      <tr>
-        <td>
-          <span
-            className={`indicator ${this.progressClass(
-              this.spec.overview[this.runs[0].runId]
-            )}`}
-          />
+      <tr className="highlight">
+        <td
+          className={`filename ${this.progressClass(
+            this.spec.overview[this.runs[0].runId]
+          )}`}
+          onClick={() => {
+            this.toggleShow(null);
+          }}
+        >
+          {this.file}
         </td>
-        <td className="filename">{this.file}</td>
         {this.runs.map(({ runId }) => {
           const runOverview = this.spec.overview[runId];
           return [
@@ -140,27 +163,146 @@ class GridRow extends React.Component {
           ];
         })}
       </tr>,
+      <tr className={this.state.open ? "open" : "closed"}>
+        <td className="subTable" colSpan={this.runs.length * 2 + 2}>
+          <table className={"runDetails"}>
+            {this.runs.length > 1 && (
+              <thead>
+                <tr>
+                  {this.runs.map((run, i) => [
+                    <th
+                      className={this.progressClass(
+                        this.spec.overview[run.runId]
+                      )}
+                    >
+                      <TestGridHeader run={run} index={i} date={false} />
+                    </th>,
+                  ])}
+                </tr>
+              </thead>
+            )}
+            <tbody>
+              {Object.keys(this.spec.blocks)
+                .sort(
+                  (a, b) =>
+                    this.spec.blocks[a].order - this.spec.blocks[b].order
+                )
+                .map((key) => {
+                  let status = null;
+                  const block = this.spec.blocks[key];
+                  if (this.runs.length === 1) {
+                    status =
+                      block.runs[this.runs[0].runId].status.toUpperCase();
+                  }
+                  return [
+                    <tr>
+                      <td colSpan={this.runs.length} className="blockTitle">
+                        {this.runs.length === 1 && (
+                          <span className={`pill ${status}`}>{status}</span>
+                        )}
+                        {key}
+                      </td>
+                    </tr>,
+                    <tr>
+                      {this.runs.map(({ runId }) => {
+                        const run = block.runs[runId];
+                        return (
+                          <TestGridRowDetails
+                            run={run}
+                            singleRun={status !== null}
+                          />
+                        );
+                      })}
+                    </tr>,
+                  ];
+                })}
+            </tbody>
+          </table>
+        </td>
+      </tr>,
     ];
   }
+}
+
+function TestGridRowDetails({ run, singleRun }) {
+  const status = run.status ? run.status.toUpperCase() : "N/A";
+  singleRun = setDefault(singleRun, false);
+  return (
+    <td className="TestGridRowDetails">
+      <table className="TestGridRowDetails">
+        {(run.messages.length > 0 && !singleRun) ||
+          (!singleRun && (
+            <tr>
+              <td colSpan="2">
+                <span className={`pill ${status}`}>{status}</span>
+                {`${run.category ?? ""}`}
+              </td>
+            </tr>
+          ))}
+        <TestGridRowMessages run={run} singleRun={singleRun} />
+      </table>
+    </td>
+  );
+}
+
+function TestGridRowMessages({ run, singleRun }) {
+  if (!run.messages.length) {
+    return <></>;
+  }
+  return run.messages.map(({ tryNumber, message }, i) => {
+    if (message) {
+      return (
+        <tr className={`try ${run.status} try_${tryNumber}`}>
+          {!singleRun && i === 0 && (
+            <td
+              className={`status ${run.status}`}
+              rowSpan={run.messages.length}
+            >
+              <span>{run.status}</span>
+            </td>
+          )}
+          <td className="tryNumber">{tryNumber}</td>
+          <td className={run.status ?? "closed"}>
+            <code className={"display-linebreak"}>
+              <RichErroMessage>{message}</RichErroMessage>
+            </code>
+          </td>
+        </tr>
+      );
+    }
+  });
+}
+
+function TestGridHeader({ run, index, date }) {
+  date = setDefault(date, true);
+  return (
+    <Tooltip
+      placementType={Tooltip.PLACEMENT_TYPE.BOTTOM}
+      text={`${format(run.startTime, "PPp")} - ${format(run.endTime, "PPp")}\n
+                              Run ID: ${run.runId}
+                              Environment: ${labelEnv(run.environment)}
+                              Compute Time: ${msToTime(run.computeTimeMs)}
+                              `}
+      additionalInfoLink={{
+        to: run.cypressUrl,
+        label: "View in Cypress",
+      }}
+    >
+      <span className="TestGridHeader">
+        <span className="indexNumber">
+          {index + 1}
+          <Tags tags={run.tags} />
+        </span>
+        {date && <span className="date">{format(run.startTime, "PPp")}</span>}
+      </span>
+    </Tooltip>
+  );
 }
 
 export default class TestGrid extends React.Component {
   constructor(props) {
     super(props);
     this.runIds = props.runIds;
-  }
-
-  msToTime(duration) {
-    var milliseconds = Math.floor((duration % 1000) / 100),
-      seconds = Math.floor((duration / 1000) % 60),
-      minutes = Math.floor((duration / (1000 * 60)) % 60),
-      hours = Math.floor((duration / (1000 * 60 * 60)) % 24);
-
-    hours = hours < 10 ? "0" + hours : hours;
-    minutes = minutes < 10 ? "0" + minutes : minutes;
-    seconds = seconds < 10 ? "0" + seconds : seconds;
-
-    return hours + ":" + minutes + ":" + seconds + "." + milliseconds;
   }
 
   /**
@@ -202,34 +344,11 @@ export default class TestGrid extends React.Component {
                         </th>
                       </tr>
                       <tr>
-                        <th />
                         <th>File</th>
                         {overview.map((run, i) => [
                           <th />,
                           <th width="150px" className="colProgress">
-                            <Tooltip
-                              placementType={Tooltip.PLACEMENT_TYPE.BOTTOM}
-                              text={`${format(run.startTime, "PPp")} - ${format(
-                                run.endTime,
-                                "PPp"
-                              )}\n
-                              Run ID: ${run.runId}
-                              Environment: ${labelEnv(run.environment)}
-                              Compute Time: ${this.msToTime(run.computeTimeMs)}
-                              `}
-                              additionalInfoLink={{
-                                to: run.cypressUrl,
-                                label: "View in Cypress",
-                              }}
-                            >
-                              <span>
-                                {i + 1}
-                                <Tags tags={run.tags} />
-                                <span className="date">
-                                  {format(run.startTime, "PPp")}
-                                </span>
-                              </span>
-                            </Tooltip>
+                            <TestGridHeader run={run} index={i} />
                           </th>,
                         ])}
                       </tr>
@@ -296,6 +415,7 @@ export default class TestGrid extends React.Component {
           status: null,
           category: null,
           tryNumber: 0,
+          blockCount: 0,
           messages: [],
           check: [],
         };
@@ -474,14 +594,18 @@ export default class TestGrid extends React.Component {
       }
 
       // Dont count a block for a run if it already has a message in it.
-      if (!_runBlock.messages.length) {
+      if (!_runBlock.blockCount) {
         _overview.totalBlocks++;
       }
 
-      _runBlock.messages.push({
-        message: datum.anonymizedMessage,
-        tryNumber: datum.tryNumber,
-      });
+      _runBlock.blockCount++;
+
+      if (datum.anonymizedMessage) {
+        _runBlock.messages.push({
+          message: datum.anonymizedMessage,
+          tryNumber: datum.tryNumber,
+        });
+      }
     });
 
     return { overview: runOverview, groups: ret };
