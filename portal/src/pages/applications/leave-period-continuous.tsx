@@ -43,25 +43,28 @@ export const LeavePeriodContinuous = (props: WithBenefitsApplicationProps) => {
   const { loadCrossedBenefitYears, getCrossedBenefitYear } =
     appLogic.benefitYears;
 
-  const employee_id = get(claim, "employee_id");
+  const employeeId = get(claim, "employee_id");
   const submissionWindow = dayjs().add(60, "day").format("YYYY-MM-DD");
 
   const startDate = String(get(formState, `${leavePeriodPath}.start_date`));
   const endDate = String(get(formState, `${leavePeriodPath}.end_date`));
 
   useEffect(() => {
-    // make sure startDate & endDate are both valid dates before making the API call
-    const validDateRegex = /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/;
-    const validStartDate =
-      startDate.match(validDateRegex) !== null &&
-      !isNaN(new Date(startDate).getDate());
-    const validEndDate =
-      endDate.match(validDateRegex) !== null &&
-      !isNaN(new Date(endDate).getDate());
-    if (validStartDate && validEndDate) {
-      loadCrossedBenefitYears(employee_id, startDate, endDate);
+    if (employeeId != null) {
+      // make sure startDate & endDate are both valid dates before making the API call
+      const validDateRegex = /([0-9]{4})-(?:[0-9]{2})-([0-9]{2})/;
+      const validStartDate =
+        startDate.match(validDateRegex) !== null &&
+        !isNaN(new Date(startDate).getDate());
+      const validEndDate =
+        endDate.match(validDateRegex) !== null &&
+        !isNaN(new Date(endDate).getDate());
+      if (validStartDate && validEndDate) {
+        loadCrossedBenefitYears(employeeId, startDate, endDate);
+      }
     }
-  }, [loadCrossedBenefitYears, employee_id, startDate, endDate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [employeeId, startDate, endDate]);
 
   const crossedBenefitYear = getCrossedBenefitYear();
   const canSubmitBoth =
