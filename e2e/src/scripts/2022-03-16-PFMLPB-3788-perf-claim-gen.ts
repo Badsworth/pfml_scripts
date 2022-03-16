@@ -1,4 +1,4 @@
-import * as scenarios from "../scenarios/2022-03-16-pref";
+import * as scenarios from "../scenarios/2022-03-16-perf";
 import dataDirectory from "../generation/DataDirectory";
 import ClaimPool from "../generation/Claim";
 import EmployeePool from "../generation/Employee";
