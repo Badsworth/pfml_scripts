@@ -56,12 +56,12 @@ locals {
   #
   endpoints = {
     "reductions-dia" = {
-      bucket        = data.aws_s3_bucket.agency_transfer.arn,
+      bucket        = data.aws_s3_bucket.agency_transfer,
       object_prefix = "reductions/dia/"
       resource_name = "dia"
     }
     "reductions-dua" = {
-      bucket        = data.aws_s3_bucket.agency_transfer.arn,
+      bucket        = data.aws_s3_bucket.agency_transfer,
       object_prefix = "reductions/dua/"
       resource_name = "dua"
     }
