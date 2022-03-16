@@ -841,8 +841,7 @@ def test_build_customer_model_no_mass_id(user):
 
     assert application.mass_id is None
 
-    assert customer_model.classExtensionInformation[0].name == "MassachusettsID"
-    assert customer_model.classExtensionInformation[0].stringValue == ""
+    assert customer_model.classExtensionInformation[0].name != "MassachusettsID"
 
 
 def test_build_customer_address(user):
@@ -1565,7 +1564,7 @@ class TestGetAbsencePeriods:
                 absence_period_end_date=datetime.date(2021, 1, 30),
                 reason="Child Bonding",
                 reason_qualifier_one="Foster Care",
-                reason_qualifier_two="",
+                reason_qualifier_two=None,
                 period_type="Continuous",
                 request_decision="Pending",
                 evidence_status=None,
