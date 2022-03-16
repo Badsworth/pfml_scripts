@@ -77,7 +77,6 @@ export const PERF_APRIL_A: ScenarioSpecification = {
     employee: { mass_id: true, wages: "eligible" },
     claim: {
       label: "PERF_APRIL_D",
-      work_pattern_spec: "standard",
       intermittent_leave_spec: {
         duration: 3,
         duration_basis: "Days",
@@ -107,7 +106,6 @@ export const PERF_APRIL_A: ScenarioSpecification = {
     employee: { mass_id: true, wages: "eligible" },
     claim: {
       label: "PERF_APRIL_E",
-      work_pattern_spec: "standard",
       reduced_leave_spec: "0, 240, 240, 240, 240, 240, 0",
       reason: "Pregnancy/Maternity",
       leave_dates: [parseISO("2022-02-27"), parseISO("2022-05-15")],
