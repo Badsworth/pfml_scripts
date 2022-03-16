@@ -906,8 +906,8 @@ def test_set_other_leaves_includes_minutes(
     assert application.has_previous_leaves_other_reason is True
     test_db_session.refresh(application)
     # values from MOCK_CUSTOMER_EFORM_OTHER_LEAVES
-    assert application.previous_leaves_other_reason[0].leave_minutes == 120
-    assert application.previous_leaves_other_reason[0].worked_per_week_minutes == 40
+    assert application.previous_leaves_other_reason[0].leave_minutes == 2415
+    assert application.previous_leaves_other_reason[0].worked_per_week_minutes == 1245
 
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.customer_get_eform_summary")
