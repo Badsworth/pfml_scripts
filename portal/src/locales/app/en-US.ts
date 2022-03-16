@@ -119,9 +119,7 @@ const errors = {
       pattern:
         "Enter the Employer Identification Number in the correct format.",
       require_contributing_employer:
-        "We couldn’t find the employer you entered in our system. Check that you entered your employer’s Employer Identification Number (EIN) correctly. If you continue to get this error, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak). Common reasons for this error include that your employer is statutorily exempt, non-compliant, or hasn’t filed wage information yet.",
-      require_non_exempt_employer:
-        "Our records show the employer you entered has a private plan. Check that you entered your employer’s Employer Identification Number (EIN) correctly. If you continue to get this error, ask your employer about their private plan. If this is incorrect, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
+        "Enter a valid Employer Identification Number (EIN). Check that you entered your employer’s EIN correctly. You can find this number on all notices your employer sent about Paid Family and Medical Leave, or on your W‑2 or 1099‑MISC. If you continue to get this error, contact your employer and confirm that you have the correct EIN, and that they are contributing to Paid Family and Medical Leave.",
       required: "Enter your employer’s Employer Identification Number.",
     },
     employer_notified: {
@@ -538,7 +536,7 @@ const errors = {
       min_reduced_leave_minutes:
         "The total time entered for your hours off must be greater than 0.",
       require_employee:
-        "We couldn’t find a match between your Social Security Number and the employer you entered in our system. Check that you entered your Social Security Number and your employer’s Employer Identification Number (EIN) correctly. If you continue to get this error, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> to provide proof of wages.",
+        "We couldn’t find you in our system. Check that you entered your employer’s Employer Identification Number (EIN) correctly. If you continue to get this error, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
       require_employer_notified:
         "You must tell your employer that you’re taking leave before you can submit an application. If you’ve told your employer, update your application with the date that you notified them.",
     },
@@ -667,8 +665,6 @@ const errors = {
         "Enter a valid Employer Identification Number (EIN). Check that you entered your EIN correctly and the associated business is contributing to Paid Family and Medical Leave.",
       require_employer:
         "Enter a valid Employer Identification Number (EIN). Check that you entered your EIN correctly.",
-      require_non_exempt_employer:
-        "Our records show the employer you entered has a private plan. Check that you entered your employer’s Employer Identification Number (EIN) correctly. If you continue to get this error, ask your employer about their private plan. If this is incorrect, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
       required: "Enter your 9-digit Employer Identification Number.",
     },
     fineos_claim_withdrawn:
@@ -732,8 +728,6 @@ const errors = {
           "Enter a valid Employer Identification Number (EIN). Check that you entered your EIN correctly and the associated business is contributing to Paid Family and Medical Leave.",
         require_employer:
           "Enter a valid Employer Identification Number (EIN). Check that you entered your EIN correctly.",
-        require_non_exempt_employer:
-          "Our records show the employer you entered has a private plan. Check that you entered your employer’s Employer Identification Number (EIN) correctly. If you continue to get this error, ask your employer about their private plan. If this is incorrect, call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
         required: "Enter your 9-digit Employer Identification Number.",
       },
     },
