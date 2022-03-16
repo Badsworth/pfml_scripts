@@ -2756,6 +2756,10 @@ const pages: {
       "$t(pages.payments.tablePaymentStatus_Delayed_Default)",
     "tablePaymentStatus_Delayed_Max Weekly Benefits Exceeded":
       "$t(pages.payments.tablePaymentStatus_Delayed_Default)",
+    tablePaymentStatus_Delayed_Processing:
+      "Your payment is being processed. Your {{paymentMethod}} dates will be available in a few days. No action is required from you at this time.",
+    tablePaymentStatus_Delayed_ProcessingWithDate:
+      "$t(pages.payments.tablePaymentStatus_Pending)",
     tablePaymentStatus_Pending:
       "Your payment will be sent by {{paymentMethod}} between {{payPeriod}}.",
     "tablePaymentStatus_Sent to bank":
