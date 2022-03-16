@@ -52,6 +52,7 @@ resource "aws_api_gateway_deployment" "stage" {
     aws_api_gateway_integration.s3_integration_get_business_intelligence,
     aws_api_gateway_integration.s3_integration_put_business_intelligence,
     aws_api_gateway_integration.s3_integration_delete_business_intelligence,
+    aws_api_gateway_integration.files_list_objects_s3_integration
   ]
 }
 
