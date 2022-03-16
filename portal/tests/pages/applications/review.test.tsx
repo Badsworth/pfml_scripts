@@ -417,6 +417,71 @@ describe("Review Page", () => {
     expect(screen.queryByText(textMatch)).toBeInTheDocument();
   });
 
+  it("conditionally renders Family Member information depending on if caring_leave_metadata is set", () => {
+    const textMatch = /Family member's/;
+    const claim = new MockBenefitsApplicationBuilder()
+      .part1Complete()
+      .caringLeaveReason()
+      .create();
+
+    setup({ claim });
+    expect(
+      screen.queryAllByRole("heading", { name: textMatch })
+    ).not.toHaveLength(0);
+
+    cleanup();
+
+    claim.leave_details.caring_leave_metadata = null;
+    setup({ claim });
+    expect(
+      screen.queryByRole("heading", { name: textMatch })
+    ).not.toBeInTheDocument();
+  });
+
+  it("conditionally renders child birth date", () => {
+    // Applications imported from Fineos as part of Channel Switching won't have this field
+    const textMatch = /Child’s date of birth/;
+    const claim = new MockBenefitsApplicationBuilder()
+      .part1Complete()
+      .bondingBirthLeaveReason()
+      .create();
+
+    setup({ claim });
+    expect(
+      screen.queryAllByRole("heading", { name: textMatch })
+    ).not.toHaveLength(0);
+
+    cleanup();
+
+    claim.leave_details.child_birth_date = null;
+    setup({ claim });
+    expect(
+      screen.queryByRole("heading", { name: textMatch })
+    ).not.toBeInTheDocument();
+  });
+
+  it("conditionally renders child placement date", () => {
+    // Applications imported from Fineos as part of Channel Switching won't have this field
+    const textMatch = /Child’s placement date/;
+    const claim = new MockBenefitsApplicationBuilder()
+      .part1Complete()
+      .bondingAdoptionLeaveReason()
+      .create();
+
+    setup({ claim });
+    expect(
+      screen.queryAllByRole("heading", { name: textMatch })
+    ).not.toHaveLength(0);
+
+    cleanup();
+
+    claim.leave_details.child_placement_date = null;
+    setup({ claim });
+    expect(
+      screen.queryByRole("heading", { name: textMatch })
+    ).not.toBeInTheDocument();
+  });
+
   it("renders WeeklyTimeTable for the reduced leave period when work pattern is Fixed", () => {
     const claim = new MockBenefitsApplicationBuilder()
       .part1Complete()

@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Mapping, Optional, TypeVar
+from typing import Any, Dict, Mapping, Optional, TypeVar
 
 _T = TypeVar("_T")
 
@@ -35,17 +35,3 @@ def get_json_from_object(object_instance: Optional[Any]) -> Optional[Dict[str, A
             json_str[key] = object_dict[key]
 
     return json_str
-
-
-def set_empty_dates_to_none(
-    object_instance: Optional[Any], date_strings: List[str]
-) -> Optional[Dict[str, Any]]:
-    """Workaround empty strings in response instead of null. These cause parse_obj to fail."""
-    if object_instance is None:
-        return None
-
-    for prop in date_strings:
-        if prop in object_instance and object_instance[prop] == "":
-            object_instance[prop] = None
-
-    return object_instance

@@ -451,28 +451,31 @@ export const Review = (
         </ReviewRow>
       )}
 
-      {claim.isBondingLeave && reasonQualifier === ReasonQualifier.newBorn && (
-        <ReviewRow
-          level={reviewRowLevel}
-          label={t("pages.claimsReview.childBirthDateLabel")}
-        >
-          {formatDateRange(get(claim, "leave_details.child_birth_date"))}
-        </ReviewRow>
-      )}
+      {claim.isBondingLeave &&
+        reasonQualifier === ReasonQualifier.newBorn &&
+        claim.leave_details.child_birth_date && (
+          <ReviewRow
+            level={reviewRowLevel}
+            label={t("pages.claimsReview.childBirthDateLabel")}
+          >
+            {formatDateRange(claim.leave_details.child_birth_date)}
+          </ReviewRow>
+        )}
 
       {claim.isBondingLeave &&
         [ReasonQualifier.adoption, ReasonQualifier.fosterCare].includes(
           reasonQualifier
-        ) && (
+        ) &&
+        claim.leave_details.child_placement_date && (
           <ReviewRow
             level={reviewRowLevel}
             label={t("pages.claimsReview.childPlacementDateLabel")}
           >
-            {formatDateRange(get(claim, "leave_details.child_placement_date"))}
+            {formatDateRange(claim.leave_details.child_placement_date)}
           </ReviewRow>
         )}
 
-      {claim.isCaringLeave && (
+      {claim.isCaringLeave && claim.hasCaringLeaveMetadata && (
         <React.Fragment>
           <ReviewRow
             level={reviewRowLevel}
