@@ -108,3 +108,118 @@ resource "aws_api_gateway_usage_plan_key" "files_usage_plan_key" {
   key_type      = "API_KEY"
   usage_plan_id = aws_api_gateway_usage_plan.files_usage_plan[each.key].id
 }
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# GET /{bucket}/{key} endpoint to proxy S3 GetObject
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_api_gateway_method" "files_get_object_method" {
+  for_each         = local.endpoints
+  resource_id      = aws_api_gateway_resource.files_key[each.key].id
+  rest_api_id      = aws_api_gateway_rest_api.pfml.id
+  http_method      = "GET"
+  authorization    = "NONE"
+  api_key_required = true
+
+  request_parameters = {
+    "method.request.path.bucket" = true
+    "method.request.path.key"    = true
+  }
+}
+
+resource "aws_api_gateway_method_response" "files_get_object_response_200" {
+  for_each    = local.endpoints
+  rest_api_id = aws_api_gateway_rest_api.pfml.id
+  resource_id = aws_api_gateway_resource.files_key[each.key].id
+  http_method = aws_api_gateway_method.files_get_object_method[each.key].http_method
+  status_code = "200"
+  response_parameters = {
+    "method.response.header.Timestamp"      = true
+    "method.response.header.Content-Length" = true
+    "method.response.header.Content-Type"   = true
+  }
+}
+
+resource "aws_api_gateway_method_response" "files_get_object_response_403" {
+  for_each    = local.endpoints
+  rest_api_id = aws_api_gateway_rest_api.pfml.id
+  resource_id = aws_api_gateway_resource.files_key[each.key].id
+  http_method = aws_api_gateway_method.files_get_object_method[each.key].http_method
+  status_code = "403"
+  response_parameters = {
+    "method.response.header.Content-Type" = true
+  }
+}
+
+resource "aws_api_gateway_method_response" "files_get_object_response_404" {
+  for_each    = local.endpoints
+  rest_api_id = aws_api_gateway_rest_api.pfml.id
+  resource_id = aws_api_gateway_resource.files_key[each.key].id
+  http_method = aws_api_gateway_method.files_get_object_method[each.key].http_method
+  status_code = "404"
+  response_parameters = {
+    "method.response.header.Content-Type" = true
+  }
+}
+
+
+resource "aws_api_gateway_integration" "files_get_object_s3_integration" {
+  for_each    = local.endpoints
+  rest_api_id = aws_api_gateway_rest_api.pfml.id
+  resource_id = aws_api_gateway_resource.files_key[each.key].id
+  http_method = aws_api_gateway_method.files_get_object_method[each.key].http_method
+
+  integration_http_method = "GET"
+  type                    = "AWS"
+
+  uri         = "arn:aws:apigateway:us-east-1:s3:path/${each.value.bucket}/${each.value.object_prefix}/{key}"
+  credentials = aws_iam_role.files_executor_role[each.key].arn
+  request_parameters = {
+    "integration.request.path.bucket" : "method.request.path.bucket"
+    "integration.request.path.key" : "method.request.path.key"
+  }
+}
+
+resource "aws_api_gateway_integration_response" "files_get_object_s3_integration_response_200" {
+  for_each          = local.endpoints
+  depends_on        = [aws_api_gateway_integration.files_get_object_s3_integration]
+  rest_api_id       = aws_api_gateway_rest_api.pfml.id
+  resource_id       = aws_api_gateway_resource.files_key[each.key].id
+  http_method       = aws_api_gateway_method.files_get_object_method[each.key].http_method
+  status_code       = "200"
+  selection_pattern = "200"
+  response_parameters = {
+    "method.response.header.Timestamp"      = "integration.response.header.Date"
+    "method.response.header.Content-Length" = "integration.response.header.Content-Length"
+    "method.response.header.Content-Type"   = "integration.response.header.Content-Type"
+  }
+}
+
+resource "aws_api_gateway_integration_response" "files_get_object_s3_integration_response_403" {
+  for_each          = local.endpoints
+  depends_on        = [aws_api_gateway_integration.files_get_object_s3_integration]
+  rest_api_id       = aws_api_gateway_rest_api.pfml.id
+  resource_id       = aws_api_gateway_resource.files_key[each.key].id
+  http_method       = aws_api_gateway_method.files_get_object_method[each.key].http_method
+  status_code       = "403"
+  selection_pattern = "403"
+
+  response_parameters = {
+    "method.response.header.Content-Type" = "integration.response.header.Content-Type"
+  }
+}
+
+resource "aws_api_gateway_integration_response" "files_get_object_s3_integration_response_404" {
+  for_each          = local.endpoints
+  depends_on        = [aws_api_gateway_integration.files_get_object_s3_integration]
+  rest_api_id       = aws_api_gateway_rest_api.pfml.id
+  resource_id       = aws_api_gateway_resource.files_key[each.key].id
+  http_method       = aws_api_gateway_method.files_get_object_method[each.key].http_method
+  status_code       = "404"
+  selection_pattern = "404"
+
+  response_parameters = {
+    "method.response.header.Content-Type" = "integration.response.header.Content-Type"
+  }
+}
