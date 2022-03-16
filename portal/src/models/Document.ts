@@ -2,7 +2,7 @@
 /**
  * @file Document (AKA File) model and enum values
  */
-import LeaveReason, { LeaveReasonType } from "./LeaveReason";
+import LeaveReason from "./LeaveReason";
 import { ValuesOf } from "../../types/common";
 
 const CertificationType = {
@@ -88,23 +88,6 @@ export function filterByApplication(
 }
 
 /**
- * Get certification documents based on application leave reason
- */
-export function findDocumentsByLeaveReason<
-  T extends BenefitsApplicationDocument | ClaimDocument
->(documents: T[], leaveReason?: LeaveReasonType): T[] {
-  // TODO (CP-2029): Remove the medicalCertification type from this array when it becomes obsolete
-  const documentFilters: Array<
-    typeof DocumentType.certification[keyof typeof DocumentType.certification]
-  > = [DocumentType.certification.medicalCertification];
-
-  if (leaveReason) {
-    documentFilters.push(DocumentType.certification[leaveReason]);
-  }
-  return findDocumentsByTypes(documents, documentFilters);
-}
-
-/**
  * Get only documents associated with a given selection of document_types
  */
 export function findDocumentsByTypes<
@@ -141,6 +124,17 @@ export function getLegalNotices(
     DocumentType.changeRequestApproved,
     DocumentType.changeRequestDenied,
   ]);
+}
+
+/**
+ * Get only documents that are certification documents for a specific leave.
+ * This excludes ID verification docs, which aren't **leave** certification,
+ * and also not a doc type we want to surface to leave admins.
+ */
+export function getLeaveCertificationDocs<
+  T extends BenefitsApplicationDocument | ClaimDocument
+>(documents: T[]) {
+  return findDocumentsByTypes(documents, Object.values(CertificationType));
 }
 
 export function isBenefitsApplicationDocument(

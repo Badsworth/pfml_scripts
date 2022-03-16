@@ -287,6 +287,35 @@ def test_applications_get_split_from_application_id(client, user, auth_token, te
     assert response_body.get("split_into_application_id") == str(split_application.application_id)
 
 
+def test_applications_get_employee_id(client, user, auth_token, test_db_session):
+    # No employee_id should be returned if there isn't an employee associated with the application
+    application = ApplicationFactory.create(user=user)
+    test_db_session.commit()
+
+    response = client.get(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    assert response_body.get("employee_id") is None
+
+    # employee_id will be returned when the application is associated with an employee
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(user=user, tax_identifier=employee.tax_identifier)
+    test_db_session.commit()
+
+    response = client.get(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    assert response_body.get("employee_id") == str(employee.employee_id)
+
+
 def test_applications_get_all_for_user(client, user, auth_token):
     applications = sorted(
         [ApplicationFactory.create(user=user), ApplicationFactory.create(user=user)],
@@ -302,7 +331,6 @@ def test_applications_get_all_for_user(client, user, auth_token):
     assert len(response_data) == len(applications)
     for (application, app_response) in zip(applications, response_data):
         assert str(application.application_id) == app_response["application_id"]
-        assert application.nickname == app_response["application_nickname"]
         assert application.application_id != unassociated_application.application_id
 
 
@@ -316,7 +344,6 @@ def test_applications_get_all_pagination_default_limit(client, user, auth_token)
     assert len(response_data) == DEFAULT_PAGE_SIZE
     for (application, app_response) in zip(applications, response_data):
         assert str(application.application_id) == app_response["application_id"]
-        assert application.nickname == app_response["application_nickname"]
 
 
 def test_applications_get_all_pagination_asc(client, user, auth_token):
@@ -332,7 +359,6 @@ def test_applications_get_all_pagination_asc(client, user, auth_token):
     assert len(response_data) == DEFAULT_PAGE_SIZE
     for (application, app_response) in zip(applications, response_data):
         assert str(application.application_id) == app_response["application_id"]
-        assert application.nickname == app_response["application_nickname"]
 
 
 def test_applications_get_all_pagination_limit_double(client, user, auth_token):
@@ -348,10 +374,19 @@ def test_applications_get_all_pagination_limit_double(client, user, auth_token):
     assert len(response_data) == DEFAULT_PAGE_SIZE * 2
     for (application, app_response) in zip(applications, response_data):
         assert str(application.application_id) == app_response["application_id"]
-        assert application.nickname == app_response["application_nickname"]
 
 
 class TestApplicationsImport:
+    @pytest.fixture
+    def claim(self, claim, test_db_session) -> Claim:
+        # delete the application that is pre-associated with the claim fixture
+        # so that we can test importing a new one
+        application = claim.application
+        test_db_session.delete(application)
+        test_db_session.commit()
+
+        return claim
+
     @pytest.fixture
     def valid_request_body(self, claim: Claim) -> Dict[str, str]:
         return {
@@ -3480,8 +3515,7 @@ def test_application_patch_minimum_payload(client, user, auth_token):
     assert response.status_code == 200
 
     response_body = response.get_json().get("data")
-    data = response_body
-    assert application.nickname == data.get("application_nickname")
+    assert response_body is not None
 
 
 def test_application_patch_null_values(client, user, auth_token):
@@ -3489,7 +3523,6 @@ def test_application_patch_null_values(client, user, auth_token):
 
     null_request_body = {
         "application_id": application.application_id,
-        "application_nickname": None,
         "tax_identifier": None,
         "employer_fein": None,
         "hours_worked_per_week": None,
@@ -4080,7 +4113,11 @@ def test_application_post_submit_ssn_fraud_error(
         user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
     )
     ApplicationFactory.create(user=employer_user, tax_identifier=application.tax_identifier)
-    ApplicationFactory.create(user=consented_user, tax_identifier=application.tax_identifier)
+    ApplicationFactory.create(
+        user=consented_user,
+        tax_identifier=application.tax_identifier,
+        submitted_time=datetime_util.utcnow(),
+    )
     WagesAndContributionsFactory.create(employer=employer, employee=employee)
 
     application.continuous_leave_periods = [
@@ -4112,6 +4149,55 @@ def test_application_post_submit_ssn_fraud_error(
             }
         ],
     )
+
+
+def test_application_post_submit_ssn_fraud_not_submitted_okay(
+    client,
+    user,
+    consented_user,
+    employer_user,
+    auth_token,
+    test_db_session,
+    enable_application_fraud_check,
+):
+    # This tests the case where an application is submitted, but another application
+    # with the same SSN but different user ids exists. These need to be handled
+    # in the call center as they may be cases of fraud.
+
+    # consented_user will have a different IDs, create another app with it
+    assert user.sub_id != consented_user.sub_id
+    assert user.sub_id != employer_user.sub_id
+
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
+    )
+    ApplicationFactory.create(user=employer_user, tax_identifier=application.tax_identifier)
+    ApplicationFactory.create(user=consented_user, tax_identifier=application.tax_identifier)
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
+
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
+    ]
+    application.date_of_birth = date(1997, 6, 6)
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.hours_worked_per_week = 70
+    application.has_continuous_leave_periods = True
+    application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
+
+    test_db_session.commit()
+
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    response_body = response.get_json()
+    assert response.status_code == 201
+    assert not response_body.get("errors")
+    assert not response_body.get("warnings")
 
 
 def test_application_post_submit_ssn_second_app(
@@ -4504,7 +4590,7 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                         ),
                     ],
                     emailAddresses=[
-                        massgov.pfml.fineos.models.customer_api.EmailAddress(
+                        massgov.pfml.fineos.models.customer_api.EmailAddressV20(
                             emailAddress=application.user.email_address
                         )
                     ],

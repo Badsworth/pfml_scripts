@@ -33,6 +33,14 @@ def test_populate_mmars_payments(populate_mmars_payments_step, local_test_db_ses
     assert after_payment_counts[batch.pfml_1099_batch_id] == 9
 
 
+def test_get_mmars_payments_no_batch_for_employee(
+    local_initialize_factories_session, local_test_db_session
+):
+    employee_id = "a9c98c3f-eaaf-4f68-9a03-13561537c023"
+    batch = pfml_1099_util.get_last_1099_batch_for_employee(local_test_db_session, employee_id)
+    assert batch is None
+
+
 def _mmars_payment_factory(pub_individual_id, test_db_session) -> MmarsPaymentData:
     employee = factories.EmployeeFactory.create(
         ctr_vendor_customer_code="VC00012011" + str(pub_individual_id)

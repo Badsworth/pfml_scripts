@@ -13,24 +13,10 @@ WITH PAYMENT_BATCH_TRANSACTIONS AS (
 	LEFT OUTER JOIN EMPLOYEE E ON P.EMPLOYEE_ID = E.EMPLOYEE_ID
   LEFT OUTER JOIN LK_PUB_ERROR_TYPE PET ON PE.PUB_ERROR_TYPE_ID = PET.PUB_ERROR_TYPE_ID
   LEFT OUTER JOIN LK_PAYMENT_TRANSACTION_TYPE TT ON P.PAYMENT_TRANSACTION_TYPE_ID = TT.PAYMENT_TRANSACTION_TYPE_ID
-    WHERE PE.IMPORT_LOG_ID IN (SELECT MAX(IMPORT_LOG_ID)
-                               FROM IMPORT_LOG
-                               WHERE SOURCE = 'ProcessNachaReturnFileStep'
-							   UNION ALL
-                               SELECT MAX(IMPORT_LOG_ID)
-                               FROM IMPORT_LOG
-                               WHERE SOURCE = 'ProcessManualPubRejectionStep'
-                 UNION ALL
-                               SELECT MAX(IMPORT_LOG_ID)
-                               FROM IMPORT_LOG
-                               WHERE SOURCE = 'ProcessCheckReturnFileStep'
-                               UNION ALL
-                               SELECT MAX(IMPORT_LOG_ID)
-                               FROM IMPORT_LOG
-                               WHERE SOURCE = 'ProcessCheckReturnFileStep'
-                                 AND IMPORT_LOG_ID < (SELECT MAX(IMPORT_LOG_ID)
-                                                      FROM IMPORT_LOG
-                                                      WHERE SOURCE = 'ProcessCheckReturnFileStep')))
+  INNER JOIN IMPORT_LOG IL ON PE.IMPORT_LOG_ID = IL.IMPORT_LOG_ID
+  INNER JOIN IMPORT_LOG_REPORT_QUEUE ILRQ ON IL.IMPORT_LOG_ID = ILRQ.IMPORT_LOG_ID
+    WHERE IL.SOURCE IN ('ProcessNachaReturnFileStep', 'ProcessCheckReturnFileStep', 'ProcessManualPubRejectionStep')
+)
 SELECT PBT.FINEOS_CUSTOMER_NUMBER "Customer Number",
        PBT.FINEOS_ABSENCE_ID "NTN Number", 
        PBT.CLAIM_TYPE_DESCRIPTION "Absence Case Type",

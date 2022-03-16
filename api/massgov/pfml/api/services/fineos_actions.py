@@ -36,6 +36,7 @@ from massgov.pfml.db.models.applications import (
     FINEOSWebIdExt,
     LeaveReason,
     LeaveReasonQualifier,
+    PhoneType,
     RelationshipQualifier,
     RelationshipToCaregiver,
 )
@@ -59,6 +60,8 @@ from massgov.pfml.fineos.models.customer_api import (
     Base64EncodedFileData,
     ChangeRequestPeriod,
     ChangeRequestReason,
+    EmailAddressV20,
+    EmailAddressV21,
     LeavePeriodChangeRequest,
     ReflexiveQuestionType,
 )
@@ -68,6 +71,7 @@ from massgov.pfml.fineos.transforms.to_fineos.eforms.employee import (
     OtherIncomesEFormBuilder,
     PreviousLeavesEFormBuilder,
 )
+from massgov.pfml.util.config import get_env_bool
 from massgov.pfml.util.datetime import convert_minutes_to_hours_minutes
 from massgov.pfml.util.logging.applications import get_application_log_attributes
 
@@ -415,18 +419,22 @@ def mark_single_document_as_received(
 def build_customer_model(application, current_user):
     """Convert an application to a FINEOS API Customer model."""
     tax_identifier = application.tax_identifier.tax_identifier
-    mass_id = massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
-        name="MassachusettsID", stringValue=application.mass_id or ""
-    )
     confirmed = massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
         name="Confirmed", booleanValue=True
     )
-    class_ext_info = [mass_id, confirmed]
+    class_ext_info = [confirmed]
     if current_user is not None:
         consented_to_data_sharing = massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
             name="ConsenttoShareData", booleanValue=current_user.consented_to_data_sharing
         )
         class_ext_info.append(consented_to_data_sharing)
+
+    if application.mass_id is not None:
+        mass_id = massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
+            name="MassachusettsID", stringValue=application.mass_id or ""
+        )
+        # tests assume MassId is the first ExtensionAttribute, so insert at 0 index.
+        class_ext_info.insert(0, mass_id)
 
     customer = massgov.pfml.fineos.models.customer_api.Customer(
         firstName=application.first_name,
@@ -455,18 +463,22 @@ def build_contact_details(
 ) -> massgov.pfml.fineos.models.customer_api.ContactDetails:
     """Convert an application's email and phone number to FINEOS API ContactDetails model."""
 
+    email_address: Union[EmailAddressV20, EmailAddressV21]
+    if not get_env_bool("FINEOS_IS_RUNNING_V21"):
+        email_address = EmailAddressV20(emailAddress=application.user.email_address)
+    else:
+        email_address = EmailAddressV21(
+            emailAddress=application.user.email_address, emailAddressType="Email"
+        )
+
     contact_details = massgov.pfml.fineos.models.customer_api.ContactDetails(
-        emailAddresses=[
-            massgov.pfml.fineos.models.customer_api.EmailAddress(
-                emailAddress=application.user.email_address
-            )
-        ]
+        emailAddresses=[email_address]
     )
 
     if application.phone.phone_number is not None:
         phone_number = phonenumbers.parse(application.phone.phone_number)
 
-        phone_number_type = application.phone.phone_type_instance.phone_type_description
+        phone_number_type = PhoneType.get_description(application.phone.phone_type_id)
         int_code = phone_number.country_code
         if phone_number.national_number is not None:
             telephone_no = str(phone_number.national_number)

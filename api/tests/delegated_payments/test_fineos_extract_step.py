@@ -16,6 +16,7 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVbiLeavePlanRequestedAbsence,
     FineosExtractVbiRequestedAbsence,
     FineosExtractVbiRequestedAbsenceSom,
+    FineosExtractVbiTaskReportSom,
     FineosExtractVPaidLeaveInstruction,
     FineosExtractVpei,
     FineosExtractVpeiClaimDetails,
@@ -27,6 +28,7 @@ from massgov.pfml.delegated_payments.fineos_extract_step import (
     IAWW_EXTRACT_CONFIG,
     PAYMENT_EXTRACT_CONFIG,
     PAYMENT_RECONCILIATION_EXTRACT_CONFIG,
+    VBI_TASKREPORT_SOM_EXTRACT_CONFIG,
     FineosExtractStep,
 )
 from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
@@ -36,6 +38,9 @@ from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
     create_fineos_payment_extract_files,
     generate_iaww_extract_files,
     generate_payment_reconciliation_extract_files,
+    generate_vbi_taskreport_som_extract_files,
+    get_vbi_taskreport_som_extract_filtered_records,
+    get_vbi_taskreport_som_extract_records,
 )
 
 earlier_date_str = "2020-07-01-12-00-00"
@@ -462,6 +467,63 @@ def test_iaww_extracts(
     )
 
 
+def test_vbi_taskreport_som_extracts(
+    mock_s3_bucket,
+    mock_fineos_s3_bucket,
+    set_exporter_env_vars,
+    local_test_db_session,
+    local_test_db_other_session,
+    monkeypatch,
+):
+    monkeypatch.setenv("FINEOS_VBI_TASKREPORT_SOM_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
+
+    records = get_vbi_taskreport_som_extract_records()
+
+    # Create VBI Task Report Som extract files
+    folder_path = os.path.join(f"s3://{mock_fineos_s3_bucket}", "DT2/dataexports/")
+    generate_vbi_taskreport_som_extract_files(
+        folder_path, datetime.strptime(date_str, "%Y-%m-%d-%H-%M-%S"), records=records
+    )
+
+    # Run the extract
+    fineos_extract_step = FineosExtractStep(
+        db_session=local_test_db_session,
+        log_entry_db_session=local_test_db_other_session,
+        extract_config=VBI_TASKREPORT_SOM_EXTRACT_CONFIG,
+    )
+    fineos_extract_step.run()
+
+    # Verify file
+    expected_path_prefix = f"s3://{mock_s3_bucket}/cps/inbound/processed/"
+    files = file_util.list_files(expected_path_prefix, recursive=True)
+    assert len(files) == 1
+
+    file_prefix = f"{date_str}-vbi-taskreport-som-extract/{date_str}"
+    assert (
+        f"{file_prefix}-{payments_util.FineosExtractConstants.VBI_TASKREPORT_SOM.file_name}"
+        in files
+    )
+
+    reference_file = (
+        local_test_db_session.query(ReferenceFile)
+        .filter(
+            ReferenceFile.file_location
+            == expected_path_prefix + f"{date_str}-vbi-taskreport-som-extract"
+        )
+        .one_or_none()
+    )
+    assert reference_file
+    assert (
+        reference_file.reference_file_type_id
+        == ReferenceFileType.FINEOS_VBI_TASKREPORT_SOM_EXTRACT.reference_file_type_id
+    )
+
+    filtered_records = get_vbi_taskreport_som_extract_filtered_records(records)
+    validate_records(
+        filtered_records, FineosExtractVbiTaskReportSom, "TASKID", local_test_db_session
+    )
+
+
 def test_run_with_error_during_processing(
     mock_s3_bucket,
     mock_fineos_s3_bucket,
@@ -472,6 +534,12 @@ def test_run_with_error_during_processing(
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
+
+    # Prior skipped data
+    prior_payment_data = [FineosPaymentData()]
+    upload_fineos_payment_data(
+        mock_fineos_s3_bucket, prior_payment_data, timestamp=earlier_date_str
+    )
 
     payment_data = [FineosPaymentData(), FineosPaymentData(), FineosPaymentData()]
     upload_fineos_payment_data(mock_fineos_s3_bucket, payment_data)
@@ -498,10 +566,22 @@ def test_run_with_error_during_processing(
     assert f"{payment_prefix}-{payments_util.Constants.CLAIM_DETAILS_EXPECTED_FILE_NAME}" in files
     assert f"{payment_prefix}-{payments_util.Constants.PAYMENT_LINE_EXPECTED_FILE_NAME}" in files
 
-    # A reference file is present and pointing to the errored directory
+    # Verify that the skipped file ended up in the right place
+    expected_path_prefix = f"s3://{mock_s3_bucket}/cps/inbound/skipped/"
+    files = file_util.list_files(expected_path_prefix, recursive=True)
+    assert len(files) == 4
+
+    payment_prefix = f"{earlier_date_str}-payment-extract/{earlier_date_str}"
+    assert f"{payment_prefix}-{payments_util.Constants.PEI_EXPECTED_FILE_NAME}" in files
+    assert f"{payment_prefix}-{payments_util.Constants.PAYMENT_DETAILS_EXPECTED_FILE_NAME}" in files
+    assert f"{payment_prefix}-{payments_util.Constants.CLAIM_DETAILS_EXPECTED_FILE_NAME}" in files
+    assert f"{payment_prefix}-{payments_util.Constants.PAYMENT_LINE_EXPECTED_FILE_NAME}" in files
+
+    # No reference files are created for errored files
+    # The skipped files' reference file was rolled back
+    # so isn't present in the DB. We'd pick them up again next time
     reference_files = local_test_db_session.query(ReferenceFile).all()
-    assert len(reference_files) == 1
-    assert reference_files[0].file_location == expected_path_prefix + f"{date_str}-payment-extract"
+    assert len(reference_files) == 0
 
     # Verify nothing is in any of the tables
     validate_records([], FineosExtractEmployeeFeed, "I", local_test_db_session)

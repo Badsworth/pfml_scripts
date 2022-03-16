@@ -560,7 +560,6 @@ class ApplicationFactory(BaseFactory):
 
     application_id = Generators.UuidObj
 
-    nickname = "My leave application"
     requestor = None
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")

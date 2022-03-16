@@ -423,9 +423,6 @@ def update_from_request(
             )
             continue
 
-        if key == "application_nickname":
-            key = "nickname"
-
         if key == "phone":
             add_or_update_phone(db_session, body.phone, application)
             continue
@@ -1062,7 +1059,7 @@ def set_customer_detail_fields(
             (info for info in details.classExtensionInformation if info.name == "MassachusettsID"),
             None,
         )
-        if mass_id is not None and mass_id.stringValue != "":
+        if mass_id is not None and mass_id.stringValue != "" and mass_id.stringValue is not None:
             application.mass_id = str(mass_id.stringValue).upper()
             has_state_id = True
     application.has_state_id = has_state_id
@@ -1411,6 +1408,10 @@ def set_payment_preference_fields(
         )
         add_or_update_address(db_session, address_to_create, AddressType.MAILING, application)
         has_mailing_address = True
+
+    if preference.paymentMethod is None:
+        application.has_submitted_payment_preference = False
+
     application.has_mailing_address = has_mailing_address
 
 

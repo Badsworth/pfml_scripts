@@ -5,7 +5,7 @@ import os
 from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from typing import Dict, List, Optional, cast
+from typing import Any, Dict, List, Optional, cast
 
 import faker
 from sqlalchemy.sql.expression import true
@@ -62,6 +62,10 @@ VBI_LEAVE_PLAN_REQUESTED_ABSENCE_FIELD_NAMES = (
 )
 PAID_LEVAVE_INSTRUCTION_FIELD_NAMES = (
     payments_util.FineosExtractConstants.PAID_LEAVE_INSTRUCTION.field_names
+)
+
+VBI_TASKREPORT_SOM_EXTRACT_FIELD_NAMES = (
+    payments_util.FineosExtractConstants.VBI_TASKREPORT_SOM.field_names
 )
 
 xml_1099_packed_data = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -136,6 +140,7 @@ class FineosPaymentData(MockData):
         include_employee_feed=True,
         include_absence_case=True,
         include_1099_data=True,
+        include_vbi_tasks=False,
         **kwargs,
     ):
         super().__init__(generate_defaults, **kwargs)
@@ -147,6 +152,7 @@ class FineosPaymentData(MockData):
         self.include_employee_feed = include_employee_feed
         self.include_absence_case = include_absence_case
         self.include_1099_data = include_1099_data
+        self.include_vbi_tasks = include_vbi_tasks
         self.kwargs = kwargs
 
         # Values used in various places below
@@ -252,6 +258,10 @@ class FineosPaymentData(MockData):
         self.payment_line_i_value = self.get_value("payment_line_i_value", random_unique_int())
         self.payment_line_type = self.get_value("payment_line_type", "Auto Gross Entitlement")
         self.payment_line_amount = self.get_value("payment_line_amount", self.payment_amount)
+
+        # VBI Task Record Som values
+        self.task_status = self.get_value("task_status", "")
+        self.task_tasktypename = self.get_value("task_tasktypename", "")
 
     def get_vpei_record(self):
         vpei_record = OrderedDict()
@@ -393,6 +403,17 @@ class FineosPaymentData(MockData):
             vbi_1099_data_record["DOCUMENTTYPE"] = self.document_type_1099
 
         return vbi_1099_data_record
+
+    def get_vbi_task_record(self, **kwargs: str) -> Dict[str, Any]:
+        vbi_task_record = OrderedDict()
+
+        if self.include_vbi_tasks:
+            vbi_task_record["TASKID"] = str(fake.random_int(1, 999_999_999))
+            vbi_task_record["CASENUMBER"] = self.absence_case_number
+            vbi_task_record["STATUS"] = self.task_status
+            vbi_task_record["TASKTYPENAME"] = self.task_tasktypename
+
+        return vbi_task_record
 
 
 class FineosIAWWData(MockData):
@@ -911,6 +932,85 @@ def generate_payment_reconciliation_extract_files(
         extract_records[extract_file.file_name] = records
 
     return extract_records
+
+
+def get_vbi_taskreport_som_extract_records(
+    dataset: Optional[List[FineosPaymentData]] = None,
+) -> List[Dict[str, Any]]:
+
+    if dataset is None:
+        dataset = []
+
+        statuses = ["928000", "928001", "928002"]
+        tasktypenames = [
+            # This isn't exhaustive - just enough to be able to test that our
+            # filter works correctly. These are the ones we want to keep:
+            "Employee Reported Other Income",
+            "Escalate Employer Reported Other Income",
+            "Escalate employer reported accrued paid leave (PTO)",
+            "Employee reported accrued paid leave (PTO)",
+            "Employee Reported Other Leave",
+            # These are (some) of the ones we want to ignore:
+            "Overpayment Mgt New Underpayment Notification",
+            "Additional Information Overdue Notification Task",
+            "Adjudicate Absence",
+        ]
+
+        # Generate all possible permutations of these columns, and fill the rest
+        # of the data with random values.
+        for status in statuses:
+            for tasktypename in tasktypenames:
+                dataset.append(
+                    FineosPaymentData(
+                        include_vbi_tasks=True, task_status=status, task_tasktypename=tasktypename
+                    )
+                )
+
+    records = [data.get_vbi_task_record() for data in dataset]
+    return records
+
+
+def get_vbi_taskreport_som_extract_filtered_records(
+    records: List[Dict[str, Any]]
+) -> List[Dict[str, Any]]:
+    filtered_records = []
+
+    for record in records:
+        if record["STATUS"] == "928000" and record["TASKTYPENAME"] in (
+            "Employee Reported Other Income",
+            "Escalate Employer Reported Other Income",
+            "Escalate employer reported accrued paid leave (PTO)",
+            "Employee reported accrued paid leave (PTO)",
+            "Employee Reported Other Leave",
+        ):
+            filtered_records.append(record)
+
+    return filtered_records
+
+
+def generate_vbi_taskreport_som_extract_files(
+    folder_path: str,
+    date_of_extract: datetime,
+    records: Optional[List[Dict[str, Any]]] = None,
+) -> None:
+
+    date_prefix = date_of_extract.strftime("%Y-%m-%d-%H-%M-%S-")
+
+    if records is None:
+        records = get_vbi_taskreport_som_extract_records()
+
+    # create the extract file
+    writer = _create_file(
+        folder_path,
+        date_prefix,
+        payments_util.FineosExtractConstants.VBI_TASKREPORT_SOM.file_name,
+        VBI_TASKREPORT_SOM_EXTRACT_FIELD_NAMES,
+    )
+
+    for record in records:
+        writer.csv_writer.writerow(record)
+
+    writer.file.close()
 
 
 def generate_iaww_extract_files(

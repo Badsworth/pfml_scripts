@@ -29,7 +29,7 @@ from massgov.pfml.rmv.models import RmvAcknowledgement
 from massgov.pfml.util.decimals import round_nearest_hundredth
 
 from ..lookup import LookupTable
-from .base import Base, TimestampMixin, uuid_gen
+from .base import Base, TimestampMixin, deprecated_column, uuid_gen
 from .common import PostgreSQLUUID, StrEnum
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -271,7 +271,7 @@ class Application(Base, TimestampMixin):
     tax_identifier_id = Column(
         PostgreSQLUUID, ForeignKey("tax_identifier.tax_identifier_id"), index=True
     )
-    nickname = Column(Text)
+    nickname = deprecated_column(Text)
     requestor = Column(Integer)
     claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), nullable=True, unique=True)
     has_mailing_address = Column(Boolean)
@@ -1025,6 +1025,14 @@ class PreviousLeaveQualifyingReason(LookupTable):
     MILITARY_EXIGENCY_FAMILY = LkPreviousLeaveQualifyingReason(
         6, "Managing family affairs while a family member is on active duty in the armed forces"
     )
+
+
+class Holiday(Base, TimestampMixin):
+    __tablename__ = "holiday"
+
+    holiday_id = Column(Integer, nullable=False, primary_key=True)
+    date = Column(Date, nullable=False, index=True)
+    holiday_name = Column(Text, nullable=False)
 
 
 def sync_lookup_tables(db_session):

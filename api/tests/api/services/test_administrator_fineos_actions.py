@@ -1858,8 +1858,8 @@ def test_get_claim_other_leaves_v2_eform(mock_fineos_other_leaves_v2_eform):
             leave_end_date=date(2021, 1, 4),
             leave_reason="Pregnancy",
             previous_leave_id=None,
-            worked_per_week_minutes=None,
-            leave_minutes=None,
+            worked_per_week_minutes=2415,
+            leave_minutes=2745,
             type="same_reason",
         ),
         PreviousLeave(
@@ -1868,8 +1868,8 @@ def test_get_claim_other_leaves_v2_eform(mock_fineos_other_leaves_v2_eform):
             leave_end_date=date(2021, 1, 12),
             leave_reason="An illness or injury",
             previous_leave_id=None,
-            worked_per_week_minutes=None,
-            leave_minutes=None,
+            worked_per_week_minutes=2430,
+            leave_minutes=3630,
             type="same_reason",
         ),
         PreviousLeave(
@@ -1878,8 +1878,8 @@ def test_get_claim_other_leaves_v2_eform(mock_fineos_other_leaves_v2_eform):
             leave_end_date=date(2021, 1, 15),
             leave_reason="Caring for a family member with a serious health condition",
             previous_leave_id=None,
-            worked_per_week_minutes=None,
-            leave_minutes=None,
+            worked_per_week_minutes=2445,
+            leave_minutes=2415,
             type="other_reason",
         ),
         PreviousLeave(
@@ -1888,8 +1888,8 @@ def test_get_claim_other_leaves_v2_eform(mock_fineos_other_leaves_v2_eform):
             leave_end_date=date(2021, 1, 19),
             leave_reason="Bonding with my child after birth or placement",
             previous_leave_id=None,
-            worked_per_week_minutes=None,
-            leave_minutes=None,
+            worked_per_week_minutes=2415,
+            leave_minutes=2715,
             type="other_reason",
         ),
         PreviousLeave(
@@ -1898,8 +1898,8 @@ def test_get_claim_other_leaves_v2_eform(mock_fineos_other_leaves_v2_eform):
             leave_end_date=date(2021, 1, 22),
             leave_reason="Caring for a family member who serves in the armed forces",
             previous_leave_id=None,
-            worked_per_week_minutes=None,
-            leave_minutes=None,
+            worked_per_week_minutes=2430,
+            leave_minutes=3645,
             type="other_reason",
         ),
     ]
@@ -1943,8 +1943,8 @@ def test_get_claim_other_leaves_v2_accrued_leave_different_employer_eform(
             leave_end_date=date(2021, 3, 8),
             leave_reason="Pregnancy",
             previous_leave_id=None,
-            worked_per_week_minutes=None,
-            leave_minutes=None,
+            worked_per_week_minutes=2400,
+            leave_minutes=3600,
             type="same_reason",
         )
     ]
@@ -1970,7 +1970,7 @@ def test_get_claim_other_income(mock_fineos_other_income_v1_eform):
     assert leave_details.employer_id == employer.employer_id
     assert leave_details.fineos_absence_id == absence_id
     assert leave_details.first_name == "Bud"
-    assert leave_details.middle_name == ""
+    assert leave_details.middle_name is None
     assert leave_details.last_name == "Baxter"
     assert leave_details.hours_worked_per_week == 37.5
     assert leave_details.leave_details.reason == "Serious Health Condition - Employee"

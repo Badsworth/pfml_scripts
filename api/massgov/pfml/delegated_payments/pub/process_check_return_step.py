@@ -70,12 +70,15 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         db_session: massgov.pfml.db.Session,
         log_entry_db_session: massgov.pfml.db.Session,
         inbound_path: str = "",
+        should_add_to_report_queue: bool = False,
     ) -> None:
         """Constructor."""
         pub_check_inbound_path = inbound_path
         if not inbound_path:
             pub_check_inbound_path = delegated_config.get_s3_config().pfml_pub_check_archive_path
-        super().__init__(db_session, log_entry_db_session, pub_check_inbound_path)
+        super().__init__(
+            db_session, log_entry_db_session, pub_check_inbound_path, should_add_to_report_queue
+        )
 
     def process_file(self, path: str) -> None:
         """Parse a check payment return file and process each record."""

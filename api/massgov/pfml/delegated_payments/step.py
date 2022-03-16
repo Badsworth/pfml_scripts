@@ -9,6 +9,7 @@ from massgov.pfml import db
 from massgov.pfml.db.models.employees import (
     Employee,
     EmployeeReferenceFile,
+    ImportLogReportQueue,
     Payment,
     PaymentReferenceFile,
     ReferenceFile,
@@ -27,14 +28,22 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
     payments_in_reference_file: Set[uuid.UUID]
     employees_in_reference_file: Set[uuid.UUID]
 
+    should_add_to_report_queue: bool
+
     class Metrics(str, enum.Enum):
         pass
 
-    def __init__(self, db_session: db.Session, log_entry_db_session: db.Session) -> None:
+    def __init__(
+        self,
+        db_session: db.Session,
+        log_entry_db_session: db.Session,
+        should_add_to_report_queue: bool = False,
+    ) -> None:
         self.db_session = db_session
         self.log_entry_db_session = log_entry_db_session
         self.payments_in_reference_file = set()
         self.employees_in_reference_file = set()
+        self.should_add_to_report_queue = should_add_to_report_queue
 
     def cleanup_on_failure(self) -> None:
         pass
@@ -59,6 +68,7 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
 
             try:
                 self.run_step()
+                self.add_to_report_queue()
                 self.db_session.commit()
 
             except Exception:
@@ -128,6 +138,14 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
             employee=employee, reference_file=reference_file
         )
         self.db_session.add(employee_reference_file)
+
+    def add_to_report_queue(self):
+        if not self.should_add_to_report_queue:
+            return
+        if not (import_log_id := self.get_import_log_id()):
+            return
+
+        self.log_entry_db_session.add(ImportLogReportQueue(import_log_id=import_log_id))
 
     @classmethod
     def check_if_processed_within_x_days(

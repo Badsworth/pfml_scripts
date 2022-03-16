@@ -12,7 +12,8 @@ locals {
     { name : "LOGGING_LEVEL", value : var.logging_level },
     { name : "FEATURES_FILE_PATH", value : "s3://massgov-pfml-${var.environment_name}-feature-gate/features.yaml" },
     { name : "NEW_RELIC_LICENSE_KEY", valueFrom : "/service/${local.app_name}/common/newrelic-license-key" },
-    { name : "NR_INSERT_API_KEY", valueFrom : "/admin/${local.app_name}/newrelic-insert-api-key" }
+    { name : "NR_INSERT_API_KEY", valueFrom : "/admin/${local.app_name}/newrelic-insert-api-key" },
+    { name : "FINEOS_IS_RUNNING_V21", value : var.fineos_is_running_v21 },
   ]
 
   # Provides access to the RDS database via admin username/password

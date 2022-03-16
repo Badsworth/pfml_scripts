@@ -7,11 +7,12 @@ import logging  # noqa: B1
 import os
 import re
 from dataclasses import asdict
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Type
 from unittest import mock
 
 import pytest
 from freezegun import freeze_time
+from sqlalchemy import func
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_config as payments_config
@@ -22,6 +23,7 @@ from massgov.pfml import db
 from massgov.pfml.db.models.employees import (
     Claim,
     ImportLog,
+    ImportLogReportQueue,
     Payment,
     PaymentMethod,
     PaymentTransactionType,
@@ -46,10 +48,13 @@ from massgov.pfml.db.models.state import Flow, LkFlow, LkState, State
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
 )
+from massgov.pfml.delegated_payments.delegated_fineos_claimant_extract import ClaimantExtractStep
+from massgov.pfml.delegated_payments.delegated_fineos_payment_extract import PaymentExtractStep
 from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
     generate_claimant_data_files,
     generate_payment_extract_files,
     generate_payment_reconciliation_extract_files,
+    generate_vbi_taskreport_som_extract_files,
 )
 from massgov.pfml.delegated_payments.mock.generate_check_response import PubCheckResponseGenerator
 from massgov.pfml.delegated_payments.mock.generate_manual_pub_reject_response import (
@@ -70,6 +75,11 @@ from massgov.pfml.delegated_payments.mock.scenarios import (
     ScenarioDescriptor,
     ScenarioName,
 )
+from massgov.pfml.delegated_payments.pub.process_check_return_step import ProcessCheckReturnFileStep
+from massgov.pfml.delegated_payments.pub.process_manual_pub_rejection_step import (
+    ProcessManualPubRejectionStep,
+)
+from massgov.pfml.delegated_payments.pub.process_nacha_return_step import ProcessNachaReturnFileStep
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports import (
     CREATE_PUB_FILES_REPORTS,
     PROCESS_FINEOS_EXTRACT_REPORTS,
@@ -78,6 +88,7 @@ from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports imp
     ReportName,
     get_report_by_name,
 )
+from massgov.pfml.delegated_payments.step import Step
 from massgov.pfml.delegated_payments.task.process_fineos_extracts import (
     Configuration as FineosTaskConfiguration,
 )
@@ -280,6 +291,8 @@ def test_e2e_pub_payments(
             test_dataset, mock_experian_client, test_db_session, test_db_other_session
         )
 
+        assert_report_queue_items_count(local_test_db_other_session, {PaymentExtractStep: 1})
+
         # == Validate created rows
         claims = test_db_session.query(Claim).all()
         # Each scenario will have a claim created even if it doesn't start with one
@@ -288,10 +301,11 @@ def test_e2e_pub_payments(
         # Payments
         payments = (
             # Only retrieve payments that were generated from processing extracts
-            # This ends up being 6 there are 4 steps that occur before as well as an import log for past payments
-            # 1:PastPayments,2:StateCleanupStep,3:CLAIMANT_EXTRACT_CONFIG,4:PAYMENT_EXTRACT_CONFIG,5:ClaimantExtractStep,6:PaymentExtractStep
+            # This ends up being 7: there are 5 steps that occur before as well as an import log for past payments
+            # 1:PastPayments,2:StateCleanupStep,3:CLAIMANT_EXTRACT_CONFIG,4:PAYMENT_EXTRACT_CONFIG,
+            # 5:VBI_TASKREPORT_SOM_EXTRACT_CONFIG,6:ClaimantExtractStep,7:PaymentExtractStep
             test_db_session.query(Payment)
-            .filter(Payment.fineos_extract_import_log_id == 6)
+            .filter(Payment.fineos_extract_import_log_id == 7)
             .all()
         )
         missing_payment = list(
@@ -1326,6 +1340,8 @@ def test_e2e_pub_payments(
         # == Run the task
         process_pub_payments(test_db_session, test_db_other_session)
 
+        assert_report_queue_items_count(local_test_db_other_session)
+
         # == Validate file contents
         date_folder = get_current_date_folder()
         timestamp_prefix = get_current_timestamp_prefix()
@@ -1734,6 +1750,8 @@ def test_e2e_pub_payments(
 
         # == Run the task
         process_pub_responses(test_db_session, test_db_other_session)
+
+        assert_report_queue_items_count(local_test_db_other_session)
 
         # == Validate payment states
 
@@ -2225,6 +2243,13 @@ def test_e2e_pub_payments(
             test_dataset, mock_experian_client, test_db_session, test_db_other_session
         )
 
+        assert_report_queue_items_count(
+            test_db_other_session,
+            {
+                PaymentExtractStep: 1,
+            },
+        )
+
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
             scenario_names=[
@@ -2328,6 +2353,12 @@ def test_e2e_pub_payments_delayed_scenarios(
         process_fineos_extracts(
             test_dataset, mock_experian_client, local_test_db_session, local_test_db_other_session
         )
+        assert_report_queue_items_count(
+            local_test_db_other_session,
+            {
+                PaymentExtractStep: 1,
+            },
+        )
 
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
@@ -2377,6 +2408,8 @@ def test_e2e_pub_payments_delayed_scenarios(
 
     with freeze_time("2021-05-02 18:00:00", tz_offset=5):
         process_pub_payments(local_test_db_session, local_test_db_other_session)
+
+        assert_report_queue_items_count(local_test_db_other_session)
 
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
@@ -2435,6 +2468,7 @@ def test_e2e_pub_payments_delayed_scenarios(
         process_fineos_extracts(
             test_dataset, mock_experian_client, local_test_db_session, local_test_db_other_session
         )
+        assert_report_queue_items_count(local_test_db_other_session, {PaymentExtractStep: 1})
 
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
@@ -2494,6 +2528,8 @@ def test_e2e_pub_payments_delayed_scenarios(
     with freeze_time("2021-05-03 18:00:00", tz_offset=5):
         process_pub_payments(local_test_db_session, local_test_db_other_session)
 
+        assert_report_queue_items_count(local_test_db_other_session)
+
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
             scenario_names=[
@@ -2537,6 +2573,8 @@ def test_e2e_pub_payments_delayed_scenarios(
         process_fineos_extracts(
             test_dataset, mock_experian_client, local_test_db_session, local_test_db_other_session
         )
+
+        assert_report_queue_items_count(local_test_db_other_session, {PaymentExtractStep: 1})
 
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
@@ -2604,6 +2642,197 @@ def test_e2e_pub_payments_fails(
         # Nothing should have been written to s3
         all_files = file_util.list_files(f"s3://{mock_s3_bucket}", recursive=True)
         assert len(all_files) == 0
+
+
+def test_e2e_pub_payments_report_queue(
+    local_test_db_session,
+    local_test_db_other_session,
+    local_initialize_factories_session,
+    monkeypatch,
+    set_exporter_env_vars,
+    caplog,
+):
+
+    test_db_session = local_test_db_session
+    test_db_other_session = local_test_db_other_session
+
+    # ========================================================================
+    # Configuration / Setup
+    # ========================================================================
+
+    caplog.set_level(logging.ERROR)  # noqa: B1
+    setup_common_env_variables(monkeypatch)
+    mock_experian_client = get_mock_address_client()
+
+    # ========================================================================
+    # Data Setup - Mirror DOR Import + Claim Application
+    # ========================================================================
+
+    # Free time to hint upcoming processing dates
+    # In reality DB data will be populated any time prior to processing
+    with freeze_time("2021-05-01 00:00:00", tz_offset=5):
+        test_dataset = generate_test_dataset(SCENARIO_DESCRIPTORS, test_db_session)
+
+    # ===============================================================================
+    # [Day 1]
+    #  - [Between 7:00 - 9:00 PM] Generate FINEOS vendor extract files
+    #  - [After 9:00 PM] Run the FINEOS ECS task without Reports - Process Claim and Payment Extract
+    # ===============================================================================
+
+    with freeze_time("2021-05-01 20:00:00", tz_offset=5):
+        generate_fineos_extract_files(test_dataset.scenario_dataset)
+
+    with freeze_time("2021-05-01 21:30:00", tz_offset=5):
+        # == Run task with args excluding report
+        task_config = FineosTaskConfiguration(["--steps", "ALL"])
+        task_config.make_reports = False
+        process_fineos_extracts(
+            test_dataset, mock_experian_client, test_db_session, test_db_other_session, task_config
+        )
+
+    # Claimant extract step has not cleared since report not ran
+    assert_report_queue_items_count(
+        test_db_other_session,
+        {
+            PaymentExtractStep: 1,
+            ClaimantExtractStep: 1,
+        },
+    )
+
+    # ===============================================================================
+    # [Day 2]
+    #  - [Before 5:00 PM] Payment Integrity Team returns Payment Rejects File
+    #  - [Between 7:00 - 9:00 PM] Generate FINEOS vendor extract files
+    #  - [After 9:00 PM] Run the FINEOS ECS task - Process Claim and Payment Extract
+    # ===============================================================================
+
+    with freeze_time("2021-05-02 14:00:00", tz_offset=5):
+        generate_rejects_file(test_dataset)
+
+    with freeze_time("2021-05-02 18:00:00", tz_offset=5):
+        generate_fineos_extract_files(test_dataset.scenario_dataset)
+
+    with freeze_time("2021-05-02 21:30:00", tz_offset=5):
+        process_fineos_extracts(
+            test_dataset, mock_experian_client, test_db_session, test_db_other_session
+        )
+
+    # Claimant extract step(s) cleared and additional Payment extract step has been added
+    assert_report_queue_items_count(
+        test_db_other_session,
+        {
+            PaymentExtractStep: 2,
+        },
+    )
+
+    # ===============================================================================
+    # [Day 3]
+    #  - [Before 5:00 PM] Payment Integrity Team returns Payment Rejects File
+    #  - [Between 5:00 - 7:00 PM PM] Run the PUB Processing ECS task without Reports - Rejects, PUB Transaction Files, Writeback
+    # ===============================================================================
+    with freeze_time("2021-05-03 14:00:00", tz_offset=5):
+        generate_rejects_file(test_dataset)
+
+    with freeze_time("2021-05-03 18:00:00", tz_offset=5):
+        # == Run task with args excluding report
+        task_config = ProcessPubPaymentsTaskConfiguration(["--steps", "ALL"])
+        task_config.make_reports = False
+        process_pub_payments(test_db_session, test_db_other_session, task_config)
+
+    # Payment extract step carried over since report not ran
+    assert_report_queue_items_count(
+        test_db_other_session,
+        {
+            PaymentExtractStep: 2,
+        },
+    )
+
+    # ===============================================================================
+    # [Day 4]
+    #  - [9:00 AM] PUB sends ACH and Check response files
+    #  - [11:00 AM] Run the PUB Response ECS task without Reports - response, writeback
+    # ===============================================================================
+
+    with freeze_time("2021-05-04 09:00:00", tz_offset=5):
+        generate_pub_returns(test_dataset)
+
+    with freeze_time("2021-05-04 11:00:00", tz_offset=5):
+        # == Run task with args excluding report
+        task_config = ProcessPubResponsesTaskConfiguration(["--steps", "ALL"])
+        task_config.make_reports = False
+        process_pub_responses(test_db_session, test_db_other_session, task_config)
+
+    # Process files in path steps carried over since report not ran
+    assert_report_queue_items_count(
+        test_db_other_session,
+        {
+            ProcessCheckReturnFileStep: 2,
+            ProcessNachaReturnFileStep: 1,
+            ProcessManualPubRejectionStep: 1,
+            PaymentExtractStep: 2,
+        },
+    )
+
+    # ===============================================================================
+    # [Day 5]
+    #  - [Between 7:00 - 9:00 PM] Generate FINEOS vendor extract files
+    #  - [After 9:00 PM] Run the FINEOS ECS task - Process Claim and Payment Extract
+    # ===============================================================================
+
+    with freeze_time("2021-05-05 19:00:00", tz_offset=5):
+        generate_fineos_extract_files(test_dataset.scenario_dataset)
+
+    with freeze_time("2021-05-05 21:30:00", tz_offset=5):
+        process_fineos_extracts(
+            test_dataset, mock_experian_client, test_db_session, test_db_other_session
+        )
+
+    # Additional Payment extract step has been added
+    assert_report_queue_items_count(
+        test_db_other_session,
+        {
+            ProcessCheckReturnFileStep: 2,
+            ProcessNachaReturnFileStep: 1,
+            ProcessManualPubRejectionStep: 1,
+            PaymentExtractStep: 3,
+        },
+    )
+
+    # ===============================================================================
+    # [Day 6]
+    #  - [Before 5:00 PM] Payment Integrity Team returns Payment Rejects File
+    #  - [Between 5:00 - 7:00 PM PM] Run the PUB Processing ECS task - Rejects, PUB Transaction Files, Writeback
+    # ===============================================================================
+    with freeze_time("2021-05-06 14:00:00", tz_offset=5):
+        generate_rejects_file(test_dataset)
+
+    with freeze_time("2021-05-06 18:00:00", tz_offset=5):
+        process_pub_payments(test_db_session, test_db_other_session)
+
+    # Payment extract steps cleared
+    assert_report_queue_items_count(
+        test_db_other_session,
+        {
+            ProcessCheckReturnFileStep: 2,
+            ProcessNachaReturnFileStep: 1,
+            ProcessManualPubRejectionStep: 1,
+        },
+    )
+
+    # ===============================================================================
+    # [Day 7]
+    #  - [9:00 AM] PUB sends ACH and Check response files
+    #  - [11:00 AM] Run the PUB Response ECS task - response, writeback, reports
+    # ===============================================================================
+
+    with freeze_time("2021-05-07 09:00:00", tz_offset=5):
+        generate_pub_returns(test_dataset)
+
+    with freeze_time("2021-05-07 11:00:00", tz_offset=5):
+        process_pub_responses(test_db_session, test_db_other_session)
+
+    # All queue items should be processed
+    assert_report_queue_items_count(test_db_other_session, {})
 
 
 def test_e2e_process_payment_reconciliation(
@@ -2734,6 +2963,14 @@ def generate_fineos_extract_files(scenario_dataset: List[ScenarioData], round: i
         fineos_extract_date_prefix,
     )
 
+    # vbi taskreport som extract
+    generate_vbi_taskreport_som_extract_files(fineos_data_export_path, get_now_us_eastern())
+    assert_files(
+        fineos_data_export_path,
+        payments_util.VBI_TASKREPORT_SOM_EXTRACT_FILE_NAMES,
+        fineos_extract_date_prefix,
+    )
+
 
 def generate_rejects_file(test_dataset: TestDataSet, round: int = 1):
     s3_config = payments_config.get_s3_config()
@@ -2813,7 +3050,9 @@ def process_fineos_extracts(
     mock_experian_client: soap_api.Client,
     db_session: db.Session,
     log_entry_db_session: db.Session,
+    config: Optional[FineosTaskConfiguration] = None,
 ):
+    config = config if config else FineosTaskConfiguration(["--steps", "ALL"])
     with mock.patch(
         "massgov.pfml.delegated_payments.address_validation._get_experian_soap_client",
         return_value=mock_experian_client,
@@ -2821,7 +3060,7 @@ def process_fineos_extracts(
         run_fineos_ecs_task(
             db_session=db_session,
             log_entry_db_session=log_entry_db_session,
-            config=FineosTaskConfiguration(["--steps", "ALL"]),
+            config=config,
         )
 
     assert_success_file("pub-payments-process-fineos")
@@ -2829,20 +3068,30 @@ def process_fineos_extracts(
     test_dataset.populate_scenario_dataset_claims(db_session)
 
 
-def process_pub_payments(db_session: db.Session, log_entry_db_session: db.Session):
+def process_pub_payments(
+    db_session: db.Session,
+    log_entry_db_session: db.Session,
+    config: Optional[ProcessPubPaymentsTaskConfiguration] = None,
+):
+    config = config if config else ProcessPubPaymentsTaskConfiguration(["--steps", "ALL"])
     run_process_pub_payments_ecs_task(
         db_session=db_session,
         log_entry_db_session=log_entry_db_session,
-        config=ProcessPubPaymentsTaskConfiguration(["--steps", "ALL"]),
+        config=config,
     )
     assert_success_file("pub-payments-create-pub-files")
 
 
-def process_pub_responses(db_session: db.Session, log_entry_db_session: db.Session):
+def process_pub_responses(
+    db_session: db.Session,
+    log_entry_db_session: db.Session,
+    config: Optional[ProcessPubResponsesTaskConfiguration] = None,
+):
+    config = config if config else ProcessPubResponsesTaskConfiguration(["--steps", "ALL"])
     run_process_pub_responses_ecs_task(
         db_session=db_session,
         log_entry_db_session=log_entry_db_session,
-        config=ProcessPubResponsesTaskConfiguration(["--steps", "ALL"]),
+        config=config,
     )
     assert_success_file("pub-payments-process-pub-returns")
 
@@ -3044,6 +3293,42 @@ def assert_success_file(process_name):
     )
     expected_file_name = f"{process_name}.SUCCESS"
     assert_files(processed_folder, [expected_file_name], get_current_timestamp_prefix())
+
+
+def assert_report_queue_items_count(
+    log_report_db_session: db.Session,
+    import_log_expected_values: Optional[Dict[Type[Step], int]] = None,
+):
+    import_log_expected_values = import_log_expected_values if import_log_expected_values else {}
+    expected_sources = set()
+    assertion_errors = []
+
+    report_queue_source_counts = (
+        log_report_db_session.query(
+            func.count(ImportLog.source),
+            ImportLog.source,
+        )
+        .join(ImportLogReportQueue)
+        .group_by(ImportLog.source)
+        .all()
+    )
+
+    for step, expected_count in import_log_expected_values.items():
+        source = step.__name__
+        expected_sources.add(source)
+        found_source = next(x for x in report_queue_source_counts if x.source == source)
+        found_count = found_source[0] if found_source else 0
+        if expected_count != found_count:
+            assertion_errors.append(
+                f"log source: {source}, expected: {expected_count}, found: {found_count}"
+            )
+
+    for found_count, source in report_queue_source_counts:
+        if source not in expected_sources:
+            assertion_errors.append(f"log source: {source}, expected: 0, found: {found_count}")
+
+    errors = "\n".join(assertion_errors)
+    assert len(assertion_errors) == 0, f"Unexpected report queue item count(s)\n{errors}"
 
 
 def assert_metrics(

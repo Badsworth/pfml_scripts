@@ -750,6 +750,86 @@ class TestGetPaymentPreapprovalStatus:
             == f"{PreapprovalIssue.CHANGED_ADDRESS}: {different_address.address_line_one} {different_address.city} {different_address.zip_code} -> {address.address_line_one} {address.city} {address.zip_code}"
         )
 
+    def test_not_preapproved_address_change_missing_address(
+        self, initialize_factories_session, test_db_session
+    ):
+        delegated_payment = DelegatedPaymentFactory(test_db_session)
+        employee = delegated_payment.get_or_create_employee()
+        address = delegated_payment.get_or_create_address()
+        payment = delegated_payment.get_or_create_payment()
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            experian_address_pair=payment.experian_address_pair,
+            employee=employee,
+            add_import_log=True,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            experian_address_pair=payment.experian_address_pair,
+            employee=employee,
+            add_import_log=True,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+
+        # The most recent payment does not have an adderss associated with it
+        delegated_different_address_payment = DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            add_import_log=True,
+            employee=employee,
+            experian_address_pair=None,
+            add_address=False,
+        )
+        delegated_different_address_payment.get_or_create_payment_with_state(
+            State.DELEGATED_PAYMENT_COMPLETE
+        )
+
+        approval_status = get_payment_preapproval_status(payment, list(), test_db_session)
+        assert not approval_status.is_preapproved()
+        assert (
+            approval_status.get_preapproval_issue_description()
+            == f"{PreapprovalIssue.CHANGED_ADDRESS}: No address associated with last payment -> {address.address_line_one} {address.city} {address.zip_code}"
+        )
+
+        # Current payment does not have an address associated with it
+        delegated_payment = DelegatedPaymentFactory(test_db_session, add_address=False)
+        employee = delegated_payment.get_or_create_employee()
+        payment = delegated_payment.get_or_create_payment()
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            experian_address_pair=payment.experian_address_pair,
+            employee=employee,
+            add_import_log=True,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            experian_address_pair=payment.experian_address_pair,
+            employee=employee,
+            add_import_log=True,
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+
+        # The most recent payment has a different address
+        delegated_different_address_payment = DelegatedPaymentFactory(
+            test_db_session,
+            fineos_leave_request_id=payment.fineos_leave_request_id,
+            add_import_log=True,
+            employee=employee,
+        )
+        most_recent_address = delegated_different_address_payment.get_or_create_address()
+        delegated_different_address_payment.get_or_create_payment_with_state(
+            State.DELEGATED_PAYMENT_COMPLETE
+        )
+
+        approval_status = get_payment_preapproval_status(payment, list(), test_db_session)
+        assert not approval_status.is_preapproved()
+        assert (
+            approval_status.get_preapproval_issue_description()
+            == f"{PreapprovalIssue.CHANGED_ADDRESS}: {most_recent_address.address_line_one} {most_recent_address.city} {most_recent_address.zip_code} -> No address associated with payment"
+        )
+
     def test_not_preapproved_multiple_reasons(self, initialize_factories_session, test_db_session):
         # Tests that multiple issues are detected. In this case:
         # different name on last payment
