@@ -583,10 +583,10 @@ module "process-1099-generate" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = true
 
-  task_name           = "1099-generate"
+  task_name                            = "1099-generate"
   schedule_expression_standard         = "cron(0 18 ? * 6 *)"
   schedule_expression_daylight_savings = "cron(0 17 ? * 6 *)"
-  environment_name    = var.environment_name
+  environment_name                     = var.environment_name
 
   cluster_arn        = data.aws_ecs_cluster.cluster.arn
   app_subnet_ids     = var.app_subnet_ids
@@ -626,10 +626,10 @@ module "process-1099-upload" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = true
 
-  task_name           = "1099-upload"
+  task_name                            = "1099-upload"
   schedule_expression_standard         = "cron(0 21 ? * 6 *)"
   schedule_expression_daylight_savings = "cron(0 20 ? * 6 *)"
-  environment_name    = var.environment_name
+  environment_name                     = var.environment_name
 
   cluster_arn        = data.aws_ecs_cluster.cluster.arn
   app_subnet_ids     = var.app_subnet_ids
