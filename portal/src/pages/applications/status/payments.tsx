@@ -153,7 +153,8 @@ export const Payments = ({
       return t("pages.payments.tableAmountSent", { amount });
     } else if (
       status === "Pending" ||
-      (status === "Delayed" &&
+      (isFeatureEnabled("claimantShowPaymentsPhaseThree") &&
+        status === "Delayed" &&
         transaction_date &&
         !isAfterDelayProcessingTime(
           writeback_transaction_status,

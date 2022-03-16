@@ -5,6 +5,8 @@ import { extractLeavePeriod } from "../../../../src/util/claims";
 import { config } from "../../../actions/common";
 
 describe("Submit medical pre-birth application via the web portal", () => {
+  const APRIL_UPGRADE: boolean = config("HAS_APRIL_UPGRADE") === "true";
+
   const submission =
     it("Submits a Medical/Pregnancy claim through the API", () => {
       cy.task("generateClaim", "PREBIRTH").then((claim) => {
@@ -59,11 +61,7 @@ describe("Submit medical pre-birth application via the web portal", () => {
               .shouldHaveStatus("Availability", "Time Available")
               .shouldHaveStatus("Restriction", "Passed")
               .shouldHaveStatus("PlanDecision", "Accepted");
-            if (config("HAS_APRIL_UPGRADE") === "true") {
-              claimPage.approve("Approved", true);
-            } else {
-              claimPage.approve("Approved", false);
-            }
+            claimPage.approve("Approved", APRIL_UPGRADE);
           });
         });
       });
@@ -138,19 +136,13 @@ describe("Submit medical pre-birth application via the web portal", () => {
       cy.dependsOnPreviousPass([extension]);
       fineos.before();
       cy.unstash<Submission>("submission").then((submission) => {
-        if (config("HAS_APRIL_UPGRADE") === "true") {
-          fineosPages.ClaimPage.visit(submission.fineos_absence_id).deny(
-            "Covered family relationship not established",
-            true,
-            true
-          );
-        } else {
-          fineosPages.ClaimPage.visit(submission.fineos_absence_id).deny(
-            "Claimant wages failed 30x rule",
-            false,
-            false
-          );
-        }
+        fineosPages.ClaimPage.visit(submission.fineos_absence_id).deny(
+          APRIL_UPGRADE
+            ? "Covered family relationship not established"
+            : "Claimant wages failed 30x rule",
+          APRIL_UPGRADE,
+          APRIL_UPGRADE
+        );
       });
     }
   );
