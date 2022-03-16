@@ -1632,6 +1632,7 @@ components:
       type: apiKey
       in: header
       name: Mass-PFML-Agent-ID
+      x-apikeyInfoFunc: massgov.pfml.api.authentication.apikey_auth_agent_id
       description: |
         Some clients are required to provide a non-empty value for this header in order to authenticate.
 

@@ -241,3 +241,12 @@ def build_logout_flow() -> Optional[str]:
     if azure_config is None:
         return None
     return azure_config.logout_uri
+
+
+def apikey_auth_agent_id(api_key: str, required_scopes: list) -> dict:
+    """API key info function for "Mass-PFML-Agent-ID" header.
+
+    This is not called normally, as all endpoints that require this header also require oauth.
+    The connexion library requires this function to be defined."""
+    logger.info("api_key %r, required_scopes %r", api_key, required_scopes)
+    return {"uid": api_key}
