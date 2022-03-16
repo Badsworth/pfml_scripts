@@ -8,6 +8,7 @@ from massgov.pfml import db
 from massgov.pfml.db.models.employees import Payment, PaymentTransactionType, StateLog
 from massgov.pfml.db.models.payments import (
     FineosWritebackDetails,
+    FineosWritebackTransactionStatus,
     LinkSplitPayment,
     LkFineosWritebackTransactionStatus,
 )
@@ -115,6 +116,19 @@ class RelatedPaymentsProcessingStep(Step):
                 logger.info(
                     "Payment added to state %s",
                     end_state.state_description,
+                    extra=extra,
+                )
+
+                writeback_message = "Payment errored due to an issue with a related payment."
+                stage_payment_fineos_writeback(
+                    payment=payment,
+                    writeback_transaction_status=FineosWritebackTransactionStatus.DATA_ISSUE_IN_SYSTEM,
+                    outcome=state_log_util.build_outcome(writeback_message),
+                    db_session=self.db_session,
+                    import_log_id=self.get_import_log_id(),
+                )
+                logger.info(
+                    writeback_message,
                     extra=extra,
                 )
                 continue
