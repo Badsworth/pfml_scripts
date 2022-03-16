@@ -65,6 +65,8 @@ def test_employer_with_fineos_id_is_required(test_db_session, initialize_factori
 
 def test_employer_is_not_fully_exempt(test_db_session, initialize_factories_session):
     # Validation issue when Employer exists, but it's fully exempt
+    # DOR has a 'magic date' of 12/31/9999 if employer has no exemptions.
+    # This date is used for simplicity as it doesn't really matter here.
     exemption_date = datetime.strptime("12/31/9999", "%m/%d/%Y").date()
     employer = EmployerFactory.create(
         family_exemption=True,
