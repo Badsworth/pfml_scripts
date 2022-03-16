@@ -1027,6 +1027,14 @@ class PreviousLeaveQualifyingReason(LookupTable):
     )
 
 
+class Holiday(Base, TimestampMixin):
+    __tablename__ = "holiday"
+
+    holiday_id = Column(Integer, nullable=False, primary_key=True)
+    date = Column(Date, nullable=False, index=True)
+    holiday_name = Column(Text, nullable=False)
+
+
 def sync_lookup_tables(db_session):
     """Synchronize lookup tables to the database."""
     LeaveReason.sync_to_database(db_session)

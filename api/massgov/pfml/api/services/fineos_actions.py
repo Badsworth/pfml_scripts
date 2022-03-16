@@ -419,18 +419,22 @@ def mark_single_document_as_received(
 def build_customer_model(application, current_user):
     """Convert an application to a FINEOS API Customer model."""
     tax_identifier = application.tax_identifier.tax_identifier
-    mass_id = massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
-        name="MassachusettsID", stringValue=application.mass_id or ""
-    )
     confirmed = massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
         name="Confirmed", booleanValue=True
     )
-    class_ext_info = [mass_id, confirmed]
+    class_ext_info = [confirmed]
     if current_user is not None:
         consented_to_data_sharing = massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
             name="ConsenttoShareData", booleanValue=current_user.consented_to_data_sharing
         )
         class_ext_info.append(consented_to_data_sharing)
+
+    if application.mass_id is not None:
+        mass_id = massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
+            name="MassachusettsID", stringValue=application.mass_id or ""
+        )
+        # tests assume MassId is the first ExtensionAttribute, so insert at 0 index.
+        class_ext_info.insert(0, mass_id)
 
     customer = massgov.pfml.fineos.models.customer_api.Customer(
         firstName=application.first_name,

@@ -1,17 +1,10 @@
-/**
- * We import from /pure here in order to prevent the auto-cleanup behavior, which
- * attempts to unmount the React tree. This fails for components that initialize
- * USWDS JS, which seems to be due the DOM markup being altered by the USWDS
- * script once the component mounts/unmounts.
- * https://testing-library.com/docs/react-testing-library/setup/#skipping-auto-cleanup
- */
 import * as globalStorybookConfig from "storybook/preview";
 import { DecoratorFn, Story } from "@storybook/react";
 import {
   composeStories,
   setGlobalConfig as setupStorybook,
 } from "@storybook/testing-react";
-import { render, waitFor } from "@testing-library/react/pure";
+import { render, waitFor } from "@testing-library/react";
 import React from "react";
 import { axe } from "jest-axe";
 import path from "path";

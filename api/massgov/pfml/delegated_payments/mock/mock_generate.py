@@ -44,6 +44,11 @@ def main():
         scenario_dataset, fineos_data_export_path, get_now_us_eastern(), round=1
     )
 
+    # VBI Taskreport Som extract
+    fineos_extract_data.generate_vbi_taskreport_som_extract_files(
+        fineos_data_export_path, get_now_us_eastern()
+    )
+
 
 if __name__ == "__main__":
     main()
