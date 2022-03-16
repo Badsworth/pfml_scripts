@@ -29,6 +29,7 @@ import massgov.pfml.db.models.employees as employee_models
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.models.claims.responses import AbsencePeriodResponse
+from massgov.pfml.db.models.employees import MFADeliveryPreference
 from massgov.pfml.db.models.factories import (
     ApplicationFactory,
     ChangeRequestFactory,
@@ -205,7 +206,10 @@ def consented_user(initialize_factories_session):
 
 @pytest.fixture
 def user_with_mfa(initialize_factories_session):
-    user = UserFactory.create(mfa_phone_number="+15109283075")
+    user = UserFactory.create(
+        mfa_phone_number="+15109283075",
+        mfa_delivery_preference_id=MFADeliveryPreference.SMS.mfa_delivery_preference_id,
+    )
     return user
 
 
@@ -670,11 +674,11 @@ def test_db(test_db_schema):
     is dropped after the test completes.
     """
     import massgov.pfml.db as db
-    from massgov.pfml.db.models.base import Base
+    import massgov.pfml.db.models.applications as applications  # noqa: F401
 
     # not used directly, but loads models into Base
     import massgov.pfml.db.models.employees as employees  # noqa: F401
-    import massgov.pfml.db.models.applications as applications  # noqa: F401
+    from massgov.pfml.db.models.base import Base
 
     engine = db.create_engine()
     Base.metadata.create_all(bind=engine)
@@ -758,12 +762,12 @@ def local_test_db(local_test_db_schema):
     is dropped after the test completes.
     """
     import massgov.pfml.db as db
-    from massgov.pfml.db.models.base import Base
+    import massgov.pfml.db.models.applications as applications  # noqa: F401
 
     # not used directly, but loads models into Base
     import massgov.pfml.db.models.employees as employees  # noqa: F401
-    import massgov.pfml.db.models.applications as applications  # noqa: F401
     import massgov.pfml.db.models.payments as payments  # noqa: F401
+    from massgov.pfml.db.models.base import Base
 
     engine = db.create_engine()
     Base.metadata.create_all(bind=engine)
@@ -831,9 +835,10 @@ def test_db_via_migrations(has_external_dependencies, migrations_test_db_schema,
     Creates a test schema, runs migrations through Alembic. Schema is dropped
     after the test completes.
     """
-    from alembic.config import Config
-    from alembic import command
     from pathlib import Path
+
+    from alembic import command
+    from alembic.config import Config
 
     alembic_cfg = Config(
         os.path.join(os.path.dirname(__file__), "../massgov/pfml/db/migrations/alembic.ini")
@@ -867,11 +872,11 @@ def initialize_factories_session_via_migrations(test_db_session_via_migrations):
 @pytest.fixture(scope="module")
 def module_persistent_db(has_external_dependencies, monkeypatch_module, request):
     import massgov.pfml.db as db
-    from massgov.pfml.db.models.base import Base
+    import massgov.pfml.db.models.applications as applications  # noqa: F401
 
     # not used directly, but loads models into Base
     import massgov.pfml.db.models.employees as employees  # noqa: F401
-    import massgov.pfml.db.models.applications as applications  # noqa: F401
+    from massgov.pfml.db.models.base import Base
 
     schema_name = f"api_test_persistent_{uuid.uuid4().int}"
     logger.info("use persistent test db for module %s", request.module.__name__)
