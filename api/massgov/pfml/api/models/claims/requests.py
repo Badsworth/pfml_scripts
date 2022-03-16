@@ -17,7 +17,7 @@ class ClaimSearchTerms(PydanticBaseModel):
     # Alias specified for backward compatibility with the UI param "employee_id"
     employee_ids: Optional[Set[UUID4]] = Field(None, alias="employee_id")
     search: Optional[str] = None
-    is_reviewable: Optional[str] = None
+    is_reviewable: Optional[bool] = None
     request_decision: Optional[str] = None
 
     class Config:

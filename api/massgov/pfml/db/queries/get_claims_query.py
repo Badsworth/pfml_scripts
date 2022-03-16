@@ -1,5 +1,5 @@
 import re
-from typing import Any, Callable, Optional, Set, Type, Union, no_type_check
+from typing import Any, Callable, Optional, Set, Type, Union
 from uuid import UUID
 
 from sqlalchemy import Column, and_, asc, desc, func, or_
@@ -93,25 +93,23 @@ class GetClaimsQuery:
         filter = Claim.application.has(Application.user_id == current_user.user_id)  # type: ignore
         self.query = self.query.filter(filter)
 
-    @no_type_check
-    def add_is_reviewable_filter(self, is_reviewable: str) -> None:
+    def add_is_reviewable_filter(self, is_reviewable: bool) -> None:
         """
         Filters claims by checking if they are reviewable or not.
 
         A claim is reviewable if it has an associated open requirement (soonest_open_requirement_date isn't None)
         AND the claim has at least one reviewable (non-final) absence period request decision
         """
-        if is_reviewable == "yes":
+        if is_reviewable:
             self.query = self.query.filter(
-                Claim.soonest_open_requirement_date.isnot(None),
-                Claim.absence_periods.any(~AbsencePeriod.has_final_decision),
+                Claim.soonest_open_requirement_date.isnot(None),  # type: ignore
+                Claim.absence_periods.any(~AbsencePeriod.has_final_decision),  # type: ignore
             )
-
-        if is_reviewable == "no":
+        else:
             self.query = self.query.filter(
                 or_(
-                    Claim.soonest_open_requirement_date.is_(None),
-                    ~Claim.absence_periods.any(~AbsencePeriod.has_final_decision),
+                    Claim.soonest_open_requirement_date.is_(None),  # type: ignore
+                    ~Claim.absence_periods.any(~AbsencePeriod.has_final_decision),  # type: ignore
                 )
             )
 
@@ -196,7 +194,7 @@ class GetClaimsQuery:
         # use outer join to return claims without managed_requirements (one to many)
         self.join(ManagedRequirement, isouter=True, join_filter=and_(*filters))
 
-    def add_order_by(self, context: PaginationAPIContext, is_reviewable: Optional[str]) -> None:
+    def add_order_by(self, context: PaginationAPIContext, is_reviewable: Optional[bool]) -> None:
         is_asc = context.order_direction == OrderDirection.asc.value
         sort_fn = asc_null_first if is_asc else desc_null_last
 
@@ -211,7 +209,7 @@ class GetClaimsQuery:
         elif context.order_by in Claim.__table__.columns:
             self.add_order_by_column(is_asc, context)
 
-    def add_order_by_follow_up_date(self, is_asc: bool, is_reviewable: Optional[str]) -> None:
+    def add_order_by_follow_up_date(self, is_asc: bool, is_reviewable: Optional[bool]) -> None:
         """
         For order_direction=ascending (user selects "Oldest"),
         return non-open requirements first, then open,
@@ -226,10 +224,10 @@ class GetClaimsQuery:
         test_get_claims_with_order_by_follow_up_date_asc_and_is_reviewable_yes
         """
         if is_asc:
-            if is_reviewable and is_reviewable == "yes":
+            if is_reviewable:
                 # Only sort by one key, otherwise a subset (those with multiple managed requirements)
                 # get returned first (non-open), followed by all the rest (open requirements).
-                # When is_reviewable=="yes", all claims will have `soonest_open_requirement_date`.
+                # When is_reviewable==True, all claims will have `soonest_open_requirement_date`.
                 order_keys = [
                     asc(Claim.soonest_open_requirement_date),  # type:ignore
                 ]

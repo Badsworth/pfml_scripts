@@ -1,4 +1,4 @@
-from typing import Dict, Optional, Set, Type, Union
+from typing import Optional, Set, Type, Union
 from uuid import UUID
 
 import connexion
@@ -22,12 +22,8 @@ from massgov.pfml.api.services.claims import (
 )
 from massgov.pfml.api.util.claims import user_has_access_to_claim
 from massgov.pfml.api.util.logging.search_request import search_request_log_info
-from massgov.pfml.api.util.paginate.paginator import (
-    PaginationAPIContext,
-    make_pagination_params,
-)
+from massgov.pfml.api.util.paginate.paginator import PaginationAPIContext, make_pagination_params
 from massgov.pfml.api.validation.exceptions import IssueType
-from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.employees import (
     Claim,
     LeaveRequestDecision,
@@ -219,7 +215,7 @@ def get_claims() -> flask.Response:
     terms = ClaimSearchTerms(
         search=flask.request.args.get("search", type=str),
         request_decision=flask.request.args.get("request_decision"),
-        is_reviewable=is_reviewable_str,
+        is_reviewable=is_reviewable_str,  # type: ignore
     )
     if employer_id_str is not None:
         terms.employer_ids = {UUID(eid.strip()) for eid in employer_id_str.split(",")}
@@ -289,8 +285,8 @@ def _process_claims_request(claim_request: ClaimSearchRequest, method_name: str)
                     escape_like(search_string)
                 )  # escape user input search string
 
-            if is_reviewable:
-                log_attributes.update({"filter.is_reviewable": is_reviewable})
+            if is_reviewable is not None:
+                log_attributes.update({"filter.is_reviewable": "yes" if is_reviewable else "no"})
                 query.add_is_reviewable_filter(is_reviewable)
 
             if request_decisions:

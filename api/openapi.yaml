@@ -4558,9 +4558,11 @@ components:
             Absence Case IDs, in addition to the employees' first, middle, and last names.
             When the string is empty, it is ignored.
         is_reviewable:
-          type: string
-          enum: ["yes", "no"]
-          description: A string value used to check whether or not to filter claims where a review is requested for a leave admin.
+          oneOf:
+            - type: boolean
+            - type: string
+              enum: ["yes", "no"]
+          description: Whether or not to filter claims where a review is requested for a leave admin.
         request_decision:
           type: string
           enum: ["approved", "denied", "withdrawn", "pending", "cancelled"]
