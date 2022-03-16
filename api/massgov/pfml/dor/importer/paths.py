@@ -33,7 +33,7 @@ def get_exempt_employer_files_to_process(path: str) -> List[str]:
     return get_files_to_process_by_regex(path, EXEMPT_EMPLOYER_FILE_PREFIX)
 
 
-def get_files_to_process_by_regex(path: str, prefix: str):
+def get_files_to_process_by_regex(path: str, prefix: str) -> List[str]:
     import_files: List[str] = []
 
     files_for_import = massgov.pfml.util.files.list_files(str(path))
