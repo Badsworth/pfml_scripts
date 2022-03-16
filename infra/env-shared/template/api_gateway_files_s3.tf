@@ -155,6 +155,17 @@ resource "aws_api_gateway_method_response" "files_get_object_response_404" {
 }
 
 
+resource "aws_api_gateway_method_response" "files_get_object_response_400" {
+  for_each    = local.endpoints
+  rest_api_id = aws_api_gateway_rest_api.pfml.id
+  resource_id = aws_api_gateway_resource.files_key[each.key].id
+  http_method = aws_api_gateway_method.files_get_object_method[each.key].http_method
+  status_code = "400"
+  response_parameters = {
+    "method.response.header.Content-Type" = true
+  }
+}
+
 resource "aws_api_gateway_integration" "files_get_object_s3_integration" {
   for_each    = local.endpoints
   rest_api_id = aws_api_gateway_rest_api.pfml.id
@@ -164,7 +175,7 @@ resource "aws_api_gateway_integration" "files_get_object_s3_integration" {
   integration_http_method = "GET"
   type                    = "AWS"
 
-  uri         = "arn:aws:apigateway:us-east-1:s3:path/${each.value.bucket}/${each.value.object_prefix}{key}"
+  uri         = "arn:aws:apigateway:us-east-1:s3:path/${each.value.bucket.id}/${each.value.object_prefix}{key}"
   credentials = aws_iam_role.files_executor_role[each.key].arn
   request_parameters = {
     "integration.request.path.key" : "method.request.path.key"
@@ -213,3 +224,19 @@ resource "aws_api_gateway_integration_response" "files_get_object_s3_integration
     "method.response.header.Content-Type" = "integration.response.header.Content-Type"
   }
 }
+
+resource "aws_api_gateway_integration_response" "files_get_object_s3_integration_response_400" {
+  for_each          = local.endpoints
+  depends_on        = [aws_api_gateway_integration.files_get_object_s3_integration]
+  rest_api_id       = aws_api_gateway_rest_api.pfml.id
+  resource_id       = aws_api_gateway_resource.files_key[each.key].id
+  http_method       = aws_api_gateway_method.files_get_object_method[each.key].http_method
+  status_code       = "400"
+  selection_pattern = "400"
+
+  response_parameters = {
+    "method.response.header.Content-Type" = "integration.response.header.Content-Type"
+  }
+}
+
+
