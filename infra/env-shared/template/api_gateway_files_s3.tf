@@ -183,7 +183,7 @@ resource "aws_api_gateway_integration" "files_copy_object_s3_integration" {
   integration_http_method = "PUT"
   type                    = "AWS"
 
-  uri         = "arn:aws:apigateway:us-east-1:s3:path/${each.value.bucket}/${each.value.object_prefix}/{key}"
+  uri         = "arn:aws:apigateway:us-east-1:s3:path/${each.value.bucket}/${each.value.object_prefix}{key}"
   credentials = aws_iam_role.files_executor_role[each.key].arn
   request_parameters = {
     "integration.request.path.key" : "method.request.path.key"
