@@ -66,6 +66,13 @@ resource "aws_api_gateway_usage_plan" "files_usage_plan" {
       path        = "*/*"
       rate_limit  = 0
     }
+
+    throttle {
+      burst_limit = 10
+      path        = "/files/${each.value.resource_name}/{key+}/GET"
+      rate_limit  = 100
+    }
+
   }
 
   quota_settings {
@@ -108,8 +115,7 @@ resource "aws_api_gateway_method" "files_get_object_method" {
   api_key_required = true
 
   request_parameters = {
-    "method.request.path.bucket" = true
-    "method.request.path.key"    = true
+    "method.request.path.key" = true
   }
 }
 
@@ -161,7 +167,6 @@ resource "aws_api_gateway_integration" "files_get_object_s3_integration" {
   uri         = "arn:aws:apigateway:us-east-1:s3:path/${each.value.bucket}/${each.value.object_prefix}{key}"
   credentials = aws_iam_role.files_executor_role[each.key].arn
   request_parameters = {
-    "integration.request.path.bucket" : "method.request.path.bucket"
     "integration.request.path.key" : "method.request.path.key"
   }
 }
