@@ -899,6 +899,17 @@ def test_set_other_leaves(
     assert application.has_concurrent_leave is True
 
 
+def test_set_other_leaves_includes_minutes(
+    fineos_client, fineos_web_id, application, test_db_session, absence_case_id
+):
+    set_other_leaves(fineos_client, fineos_web_id, application, test_db_session, absence_case_id)
+    assert application.has_previous_leaves_other_reason is True
+    test_db_session.refresh(application)
+    # values from MOCK_CUSTOMER_EFORM_OTHER_LEAVES
+    assert application.previous_leaves_other_reason[0].leave_minutes == 120
+    assert application.previous_leaves_other_reason[0].worked_per_week_minutes == 40
+
+
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.customer_get_eform_summary")
 def test_set_other_leaves_with_no_leaves(
     mock_customer_get_eform_summary,

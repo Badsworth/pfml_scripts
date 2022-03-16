@@ -215,7 +215,7 @@ def process_csv_row(
 
     title = row.get("EMPLOYEETITLE")
     title_id = (
-        db_session.query(LkTitle.title_id).filter(LkTitle.title_description == title).one_or_none()
+        db_session.query(LkTitle.title_id).filter(LkTitle.title_description == title).scalar()
     )
     if title_id is not None:
         employee.title_id = title_id
@@ -228,7 +228,7 @@ def process_csv_row(
     gender_id = (
         db_session.query(LkGender.gender_id)
         .filter(LkGender.fineos_gender_description == gender)
-        .one_or_none()
+        .scalar()
     )
     if gender_id is not None:
         employee.gender_id = gender_id
@@ -237,7 +237,7 @@ def process_csv_row(
     marital_status_id = (
         db_session.query(LkMaritalStatus.marital_status_id)
         .filter(LkMaritalStatus.marital_status_description == marital_status)
-        .one_or_none()
+        .scalar()
     )
     if marital_status_id is not None:
         employee.marital_status_id = marital_status_id
@@ -269,7 +269,7 @@ def process_csv_row(
     employee_classification_id = (
         db_session.query(LkOccupation.occupation_id)
         .filter(LkOccupation.occupation_description == employee_classification)
-        .one_or_none()
+        .scalar()
     )
     if employee_classification_id is not None:
         employee.occupation_id = employee_classification_id
@@ -285,7 +285,7 @@ def process_csv_row(
     employer_id: Optional[UUID] = (
         db_session.query(Employer.employer_id)
         .filter(Employer.fineos_employer_id == employer_fineos_id)
-        .one_or_none()
+        .scalar()
     )
 
     if employer_id is None:

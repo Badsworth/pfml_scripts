@@ -1547,6 +1547,25 @@ class ImportLog(Base, TimestampMixin):
     report = Column(Text)
     start = Column(TIMESTAMP(timezone=True), index=True)
     end = Column(TIMESTAMP(timezone=True))
+    report_queue_item = relationship(
+        "ImportLogReportQueue",
+        back_populates="import_log",
+        uselist=False,
+        passive_deletes=True,
+        cascade="all, delete-orphan",
+    )
+
+
+class ImportLogReportQueue(Base, TimestampMixin):
+    __tablename__ = "import_log_report_queue"
+    import_log_report_queue_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    import_log_id = Column(
+        Integer,
+        ForeignKey("import_log.import_log_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    import_log = cast(ImportLog, relationship("ImportLog", back_populates="report_queue_item"))
 
 
 class ReferenceFile(Base, TimestampMixin):

@@ -473,6 +473,12 @@ def test_run_with_error_during_processing(
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
 
+    # Prior skipped data
+    prior_payment_data = [FineosPaymentData()]
+    upload_fineos_payment_data(
+        mock_fineos_s3_bucket, prior_payment_data, timestamp=earlier_date_str
+    )
+
     payment_data = [FineosPaymentData(), FineosPaymentData(), FineosPaymentData()]
     upload_fineos_payment_data(mock_fineos_s3_bucket, payment_data)
 
@@ -498,10 +504,22 @@ def test_run_with_error_during_processing(
     assert f"{payment_prefix}-{payments_util.Constants.CLAIM_DETAILS_EXPECTED_FILE_NAME}" in files
     assert f"{payment_prefix}-{payments_util.Constants.PAYMENT_LINE_EXPECTED_FILE_NAME}" in files
 
-    # A reference file is present and pointing to the errored directory
+    # Verify that the skipped file ended up in the right place
+    expected_path_prefix = f"s3://{mock_s3_bucket}/cps/inbound/skipped/"
+    files = file_util.list_files(expected_path_prefix, recursive=True)
+    assert len(files) == 4
+
+    payment_prefix = f"{earlier_date_str}-payment-extract/{earlier_date_str}"
+    assert f"{payment_prefix}-{payments_util.Constants.PEI_EXPECTED_FILE_NAME}" in files
+    assert f"{payment_prefix}-{payments_util.Constants.PAYMENT_DETAILS_EXPECTED_FILE_NAME}" in files
+    assert f"{payment_prefix}-{payments_util.Constants.CLAIM_DETAILS_EXPECTED_FILE_NAME}" in files
+    assert f"{payment_prefix}-{payments_util.Constants.PAYMENT_LINE_EXPECTED_FILE_NAME}" in files
+
+    # No reference files are created for errored files
+    # The skipped files' reference file was rolled back
+    # so isn't present in the DB. We'd pick them up again next time
     reference_files = local_test_db_session.query(ReferenceFile).all()
-    assert len(reference_files) == 1
-    assert reference_files[0].file_location == expected_path_prefix + f"{date_str}-payment-extract"
+    assert len(reference_files) == 0
 
     # Verify nothing is in any of the tables
     validate_records([], FineosExtractEmployeeFeed, "I", local_test_db_session)

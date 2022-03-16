@@ -1168,7 +1168,7 @@ def create_staging_table_instance(
     data: Dict,
     db_cls: ExtractTable,
     ref_file: ReferenceFile,
-    fineos_extract_import_log_id: Optional[int],
+    fineos_extract_import_log_id: Optional[int] = None,
     ignore_properties: Optional[List[Any]] = None,
 ) -> base.Base:
     """We return an instance of cls, with matching properties from data and cls. If there are any

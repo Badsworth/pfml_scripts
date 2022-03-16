@@ -64,11 +64,16 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         PROCESSED_ACH_FILE = "processed_ach_file"
 
     def __init__(
-        self, db_session: massgov.pfml.db.Session, log_entry_db_session: massgov.pfml.db.Session
+        self,
+        db_session: massgov.pfml.db.Session,
+        log_entry_db_session: massgov.pfml.db.Session,
+        should_add_to_report_queue: bool = False,
     ) -> None:
         """Constructor."""
         pub_ach_inbound_path = delegated_config.get_s3_config().pfml_pub_ach_archive_path
-        super().__init__(db_session, log_entry_db_session, pub_ach_inbound_path)
+        super().__init__(
+            db_session, log_entry_db_session, pub_ach_inbound_path, should_add_to_report_queue
+        )
 
     def process_file(self, path: str) -> None:
         """Parse an ACH return file and process each record."""
