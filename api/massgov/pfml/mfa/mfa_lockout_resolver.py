@@ -1,10 +1,8 @@
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
-from massgov.pfml.api.models.users.requests import UserUpdateRequest
-from massgov.pfml.api.services.users import update_user
+from massgov.pfml.api.services.users import admin_disable_mfa
 from massgov.pfml.db.models.employees import User
 from massgov.pfml.db.queries.users import get_user_by_email
-from massgov.pfml.util.aws.cognito import disable_user_mfa
 from massgov.pfml.util.aws.sns import check_phone_number_opt_out, opt_in_phone_number
 
 logger = logging.get_logger(__name__)
@@ -54,8 +52,7 @@ class MfaLockoutResolver:
 
     def _resolve_lockout(self, user: User) -> None:
 
-        self._disable_mfa_cognito()
-        self._disable_mfa_pfml(user)
+        self._disable_mfa(user)
         self._set_sns_opt_in(user)
 
     def _get_user(self) -> User:
@@ -74,17 +71,18 @@ class MfaLockoutResolver:
         self._log_info("...Done!")
         return user
 
-    def _disable_mfa_cognito(self) -> None:
-        self._log_info("Disabling user MFA in Cognito")
+    def _disable_mfa(self, user: User) -> None:
+        self._log_info("Disabling user MFA")
 
-        try:
-            if self.should_commit_changes:
-                disable_user_mfa(self.user_email)
-            else:
-                self._log_info("(DRY RUN: Skipping API call to disable user MFA)")
-        except Exception as e:
-            self._log_error("Error disabling user MFA in Cognito", e)
-            raise e
+        with db.session_scope(self.db_session_raw) as db_session:
+            try:
+                if self.should_commit_changes:
+                    admin_disable_mfa(db_session, user)
+                else:
+                    self._log_info("(DRY RUN: Skipping call to disable user MFA)")
+            except Exception as e:
+                self._log_error("Error disabling user MFA", e)
+                raise e
 
         self._log_info("...Done!")
 
@@ -111,23 +109,6 @@ class MfaLockoutResolver:
                     self._log_info("(DRY RUN: Skipping API call to opt user into SNS)")
             except Exception as e:
                 self._log_error("Error setting user opt-in in SNS", e)
-                raise e
-
-        self._log_info("...Done!")
-
-    def _disable_mfa_pfml(self, user: User) -> None:
-        self._log_info("Disabling user MFA in PFML db")
-
-        update_request = UserUpdateRequest(mfa_delivery_preference="Opt Out")
-
-        with db.session_scope(self.db_session_raw) as db_session:
-            try:
-                if self.should_commit_changes:
-                    update_user(db_session, user, update_request, "Admin")
-                else:
-                    self._log_info("(DRY RUN: Skipping API call to disable MFA in PFML DB)")
-            except Exception as e:
-                self._log_error("Error disabling user MFA in PFML db", e)
                 raise e
 
         self._log_info("...Done!")

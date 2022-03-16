@@ -10,7 +10,13 @@ from freezegun import freeze_time
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.util.files as file_util
-from massgov.pfml.db.models.employees import ImportLog, ReferenceFile, ReferenceFileType, State
+from massgov.pfml.db.models.employees import (
+    ImportLog,
+    ImportLogReportQueue,
+    ReferenceFile,
+    ReferenceFileType,
+    State,
+)
 from massgov.pfml.db.models.factories import EmployeeFactory
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_report_step import ReportStep
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports import (
@@ -51,9 +57,13 @@ def test_report_generation(
     def create_employee_with_pre_note_state(first_name, last_name, pre_note_state):
         employee = EmployeeFactory.create(first_name=first_name, last_name=last_name)
 
-        state_log_util.create_finished_state_log(
-            employee, pre_note_state, state_log_util.build_outcome("test"), test_db_session
+        state_log = state_log_util.create_finished_state_log(
+            employee,
+            pre_note_state,
+            state_log_util.build_outcome("test"),
+            test_db_session,
         )
+        test_db_other_session.add(ImportLogReportQueue(import_log_id=state_log.import_log_id))
 
         return employee
 

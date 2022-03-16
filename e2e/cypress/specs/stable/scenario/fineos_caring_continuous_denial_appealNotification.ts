@@ -11,11 +11,7 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
       cy.stash("claim", claim);
       assertValidClaim(claim.claim);
       fineosPages.ClaimantPage.visit(claim.claim.tax_identifier)
-        .createNotification(
-          claim.claim,
-          claim.is_withholding_tax,
-          config("HAS_APRIL_UPGRADE") === "true"
-        )
+        .createNotification(claim.claim, claim.is_withholding_tax)
         .then((fineos_absence_id) => {
           cy.log(fineos_absence_id);
           cy.stash("submission", {

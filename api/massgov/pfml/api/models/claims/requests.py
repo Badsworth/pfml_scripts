@@ -1,8 +1,9 @@
+from datetime import date
 from typing import Optional, Set
 
 from pydantic import UUID4, Extra, Field
 
-from massgov.pfml.api.models.claims.common import EmployerClaimReview
+from massgov.pfml.api.models.claims.common import ChangeRequestType, EmployerClaimReview
 from massgov.pfml.api.models.common import SearchEnvelope
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
@@ -26,3 +27,9 @@ class ClaimSearchTerms(PydanticBaseModel):
 
 
 ClaimSearchRequest = SearchEnvelope[ClaimSearchTerms]
+
+
+class ChangeRequestUpdate(PydanticBaseModel):
+    change_request_type: Optional[ChangeRequestType]
+    start_date: Optional[date]
+    end_date: Optional[date]

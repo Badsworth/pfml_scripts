@@ -2859,6 +2859,8 @@ const components: {
     heading_serviceMemberFamily: "$t(shared.leaveReasonServiceMemberFamily)",
     inProgressText:
       "Submit all three parts so that we can review your application.",
+    leaveDates: "{{start}} to {{end}}",
+    leaveDatesLabel: "Leave Dates",
     leavePeriodLabel_reduced: "$t(shared.claimDurationTypeReducedSchedule)",
     loadingLabel: "$t(shared.loadingDocumentsLabel)",
     noticeOnClickDetails:
