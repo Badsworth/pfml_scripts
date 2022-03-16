@@ -93,10 +93,6 @@ from massgov.pfml.util.users import has_role_in
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
-# Added in https://lwd.atlassian.net/browse/PSD-2401
-# Modified in https://lwd.atlassian.net/browse/PFMLPB-3276
-CLAIMS_DASHBOARD_BLOCKED_FEINS: Set[str] = set([])
-
 
 class VerificationRequired(Forbidden):
     user_leave_admin: UserLeaveAdministrator
@@ -645,8 +641,7 @@ def _process_claims_request(claim_request: ClaimSearchRequest, method_name: str)
                 verified_employers = [
                     employer
                     for employer in employers_list
-                    if employer.employer_fein not in CLAIMS_DASHBOARD_BLOCKED_FEINS
-                    and current_user.verified_employer(employer)
+                    if current_user.verified_employer(employer)
                 ]
 
                 # filters claims by employer id - shows all claims of those employers
@@ -688,7 +683,7 @@ def _process_claims_request(claim_request: ClaimSearchRequest, method_name: str)
                 )
                 query.add_request_decision_filter(request_decisions)
 
-            query.add_order_by(pagination_context)
+            query.add_order_by(pagination_context, is_reviewable)
 
             page = query.get_paginated_results(pagination_context)
             page_data_log_attributes = make_paging_meta_data_from_paginator(
@@ -856,10 +851,16 @@ def get_change_requests(fineos_absence_id: str) -> flask.Response:
     with app.db_session() as db_session:
         change_requests = get_change_requests_from_db(claim.claim_id, db_session)
 
-    # TODO: (PORTAL-1864) Convert the change_request_type to return the enum value rather than the id
     change_requests_dict = []
     for request in change_requests:
-        change_requests_dict.append(request.dict())
+        change_request = ChangeRequestResponse(
+            fineos_absence_id=fineos_absence_id,
+            change_request_type=request.type,
+            start_date=request.start_date,
+            end_date=request.end_date,
+            submitted_time=request.submitted_time,
+        )
+        change_requests_dict.append(change_request.dict())
 
     return response_util.success_response(
         message="Successfully retrieved change requests",

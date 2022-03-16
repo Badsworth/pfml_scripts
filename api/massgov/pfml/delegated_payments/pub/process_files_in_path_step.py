@@ -37,14 +37,16 @@ class ProcessFilesInPathStep(Step, metaclass=abc.ABCMeta):
         db_session: massgov.pfml.db.Session,
         log_entry_db_session: massgov.pfml.db.Session,
         base_path: str,
+        should_add_to_report_queue: bool = False,
     ) -> None:
         """Constructor."""
         self.base_path = base_path
+
         self.log_extra = {}
         self.compute_paths_from_base_path()
         self.more_files_to_process = True
 
-        super().__init__(db_session, log_entry_db_session)
+        super().__init__(db_session, log_entry_db_session, should_add_to_report_queue)
 
     def cleanup_on_failure(self) -> None:
         # If the reference file has been created, we can

@@ -80,7 +80,6 @@ def continuous_leave_periods():
             endDate=date(2021, 2, 9),
             status="known",
             lastDayWorked=date(2020, 12, 30),
-            expectedReturnToWorkDate=date(2021, 2, 11),
             startDateFullDay=True,
             startDateOffHours=1,
             startDateOffMinutes=5,
@@ -286,10 +285,6 @@ def _compare_continuous_leave(
     assert continuous_leave.application_id == application.application_id
     assert continuous_leave.start_date == fineos_continuous_leave.startDate
     assert continuous_leave.end_date == fineos_continuous_leave.endDate
-    assert (
-        continuous_leave.expected_return_to_work_date
-        == fineos_continuous_leave.expectedReturnToWorkDate
-    )
     assert continuous_leave.start_date_full_day == fineos_continuous_leave.startDateFullDay
     assert continuous_leave.start_date_off_hours == fineos_continuous_leave.startDateOffHours
     assert continuous_leave.start_date_off_minutes == fineos_continuous_leave.startDateOffMinutes
@@ -902,6 +897,17 @@ def test_set_other_leaves(
     assert application.has_previous_leaves_other_reason is True
     assert application.has_previous_leaves_same_reason is False
     assert application.has_concurrent_leave is True
+
+
+def test_set_other_leaves_includes_minutes(
+    fineos_client, fineos_web_id, application, test_db_session, absence_case_id
+):
+    set_other_leaves(fineos_client, fineos_web_id, application, test_db_session, absence_case_id)
+    assert application.has_previous_leaves_other_reason is True
+    test_db_session.refresh(application)
+    # values from MOCK_CUSTOMER_EFORM_OTHER_LEAVES
+    assert application.previous_leaves_other_reason[0].leave_minutes == 120
+    assert application.previous_leaves_other_reason[0].worked_per_week_minutes == 40
 
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.customer_get_eform_summary")

@@ -1004,7 +1004,7 @@ def test_documents_get_not_submitted_application(
     assert len(response["data"]) == 0
 
 
-@mock.patch("massgov.pfml.api.applications.upload_document")
+@mock.patch("massgov.pfml.api.services.document_upload.upload_document")
 def test_document_upload_return_error_rule(
     mock_upload, client, consented_user, consented_user_token, test_db_session
 ):
@@ -1027,7 +1027,7 @@ def test_document_upload_return_error_rule(
     assert response["errors"][0]["rule"] == "document_requirement_already_satisfied"
 
 
-@mock.patch("massgov.pfml.api.applications.upload_document")
+@mock.patch("massgov.pfml.api.services.document_upload.upload_document")
 def test_document_upload_doesnt_return_error_rule(
     mock_upload, client, consented_user, consented_user_token, test_db_session
 ):

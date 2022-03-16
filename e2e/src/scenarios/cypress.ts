@@ -460,6 +460,7 @@ export const BHAP1_OLB: ScenarioSpecification = {
   },
 };
 
+// This needs a specific scenario to be used by a CPS test. Please do not change specs on this scenario.
 export const MHAP1_OLB_ER: ScenarioSpecification = {
   employee: { wages: 30000, mass_id: true },
   claim: {

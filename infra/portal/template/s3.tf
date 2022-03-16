@@ -6,6 +6,14 @@ resource "aws_s3_bucket" "portal_web" {
   bucket = "massgov-${local.app_name}-${var.environment_name}-portal-site-builds"
   acl    = "private"
 
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
+
   # EOTSS AWS Tagging Standards
   tags = merge(module.constants.common_tags, {
     environment = module.constants.environment_tags[var.environment_name]
@@ -34,7 +42,32 @@ data "aws_iam_policy_document" "portal_web" {
       identifiers = [aws_cloudfront_origin_access_identity.portal_web_origin_access_identity.iam_arn]
     }
   }
+
+  statement {
+    sid     = "EnforceTls"
+    effect  = "Deny"
+    actions = ["s3:*"]
+    resources = [
+      "${aws_s3_bucket.portal_web.arn}/*",
+      aws_s3_bucket.portal_web.arn
+    ]
+    condition {
+      test     = "Bool"
+      variable = "aws:SecureTransport"
+      values   = ["false"]
+    }
+    condition {
+      test     = "NumericLessThan"
+      variable = "s3:TlsVersion"
+      values   = ["1.2"]
+    }
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+  }
 }
+
 resource "aws_s3_bucket_policy" "portal_web_policy" {
   bucket = aws_s3_bucket.portal_web.id
   policy = data.aws_iam_policy_document.portal_web.json

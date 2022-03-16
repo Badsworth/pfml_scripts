@@ -4,9 +4,11 @@ import { waitForAjaxComplete } from "../../actions/fineos";
 import { assertValidClaim } from "../../../src/util/typeUtils";
 import { config } from "../../actions/common";
 
+// We are using the following MHAP1_OLB_ER scenario to create a claim to use with
+// "api_bonding_reduced_approval_fullOffsetRecoveryOverpayment.ts" if needed for CPS testing.
 describe("Create a new caring leave claim in FINEOS and check multiple secure actions", () => {
   const adjClaim = it("Create an absence case through the API", () => {
-    cy.task("generateClaim", "HIST_CASE").then((claim) => {
+    cy.task("generateClaim", "MHAP1_OLB_ER").then((claim) => {
       cy.task("submitClaimToAPI", claim).then((res) => {
         cy.stash("claim", claim);
         assertValidClaim(claim.claim);
@@ -59,7 +61,7 @@ describe("Create a new caring leave claim in FINEOS and check multiple secure ac
         );
         claimPage.adjudicate((adjudicate) => {
           adjudicate.evidence((evidence) => {
-            evidence.receive("Care for a family member form");
+            evidence.receive("Own serious health condition form");
             evidence.receive("Identification Proof");
           });
           adjudicate.certificationPeriods((cert) => cert.prefill());
@@ -68,7 +70,7 @@ describe("Create a new caring leave claim in FINEOS and check multiple secure ac
         if (config("HAS_APRIL_UPGRADE") === "true") {
           claimPage.approve("Approved", true);
         } else {
-          claimPage.approve("Approved", false);
+          claimPage.approve();
         }
       });
     });

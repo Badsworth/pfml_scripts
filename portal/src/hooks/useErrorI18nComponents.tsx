@@ -23,6 +23,13 @@ const links: { [i18nComponentName: string]: JSX.Element } = {
       href={routes.external.massgov.intermittentLeaveGuide}
     />
   ),
+  "mail-fax-instructions": (
+    <a
+      target="_blank"
+      rel="noopener"
+      href={routes.external.massgov.mailFaxInstructions}
+    />
+  ),
   "mass-gov-form-link": (
     <a
       target="_blank"

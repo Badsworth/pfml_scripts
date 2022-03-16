@@ -29,7 +29,7 @@ type FineosExclusiveLeaveReasons =
   import("./src/generation/Claim").FineosExclusiveLeaveReasons;
 type ApplicationSubmissionResponse =
   import("./src/types").ApplicationSubmissionResponse;
-
+type DetailedClaimResponse = import("./src/api").DetailedClaimResponse;
 declare namespace Cypress {
   interface Cypress {
     // Declare the runner, which is an internal Cypress property.
@@ -110,5 +110,17 @@ declare namespace Cypress {
       event: "findFirstApprovedClaim",
       args: { applications: ApplicationResponse[]; credentials: Credentials }
     ): Chainable<ApplicationResponse | 0>;
+    task(
+      event: "findClaim",
+      args: {
+        applications: ApplicationResponse[];
+        credentials: Credentials;
+        spec: {
+          hasPaidPayments: boolean;
+          status: "Pending" | "Approved" | "Denied" | "Withdrawn";
+        };
+        limit?: number;
+      }
+    ): Chainable<DetailedClaimResponse[]>;
   }
 }

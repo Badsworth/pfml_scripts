@@ -13,6 +13,7 @@ import massgov.pfml.util.batch.log
 import massgov.pfml.util.files as file_utils
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
+from massgov.pfml.api.util.phone import convert_to_E164
 from massgov.pfml.db.models.employees import (
     Employee,
     EmployeeOccupation,
@@ -215,7 +216,7 @@ def process_csv_row(
 
     title = row.get("EMPLOYEETITLE")
     title_id = (
-        db_session.query(LkTitle.title_id).filter(LkTitle.title_description == title).one_or_none()
+        db_session.query(LkTitle.title_id).filter(LkTitle.title_description == title).scalar()
     )
     if title_id is not None:
         employee.title_id = title_id
@@ -228,7 +229,7 @@ def process_csv_row(
     gender_id = (
         db_session.query(LkGender.gender_id)
         .filter(LkGender.fineos_gender_description == gender)
-        .one_or_none()
+        .scalar()
     )
     if gender_id is not None:
         employee.gender_id = gender_id
@@ -237,28 +238,24 @@ def process_csv_row(
     marital_status_id = (
         db_session.query(LkMaritalStatus.marital_status_id)
         .filter(LkMaritalStatus.marital_status_description == marital_status)
-        .one_or_none()
+        .scalar()
     )
     if marital_status_id is not None:
         employee.marital_status_id = marital_status_id
 
-    phone_intl_code = row.get("TELEPHONEINTCODE")
-    phone_area_code = row.get("TELEPHONEAREACODE")
-    phone_nbr = row.get("TELEPHONENUMBER")
+    employee.phone_number = parse_fineos_phone_number(
+        str(row.get("TELEPHONEINTCODE")),
+        str(row.get("TELEPHONEAREACODE")),
+        str(row.get("TELEPHONENUMBER")),
+        {"employee_id": employee_id, "fineos_customer_number": customer_no},
+    )
 
-    if phone_area_code is None:
-        employee.phone_number = f"+{phone_intl_code}{phone_nbr}"
-    else:
-        employee.phone_number = f"+{phone_intl_code}{phone_area_code}{phone_nbr}"
-
-    cell_intl_code = row.get("CELLINTCODE")
-    cell_area_code = row.get("CELLAREACODE")
-    cell_nbr = row.get("CELLNUMBER")
-
-    if cell_area_code is None:
-        employee.cell_phone_number = f"+{cell_intl_code}{cell_nbr}"
-    else:
-        employee.cell_phone_number = f"+{cell_intl_code}{cell_area_code}{cell_nbr}"
+    employee.cell_phone_number = parse_fineos_phone_number(
+        str(row.get("CELLINTCODE")),
+        str(row.get("CELLAREACODE")),
+        str(row.get("CELLNUMBER")),
+        {"employee_id": employee_id, "fineos_customer_number": customer_no},
+    )
 
     employee_email = row.get("EMPLOYEEEMAIL")
     if employee_email is not None:
@@ -269,7 +266,7 @@ def process_csv_row(
     employee_classification_id = (
         db_session.query(LkOccupation.occupation_id)
         .filter(LkOccupation.occupation_description == employee_classification)
-        .one_or_none()
+        .scalar()
     )
     if employee_classification_id is not None:
         employee.occupation_id = employee_classification_id
@@ -285,7 +282,7 @@ def process_csv_row(
     employer_id: Optional[UUID] = (
         db_session.query(Employer.employer_id)
         .filter(Employer.fineos_employer_id == employer_fineos_id)
-        .one_or_none()
+        .scalar()
     )
 
     if employer_id is None:
@@ -370,3 +367,18 @@ def process_csv_row(
 
     if not is_new_employee:
         report.updated_employees_count += 1
+
+
+def parse_fineos_phone_number(
+    intl_code: str, area_code: str, phone_nbr: str, log_attrs: Optional[Dict] = None
+) -> Optional[str]:
+    try:
+        return convert_to_E164(f"{area_code}{phone_nbr}", intl_code, True)
+    except ValueError:
+        log_attrs = {} if log_attrs is None else log_attrs
+        log_attrs["int_code_len"] = len(intl_code)
+        log_attrs["area_code_len"] = len(area_code)
+        log_attrs["telephone_num_len"] = len(phone_nbr)
+        logger.warning("Could not parse a valid phone number from input", extra=log_attrs)
+
+        return None

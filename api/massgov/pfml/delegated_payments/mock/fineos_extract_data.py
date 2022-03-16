@@ -5,7 +5,7 @@ import os
 from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from typing import Dict, List, Optional, cast
+from typing import Any, Dict, List, Optional, cast
 
 import faker
 from sqlalchemy.sql.expression import true
@@ -29,6 +29,10 @@ fake = faker.Faker()
 fake.seed_instance(1212)
 
 
+def random_unique_int(min=1, max=999_999_999):
+    return str(fake.unique.random_int(min=min, max=max))
+
+
 # We may want additional columns here from what we validate
 # so these field names extended from the constant values
 # This is mainly for new columns we want to implement logic for
@@ -46,6 +50,7 @@ VBI_1099DATA_SOM_FIELD_NAMES = payments_util.FineosExtractConstants.VBI_1099DATA
 # Payment files
 PEI_FIELD_NAMES = payments_util.FineosExtractConstants.VPEI.field_names
 PEI_PAYMENT_DETAILS_FIELD_NAMES = payments_util.FineosExtractConstants.PAYMENT_DETAILS.field_names
+PAYMENT_LINE_FIELD_NAMES = payments_util.FineosExtractConstants.PAYMENT_LINE.field_names
 PEI_CLAIM_DETAILS_FIELD_NAMES = payments_util.FineosExtractConstants.CLAIM_DETAILS.field_names
 REQUESTED_ABSENCE_FIELD_NAMES = (
     payments_util.FineosExtractConstants.VBI_REQUESTED_ABSENCE.field_names
@@ -57,6 +62,10 @@ VBI_LEAVE_PLAN_REQUESTED_ABSENCE_FIELD_NAMES = (
 )
 PAID_LEVAVE_INSTRUCTION_FIELD_NAMES = (
     payments_util.FineosExtractConstants.PAID_LEAVE_INSTRUCTION.field_names
+)
+
+VBI_TASKREPORT_SOM_EXTRACT_FIELD_NAMES = (
+    payments_util.FineosExtractConstants.VBI_TASKREPORT_SOM.field_names
 )
 
 xml_1099_packed_data = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -126,24 +135,28 @@ class FineosPaymentData(MockData):
         include_vpei=True,
         include_claim_details=True,
         include_payment_details=True,
+        include_payment_lines=True,
         include_requested_absence=True,
         include_employee_feed=True,
         include_absence_case=True,
         include_1099_data=True,
+        include_vbi_tasks=False,
         **kwargs,
     ):
         super().__init__(generate_defaults, **kwargs)
         self.include_vpei = include_vpei
         self.include_claim_details = include_claim_details
         self.include_payment_details = include_payment_details
+        self.include_payment_lines = include_payment_lines
         self.include_requested_absence = include_requested_absence
         self.include_employee_feed = include_employee_feed
         self.include_absence_case = include_absence_case
         self.include_1099_data = include_1099_data
+        self.include_vbi_tasks = include_vbi_tasks
         self.kwargs = kwargs
 
         # Values used in various places below
-        absence_num = str(fake.unique.random_int())
+        absence_num = random_unique_int()
         self.ssn = self.get_value("ssn", fake.ssn().replace("-", ""))
 
         # Absence case values
@@ -151,9 +164,7 @@ class FineosPaymentData(MockData):
         self.notification_number = self.get_value("notification_number", f"NTN-{absence_num}")
 
         self.absence_period_class_id = self.get_value("absence_period_c_value", "14449")
-        self.absence_period_index_id = self.get_value(
-            "absence_period_i_value", str(fake.unique.random_int())
-        )
+        self.absence_period_index_id = self.get_value("absence_period_i_value", random_unique_int())
 
         self.claim_type = self.get_value("claim_type", "Family")
 
@@ -162,15 +173,13 @@ class FineosPaymentData(MockData):
         )
         self.absence_case_status = self.get_value("absence_case_status", "Approved")
 
-        self.leave_request_id = self.get_value("leave_request_id", str(fake.unique.random_int()))
+        self.leave_request_id = self.get_value("leave_request_id", random_unique_int())
         self.leave_request_decision = self.get_value("leave_request_decision", "Approved")
         self.leave_request_evidence = self.get_value("leave_request_evidence", "Satisfied")
         self.leave_request_start = self.get_value("leave_request_start", "2021-01-01 12:00:00")
         self.leave_request_end = self.get_value("leave_request_end", "2021-04-01 12:00:00")
 
-        self.employer_customer_num = self.get_value(
-            "employer_customer_num", str(fake.unique.random_int())
-        )
+        self.employer_customer_num = self.get_value("employer_customer_num", random_unique_int())
 
         self.absence_period_type = self.get_value("absence_period_type", "Time off period")
         self.absence_reason_qualifier_one = self.get_value(
@@ -224,7 +233,12 @@ class FineosPaymentData(MockData):
 
         # Payment values
         self.c_value = self.get_value("c_value", "7326")
-        self.i_value = self.get_value("i_value", str(fake.unique.random_int()))
+        self.i_value = self.get_value("i_value", random_unique_int())
+
+        self.payment_details_c_value = self.get_value("payment_details_c_value", "7806")
+        self.payment_details_i_value = self.get_value(
+            "payment_details_i_value", random_unique_int()
+        )
 
         self.payment_date = self.get_value("payment_date", "2021-01-01 12:00:00")
         self.payment_amount = self.get_value("payment_amount", "100.00")
@@ -239,6 +253,15 @@ class FineosPaymentData(MockData):
 
         self.payment_start_period = self.get_value("payment_start", "2021-01-01 12:00:00")
         self.payment_end_period = self.get_value("payment_end", "2021-01-07 12:00:00")
+
+        self.payment_line_c_value = self.get_value("payment_line_c_value", "7692")
+        self.payment_line_i_value = self.get_value("payment_line_i_value", random_unique_int())
+        self.payment_line_type = self.get_value("payment_line_type", "Auto Gross Entitlement")
+        self.payment_line_amount = self.get_value("payment_line_amount", self.payment_amount)
+
+        # VBI Task Record Som values
+        self.task_status = self.get_value("task_status", "")
+        self.task_tasktypename = self.get_value("task_tasktypename", "")
 
     def get_vpei_record(self):
         vpei_record = OrderedDict()
@@ -276,6 +299,9 @@ class FineosPaymentData(MockData):
     def get_payment_details_record(self):
         payment_detail_record = OrderedDict()
         if self.include_payment_details:
+            payment_detail_record["C"] = self.payment_details_c_value
+            payment_detail_record["I"] = self.payment_details_i_value
+
             payment_detail_record["PECLASSID"] = self.c_value
             payment_detail_record["PEINDEXID"] = self.i_value
 
@@ -286,6 +312,22 @@ class FineosPaymentData(MockData):
             payment_detail_record["BUSINESSNETBE_MONAMT"] = self.business_net_amount
 
         return payment_detail_record
+
+    def get_payment_line_record(self):
+        payment_line_record = OrderedDict()
+        if self.include_payment_lines:
+            payment_line_record["C"] = self.payment_line_c_value
+            payment_line_record["I"] = self.payment_line_i_value
+
+            payment_line_record["AMOUNT_MONAMT"] = self.payment_line_amount
+            payment_line_record["LINETYPE"] = self.payment_line_type
+
+            payment_line_record["C_PYMNTEIF_PAYMENTLINES"] = self.c_value
+            payment_line_record["I_PYMNTEIF_PAYMENTLINES"] = self.i_value
+            payment_line_record["PAYMENTDETAILCLASSID"] = self.payment_details_c_value
+            payment_line_record["PAYMENTDETAILINDEXID"] = self.payment_details_i_value
+
+        return payment_line_record
 
     def get_requested_absence_record(self):
         requested_absence_record = OrderedDict()
@@ -362,6 +404,17 @@ class FineosPaymentData(MockData):
 
         return vbi_1099_data_record
 
+    def get_vbi_task_record(self, **kwargs: str) -> Dict[str, Any]:
+        vbi_task_record = OrderedDict()
+
+        if self.include_vbi_tasks:
+            vbi_task_record["TASKID"] = str(fake.random_int(1, 999_999_999))
+            vbi_task_record["CASENUMBER"] = self.absence_case_number
+            vbi_task_record["STATUS"] = self.task_status
+            vbi_task_record["TASKTYPENAME"] = self.task_tasktypename
+
+        return vbi_task_record
+
 
 class FineosIAWWData(MockData):
     """
@@ -375,20 +428,18 @@ class FineosIAWWData(MockData):
         self.kwargs = kwargs
 
         self.c_value = self.get_value("c_value", "7326")
-        self.i_value = self.get_value("i_value", str(fake.unique.random_int()))
+        self.i_value = self.get_value("i_value", random_unique_int())
         self.leaveplan_c_value = self.get_value("leaveplan_c_value", "14437")
 
-        leaveplan_i_value = str(fake.unique.random_int())
+        leaveplan_i_value = random_unique_int()
         self.leaveplan_i_value_instruction = self.get_value(
             "leaveplan_i_value_instruction", leaveplan_i_value
         )
         self.leaveplan_i_value_request = self.get_value(
             "leaveplan_i_value_request", leaveplan_i_value
         )
-        self.leave_request_id_value = self.get_value(
-            "leave_request_id_value", str(fake.unique.random_int())
-        )
-        self.aww_value = self.get_value("aww_value", str(fake.unique.random_int()))
+        self.leave_request_id_value = self.get_value("leave_request_id_value", random_unique_int())
+        self.aww_value = self.get_value("aww_value", random_unique_int())
 
     def get_leave_plan_request_absence_record(self):
         leave_plan_request_absence_record = OrderedDict()
@@ -452,6 +503,12 @@ def create_fineos_payment_extract_files(
         payments_util.FineosExtractConstants.PAYMENT_DETAILS.file_name,
         PEI_PAYMENT_DETAILS_FIELD_NAMES,
     )
+    pei_payment_line_writer = _create_file(
+        folder_path,
+        date_prefix,
+        payments_util.FineosExtractConstants.PAYMENT_LINE.file_name,
+        PAYMENT_LINE_FIELD_NAMES,
+    )
     pei_claim_details_writer = _create_file(
         folder_path,
         date_prefix,
@@ -467,12 +524,14 @@ def create_fineos_payment_extract_files(
         pei_payment_details_writer.csv_writer.writerow(
             fineos_payments_data.get_payment_details_record()
         )
+        pei_payment_line_writer.csv_writer.writerow(fineos_payments_data.get_payment_line_record())
         pei_claim_details_writer.csv_writer.writerow(
             fineos_payments_data.get_claim_details_record()
         )
 
     # close the files
     pei_writer.file.close()
+    pei_payment_line_writer.file.close()
     pei_payment_details_writer.file.close()
     pei_claim_details_writer.file.close()
 
@@ -647,6 +706,37 @@ def generate_payment_extract_files(
                         item
                     ]
                 fineos_payments_dataset.append(withholding_payment)
+
+        # TODO Need to refactor
+        if (
+            scenario_descriptor.is_employer_reimbursement_records_exists
+            and scenario_data.employer_reimbursement_payment_i_values
+        ):
+            for item in range(1):
+                employer_reimbursement_payment = copy.deepcopy(fineos_payments_data)
+                employer_reimbursement_payment.event_reason = "Automatic Alternate Payment"
+                employer_reimbursement_payment.payee_identifier = "Tax Identification Number"
+                if scenario_descriptor.is_employer_reimbursement_fineos_extract_address_valid:
+                    mock_address = MATCH_ADDRESS
+                else:
+                    mock_address = NO_MATCH_ADDRESS
+                employer_reimbursement_payment.payment_address_1 = mock_address["line_1"]
+                employer_reimbursement_payment.payment_address_2 = mock_address["line_2"]
+                employer_reimbursement_payment.city = mock_address["city"]
+                employer_reimbursement_payment.state = mock_address["state"]
+                employer_reimbursement_payment.zip_code = mock_address["zip"]
+
+                if item == 0:
+                    employer_reimbursement_payment.payment_amount = "300.00"
+                    employer_reimbursement_payment.i_value = (
+                        scenario_data.employer_reimbursement_payment_i_values[item]
+                    )
+                # if item == 1:
+                #     employer_reimbursement_payment.payment_amount = "350.00"
+                #     employer_reimbursement_payment.i_value = scenario_data.employer_reimbursement_payment_i_values[
+                #         item
+                #     ]
+                fineos_payments_dataset.append(employer_reimbursement_payment)
         fineos_payments_dataset.append(fineos_payments_data)
 
     # create the files
@@ -842,6 +932,85 @@ def generate_payment_reconciliation_extract_files(
         extract_records[extract_file.file_name] = records
 
     return extract_records
+
+
+def get_vbi_taskreport_som_extract_records(
+    dataset: Optional[List[FineosPaymentData]] = None,
+) -> List[Dict[str, Any]]:
+
+    if dataset is None:
+        dataset = []
+
+        statuses = ["928000", "928001", "928002"]
+        tasktypenames = [
+            # This isn't exhaustive - just enough to be able to test that our
+            # filter works correctly. These are the ones we want to keep:
+            "Employee Reported Other Income",
+            "Escalate Employer Reported Other Income",
+            "Escalate employer reported accrued paid leave (PTO)",
+            "Employee reported accrued paid leave (PTO)",
+            "Employee Reported Other Leave",
+            # These are (some) of the ones we want to ignore:
+            "Overpayment Mgt New Underpayment Notification",
+            "Additional Information Overdue Notification Task",
+            "Adjudicate Absence",
+        ]
+
+        # Generate all possible permutations of these columns, and fill the rest
+        # of the data with random values.
+        for status in statuses:
+            for tasktypename in tasktypenames:
+                dataset.append(
+                    FineosPaymentData(
+                        include_vbi_tasks=True, task_status=status, task_tasktypename=tasktypename
+                    )
+                )
+
+    records = [data.get_vbi_task_record() for data in dataset]
+    return records
+
+
+def get_vbi_taskreport_som_extract_filtered_records(
+    records: List[Dict[str, Any]]
+) -> List[Dict[str, Any]]:
+    filtered_records = []
+
+    for record in records:
+        if record["STATUS"] == "928000" and record["TASKTYPENAME"] in (
+            "Employee Reported Other Income",
+            "Escalate Employer Reported Other Income",
+            "Escalate employer reported accrued paid leave (PTO)",
+            "Employee reported accrued paid leave (PTO)",
+            "Employee Reported Other Leave",
+        ):
+            filtered_records.append(record)
+
+    return filtered_records
+
+
+def generate_vbi_taskreport_som_extract_files(
+    folder_path: str,
+    date_of_extract: datetime,
+    records: Optional[List[Dict[str, Any]]] = None,
+) -> None:
+
+    date_prefix = date_of_extract.strftime("%Y-%m-%d-%H-%M-%S-")
+
+    if records is None:
+        records = get_vbi_taskreport_som_extract_records()
+
+    # create the extract file
+    writer = _create_file(
+        folder_path,
+        date_prefix,
+        payments_util.FineosExtractConstants.VBI_TASKREPORT_SOM.file_name,
+        VBI_TASKREPORT_SOM_EXTRACT_FIELD_NAMES,
+    )
+
+    for record in records:
+        writer.csv_writer.writerow(record)
+
+    writer.file.close()
 
 
 def generate_iaww_extract_files(

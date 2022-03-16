@@ -439,12 +439,6 @@ paths:
             Absence Case IDs, in addition to the employees' first, middle, and last names.
             When the string is empty, it is ignored.
           required: false
-        - name: "allow_hrd"
-          in: query
-          schema:
-            type: boolean
-          description: A temporary boolean value used to allow smoke testers to see HRD dashboard
-          required: false
         - name: "is_reviewable"
           in: query
           schema:
@@ -2623,10 +2617,6 @@ components:
               format: uuid
               example: "2f0f58a0-fcad-465b-b474-ee6c961cd6e3"
               nullable: true
-            application_nickname:
-              type: string
-              nullable: true
-              example: "My bonding leave request"
             tax_identifier:
               $ref: "#/components/schemas/SsnItin"
               nullable: true
@@ -2786,10 +2776,6 @@ components:
     ApplicationResponse:
       type: object
       properties:
-        application_nickname:
-          type: string
-          example: "My bonding leave request"
-          nullable: true
         organization_unit_id:
           type: string
           format: uuid
@@ -2805,6 +2791,11 @@ components:
           nullable: true
         tax_identifier:
           $ref: "#/components/schemas/MaskedSsnItin"
+          nullable: true
+        employee_id:
+          type: string
+          format: uuid
+          example: '2a340cf8-6d2a-4f82-a075-73588d003f8f'
           nullable: true
         employer_id:
           type: string
@@ -4435,9 +4426,6 @@ components:
             when provided, is used in a fuzzy search against the claims'
             Absence Case IDs, in addition to the employees' first, middle, and last names.
             When the string is empty, it is ignored.
-        allow_hrd:
-          type: boolean
-          description: A temporary boolean value used to allow smoke testers to see HRD dashboard
         is_reviewable:
           type: string
           enum: ["yes", "no"]

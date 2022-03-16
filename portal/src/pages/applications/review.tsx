@@ -4,8 +4,8 @@ import {
 } from "../../models/PaymentPreference";
 import {
   DocumentType,
-  findDocumentsByLeaveReason,
   findDocumentsByTypes,
+  getLeaveCertificationDocs,
 } from "../../models/Document";
 import EmployerBenefit, {
   EmployerBenefitType,
@@ -96,10 +96,7 @@ export const Review = (
     claim.application_id
   );
 
-  const certificationDocuments = findDocumentsByLeaveReason(
-    documents,
-    get(claim, "leave_details.reason")
-  );
+  const certificationDocuments = getLeaveCertificationDocs(documents);
   const idDocuments = findDocumentsByTypes(documents, [
     DocumentType.identityVerification,
   ]);
@@ -454,28 +451,31 @@ export const Review = (
         </ReviewRow>
       )}
 
-      {claim.isBondingLeave && reasonQualifier === ReasonQualifier.newBorn && (
-        <ReviewRow
-          level={reviewRowLevel}
-          label={t("pages.claimsReview.childBirthDateLabel")}
-        >
-          {formatDateRange(get(claim, "leave_details.child_birth_date"))}
-        </ReviewRow>
-      )}
+      {claim.isBondingLeave &&
+        reasonQualifier === ReasonQualifier.newBorn &&
+        claim.leave_details.child_birth_date && (
+          <ReviewRow
+            level={reviewRowLevel}
+            label={t("pages.claimsReview.childBirthDateLabel")}
+          >
+            {formatDateRange(claim.leave_details.child_birth_date)}
+          </ReviewRow>
+        )}
 
       {claim.isBondingLeave &&
         [ReasonQualifier.adoption, ReasonQualifier.fosterCare].includes(
           reasonQualifier
-        ) && (
+        ) &&
+        claim.leave_details.child_placement_date && (
           <ReviewRow
             level={reviewRowLevel}
             label={t("pages.claimsReview.childPlacementDateLabel")}
           >
-            {formatDateRange(get(claim, "leave_details.child_placement_date"))}
+            {formatDateRange(claim.leave_details.child_placement_date)}
           </ReviewRow>
         )}
 
-      {claim.isCaringLeave && (
+      {claim.isCaringLeave && claim.hasCaringLeaveMetadata && (
         <React.Fragment>
           <ReviewRow
             level={reviewRowLevel}

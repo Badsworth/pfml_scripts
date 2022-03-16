@@ -16,6 +16,7 @@ import PreviousLeave from "./PreviousLeave";
 import { ValuesOf } from "../../types/common";
 import assert from "assert";
 import dayjs from "dayjs";
+import isBlank from "../utils/isBlank";
 import spreadMinutesOverWeek from "../utils/spreadMinutesOverWeek";
 
 class BenefitsApplication extends BaseBenefitsApplication {
@@ -30,6 +31,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
   concurrent_leave: ConcurrentLeave | null = null;
   employer_benefits: EmployerBenefit[] = [];
   date_of_birth: string | null = null;
+  employee_id: string | null = null;
   employer_fein: string | null = null;
   gender: ValuesOf<typeof Gender> | null = null;
   has_concurrent_leave: boolean | null = null;
@@ -99,6 +101,16 @@ class BenefitsApplication extends BaseBenefitsApplication {
     super();
     // Recursively merge with the defaults
     merge(this, attrs);
+  }
+
+  /**
+   * Applications imported from Fineos as part of Channel Switching won't have
+   * any caring leave metadata fields set.
+   */
+  get hasCaringLeaveMetadata(): boolean {
+    return !isBlank(
+      this.leave_details.caring_leave_metadata?.family_member_first_name
+    );
   }
 
   /**

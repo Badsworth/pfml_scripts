@@ -177,6 +177,11 @@ class PaymentsDateConfig(PydanticBaseSettings):
         NOT_SET, description="The earliest file we will copy from FINEOS for the 1099 extract"
     )
 
+    fineos_vbi_taskreport_som_extract_max_history_date: str = Field(
+        NOT_SET,
+        description="The earliest file we will copy from FINEOS for the VBI Taskreport Som extract",
+    )
+
 
 def get_date_config() -> PaymentsDateConfig:
     payments_date_config = PaymentsDateConfig()

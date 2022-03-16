@@ -7,7 +7,7 @@
 #
 locals {
   # toggle variable between daylight savings and standard time
-  is_daylight_savings = false
+  is_daylight_savings = true
 
   # Allow first step to either generate mock data _or_ import employees from FINEOS
   st_states_details_list = {

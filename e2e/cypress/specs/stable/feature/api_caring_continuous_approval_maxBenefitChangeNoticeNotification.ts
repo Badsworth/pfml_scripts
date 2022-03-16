@@ -43,7 +43,7 @@ describeIf(
               .acceptLeavePlan();
           });
           if (config("HAS_APRIL_UPGRADE") === "true") {
-            claimPage.approve("Completed", true);
+            claimPage.approve("Approved", true);
           } else {
             claimPage.approve();
           }

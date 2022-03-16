@@ -1,9 +1,10 @@
+import { Trans, useTranslation } from "react-i18next";
 import Alert from "src/components/core/Alert";
 import Heading from "src/components/core/Heading";
 import React from "react";
 import englishLocale from "src/locales/app/en-US";
 import { groupBy } from "lodash";
-import { useTranslation } from "react-i18next";
+import useErrorI18nComponents from "src/hooks/useErrorI18nComponents";
 
 export default {
   title: "Misc/Error content",
@@ -18,6 +19,7 @@ export const Default = () => {
     englishLocale.translation.errors,
     "errors."
   );
+  const i18nComponents = useErrorI18nComponents();
 
   // Group by the root key so we can render group headings
   const messageGroups = groupBy(flatMessageKeyList, (key) => {
@@ -78,7 +80,7 @@ export const Default = () => {
               <div key={messageKey}>
                 <code className="font-code-2xs text-base">{messageKey}</code>
                 <Alert className="margin-bottom-3" aria-label={messageKey}>
-                  {t(messageKey)}
+                  <Trans i18nKey={t(messageKey)} components={i18nComponents} />
                 </Alert>
               </div>
             ))}
