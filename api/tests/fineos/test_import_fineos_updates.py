@@ -20,7 +20,7 @@ from massgov.pfml.util import datetime
 def emp_updates_path(tmp_path):
     file_name = "2020-12-10-23-10-11-EmployeeDataLoad_feed.csv"
     content_line_one = '"EMPLOYEEIDENTIFIER","EMPLOYEETITLE","EMPLOYEEDATEOFBIRTH","EMPLOYEEGENDER","EMPLOYEEMARITALSTATUS","TELEPHONEINTCODE","TELEPHONEAREACODE","TELEPHONENUMBER","CELLINTCODE","CELLAREACODE","CELLNUMBER","EMPLOYEEEMAIL","EMPLOYEEID","EMPLOYEECLASSIFICATION","EMPLOYEEJOBTITLE","EMPLOYEEDATEOFHIRE","EMPLOYEEENDDATE","EMPLOYMENTSTATUS","EMPLOYEEORGUNITNAME","EMPLOYEEHOURSWORKEDPERWEEK","EMPLOYEEDAYSWORKEDPERWEEK","MANAGERIDENTIFIER","QUALIFIERDESCRIPTION","EMPLOYEEWORKSITEID","ORG_CUSTOMERNO","ORG_NAME","EMPLOYEENATIONALID","EMPLOYEEFIRSTNAME","EMPLOYEELASTNAME","CUSTOMERNO"'
-    content_line_two = '"4376896b-596c-4c86-a653-1915cf997a84","Mr","1970-10-06 00:00:00","Male","Single","","","","","","","nona@comm.com","","Unknown","DEFAULT","2000-01-01 00:00:00","","Active","Testing Department","37.5","0","","","","10","Test Company","123456789","John","Doe","444"'
+    content_line_two = '"4376896b-596c-4c86-a653-1915cf997a84","Mr","1970-10-06 00:00:00","Male","Single","","617","5551212","","508","","nona@comm.com","","Unknown","DEFAULT","2000-01-01 00:00:00","","Active","Testing Department","37.5","0","","","","10","Test Company","123456789","John","Doe","444"'
     content_line_three = '"cb2f2d72-ac68-4402-a82f-6e32edd086b3","Unknown","1994-09-14 00:00:00","Unknown","Unknown","","","","","","","rob+pfml-cypress-gh3@lastcallmedia.com","","Unknown","DEFAULT","2020-01-01 00:00:00","","Active","","42","4.55","","","","10","Test Company","987654321","Jerry","Smith","555"'
     content = f"{content_line_one}\n{content_line_two}\n{content_line_three}"
 
@@ -167,6 +167,9 @@ def test_fineos_updates_happy_path(test_db_session, initialize_factories_session
     assert updated_employee_one.marital_status_id == MaritalStatus.SINGLE.marital_status_id
     assert updated_employee_one.gender_id == Gender.MAN.gender_id
     assert updated_employee_one.title_id == Title.MR.title_id
+    assert updated_employee_one.phone_number == "+16175551212"
+    # Despite having an area code (only), their cell phone should be None, not +1508 which is nonsense:
+    assert updated_employee_one.cell_phone_number is None
 
     assert updated_employee_two is not None
     assert updated_employee_two.title_id == 1
@@ -174,6 +177,8 @@ def test_fineos_updates_happy_path(test_db_session, initialize_factories_session
     assert updated_employee_two.marital_status_id is None
     assert updated_employee_two.gender_id is Gender.NOT_LISTED.gender_id
     assert updated_employee_two.title_id == Title.UNKNOWN.title_id
+    assert updated_employee_two.phone_number is None
+    assert updated_employee_two.cell_phone_number is None
 
     assert employee_occupation_one is not None
     assert employee_occupation_one.date_of_hire == datetime.date(2000, 1, 1)

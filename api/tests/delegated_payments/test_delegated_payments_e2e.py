@@ -54,6 +54,7 @@ from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
     generate_claimant_data_files,
     generate_payment_extract_files,
     generate_payment_reconciliation_extract_files,
+    generate_vbi_taskreport_som_extract_files,
 )
 from massgov.pfml.delegated_payments.mock.generate_check_response import PubCheckResponseGenerator
 from massgov.pfml.delegated_payments.mock.generate_manual_pub_reject_response import (
@@ -300,10 +301,11 @@ def test_e2e_pub_payments(
         # Payments
         payments = (
             # Only retrieve payments that were generated from processing extracts
-            # This ends up being 6 there are 4 steps that occur before as well as an import log for past payments
-            # 1:PastPayments,2:StateCleanupStep,3:CLAIMANT_EXTRACT_CONFIG,4:PAYMENT_EXTRACT_CONFIG,5:ClaimantExtractStep,6:PaymentExtractStep
+            # This ends up being 7: there are 5 steps that occur before as well as an import log for past payments
+            # 1:PastPayments,2:StateCleanupStep,3:CLAIMANT_EXTRACT_CONFIG,4:PAYMENT_EXTRACT_CONFIG,
+            # 5:VBI_TASKREPORT_SOM_EXTRACT_CONFIG,6:ClaimantExtractStep,7:PaymentExtractStep
             test_db_session.query(Payment)
-            .filter(Payment.fineos_extract_import_log_id == 6)
+            .filter(Payment.fineos_extract_import_log_id == 7)
             .all()
         )
         missing_payment = list(
@@ -2958,6 +2960,14 @@ def generate_fineos_extract_files(scenario_dataset: List[ScenarioData], round: i
     assert_files(
         fineos_data_export_path,
         payments_util.PAYMENT_EXTRACT_FILE_NAMES,
+        fineos_extract_date_prefix,
+    )
+
+    # vbi taskreport som extract
+    generate_vbi_taskreport_som_extract_files(fineos_data_export_path, get_now_us_eastern())
+    assert_files(
+        fineos_data_export_path,
+        payments_util.VBI_TASKREPORT_SOM_EXTRACT_FILE_NAMES,
         fineos_extract_date_prefix,
     )
 

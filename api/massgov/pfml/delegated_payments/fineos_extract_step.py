@@ -56,6 +56,12 @@ REQUEST_1099_EXTRACT_CONFIG = ExtractConfig(
     "fineos_data_export_path",
 )
 
+VBI_TASKREPORT_SOM_EXTRACT_CONFIG = ExtractConfig(
+    payments_util.VBI_TASKREPORT_SOM_EXTRACT_FILES,
+    ReferenceFileType.FINEOS_VBI_TASKREPORT_SOM_EXTRACT,
+    "fineos_data_export_path",
+)
+
 
 class ExtractData:
     s3_locations: List[str]
@@ -113,6 +119,7 @@ class FineosExtractStep(Step):
         ARCHIVE_PATH = "archive_path"
         FILE_TYPE = "file_type"
         RECORDS_PROCESSED_COUNT = "records_processed_count"
+        RECORDS_FILTERED_OUT_COUNT = "records_filtered_out_count"
 
     def __init__(
         self,
@@ -320,14 +327,17 @@ class FineosExtractStep(Step):
                             },
                         )
 
-                staging_table_instance = payments_util.create_staging_table_instance(
-                    lower_key_record,
-                    extract.table,
-                    extract_data.reference_file,
-                    self.get_import_log_id(),
-                    # These were already logged when we checked the first record earlier,
-                    # so we don't need to log them again.
-                    ignore_properties=unconfigured_columns,
-                )
-                self.db_session.add(staging_table_instance)
-                self.increment(self.Metrics.RECORDS_PROCESSED_COUNT)
+                if payments_util.matches_all_filters(lower_key_record, extract):
+                    staging_table_instance = payments_util.create_staging_table_instance(
+                        lower_key_record,
+                        extract.table,
+                        extract_data.reference_file,
+                        self.get_import_log_id(),
+                        # These were already logged when we checked the first record earlier,
+                        # so we don't need to log them again.
+                        ignore_properties=unconfigured_columns,
+                    )
+                    self.db_session.add(staging_table_instance)
+                    self.increment(self.Metrics.RECORDS_PROCESSED_COUNT)
+                else:
+                    self.increment(self.Metrics.RECORDS_FILTERED_OUT_COUNT)

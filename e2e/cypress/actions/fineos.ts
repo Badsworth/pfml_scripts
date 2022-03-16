@@ -95,8 +95,11 @@ export function visitClaim(claimId: string): void {
 /**
  * Called from the claim page, asserts that the claim status is an expected value.
  */
-export function assertClaimStatus(expected: string): void {
-  cy.get(".key-info-bar .status dd").should((statusElement) => {
+export function assertClaimStatus(expected: string, upgrade?: boolean): void {
+  const selector = upgrade
+    ? "label[id*='deniedLeaveDescription']"
+    : ".key-info-bar .status dd";
+  cy.get(selector).should((statusElement) => {
     expect(statusElement, `Absence case should be ${expected}`).to.contain.text(
       expected
     );

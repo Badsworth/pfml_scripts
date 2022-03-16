@@ -238,12 +238,20 @@ def other_leave_eform():
                 },
                 {"name": "V2SecondaryQualifyingReason2", "stringValue": "Military caregiver"},
                 {
-                    "enumValue": {"domainName": "15MinuteIncrements", "instanceValue": "12"},
+                    "enumValue": {"domainName": "15MinuteIncrements", "instanceValue": "15"},
                     "name": "V2MinutesWorked1",
                 },
                 {
-                    "enumValue": {"domainName": "15MinuteIncrements", "instanceValue": "32"},
+                    "enumValue": {"domainName": "15MinuteIncrements", "instanceValue": "30"},
                     "name": "V2TotalMinutes1",
+                },
+                {
+                    "integerValue": 8,
+                    "name": "V2HoursWorked1",
+                },
+                {
+                    "integerValue": 40,
+                    "name": "V2TotalHours1",
                 },
             ],
         }
@@ -412,8 +420,8 @@ class TestTransformEformBody:
         assert other_leave_1["leave_end_date"] == date(2020, 9, 22)
         assert other_leave_1["leave_reason"] == "Pregnancy"
         assert other_leave_1["type"] == "other_reason"
-        assert other_leave_1["leave_minutes"] == 32
-        assert other_leave_1["worked_per_week_minutes"] == 12
+        assert other_leave_1["leave_minutes"] == 2430
+        assert other_leave_1["worked_per_week_minutes"] == 495
 
         assert type(other_leaves_list[1]) is PreviousLeave
         other_leave_2 = other_leaves_list[1].dict()
