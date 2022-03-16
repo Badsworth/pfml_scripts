@@ -3,7 +3,9 @@ from typing import Optional, Union
 import phonenumbers
 
 
-def convert_to_E164(phone: str, int_code: Optional[str] = None) -> Union[str, None]:
+def convert_to_E164(
+    phone: str, int_code: Optional[str] = None, raise_if_invalid: bool = False
+) -> Union[str, None]:
     parsed_phone_number = parse_number(phone, int_code)
 
     if not parsed_phone_number:
@@ -12,6 +14,9 @@ def convert_to_E164(phone: str, int_code: Optional[str] = None) -> Union[str, No
     internationalized_phone_number = phonenumbers.format_number(
         parsed_phone_number, phonenumbers.PhoneNumberFormat.E164
     )
+
+    if raise_if_invalid and not phonenumbers.is_valid_number(parsed_phone_number):
+        raise ValueError("Phone number is not valid.")
 
     return internationalized_phone_number
 

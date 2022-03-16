@@ -13,7 +13,8 @@ from massgov.pfml.api.validation.claim_rules import (
     get_previous_leaves_issues,
 )
 from massgov.pfml.api.validation.exceptions import IssueType
-from massgov.pfml.db.models.employees import AbsencePeriod, ChangeRequestType
+from massgov.pfml.db.models.absences import AbsenceReasonQualifierOne
+from massgov.pfml.db.models.employees import AbsencePeriod, ChangeRequestType, LeaveRequestDecision
 from massgov.pfml.db.models.factories import (
     AbsencePeriodFactory,
     ChangeRequestFactory,
@@ -194,8 +195,12 @@ def claim():
     claim = ClaimFactory.create()
     claim.absence_period_start_date = date(2020, 1, 1)
     absence_period: AbsencePeriod = AbsencePeriodFactory.create(claim=claim)
-    absence_period.leave_request_decision_id = 3
-    absence_period.absence_reason_qualifier_one_id = 29
+    absence_period.leave_request_decision_id = (
+        LeaveRequestDecision.APPROVED.leave_request_decision_id
+    )
+    absence_period.absence_reason_qualifier_one_id = (
+        AbsenceReasonQualifierOne.BIRTH_DISABILITY.absence_reason_qualifier_one_id
+    )
     claim.absence_periods = [absence_period]
     return claim
 
@@ -230,12 +235,14 @@ class TestGetChangeRequestIssues:
             assert "End date is required for this request type" in resp[0].message
 
         def test_wrong_absence_status(self, modification_change_request, claim):
-            claim.absence_periods[0].leave_request_decision_id = 2
+            claim.absence_periods[
+                0
+            ].leave_request_decision_id = LeaveRequestDecision.DENIED.leave_request_decision_id
             resp = get_change_request_issues(modification_change_request, claim)
-            assert resp[0].type == IssueType.must_be_approved_claim
+            assert resp[0].type == IssueType.must_have_valid_decision_status
             assert resp[0].field == "fineos_absence_id"
             assert (
-                "Claim must have at least one approved absence period to submit a change request"
+                "Claim must have at least one absence period in approved, in_review"
                 in resp[0].message
             )
 
@@ -246,6 +253,13 @@ class TestGetChangeRequestIssues:
             assert resp[0].field == "change_request.documents_submitted_at"
             assert "Supporting documents must be submitted for this request type" in resp[0].message
 
+        def test_in_review_status_valid(self, modification_change_request, claim):
+            claim.absence_periods[
+                0
+            ].leave_request_decision_id = LeaveRequestDecision.IN_REVIEW.leave_request_decision_id
+            issues = get_change_request_issues(modification_change_request, claim)
+            assert not issues
+
     class TestChangeRequestTypeWithdrawal:
         # Test rules specific to the Withdrawal type
 
@@ -253,7 +267,9 @@ class TestGetChangeRequestIssues:
             assert not get_change_request_issues(withdrawal_change_request, claim)
 
         def test_no_issues_pending_period(self, withdrawal_change_request, claim):
-            claim.absence_periods[0].leave_request_decision_id = 1
+            claim.absence_periods[
+                0
+            ].leave_request_decision_id = LeaveRequestDecision.PENDING.leave_request_decision_id
             assert not get_change_request_issues(withdrawal_change_request, claim)
 
         def test_start_date_error(self, withdrawal_change_request, claim):
@@ -271,14 +287,23 @@ class TestGetChangeRequestIssues:
             assert "End date is invalid for this request type" in resp[0].message
 
         def test_wrong_absence_status(self, withdrawal_change_request, claim):
-            claim.absence_periods[0].leave_request_decision_id = 2
+            claim.absence_periods[
+                0
+            ].leave_request_decision_id = LeaveRequestDecision.DENIED.leave_request_decision_id
             resp = get_change_request_issues(withdrawal_change_request, claim)
-            assert resp[0].type == IssueType.must_be_approved_or_pending_claim
+            assert resp[0].type == IssueType.must_have_valid_decision_status
             assert resp[0].field == "fineos_absence_id"
             assert (
-                "Claim must have at least one approved or pending absence period to submit a withdrawal"
+                "Claim must have at least one absence period in approved, pending, in_review"
                 in resp[0].message
             )
+
+        def test_in_review_status_valid(self, withdrawal_change_request, claim):
+            claim.absence_periods[
+                0
+            ].leave_request_decision_id = LeaveRequestDecision.IN_REVIEW.leave_request_decision_id
+            issues = get_change_request_issues(withdrawal_change_request, claim)
+            assert not issues
 
     class TestChangeRequestTypeMedicalToBonding:
         # Test rules specific to the Medical To Bonding type
@@ -301,7 +326,11 @@ class TestGetChangeRequestIssues:
             assert "End date is required for this request type" in resp[0].message
 
         def test_missing_absence_period(self, mtb_change_request, claim):
-            claim.absence_periods[0].absence_reason_qualifier_one_id = 1
+            claim.absence_periods[
+                0
+            ].absence_reason_qualifier_one_id = (
+                AbsenceReasonQualifierOne.NOT_WORK_RELATED.absence_reason_qualifier_one_id
+            )
             resp = get_change_request_issues(mtb_change_request, claim)
             assert resp[0].type == IssueType.not_medical_to_bonding_claim
             assert (
@@ -309,11 +338,20 @@ class TestGetChangeRequestIssues:
             )
 
         def test_wrong_absence_status(self, mtb_change_request, claim):
-            claim.absence_periods[0].leave_request_decision_id = 2
+            claim.absence_periods[
+                0
+            ].leave_request_decision_id = LeaveRequestDecision.DENIED.leave_request_decision_id
             resp = get_change_request_issues(mtb_change_request, claim)
-            assert resp[0].type == IssueType.must_be_approved_claim
+            assert resp[0].type == IssueType.must_have_valid_decision_status
             assert resp[0].field == "fineos_absence_id"
             assert (
-                "Claim must have at least one approved absence period to submit a change request"
+                "Claim must have at least one absence period in approved, in_review"
                 in resp[0].message
             )
+
+        def test_in_review_status_valid(self, mtb_change_request, claim):
+            claim.absence_periods[
+                0
+            ].leave_request_decision_id = LeaveRequestDecision.IN_REVIEW.leave_request_decision_id
+            issues = get_change_request_issues(mtb_change_request, claim)
+            assert not issues

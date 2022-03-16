@@ -782,6 +782,13 @@ class ChangeRequest(Base, TimestampMixin):
     def type(self) -> str:
         return self.change_request_type_instance.description
 
+    @typed_hybrid_property
+    def application(self):
+        if not self.claim:
+            return None
+
+        return self.claim.application  # type: ignore
+
 
 class Claim(Base, TimestampMixin):
     __tablename__ = "claim"
@@ -2088,6 +2095,8 @@ class ReferenceFileType(LookupTable):
     DUA_EMPLOYER_UNIT_FILE = LkReferenceFileType(40, "DUA employer unit", 1)
 
     MANUAL_PUB_REJECT_FILE = LkReferenceFileType(41, "Manual PUB Reject File", 1)
+
+    FINEOS_VBI_TASKREPORT_SOM_EXTRACT = LkReferenceFileType(41, "VBI TaskReport Som extract", 1)
 
 
 class Title(LookupTable):
