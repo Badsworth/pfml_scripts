@@ -11,8 +11,8 @@ import massgov.pfml.util.logging
 
 EMPLOYER_FILE_PREFIX = "DORDFMLEMP_"
 EMPLOYEE_FILE_PREFIX = "DORDFML_"
-PENDING_FILING_FILE_PREFIX = "DORDUADFML_SUBMISSION"
-EXEMPT_EMPLOYER_FILE_PREFIX = "DORDUADFML"
+PENDING_FILING_FILE_PREFIX = "DORDUADFML_SUBMISSION_"
+EXEMPT_EMPLOYER_FILE_PREFIX = "DORDUADFML_"
 
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -33,14 +33,14 @@ def get_exempt_employer_files_to_process(path: str) -> List[str]:
     return get_files_to_process_by_regex(path, EXEMPT_EMPLOYER_FILE_PREFIX)
 
 
-def get_files_to_process_by_regex(path: str, prefix: str):
+def get_files_to_process_by_regex(path: str, prefix: str) -> List[str]:
     import_files: List[str] = []
 
     files_for_import = massgov.pfml.util.files.list_files(str(path))
     files_for_import.sort()
 
     for filename in files_for_import:
-        match = re.match(r"({prefix}.*_)(\d+)".format(prefix=prefix), filename)
+        match = re.match(r"({prefix})(\d+)".format(prefix=prefix), filename)
 
         if match is not None:
             if path.endswith("/"):
