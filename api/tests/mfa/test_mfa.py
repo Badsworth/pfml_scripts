@@ -90,7 +90,7 @@ class TestHandleMfaDisabled:
             extra={
                 "last_enabled_at": mock.ANY,
                 "time_since_enabled_in_sec": mock.ANY,
-                "updated_by": MFAUpdatedBy.USER,
+                "updated_by": "user",
             },
         )
 
