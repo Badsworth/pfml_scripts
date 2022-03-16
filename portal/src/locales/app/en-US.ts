@@ -2756,6 +2756,10 @@ const pages: {
       "$t(pages.payments.tablePaymentStatus_Delayed_Default)",
     "tablePaymentStatus_Delayed_Max Weekly Benefits Exceeded":
       "$t(pages.payments.tablePaymentStatus_Delayed_Default)",
+    tablePaymentStatus_Delayed_Processing:
+      "Your payment is being processed. Your {{paymentMethod}} dates will be available in a few days. No action is required from you at this time.",
+    tablePaymentStatus_Delayed_ProcessingWithDate:
+      "$t(pages.payments.tablePaymentStatus_Pending)",
     tablePaymentStatus_Pending:
       "Your payment will be sent by {{paymentMethod}} between {{payPeriod}}.",
     "tablePaymentStatus_Sent to bank":
@@ -2859,6 +2863,8 @@ const components: {
     heading_serviceMemberFamily: "$t(shared.leaveReasonServiceMemberFamily)",
     inProgressText:
       "Submit all three parts so that we can review your application.",
+    leaveDates: "{{start}} to {{end}}",
+    leaveDatesLabel: "Leave Dates",
     leavePeriodLabel_reduced: "$t(shared.claimDurationTypeReducedSchedule)",
     loadingLabel: "$t(shared.loadingDocumentsLabel)",
     noticeOnClickDetails:

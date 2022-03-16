@@ -339,7 +339,7 @@ def download_from_s3(source, destination):
 
     bucket, path = split_s3_url(source)
 
-    s3 = boto3.client("s3")
+    s3 = get_s3_client(bucket)
     s3.download_file(bucket, path, destination)
 
 
@@ -352,7 +352,7 @@ def upload_to_s3(source, destination):
 
     bucket, path = split_s3_url(destination)
 
-    s3 = boto3.client("s3")
+    s3 = get_s3_client(bucket)
     s3.upload_file(source, bucket, path)
 
 
