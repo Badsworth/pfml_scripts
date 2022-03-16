@@ -166,6 +166,21 @@ locals {
       ]
     },
 
+    "dor-import-exempt" = {
+      command        = ["dor-import-exempt"],
+      task_role      = aws_iam_role.dor_import_task_role.arn,
+      execution_role = aws_iam_role.dor_import_execution_role.arn,
+      cpu            = 4096,
+      memory         = 18432,
+      env = [
+        local.db_access,
+        { name : "DECRYPT", value : "true" },
+        { name : "FOLDER_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/dor/received" },
+        { name : "GPG_DECRYPTION_KEY", valueFrom : "/service/${local.app_name}-dor-import/${var.environment_name}/gpg_decryption_key" },
+        { name : "GPG_DECRYPTION_KEY_PASSPHRASE", valueFrom : "/service/${local.app_name}-dor-import/${var.environment_name}/gpg_decryption_key_passphrase" }
+      ]
+    },
+
     "fineos-import-employee-updates" = {
       command   = ["fineos-import-employee-updates"]
       task_role = aws_iam_role.fineos_import_employee_updates_task_role.arn
@@ -280,6 +295,7 @@ locals {
         { name : "FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", value : "2021-06-12" },
         { name : "FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", value : "2021-06-12" },
         { name : "FINEOS_1099_DATA_EXTRACT_MAX_HISTORY_DATE", value : "2022-01-01" },
+        { name : "FINEOS_VBI_TASKREPORT_SOM_EXTRACT_MAX_HISTORY_DATE", value : "2022-03-11" },
         { name : "USE_EXPERIAN_SOAP_CLIENT", value : "1" },
         { name : "EXPERIAN_AUTH_TOKEN", valueFrom : "/service/${local.app_name}/common/experian-auth-token" },
         { "name" : "ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS", "value" : var.enable_employer_reimbursement_payments }

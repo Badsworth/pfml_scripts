@@ -2505,6 +2505,7 @@ components:
           type: string
         middle_name:
           type: string
+          nullable: true
         uses_second_eform_version:
           type: boolean
         previous_leaves:

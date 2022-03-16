@@ -30,6 +30,7 @@ import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.models.claims.responses import AbsencePeriodResponse
 from massgov.pfml.db.models.factories import (
+    ApplicationFactory,
     ChangeRequestFactory,
     ClaimFactory,
     EmployeeFactory,
@@ -120,14 +121,20 @@ def employee(tax_identifier):
 
 
 @pytest.fixture
-def claim(employer, employee):
+def claim(employer, employee, application):
     return ClaimFactory.create(
         employer=employer,
         employee=employee,
+        application=application,
         fineos_absence_status_id=1,
         claim_type_id=1,
         fineos_absence_id="foo",
     )
+
+
+@pytest.fixture
+def application(user):
+    return ApplicationFactory.create(user=user)
 
 
 @pytest.fixture
@@ -149,6 +156,7 @@ def absence_period():
 def change_request(claim):
     return ChangeRequestFactory.create(
         claim_id=claim.claim_id,
+        claim=claim,
         change_request_type_id=employee_models.ChangeRequestType.MODIFICATION.change_request_type_id,
     )
 

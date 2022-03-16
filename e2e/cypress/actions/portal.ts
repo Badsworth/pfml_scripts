@@ -2214,15 +2214,19 @@ export function completeFlowMFA(number: string): void {
 }
 
 export function acceptMFA(): void {
+  //Backward Compatability
+  // Yes, I want to add a phone number for verifying logins. -> Yes, I want to add a phone number for additional security.
   cy.contains(
-    "Yes, I want to add a phone number for verifying logins."
+    /(Yes, I want to add a phone number for verifying logins.|Yes, I want to add a phone number for additional security.)/
   ).click();
   cy.contains("button", "Save and continue").click();
 }
 
 export function declineMFA(): void {
+  //Backward Compatability
+  // No, I do not want to add a phone number for verifying logins. -> No, I do not want to add a phone number.
   cy.contains(
-    "No, I do not want to add a phone number for verifying logins."
+    /(No, I do not want to add a phone number for verifying logins.|No, I do not want to add a phone number.)/
   ).click();
   cy.contains("button", "Save and continue").click();
 }

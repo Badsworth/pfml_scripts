@@ -47,7 +47,7 @@ function getDocuments({
 }
 
 export default {
-  title: `Pages/Applications/Status/Status`,
+  title: `Pages/Applications/Status/Claim Status`,
   component: Status,
   args: {
     "Has payments": true,
