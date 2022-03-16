@@ -2,6 +2,10 @@ import {
   BenefitsApplicationDocument,
   DocumentType,
 } from "../../../../src/models/Document";
+import {
+  PROCESSING_DAYS_PER_DELAY,
+  Payment,
+} from "../../../../src/models/Payment";
 // TODO (PORTAL-1148) Update to use createMockClaim when ready
 import { createAbsencePeriod, renderPage } from "../../../test-utils";
 import { AbsencePeriod } from "../../../../src/models/AbsencePeriod";
@@ -11,7 +15,6 @@ import ClaimDetail from "../../../../src/models/ClaimDetail";
 import { Holiday } from "../../../../src/models/Holiday";
 import LeaveReason from "../../../../src/models/LeaveReason";
 import { NotFoundError } from "../../../../src/errors";
-import { Payment } from "../../../../src/models/Payment";
 import { Payments } from "../../../../src/pages/applications/status/payments";
 import { createMockBenefitsApplicationDocument } from "../../../../lib/mock-helpers/createMockDocument";
 import { createMockPayment } from "lib/mock-helpers/createMockPayment";
@@ -735,6 +738,7 @@ describe("Payments", () => {
     );
 
     it("default render for status not in PROCESSING_DAYS_PER_DELAY ('DUA Additional Income') displays 'Delayed' status if transaction date after 3 business days", () => {
+      const transactionStatus = "DUA Additional Income";
       renderPage(
         Payments,
         {
@@ -746,7 +750,7 @@ describe("Payments", () => {
                   {
                     status: "Delayed",
                     sent_to_bank_date: null,
-                    writeback_transaction_status: "DUA Additional Income",
+                    writeback_transaction_status: transactionStatus,
                     transaction_date: transactionDate[beforeFourDays],
                   },
                   true
@@ -759,6 +763,7 @@ describe("Payments", () => {
       );
       const defaultDelayReasonText =
         "Most delays are resolved within 3 to 5 business days. The Contact Center will contact you if they require more information.";
+      expect(PROCESSING_DAYS_PER_DELAY).not.toHaveProperty(transactionStatus);
       expect(
         screen.queryByText(defaultDelayReasonText, { exact: false })
       ).toBeInTheDocument();
@@ -767,6 +772,7 @@ describe("Payments", () => {
     });
 
     it("default render for status not in PROCESSING_DAYS_PER_DELAY ('DUA Additional Income') will display 'Processing' status if transaction date before 2 business days", () => {
+      const transactionStatus = "DUA Additional Income";
       renderPage(
         Payments,
         {
@@ -778,7 +784,7 @@ describe("Payments", () => {
                   {
                     status: "Delayed",
                     sent_to_bank_date: null,
-                    writeback_transaction_status: "DUA Additional Income",
+                    writeback_transaction_status: transactionStatus,
                     transaction_date: transactionDate[beforeThreeDays],
                   },
                   true
@@ -791,9 +797,47 @@ describe("Payments", () => {
       );
       const defaultDelayReasonText =
         "Most delays are resolved within 3 to 5 business days. The Contact Center will contact you if they require more information.";
+      expect(PROCESSING_DAYS_PER_DELAY).not.toHaveProperty(transactionStatus);
       expect(
         screen.queryByText(defaultDelayReasonText, { exact: false })
       ).not.toBeInTheDocument();
+      expect(screen.queryByText("Delayed")).not.toBeInTheDocument();
+      expect(screen.queryByText("Processing")).toBeInTheDocument();
+    });
+
+    it("renders generic processing text if transaction_date_could_change is true and expected_send_start_date/expected_send_end_date are null", () => {
+      const transactionStatus = "Pending Payment Audit";
+      renderPage(
+        Payments,
+        {
+          addCustomSetup: setupHelper({
+            payments: {
+              absence_case_id: "NTN-12345-ABS-01",
+              payments: [
+                createMockPayment(
+                  {
+                    status: "Delayed",
+                    sent_to_bank_date: null,
+                    writeback_transaction_status: "Pending Payment Audit",
+                    transaction_date: transactionDate[sameDay],
+                    transaction_date_could_change: true,
+                  },
+                  true
+                ),
+              ],
+            },
+          }),
+        },
+        props
+      );
+      const transactionDateCouldChangeDelayReasonText =
+        "dates will be available in a few days. No action is required from you at this time";
+      expect(PROCESSING_DAYS_PER_DELAY).not.toHaveProperty(transactionStatus);
+      expect(
+        screen.queryByText(transactionDateCouldChangeDelayReasonText, {
+          exact: false,
+        })
+      ).toBeInTheDocument();
       expect(screen.queryByText("Delayed")).not.toBeInTheDocument();
       expect(screen.queryByText("Processing")).toBeInTheDocument();
     });

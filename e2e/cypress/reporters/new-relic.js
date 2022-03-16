@@ -144,7 +144,26 @@ module.exports = class NewRelicCypressReporter extends reporters.Spec {
     };
   }
 
+  getTagGroup(tag) {
+    if (tag.includes("Deploy")) {
+      return "Deploy";
+    } else if (tag.includes("PR")) {
+      return "PR";
+    } else if (tag.includes("Fineos Trigger")) {
+      return "Fineos";
+    } else if (tag.includes("Targeted")) {
+      return "Targeted";
+    } else if (tag.includes("Morning Run")) {
+      return "Morning Run";
+    } else {
+      return "Manual";
+    }
+  }
+
   setEventCommon(metadata, test) {
+    const tag = metadata.tag
+      ? metadata.tag.filter((tag) => !tag.includes("Env-")).join(",")
+      : "Deploy,Deploy-API";
     return {
       schemaVersion: 0.2,
       runId: metadata.ciBuildId,
@@ -154,7 +173,8 @@ module.exports = class NewRelicCypressReporter extends reporters.Spec {
       file: getSuiteWithFile(metadata.suite),
       blockTitle: test.title,
       duration: test.duration ?? 0,
-      tag: metadata.tag ? metadata.tag.join(",") : "",
+      tag: tag,
+      tagGroup: this.getTagGroup(tag),
       group: metadata.group,
     };
   }
