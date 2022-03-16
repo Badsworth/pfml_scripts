@@ -4113,7 +4113,11 @@ def test_application_post_submit_ssn_fraud_error(
         user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
     )
     ApplicationFactory.create(user=employer_user, tax_identifier=application.tax_identifier)
-    ApplicationFactory.create(user=consented_user, tax_identifier=application.tax_identifier)
+    ApplicationFactory.create(
+        user=consented_user,
+        tax_identifier=application.tax_identifier,
+        submitted_time=datetime_util.utcnow(),
+    )
     WagesAndContributionsFactory.create(employer=employer, employee=employee)
 
     application.continuous_leave_periods = [
@@ -4145,6 +4149,55 @@ def test_application_post_submit_ssn_fraud_error(
             }
         ],
     )
+
+
+def test_application_post_submit_ssn_fraud_not_submitted_okay(
+    client,
+    user,
+    consented_user,
+    employer_user,
+    auth_token,
+    test_db_session,
+    enable_application_fraud_check,
+):
+    # This tests the case where an application is submitted, but another application
+    # with the same SSN but different user ids exists. These need to be handled
+    # in the call center as they may be cases of fraud.
+
+    # consented_user will have a different IDs, create another app with it
+    assert user.sub_id != consented_user.sub_id
+    assert user.sub_id != employer_user.sub_id
+
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
+    )
+    ApplicationFactory.create(user=employer_user, tax_identifier=application.tax_identifier)
+    ApplicationFactory.create(user=consented_user, tax_identifier=application.tax_identifier)
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
+
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
+    ]
+    application.date_of_birth = date(1997, 6, 6)
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.hours_worked_per_week = 70
+    application.has_continuous_leave_periods = True
+    application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
+
+    test_db_session.commit()
+
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    response_body = response.get_json()
+    assert response.status_code == 201
+    assert not response_body.get("errors")
+    assert not response_body.get("warnings")
 
 
 def test_application_post_submit_ssn_second_app(

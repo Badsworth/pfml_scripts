@@ -136,6 +136,8 @@ const useBenefitsApplicationsLogic = ({
       setIsLoadingClaims(false);
     } catch (error) {
       errorsLogic.catchError(error);
+      // to avoid infinite loop when errors are encountered:
+      setPaginationMeta(<PaginationMeta>{ page_offset: Number(pageOffset) });
       setIsLoadingClaims(false);
     }
   };

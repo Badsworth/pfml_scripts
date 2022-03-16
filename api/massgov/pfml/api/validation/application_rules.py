@@ -1379,11 +1379,13 @@ def validate_application_state(
     # We consider an application potentially fraudulent if another application exists that:
     #   Has the same tax identifier
     #   Has a different user
+    #   Has been submitted
     application = (
         db_session.query(Application).filter(
             Application.tax_identifier_id == existing_application.tax_identifier_id,
             Application.application_id != existing_application.application_id,
             Application.user_id != existing_application.user_id,
+            Application.submitted_time.isnot(None),
         )
     ).first()
 
@@ -1401,7 +1403,13 @@ def validate_application_state(
 
         logger.warning(
             "Fraud detected. Multiple applications found for specified Tax id",
-            extra={"application.application_id": existing_application.application_id},
+            extra={
+                "application.user_id": existing_application.user_id,
+                "application.application_id": existing_application.application_id,
+                "prior_application.user_id": application.user_id,
+                "prior_application.application_id": application.application_id,
+                "prior_application.absence_case_id": application.fineos_absence_id,
+            },
         )
     return issues
 

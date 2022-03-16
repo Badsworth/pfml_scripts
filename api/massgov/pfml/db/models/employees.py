@@ -2096,6 +2096,8 @@ class ReferenceFileType(LookupTable):
 
     MANUAL_PUB_REJECT_FILE = LkReferenceFileType(41, "Manual PUB Reject File", 1)
 
+    FINEOS_VBI_TASKREPORT_SOM_EXTRACT = LkReferenceFileType(41, "VBI TaskReport Som extract", 1)
+
 
 class Title(LookupTable):
     model = LkTitle
