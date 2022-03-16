@@ -278,17 +278,17 @@ export class ClaimPage {
       .click();
     cy.get("input[type='submit'][value='Reject']").click();
     clickBottomWidgetButton("OK");
-    if (upgrade) {
-      cy.get('a[title="Deny the pending/in review leave request"]').click();
-    } else {
-      cy.get('a[title="Deny the Pending Leave Request"]').click();
-    }
+    const selector = upgrade
+      ? 'a[title="Deny the pending/in review leave request"]'
+      : 'a[title="Deny the Pending Leave Request"]';
+    cy.get(selector).click();
     cy.get('span[id="leaveRequestDenialDetailsWidget"]')
       .find("select")
       .select(reason);
     cy.get('input[type="submit"][value="OK"]').click();
     // denying an extension for another reason will cause this assertion to fail
-    assertStatus && assertClaimStatus("Declined");
+    assertStatus &&
+      assertClaimStatus(upgrade ? "Previously denied" : "Declined", upgrade);
     return this;
   }
 
