@@ -851,10 +851,16 @@ def get_change_requests(fineos_absence_id: str) -> flask.Response:
     with app.db_session() as db_session:
         change_requests = get_change_requests_from_db(claim.claim_id, db_session)
 
-    # TODO: (PORTAL-1864) Convert the change_request_type to return the enum value rather than the id
     change_requests_dict = []
     for request in change_requests:
-        change_requests_dict.append(request.dict())
+        change_request = ChangeRequestResponse(
+            fineos_absence_id=fineos_absence_id,
+            change_request_type=request.type,
+            start_date=request.start_date,
+            end_date=request.end_date,
+            submitted_time=request.submitted_time,
+        )
+        change_requests_dict.append(change_request.dict())
 
     return response_util.success_response(
         message="Successfully retrieved change requests",

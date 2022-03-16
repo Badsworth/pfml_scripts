@@ -160,10 +160,8 @@ class IssueType(str, Enum):
     employer_requires_verification_data = "employer_requires_verification_data"
     # Leave admin user attempting to view data for an organization they don't have access to
     unauthorized_leave_admin = "unauthorized_leave_admin"
-    # User is trying to submit a modification on an unapproved claim
-    must_be_approved_claim = "must_be_approved_claim"
-    # User is trying to submit a withdrawal on an claim without either a pending or approved absence period
-    must_be_approved_or_pending_claim = "must_be_approved_or_pending_claim"
+    # User is trying to submit a change request without an absence period in a valid state
+    must_have_valid_decision_status = "must_have_valid_decision_status"
     # User is trying to add start and end dates to a claim withdrawal
     withdrawal_dates_must_be_null = "withdrawal_dates_must_be_null"
     # User is trying to make an unsupported modification

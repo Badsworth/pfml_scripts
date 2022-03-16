@@ -20,6 +20,14 @@ class PydanticBaseModel(pydantic.BaseModel):
         orm_mode = True
 
 
+class PydanticBaseModelEmptyStrIsNone(pydantic.BaseModel):
+    @pydantic.validator("*", pre=True)
+    def empty_str_to_none(cls, v):  # noqa: B902
+        if v == "":
+            return None
+        return v
+
+
 class PydanticBaseSettings(pydantic.BaseSettings):
     class Config:
         env_file = env_file

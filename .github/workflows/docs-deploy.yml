@@ -41,6 +41,7 @@ jobs:
         run: |
           python ./bin/docs/hardcode_doc_links.py
           ./bin/docs/generate-release-docs.sh
+          ./bin/docs/generate-infra-docs.sh
 
       - name: Build
         run: npm run docs:build

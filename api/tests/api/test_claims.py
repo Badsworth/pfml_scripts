@@ -5995,6 +5995,7 @@ class TestGetChangeRequests:
         assert response.status_code == 200
         response_body = response.get_json()
         assert len(response_body["data"]["change_requests"]) == 1
+        assert response_body["data"]["change_requests"][0]["change_request_type"] == "Modification"
         assert response_body["message"] == "Successfully retrieved change requests"
 
     @mock.patch("massgov.pfml.api.claims.get_change_requests_from_db")
