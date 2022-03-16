@@ -2790,17 +2790,13 @@ export class ClaimantPage {
    */
   createNotification(
     claim: ValidClaim,
-    withholdingPreference?: boolean,
-    verifyOccupation?: boolean
+    withholdingPreference?: boolean
   ): Cypress.Chainable<string> {
     if (!claim.leave_details.reason) throw new Error(`Missing leave reason.`);
     const reason = claim.leave_details.reason as NonNullable<LeaveReason>;
     // Start the process
     return this.startCreateNotification((occupationDetails) => {
       // "Occupation Details" step.
-      if (verifyOccupation) {
-        occupationDetails.verifyOccupation();
-      }
       if (claim.hours_worked_per_week)
         occupationDetails.enterHoursWorkedPerWeek(claim.hours_worked_per_week);
       return occupationDetails.nextStep((notificationOptions) => {
@@ -3032,11 +3028,6 @@ class OccupationDetails extends CreateNotificationStep {
     cy.findByLabelText("Date job ended").type(
       `${dateToMMddyyyy(dateJobEnded)}{enter}`
     );
-  }
-
-  verifyOccupation(): this {
-    cy.get("[name$='_reverifyStatusLink']").click();
-    return this;
   }
 }
 
