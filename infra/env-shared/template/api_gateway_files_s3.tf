@@ -66,6 +66,11 @@ resource "aws_api_gateway_usage_plan" "files_usage_plan" {
       path        = "*/*"
       rate_limit  = 0
     }
+    throttle {
+      burst_limit = 10
+      path        = "/files/${each.value.resource_name}/list/{key+}/GET"
+      rate_limit  = 100
+    }
   }
 
   quota_settings {
@@ -149,7 +154,7 @@ resource "aws_api_gateway_integration" "files_list_objects_s3_integration" {
   type                    = "AWS"
   integration_http_method = "GET"
 
-  uri         = "arn:aws:apigateway:us-east-1:s3:path/${each.value.bucket}/${each.value.object_prefix}{key}"
+  uri         = "arn:aws:apigateway:us-east-1:s3:path/${each.value.bucket.id}/"
   credentials = aws_iam_role.files_executor_role[each.key].arn
 
   request_parameters = {
@@ -166,7 +171,7 @@ resource "aws_api_gateway_integration" "files_list_objects_s3_integration" {
 #if( $shouldFixSlash )
   #set($bucketKey="$bucketKey/")
 #end
-#set($context.requestOverride.querystring.prefix="$bucketKey")
+#set($context.requestOverride.querystring.prefix="${each.value.object_prefix}$bucketKey")
 EOD
   }
 }
