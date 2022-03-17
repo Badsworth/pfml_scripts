@@ -49,6 +49,10 @@ export const createMockPayment = (
   startDate: string = randomStartDate,
   amount: number = randomAmount
 ): PaymentDetail => {
+  const populateEstimatedDates =
+    customDetails?.writeback_transaction_status ===
+    "EFT Pending Bank Validation";
+
   // To use constant data (helps w/snapshots & similar)
   if (isConstant) {
     return {
@@ -58,14 +62,15 @@ export const createMockPayment = (
       amount: 100,
       sent_to_bank_date: "2021-11-15",
       payment_method: "Check",
-      expected_send_date_start: "2021-11-15",
-      expected_send_date_end: "2021-11-21",
+      expected_send_date_start: populateEstimatedDates ? "2021-11-15" : null,
+      expected_send_date_end: populateEstimatedDates ? "2021-11-21" : null,
       cancellation_date: "",
       status: "Pending",
       writeback_transaction_status: "Paid",
       transaction_date: "2021-11-16",
       transaction_date_could_change: false,
       ...customDetails,
+      ...{ populateEstimatedDates },
     };
   }
 
@@ -91,8 +96,8 @@ export const createMockPayment = (
       "Check",
       "Elec Funds Transfer",
     ]),
-    expected_send_date_start: sendDate,
-    expected_send_date_end: sendDateEnd,
+    expected_send_date_start: populateEstimatedDates ? sendDate : null,
+    expected_send_date_end: populateEstimatedDates ? sendDateEnd : null,
     // This should probably depend on the status below
     cancellation_date: "",
     status: faker.random.arrayElement<PaymentStatus>([

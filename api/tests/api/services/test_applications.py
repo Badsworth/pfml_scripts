@@ -214,13 +214,17 @@ def reduced_leave_periods():
         ReportedReducedScheduleLeavePeriod(
             startDate=date(2021, 1, 29),
             endDate=date(2021, 3, 29),
-            sundayOffMinutes=10,
+            sundayOffMinutes=0,  # day with only minutes
+            mondayOffHours=7,
             mondayOffMinutes=15,
-            tuesdayOffMinutes=20,
+            tuesdayOffHours=8,  # day with only hours
+            wednesdayOffHours=7,
             wednesdayOffMinutes=40,
+            thursdayOffHours=6,
             thursdayOffMinutes=45,
+            fridayOffHours=6,
             fridayOffMinutes=25,
-            saturdayOffMinutes=12,
+            # saturday = day with no hours or minutes
         )
     ]
 
@@ -310,13 +314,25 @@ def _compare_reduced_leave(application, reduced_leave, fineos_reduced_leave):
     assert reduced_leave.application_id == application.application_id
     assert reduced_leave.start_date == fineos_reduced_leave.startDate
     assert reduced_leave.end_date == fineos_reduced_leave.endDate
-    assert reduced_leave.sunday_off_minutes == fineos_reduced_leave.sundayOffMinutes
-    assert reduced_leave.monday_off_minutes == fineos_reduced_leave.mondayOffMinutes
-    assert reduced_leave.tuesday_off_minutes == fineos_reduced_leave.tuesdayOffMinutes
-    assert reduced_leave.wednesday_off_minutes == fineos_reduced_leave.wednesdayOffMinutes
-    assert reduced_leave.thursday_off_minutes == fineos_reduced_leave.thursdayOffMinutes
-    assert reduced_leave.friday_off_minutes == fineos_reduced_leave.fridayOffMinutes
-    assert reduced_leave.saturday_off_minutes == fineos_reduced_leave.saturdayOffMinutes
+    assert (
+        reduced_leave.sunday_off_minutes == fineos_reduced_leave.sundayOffMinutes
+    )  # sunday has only minutes
+    assert reduced_leave.monday_off_minutes == fineos_reduced_leave.mondayOffMinutes + (
+        fineos_reduced_leave.mondayOffHours * 60
+    )
+    assert (
+        reduced_leave.tuesday_off_minutes == fineos_reduced_leave.tuesdayOffHours * 60
+    )  # tuesday has only hours
+    assert reduced_leave.wednesday_off_minutes == fineos_reduced_leave.wednesdayOffMinutes + (
+        fineos_reduced_leave.wednesdayOffHours * 60
+    )
+    assert reduced_leave.thursday_off_minutes == fineos_reduced_leave.thursdayOffMinutes + (
+        fineos_reduced_leave.thursdayOffHours * 60
+    )
+    assert reduced_leave.friday_off_minutes == fineos_reduced_leave.fridayOffMinutes + (
+        fineos_reduced_leave.fridayOffHours * 60
+    )
+    assert reduced_leave.saturday_off_minutes is None
 
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")

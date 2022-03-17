@@ -1,0 +1,80 @@
+# Scripted Releases Github Actions Workflow 
+
+name: Scripted Releases
+
+on:
+  workflow_dispatch:
+    inputs:
+      application:
+        description: |
+          ⚠️ Only edit the above dropdown if you do not wish to use the GHA Workflow from `main` ⚠️
+          ------------------------------------------------------------------------------------------
+          1️⃣ Application to create tag & branch for
+          📝 Tip: `foobar` is for testing
+        required: true
+        default: foobar
+        type: choice
+        options:
+          - api
+          - portal
+          - foobar
+      scripted-release-task:
+        description: |
+          2️⃣ Scripted Release Task 
+        required: true
+        default: start-release
+        type: choice
+        options:
+          - start-release
+          - update-release
+          - finalize-release
+          - hotfix
+          - major-release
+      arguments:
+        description: |
+          3️⃣ Arguments to pass to Makefile when calling the Scripted Release Task
+          ⚠️ No arguments required for `start-release`
+          📝 Example arguments for `update-release` where a commit is used:
+            `-r release/api/v2.25.0 -c commit`
+          📝 Example arguments for `update-release` where a branch is used:
+            `-r release/api/v2.25.0 --with-branch main`
+          📝 Example arguments for `finalize-release`:
+            `-r release/portal/v49.0`
+          📝 Example arguments for `hotfix` with 2 commits:
+            `-r release/portal/v49.0 -c commit1 -c commit2`
+          🤔 Need help? Refer to [Operational Instructions](https://github.com/EOLWD/pfml/blob/main/bin/ci/README.md#operational-instructions)
+        required: false
+        type: string
+
+  push:
+    branches:
+      - bdlake/INFRA-1181
+
+jobs:
+  run-scripted-releases:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PMFL repo
+        uses: actions/checkout@v3
+
+      - name: Install Poetry
+        working-directory: ./bin/ci
+        # Installing with curl requires an extra step to add poetry to $PATH 
+        run: pip install poetry
+
+      - name: Install Poetry dependencies 
+        working-directory: ./bin/ci
+        run: poetry install
+
+        # If an application is selected
+      - name: Run scripted releases task with Makefile
+        if: github.event.inputs.application != 'foobar'
+        working-directory: ./${{ github.event.inputs.application }}
+        run: make ${{ github.event.inputs.scripted-release-task }} args="${{ github.event.inputs.arguments }}"
+      
+        # If foobar is selected
+      - name: Run scripted releases with Poetry 
+        if: github.event.inputs.application == 'foobar'
+        working-directory: ./bin/ci
+        run: poetry run scripted-releases -a ${{ github.event.inputs.application }} ${{ github.event.inputs.scripted-release-task }} ${{ github.event.inputs.arguments }}
+

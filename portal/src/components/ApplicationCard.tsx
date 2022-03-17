@@ -11,6 +11,7 @@ import Spinner from "./core/Spinner";
 import { WithUserProps } from "src/hoc/withUser";
 import { createRouteWithQuery } from "../utils/routeWithParams";
 import findKeyByValue from "../utils/findKeyByValue";
+import formatDate from "../utils/formatDate";
 import hasDocumentsLoadError from "../utils/hasDocumentsLoadError";
 import isBlank from "../utils/isBlank";
 import routes from "../routes";
@@ -237,6 +238,19 @@ export const ApplicationCard = (props: ApplicationCardProps) => {
             {t("components.applicationCard.applicationID")}
             <br />
             <strong>{claim.fineos_absence_id}</strong>
+          </p>
+        )}
+
+        {claim.leaveStartDate && claim.leaveEndDate && (
+          <p>
+            {t("components.applicationCard.leaveDatesLabel")}
+            <br />
+            <strong>
+              {t("components.applicationCard.leaveDates", {
+                start: formatDate(claim.leaveStartDate).short(),
+                end: formatDate(claim.leaveEndDate).short(),
+              })}
+            </strong>
           </p>
         )}
 
