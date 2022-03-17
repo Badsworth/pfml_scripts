@@ -107,7 +107,9 @@ export class ClaimPage {
   }
 
   paidLeave(cb: (page: PaidLeavePage) => unknown): this {
-    cy.findByText("Absence Paid Leave Case", { selector: "a" }).click();
+    cy.findByText("Absence Paid Leave Case", { selector: "a" }).click({
+      force: true,
+    });
     cb(new PaidLeavePage());
     cy.findByText("Absence Case", { selector: "a" }).click();
     return this;

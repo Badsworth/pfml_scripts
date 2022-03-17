@@ -43,6 +43,7 @@ const DELAY_TRANSACTION_TYPE: { [key: string]: WritebackTransactionStatus } = {
   BANK_PROCESSING_ERROR: "Bank Processing Error",
   DUA_ADDITIONAL_INCOME: "DUA Additional Income",
   MAX_WEEKLY_BENEFITS_EXCEEDED: "Max Weekly Benefits Exceeded",
+  PENDING_PAYMENT_AUDIT: "Pending Payment Audit",
 };
 
 const PAYMENT_METHOD = {
@@ -210,6 +211,9 @@ export const DefaultStory = (
           payment_method: args["Payment method"],
           status: "Delayed",
           transaction_date: mappedTransactionDate[args["Transaction date"]],
+          transaction_date_could_change:
+            args["Delay transaction type"] ===
+            DELAY_TRANSACTION_TYPE.PENDING_PAYMENT_AUDIT,
           writeback_transaction_status: args["Delay transaction type"],
         },
         false,

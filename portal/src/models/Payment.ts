@@ -4,8 +4,7 @@
 
 import dayjs from "dayjs";
 import dayjsBusinessTime from "dayjs-business-time";
-import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
-dayjs.extend(isSameOrAfter);
+
 dayjs.extend(dayjsBusinessTime);
 
 export type PaymentStatus =
@@ -68,14 +67,15 @@ export const PROCESSING_DAYS_PER_DELAY: Partial<ProcessingDaysPerDelay> = {
 
 export const isAfterDelayProcessingTime = (
   writeback_transaction_status: WritebackTransactionStatus,
-  transaction_date: string
+  transaction_date: string,
+  transaction_date_could_change: boolean
 ): boolean => {
   const todaysDate = dayjs();
 
   const transactionDate = dayjs(transaction_date);
   const daysToProcess =
     PROCESSING_DAYS_PER_DELAY[writeback_transaction_status] ?? 3;
-  const showImmediately = daysToProcess === 0;
+  const showImmediately = daysToProcess === 0 || transaction_date_could_change;
   return (
     showImmediately ||
     todaysDate.isAfter(transactionDate.addBusinessDays(daysToProcess), "day")
