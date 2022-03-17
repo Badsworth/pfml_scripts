@@ -372,8 +372,6 @@ def test_set_application_absence_and_leave_period(
     assert application.completed_time is None
 
     assert application.submitted_time == absence_details.creationDate
-    assert application.employer_notification_date == absence_details.notificationDate
-    assert application.employer_notified
     assert application.has_future_child_date is False
 
     absence_details.absencePeriods[0].reason = "Child Bonding"
@@ -429,11 +427,6 @@ def test_set_application_absence_and_leave_period_without_open_absence_period(
     assert application.completed_time is not None
 
     assert application.submitted_time == absence_details_without_open_absence_period.creationDate
-    assert (
-        application.employer_notification_date
-        == absence_details_without_open_absence_period.notificationDate
-    )
-    assert application.employer_notified
 
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")

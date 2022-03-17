@@ -1300,10 +1300,6 @@ def set_application_absence_and_leave_period(
         )
         _set_has_future_child_date(application, absence_period)
     application.submitted_time = absence_details.creationDate
-    application.employer_notification_date = absence_details.notificationDate
-    application.employer_notified = application.employer_notification_date is not None
-
-    return
 
 
 def minutes_from_hours_minutes(hours: int, minutes: int) -> int:
