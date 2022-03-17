@@ -66,6 +66,11 @@ resource "aws_api_gateway_usage_plan" "files_usage_plan" {
       path        = "*/*"
       rate_limit  = 0
     }
+    throttle {
+      burst_limit = 10
+      path        = "/files/${each.value.resource_name}/{key+}/PUT"
+      rate_limit  = 100
+    }
   }
 
   quota_settings {
@@ -168,7 +173,7 @@ resource "aws_api_gateway_integration" "files_copy_object_s3_integration" {
   integration_http_method = "PUT"
   type                    = "AWS"
 
-  uri         = "arn:aws:apigateway:us-east-1:s3:path/${each.value.bucket}/${each.value.object_prefix}{key}"
+  uri         = "arn:aws:apigateway:us-east-1:s3:path/${each.value.bucket.id}/${each.value.object_prefix}{key}"
   credentials = aws_iam_role.files_executor_role[each.key].arn
   request_parameters = {
     "integration.request.path.key" : "method.request.path.key"
@@ -176,7 +181,7 @@ resource "aws_api_gateway_integration" "files_copy_object_s3_integration" {
 
   request_templates = {
     "application/json" : <<EOD
-#set($context.requestOverride.header.x-amz-copy-source="$input.params('bucket')/$input.params('src')")
+#set($context.requestOverride.header.x-amz-copy-source="${each.value.bucket.id}/${each.value.object_prefix}$input.params('src')")
 EOD
   }
 }
