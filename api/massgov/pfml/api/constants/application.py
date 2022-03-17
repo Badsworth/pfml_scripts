@@ -4,6 +4,9 @@ from massgov.pfml.db.models.applications import DocumentType
 
 CARING_LEAVE_EARLIEST_START_DATE = date(2021, 7, 1)
 PFML_PROGRAM_LAUNCH_DATE = date(2021, 1, 1)
+MAX_DAYS_IN_ADVANCE_TO_SUBMIT = 60
+MAX_DAYS_IN_LEAVE_PERIOD_RANGE = 364
+MAX_MINUTES_IN_WEEK = 10080  # 60 * 24 * 7
 
 ID_DOC_TYPES = [
     DocumentType.PASSPORT,

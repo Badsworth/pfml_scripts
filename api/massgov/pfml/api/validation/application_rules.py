@@ -11,6 +11,9 @@ from massgov.pfml.api.constants.application import (
     CARING_LEAVE_EARLIEST_START_DATE,
     CERTIFICATION_DOC_TYPES,
     ID_DOC_TYPES,
+    MAX_DAYS_IN_ADVANCE_TO_SUBMIT,
+    MAX_DAYS_IN_LEAVE_PERIOD_RANGE,
+    MAX_MINUTES_IN_WEEK,
     PFML_PROGRAM_LAUNCH_DATE,
 )
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
@@ -46,10 +49,6 @@ from massgov.pfml.db.models.applications import (
 )
 from massgov.pfml.db.models.employees import Claim, PaymentMethod
 from massgov.pfml.util.routing_number_validation import validate_routing_number
-
-MAX_DAYS_IN_ADVANCE_TO_SUBMIT = 60
-MAX_DAYS_IN_LEAVE_PERIOD_RANGE = 364
-MAX_MINUTES_IN_WEEK = 10080  # 60 * 24 * 7
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
