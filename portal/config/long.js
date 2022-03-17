@@ -15,7 +15,7 @@ const config = {
   awsCognitoUserPoolWebClientId: "1ufb6r40s1ad0evjffvdtl3113",
   domain: "paidleave-long.dfml.eol.mass.gov",
   gtmConfigAuth: "",
-  newRelicAppId: "1531932432",
+  newRelicAppId: "1588615468",
 };
 
 module.exports = config;
