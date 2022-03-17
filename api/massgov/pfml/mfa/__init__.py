@@ -107,7 +107,10 @@ def _send_mfa_disabled_email(recipient_email: str, phone_number_last_four: str) 
     )
 
 
-def handle_mfa_disabled_by_admin(user: User, last_enabled_at: Optional[datetime],) -> None:
+def handle_mfa_disabled_by_admin(
+    user: User,
+    last_enabled_at: Optional[datetime],
+) -> None:
     """Helper method for handling necessary actions after MFA is disabled for a user by an admin. This handles
     logging, sending an MFA disabled email, and disabling MFA in Cognito"""
     # These values should always be set by the time a user disables MFA but the

@@ -6,7 +6,6 @@ import pytest
 from massgov.pfml.api.models.common import Phone
 from massgov.pfml.api.models.users.requests import UserUpdateRequest
 from massgov.pfml.api.services.users import admin_disable_mfa, update_user
-from massgov.pfml.mfa import MFAUpdatedBy
 from tests.conftest import get_mock_logger
 
 
