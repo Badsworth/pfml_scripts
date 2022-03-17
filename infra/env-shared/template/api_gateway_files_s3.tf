@@ -66,32 +66,17 @@ resource "aws_api_gateway_usage_plan" "files_usage_plan" {
       path        = "*/*"
       rate_limit  = 0
     }
-    throttle {
-      burst_limit = 10
-      path        = "/files/list/${each.value.resource_name}/{key+}/GET"
-      rate_limit  = 100
-    }
-    throttle {
-      burst_limit = 10
-      path        = "/files/${each.value.resource_name}/{key+}/DELETE"
-      rate_limit  = 100
-    }
-    throttle {
-      burst_limit = 10
-      path        = "/files/${each.value.resource_name}/{key+}/GET"
-      rate_limit  = 100
-    }
-    throttle {
-      burst_limit = 10
-      path        = "/files/${each.value.resource_name}/{key+}/PUT"
-      rate_limit  = 100
-    }
   }
 
   quota_settings {
     limit  = 10000
     offset = 0
     period = "DAY"
+  }
+
+  throttle_settings {
+    burst_limit = 10
+    rate_limit  = 100
   }
 }
 
