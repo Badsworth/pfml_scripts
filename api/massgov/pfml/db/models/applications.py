@@ -682,6 +682,36 @@ class LeaveReasonQualifier(LookupTable):
     SICKNESS = LkLeaveReasonQualifier(7, "Sickness")
     POSTNATAL_DISABILITY = LkLeaveReasonQualifier(8, "Postnatal Disability")
 
+    WORK_RELATED = LkLeaveReasonQualifier(9, "Work Related")
+    BLOOD = LkLeaveReasonQualifier(10, "Blood")
+    BLOOD_STEM_CELL = LkLeaveReasonQualifier(11, "Blood Stem Cell")
+    BONE_MARROW = LkLeaveReasonQualifier(12, "Bone Marrow")
+    ORGAN = LkLeaveReasonQualifier(13, "Organ")
+    OTHER = LkLeaveReasonQualifier(14, "Other")
+    PRENATAL_CARE = LkLeaveReasonQualifier(15, "Prenatal Care")
+    PRENATAL_DISABILITY = LkLeaveReasonQualifier(16, "Prenatal Disability")
+    PREGNANCY_RELATED = LkLeaveReasonQualifier(17, "Pregnancy Related")
+    RIGHT_TO_LEAVE = LkLeaveReasonQualifier(18, "Right to Leave")
+    SICKNESS_NON_SERIOUS_HEALTH_CONDITION = LkLeaveReasonQualifier(
+        19, "Sickness - Non-Serious Health Condition"
+    )
+    CHILDCARE = LkLeaveReasonQualifier(20, "Childcare")
+    COUNSELING = LkLeaveReasonQualifier(21, "Counseling")
+    FINANCIAL_AND_LEGAL_ARRANGEMENTS = LkLeaveReasonQualifier(22, "Financial & Legal Arrangements")
+    MILITARY_EVENTS_AND_RELATED_ACTIVITIES = LkLeaveReasonQualifier(
+        23, "Military Events & Related Activities"
+    )
+    OTHER_ADDITIONAL_ACTIVITIES = LkLeaveReasonQualifier(24, "Other Additional Activities")
+    POST_DEPLOYMENT_ACTIVITES_INCLUDING_BEREAVEMENT = LkLeaveReasonQualifier(
+        25, "Post Deployment Activities - Including Bereavement"
+    )
+    REST_AND_RECUPERATION = LkLeaveReasonQualifier(26, "Rest & Recuperation")
+    SHORT_NOTICE_DEPLOYMENT = LkLeaveReasonQualifier(27, "Short Notice Deployment")
+    CLOSURE_OF_SCHOOL_CHILDCARE = LkLeaveReasonQualifier(28, "Closure of School/Childcare")
+    QUARANTINE_ISOLATION_NON_SICK = LkLeaveReasonQualifier(29, "Quarantine/Isolation - Not Sick")
+    BIRTH_DISABILITY = LkLeaveReasonQualifier(30, "Birth Disability")
+    CHILDCARE_AND_SCHOOL_ACTIVITIES = LkLeaveReasonQualifier(31, "Childcare and School Activities")
+
 
 class RelationshipToCaregiver(LookupTable):
     model = LkRelationshipToCaregiver

@@ -77,6 +77,31 @@ class LeaveReasonQualifier(str, LookupEnum):
     not_work_related = "Not Work Related"
     sickness = "Sickness"
     postnatal_disability = "Postnatal Disability"
+    work_related = "Work Related"
+    blood = "Blood"
+    blood_stem_cell = "Blood Stem Cell"
+    bone_marrow = "Bone Marrow"
+    organ = "Organ"
+    other = "Other"
+    prenatal_care = "Prenatal Care"
+    prenatal_disability = "Prenatal Disability"
+    pregnancy_related = "Pregnancy Related"
+    right_to_leave = "Right to Leave"
+    sickness_non_serious_health_condition = "Sickness - Non-Serious Health Condition"
+    childcare = "Childcare"
+    counseling = "Counseling"
+    financial_and_legal_arrangements = "Financial & Legal Arrangements"
+    military_events_and_related_activities = "Military Events & Related Activities"
+    other_additional_activities = "Other Additional Activities"
+    post_deployment_activites_including_bereavement = (
+        "Post Deployment Activities - Including Bereavement"
+    )
+    rest_and_recuperation = "Rest & Recuperation"
+    short_notice_deployment = "Short Notice Deployment"
+    closure_of_school_childcare = "Closure of School/Childcare"
+    quarantine_isolation_non_sick = "Quarantine/Isolation - Not Sick"
+    birth_disability = "Birth Disability"
+    childcare_and_school_activities = "Childcare and School Activities"
 
 
 class RelationshipToCaregiver(str, LookupEnum):
