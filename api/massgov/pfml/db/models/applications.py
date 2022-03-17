@@ -1065,6 +1065,59 @@ class Holiday(Base, TimestampMixin):
     holiday_name = Column(Text, nullable=False)
 
 
+def _are_holidays_valid(holidays: list[Holiday]) -> bool:
+    holiday_ids = [holiday.holiday_id for holiday in holidays]
+    if len(holiday_ids) != len(set(holiday_ids)):
+        return False
+
+    all_days_valid = True
+    for holiday in holidays:
+        if holiday.date.weekday() == 6:
+            all_days_valid = False
+
+    return all_days_valid
+
+
+def sync_holidays(db_session):
+    # See: https://www.sec.state.ma.us/cis/cispdf/ma_legal_holiday.pdf
+    holidays = [
+        Holiday(holiday_id=1, date=datetime.date(2022, 1, 1), holiday_name="New Year's Day"),
+        Holiday(
+            holiday_id=2,
+            date=datetime.date(2022, 1, 17),
+            holiday_name="Martin Luther King, Jr. Day",
+        ),
+        Holiday(
+            holiday_id=3, date=datetime.date(2022, 2, 21), holiday_name="Washington's Birthday"
+        ),
+        Holiday(holiday_id=4, date=datetime.date(2022, 4, 18), holiday_name="Patriots' Day"),
+        Holiday(holiday_id=5, date=datetime.date(2022, 5, 30), holiday_name="Memorial Day"),
+        Holiday(
+            holiday_id=6,
+            date=datetime.date(2022, 6, 20),  # The 19th falls on a Sunday
+            holiday_name="Juneteenth Independence Day",
+        ),
+        Holiday(holiday_id=7, date=datetime.date(2022, 7, 4), holiday_name="Independence Day"),
+        Holiday(holiday_id=8, date=datetime.date(2022, 9, 5), holiday_name="Labor Day"),
+        Holiday(holiday_id=9, date=datetime.date(2022, 10, 10), holiday_name="Columbus Day"),
+        Holiday(holiday_id=10, date=datetime.date(2022, 11, 11), holiday_name="Veterans' Day"),
+        Holiday(holiday_id=11, date=datetime.date(2022, 11, 24), holiday_name="Thanksgiving Day"),
+        Holiday(holiday_id=12, date=datetime.date(2022, 12, 26), holiday_name="Christmas Day"),
+    ]
+
+    if not _are_holidays_valid(holidays):
+        raise Exception(
+            "Configured dates were not valid.  Please make sure all have a unique holiday_id and dates do not follow on a Sunday"
+        )
+
+    for holiday in holidays:
+        instance = db_session.merge(holiday)
+        if db_session.is_modified(instance):
+            logger.info("updating holiday %r", holiday.holiday_name)
+
+    db_session.commit()
+
+
 def sync_lookup_tables(db_session):
     """Synchronize lookup tables to the database."""
     LeaveReason.sync_to_database(db_session)
