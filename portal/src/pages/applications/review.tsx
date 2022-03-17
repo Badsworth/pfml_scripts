@@ -94,7 +94,7 @@ export const Review = (
   const { loadCrossedBenefitYears, getCrossedBenefitYear } =
     appLogic.benefitYears;
 
-  const employeeId = get(claim, "employee_id");
+  const employeeId = claim.employee_id;
   const startDate = String(get(claim, "leaveStartDate"));
   const endDate = String(get(claim, "leaveEndDate"));
   const submissionWindow = dayjs().add(60, "day").format("YYYY-MM-DD");

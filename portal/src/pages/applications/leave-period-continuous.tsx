@@ -43,7 +43,7 @@ export const LeavePeriodContinuous = (props: WithBenefitsApplicationProps) => {
   const { loadCrossedBenefitYears, getCrossedBenefitYear } =
     appLogic.benefitYears;
 
-  const employeeId = get(claim, "employee_id");
+  const employeeId = claim.employee_id;
   const submissionWindow = dayjs().add(60, "day").format("YYYY-MM-DD");
 
   const startDate = String(get(formState, `${leavePeriodPath}.start_date`));

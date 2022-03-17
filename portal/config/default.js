@@ -13,11 +13,11 @@
 const config = {
   // We target the API stage environment for the systems we're dependent on,
   // even in dev and test. Read more here: https://lwd.atlassian.net/wiki/spaces/DD/pages/246612440/Environments
-  apiUrl: "https://paidleave-api-stage.mass.gov/api/v1",
+  apiUrl: "https://paidleave-api-test.mass.gov/api/v1",
   awsCognitoRegion: "us-east-1",
   // Cognito Stage environment (must match whatever API environment we're targeting)
-  awsCognitoUserPoolId: "us-east-1_HpL4XslLg",
-  awsCognitoUserPoolWebClientId: "10rjcp71r8bnk4459c67bn18t8",
+  awsCognitoUserPoolId: "us-east-1_HhQSLYSIe",
+  awsCognitoUserPoolWebClientId: "7sjb96tvg8251lrq5vdk7de9",
   // PFML API Gateway has a 10mb payload size limit, so we shouldn't attempt to send files beyond this.
   // https://docs.aws.amazon.com/apigateway/latest/developerguide/limits.html#http-api-quotas
   fileSizeMaxBytesApiGateway: "10000000",
