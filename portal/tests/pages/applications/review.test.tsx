@@ -141,6 +141,25 @@ describe("Review Page", () => {
     expect(screen.queryByText(/Tax withholding/)).not.toBeInTheDocument();
   });
 
+  it("conditionally renders employer notification date", () => {
+    // Applications imported from Fineos as part of Channel Switching won't have this field
+    const textMatch = /Notified employer/;
+    const claim = new MockBenefitsApplicationBuilder()
+      .part1Complete()
+      .notifiedEmployer()
+      .create();
+
+    setup({ claim });
+    expect(screen.queryAllByText(textMatch)).toHaveLength(2);
+
+    cleanup();
+
+    claim.leave_details.employer_notified = null;
+    claim.leave_details.employer_notification_date = null;
+    setup({ claim });
+    expect(screen.queryByText(textMatch)).not.toBeInTheDocument();
+  });
+
   it("displays tax information for review when tax Pref is set", () => {
     setup({
       claim: new MockBenefitsApplicationBuilder()
