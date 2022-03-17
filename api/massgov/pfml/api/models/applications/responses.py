@@ -1,10 +1,13 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from enum import Enum
 from typing import List, Optional
 
 from pydantic import UUID4
 
+import massgov.pfml.api.app as app
+from massgov.pfml.api.constants.application import MAX_DAYS_IN_ADVANCE_TO_SUBMIT
+from massgov.pfml.api.eligibility.handler import BenefitYearsResponse
 from massgov.pfml.api.models.applications.common import (
     EmploymentStatus,
     Gender,
@@ -26,9 +29,11 @@ from massgov.pfml.api.models.common import (
     MaskedPhoneResponse,
     get_computed_start_dates,
     get_earliest_start_date,
+    get_latest_end_date,
     get_leave_reason,
 )
 from massgov.pfml.db.models.applications import Application, ApplicationPaymentPreference, Document
+from massgov.pfml.db.models.employees import BenefitYear
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import (
     FEINFormattedStr,
@@ -42,6 +47,18 @@ class ApplicationStatus(str, Enum):
     Started = "Started"
     Completed = "Completed"
     Submitted = "Submitted"
+
+
+class ComputedApplicationSplit(PydanticBaseModel):
+    crossed_benefit_year: BenefitYearsResponse
+    first_portion_start_date: date
+    first_portion_end_date: date
+    first_portion_submittable_on: date
+    first_portion_submittable: bool
+    second_portion_start_date: date
+    second_portion_end_date: date
+    second_portion_submittable_on: date
+    second_portion_submittable: bool
 
 
 class ApplicationResponse(PydanticBaseModel):
@@ -93,6 +110,7 @@ class ApplicationResponse(PydanticBaseModel):
     imported_from_fineos_at: Optional[datetime]
     updated_at: datetime
     computed_start_dates: Optional[ComputedStartDates]
+    computed_application_split: Optional[ComputedApplicationSplit]
     split_from_application_id: Optional[UUID4]
     split_into_application_id: Optional[UUID4]
 
@@ -132,6 +150,11 @@ class ApplicationResponse(PydanticBaseModel):
         application_response.updated_time = application_response.updated_at
         application_response.computed_start_dates = _get_computed_start_dates(application)
 
+        if application.employee is not None:
+            application_response.computed_application_split = _get_computed_application_split(
+                application
+            )
+
         return application_response
 
 
@@ -139,6 +162,48 @@ def _get_computed_start_dates(application: Application) -> ComputedStartDates:
     earliest_start_date = get_earliest_start_date(application)
     leave_reason = get_leave_reason(application)
     return get_computed_start_dates(earliest_start_date, leave_reason)
+
+
+def _get_computed_application_split(application: Application) -> Optional[ComputedApplicationSplit]:
+    with app.db_session() as db_session:
+        earliest_start_date = get_earliest_start_date(application)
+        latest_end_date = get_latest_end_date(application)
+        if (
+            earliest_start_date is not None
+            and latest_end_date is not None
+            and application.employee is not None
+        ):
+            query = db_session.query(BenefitYear).filter(
+                BenefitYear.employee_id == application.employee.employee_id
+            )
+            query = query.filter(BenefitYear.end_date.between(earliest_start_date, latest_end_date))
+            crossed_benefit_year = query.one_or_none()
+            if crossed_benefit_year is not None:
+                first_portion_start_date = earliest_start_date
+                first_portion_end_date = crossed_benefit_year.end_date
+                first_portion_submittable_on = first_portion_start_date - timedelta(
+                    days=MAX_DAYS_IN_ADVANCE_TO_SUBMIT
+                )
+                first_portion_submittable = first_portion_submittable_on <= date.today()
+                second_portion_start_date = crossed_benefit_year.end_date + timedelta(days=1)
+                second_portion_end_date = latest_end_date
+                second_portion_submittable_on = second_portion_start_date - timedelta(
+                    days=MAX_DAYS_IN_ADVANCE_TO_SUBMIT
+                )
+                second_portion_submittable = second_portion_submittable_on <= date.today()
+                return ComputedApplicationSplit(
+                    crossed_benefit_year=crossed_benefit_year,
+                    first_portion_start_date=first_portion_start_date,
+                    first_portion_end_date=first_portion_end_date,
+                    first_portion_submittable_on=first_portion_submittable_on,
+                    first_portion_submittable=first_portion_submittable,
+                    second_portion_start_date=second_portion_start_date,
+                    second_portion_end_date=second_portion_end_date,
+                    second_portion_submittable_on=second_portion_submittable_on,
+                    second_portion_submittable=second_portion_submittable,
+                )
+
+        return None
 
 
 def build_payment_preference(

@@ -51,6 +51,7 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,
+    BenefitYearFactory,
     CaringLeaveMetadataFactory,
     ClaimFactory,
     ConcurrentLeaveFactory,
@@ -314,6 +315,47 @@ def test_applications_get_employee_id(client, user, auth_token, test_db_session)
 
     response_body = response.get_json().get("data")
     assert response_body.get("employee_id") == str(employee.employee_id)
+
+
+@freeze_time("2021-10-25")
+def test_applications_get_computed_application_split(
+    client, user, auth_token, test_db_session, initialize_factories_session
+):
+    employee = EmployeeFactory.create()
+
+    # note: BY end date will be 01/01/2022
+    BenefitYearFactory.create(employee=employee)
+
+    application = ApplicationFactory.create(tax_identifier=employee.tax_identifier, user=user)
+
+    leave_period = IntermittentLeavePeriodFactory.create(
+        start_date=date(2021, 12, 15),
+        end_date=date(2022, 3, 10),
+        application_id=application.application_id,
+    )
+    test_db_session.add(leave_period)
+    test_db_session.commit()
+    test_db_session.refresh(application)
+
+    response = client.get(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    assert response.status_code == 200
+    response_body = response.get_json().get("data")
+    application_split = response_body.get("computed_application_split")
+
+    assert application_split is not None
+    assert application_split["crossed_benefit_year"]["benefit_year_start_date"] == "2021-01-03"
+    assert application_split["crossed_benefit_year"]["benefit_year_end_date"] == "2022-01-01"
+    assert application_split["first_portion_start_date"] == "2021-12-15"
+    assert application_split["first_portion_end_date"] == "2022-01-01"
+    assert application_split["first_portion_submittable_on"] == "2021-10-16"
+    assert application_split["first_portion_submittable"] is True
+    assert application_split["second_portion_start_date"] == "2022-01-02"
+    assert application_split["second_portion_end_date"] == "2022-03-10"
+    assert application_split["second_portion_submittable_on"] == "2021-11-03"
+    assert application_split["second_portion_submittable"] is False
 
 
 def test_applications_get_all_for_user(client, user, auth_token):
