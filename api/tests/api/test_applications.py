@@ -1,5 +1,5 @@
 import copy
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Dict, Optional
 from unittest import mock
 
@@ -15,6 +15,7 @@ import massgov.pfml.fineos.mock_client
 import massgov.pfml.fineos.models
 import massgov.pfml.util.datetime as datetime_util
 import tests.api
+from massgov.pfml.api.applications import _get_crossed_benefit_year
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
 from massgov.pfml.api.models.applications.responses import ApplicationStatus
 from massgov.pfml.api.services.fineos_actions import LeaveNotificationReason
@@ -51,6 +52,7 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,
+    BenefitYearFactory,
     CaringLeaveMetadataFactory,
     ClaimFactory,
     ConcurrentLeaveFactory,
@@ -6054,6 +6056,86 @@ def test_application_patch_caring_leave_metadata_family_member_future_date_of_bi
     assert message == "Family member's date of birth must be less than 7 months from now"
     assert rule == "max_7_months_in_future"
     assert error_type == "future_birth_date"
+
+
+def test_get_crossed_benefit_year(initialize_factories_session, test_db_session):
+    by_end_date = date(2022, 3, 1)
+    by_start_date = by_end_date - timedelta(weeks=52)
+    employee = EmployeeFactory.create()
+    by = BenefitYearFactory.create(
+        start_date=by_start_date, end_date=by_end_date, employee=employee
+    )
+    application: Application = ApplicationFactory.create(tax_identifier=employee.tax_identifier)
+
+    assert _get_crossed_benefit_year(application, by) is None
+
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(
+            start_date=by_end_date - timedelta(days=10), end_date=by_end_date + timedelta(days=10)
+        )
+    ]
+
+    application.employer_benefits = [
+        EmployerBenefitFactory.build(
+            benefit_start_date=by_end_date - timedelta(days=20),
+            benefit_end_date=by_end_date + timedelta(days=10),
+        )
+    ]
+
+    assert _get_crossed_benefit_year(application, test_db_session) == by
+
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(
+            start_date=by_end_date - timedelta(days=20), end_date=by_end_date - timedelta(days=10)
+        )
+    ]
+
+    assert _get_crossed_benefit_year(application, test_db_session) is None
+
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(
+            start_date=by_end_date - timedelta(days=10), end_date=by_end_date
+        )
+    ]
+
+    assert _get_crossed_benefit_year(application, test_db_session) is None
+
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(
+            start_date=by_end_date, end_date=by_end_date + timedelta(days=10)
+        )
+    ]
+
+    assert _get_crossed_benefit_year(application, test_db_session) == by
+
+
+def test_get_crossed_benefit_year_no_benefit_year(initialize_factories_session, test_db_session):
+    end_date = date(2022, 3, 1)
+    start_date = end_date - timedelta(days=12)
+    employee = EmployeeFactory.create()
+    application: Application = ApplicationFactory.create(tax_identifier=employee.tax_identifier)
+
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(start_date=start_date, end_date=end_date)
+    ]
+
+    assert _get_crossed_benefit_year(application, test_db_session) is None
+
+
+def test_get_crossed_benefit_year_app_already_split():
+    by_end_date = date(2022, 3, 1)
+    by_start_date = by_end_date - timedelta(weeks=52)
+    by = BenefitYearFactory.build(start_date=by_start_date, end_date=by_end_date)
+    application: Application = ApplicationFactory.build()
+    already_split_app: Application = ApplicationFactory.build()
+
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.build(
+            start_date=by_end_date - timedelta(days=10), end_date=by_end_date + timedelta(days=10)
+        )
+    ]
+    application.split_from_application_id = already_split_app.application_id
+    assert _get_crossed_benefit_year(application, by) is None
 
 
 def test_computed_earliest_submission_date(client, user, auth_token, test_db_session):
