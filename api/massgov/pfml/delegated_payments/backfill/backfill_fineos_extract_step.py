@@ -1,5 +1,6 @@
 import enum
 import os
+import tempfile
 from typing import Any, Dict, List, Optional
 
 import massgov.pfml.delegated_payments.delegated_config as payments_config
@@ -11,7 +12,7 @@ from massgov.pfml.db.models.employees import LkReferenceFileType, ReferenceFile
 from massgov.pfml.delegated_payments.delegated_payments_util import FineosExtract
 from massgov.pfml.delegated_payments.step import Step
 from massgov.pfml.util.collections.dict import make_keys_lowercase
-from massgov.pfml.util.csv import CSVSourceWrapper
+from massgov.pfml.util.csv import download_and_parse_csv
 
 logger = logging.get_logger(__name__)
 
@@ -150,37 +151,39 @@ class BackfillFineosExtractStep(Step):
 
         # Read the file and write the rows to the DB
         fineos_path = os.path.join(fineos_dir, expected_filename)
-        csv_reader = CSVSourceWrapper(fineos_path)
 
-        date_group_processed_count_key = f"{date_group_str}_RECORDS_PROCESSED_COUNT"
-        unconfigured_columns = []
-        for i, record in enumerate(csv_reader):
+        with tempfile.TemporaryDirectory() as download_directory:
+            csv_reader = download_and_parse_csv(fineos_path, download_directory)
 
-            if i == 0:
-                lower_key_record = make_keys_lowercase(record)
-                # Verify that the expected columns are present
-                payments_util.validate_columns_present(lower_key_record, self.fineos_extract)
+            date_group_processed_count_key = f"{date_group_str}_RECORDS_PROCESSED_COUNT"
+            unconfigured_columns = []
+            for i, record in enumerate(csv_reader):
 
-                unconfigured_columns = payments_util.get_unconfigured_fineos_columns(
-                    lower_key_record,
-                    self.fineos_extract.table,
-                )
+                if i == 0:
+                    lower_key_record = make_keys_lowercase(record)
+                    # Verify that the expected columns are present
+                    payments_util.validate_columns_present(lower_key_record, self.fineos_extract)
 
-                if len(unconfigured_columns) > 0:
-                    unconfigured_extra = {"fields": ",".join(unconfigured_columns)} | extra
-                    logger.warning(
-                        "Unconfigured columns in FINEOS extract", extra=unconfigured_extra
+                    unconfigured_columns = payments_util.get_unconfigured_fineos_columns(
+                        lower_key_record,
+                        self.fineos_extract.table,
                     )
 
-            staging_table_instance = payments_util.create_staging_table_instance(
-                data=record,
-                db_cls=self.fineos_extract.table,
-                ref_file=reference_file,
-                ignore_properties=unconfigured_columns,
-            )
-            self.db_session.add(staging_table_instance)
-            self.increment(self.Metrics.RECORDS_PROCESSED_COUNT)
-            self.increment(date_group_processed_count_key)
+                    if len(unconfigured_columns) > 0:
+                        unconfigured_extra = {"fields": ",".join(unconfigured_columns)} | extra
+                        logger.warning(
+                            "Unconfigured columns in FINEOS extract", extra=unconfigured_extra
+                        )
+
+                staging_table_instance = payments_util.create_staging_table_instance(
+                    data=record,
+                    db_cls=self.fineos_extract.table,
+                    ref_file=reference_file,
+                    ignore_properties=unconfigured_columns,
+                )
+                self.db_session.add(staging_table_instance)
+                self.increment(self.Metrics.RECORDS_PROCESSED_COUNT)
+                self.increment(date_group_processed_count_key)
 
         self.increment(self.Metrics.SUCCESSFUL_REFERENCE_FILE_COUNT)
 

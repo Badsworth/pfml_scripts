@@ -37,7 +37,7 @@ const flagsConfig = {
 
     // Show multiple leave request UI updates to leave admins (dashboard++)
     // TODO (PORTAL-1560) Remove flag
-    employerShowMultiLeaveDashboard: false,
+    employerShowMultiLeaveDashboard: true,
 
     // When this flag true, you can BYPASS maintenance pages that are currently present.
     // See docs/portal/maintenance-pages.md for more details.

@@ -53,6 +53,13 @@ class RunIndicators extends React.Component {
           .limit(this.state.limit)}
       >
         {({ data }) => {
+          //TODO: Remove once integration tests have a tag
+          data = data.reduce((arr, run) => {
+            if (run.stable?.total > 0 || run.targeted?.total) {
+              arr.push(run);
+            }
+            return arr;
+          }, []);
           const link = navigation.getOpenStackedNerdletLocation({
             id: "panel-testgrid",
             urlState: { runIds: data.map((run) => run.runId) },

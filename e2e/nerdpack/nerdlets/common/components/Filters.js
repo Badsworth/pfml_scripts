@@ -208,3 +208,76 @@ export class FilterByTag extends BaseFilter {
     );
   }
 }
+
+export class FilterByTagGroup extends BaseFilter {
+  state = {
+    Deploy: false,
+    PR: false,
+    Fineos: false,
+    Targeted: false,
+    MorningRun: false,
+    Manual: false,
+  };
+
+  whereMatch = {
+    Deploy: "tagGroup = 'Deploy'",
+    PR: "tagGroup = 'PR'",
+    Fineos: "tagGroup = 'Fineos'",
+    Targeted: "tagGroup = 'Targeted'",
+    MorningRun: "tagGroup = 'Morning Run'",
+    Manual: "tagGroup = 'Manual'",
+  };
+
+  constructor(props) {
+    super(props);
+    this.sendUpdateEvent();
+  }
+
+  getStateNRQL = () => {
+    let WHERE = [];
+    Object.keys(this.state).map((key) => {
+      if (this.state[key]) {
+        WHERE.push(this.whereMatch[key]);
+      }
+    });
+    if (WHERE.length) {
+      return `( ${WHERE.join(" OR ")} )`;
+    }
+    return "";
+  };
+
+  render() {
+    return (
+      <div className={"filters"}>
+        TAG GROUP:
+        <button
+          onClick={() => {
+            this.clearAll("tags");
+          }}
+        >
+          Clear All
+        </button>
+        <button
+          onClick={() => {
+            this.checkAll("tags");
+          }}
+        >
+          Check All
+        </button>
+        {Object.keys(this.state).map((status) => {
+          return (
+            <label>
+              <input
+                name={status}
+                type={"checkbox"}
+                checked={this.state[status]}
+                onChange={this.handleInputChange}
+              />
+              {status}
+            </label>
+          );
+        })}
+      </div>
+    );
+  }
+}

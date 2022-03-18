@@ -57,6 +57,13 @@ exports[`ApplicationCard renders status button and Other Actions when status is 
       </strong>
     </p>
     <p>
+      Leave Dates
+      <br />
+      <strong>
+        1/1/2022 to 6/1/2022
+      </strong>
+    </p>
+    <p>
       Employer Identification Number (EIN)
       <br />
       <strong>

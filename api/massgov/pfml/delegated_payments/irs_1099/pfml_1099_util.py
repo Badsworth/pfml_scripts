@@ -1736,8 +1736,8 @@ def get_last_1099_batch_for_employee(
         .first()
     )
 
-    if len(batch) == 0:
-        logger.info("No previous batch exists")
+    if batch is None or len(batch) == 0:
+        logger.info("No previous batch exists for employee: %s", employee_id)
         return None
 
     logger.info("Found %s batches in %s", len(batch), year)

@@ -249,6 +249,10 @@ class LkMFADeliveryPreference(Base):
         self.mfa_delivery_preference_id = mfa_delivery_preference_id
         self.mfa_delivery_preference_description = mfa_delivery_preference_description
 
+    @typed_hybrid_property
+    def description(self) -> str:
+        return self.mfa_delivery_preference_description
+
 
 class LkMFADeliveryPreferenceUpdatedBy(Base):
     __tablename__ = "lk_mfa_delivery_preference_updated_by"
@@ -262,6 +266,10 @@ class LkMFADeliveryPreferenceUpdatedBy(Base):
         self.mfa_delivery_preference_updated_by_description = (
             mfa_delivery_preference_updated_by_description
         )
+
+    @typed_hybrid_property
+    def description(self) -> str:
+        return self.mfa_delivery_preference_updated_by_description
 
 
 class AbsencePeriod(Base, TimestampMixin):
@@ -1310,7 +1318,7 @@ class User(Base, TimestampMixin):
         if mfa_preference is None:
             return None
 
-        return mfa_preference.mfa_delivery_preference_description
+        return mfa_preference.description
 
     @hybrid_method
     def mfa_phone_number_last_four(self) -> Optional[str]:
