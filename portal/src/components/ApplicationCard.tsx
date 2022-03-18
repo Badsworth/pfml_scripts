@@ -8,6 +8,7 @@ import LeaveReason from "../models/LeaveReason";
 import LegalNoticeList from "./LegalNoticeList";
 import React from "react";
 import Spinner from "./core/Spinner";
+import { Trans } from "react-i18next";
 import { WithUserProps } from "src/hoc/withUser";
 import { createRouteWithQuery } from "../utils/routeWithParams";
 import findKeyByValue from "../utils/findKeyByValue";
@@ -223,6 +224,20 @@ export const ApplicationCard = (props: ApplicationCardProps) => {
               {t("components.applicationCard.claimAssociatedSuccessfully", {
                 fineos_absence_id: claim.fineos_absence_id,
               })}
+            </p>
+          </Alert>
+        )}
+        {claim.isEarliestSubmissionDateInFuture && (
+          <Alert state="warning" noIcon>
+            <p>
+              <Trans
+                i18nKey="components.applicationCard.earliestSubmissionDateInFuture"
+                values={{
+                  earliest_submission_date: formatDate(
+                    claim.computed_earliest_submission_date
+                  ).short(),
+                }}
+              />
             </p>
           </Alert>
         )}

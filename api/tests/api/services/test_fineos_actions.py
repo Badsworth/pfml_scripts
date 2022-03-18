@@ -1774,11 +1774,7 @@ class TestBuildContactDetailsForFineosUpgrade:
         monkeypatch.setenv("FINEOS_IS_RUNNING_V21", "true")
 
         application = ApplicationFactory.build()
-        fineos_client = massgov.pfml.fineos.MockFINEOSClient()
-
-        contact_details = fineos_actions.build_contact_details(
-            application, fineos_client.read_customer_contact_details("foo")
-        )
+        contact_details = fineos_actions.build_contact_details(application)
 
         assert contact_details.emailAddresses[0].emailAddress == application.user.email_address
         assert contact_details.emailAddresses[0].emailAddressType == "Email"
@@ -1787,11 +1783,7 @@ class TestBuildContactDetailsForFineosUpgrade:
         monkeypatch.setenv("FINEOS_IS_RUNNING_V21", "false")
 
         application = ApplicationFactory.build()
-        fineos_client = massgov.pfml.fineos.MockFINEOSClient()
-
-        contact_details = fineos_actions.build_contact_details(
-            application, fineos_client.read_customer_contact_details("foo")
-        )
+        contact_details = fineos_actions.build_contact_details(application)
 
         assert contact_details.emailAddresses[0].emailAddress == application.user.email_address
         assert "emailAddressType" not in contact_details.emailAddresses[0].dict()

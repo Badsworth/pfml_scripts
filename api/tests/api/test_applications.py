@@ -4340,7 +4340,7 @@ def test_application_post_submit_existing_work_pattern(
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
 
-    assert capture[3] == (
+    assert capture[2] == (
         "update_week_based_work_pattern",
         fineos_user_id,
         {
@@ -4447,7 +4447,6 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                 )
             },
         ),
-        ("update_customer_contact_details", fineos_user_id, {}),
         (
             "update_customer_details",
             fineos_user_id,
@@ -4571,23 +4570,14 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                 "contact_details": massgov.pfml.fineos.models.customer_api.ContactDetails(
                     phoneNumbers=[
                         massgov.pfml.fineos.models.customer_api.PhoneNumber(
-                            id=1,
-                            preferred=None,
-                            phoneNumberType="Phone",
-                            intCode="1",
-                            areaCode="321",
-                            telephoneNo="4567890",
-                            classExtensionInformation=None,
-                        ),
-                        massgov.pfml.fineos.models.customer_api.PhoneNumber(
                             id=111,
-                            preferred=True,
+                            preferred=None,
                             phoneNumberType="Cell",
                             intCode="1",
                             areaCode="240",
                             telephoneNo="4879945",
                             classExtensionInformation=None,
-                        ),
+                        )
                     ],
                     emailAddresses=[
                         massgov.pfml.fineos.models.customer_api.EmailAddressV20(
@@ -4651,7 +4641,7 @@ def test_application_post_submit_to_fineos_intermittent_leave(
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
 
-    assert capture[7][2]["absence_case"].episodicLeavePeriods == [
+    assert capture[6][2]["absence_case"].episodicLeavePeriods == [
         massgov.pfml.fineos.models.customer_api.EpisodicLeavePeriod(
             startDate=date(2021, 1, 1),
             endDate=date(2021, 3, 2),
@@ -4715,7 +4705,7 @@ def test_application_post_submit_to_fineos_reduced_schedule_leave(
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
 
-    assert capture[7][2]["absence_case"].reducedScheduleLeavePeriods == [
+    assert capture[6][2]["absence_case"].reducedScheduleLeavePeriods == [
         massgov.pfml.fineos.models.customer_api.ReducedScheduleLeavePeriod(
             startDate=date(2021, 1, 1),
             endDate=date(2021, 2, 9),
@@ -4774,7 +4764,7 @@ def test_application_post_submit_to_fineos_bonding_adoption(
     assert response.status_code == 201
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
-    captured_absence_case = capture[7][2]["absence_case"]
+    captured_absence_case = capture[6][2]["absence_case"]
 
     assert captured_absence_case.reason == LeaveReason.CHILD_BONDING.leave_reason_description
     assert (
@@ -4831,7 +4821,7 @@ def test_application_post_submit_to_fineos_bonding_foster(
     assert response.status_code == 201
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
-    captured_absence_case = capture[7][2]["absence_case"]
+    captured_absence_case = capture[6][2]["absence_case"]
 
     assert captured_absence_case.reason == LeaveReason.CHILD_BONDING.leave_reason_description
     assert (
@@ -4887,7 +4877,7 @@ def test_application_post_submit_to_fineos_bonding_newborn(
     assert response.status_code == 201
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
-    captured_absence_case = capture[7][2]["absence_case"]
+    captured_absence_case = capture[6][2]["absence_case"]
 
     assert captured_absence_case.reason == LeaveReason.CHILD_BONDING.leave_reason_description
     assert (
@@ -4940,7 +4930,7 @@ def test_application_post_submit_to_fineos_medical(client, user, auth_token, tes
     assert response.status_code == 201
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
-    captured_absence_case = capture[7][2]["absence_case"]
+    captured_absence_case = capture[6][2]["absence_case"]
 
     # Maps to FINEOS:
     # Reason = Serious Health Condition - Employee
@@ -4997,7 +4987,7 @@ def test_application_post_submit_to_fineos_pregnant_true(client, user, auth_toke
     assert response.status_code == 201
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
-    captured_absence_case = capture[7][2]["absence_case"]
+    captured_absence_case = capture[6][2]["absence_case"]
 
     # Maps to FINEOS:
     # Reason = Pregnancy/Maternity
@@ -5047,7 +5037,7 @@ def test_application_post_submit_to_fineos_pregnant(client, user, auth_token, te
     assert response.status_code == 201
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
-    captured_absence_case = capture[7][2]["absence_case"]
+    captured_absence_case = capture[6][2]["absence_case"]
 
     # Maps to FINEOS:
     # Reason = Pregnancy/Maternity
@@ -5273,7 +5263,7 @@ def test_application_post_submit_to_fineos_caring_leave(client, user, auth_token
     )
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
-    captured_absence_case = capture[7][2]["absence_case"]
+    captured_absence_case = capture[6][2]["absence_case"]
 
     assert response.status_code == 201
     assert (
@@ -5717,105 +5707,6 @@ def test_application_post_submit_app_creates_claim(client, user, auth_token, tes
     assert submitted_application.claim.claim_type_id == 2
 
 
-@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.read_customer_contact_details")
-def test_submit_app_does_not_remove_fineos_phone_numbers(
-    mock_read_customer_contact_details, client, user, auth_token, test_db_session
-):
-    employer = EmployerFactory.create()
-    employee = EmployeeFactory.create()
-    application = ApplicationFactory.create(
-        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
-    )
-    WagesAndContributionsFactory.create(employer=employer, employee=employee)
-
-    application.continuous_leave_periods = [
-        ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
-    ]
-    application.date_of_birth = date(1997, 6, 6)
-    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
-    application.hours_worked_per_week = 70
-    application.has_continuous_leave_periods = True
-    application.residential_address = AddressFactory.create()
-    application.work_pattern = WorkPatternFixedFactory.create()
-
-    customer_contact_details_json = massgov.pfml.fineos.mock_client.mock_customer_contact_details()
-    customer_contact_details = massgov.pfml.fineos.models.customer_api.ContactDetails.parse_obj(
-        customer_contact_details_json
-    )
-    mock_read_customer_contact_details.return_value = customer_contact_details
-
-    # This customer has two phone numbers in FINEOS before application submission
-    assert len(customer_contact_details.phoneNumbers) == 2
-    assert application.phone.fineos_phone_id is None
-
-    test_db_session.commit()
-    massgov.pfml.fineos.mock_client.start_capture()
-    response = client.post(
-        "/v1/applications/{}/submit_application".format(application.application_id),
-        headers={"Authorization": f"Bearer {auth_token}"},
-    )
-    assert response.status_code == 201
-
-    capture = massgov.pfml.fineos.mock_client.get_capture()
-    contactDetails = capture[7][2]["contact_details"]
-    # This customer now has three phone numbers in FINEOS
-    assert len(contactDetails.phoneNumbers) == 3
-    assert application.phone.fineos_phone_id is not None
-
-
-@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.read_customer_contact_details")
-def test_submit_app_does_not_create_duplicate_fineos_phone_numbers(
-    mock_read_customer_contact_details, client, user, auth_token, test_db_session
-):
-    employer = EmployerFactory.create()
-    employee = EmployeeFactory.create()
-    application = ApplicationFactory.create(
-        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
-    )
-    WagesAndContributionsFactory.create(employer=employer, employee=employee)
-
-    application.continuous_leave_periods = [
-        ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
-    ]
-    application.date_of_birth = date(1997, 6, 6)
-    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
-    application.hours_worked_per_week = 70
-    application.has_continuous_leave_periods = True
-    application.residential_address = AddressFactory.create()
-    application.work_pattern = WorkPatternFixedFactory.create()
-    application.phone = Phone(phone_number="+12401112222", phone_type_id=1)
-
-    customer_contact_details_json = massgov.pfml.fineos.mock_client.mock_customer_contact_details()
-    customer_contact_details = massgov.pfml.fineos.models.customer_api.ContactDetails.parse_obj(
-        customer_contact_details_json
-    )
-    mock_read_customer_contact_details.return_value = customer_contact_details
-    # match the value in application.phone.phone_number:
-    customer_contact_details.phoneNumbers[0] = massgov.pfml.fineos.models.customer_api.PhoneNumber(
-        phoneNumberType="Phone",
-        intCode="1",
-        areaCode="240",
-        telephoneNo="1112222",
-        classExtensionInformation=None,
-    )
-
-    # This customer has two phone numbers in FINEOS before application submission
-    assert len(customer_contact_details.phoneNumbers) == 2
-
-    test_db_session.commit()
-    massgov.pfml.fineos.mock_client.start_capture()
-    response = client.post(
-        "/v1/applications/{}/submit_application".format(application.application_id),
-        headers={"Authorization": f"Bearer {auth_token}"},
-    )
-    assert response.status_code == 201
-
-    capture = massgov.pfml.fineos.mock_client.get_capture()
-    contactDetails = capture[7][2]["contact_details"]
-    # This customer still has two phone numbers because the new one matched an existing one
-    assert len(contactDetails.phoneNumbers) == 2
-
-
 def test_submit_app_with_leave_reason_id_not_in_map(client, user, auth_token, test_db_session):
     with pytest.raises(NoClaimTypeForAbsenceType):
         new_leave_reason = LeaveReasonFactory.create(
@@ -6095,3 +5986,20 @@ def test_application_patch_caring_leave_metadata_family_member_future_date_of_bi
     assert message == "Family member's date of birth must be less than 7 months from now"
     assert rule == "max_7_months_in_future"
     assert error_type == "future_birth_date"
+
+
+def test_computed_earliest_submission_date(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(start_date=date(2053, 10, 1))
+    ]
+    test_db_session.commit()
+
+    response = client.get(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    assert response_body.get("computed_earliest_submission_date") == "2053-08-02"

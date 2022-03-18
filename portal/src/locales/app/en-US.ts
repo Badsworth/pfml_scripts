@@ -2756,6 +2756,10 @@ const pages: {
       "$t(pages.payments.tablePaymentStatus_Delayed_Default)",
     "tablePaymentStatus_Delayed_Max Weekly Benefits Exceeded":
       "$t(pages.payments.tablePaymentStatus_Delayed_Default)",
+    tablePaymentStatus_Delayed_Processing:
+      "Your payment is being processed. Your {{paymentMethod}} dates will be available in a few days. No action is required from you at this time.",
+    tablePaymentStatus_Delayed_ProcessingWithDate:
+      "$t(pages.payments.tablePaymentStatus_Pending)",
     tablePaymentStatus_Pending:
       "Your payment will be sent by {{paymentMethod}} between {{payPeriod}}.",
     "tablePaymentStatus_Sent to bank":
@@ -2849,6 +2853,8 @@ const components: {
     claimAssociatedSuccessfully:
       "Application {{fineos_absence_id}} has been added to your account.",
     continueApplication: "Continue application",
+    earliestSubmissionDateInFuture:
+      "You will be able to submit this application on <strong>{{earliest_submission_date}}</strong>. This is 60 days before the start of your leave. Applications cannot be submitted earlier than 60 days before the start of leave.",
     employerEIN: "Employer Identification Number (EIN)",
     heading_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
     heading_bonding: "$t(shared.leaveReasonBondingHeader)",

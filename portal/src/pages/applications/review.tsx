@@ -348,22 +348,23 @@ export const Review = (
         </ReviewRow>
       )}
 
-      {isEmployed && ( // only display this if the claimant is Employed
-        <ReviewRow
-          level={reviewRowLevel}
-          label={t("pages.claimsReview.employerNotifiedLabel")}
-        >
-          {t("pages.claimsReview.employerNotifiedValue", {
-            context: (!!get(
-              claim,
-              "leave_details.employer_notified"
-            )).toString(),
-            date: formatDate(
-              get(claim, "leave_details.employer_notification_date")
-            ).short(),
-          })}
-        </ReviewRow>
-      )}
+      {isEmployed &&
+        get(claim, "leave_details.employer_notification_date") && ( // only display this if the claimant is Employed and date is set
+          <ReviewRow
+            level={reviewRowLevel}
+            label={t("pages.claimsReview.employerNotifiedLabel")}
+          >
+            {t("pages.claimsReview.employerNotifiedValue", {
+              context: (!!get(
+                claim,
+                "leave_details.employer_notified"
+              )).toString(),
+              date: formatDate(
+                get(claim, "leave_details.employer_notification_date")
+              ).short(),
+            })}
+          </ReviewRow>
+        )}
 
       <ReviewRow
         level={reviewRowLevel}
