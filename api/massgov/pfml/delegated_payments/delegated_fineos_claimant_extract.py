@@ -1310,13 +1310,6 @@ class ClaimantExtractStep(Step):
                 logger.info("Claim failed validation", extra=extra)
 
         else:
-            state_log_util.create_finished_state_log(
-                end_state=State.DELEGATED_CLAIM_EXTRACTED_FROM_FINEOS,
-                associated_model=claim,
-                import_log_id=self.get_import_log_id(),
-                outcome=state_log_util.build_outcome(
-                    f"Claim {claim.fineos_absence_id} successfully extracted from FINEOS claimant extract"
-                ),
-                db_session=self.db_session,
-            )
+            # Don't update state log for successful claims
+            # as it doesn't get used / degrades performance
             self.increment(self.Metrics.VALID_CLAIM_COUNT)
