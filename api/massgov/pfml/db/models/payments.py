@@ -1463,9 +1463,7 @@ class LinkSplitPayment(Base, TimestampMixin):
     related_payment_id = Column(PostgreSQLUUID, ForeignKey("payment.payment_id"), primary_key=True)
 
     payment = relationship(Payment, foreign_keys=[payment_id])
-    related_payment = cast(
-        "Optional[Payment]", relationship(Payment, foreign_keys=[related_payment_id])
-    )
+    related_payment = relationship(Payment, foreign_keys=[related_payment_id])
 
 
 #### Writeback Status Mapping Configuration
