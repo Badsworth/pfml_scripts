@@ -83,6 +83,7 @@ from massgov.pfml.fineos.models.customer_api.spec import (
     AbsenceDetails,
     AbsencePeriod,
     EpisodicLeavePeriodDetail,
+    NotificationCaseSummary,
     ReadCustomerOccupation,
     ReportedReducedScheduleLeavePeriod,
     TimeOffLeavePeriod,
@@ -3855,6 +3856,8 @@ def test_application_post_submit_app(client, user, auth_token, test_db_session):
     assert response_body.get("data").get("application_id") == str(application.application_id)
     assert response_body.get("data").get("fineos_absence_id") == "NTN-259-ABS-01"
     assert response_body.get("data").get("status") == ApplicationStatus.Submitted.value
+    test_db_session.refresh(application)
+    assert application.submitted_time
 
 
 def create_mock_client(err: FINEOSClientError):
@@ -3942,10 +3945,75 @@ def test_application_post_submit_fineos_register_api_errors(
         assert num_issues == 0
     else:
         assert num_issues > 0
+        test_db_session.refresh(application)
+        assert application.submitted_time is None
         # Simplified check to confirm Application was included in response:
         assert response_body.get("data").get("application_id") == str(application.application_id)
         assert not response_body.get("data").get("fineos_absence_id")
         assert response_body.get("data").get("status") == ApplicationStatus.Started.value
+
+
+def test_application_post_submit_complete_intake_fineos_api_errors(
+    client, user, auth_token, test_db_session, monkeypatch
+):
+    class MockFINEOSTestClient(massgov.pfml.fineos.mock_client.MockFINEOSClient):
+        def complete_intake(
+            self, user_id: str, notification_case_id: str
+        ) -> NotificationCaseSummary:
+            raise FINEOSFatalUnavailable(response_status=504, method_name="complete_intake")
+
+    monkeypatch.setattr(massgov.pfml.fineos, "create_client", MockFINEOSTestClient)
+
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
+    )
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
+
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
+    ]
+    application.date_of_birth = date(1997, 6, 6)
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.hours_worked_per_week = 70
+    application.has_continuous_leave_periods = True
+    application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
+    test_db_session.commit()
+
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 503
+    response_body = response.get_json()
+    expected_message = (
+        f"Application {str(application.application_id)} could not be submitted, try again later"
+    )
+    assert response_body.get("message"), expected_message
+    assert response_body.get("data").get("fineos_absence_id") is not None
+
+    test_db_session.refresh(application)
+    assert application.claim is not None
+    assert application.submitted_time is None
+    assert len(application.continuous_leave_periods) == 1
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "has_continuous_leave_periods": True,
+            "has_intermittent_leave_periods": False,
+            "has_reduced_schedule_leave_periods": False,
+            "leave_details": {"continuous_leave_periods": [{"start_date": "2021-01-01"}]},
+        },
+    )
+
+    assert response.status_code == 200
+    test_db_session.refresh(application)
+    assert len(application.continuous_leave_periods) == 2
 
 
 def test_application_post_submit_app_already_submitted(client, user, auth_token, test_db_session):
