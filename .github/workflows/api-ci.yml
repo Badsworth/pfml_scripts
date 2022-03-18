@@ -79,10 +79,10 @@ jobs:
 
     needs: get-test-dirs
 
-    strategy:
-      fail-fast: false
-      matrix:
-        test_dirs: ${{ fromJSON(needs.get-test-dirs.outputs.matrix) }}
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        test_dirs: ${{ fromJSON(needs.get-test-dirs.outputs.matrix) }}
 
     steps:
       - uses: actions/checkout@v2
@@ -103,7 +103,13 @@ jobs:
         run: make db-create-users
 
       - name: test with coverage
-        run: make test-coverage args=tests/${{ matrix.test_dirs }}
+        run: make test-coverage
+
+      - name: Coverage comment
+        id: coverage_comment
+        uses: ewjoachim/python-coverage-comment-action@v2
+        with:
+          GITHUB_TOKEN: ${{ github.token }}
 
 
   # Check we can build a release
