@@ -365,17 +365,19 @@ export const Review = (
         </ReviewRow>
       )}
 
-      <ReviewRow
-        level={reviewRowLevel}
-        label={t("pages.claimsReview.workPatternTypeLabel")}
-      >
-        {t("pages.claimsReview.workPatternTypeValue", {
-          context: findKeyByValue(
-            WorkPatternType,
-            get(claim, "work_pattern.work_pattern_type")
-          ),
-        })}
-      </ReviewRow>
+      {workPattern.work_pattern_type && (
+        <ReviewRow
+          level={reviewRowLevel}
+          label={t("pages.claimsReview.workPatternTypeLabel")}
+        >
+          {t("pages.claimsReview.workPatternTypeValue", {
+            context: findKeyByValue(
+              WorkPatternType,
+              get(claim, "work_pattern.work_pattern_type")
+            ),
+          })}
+        </ReviewRow>
+      )}
 
       {workPattern.work_pattern_days &&
         workPattern.work_pattern_type === WorkPatternType.fixed &&
