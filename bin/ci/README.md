@@ -11,6 +11,11 @@ Use either Poetry or `pip` to bootstrap the project's dependencies before you us
 
 - To install the necessary dependencies, cd into this directory (bin/ci) and run `poetry install`.
 
+🟢 Scripted Releases is now available through Github Actions 🟢
+  - No installation steps required and no CLI needed.
+  - Job located here - [Scripted Releases](https://github.com/EOLWD/pfml/actions/workflows/scripted-releases.yml)
+  - ⚠️ Merge conflicts must be resolved manually using `git` then the Action can be re-ran ⚠️
+
 ---
 
 ## Usage Instructions
@@ -18,6 +23,17 @@ Use either Poetry or `pip` to bootstrap the project's dependencies before you us
 There's a multitude of ways to use this project to accomplish your release tasks. Choose whichever works best for you.
 
 You can always provide the `-h / --help` flag instead of any other args to see detailed usage and syntax instructions.
+
+### ...via Github Actions
+- Github Actions utilizes Poetry to run Scripted Releases.
+- Just select the **Application**, **Scripted Release Task**, and **Arguments** (not required for `start-release` task)
+- Examples:
+  - 1️⃣**Application**: `api` 2️⃣**Scripted Release Task**: `start-release` 3️⃣**Arguments**:
+  - 1️⃣**Application**: `api` 2️⃣**Scripted Release Task**: `update-release` 3️⃣**Arguments**: `-r release/api/v2.25.0 --with-branch main`
+  - 1️⃣**Application**: `api` 2️⃣**Scripted Release Task**: `finalize-release` 3️⃣**Arguments**: `-r release/api/v2.25.0`
+  - 1️⃣**Application**: `api` 2️⃣**Scripted Release Task**: `hotfix` 3️⃣**Arguments**: `-r release/api/v2.25.0 -c DEADBEEF -c ABADCAFE`
+  - 1️⃣**Application**: `portal` 2️⃣**Scripted Release Task**: `update-release` 3️⃣**Arguments**: `-r release/portal/v49.0 -c ABCDEFGH`
+- ⚠️ Merge conflicts must be resolved manually using `git` then the Action can be re-ran ⚠️
 
 ### ...via Poetry
 - Once you've got the project installed, run these scripts from `bin/ci` with `poetry run scripted-releases <args>`.
