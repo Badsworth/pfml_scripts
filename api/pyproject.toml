@@ -161,6 +161,9 @@ backfill-benefit-years = "massgov.pfml.api.eligibility.task.backfill_benefit_yea
 [tool.black]
 line-length = 100
 
+[tool.coverage.run]
+relative_files = true
+
 [tool.isort]
 multi_line_output = 3
 include_trailing_comma = true

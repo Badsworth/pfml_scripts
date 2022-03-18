@@ -103,7 +103,7 @@ jobs:
         run: make db-create-users
 
       - name: test with coverage
-        run: make test-coverage
+        run: make test-coverage args=tests/util
 
       - name: Coverage comment
         id: coverage_comment
