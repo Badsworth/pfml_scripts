@@ -30,6 +30,7 @@ from massgov.pfml.db.models.applications import (
 )
 from massgov.pfml.db.models.employees import BankAccountType, Gender, PaymentMethod
 from massgov.pfml.db.models.factories import ApplicationFactory
+from massgov.pfml.fineos import exception
 from massgov.pfml.fineos.mock.eform import (
     MOCK_EFORM_EMPLOYER_RESPONSE_V2,
     MOCK_EFORM_OTHER_INCOME_V1,
@@ -618,6 +619,25 @@ def test_set_employment_status_and_occupations_work_pattern_not_fixed(
     set_employment_status_and_occupations(fineos_client, fineos_web_id, application)
     assert application.employment_status_id == EmploymentStatus.EMPLOYED.employment_status_id
     assert application.hours_worked_per_week == 37.5
+    assert application.work_pattern is None
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_week_based_work_pattern")
+def test_set_employment_status_and_occupations_work_pattern_fineos_error(
+    mock_get_week_based_work_pattern, fineos_client, fineos_web_id, application, user
+):
+    # FINEOS returns a 403 Forbidden error for Variable work patterns
+    error_msg = """{
+        "error" : "User does not have permission to access the resource or the instance data",
+        "correlationId" : "1234"
+    }"""
+    error = exception.FINEOSForbidden("get_week_based_work_pattern", 200, 403, error_msg)
+    mock_get_week_based_work_pattern.side_effect = error
+    set_employment_status_and_occupations(fineos_client, fineos_web_id, application)
+    # data from the get_customer_occupations_customer_api() call is unaffected
+    assert application.employment_status_id == EmploymentStatus.EMPLOYED.employment_status_id
+    assert application.hours_worked_per_week == 37.5
+    # due to 403 error, no work_pattern is set
     assert application.work_pattern is None
 
 

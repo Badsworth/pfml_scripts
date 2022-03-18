@@ -75,7 +75,7 @@ from massgov.pfml.db.models.employees import (
     User,
 )
 from massgov.pfml.db.models.geo import GeoState
-from massgov.pfml.fineos import AbstractFINEOSClient
+from massgov.pfml.fineos import AbstractFINEOSClient, exception
 from massgov.pfml.fineos.models.customer_api import AbsencePeriodStatus, PhoneNumber
 from massgov.pfml.fineos.models.customer_api.spec import (
     AbsenceDetails,
@@ -1343,9 +1343,26 @@ def set_employment_status_and_occupations(
     if occupation.occupationId is None:
         return
 
-    fineos_work_patterns = fineos_client.get_week_based_work_pattern(
-        fineos_web_id, occupation.occupationId
-    )
+    fineos_work_patterns = None
+    try:
+        fineos_work_patterns = fineos_client.get_week_based_work_pattern(
+            fineos_web_id, occupation.occupationId
+        )
+    except exception.FINEOSForbidden:
+        # Known FINEOS limitation, where it responds with a 403 for Variable work pattern types
+        logger.info(
+            "Received FINEOS forbidden response when getting week-based work pattern.",
+            extra={
+                "absence_case_id": application.claim.fineos_absence_id
+                if application.claim
+                else None,
+                "occupationId": occupation.occupationId,
+            },
+        )
+
+    if fineos_work_patterns is None:
+        return
+
     if fineos_work_patterns.workPatternType != WorkPatternType.FIXED.work_pattern_type_description:
         newrelic_util.log_and_capture_exception(
             f"Application work pattern type is not {WorkPatternType.FIXED.work_pattern_type_description}",

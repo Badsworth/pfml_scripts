@@ -366,6 +366,27 @@ describe("Review Page", () => {
         screen.getByText(/Average weekly hours/i).nextSibling
       ).toHaveTextContent("40h");
     });
+
+    it("conditionally renders work pattern type", () => {
+      const textMatch = /Work schedule type/;
+      const claim = new MockBenefitsApplicationBuilder()
+        .part1Complete()
+        .fixedWorkPattern()
+        .create();
+
+      setup({ claim });
+      expect(
+        screen.queryAllByRole("heading", { name: textMatch })
+      ).not.toHaveLength(0);
+
+      cleanup();
+
+      claim.work_pattern = null;
+      setup({ claim });
+      expect(
+        screen.queryByRole("heading", { name: textMatch })
+      ).not.toBeInTheDocument();
+    });
   });
 
   it("does not render ACH content when payment method is Check", () => {
