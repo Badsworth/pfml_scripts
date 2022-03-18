@@ -3030,6 +3030,11 @@ components:
           format: uuid
           example: "2f0f58a0-fcad-465b-b474-ee6c961cd6e3"
           nullable: true
+        computed_earliest_submission_date:
+          type: string
+          format: date
+          example: "2022-07-04"
+          nullable: true
 
     ComputedStartDates:
       type: object

@@ -2853,6 +2853,8 @@ const components: {
     claimAssociatedSuccessfully:
       "Application {{fineos_absence_id}} has been added to your account.",
     continueApplication: "Continue application",
+    earliestSubmissionDateInFuture:
+      "You will be able to submit this application on <strong>{{earliest_submission_date}}</strong>. This is 60 days before the start of your leave. Applications cannot be submitted earlier than 60 days before the start of leave.",
     employerEIN: "Employer Identification Number (EIN)",
     heading_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
     heading_bonding: "$t(shared.leaveReasonBondingHeader)",

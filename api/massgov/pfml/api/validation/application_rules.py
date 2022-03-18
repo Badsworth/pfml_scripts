@@ -11,6 +11,7 @@ from massgov.pfml.api.constants.application import (
     CARING_LEAVE_EARLIEST_START_DATE,
     CERTIFICATION_DOC_TYPES,
     ID_DOC_TYPES,
+    MAX_DAYS_IN_ADVANCE_TO_SUBMIT,
     PFML_PROGRAM_LAUNCH_DATE,
 )
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
@@ -18,6 +19,7 @@ from massgov.pfml.api.models.applications.requests import ApplicationImportReque
 from massgov.pfml.api.models.common import (
     get_computed_start_dates,
     get_earliest_start_date,
+    get_earliest_submission_date,
     get_leave_reason,
 )
 from massgov.pfml.api.services.applications import (
@@ -47,7 +49,6 @@ from massgov.pfml.db.models.applications import (
 from massgov.pfml.db.models.employees import Claim, PaymentMethod
 from massgov.pfml.util.routing_number_validation import validate_routing_number
 
-MAX_DAYS_IN_ADVANCE_TO_SUBMIT = 60
 MAX_DAYS_IN_LEAVE_PERIOD_RANGE = 364
 MAX_MINUTES_IN_WEEK = 10080  # 60 * 24 * 7
 
@@ -1004,13 +1005,8 @@ def get_leave_period_ranges_issues(application: Application) -> List[ValidationE
     leave_period_ranges.sort()
 
     # Prevent submission too far in advance
-    earliest_start_date = min(leave_period_start_dates, default=None)
-    latest_end_date = max(leave_period_end_dates, default=None)
-
-    if (
-        earliest_start_date is not None
-        and (earliest_start_date - date.today()).days > MAX_DAYS_IN_ADVANCE_TO_SUBMIT
-    ):
+    earliest_submission_date = get_earliest_submission_date(application)
+    if earliest_submission_date is not None and (earliest_submission_date - date.today()).days > 0:
         issues.append(
             ValidationErrorDetail(
                 message=f"Can't submit application more than {MAX_DAYS_IN_ADVANCE_TO_SUBMIT} days in advance of the earliest leave period",
@@ -1020,6 +1016,8 @@ def get_leave_period_ranges_issues(application: Application) -> List[ValidationE
         )
 
     # Prevent caring leave submissions before 7/1/2021
+    earliest_start_date = min(leave_period_start_dates, default=None)
+
     if (
         application.leave_reason_id == LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id
         and earliest_start_date is not None
@@ -1034,6 +1032,8 @@ def get_leave_period_ranges_issues(application: Application) -> List[ValidationE
         )
 
     # Prevent leave that exceed 12 months
+    latest_end_date = max(leave_period_end_dates, default=None)
+
     if (
         earliest_start_date is not None
         and latest_end_date is not None

@@ -4,8 +4,9 @@ from massgov.pfml.api.constants.application import (
     CARING_LEAVE_EARLIEST_START_DATE,
     PFML_PROGRAM_LAUNCH_DATE,
 )
-from massgov.pfml.api.models.common import get_computed_start_dates
+from massgov.pfml.api.models.common import get_computed_start_dates, get_earliest_submission_date
 from massgov.pfml.db.models.applications import LeaveReason
+from massgov.pfml.db.models.factories import ApplicationFactory, ContinuousLeavePeriodFactory
 
 
 def test_computed_start_dates_for_application_with_no_reason():
@@ -58,3 +59,17 @@ def test_computed_start_dates_for_caring_leave_with_prior_year_after_launch():
     assert computed_start_dates.other_reason == date(2021, 7, 25)
     assert computed_start_dates.same_reason.strftime("%A") == "Sunday"
     assert computed_start_dates.other_reason.strftime("%A") == "Sunday"
+
+
+def test_get_earliest_submission_date():
+    application = ApplicationFactory.build()
+
+    assert get_earliest_submission_date(application) is None
+
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.build(start_date=date(2053, 10, 1))
+    ]
+    assert get_earliest_submission_date(application) == date(2053, 8, 2)
+
+    application.submitted_time = date.today()
+    assert get_earliest_submission_date(application) is None

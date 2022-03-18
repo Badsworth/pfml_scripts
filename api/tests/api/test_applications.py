@@ -5986,3 +5986,20 @@ def test_application_patch_caring_leave_metadata_family_member_future_date_of_bi
     assert message == "Family member's date of birth must be less than 7 months from now"
     assert rule == "max_7_months_in_future"
     assert error_type == "future_birth_date"
+
+
+def test_computed_earliest_submission_date(client, user, auth_token, test_db_session):
+    application = ApplicationFactory.create(user=user)
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(start_date=date(2053, 10, 1))
+    ]
+    test_db_session.commit()
+
+    response = client.get(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    assert response.status_code == 200
+
+    response_body = response.get_json().get("data")
+    assert response_body.get("computed_earliest_submission_date") == "2053-08-02"
