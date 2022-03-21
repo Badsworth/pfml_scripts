@@ -584,8 +584,8 @@ module "process-1099-generate" {
   is_enabled = true
 
   task_name                            = "1099-generate"
-  schedule_expression_standard         = "cron(0 18 ? * 6 *)"
-  schedule_expression_daylight_savings = "cron(0 17 ? * 6 *)"
+  schedule_expression_standard         = "cron(15 20 ? * 2 *)"
+  schedule_expression_daylight_savings = "cron(15 19 ? * 2 *)"
   environment_name                     = var.environment_name
 
   cluster_arn        = data.aws_ecs_cluster.cluster.arn
@@ -608,7 +608,7 @@ module "process-1099-generate" {
         ],
         "environment": [
           {"name": "ENABLE_GENERATE_1099_PDF", "value": "1"},
-          {"name": "GENERATE_1099_MAX_FILES", "value": "100000"},
+          {"name": "GENERATE_1099_MAX_FILES", "value": "100"},
           {"name": "ENABLE_MERGE_1099_PDF", "value": "1"},
           {"name": "IRS_1099_CORRECTION_IND", "value" : "1" },
           {"name": "IRS_1099_TAX_YEAR", "value" : "2021" }
@@ -627,8 +627,8 @@ module "process-1099-upload" {
   is_enabled = true
 
   task_name                            = "1099-upload"
-  schedule_expression_standard         = "cron(0 21 ? * 6 *)"
-  schedule_expression_daylight_savings = "cron(0 20 ? * 6 *)"
+  schedule_expression_standard         = "cron(30 20 ? * 2 *)"
+  schedule_expression_daylight_savings = "cron(30 19 ? * 2 *)"
   environment_name                     = var.environment_name
 
   cluster_arn        = data.aws_ecs_cluster.cluster.arn
@@ -651,7 +651,7 @@ module "process-1099-upload" {
         ],
         "environment": [
           {"name": "ENABLE_UPLOAD_1099_PDF", "value": "1"},
-          {"name": "UPLOAD_MAX_FILES_TO_FINEOS", "value": "1000"},
+          {"name": "UPLOAD_MAX_FILES_TO_FINEOS", "value": "1"},
           {"name": "IRS_1099_CORRECTION_IND", "value" : "1" },
           {"name": "IRS_1099_TAX_YEAR", "value" : "2021" }
         ]        
