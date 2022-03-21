@@ -51,7 +51,7 @@ const flagsConfig = {
     pfmlTerriyay: false,
 
     // When this flag is true, PDF files up to 10mb are sent to the API.
-    sendLargePdfToApi: false,
+    sendLargePdfToApi: true,
 
     // TODO (PORTAL-1893) This flag should be enabled when the /holidays endpoint is ready for production.
     // The /holidays endpoint is still under development, but the holiday alert component is done.
