@@ -471,14 +471,14 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     # ScenarioDescriptor(
     #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_WITH_STANDARD_PAYMENT,
     #     payment_transaction_type=PaymentTransactionType.STANDARD,
-    #     is_employer_reimbursement_records_exists = True,
+    #     is_employer_reimbursement_records_exists=True,
     #     payment_method=PaymentMethod.CHECK,
     #     fineos_extract_address_valid=True,
     # ),
     # ScenarioDescriptor(
     #     scenario_name=ScenarioName.STANDARD_PAYMENT_WITH_TW_AND_ER,
     #     payment_transaction_type=PaymentTransactionType.STANDARD,
-    #     is_employer_reimbursement_records_exists = True,
+    #     is_employer_reimbursement_records_exists=True,
     #     is_tax_withholding_records_exists=True,
     #     payment_method=PaymentMethod.CHECK,
     #     fineos_extract_address_valid=True,
@@ -486,7 +486,7 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     # ScenarioDescriptor(
     #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_WITH_STANDARD_PAYMENT_INVALID_ADDRESS,
     #     payment_transaction_type=PaymentTransactionType.STANDARD,
-    #     is_employer_reimbursement_records_exists = True,
+    #     is_employer_reimbursement_records_exists=True,
     #     fineos_extract_address_valid=False,
     #     payment_method=PaymentMethod.CHECK,
     # ),

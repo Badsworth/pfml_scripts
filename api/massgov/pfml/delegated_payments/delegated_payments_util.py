@@ -282,6 +282,7 @@ class FineosExtractConstants:
             "PAYEEACCOUNTT",
             "EVENTTYPE",
             "PAYEEIDENTIFI",
+            "PAYEEFULLNAME",
             "EVENTREASON",
             "AMALGAMATIONC",
             "PAYMENTTYPE",

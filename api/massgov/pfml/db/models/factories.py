@@ -500,6 +500,11 @@ class PaymentFactory(BaseFactory):
     fineos_employee_first_name = factory.Faker("first_name")
     fineos_employee_last_name = factory.Faker("last_name")
 
+    payee_name = factory.Faker("company")
+    payment_transaction_type_id = (
+        employee_models.PaymentTransactionType.STANDARD.payment_transaction_type_id
+    )
+
 
 class PaymentDetailsFactory(BaseFactory):
     class Meta:

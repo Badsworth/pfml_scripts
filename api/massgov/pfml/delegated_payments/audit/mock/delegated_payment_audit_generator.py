@@ -454,6 +454,7 @@ def generate_scenario_data(
 
     payment_audit_data = PaymentAuditData(
         payment=payment,
+        employer_reimbursement_payment=None,
         is_first_time_payment=scenario_descriptor.is_first_time_payment,
         previously_errored_payment_count=previous_error_count,
         previously_rejected_payment_count=previously_rejected_payment_count,
@@ -464,9 +465,9 @@ def generate_scenario_data(
         net_payment_amount=str(payment.amount),
         federal_withholding_amount="",
         state_withholding_amount="",
+        employer_reimbursement_amount="",
         federal_withholding_i_value="",
         state_withholding_i_value="",
-        employer_reimbursement_amount="",
         employer_reimbursement_i_value="",
     )
 
