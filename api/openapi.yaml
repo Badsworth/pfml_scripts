@@ -3032,6 +3032,11 @@ components:
           format: uuid
           example: "2f0f58a0-fcad-465b-b474-ee6c961cd6e3"
           nullable: true
+        computed_earliest_submission_date:
+          type: string
+          format: date
+          example: "2022-07-04"
+          nullable: true
 
     ComputedStartDates:
       type: object
@@ -3141,38 +3146,7 @@ components:
             - Serious Health Condition - Employee
           example: "Child Bonding"
         reason_qualifier_one:
-          type: string
-          enum:
-            - Not Work Related
-            - Work Related
-            - Blood
-            - Blood Stem Cell
-            - Bone Marrow
-            - Organ
-            - Other
-            - Postnatal Disability
-            - Prenatal Care
-            - Prenatal Disability
-            - Adoption
-            - Foster Care
-            - Newborn
-            - Pregnancy Related
-            - Right to Leave
-            - Serious Health Condition
-            - Sickness - Non-Serious Health Condition
-            - Childcare
-            - Counseling
-            - Financial & Legal Arrangements
-            - Military Events & Related Activities
-            - Other Additional Activities
-            - Post Deployment Activities - Including Bereavement
-            - Rest & Recuperation
-            - Short Notice Deployment
-            - Closure of School/Childcare
-            - Quarantine/Isolation - Not Sick
-            - Birth Disability
-            - Childcare and School Activities
-          example: "Newborn"
+          $ref: "#/components/schemas/ReasonQualifierOne"
         reason_qualifier_two:
           type: string
           nullable: true
@@ -3700,18 +3674,8 @@ components:
             - Care for a Family Member
           example: "Child Bonding"
         reason_qualifier:
-          type: string
+          $ref: "#/components/schemas/ReasonQualifierOne"
           nullable: true
-          enum:
-            - Newborn
-            - Serious Health Condition
-            - Work Related Accident/Injury
-            - Adoption
-            - Foster Care
-            - Not Work Related
-            - Sickness
-            - Postnatal Disability
-          example: "Newborn"
         reduced_schedule_leave_periods:
           type: array
           nullable: true
@@ -3760,6 +3724,40 @@ components:
             - By Telephone
             - Other
           example: "In Writing"
+
+    ReasonQualifierOne:
+      type: string
+      example: "Newborn"
+      enum:
+        - Not Work Related
+        - Work Related
+        - Blood
+        - Blood Stem Cell
+        - Bone Marrow
+        - Organ
+        - Other
+        - Postnatal Disability
+        - Prenatal Care
+        - Prenatal Disability
+        - Adoption
+        - Foster Care
+        - Newborn
+        - Pregnancy Related
+        - Right to Leave
+        - Serious Health Condition
+        - Sickness - Non-Serious Health Condition
+        - Childcare
+        - Counseling
+        - Financial & Legal Arrangements
+        - Military Events & Related Activities
+        - Other Additional Activities
+        - Post Deployment Activities - Including Bereavement
+        - Rest & Recuperation
+        - Short Notice Deployment
+        - Closure of School/Childcare
+        - Quarantine/Isolation - Not Sick
+        - Birth Disability
+        - Childcare and School Activities
 
     ReducedScheduleLeavePeriods:
       type: object

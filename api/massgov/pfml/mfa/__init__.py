@@ -45,7 +45,7 @@ def handle_mfa_disabled(
 def _collect_log_attributes(
     updated_by: MFAUpdatedBy, last_enabled_at: Optional[datetime]
 ) -> Dict[str, Any]:
-    log_attributes: Dict[str, Any] = {"updated_by": updated_by}
+    log_attributes: Dict[str, Any] = {"updated_by": updated_by.value}
 
     # TODO: investigate why this is happening: https://lwd.atlassian.net/browse/PORTAL-1678
     if last_enabled_at is None:

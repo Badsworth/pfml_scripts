@@ -147,28 +147,40 @@ export const Payments = ({
     status: string,
     amount: number | null,
     writeback_transaction_status: WritebackTransactionStatus,
-    transaction_date: string | null
+    transaction_date: string | null,
+    transaction_date_could_change: boolean
   ) => {
     if (status === "Sent to bank") {
       return t("pages.payments.tableAmountSent", { amount });
-    } else if (
-      status === "Pending" ||
-      (isFeatureEnabled("claimantShowPaymentsPhaseThree") &&
-        status === "Delayed" &&
-        transaction_date &&
+    }
+    if (status === "Pending") {
+      return "Processing";
+    }
+    const isDelayedAndShowsProcessing =
+      status === "Delayed" &&
+      ((transaction_date &&
         !isAfterDelayProcessingTime(
           writeback_transaction_status,
-          transaction_date
-        ))
+          transaction_date,
+          transaction_date_could_change
+        )) ||
+        transaction_date_could_change);
+
+    if (
+      isFeatureEnabled("claimantShowPaymentsPhaseThree") &&
+      isDelayedAndShowsProcessing
     ) {
       return "Processing";
     }
     return status;
   };
 
-  const getPaymentMethod = (payment_method: string) => {
+  const getPaymentMethodText = (
+    payment_method: string,
+    transaction_date_could_change: boolean
+  ) => {
     if (payment_method === "Check") {
-      return "check";
+      return transaction_date_could_change ? "check mailing" : "check";
     } else {
       return "direct deposit";
     }
@@ -178,7 +190,8 @@ export const Payments = ({
     status: string,
     payment_method: string,
     writeback_transaction_status: WritebackTransactionStatus,
-    transaction_date: string | null
+    transaction_date: string | null,
+    transaction_date_could_change: boolean
   ) => {
     if (status === "Sent to bank" && payment_method === "Check") {
       return "Check";
@@ -189,17 +202,59 @@ export const Payments = ({
       // Handle delay cases below
       if (isBlank(transaction_date)) return "Pending";
 
+      // condition to display specific delay text
       const shouldShowWritebackSpecificText = isAfterDelayProcessingTime(
         writeback_transaction_status,
-        transaction_date
+        transaction_date,
+        transaction_date_could_change
       );
-      return shouldShowWritebackSpecificText
-        ? writeback_transaction_status in PROCESSING_DAYS_PER_DELAY
-          ? `${status}_${writeback_transaction_status}`
-          : `${status}_Default`
-        : "Pending";
+
+      // case where we won't have a static transaction_date/can't set expected_send_dates
+      if (transaction_date_could_change) {
+        return `${status}_Processing`;
+      } else {
+        // case where will show delay message text
+        if (shouldShowWritebackSpecificText) {
+          return writeback_transaction_status in PROCESSING_DAYS_PER_DELAY
+            ? `${status}_${writeback_transaction_status}`
+            : `${status}_Default`;
+        } else {
+          // intermediary period where we will show Pending/Processing text
+          return `${status}_ProcessingWithDate`;
+        }
+      }
     }
     return status;
+  };
+
+  const calculateProcessingDates = (
+    expected_send_date_start: string | null,
+    expected_send_date_end: string | null,
+    transaction_date: string | null,
+    writeback_transaction_status: WritebackTransactionStatus,
+    transaction_date_could_change: boolean
+  ) => {
+    if (expected_send_date_start && expected_send_date_end) {
+      return formatDateRange(
+        expected_send_date_start,
+        expected_send_date_end,
+        "and"
+      );
+    }
+    const oneBusinessDayAfterTransaction = dayjs(transaction_date)
+      .addBusinessDays(1)
+      .format("YYYY-MM-DD");
+    const delayTiming =
+      PROCESSING_DAYS_PER_DELAY[writeback_transaction_status] ??
+      (transaction_date_could_change ? 5 : 3);
+    const severalBusinessDaysAfterTransaction = dayjs(transaction_date)
+      .addBusinessDays(delayTiming + 1)
+      .format("YYYY-MM-DD");
+    return formatDateRange(
+      oneBusinessDayAfterTransaction,
+      severalBusinessDaysAfterTransaction,
+      "and"
+    );
   };
 
   return (
@@ -311,6 +366,7 @@ export const Payments = ({
                       status,
                       writeback_transaction_status,
                       transaction_date,
+                      transaction_date_could_change,
                     }) => {
                       return (
                         <tr key={payment_id}>
@@ -328,7 +384,8 @@ export const Payments = ({
                               status,
                               amount,
                               writeback_transaction_status,
-                              transaction_date
+                              transaction_date,
+                              transaction_date_could_change
                             )}
                           </td>
                           <td data-label={tableColumns[2]}>
@@ -339,13 +396,19 @@ export const Payments = ({
                                   status,
                                   payment_method,
                                   writeback_transaction_status,
-                                  transaction_date
+                                  transaction_date,
+                                  transaction_date_could_change
                                 ),
-                                paymentMethod: getPaymentMethod(payment_method),
-                                payPeriod: formatDateRange(
+                                paymentMethod: getPaymentMethodText(
+                                  payment_method,
+                                  transaction_date_could_change
+                                ),
+                                payPeriod: calculateProcessingDates(
                                   expected_send_date_start,
                                   expected_send_date_end,
-                                  "and"
+                                  transaction_date,
+                                  writeback_transaction_status,
+                                  transaction_date_could_change
                                 ),
                                 sentDate:
                                   dayjs(sent_to_bank_date).format(

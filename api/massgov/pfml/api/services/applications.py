@@ -75,7 +75,7 @@ from massgov.pfml.db.models.employees import (
     User,
 )
 from massgov.pfml.db.models.geo import GeoState
-from massgov.pfml.fineos import AbstractFINEOSClient
+from massgov.pfml.fineos import AbstractFINEOSClient, exception
 from massgov.pfml.fineos.models.customer_api import AbsencePeriodStatus, PhoneNumber
 from massgov.pfml.fineos.models.customer_api.spec import (
     AbsenceDetails,
@@ -1120,14 +1120,28 @@ def _parse_reduced_leave_period(
         application_id=application_id,
         start_date=reduced_period.startDate,
         end_date=reduced_period.endDate,
-        sunday_off_minutes=reduced_period.sundayOffMinutes,
-        monday_off_minutes=reduced_period.mondayOffMinutes,
-        tuesday_off_minutes=reduced_period.tuesdayOffMinutes,
-        wednesday_off_minutes=reduced_period.wednesdayOffMinutes,
-        thursday_off_minutes=reduced_period.thursdayOffMinutes,
-        friday_off_minutes=reduced_period.fridayOffMinutes,
-        saturday_off_minutes=reduced_period.saturdayOffMinutes,
+        sunday_off_minutes=off_minutes_from_day("sunday", reduced_period),
+        monday_off_minutes=off_minutes_from_day("monday", reduced_period),
+        tuesday_off_minutes=off_minutes_from_day("tuesday", reduced_period),
+        wednesday_off_minutes=off_minutes_from_day("wednesday", reduced_period),
+        thursday_off_minutes=off_minutes_from_day("thursday", reduced_period),
+        friday_off_minutes=off_minutes_from_day("friday", reduced_period),
+        saturday_off_minutes=off_minutes_from_day("saturday", reduced_period),
     )
+
+
+def off_minutes_from_day(
+    day: str, reduced_period: ReportedReducedScheduleLeavePeriod
+) -> Optional[int]:
+    period = reduced_period.dict()
+    minutes = period[f"{day}OffMinutes"]
+    hours = period[f"{day}OffHours"]
+    if minutes is not None and hours is not None:
+        minutes = minutes_from_hours_minutes(hours, minutes)
+    else:
+        if hours is not None:
+            minutes = hours * 60
+    return minutes
 
 
 def _set_continuous_leave_periods(
@@ -1286,10 +1300,6 @@ def set_application_absence_and_leave_period(
         )
         _set_has_future_child_date(application, absence_period)
     application.submitted_time = absence_details.creationDate
-    application.employer_notification_date = absence_details.notificationDate
-    application.employer_notified = application.employer_notification_date is not None
-
-    return
 
 
 def minutes_from_hours_minutes(hours: int, minutes: int) -> int:
@@ -1333,9 +1343,26 @@ def set_employment_status_and_occupations(
     if occupation.occupationId is None:
         return
 
-    fineos_work_patterns = fineos_client.get_week_based_work_pattern(
-        fineos_web_id, occupation.occupationId
-    )
+    fineos_work_patterns = None
+    try:
+        fineos_work_patterns = fineos_client.get_week_based_work_pattern(
+            fineos_web_id, occupation.occupationId
+        )
+    except exception.FINEOSForbidden:
+        # Known FINEOS limitation, where it responds with a 403 for Variable work pattern types
+        logger.info(
+            "Received FINEOS forbidden response when getting week-based work pattern.",
+            extra={
+                "absence_case_id": application.claim.fineos_absence_id
+                if application.claim
+                else None,
+                "occupationId": occupation.occupationId,
+            },
+        )
+
+    if fineos_work_patterns is None:
+        return
+
     if fineos_work_patterns.workPatternType != WorkPatternType.FIXED.work_pattern_type_description:
         newrelic_util.log_and_capture_exception(
             f"Application work pattern type is not {WorkPatternType.FIXED.work_pattern_type_description}",

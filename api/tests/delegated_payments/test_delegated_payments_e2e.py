@@ -515,7 +515,7 @@ def test_e2e_pub_payments(
         assert_claim_state_for_scenarios(
             test_dataset=test_dataset,
             scenario_names=valid_claim_scenarios,
-            end_state=State.DELEGATED_CLAIM_EXTRACTED_FROM_FINEOS,
+            end_state=None,
             db_session=test_db_session,
         )
         assert_claim_state_for_scenarios(
@@ -3120,7 +3120,7 @@ def assert_files(folder_path, expected_files, file_prefix=""):
 def assert_claim_state_for_scenarios(
     test_dataset: TestDataSet,
     scenario_names: List[ScenarioName],
-    end_state: LkState,
+    end_state: Optional[LkState],
     db_session: db.Session,
 ):
     for scenario_name in scenario_names:
@@ -3133,13 +3133,17 @@ def assert_claim_state_for_scenarios(
             state_log = state_log_util.get_latest_state_log_in_flow(
                 claim, Flow.DELEGATED_CLAIM_VALIDATION, db_session
             )
-
-            assert (
-                state_log is not None
-            ), f"No state found for scenario: {scenario_name}, {claim.state_logs}"
-            assert (
-                state_log.end_state_id == end_state.state_id
-            ), f"Unexpected claim state for scenario: {scenario_name}, expected: {end_state.state_description}, found: {state_log.end_state.state_description}"
+            if end_state is None:
+                assert (
+                    state_log is None
+                ), f"Expected state log to be none for claim in scenario {scenario_name}, found {state_log.end_state.state_description}"
+            else:
+                assert (
+                    state_log is not None
+                ), f"No state found for scenario: {scenario_name}, {claim.state_logs}"
+                assert (
+                    state_log.end_state_id == end_state.state_id
+                ), f"Unexpected claim state for scenario: {scenario_name}, expected: {end_state.state_description}, found: {state_log.end_state.state_description}"
 
 
 def assert_payment_state_for_scenarios(

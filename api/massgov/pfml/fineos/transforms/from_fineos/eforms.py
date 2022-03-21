@@ -48,11 +48,13 @@ class TransformOtherLeaveAttributes(TransformEformAttributes):
             "name": "leave_minutes",
             "type": "enumValue",
             "embeddedProperty": "instanceValue",
+            "defaultValue": None,
         },
         "V2MinutesWorked": {
             "name": "worked_per_week_minutes",
             "type": "enumValue",
             "embeddedProperty": "instanceValue",
+            "defaultValue": None,
         },
         "V2TotalHours": {
             "name": "total_leave_hours",

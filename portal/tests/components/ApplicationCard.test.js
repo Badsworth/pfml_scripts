@@ -5,6 +5,7 @@ import { DocumentsLoadError } from "../../src/errors";
 import { MockBenefitsApplicationBuilder } from "../test-utils";
 import React from "react";
 import User from "../../src/models/User";
+import dayjs from "dayjs";
 import { merge } from "lodash";
 import useAppLogic from "../../src/hooks/useAppLogic";
 
@@ -162,5 +163,35 @@ describe("ApplicationCard", () => {
     expect(
       screen.queryByRole("button", { name: /View your notices/ })
     ).not.toBeInTheDocument();
+  });
+
+  describe("Submission date in future alert", () => {
+    const claim = new MockBenefitsApplicationBuilder().create();
+
+    const recentClaim = new MockBenefitsApplicationBuilder()
+      .computedEarliestSubmissionDate(dayjs().format("YYYY-MM-DD"))
+      .create();
+
+    const futureClaim = new MockBenefitsApplicationBuilder()
+      .computedEarliestSubmissionDate("2053-08-02")
+      .create();
+
+    const alertText = /You will be able to submit this application on/;
+
+    it("does not display if earliest claim submission date is null", () => {
+      render(<ApplicationCardWithAppLogic claim={claim} />);
+      expect(screen.queryByText(alertText)).not.toBeInTheDocument();
+    });
+
+    it("does not display if earliest claim submission date is today or earlier", () => {
+      render(<ApplicationCardWithAppLogic claim={recentClaim} />);
+      expect(screen.queryByText(alertText)).not.toBeInTheDocument();
+    });
+
+    it("displays when earliest claim submission date is in future", () => {
+      render(<ApplicationCardWithAppLogic claim={futureClaim} />);
+      expect(screen.queryByText(alertText)).toBeInTheDocument();
+      expect(screen.queryByText(/8\/2\/2053/)).toBeInTheDocument();
+    });
   });
 });

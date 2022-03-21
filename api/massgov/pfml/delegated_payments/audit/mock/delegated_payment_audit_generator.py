@@ -30,7 +30,6 @@ from massgov.pfml.db.models.factories import (
     EmployeeFactory,
     EmployerFactory,
     ExperianAddressPairFactory,
-    PaymentFactory,
 )
 from massgov.pfml.db.models.payments import PaymentAuditReportType
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
@@ -245,23 +244,20 @@ def create_payment_with_end_state(
 
     payment_amount = round(decimal.Decimal(random.uniform(1, 1000)), 2)
 
-    payment = PaymentFactory.create(
+    payment = DelegatedPaymentFactory(
+        db_session,
         fineos_pei_c_value=c_value,
         fineos_pei_i_value=i_value,
         claim=claim,
-        disb_method_id=payment_method.payment_method_id,
+        payment_method=payment_method,
         amount=payment_amount,
         payment_date=payment_date,
         period_start_date=period_start_date,
         period_end_date=period_end_date,
-        absence_case_creation_date=absence_case_creation_date,
         experian_address_pair=address_pair,
-        leave_request_decision="Approved",
-    )
-
-    state_log_util.create_finished_state_log(
-        payment, end_state, state_log_util.build_outcome("test"), db_session
-    )
+    ).get_or_create_payment_with_state(end_state)
+    payment.absence_case_creation_date = absence_case_creation_date
+    payment.leave_request_decision = "Approved"
 
     return payment
 

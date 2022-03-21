@@ -589,6 +589,8 @@ def generate_payment_extract_files(
         if scenario_descriptor.payment_close_to_cap:
             # The cap is $850.00
             payment_amount = "800.00"
+        elif scenario_descriptor.payment_over_cap:
+            payment_amount = "860.00"
         else:
             payment_amount = "100.00"
 
