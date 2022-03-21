@@ -252,7 +252,7 @@ class ScenarioDescriptor:
 
     # Manual rejects
     manual_pub_reject_response: bool = False
-    manual_pub_reject_notes: str = "Manual Failure Test"
+    manual_pub_reject_notes: str = "Invalid Routing Number"
 
 
 SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [

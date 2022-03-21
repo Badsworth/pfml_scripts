@@ -1197,6 +1197,10 @@ class FineosWritebackTransactionStatus(LookupTable):
         30, "Invalid Routing Number", PENDING_ACTIVE_WRITEBACK_RECORD_STATUS
     )
 
+    PUB_PAYMENT_RETURNED = LkFineosWritebackTransactionStatus(
+        31, "PUB Payment Returned", PENDING_ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
 
 class AuditReportAction(str, Enum):
     REJECTED = "REJECTED"

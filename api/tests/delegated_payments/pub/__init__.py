@@ -12,7 +12,7 @@ def assert_pub_error(db_session, pub_error_type, message):
 
     pub_error = pub_errors[0]
     assert pub_error.pub_error_type_id == pub_error_type.pub_error_type_id
-    assert pub_error.message == message
+    assert pub_error.message == message, f"expected: {message}, recieved: {pub_error.message}"
 
 
 def assert_pub_eft_prenote_state(
