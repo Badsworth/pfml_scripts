@@ -1192,6 +1192,7 @@ def test_set_other_incomes_from_fineos(
         EFormSummary(eformId=2, eformType=EformTypes.OTHER_INCOME),  # should not be parsed
         EFormSummary(eformId=3, eformType=EformTypes.OTHER_LEAVES),  # should not be parsed
     ]
+
     mock_customer_get_eform.return_value = EForm(
         eformId=211714,
         eformType="Other Income - current version",
@@ -1220,6 +1221,7 @@ def test_set_other_incomes_from_fineos(
                 name="V2ReceiveWageReplacement",
                 enumValue=ModelEnum(domainName="YesNoI'veApplied", instanceValue="Yes"),
             ),
+            EFormAttribute(name="V2OtherIncomeNonEmployerBenefitAmount1", decimalValue=100.0),
         ],
     )
     set_other_incomes_from_fineos(
@@ -1230,12 +1232,17 @@ def test_set_other_incomes_from_fineos(
         absence_case_id,
         eform_summaries=eform_summaries,
     )
+
     assert application.has_other_incomes is True
+    assert application.other_incomes[0].income_amount_dollars == 100
+    assert (
+        application.other_incomes[0].income_type_id == 7
+    )  # OTHER EMPLOYER INCOME TYPE (lk_other_income_type)
     assert len(application.other_incomes) == 1
 
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.customer_get_eform")
-def test_set_other_incomes_from_fineos_employer_income(
+def test_set_other_incomes_with_multiple_different_income_types(
     mock_customer_get_eform,
     fineos_client,
     fineos_web_id,
@@ -1243,16 +1250,11 @@ def test_set_other_incomes_from_fineos_employer_income(
     test_db_session,
     absence_case_id,
 ):
-    eform_summaries = [
-        EFormSummary(eformId=1, eformType=EformTypes.OTHER_INCOME_V2),
-        EFormSummary(eformId=2, eformType=EformTypes.OTHER_INCOME),  # should not be parsed
-        EFormSummary(eformId=3, eformType=EformTypes.OTHER_LEAVES),  # should not be parsed
-    ]
+
     mock_customer_get_eform.return_value = EForm(
         eformId=211714,
         eformType="Other Income - current version",
         eformAttributes=[
-            # Minimum info needed to create Previous Leaves, both other and same reason:
             EFormAttribute(
                 name="V2OtherIncomeNonEmployerBenefitStartDate",
                 dateValue="2021-05-04",
@@ -1266,15 +1268,24 @@ def test_set_other_incomes_from_fineos_employer_income(
                 enumValue=ModelEnum(domainName="FrequencyEforms", instanceValue="Per Month"),
             ),
             EFormAttribute(
-                name="V2OtherIncomeNonEmployerBenefitWRT",
+                name="V2OtherIncomeNonEmployerBenefitWRT1",
                 enumValue=ModelEnum(
-                    domainName="WageReplacementType2", instanceValue="Workers Compensation"
+                    domainName="WageReplacementType2", instanceValue="Jones Act benefits"
+                ),
+            ),
+            EFormAttribute(
+                name="V2OtherIncomeNonEmployerBenefitWRT2",
+                enumValue=ModelEnum(
+                    domainName="WageReplacementType2",
+                    instanceValue="Disability benefits under a governmental retirement plan such as STRS or PERS",
                 ),
             ),
             EFormAttribute(
                 name="V2ReceiveWageReplacement",
                 enumValue=ModelEnum(domainName="YesNoI'veApplied", instanceValue="Yes"),
             ),
+            EFormAttribute(name="V2OtherIncomeNonEmployerBenefitAmount1", decimalValue=100.0),
+            EFormAttribute(name="V2OtherIncomeNonEmployerBenefitAmount2", decimalValue=200.0),
         ],
     )
     set_other_incomes_from_fineos(
@@ -1283,7 +1294,14 @@ def test_set_other_incomes_from_fineos_employer_income(
         application,
         test_db_session,
         absence_case_id,
-        eform_summaries=eform_summaries,
+        eform_summaries=[EFormSummary(eformId=1, eformType=EformTypes.OTHER_INCOME_V2)],
     )
-    assert application.has_other_incomes is False
-    assert len(application.other_incomes) == 0
+    assert application.has_other_incomes is True
+
+    assert application.other_incomes[0].income_amount_dollars == 100
+    assert application.other_incomes[0].income_type_id == 5  # (lk_other_income_type)
+
+    assert application.other_incomes[1].income_amount_dollars == 200
+    assert application.other_incomes[1].income_type_id == 4  # (lk_other_income_type)
+
+    assert len(application.other_incomes) == 2

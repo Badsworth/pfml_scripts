@@ -1677,9 +1677,8 @@ def set_other_incomes_from_fineos(
             [
                 income
                 for income in TransformOtherIncomeNonEmployerEform.from_fineos(eform)
-                if income.income_type == apps_common_io.OtherIncomeType.other_employer
+                if income.income_type in set(apps_common_io.OtherIncomeType)
             ]
         )
-
     application.has_other_incomes = len(other_incomes) > 0
     set_other_incomes(db_session, other_incomes, application)
