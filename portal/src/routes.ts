@@ -42,6 +42,7 @@ const routes = {
     leavePeriodIntermittent: "/applications/leave-period-intermittent",
     leavePeriodReducedSchedule: "/applications/leave-period-reduced-schedule",
     leaveReason: "/applications/leave-reason",
+    missingEeErMatch: "/applications/no-employee-employer-match",
     name: "/applications/name",
     notifiedEmployer: "/applications/notified-employer",
     otherIncomes: "/applications/other-incomes",

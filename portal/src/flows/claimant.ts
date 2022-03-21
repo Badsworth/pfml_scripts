@@ -19,6 +19,7 @@ import BenefitsApplication, {
 
 import { ClaimSteps } from "../models/Step";
 import { UploadType } from "../pages/applications/upload/index";
+import { ValidationError } from "../errors";
 import { fields as addressFields } from "../pages/applications/address";
 import { fields as concurrentLeavesDetailsFields } from "../pages/applications/concurrent-leaves-details";
 import { fields as concurrentLeavesFields } from "../pages/applications/concurrent-leaves";
@@ -61,6 +62,7 @@ import { fields as workPatternTypeFields } from "../pages/applications/work-patt
 export interface ClaimantFlowContext {
   claim?: BenefitsApplication;
   isAdditionalDoc?: boolean;
+  errors?: ValidationError[];
 }
 
 type ClaimFlowGuardFn = (context: ClaimantFlowContext) => boolean;
@@ -101,6 +103,12 @@ export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.fixed,
   isVariableWorkPattern: ({ claim }) =>
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.variable,
+  includesUserNotFoundError: ({ claim, errors }) =>
+    (errors || []).some(
+      (error) =>
+        error.issues[0].field === "require_employer" ||
+        error.issues[0].type === "no_ee_er_match"
+    ) && get(claim, "status") !== "In Manual Review",
 };
 
 /**
@@ -634,6 +642,32 @@ const claimantFlow: {
           },
           {
             target: routes.applications.checklist,
+          },
+        ],
+        ERROR: [
+          {
+            target: routes.applications.missingEeErMatch,
+            cond: "includesUserNotFoundError",
+          },
+        ],
+      },
+    },
+    [routes.applications.missingEeErMatch]: {
+      on: {
+        // if claimant successfully fixes the issue, continue through normal flow
+        CONTINUE: [
+          {
+            target: routes.applications.department,
+          },
+        ],
+        // if there's still an error, start user not found submission flow
+        ERROR: [
+          {
+            target: routes.applications.userNotFoundPageOne,
+            cond: "includesUserNotFoundError",
+          },
+          {
+            target: routes.applications.employmentStatus,
           },
         ],
       },

@@ -242,6 +242,9 @@ export const BenefitsApplicationStatus = {
   started: "Started",
   // Stored in the claims processing system (Step 3)
   submitted: "Submitted",
+  // User not found - No link between employee and employer
+  // User completed Step 1 and part of Step 2 along with additional information to help make a manual match
+  inManualReview: "In Manual Review",
 } as const;
 
 /**
