@@ -320,22 +320,22 @@ export class DAORunIndicators extends BaseDAOV2 {
   }
 
   query() {
-    const q_1 = GROUPS.map((group) => {
+    function queryGroup(group) {
       let groupAlias = group;
       if (group === "Stable") {
         group = "Commit Stable";
       }
-      return `, filter(count (pass), WHERE group = '${group}') as ${groupAlias}_total
-    , filter(count (pass), WHERE pass is true and group = '${group}') as ${groupAlias}_passCount
-    , filter(count (pass), WHERE fail is true and group = '${group}') as ${groupAlias}_failCount
+      return `, filter(count (pass), WHERE group = '${group}' AND duration != 0) as ${groupAlias}_total
+    , filter(count (pass), WHERE pass is true and group = '${group}' AND duration != 0) as ${groupAlias}_passCount
+    , filter(count (pass), WHERE fail is true and group = '${group}' AND duration != 0) as ${groupAlias}_failCount
     ${
       group !== "Integration"
         ? `, filter(latest(runUrl), WHERE group = '${group}') as ${groupAlias}_runUrl`
         : ``
     }
     `;
-    }).join("");
-
+    }
+    const q_1 = GROUPS.map(queryGroup).join("");
     return `SELECT MAX(timestamp) as time
     , min(timestamp) as start
     , count (pass) as total

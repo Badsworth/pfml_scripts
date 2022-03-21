@@ -39,6 +39,14 @@ def test_populate_payments(populate_payments_step, local_test_db_session):
     assert after_payment_counts is not None
 
 
+def test_get_payments_no_batch_for_employee(
+    local_initialize_factories_session, local_test_db_session
+):
+    employee_id = "a9c98c3f-eaaf-4f68-9a03-13561537c023"
+    batch = pfml_1099_util.get_last_1099_batch_for_employee(local_test_db_session, employee_id)
+    assert batch is None
+
+
 def _payment_factory(
     pub_individual_id, test_db_session, end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT
 ) -> Payment:

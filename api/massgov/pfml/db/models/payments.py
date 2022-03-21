@@ -1197,6 +1197,10 @@ class FineosWritebackTransactionStatus(LookupTable):
         30, "Invalid Routing Number", PENDING_ACTIVE_WRITEBACK_RECORD_STATUS
     )
 
+    PUB_PAYMENT_RETURNED = LkFineosWritebackTransactionStatus(
+        31, "PUB Payment Returned", PENDING_ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
 
 class AuditReportAction(str, Enum):
     REJECTED = "REJECTED"
@@ -1463,9 +1467,7 @@ class LinkSplitPayment(Base, TimestampMixin):
     related_payment_id = Column(PostgreSQLUUID, ForeignKey("payment.payment_id"), primary_key=True)
 
     payment = relationship(Payment, foreign_keys=[payment_id])
-    related_payment = cast(
-        "Optional[Payment]", relationship(Payment, foreign_keys=[related_payment_id])
-    )
+    related_payment = relationship(Payment, foreign_keys=[related_payment_id])
 
 
 #### Writeback Status Mapping Configuration

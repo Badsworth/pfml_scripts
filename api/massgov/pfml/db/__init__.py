@@ -61,6 +61,7 @@ def init(
         massgov.pfml.db.models.applications.sync_state_metrics(session_factory)
         massgov.pfml.db.models.azure.sync_azure_permissions(session_factory)
         massgov.pfml.db.models.payments.sync_lookup_tables(session_factory)
+        massgov.pfml.db.models.applications.sync_holidays(session_factory)
 
     if check_migrations_current:
         have_all_migrations_run(engine)

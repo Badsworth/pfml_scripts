@@ -682,6 +682,36 @@ class LeaveReasonQualifier(LookupTable):
     SICKNESS = LkLeaveReasonQualifier(7, "Sickness")
     POSTNATAL_DISABILITY = LkLeaveReasonQualifier(8, "Postnatal Disability")
 
+    WORK_RELATED = LkLeaveReasonQualifier(9, "Work Related")
+    BLOOD = LkLeaveReasonQualifier(10, "Blood")
+    BLOOD_STEM_CELL = LkLeaveReasonQualifier(11, "Blood Stem Cell")
+    BONE_MARROW = LkLeaveReasonQualifier(12, "Bone Marrow")
+    ORGAN = LkLeaveReasonQualifier(13, "Organ")
+    OTHER = LkLeaveReasonQualifier(14, "Other")
+    PRENATAL_CARE = LkLeaveReasonQualifier(15, "Prenatal Care")
+    PRENATAL_DISABILITY = LkLeaveReasonQualifier(16, "Prenatal Disability")
+    PREGNANCY_RELATED = LkLeaveReasonQualifier(17, "Pregnancy Related")
+    RIGHT_TO_LEAVE = LkLeaveReasonQualifier(18, "Right to Leave")
+    SICKNESS_NON_SERIOUS_HEALTH_CONDITION = LkLeaveReasonQualifier(
+        19, "Sickness - Non-Serious Health Condition"
+    )
+    CHILDCARE = LkLeaveReasonQualifier(20, "Childcare")
+    COUNSELING = LkLeaveReasonQualifier(21, "Counseling")
+    FINANCIAL_AND_LEGAL_ARRANGEMENTS = LkLeaveReasonQualifier(22, "Financial & Legal Arrangements")
+    MILITARY_EVENTS_AND_RELATED_ACTIVITIES = LkLeaveReasonQualifier(
+        23, "Military Events & Related Activities"
+    )
+    OTHER_ADDITIONAL_ACTIVITIES = LkLeaveReasonQualifier(24, "Other Additional Activities")
+    POST_DEPLOYMENT_ACTIVITES_INCLUDING_BEREAVEMENT = LkLeaveReasonQualifier(
+        25, "Post Deployment Activities - Including Bereavement"
+    )
+    REST_AND_RECUPERATION = LkLeaveReasonQualifier(26, "Rest & Recuperation")
+    SHORT_NOTICE_DEPLOYMENT = LkLeaveReasonQualifier(27, "Short Notice Deployment")
+    CLOSURE_OF_SCHOOL_CHILDCARE = LkLeaveReasonQualifier(28, "Closure of School/Childcare")
+    QUARANTINE_ISOLATION_NON_SICK = LkLeaveReasonQualifier(29, "Quarantine/Isolation - Not Sick")
+    BIRTH_DISABILITY = LkLeaveReasonQualifier(30, "Birth Disability")
+    CHILDCARE_AND_SCHOOL_ACTIVITIES = LkLeaveReasonQualifier(31, "Childcare and School Activities")
+
 
 class RelationshipToCaregiver(LookupTable):
     model = LkRelationshipToCaregiver
@@ -1025,6 +1055,67 @@ class PreviousLeaveQualifyingReason(LookupTable):
     MILITARY_EXIGENCY_FAMILY = LkPreviousLeaveQualifyingReason(
         6, "Managing family affairs while a family member is on active duty in the armed forces"
     )
+
+
+class Holiday(Base, TimestampMixin):
+    __tablename__ = "holiday"
+
+    holiday_id = Column(Integer, nullable=False, primary_key=True)
+    date = Column(Date, nullable=False, index=True)
+    holiday_name = Column(Text, nullable=False)
+
+
+def _are_holidays_valid(holidays: list[Holiday]) -> bool:
+    holiday_ids = [holiday.holiday_id for holiday in holidays]
+    if len(holiday_ids) != len(set(holiday_ids)):
+        return False
+
+    all_days_valid = True
+    for holiday in holidays:
+        if holiday.date.weekday() == 6:
+            all_days_valid = False
+
+    return all_days_valid
+
+
+def sync_holidays(db_session):
+    # See: https://www.sec.state.ma.us/cis/cispdf/ma_legal_holiday.pdf
+    holidays = [
+        Holiday(holiday_id=1, date=datetime.date(2022, 1, 1), holiday_name="New Year's Day"),
+        Holiday(
+            holiday_id=2,
+            date=datetime.date(2022, 1, 17),
+            holiday_name="Martin Luther King, Jr. Day",
+        ),
+        Holiday(
+            holiday_id=3, date=datetime.date(2022, 2, 21), holiday_name="Washington's Birthday"
+        ),
+        Holiday(holiday_id=4, date=datetime.date(2022, 4, 18), holiday_name="Patriots' Day"),
+        Holiday(holiday_id=5, date=datetime.date(2022, 5, 30), holiday_name="Memorial Day"),
+        Holiday(
+            holiday_id=6,
+            date=datetime.date(2022, 6, 20),  # The 19th falls on a Sunday
+            holiday_name="Juneteenth Independence Day",
+        ),
+        Holiday(holiday_id=7, date=datetime.date(2022, 7, 4), holiday_name="Independence Day"),
+        Holiday(holiday_id=8, date=datetime.date(2022, 9, 5), holiday_name="Labor Day"),
+        Holiday(holiday_id=9, date=datetime.date(2022, 10, 10), holiday_name="Columbus Day"),
+        Holiday(holiday_id=10, date=datetime.date(2022, 11, 11), holiday_name="Veterans' Day"),
+        Holiday(holiday_id=11, date=datetime.date(2022, 11, 24), holiday_name="Thanksgiving Day"),
+        Holiday(holiday_id=12, date=datetime.date(2022, 12, 26), holiday_name="Christmas Day"),
+    ]
+
+    if not _are_holidays_valid(holidays):
+        raise Exception(
+            "Configured dates were not valid.  Please make sure all have a unique holiday_id and dates do not follow on a Sunday"
+        )
+
+    for holiday in holidays:
+        instance = db_session.merge(holiday)
+        if db_session.is_modified(instance):
+            logger.info("updating holiday %r", holiday.holiday_name)
+
+    db_session.commit()
 
 
 def sync_lookup_tables(db_session):

@@ -47,7 +47,9 @@ def test_decryption(monkeypatch, test_db_session):
 
     decrypter = GpgCrypt(decryption_key, passphrase, test_email)
 
-    employer_file_path = TEST_FOLDER / "importer" / "encryption" / "DORDUADFMLEMP_20211210131901"
+    employer_file_path = (
+        TEST_FOLDER / "importer" / "encryption" / "DORDUADFML_SUBMISSION_20211210131901"
+    )
     exemption_file_path = TEST_FOLDER / "importer" / "CompaniesReturningToStatePlan.csv"
 
     import_files = list()
@@ -70,7 +72,9 @@ def test_decryption(monkeypatch, test_db_session):
 
 
 def test_account_key_set_single_file(monkeypatch, test_db_session):
-    employer_file_path = TEST_FOLDER / "importer" / "encryption" / "DORDUADFMLEMP_20211210131901"
+    employer_file_path = (
+        TEST_FOLDER / "importer" / "encryption" / "DORDUADFML_SUBMISSION_20211210131901"
+    )
     exemption_file_path = TEST_FOLDER / "importer" / "CompaniesReturningToStatePlan.csv"
 
     monkeypatch.setenv("DECRYPT", "true")
@@ -190,7 +194,9 @@ def test_update_existing_employer_cease_date(
     cease_date = datetime.strptime("1/1/2025", "%m/%d/%Y").date()
     employer = EmployerFactory.create(employer_fein="100000001", exemption_cease_date=cease_date)
 
-    employer_file_path = TEST_FOLDER / "importer" / "encryption" / "DORDUADFMLEMP_20211210131901"
+    employer_file_path = (
+        TEST_FOLDER / "importer" / "encryption" / "DORDUADFML_SUBMISSION_20211210131901"
+    )
     exemption_file_path = TEST_FOLDER / "importer" / "CompaniesReturningToStatePlan.csv"
 
     import_files = list()
@@ -333,10 +339,12 @@ def test_insert_wage_rows_existing_employee(
 
 @pytest.mark.timeout(60)
 def test_e2e(monkeypatch, test_db_session, mock_s3_bucket, mock_dfml_s3_bucket):
-    file_name = "DORDUADFMLEMP_20211210131901"
+    file_name = "DORDUADFML_SUBMISSION_20211210131901"
     exemption_file_name = "CompaniesReturningToStatePlan.csv"
 
-    employer_file_path = TEST_FOLDER / "importer" / "encryption" / "DORDUADFMLEMP_20211210131901"
+    employer_file_path = (
+        TEST_FOLDER / "importer" / "encryption" / "DORDUADFML_SUBMISSION_20211210131901"
+    )
     exemption_file_path = TEST_FOLDER / "importer" / "CompaniesReturningToStatePlan.csv"
 
     employer_file = open(employer_file_path, "rb")
@@ -369,14 +377,16 @@ def test_e2e(monkeypatch, test_db_session, mock_s3_bucket, mock_dfml_s3_bucket):
     assert should_exist_2 is not None
 
     import_files = get_pending_filing_files_to_process(full_received_folder_path)
-    assert import_files[0] == "s3://test_dfml_bucket/dor/received/DORDUADFMLEMP_20211210131901"
+    assert (
+        import_files[0] == "s3://test_dfml_bucket/dor/received/DORDUADFML_SUBMISSION_20211210131901"
+    )
 
     path_without_slash = full_received_folder_path[:-1]
     assert path_without_slash == "s3://test_dfml_bucket/dor/received"
     import_files_without_slash = get_pending_filing_files_to_process(path_without_slash)
     assert (
         import_files_without_slash[0]
-        == "s3://test_dfml_bucket/dor/received/DORDUADFMLEMP_20211210131901"
+        == "s3://test_dfml_bucket/dor/received/DORDUADFML_SUBMISSION_20211210131901"
     )
 
     assert len(import_files) == 1

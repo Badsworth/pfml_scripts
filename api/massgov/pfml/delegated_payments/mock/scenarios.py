@@ -119,17 +119,16 @@ class ScenarioName(Enum):
 
     # Employer Reimbursement Payments
     EMPLOYER_REIMBURSEMENT_PAYMENT = "EMPLOYER_REIMBURSEMENT_PAYMENT"
+    # EMPLOYER_REIMBURSEMENT_WITH_INVALID_ADDRESS = "EMPLOYER_REIMBURSEMENT_WITH_INVALID_ADDRESS"
     # EMPLOYER_REIMBURSEMENT_WITH_STANDARD_PAYMENT = "EMPLOYER_REIMBURSEMENT_WITH_STANDARD_PAYMENT"
     # STANDARD_PAYMENT_WITH_TW_AND_ER = "STANDARD_PAYMENT_WITH_TW_AND_ER"
-    # EMPLOYER_REIMBURSEMENT_PAYMENT_INVALID_ADDRESS = (
-    #     "EMPLOYER_REIMBURSEMENT_PAYMENT_INVALID_ADDRESS"
+    # EMPLOYER_REIMBURSEMENT_WITH_STANDARD_PAYMENT_INVALID_ADDRESS = (
+    #     "EMPLOYER_REIMBURSEMENT_WITH_STANDARD_PAYMENT_INVALID_ADDRESS"
     # )
-    # EMPLOYER_REIMBURSEMENT_INVALID_ADDRESS_WITH_VALID_PRIMARY = (
-    #     "EMPLOYER_REIMBURSEMENT_INVALID_ADDRESS_WITH_VALID_PRIMARY"
+    # EMPLOYER_REIMBURSEMENT_INVALID_ADDRESS_WITH_VALID_STANDARD_PAYMENT = (
+    #     "EMPLOYER_REIMBURSEMENT_INVALID_ADDRESS_WITH_VALID_STANDARD_PAYMENT"
     # )
-    # EMPLOYER_REIMBURSEMENT_PAYMENT_WITH_TAX_WITHHOLDING_RECORDS = "EMPLOYER_REIMBURSEMENT_PAYMENT_WITH_TAX_WITHHOLDING_RECORDS"
-    # EMPLOYER_REIMBURSEMENT_PAYMENT_VALID_ADDRESS = "EMPLOYER_REIMBURSEMENT_PAYMENT_VALID_ADDRESS"
-    # EMPLOYER_REIMBURSEMENT_PAYMENT_WITHOUT_TAX_WITHHOLDING_RECORDS = "EMPLOYER_REIMBURSEMENT_PAYMENT_WITHOUT_TAX_WITHHOLDING_RECORDS"
+    # EMPLOYER_REIMBURSEMENT_PAYMENT_AMOUNT_OVER_CAP =("EMPLOYER_REIMBURSEMENT_PAYMENT_AMOUNT_OVER_CAP")
     # EMPLOYER_REIMBURSEMENT_PAYMENT_WITH_EFT = "EMPLOYER_REIMBURSEMENT_PAYMENT_WITH_EFT"
 
     # Tax withholding payments
@@ -211,6 +210,7 @@ class ScenarioDescriptor:
 
     negative_payment_amount: bool = False
     payment_close_to_cap: bool = False
+    payment_over_cap: bool = False
     is_adhoc_payment: bool = False
 
     include_claim_details: bool = True
@@ -252,7 +252,7 @@ class ScenarioDescriptor:
 
     # Manual rejects
     manual_pub_reject_response: bool = False
-    manual_pub_reject_notes: str = "Manual Failure Test"
+    manual_pub_reject_notes: str = "Invalid Routing Number"
 
 
 SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
@@ -459,40 +459,39 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     # ScenarioDescriptor(
     #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT,
     #     payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
-    # ),
-    # ScenarioDescriptor(
-    #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT,
-    #     payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
     #     payment_method=PaymentMethod.CHECK,
     #     fineos_extract_address_valid=True,
-    #     invalid_address= False,
+    # ),
+    # ScenarioDescriptor(
+    #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_WITH_INVALID_ADDRESS,
+    #     payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+    #     payment_method=PaymentMethod.CHECK,
+    #     fineos_extract_address_valid=False,
     # ),
     # ScenarioDescriptor(
     #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_WITH_STANDARD_PAYMENT,
     #     payment_transaction_type=PaymentTransactionType.STANDARD,
-    #     is_employer_reimbursement_records_exists = True,
+    #     is_employer_reimbursement_records_exists=True,
     #     payment_method=PaymentMethod.CHECK,
     #     fineos_extract_address_valid=True,
-    #     invalid_address= False,
     # ),
     # ScenarioDescriptor(
     #     scenario_name=ScenarioName.STANDARD_PAYMENT_WITH_TW_AND_ER,
     #     payment_transaction_type=PaymentTransactionType.STANDARD,
-    #     is_employer_reimbursement_records_exists = True,
+    #     is_employer_reimbursement_records_exists=True,
     #     is_tax_withholding_records_exists=True,
     #     payment_method=PaymentMethod.CHECK,
     #     fineos_extract_address_valid=True,
-    #     invalid_address= False,
     # ),
     # ScenarioDescriptor(
-    #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT_INVALID_ADDRESS,
+    #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_WITH_STANDARD_PAYMENT_INVALID_ADDRESS,
     #     payment_transaction_type=PaymentTransactionType.STANDARD,
-    #     is_employer_reimbursement_records_exists = True,
+    #     is_employer_reimbursement_records_exists=True,
     #     fineos_extract_address_valid=False,
     #     payment_method=PaymentMethod.CHECK,
     # ),
     # ScenarioDescriptor(
-    #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_INVALID_ADDRESS_WITH_VALID_PRIMARY,
+    #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_INVALID_ADDRESS_WITH_VALID_STANDARD_PAYMENT,
     #     payment_transaction_type=PaymentTransactionType.STANDARD,
     #     is_employer_reimbursement_records_exists=True,
     #     fineos_extract_address_valid=True,
@@ -500,30 +499,16 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     #     payment_method=PaymentMethod.CHECK,
     # ),
     # ScenarioDescriptor(
-    #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT_WITH_TAX_WITHHOLDING_RECORDS,
+    #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT_AMOUNT_OVER_CAP,
     #     payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
-    #     is_tax_withholding_records_exists=True,
     #     payment_method=PaymentMethod.CHECK,
-    # ),
-    # ScenarioDescriptor(
-    #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT_VALID_ADDRESS,
-    #     payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
     #     fineos_extract_address_valid=True,
-    #     claim_missing_employee = True,
-    #     employee_in_payment_extract_missing_in_db = True,
-    #     payment_method=PaymentMethod.CHECK,
-    # ),
-    # ScenarioDescriptor(
-    #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT_WITHOUT_TAX_WITHHOLDING_RECORDS,
-    #     payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
-    #     payment_method=PaymentMethod.CHECK,
+    #     payment_over_cap=True,
     # ),
     # ScenarioDescriptor(
     #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT_WITH_EFT,
     #     payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
     #     fineos_extract_address_valid=True,
-    #     claim_missing_employee = True,
-    #     employee_in_payment_extract_missing_in_db = True,
     #     payment_method=PaymentMethod.ACH,
     # ),
     ScenarioDescriptor(

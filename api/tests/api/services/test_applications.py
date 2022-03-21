@@ -30,6 +30,7 @@ from massgov.pfml.db.models.applications import (
 )
 from massgov.pfml.db.models.employees import BankAccountType, Gender, PaymentMethod
 from massgov.pfml.db.models.factories import ApplicationFactory
+from massgov.pfml.fineos import exception
 from massgov.pfml.fineos.mock.eform import (
     MOCK_EFORM_EMPLOYER_RESPONSE_V2,
     MOCK_EFORM_OTHER_INCOME_V1,
@@ -214,13 +215,17 @@ def reduced_leave_periods():
         ReportedReducedScheduleLeavePeriod(
             startDate=date(2021, 1, 29),
             endDate=date(2021, 3, 29),
-            sundayOffMinutes=10,
+            sundayOffMinutes=0,  # day with only minutes
+            mondayOffHours=7,
             mondayOffMinutes=15,
-            tuesdayOffMinutes=20,
+            tuesdayOffHours=8,  # day with only hours
+            wednesdayOffHours=7,
             wednesdayOffMinutes=40,
+            thursdayOffHours=6,
             thursdayOffMinutes=45,
+            fridayOffHours=6,
             fridayOffMinutes=25,
-            saturdayOffMinutes=12,
+            # saturday = day with no hours or minutes
         )
     ]
 
@@ -310,13 +315,25 @@ def _compare_reduced_leave(application, reduced_leave, fineos_reduced_leave):
     assert reduced_leave.application_id == application.application_id
     assert reduced_leave.start_date == fineos_reduced_leave.startDate
     assert reduced_leave.end_date == fineos_reduced_leave.endDate
-    assert reduced_leave.sunday_off_minutes == fineos_reduced_leave.sundayOffMinutes
-    assert reduced_leave.monday_off_minutes == fineos_reduced_leave.mondayOffMinutes
-    assert reduced_leave.tuesday_off_minutes == fineos_reduced_leave.tuesdayOffMinutes
-    assert reduced_leave.wednesday_off_minutes == fineos_reduced_leave.wednesdayOffMinutes
-    assert reduced_leave.thursday_off_minutes == fineos_reduced_leave.thursdayOffMinutes
-    assert reduced_leave.friday_off_minutes == fineos_reduced_leave.fridayOffMinutes
-    assert reduced_leave.saturday_off_minutes == fineos_reduced_leave.saturdayOffMinutes
+    assert (
+        reduced_leave.sunday_off_minutes == fineos_reduced_leave.sundayOffMinutes
+    )  # sunday has only minutes
+    assert reduced_leave.monday_off_minutes == fineos_reduced_leave.mondayOffMinutes + (
+        fineos_reduced_leave.mondayOffHours * 60
+    )
+    assert (
+        reduced_leave.tuesday_off_minutes == fineos_reduced_leave.tuesdayOffHours * 60
+    )  # tuesday has only hours
+    assert reduced_leave.wednesday_off_minutes == fineos_reduced_leave.wednesdayOffMinutes + (
+        fineos_reduced_leave.wednesdayOffHours * 60
+    )
+    assert reduced_leave.thursday_off_minutes == fineos_reduced_leave.thursdayOffMinutes + (
+        fineos_reduced_leave.thursdayOffHours * 60
+    )
+    assert reduced_leave.friday_off_minutes == fineos_reduced_leave.fridayOffMinutes + (
+        fineos_reduced_leave.fridayOffHours * 60
+    )
+    assert reduced_leave.saturday_off_minutes is None
 
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")
@@ -356,8 +373,6 @@ def test_set_application_absence_and_leave_period(
     assert application.completed_time is None
 
     assert application.submitted_time == absence_details.creationDate
-    assert application.employer_notification_date == absence_details.notificationDate
-    assert application.employer_notified
     assert application.has_future_child_date is False
 
     absence_details.absencePeriods[0].reason = "Child Bonding"
@@ -413,11 +428,6 @@ def test_set_application_absence_and_leave_period_without_open_absence_period(
     assert application.completed_time is not None
 
     assert application.submitted_time == absence_details_without_open_absence_period.creationDate
-    assert (
-        application.employer_notification_date
-        == absence_details_without_open_absence_period.notificationDate
-    )
-    assert application.employer_notified
 
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")
@@ -609,6 +619,25 @@ def test_set_employment_status_and_occupations_work_pattern_not_fixed(
     set_employment_status_and_occupations(fineos_client, fineos_web_id, application)
     assert application.employment_status_id == EmploymentStatus.EMPLOYED.employment_status_id
     assert application.hours_worked_per_week == 37.5
+    assert application.work_pattern is None
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_week_based_work_pattern")
+def test_set_employment_status_and_occupations_work_pattern_fineos_error(
+    mock_get_week_based_work_pattern, fineos_client, fineos_web_id, application, user
+):
+    # FINEOS returns a 403 Forbidden error for Variable work patterns
+    error_msg = """{
+        "error" : "User does not have permission to access the resource or the instance data",
+        "correlationId" : "1234"
+    }"""
+    error = exception.FINEOSForbidden("get_week_based_work_pattern", 200, 403, error_msg)
+    mock_get_week_based_work_pattern.side_effect = error
+    set_employment_status_and_occupations(fineos_client, fineos_web_id, application)
+    # data from the get_customer_occupations_customer_api() call is unaffected
+    assert application.employment_status_id == EmploymentStatus.EMPLOYED.employment_status_id
+    assert application.hours_worked_per_week == 37.5
+    # due to 403 error, no work_pattern is set
     assert application.work_pattern is None
 
 
@@ -906,8 +935,8 @@ def test_set_other_leaves_includes_minutes(
     assert application.has_previous_leaves_other_reason is True
     test_db_session.refresh(application)
     # values from MOCK_CUSTOMER_EFORM_OTHER_LEAVES
-    assert application.previous_leaves_other_reason[0].leave_minutes == 120
-    assert application.previous_leaves_other_reason[0].worked_per_week_minutes == 40
+    assert application.previous_leaves_other_reason[0].leave_minutes == 2400
+    assert application.previous_leaves_other_reason[0].worked_per_week_minutes == 1245
 
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.customer_get_eform_summary")

@@ -520,7 +520,7 @@ const errors = {
       disallow_caring_leave_before_july:
         "Leave start dates must be after June 30, 2021.",
       disallow_hybrid_intermittent_leave:
-        "You cannot request intermittent leave in the same application as your continuous or reduced schedule leave. Create a separate application for your intermittent leave dates.",
+        "You cannot request intermittent leave in the same application as your continuous or reduced schedule leave. Create a separate application for your <intermittent-leave-guide>intermittent leave</intermittent-leave-guide> dates.",
       disallow_overlapping_leave_period_with_previous_leave:
         "Your previous leave dates cannot overlap with the PFML leave dates you are applying for. Check that you’ve entered the correct start and end dates for your leave details and previous leave.",
       disallow_overlapping_leave_periods:
@@ -532,7 +532,7 @@ const errors = {
       disallow_submit_over_60_days_before_start_date:
         "The date your leave begins is more than 60 days in the future. Submit your application within 60 days of your leave start date.",
       min_leave_periods:
-        "You must choose at least one kind of leave (continuous, reduced schedule, or intermittent).",
+        "You must choose at least one kind of leave (<scheduling-leave-guide>continuous, reduced schedule, or intermittent</scheduling-leave-guide>).",
       min_reduced_leave_minutes:
         "The total time entered for your hours off must be greater than 0.",
       require_employee:
@@ -769,7 +769,7 @@ const shared: {
   applicationImportError_noMatch:
     "No match found. Applications started on the phone with a Contact Center agent can take up to 24 hours to appear in our online system. Check back again. If you’re still unable to find your application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
   applicationImportError_unsupported:
-    "This application cannot be added at this time. If you are applying for military-related paid family leave benefits, or you are currently self-employed or unemployed, your application cannot be managed by this website. You will need to call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> to work on your application or get status updates.",
+    "This application cannot be added at this time. If you are applying for <applying-to-military-leave>military-related paid family leave benefits</applying-to-military-leave>, or you are currently <applying-self-or-unemployed>self-employed or unemployed</applying-self-or-unemployed>, your application cannot be managed by this website. You will need to call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> to work on your application or get status updates.",
   auth: {
     emailError_exists: "An account with the given email already exists",
     emailError_required: "Enter your email address",
@@ -2756,6 +2756,10 @@ const pages: {
       "$t(pages.payments.tablePaymentStatus_Delayed_Default)",
     "tablePaymentStatus_Delayed_Max Weekly Benefits Exceeded":
       "$t(pages.payments.tablePaymentStatus_Delayed_Default)",
+    tablePaymentStatus_Delayed_Processing:
+      "Your payment is being processed. Your {{paymentMethod}} dates will be available in a few days. No action is required from you at this time.",
+    tablePaymentStatus_Delayed_ProcessingWithDate:
+      "$t(pages.payments.tablePaymentStatus_Pending)",
     tablePaymentStatus_Pending:
       "Your payment will be sent by {{paymentMethod}} between {{payPeriod}}.",
     "tablePaymentStatus_Sent to bank":
@@ -2849,6 +2853,8 @@ const components: {
     claimAssociatedSuccessfully:
       "Application {{fineos_absence_id}} has been added to your account.",
     continueApplication: "Continue application",
+    earliestSubmissionDateInFuture:
+      "You will be able to submit this application on <strong>{{earliest_submission_date}}</strong>. This is 60 days before the start of your leave. Applications cannot be submitted earlier than 60 days before the start of leave.",
     employerEIN: "Employer Identification Number (EIN)",
     heading_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
     heading_bonding: "$t(shared.leaveReasonBondingHeader)",
@@ -2859,6 +2865,8 @@ const components: {
     heading_serviceMemberFamily: "$t(shared.leaveReasonServiceMemberFamily)",
     inProgressText:
       "Submit all three parts so that we can review your application.",
+    leaveDates: "{{start}} to {{end}}",
+    leaveDatesLabel: "Leave Dates",
     leavePeriodLabel_reduced: "$t(shared.claimDurationTypeReducedSchedule)",
     loadingLabel: "$t(shared.loadingDocumentsLabel)",
     noticeOnClickDetails:

@@ -282,6 +282,7 @@ class FineosExtractConstants:
             "PAYEEACCOUNTT",
             "EVENTTYPE",
             "PAYEEIDENTIFI",
+            "PAYEEFULLNAME",
             "EVENTREASON",
             "AMALGAMATIONC",
             "PAYMENTTYPE",
@@ -1583,3 +1584,12 @@ def get_earliest_matching_payment(
         .order_by(Payment.created_at.asc())
         .first()
     )
+
+
+def get_payment_transaction_type_id(payment: Payment) -> int:
+    transaction_type_id = (
+        payment.payment_transaction_type_id
+        if payment.payment_transaction_type_id is not None
+        else 0
+    )
+    return transaction_type_id

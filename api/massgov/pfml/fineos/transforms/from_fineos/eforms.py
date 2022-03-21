@@ -48,11 +48,21 @@ class TransformOtherLeaveAttributes(TransformEformAttributes):
             "name": "leave_minutes",
             "type": "enumValue",
             "embeddedProperty": "instanceValue",
+            "defaultValue": None,
         },
         "V2MinutesWorked": {
             "name": "worked_per_week_minutes",
             "type": "enumValue",
             "embeddedProperty": "instanceValue",
+            "defaultValue": None,
+        },
+        "V2TotalHours": {
+            "name": "total_leave_hours",
+            "type": "integerValue",
+        },
+        "V2HoursWorked": {
+            "name": "worked_per_week_hours",
+            "type": "integerValue",
         },
     }
 
@@ -153,6 +163,27 @@ class TransformPreviousLeaveFromOtherLeaveEform(BaseModel):
             )
             if leave["is_for_current_employer"] == "Unknown":
                 leave["is_for_current_employer"] = None
+
+            week_hours = leave.pop("worked_per_week_hours", None)
+            week_minutes = leave.pop("worked_per_week_minutes", None)
+            if week_minutes is not None and week_hours is not None:
+                leave["worked_per_week_minutes"] = int(week_minutes) + (week_hours * 60)
+            else:
+                if week_hours is not None:
+                    leave["worked_per_week_minutes"] = week_hours * 60
+                if week_minutes is not None:
+                    leave["worked_per_week_minutes"] = week_minutes
+
+            total_hours = leave.pop("total_leave_hours", None)
+            total_minutes = leave.pop("leave_minutes", None)
+            if total_hours is not None and total_minutes is not None:
+                leave["leave_minutes"] = int(total_minutes) + (total_hours * 60)
+            else:
+                if total_hours is not None:
+                    leave["leave_minutes"] = total_hours * 60
+                if total_minutes is not None:
+                    leave["leave_minutes"] = total_minutes
+
         try:
             return [PreviousLeave.parse_obj(leave) for leave in previous_leaves]
         except pydantic.ValidationError:

@@ -121,6 +121,10 @@ const routes = {
       "https://www.dol.gov/agencies/whd/fact-sheets/28C-fmla-eldercare",
     massTaxConnect: "https://mtc.dor.state.ma.us/mtc/_/",
     massgov: {
+      applyingSelfOrUnemployed:
+        "https://www.mass.gov/how-to/how-to-apply-for-paid-family-or-medical-leave-if-you-are-self-employed-or-unemployed",
+      applyingToMilitaryLeave:
+        "https://www.mass.gov/how-to/how-to-apply-for-military-related-paid-family-leave",
       approvalTimeline: "https://mass.gov/pfml/application-timeline",
       benefitsCalculator:
         "https://calculator.digital.mass.gov/pfml/yourbenefits/",

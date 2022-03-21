@@ -23,7 +23,14 @@ class PaymentAuditCSV(AbstractRecord):
     state: Optional[str]
     zip: Optional[str]
     is_address_verified: Optional[str]
-    employer_name: Optional[str]
+    employer_id: Optional[str]
+    employer_payee_name: Optional[str]
+    employer_address_line_1: Optional[str]
+    employer_address_line_2: Optional[str]
+    employer_city: Optional[str]
+    employer_state: Optional[str]
+    employer_zip: Optional[str]
+    employer_is_address_verified: Optional[str]
     payment_preference: Optional[str]
     scheduled_payment_date: Optional[str]
     payment_period_start_date: Optional[str]
@@ -42,7 +49,6 @@ class PaymentAuditCSV(AbstractRecord):
     state_withholding_i_value: Optional[str]
     employer_reimbursement_i_value: Optional[str]
     child_support_i_value: Optional[str]
-    employer_id: Optional[str]
     absence_case_creation_date: Optional[str]
     absence_start_date: Optional[str]
     absence_end_date: Optional[str]
@@ -96,7 +102,14 @@ PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
     state="State",
     zip="Zip",
     is_address_verified="Address Verified",
-    employer_name="Employer Name",
+    employer_id="Employer ID",
+    employer_payee_name="Employer Payee Name",
+    employer_address_line_1="Employer Address Line 1",
+    employer_address_line_2="Employer Address Line 2",
+    employer_city="Employer City",
+    employer_state="Employer State",
+    employer_zip="Employer Zip",
+    employer_is_address_verified="Employer Address Verified",
     payment_preference="Payment Preference",
     scheduled_payment_date="Scheduled Payment Date",
     payment_period_start_date="Payment Period Start",
@@ -115,7 +128,6 @@ PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
     state_withholding_i_value="State Withholding I Value",
     employer_reimbursement_i_value="Employer Reimbursement I Value",
     child_support_i_value="Child Support I Value",
-    employer_id="Employer ID",
     absence_case_creation_date="Absence Case Creation Date",
     absence_start_date="Absence Case Start Date",
     absence_end_date="Absence Case End Date",

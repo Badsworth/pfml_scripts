@@ -1,6 +1,6 @@
 ID,Notes
-P1,1st Notes
-E2,2nd Notes
-X3,3rd Notes
-P4,4th Notes
-E5,5th Notes
+P1,Invalid Routing Number
+E2,invalid routing number
+X3,PUB Payment Returned
+P4,pub payment returned
+E5,"PUB Payment Returned,Invalid Routing Number"
