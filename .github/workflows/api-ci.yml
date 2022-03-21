@@ -105,7 +105,10 @@ jobs:
       - name: test with coverage
         run: make test-coverage args=tests/util
 
-      - name: Coverage comment
+      - name: copy coverage file
+        run: cp --verbose .coverage ..
+
+      - name: coverage comment
         id: coverage_comment
         uses: ewjoachim/python-coverage-comment-action@v2
         with:
