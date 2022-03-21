@@ -81,10 +81,11 @@ module "tasks" {
 
   enable_register_admins_job = true
 
-  enable_pub_automation_fineos           = true
-  enable_pub_automation_create_pub_files = true
-  enable_pub_automation_process_returns  = true
-  enable_fineos_import_iaww              = true
+  enable_pub_automation_fineos                     = true
+  enable_pub_automation_create_pub_files           = true
+  enable_pub_automation_process_returns            = true
+  enable_fineos_import_iaww                        = true
+  enable_standalone_fineos_import_employee_updates = true
 
   enable_reductions_send_claimant_lists_to_agencies_schedule = true
   enable_reductions_process_agency_data_schedule             = true
@@ -96,8 +97,10 @@ module "tasks" {
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com", "EOL-DL-DFML-ITSUPPORT@MassMail.State.MA.US"]
 
   # Daily at [20:30 Eastern]
-  dor_fineos_etl_schedule_expression_standard         = "cron(30 1 * * ? *)"
-  dor_fineos_etl_schedule_expression_daylight_savings = "cron(30 0 * * ? *)"
+  dor_fineos_etl_schedule_expression_standard                                    = "cron(30 1 * * ? *)"
+  dor_fineos_etl_schedule_expression_daylight_savings                            = "cron(30 0 * * ? *)"
+  standalone_fineos_import_employee_updates_schedule_expression_standard         = "cron(30 13 * * ? *)"
+  standalone_fineos_import_employee_updates_schedule_expression_daylight_savings = "cron(30 12 * * ? *)"
 
   pdf_api_host                    = "http://localhost:5000"
   enable_generate_1099_pdf        = "0"
