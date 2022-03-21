@@ -105,8 +105,8 @@ jobs:
       - name: test with coverage
         run: make test-coverage args=tests/util
 
-      - name: copy coverage file
-        run: cp --verbose .coverage ..
+      - name: combine coverage files
+        run: cd .. && coverage combine --keep --rcfile=api/setup.cfg api/.coverage
 
       - name: coverage comment
         id: coverage_comment
