@@ -536,7 +536,7 @@ test-coverage-report: ## Open HTML test coverage report
 
 test-coverage-combine: ## Combine coverage report for CI
 	mv .coverage .coverage.api
-	poetry run coverage combine --keep .coverage.api
+	$(PY_RUN_CMD) coverage combine --keep .coverage.api
 
 test-integration: ## Run just integration tests, set $args to pass flags to `pytest`
 	$(call run_tests,-m integration $(args))
