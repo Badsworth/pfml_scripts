@@ -12,7 +12,7 @@ const flagsConfig = {
   defaults: {
     // When enabled, the "Find my application" flow is displayed.
     // TODO (PORTAL-1327): Remove channelSwitching flag once enabled everywhere.
-    channelSwitching: false,
+    channelSwitching: true,
 
     // When this flag is enabled, the user can see the "Employment status"
     // question in the claimant flow (CP-1204)
