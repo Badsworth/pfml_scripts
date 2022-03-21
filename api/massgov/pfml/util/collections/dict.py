@@ -3,7 +3,7 @@
 #
 
 import collections
-from typing import Any, Dict, Set
+from typing import Any, Dict, List, Mapping, Optional, Set, Tuple
 
 
 class LeastRecentlyUsedDict(collections.OrderedDict):
@@ -48,3 +48,47 @@ def filter_dict(dict: Dict[str, Any], allowed_keys: Set[str]) -> Dict[str, Any]:
     """
 
     return {k: v for k, v in dict.items() if k in allowed_keys}
+
+
+def flatten(
+    d: Mapping[Any, Any],
+    key_prefix: Optional[str] = None,
+    separator: str = ".",
+    *,
+    depth: int = 0,
+    max_depth: Optional[int] = None,
+) -> Dict[str, Any]:
+    """Collapse nested dictionaries into a single level.
+
+    Example:
+        {"foo": {"bar": 1}} -> {"foo.bar": 1}
+
+    Args:
+        key_prefix: String to prepend to first level of keys.
+        separator: String to use when combining nested keys.
+        max_depth: Nesting level at which to stop flattening process. Any value
+            below this will dumped as its raw string representation.
+    """
+    current_depth = depth + 1
+    items: List[Tuple[str, Any]] = []
+
+    for old_key, value in d.items():
+        key = key_prefix + separator + str(old_key) if key_prefix else str(old_key)
+
+        if isinstance(value, Mapping):
+            if max_depth is not None and (current_depth > max_depth):
+                items.append((key, str(value)))
+            else:
+                items.extend(
+                    flatten(
+                        value,
+                        key_prefix=key,
+                        separator=separator,
+                        depth=current_depth,
+                        max_depth=max_depth,
+                    ).items()
+                )
+        else:
+            items.append((key, value))
+
+    return dict(items)

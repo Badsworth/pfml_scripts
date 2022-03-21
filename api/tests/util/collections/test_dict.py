@@ -2,12 +2,12 @@
 # Unit tests for massgov.pfml.util.collections.dict.
 #
 
-import massgov.pfml.util.collections.dict
+import massgov.pfml.util.collections.dict as dict_util
 from massgov.pfml.util.collections.dict import filter_dict, make_keys_lowercase
 
 
 def test_least_recently_used_dict():
-    lru_dict = massgov.pfml.util.collections.dict.LeastRecentlyUsedDict(maxsize=4)
+    lru_dict = dict_util.LeastRecentlyUsedDict(maxsize=4)
 
     assert lru_dict["a"] == 0
     assert len(lru_dict) == 0
@@ -49,3 +49,17 @@ def test_filter_dict():
     expected = {"foo": "bar"}
 
     assert filter_dict(dict=example, allowed_keys=allowed_keys) == expected
+
+
+def test_flatten():
+    assert dict_util.flatten({"foo": {"bar": "baz"}}) == {"foo.bar": "baz"}
+
+    assert dict_util.flatten({"foo": {"bar": "baz"}}, key_prefix="oof") == {"oof.foo.bar": "baz"}
+
+    assert dict_util.flatten({"foo": {"bar": "baz"}}, separator=":") == {"foo:bar": "baz"}
+
+    # doesn't really make sense to call it with `max_depth=0`, but...
+    assert dict_util.flatten({"foo": {"bar": {"baz": 1}}}, max_depth=0) == {
+        "foo": "{'bar': {'baz': 1}}"
+    }
+    assert dict_util.flatten({"foo": {"bar": {"baz": 1}}}, max_depth=1) == {"foo.bar": "{'baz': 1}"}
