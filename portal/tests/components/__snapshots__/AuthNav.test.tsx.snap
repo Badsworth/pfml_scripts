@@ -39,7 +39,7 @@ exports[`AuthNav renders the logged-out state 1`] = `
     >
       <a
         class="usa-button width-auto usa-button--unstyled usa-button--inverse usa-button--outline"
-        href="https://www.mass.gov/topics/paid-family-and-medical-leave-in-massachusetts"
+        href="https://mass.gov/PaidLeave"
       >
         Back to Mass.gov
       </a>

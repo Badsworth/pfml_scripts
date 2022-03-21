@@ -20,7 +20,7 @@ exports[`LeavePeriodReducedSchedule renders a variation of the page when claiman
       >
         Do you need to work fewer hours than usual for a period of time (
         <a
-          href="https://www.mass.gov/info-details/intermittent-and-reduced-leave-schedules"
+          href="https://mass.gov/pfml/leave-schedules"
           rel="noopener"
           target="_blank"
         >
@@ -120,7 +120,7 @@ exports[`LeavePeriodReducedSchedule renders a variation of the page when claiman
       >
         Do you need to work fewer hours than usual for a period of time (
         <a
-          href="https://www.mass.gov/info-details/intermittent-and-reduced-leave-schedules"
+          href="https://mass.gov/pfml/leave-schedules"
           rel="noopener"
           target="_blank"
         >
@@ -225,7 +225,7 @@ exports[`LeavePeriodReducedSchedule renders a variation of the page when claiman
       >
         Do you need to work fewer hours than usual for a period of time (
         <a
-          href="https://www.mass.gov/info-details/intermittent-and-reduced-leave-schedules"
+          href="https://mass.gov/pfml/leave-schedules"
           rel="noopener"
           target="_blank"
         >
@@ -330,7 +330,7 @@ exports[`LeavePeriodReducedSchedule renders a variation of the page when claiman
       >
         Do you need to work fewer hours than usual for a period of time (
         <a
-          href="https://www.mass.gov/info-details/intermittent-and-reduced-leave-schedules"
+          href="https://mass.gov/pfml/leave-schedules"
           rel="noopener"
           target="_blank"
         >
