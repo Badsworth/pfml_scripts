@@ -1009,7 +1009,7 @@ const pages: {
   applications: {
     addApplication: "$t(shared.addApplication)",
     can_submit_application_across_benefit_year:
-      "You can submit an application for leave that crosses into a new benefit year. We will review the request as two separate applications. $t(pages.applications.claimsApprovalProcess)",
+      "If you submit an application with leave dates that are in both your current and a new benefit year, we'll review the request as two separate applications. $t(pages.applications.claimsApprovalProcess)",
     claimsApprovalProcess:
       "Learn more about the <approval-process-link>application review and approval process</approval-process-link>.",
     createApplicationHeading: "Create a new application",
