@@ -17,6 +17,7 @@ import massgov.pfml.util.logging
 from massgov.pfml import db
 from massgov.pfml.api.authorization.flask import CREATE, EDIT, READ, ensure
 from massgov.pfml.api.claims import get_claim_from_db
+from massgov.pfml.api.exceptions import ClaimWithdrawn
 from massgov.pfml.api.models.applications.requests import (
     ApplicationImportRequestBody,
     ApplicationRequestBody,
@@ -595,7 +596,12 @@ def document_upload(application_id, body, file):
     # Parse the document details from the form body
     document_details: DocumentRequestBody = DocumentRequestBody.parse_obj(body)
 
-    return upload_document_to_fineos(application, document_details, file)
+    try:
+        response = upload_document_to_fineos(application, document_details, file)
+    except ClaimWithdrawn as err:
+        return err.to_api_response()
+
+    return response
 
 
 def documents_get(application_id):
