@@ -170,12 +170,32 @@ const useBenefitsApplicationsLogic = ({
       // which still received the updates in the request. This is important
       // for situations like leave periods, where the API passes us back
       // a leave_period_id field for making subsequent updates.
-      if (issues.length) {
-        throw new ValidationError(issues);
-      }
-
       const params = { claim_id: claim.application_id };
-      portalFlow.goToNextPage({ claim }, params);
+      if (issues.length) {
+        const errorPageRoute = portalFlow.getNextPageRoute(
+          "ERROR",
+          {
+            claim,
+            errors: [
+              {
+                issues,
+                name: "no_ee_er_match",
+                message:
+                  "Couldn't find Employee in our system. Confirm that you have the correct EIN.",
+              },
+            ],
+          },
+          params
+        );
+
+        if (errorPageRoute) {
+          portalFlow.goTo(errorPageRoute);
+        } else {
+          throw new ValidationError(issues);
+        }
+      } else {
+        portalFlow.goToNextPage({ claim }, params);
+      }
     } catch (error) {
       errorsLogic.catchError(error);
     }

@@ -93,6 +93,7 @@ const routes = {
     uploadCertification: "/applications/upload-certification",
     uploadDocsOptions: "/applications/upload-docs-options",
     uploadId: "/applications/upload-id",
+    userNotFoundPageOne: "/applications/userNotFoundPageOne",
     workPatternType: "/applications/work-pattern-type",
   },
   auth: {

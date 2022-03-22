@@ -244,7 +244,7 @@ export const BenefitsApplicationStatus = {
   submitted: "Submitted",
   // User not found - No link between employee and employer
   // User completed Step 1 and part of Step 2 along with additional information to help make a manual match
-  inManualReview: "In Manual Review",
+  inReview: "In Review",
 } as const;
 
 /**

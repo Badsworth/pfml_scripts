@@ -103,12 +103,15 @@ export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.fixed,
   isVariableWorkPattern: ({ claim }) =>
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.variable,
-  includesUserNotFoundError: ({ claim, errors }) =>
-    (errors || []).some(
-      (error) =>
-        error.issues[0].field === "require_employer" ||
-        error.issues[0].type === "no_ee_er_match"
-    ) && get(claim, "status") !== "In Manual Review",
+  includesUserNotFoundError: ({ claim, errors }) => {
+    return (
+      (errors || []).some(
+        (error) =>
+          error.issues[0].rule === "require_employee" ||
+          error.issues[0].type === "no_ee_er_match"
+      ) && get(claim, "status") !== "In Review"
+    );
+  },
 };
 
 /**
