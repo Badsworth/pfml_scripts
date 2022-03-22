@@ -196,7 +196,6 @@ export const PaymentMethod = (props: WithBenefitsApplicationProps) => {
             smallLabel
             onChange={handleAccountNumberChange}
             pii
-            disablePaste
           />
 
           <InputText
