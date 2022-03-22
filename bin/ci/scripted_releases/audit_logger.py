@@ -16,7 +16,7 @@ def setup(file_loc):
 
     # write ALL logs to this file
     audit_logger = logging.FileHandler(
-        file_loc / f"/scripted_releases_audit_log_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt"
+        file_loc + f"/scripted_releases_audit_log_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt"
     )
     audit_logger.setLevel(logging.DEBUG)
 
