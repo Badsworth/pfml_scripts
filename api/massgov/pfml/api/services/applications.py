@@ -83,7 +83,6 @@ from massgov.pfml.fineos.models.customer_api.spec import (
     EForm,
     EFormSummary,
     ReportedReducedScheduleLeavePeriod,
-    ReportedTimeOffLeavePeriod,
 )
 from massgov.pfml.fineos.transforms.from_fineos.eforms import (
     TransformConcurrentLeaveFromOtherLeaveEform,
@@ -1077,18 +1076,12 @@ def set_customer_detail_fields(
 
 
 def _parse_continuous_leave_period(
-    application_id: UUID, time_off: ReportedTimeOffLeavePeriod
+    application_id: UUID, absence_period: AbsencePeriod
 ) -> ContinuousLeavePeriod:
     return ContinuousLeavePeriod(
         application_id=application_id,
-        start_date=time_off.startDate,
-        end_date=time_off.endDate,
-        start_date_full_day=time_off.startDateFullDay,
-        start_date_off_hours=time_off.startDateOffHours,
-        start_date_off_minutes=time_off.startDateOffMinutes,
-        end_date_full_day=time_off.endDateFullDay,
-        end_date_off_hours=time_off.endDateOffHours,
-        end_date_off_minutes=time_off.endDateOffMinutes,
+        start_date=absence_period.startDate,
+        end_date=absence_period.endDate,
     )
 
 
@@ -1149,10 +1142,17 @@ def _set_continuous_leave_periods(
 ) -> None:
 
     continuous_leave_periods: List[ContinuousLeavePeriod] = []
-    if absence_details.reportedTimeOff:
-        for time_off in absence_details.reportedTimeOff:
-            time_off_leave = _parse_continuous_leave_period(application.application_id, time_off)
-            continuous_leave_periods.append(time_off_leave)
+
+    if absence_details.absencePeriods:
+        for absence_period in absence_details.absencePeriods:
+            if (
+                absence_period.absenceType
+                == AbsencePeriodType.CONTINUOUS.absence_period_type_description
+            ):
+                continuous_leave = _parse_continuous_leave_period(
+                    application.application_id, absence_period
+                )
+                continuous_leave_periods.append(continuous_leave)
 
     application.continuous_leave_periods = continuous_leave_periods
     application.has_continuous_leave_periods = len(continuous_leave_periods) > 0
@@ -1167,6 +1167,8 @@ def _set_intermittent_leave_periods(
         for absence_period in absence_details.absencePeriods:
             if (
                 absence_period.absenceType
+                == AbsencePeriodType.INTERMITTENT.absence_period_type_description
+                or absence_period.absenceType
                 == AbsencePeriodType.EPISODIC.absence_period_type_description
             ):
 
@@ -1174,7 +1176,6 @@ def _set_intermittent_leave_periods(
                     application.application_id, absence_period
                 )
                 intermittent_leave_periods.append(intermittent_leave)
-
     application.intermittent_leave_periods = intermittent_leave_periods
     application.has_intermittent_leave_periods = len(intermittent_leave_periods) > 0
 
