@@ -4,6 +4,8 @@ import { getClaimantCredentials } from "../../../config";
 import { config } from "../../../actions/common";
 
 describe("Change request approval (notifications/notices)", () => {
+  const APRIL_UPGRADE: boolean = config("HAS_APRIL_UPGRADE") === "true";
+
   after(() => {
     portal.deleteDownloadsFolder();
   });
@@ -57,9 +59,15 @@ describe("Change request approval (notifications/notices)", () => {
           submission.fineos_absence_id
         );
         claimPage.leaveDetails((leaveDetails) => {
-          leaveDetails.inReview();
+          const adjudication = leaveDetails.inReview(APRIL_UPGRADE);
+          if (APRIL_UPGRADE) {
+            adjudication.acceptLeavePlan().clickOK();
+          }
+          adjudication.doNothing();
         });
-        claimPage.approveExtendedTime();
+        APRIL_UPGRADE
+          ? claimPage.approve("Approved", true)
+          : claimPage.approveExtendedTime();
         claimPage
           .triggerNotice("Review Approval Notice")
           .documents((docPage) =>

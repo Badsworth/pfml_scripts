@@ -8,6 +8,7 @@ import { itIf } from "../../../util";
 // @TODO January release and the email template updates.
 
 describe("Post-approval (notifications/notices)", () => {
+  const APRIL_UPGRADE: boolean = config("HAS_APRIL_UPGRADE") === "true";
   after(() => {
     portal.deleteDownloadsFolder();
   });
@@ -65,11 +66,15 @@ describe("Post-approval (notifications/notices)", () => {
         const claimPage = fineosPages.ClaimPage.visit(
           submission.fineos_absence_id
         );
-        claimPage.leaveDetails((leaveDetails) => {
-          leaveDetails.inReview();
-        });
         claimPage
-          .denyExtendedTime("Claimant/Family member deceased")
+          .leaveDetails((leaveDetails) => {
+            const adjudication = leaveDetails.inReview(APRIL_UPGRADE);
+            if (APRIL_UPGRADE) {
+              adjudication.rejectLeavePlan().clickOK();
+            }
+            adjudication.doNothing();
+          })
+          .denyExtendedTime("Claimant/Family member deceased", APRIL_UPGRADE)
           .triggerNotice("Review Denial Notice")
           .documents((docPage) =>
             docPage.assertDocumentExists("Change Request Denied")
