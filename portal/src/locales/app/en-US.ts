@@ -671,8 +671,6 @@ const errors = {
         "Enter a valid Employer Identification Number (EIN). Check that you entered your EIN correctly.",
       required: "Enter your 9-digit Employer Identification Number.",
     },
-    fineos_claim_withdrawn:
-      "Application has been withdrawn and is no longer being processed.",
     hours_worked_per_week: {
       maximum: "Average weekly hours must be 168 or fewer.",
       minimum: "Enter the average weekly hours.",
@@ -745,9 +743,12 @@ const errors = {
       },
     },
   },
-  // These fallbacks shouldn't normally render, but they may if a validation rule or
-  // field is introduced and we don't add a custom field-level error message for it.
+  // Generic fallbacks, when there isn't content defined for an error's namespace.
+  // These may also be used if we add a new field/validation on the backend, without
+  // also adding its i18n error message to this file.
   validationFallback: {
+    fineos_claim_withdrawn:
+      "Application has been withdrawn and is no longer being processed.",
     invalid: "Field ({{field}}) has invalid value.",
     invalid_masked_field: "Re-enter the full value to make a change.",
     // Field's value didn't match an expected regex pattern:
