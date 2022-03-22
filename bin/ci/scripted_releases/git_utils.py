@@ -55,6 +55,8 @@ def rollback(old_head=None) -> Generator:
         checkout(rollback_branch)
 
 
+# If this gives you an error saying it's rejected with "would clobber existing
+# tag" then manually run "git fetch --tags --force"
 def fetch_remotes():
     gitcmd.fetch("--all", "--tags")
 
@@ -142,6 +144,10 @@ def to_semver(version_str: str) -> semver.VersionInfo:
         # portal versions don't have a third number, which makes their versions invalid semver
         ver = "0." + version_str.split("portal/v")[-1]
         return semver.VersionInfo.parse(ver)
+    elif version_str.startswith("admin-portal/v"):
+        # The same as portal above.
+        ver = "0." + version_str.split("admin-portal/v")[-1]
+        return semver.VersionInfo.parse(ver)
     elif version_str.startswith("api/v"):
         return semver.VersionInfo.parse(version_str.split("api/v")[-1])
     elif version_str.startswith("foobar/v"):
@@ -153,6 +159,8 @@ def to_semver(version_str: str) -> semver.VersionInfo:
 def from_semver(sem_ver: semver.VersionInfo, app) -> str:
     if app == "portal":
         return "portal/v" + str(sem_ver).split(".", 1)[1]
+    elif app == "admin-portal":
+        return "admin-portal/v" + str(sem_ver).split(".", 1)[1]
     elif app == "api":
         return "api/v" + str(sem_ver)
     elif app == "foobar":

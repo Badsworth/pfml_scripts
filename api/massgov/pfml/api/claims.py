@@ -16,10 +16,9 @@ from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
 from massgov.pfml.api.authorization.flask import READ, can, requires
 from massgov.pfml.api.exceptions import ClaimWithdrawn, ObjectNotFound
 from massgov.pfml.api.models.applications.common import OrganizationUnit
-from massgov.pfml.api.models.claims.common import ChangeRequest, EmployerClaimReview
+from massgov.pfml.api.models.claims.common import EmployerClaimReview
 from massgov.pfml.api.models.claims.requests import ClaimSearchRequest, ClaimSearchTerms
 from massgov.pfml.api.models.claims.responses import (
-    ChangeRequestResponse,
     ClaimForPfmlCrmResponse,
     ClaimResponse,
     ManagedRequirementResponse,
@@ -35,9 +34,8 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
 )
 from massgov.pfml.api.services.claims import (
     ClaimWithdrawnError,
-    add_change_request_to_db,
-    get_change_requests_from_db,
     get_claim_detail,
+    get_claim_from_db,
 )
 from massgov.pfml.api.services.managed_requirements import update_employer_confirmation_requirements
 from massgov.pfml.api.util.claims import user_has_access_to_claim
@@ -51,7 +49,6 @@ from massgov.pfml.api.validation.exceptions import (
     ValidationErrorDetail,
 )
 from massgov.pfml.db.models.absences import AbsenceStatus
-from massgov.pfml.db.models.employees import ChangeRequest as change_request_db_model
 from massgov.pfml.db.models.employees import (
     Claim,
     Employer,
@@ -75,7 +72,6 @@ from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import (
     EmployerClaimReviewEFormBuilder,
     EmployerClaimReviewV1EFormBuilder,
 )
-from massgov.pfml.util.datetime import utcnow
 from massgov.pfml.util.logging.claims import (
     get_claim_log_attributes,
     get_claim_review_log_attributes,
@@ -551,20 +547,6 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
     ).to_api_response()
 
 
-def get_claim_from_db(fineos_absence_id: Optional[str]) -> Optional[Claim]:
-    if fineos_absence_id is None:
-        return None
-
-    with app.db_session() as db_session:
-        claim = (
-            db_session.query(Claim)
-            .filter(Claim.fineos_absence_id == fineos_absence_id)
-            .one_or_none()
-        )
-
-    return claim
-
-
 def retrieve_claims() -> flask.Response:
 
     body = connexion.request.json
@@ -799,111 +781,3 @@ def sync_absence_periods(
     # only commit to db when every absence period has been succesfully synced
     # otherwise rollback changes if any absence period upsert throws an exception
     db_session.commit()
-
-
-def post_change_request(fineos_absence_id: str) -> flask.Response:
-    body = connexion.request.json
-    change_request: ChangeRequest = ChangeRequest.parse_obj(body)
-
-    claim = get_claim_from_db(fineos_absence_id)
-    if claim is None:
-        logger.warning(
-            "Claim does not exist for given absence ID",
-            extra={"absence_case_id": fineos_absence_id},
-        )
-        error = response_util.error_response(
-            status_code=NotFound,
-            message="Claim does not exist for given absence ID",
-            errors=[],
-            data={},
-        )
-        return error.to_api_response()
-
-    db_change_request = add_change_request_to_db(change_request, claim.claim_id)
-
-    issues = claim_rules.get_change_request_issues(db_change_request, claim)
-
-    response_data = ChangeRequestResponse.from_orm(db_change_request)
-
-    return response_util.success_response(
-        message="Successfully posted change request",
-        data=response_data.dict(),
-        status_code=201,
-        warnings=issues,
-    ).to_api_response()
-
-
-def get_change_requests(fineos_absence_id: str) -> flask.Response:
-    claim = get_claim_from_db(fineos_absence_id)
-
-    if claim is None:
-        logger.warning(
-            "Claim does not exist for given absence ID",
-            extra={"absence_case_id": fineos_absence_id},
-        )
-        error = response_util.error_response(
-            NotFound,
-            "Claim does not exist for given absence ID",
-            errors=[],
-        )
-        return error.to_api_response()
-
-    with app.db_session() as db_session:
-        change_requests = get_change_requests_from_db(claim.claim_id, db_session)
-
-    # TODO: (PORTAL-1864) Convert the change_request_type to return the enum value rather than the id
-    change_requests_dict = []
-    for request in change_requests:
-        change_requests_dict.append(request.dict())
-
-    return response_util.success_response(
-        message="Successfully retrieved change requests",
-        data={"absence_case_id": fineos_absence_id, "change_requests": change_requests_dict},
-        status_code=200,
-    ).to_api_response()
-
-
-def submit_change_request(change_request_id: str) -> flask.Response:
-    with app.db_session() as db_session:
-        change_request = get_or_404(db_session, change_request_db_model, UUID(change_request_id))
-
-    if issues := claim_rules.get_change_request_issues(change_request, change_request.claim):
-        return response_util.error_response(
-            status_code=BadRequest,
-            message="Invalid change request",
-            errors=issues,
-            data={},
-        ).to_api_response()
-
-    # TODO: Post change request to FINEOS - https://lwd.atlassian.net/browse/PORTAL-1710
-    change_request.submitted_time = utcnow()
-
-    response_data = ChangeRequestResponse.from_orm(change_request)
-
-    return response_util.success_response(
-        message="Successfully submitted Change Request to FINEOS",
-        data=response_data.dict(),
-        status_code=200,
-    ).to_api_response()
-
-
-def delete_change_request(change_request_id: str) -> flask.Response:
-    with app.db_session() as db_session:
-        change_request = get_or_404(db_session, change_request_db_model, UUID(change_request_id))
-
-        if change_request.submitted_time is not None:
-            error = response_util.error_response(
-                BadRequest,
-                "Cannot delete a submitted request",
-                data={},
-                errors=[],
-            )
-            return error.to_api_response()
-
-        db_session.delete(change_request)
-
-    return response_util.success_response(
-        message="Successfully deleted change request",
-        data={},
-        status_code=200,
-    ).to_api_response()

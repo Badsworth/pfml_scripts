@@ -205,7 +205,7 @@ MOCK_CUSTOMER_EFORM_OTHER_LEAVES = CustomerEForm(
         ),
         CustomerEFormAttribute(
             name="V2MinutesWorked1",
-            enumValue=ModelEnum(domainName="15MinuteIncrements", instanceValue="40"),
+            enumValue=ModelEnum(domainName="15MinuteIncrements", instanceValue="45"),
         ),
         CustomerEFormAttribute(
             name="V2AccruedReasons",
@@ -239,7 +239,7 @@ MOCK_CUSTOMER_EFORM_OTHER_LEAVES = CustomerEForm(
         ),
         CustomerEFormAttribute(
             name="V2TotalMinutes1",
-            enumValue=ModelEnum(domainName="15MinuteIncrements", instanceValue="120"),
+            enumValue=ModelEnum(domainName="15MinuteIncrements", instanceValue="Please Select"),
         ),
         CustomerEFormAttribute(
             name="V2QualifyingReason1",

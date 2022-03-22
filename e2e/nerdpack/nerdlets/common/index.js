@@ -12,7 +12,13 @@ export const ENVS = [
   "test",
   "infra-test",
 ];
-export const GROUPS = ["Stable", "Unstable", "Morning", "Integration"];
+export const GROUPS = [
+  "Stable",
+  "Unstable",
+  "Morning",
+  "Integration",
+  "Targeted",
+];
 export const ENV_NOT_CONFIGURED = ["prod", "infra-test"];
 export const ENV_OFFLINE = {
   trn2: "Env expected offline",

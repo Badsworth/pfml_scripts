@@ -44,8 +44,16 @@ class JsonFormatter(logging.Formatter):  # noqa: B1
         # Inject Flask request information. See
         # https://flask.palletsprojects.com/en/1.1.x/logging/#injecting-request-information
         if flask.has_request_context():
+            # legacy keys
             record.method = flask.request.method
             record.path = flask.request.path
+
+            # keys corresponding to New Relic Flask attributes
+            record.__dict__["request.method"] = flask.request.method
+            record.__dict__["request.path"] = flask.request.path
+            record.__dict__["request.url_rule"] = flask.request.url_rule
+
+            # custom features
             record.request_id = flask.request.headers.get("x-amzn-requestid", "")
             record.mass_pfml_agent_id = flask.request.headers.get("Mass-PFML-Agent-ID", "")
 

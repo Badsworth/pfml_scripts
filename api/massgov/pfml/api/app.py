@@ -106,6 +106,7 @@ def create_app(
         newrelic.agent.add_custom_parameter(
             "request_id", flask.request.headers.get("x-amzn-requestid", "")
         )
+        newrelic.agent.add_custom_parameter("request.url_rule", flask.request.url_rule)
 
     @flask_app.teardown_request
     def close_db(exception=None):

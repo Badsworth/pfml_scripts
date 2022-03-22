@@ -841,8 +841,7 @@ def test_build_customer_model_no_mass_id(user):
 
     assert application.mass_id is None
 
-    assert customer_model.classExtensionInformation[0].name == "MassachusettsID"
-    assert customer_model.classExtensionInformation[0].stringValue == ""
+    assert customer_model.classExtensionInformation[0].name != "MassachusettsID"
 
 
 def test_build_customer_address(user):
@@ -1565,7 +1564,7 @@ class TestGetAbsencePeriods:
                 absence_period_end_date=datetime.date(2021, 1, 30),
                 reason="Child Bonding",
                 reason_qualifier_one="Foster Care",
-                reason_qualifier_two="",
+                reason_qualifier_two=None,
                 period_type="Continuous",
                 request_decision="Pending",
                 evidence_status=None,
@@ -1775,11 +1774,7 @@ class TestBuildContactDetailsForFineosUpgrade:
         monkeypatch.setenv("FINEOS_IS_RUNNING_V21", "true")
 
         application = ApplicationFactory.build()
-        fineos_client = massgov.pfml.fineos.MockFINEOSClient()
-
-        contact_details = fineos_actions.build_contact_details(
-            application, fineos_client.read_customer_contact_details("foo")
-        )
+        contact_details = fineos_actions.build_contact_details(application)
 
         assert contact_details.emailAddresses[0].emailAddress == application.user.email_address
         assert contact_details.emailAddresses[0].emailAddressType == "Email"
@@ -1788,11 +1783,7 @@ class TestBuildContactDetailsForFineosUpgrade:
         monkeypatch.setenv("FINEOS_IS_RUNNING_V21", "false")
 
         application = ApplicationFactory.build()
-        fineos_client = massgov.pfml.fineos.MockFINEOSClient()
-
-        contact_details = fineos_actions.build_contact_details(
-            application, fineos_client.read_customer_contact_details("foo")
-        )
+        contact_details = fineos_actions.build_contact_details(application)
 
         assert contact_details.emailAddresses[0].emailAddress == application.user.email_address
         assert "emailAddressType" not in contact_details.emailAddresses[0].dict()

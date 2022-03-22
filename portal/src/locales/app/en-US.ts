@@ -520,7 +520,7 @@ const errors = {
       disallow_caring_leave_before_july:
         "Leave start dates must be after June 30, 2021.",
       disallow_hybrid_intermittent_leave:
-        "You cannot request intermittent leave in the same application as your continuous or reduced schedule leave. Create a separate application for your intermittent leave dates.",
+        "You cannot request intermittent leave in the same application as your continuous or reduced schedule leave. Create a separate application for your <intermittent-leave-guide>intermittent leave</intermittent-leave-guide> dates.",
       disallow_overlapping_leave_period_with_previous_leave:
         "Your previous leave dates cannot overlap with the PFML leave dates you are applying for. Check that you’ve entered the correct start and end dates for your leave details and previous leave.",
       disallow_overlapping_leave_periods:
@@ -532,7 +532,7 @@ const errors = {
       disallow_submit_over_60_days_before_start_date:
         "The date your leave begins is more than 60 days in the future. Submit your application within 60 days of your leave start date.",
       min_leave_periods:
-        "You must choose at least one kind of leave (continuous, reduced schedule, or intermittent).",
+        "You must choose at least one kind of leave (<scheduling-leave-guide>continuous, reduced schedule, or intermittent</scheduling-leave-guide>).",
       min_reduced_leave_minutes:
         "The total time entered for your hours off must be greater than 0.",
       require_employee:
@@ -769,7 +769,7 @@ const shared: {
   applicationImportError_noMatch:
     "No match found. Applications started on the phone with a Contact Center agent can take up to 24 hours to appear in our online system. Check back again. If you’re still unable to find your application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
   applicationImportError_unsupported:
-    "This application cannot be added at this time. If you are applying for military-related paid family leave benefits, or you are currently self-employed or unemployed, your application cannot be managed by this website. You will need to call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> to work on your application or get status updates.",
+    "This application cannot be added at this time. If you are applying for <applying-to-military-leave>military-related paid family leave benefits</applying-to-military-leave>, or you are currently <applying-self-or-unemployed>self-employed or unemployed</applying-self-or-unemployed>, your application cannot be managed by this website. You will need to call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> to work on your application or get status updates.",
   auth: {
     emailError_exists: "An account with the given email already exists",
     emailError_required: "Enter your email address",
@@ -1996,14 +1996,14 @@ const pages: {
     previousLeaveLeaveMinutesLabel: "Total hours of leave taken: ",
     previousLeaveLeaveMinutes_noMinutes: "$t(shared.displayTime_noMinutes)",
     previousLeaveReason_activeDutyFamily:
-      "Leave was for managing family affairs while a family member was on active duty in the armed forces",
+      "Family leave to manage family affairs while a family member was on active duty in the armed forces",
     previousLeaveReason_bonding:
-      "Leave was for bonding with a child after birth or placement",
-    previousLeaveReason_care: "Leave was for caring for a family member",
-    previousLeaveReason_medical: "Leave was for an illness or injury",
-    previousLeaveReason_pregnancy: "Leave was for a pregnancy",
+      "Family leave to bond with a child after birth or placement",
+    previousLeaveReason_care: "Family leave to care for a family member",
+    previousLeaveReason_medical: "Medical leave for an illness or injury",
+    previousLeaveReason_pregnancy: "Medical leave related to pregnancy",
     previousLeaveReason_serviceMemberFamily:
-      "Leave was for caring for a family member who serves in the armed forces",
+      "Famliy leave to care for a family member who serves in the armed forces",
     previousLeaveType_otherReason: "Leave for a different qualifying reason",
     previousLeaveType_sameReason: "Leave for the same qualifying reason",
     previousLeaveWorkedPerWeekMinutes: "$t(shared.displayTime)",
@@ -2607,7 +2607,7 @@ const pages: {
       "When an employee applies for leave, you’ll receive email updates about their application status and any steps you need to take. We’ll include everyone who has an employer account with your organization in case you’re out of the office.",
     checkEmailTitle: "Check your email regularly",
     learnMoreLinks:
-      "<ul><li><mass-employer-role-link>Your role as a Massachusetts employer</mass-employer-role-link></li><li><reimbursements-link>Employer reimbursements</reimbursements-link></li></ul>",
+      "<ul><li><mass-employer-role-link>Your role as a Massachusetts employer</mass-employer-role-link></li><li><reimbursements-link>Request to be reimbursed for paid leave benefits</reimbursements-link></li></ul>",
     learnMoreTitle: "Learn more",
     respondBody:
       "When an application is submitted, you have 10 business days to open the direct link from your email and review it online. You can comment on the application, approve or deny it, and report fraud if needed. Reviewing takes about 10 minutes. If we don’t hear from anyone at your organization before the deadline, we’ll process the application solely based on the information the employee provided.",
@@ -2646,7 +2646,7 @@ const pages: {
       "<p>If you can, tell your employer at least 30 days before your leave begins. If you need to take leave right away, tell your employer as soon as possible.</p><p>Once you tell your employer, you have the right to apply and your job is protected. Make a note of when you notified your employer. You will need to provide this date in your leave application.</p>",
     stepOneHeading: "1. Tell your employer that you need to take paid leave",
     stepThree:
-      "<p>Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.</p><p>If you give birth and plan to take both pregnancy-related medical leave and family leave to bond with your newborn, you should apply for medical leave first. Family leave to bond with your child can be <medical-bonding-link>easily added to your claim</medical-bonding-link> by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p><p>You need to create multiple leave applications if you are:</p><ul><li>Taking leave from multiple employers.</li><li>Taking time off in uneven blocks of time (intermittent leave), <strong>and</strong> taking time off completely or on a reduced schedule. You’ll need a separate application for the intermittent leave.</li></ul><p>PFML benefits are subject to reporting for tax purposes and may be subject to taxation. Your decision to have taxes withheld from your benefit may affect your personal tax liability. If you’re unsure whether you want to withhold taxes, we recommend speaking with a <tax-guide-link>tax professional</tax-guide-link>. Learn more about the <tax-liability-link>possible tax implications</tax-liability-link> of paid leave benefits.</p><p>The maximum benefit a person can receive per week is ${{maxBenefitAmount}}. Learn more about <benefits-amount-details-link>how benefits are calculated.</benefits-amount-details-link></p>", // eslint-disable-line no-template-curly-in-string
+      "<p>Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.</p><p>If you give birth and plan to take both pregnancy-related medical leave and family leave to bond with your newborn, you should apply for medical leave first. Family leave to bond with your child can be <medical-bonding-link>easily added to your application</medical-bonding-link> by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p><p>You need to create multiple leave applications if you are:</p><ul><li>Taking leave from multiple employers.</li><li>Taking time off in uneven blocks of time (intermittent leave), <strong>and</strong> taking time off completely or on a reduced schedule. You’ll need a separate application for the intermittent leave.</li></ul><p>PFML benefits are subject to reporting for tax purposes and may be subject to taxation. Your decision to have taxes withheld from your benefit may affect your personal tax liability. If you’re unsure whether you want to withhold taxes, we recommend speaking with a <tax-guide-link>tax professional</tax-guide-link>. Learn more about the <tax-liability-link>possible tax implications</tax-liability-link> of paid leave benefits.</p><p>The maximum benefit a person can receive per week is ${{maxBenefitAmount}}. Learn more about <benefits-amount-details-link>how benefits are calculated.</benefits-amount-details-link></p>", // eslint-disable-line no-template-curly-in-string
     stepThreeHeading: "3. Apply",
     stepTwoBondingLeaveBody:
       "<p>For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child’s date of birth or placement.</p><p>You can apply before your child is born or arrives in your home. You will need to provide proof of birth or placement for your application to be approved.</p>",
@@ -2756,6 +2756,10 @@ const pages: {
       "$t(pages.payments.tablePaymentStatus_Delayed_Default)",
     "tablePaymentStatus_Delayed_Max Weekly Benefits Exceeded":
       "$t(pages.payments.tablePaymentStatus_Delayed_Default)",
+    tablePaymentStatus_Delayed_Processing:
+      "Your payment is being processed. Your {{paymentMethod}} dates will be available in a few days. No action is required from you at this time.",
+    tablePaymentStatus_Delayed_ProcessingWithDate:
+      "$t(pages.payments.tablePaymentStatus_Pending)",
     tablePaymentStatus_Pending:
       "Your payment will be sent by {{paymentMethod}} between {{payPeriod}}.",
     "tablePaymentStatus_Sent to bank":
@@ -2849,6 +2853,8 @@ const components: {
     claimAssociatedSuccessfully:
       "Application {{fineos_absence_id}} has been added to your account.",
     continueApplication: "Continue application",
+    earliestSubmissionDateInFuture:
+      "You will be able to submit this application on <strong>{{earliest_submission_date}}</strong>. This is 60 days before the start of your leave. Applications cannot be submitted earlier than 60 days before the start of leave.",
     employerEIN: "Employer Identification Number (EIN)",
     heading_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
     heading_bonding: "$t(shared.leaveReasonBondingHeader)",
@@ -2859,6 +2865,8 @@ const components: {
     heading_serviceMemberFamily: "$t(shared.leaveReasonServiceMemberFamily)",
     inProgressText:
       "Submit all three parts so that we can review your application.",
+    leaveDates: "{{start}} to {{end}}",
+    leaveDatesLabel: "Leave Dates",
     leavePeriodLabel_reduced: "$t(shared.claimDurationTypeReducedSchedule)",
     loadingLabel: "$t(shared.loadingDocumentsLabel)",
     noticeOnClickDetails:

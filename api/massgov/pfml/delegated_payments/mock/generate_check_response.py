@@ -8,7 +8,7 @@ import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import PaymentMethod
 from massgov.pfml.delegated_payments.mock.scenario_data_generator import ScenarioData
-from massgov.pfml.delegated_payments.pub.pub_check import _format_employee_name_for_ez_check
+from massgov.pfml.delegated_payments.pub.pub_check import _format_name_for_ez_check
 from massgov.pfml.util.files import create_csv_from_list
 
 logger = logging.get_logger(__name__)
@@ -150,7 +150,7 @@ class PubCheckResponseGenerator:
             bfc_code="CLMNT",
             payee_id=str(employee.employee_id),
             check_number=check_number,
-            payee_name=_format_employee_name_for_ez_check(payment),
+            payee_name=_format_name_for_ez_check(payment),
         )
 
         response_date = (

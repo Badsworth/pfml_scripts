@@ -146,7 +146,7 @@ export const Welcome = ({ appLogic, user }: WelcomeProps) => {
               ),
               "reimbursements-link": (
                 <a
-                  href={routes.external.massgov.employerReimbursements}
+                  href={routes.external.massgov.employerReimbursementsRequest}
                   target="_blank"
                   rel="noopener"
                 />

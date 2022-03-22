@@ -26,6 +26,7 @@ from massgov.pfml.db.models.employees import (
     ReferenceFile,
     ReferenceFileType,
     State,
+    StateLog,
 )
 from massgov.pfml.db.models.factories import (
     ClaimFactory,
@@ -238,14 +239,7 @@ def test_run_step_happy_path(local_claimant_extract_step, local_test_db_session)
     assert len(eft_state_logs) == 1
     assert eft_state_logs[0].import_log_id == local_claimant_extract_step.get_import_log_id()
 
-    claim_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-        associated_class=state_log_util.AssociatedClass.CLAIM,
-        end_state=State.DELEGATED_CLAIM_EXTRACTED_FROM_FINEOS,
-        db_session=local_test_db_session,
-    )
-    assert len(claim_state_logs) == 1
-    assert claim_state_logs[0].import_log_id == local_claimant_extract_step.get_import_log_id()
-    assert claim_state_logs[0].claim_id == claim.claim_id
+    assert len(claim.state_logs) == 0
 
     # Confirm metrics added to import log
     import_log = (
@@ -332,21 +326,8 @@ def test_run_step_existing_approved_eft_info(local_claimant_extract_step, local_
 
     # We should not have added it to the EFT state flow
     # and there shouldn't have been any errors
-    eft_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-        associated_class=state_log_util.AssociatedClass.EMPLOYEE,
-        end_state=State.DELEGATED_EFT_SEND_PRENOTE,
-        db_session=local_test_db_session,
-    )
-    assert len(eft_state_logs) == 0
-
-    claim_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-        associated_class=state_log_util.AssociatedClass.CLAIM,
-        end_state=State.DELEGATED_CLAIM_EXTRACTED_FROM_FINEOS,
-        db_session=local_test_db_session,
-    )
-    assert len(claim_state_logs) == 1
-    assert claim_state_logs[0].import_log_id == local_claimant_extract_step.get_import_log_id()
-    assert claim_state_logs[0].claim.employee_id == updated_employee.employee_id
+    state_logs = local_test_db_session.query(StateLog).all()
+    assert len(state_logs) == 0
 
 
 def test_run_step_existing_rejected_eft_info(local_claimant_extract_step, local_test_db_session):
@@ -1345,9 +1326,7 @@ def test_run_step_not_id_proofed(claimant_extract_step, test_db_session):
     assert not claim.is_id_proofed
 
     # Verify the state logs
-    assert len(claim.state_logs) == 1
-    state_log = claim.state_logs[0]
-    assert state_log.end_state_id == State.DELEGATED_CLAIM_EXTRACTED_FROM_FINEOS.state_id
+    assert len(claim.state_logs) == 0
 
 
 def test_run_step_no_default_payment_pref(claimant_extract_step, test_db_session):

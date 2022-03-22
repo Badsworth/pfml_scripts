@@ -22,7 +22,7 @@ exports[`Success renders the page 1`] = `
   <p>
     Your account has been verified. If anyone else on your team needs to review applications, they’ll also need to complete the 
     <a
-      href="https://www.mass.gov/how-to/creating-an-employer-account-to-review-paid-family-and-medical-leave-pfml-applications"
+      href="https://www.mass.gov/pfml-verify-employer"
       rel="noopener"
       target="_blank"
     >

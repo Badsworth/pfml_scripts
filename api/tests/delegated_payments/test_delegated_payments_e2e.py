@@ -54,6 +54,7 @@ from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
     generate_claimant_data_files,
     generate_payment_extract_files,
     generate_payment_reconciliation_extract_files,
+    generate_vbi_taskreport_som_extract_files,
 )
 from massgov.pfml.delegated_payments.mock.generate_check_response import PubCheckResponseGenerator
 from massgov.pfml.delegated_payments.mock.generate_manual_pub_reject_response import (
@@ -300,10 +301,11 @@ def test_e2e_pub_payments(
         # Payments
         payments = (
             # Only retrieve payments that were generated from processing extracts
-            # This ends up being 6 there are 4 steps that occur before as well as an import log for past payments
-            # 1:PastPayments,2:StateCleanupStep,3:CLAIMANT_EXTRACT_CONFIG,4:PAYMENT_EXTRACT_CONFIG,5:ClaimantExtractStep,6:PaymentExtractStep
+            # This ends up being 7: there are 5 steps that occur before as well as an import log for past payments
+            # 1:PastPayments,2:StateCleanupStep,3:CLAIMANT_EXTRACT_CONFIG,4:PAYMENT_EXTRACT_CONFIG,
+            # 5:VBI_TASKREPORT_SOM_EXTRACT_CONFIG,6:ClaimantExtractStep,7:PaymentExtractStep
             test_db_session.query(Payment)
-            .filter(Payment.fineos_extract_import_log_id == 6)
+            .filter(Payment.fineos_extract_import_log_id == 7)
             .all()
         )
         missing_payment = list(
@@ -513,7 +515,7 @@ def test_e2e_pub_payments(
         assert_claim_state_for_scenarios(
             test_dataset=test_dataset,
             scenario_names=valid_claim_scenarios,
-            end_state=State.DELEGATED_CLAIM_EXTRACTED_FROM_FINEOS,
+            end_state=None,
             db_session=test_db_session,
         )
         assert_claim_state_for_scenarios(
@@ -2961,6 +2963,14 @@ def generate_fineos_extract_files(scenario_dataset: List[ScenarioData], round: i
         fineos_extract_date_prefix,
     )
 
+    # vbi taskreport som extract
+    generate_vbi_taskreport_som_extract_files(fineos_data_export_path, get_now_us_eastern())
+    assert_files(
+        fineos_data_export_path,
+        payments_util.VBI_TASKREPORT_SOM_EXTRACT_FILE_NAMES,
+        fineos_extract_date_prefix,
+    )
+
 
 def generate_rejects_file(test_dataset: TestDataSet, round: int = 1):
     s3_config = payments_config.get_s3_config()
@@ -3110,7 +3120,7 @@ def assert_files(folder_path, expected_files, file_prefix=""):
 def assert_claim_state_for_scenarios(
     test_dataset: TestDataSet,
     scenario_names: List[ScenarioName],
-    end_state: LkState,
+    end_state: Optional[LkState],
     db_session: db.Session,
 ):
     for scenario_name in scenario_names:
@@ -3123,13 +3133,17 @@ def assert_claim_state_for_scenarios(
             state_log = state_log_util.get_latest_state_log_in_flow(
                 claim, Flow.DELEGATED_CLAIM_VALIDATION, db_session
             )
-
-            assert (
-                state_log is not None
-            ), f"No state found for scenario: {scenario_name}, {claim.state_logs}"
-            assert (
-                state_log.end_state_id == end_state.state_id
-            ), f"Unexpected claim state for scenario: {scenario_name}, expected: {end_state.state_description}, found: {state_log.end_state.state_description}"
+            if end_state is None:
+                assert (
+                    state_log is None
+                ), f"Expected state log to be none for claim in scenario {scenario_name}, found {state_log.end_state.state_description}"
+            else:
+                assert (
+                    state_log is not None
+                ), f"No state found for scenario: {scenario_name}, {claim.state_logs}"
+                assert (
+                    state_log.end_state_id == end_state.state_id
+                ), f"Unexpected claim state for scenario: {scenario_name}, expected: {end_state.state_description}, found: {state_log.end_state.state_description}"
 
 
 def assert_payment_state_for_scenarios(

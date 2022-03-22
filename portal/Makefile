@@ -1,5 +1,6 @@
 .DEFAULT_GOAL := help
 PORTAL_PATHS := . ../infra/portal
+SHELL = /bin/bash -o pipefail
 
 help: ## Displays this help screen
 	@grep -Eh '^[[:print:]]+:.*?##' $(MAKEFILE_LIST) | \

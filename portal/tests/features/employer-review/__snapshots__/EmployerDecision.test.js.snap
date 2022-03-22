@@ -22,7 +22,7 @@ exports[`EmployerDecision renders the component 1`] = `
   >
     Answer based on your organization's policies and our 
     <a
-      href="https://www.mass.gov/info-details/employer-paid-leave-application-review-guide"
+      href="https://mass.gov/pmfl-leave-administrators"
       rel="noreferrer noopener"
       target="_blank"
     >

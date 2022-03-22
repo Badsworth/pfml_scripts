@@ -107,7 +107,9 @@ export class ClaimPage {
   }
 
   paidLeave(cb: (page: PaidLeavePage) => unknown): this {
-    cy.findByText("Absence Paid Leave Case", { selector: "a" }).click();
+    cy.findByText("Absence Paid Leave Case", { selector: "a" }).click({
+      force: true,
+    });
     cb(new PaidLeavePage());
     cy.findByText("Absence Case", { selector: "a" }).click();
     return this;
@@ -278,17 +280,17 @@ export class ClaimPage {
       .click();
     cy.get("input[type='submit'][value='Reject']").click();
     clickBottomWidgetButton("OK");
-    if (upgrade) {
-      cy.get('a[title="Deny the pending/in review leave request"]').click();
-    } else {
-      cy.get('a[title="Deny the Pending Leave Request"]').click();
-    }
+    const selector = upgrade
+      ? 'a[title="Deny the pending/in review leave request"]'
+      : 'a[title="Deny the Pending Leave Request"]';
+    cy.get(selector).click();
     cy.get('span[id="leaveRequestDenialDetailsWidget"]')
       .find("select")
       .select(reason);
     cy.get('input[type="submit"][value="OK"]').click();
     // denying an extension for another reason will cause this assertion to fail
-    assertStatus && assertClaimStatus("Declined");
+    assertStatus &&
+      assertClaimStatus(upgrade ? "Previously denied" : "Declined", upgrade);
     return this;
   }
 
@@ -741,19 +743,15 @@ class CertificationPeriodsPage {
 
 class RequestInformationPage {
   private enterNewLeaveDates(newStartDate: string, newEndDate: string) {
-    cy.get(
-      "input[id='timeOffAbsencePeriodDetailsWidget_un41_startDate']"
-    ).click();
-    cy.get("input[id='timeOffAbsencePeriodDetailsWidget_un41_startDate']").type(
-      `{selectall}{backspace}${newStartDate}{enter}`
-    );
+    cy.get("input[id*='startDate']").first().click();
+    cy.get("input[id*='startDate']")
+      .first()
+      .type(`{selectall}{backspace}${newStartDate}{enter}`);
     waitForAjaxComplete();
-    cy.get(
-      "input[id='timeOffAbsencePeriodDetailsWidget_un41_endDate']"
-    ).click();
-    cy.get("input[id='timeOffAbsencePeriodDetailsWidget_un41_endDate']").type(
-      `{selectall}{backspace}${newEndDate}{enter}`
-    );
+    cy.get("input[id*='endDate']").first().click();
+    cy.get("input[id*='endDate']")
+      .first()
+      .type(`{selectall}{backspace}${newEndDate}{enter}`);
     waitForAjaxComplete();
     cy.get("input[type='button'][title='OK']").click();
     waitForAjaxComplete();
@@ -762,7 +760,7 @@ class RequestInformationPage {
   editRequestDates(newStartDate: string, newEndDate: string): ClaimPage {
     waitForAjaxComplete();
     cy.get(
-      "table[id$='timeOffAbsencePeriodsListviewWidget'][class='ListTable responsive-table']"
+      "table[id^='timeOffAbsencePeriodsListview'][class='ListTable responsive-table']"
     ).within(() => {
       cy.get("tr").then(
         ($el) => expect($el.hasClass("ListRowSelected")).to.be.true
@@ -2794,17 +2792,13 @@ export class ClaimantPage {
    */
   createNotification(
     claim: ValidClaim,
-    withholdingPreference?: boolean,
-    verifyOccupation?: boolean
+    withholdingPreference?: boolean
   ): Cypress.Chainable<string> {
     if (!claim.leave_details.reason) throw new Error(`Missing leave reason.`);
     const reason = claim.leave_details.reason as NonNullable<LeaveReason>;
     // Start the process
     return this.startCreateNotification((occupationDetails) => {
       // "Occupation Details" step.
-      if (verifyOccupation) {
-        occupationDetails.verifyOccupation();
-      }
       if (claim.hours_worked_per_week)
         occupationDetails.enterHoursWorkedPerWeek(claim.hours_worked_per_week);
       return occupationDetails.nextStep((notificationOptions) => {
@@ -3036,11 +3030,6 @@ class OccupationDetails extends CreateNotificationStep {
     cy.findByLabelText("Date job ended").type(
       `${dateToMMddyyyy(dateJobEnded)}{enter}`
     );
-  }
-
-  verifyOccupation(): this {
-    cy.get("[name$='_reverifyStatusLink']").click();
-    return this;
   }
 }
 

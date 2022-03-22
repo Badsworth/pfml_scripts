@@ -513,7 +513,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
       <p>
         Your employee is planning to use these benefits during their paid leave under PFML. Employer-sponsored benefits include temporary disability insurance, permanent disability insurance, and family or medical leave benefits such as a parental leave program. For paid time off (PTO) and other accrued paid leave your employee will use, review “Concurrent accrued paid leave” above. 
         <a
-          href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+          href="https://mass.gov/pfml-benefit-reductions"
           rel="noopener"
           target="_blank"
         >
@@ -845,7 +845,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
         >
           Answer based on your organization's policies and our 
           <a
-            href="https://www.mass.gov/info-details/employer-paid-leave-application-review-guide"
+            href="https://mass.gov/pmfl-leave-administrators"
             rel="noreferrer noopener"
             target="_blank"
           >

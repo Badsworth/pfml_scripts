@@ -506,7 +506,7 @@ paths:
   /change-request:
     post:
       summary: Create a change request record
-      operationId: massgov.pfml.api.claims.post_change_request
+      operationId: massgov.pfml.api.change_requests.post_change_request
       tags:
         - ChangeRequest
       parameters:
@@ -517,10 +517,7 @@ paths:
             example: "NTN-00-ABS-00"
           required: true
       requestBody:
-        content:
-          application/json:
-            schema: 
-              $ref: "#/components/schemas/ChangeRequest"
+        $ref: "#/components/requestBodies/ChangeRequest"
       responses:
         "201":
           description: A successful request returns a 201
@@ -543,7 +540,7 @@ paths:
 
     get:
       summary: Get list of change requests for a claim
-      operationId: massgov.pfml.api.claims.get_change_requests
+      operationId: massgov.pfml.api.change_requests.get_change_requests
       tags:
         - ChangeRequest
       parameters:
@@ -572,11 +569,69 @@ paths:
                             nullable: false
                           change_requests:
                               $ref: "#/components/schemas/ChangeRequestsResponse"
+
+  /change-request/{change_request_id}:
+    delete:
+      summary: Delete an in-progress ChangeRequest
+      operationId: massgov.pfml.api.change_requests.delete_change_request
+      tags:
+        - ChangeRequest
+      parameters:
+        - name: change_request_id
+          in: path
+          schema:
+            type: string
+            format: uuid
+            example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
+          description: ID of the change request to delete
+          required: true
+      responses:
+        "200":
+          description: Change Request successfully deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessfulResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"  
+    patch:
+      summary: Update an in-progress ChangeRequest
+      operationId: massgov.pfml.api.change_requests.update_change_request
+      tags:
+        - ChangeRequest
+      parameters:
+        - name: change_request_id
+          in: path
+          schema:
+            type: string
+            format: uuid
+            example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
+          description: ID of the change request to delete
+          required: true
+      requestBody:
+        $ref: "#/components/requestBodies/ChangeRequestUpdate"
+      responses:
+        "200":
+          description: Change Request successfully updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessfulResponse'
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/ChangeRequestResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"  
                               
   /change-request/{change_request_id}/submit:
     post:
       summary: Submit a completed change request to FINEOS
-      operationId: massgov.pfml.api.claims.submit_change_request
+      operationId: massgov.pfml.api.change_requests.submit_change_request
       tags:
         - ChangeRequest
       parameters:
@@ -606,33 +661,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-
-  /change-request/{change_request_id}:
-    delete:
-      summary: Delete an in-progress ChangeRequest
-      operationId: massgov.pfml.api.claims.delete_change_request
-      tags:
-        - ChangeRequest
-      parameters:
-        - name: change_request_id
-          in: path
-          schema:
-            type: string
-            format: uuid
-            example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
-          description: ID of the change request to delete
-          required: true
-      responses:
-        "200":
-          description: Change Request successfully deleted
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SuccessfulResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"   
 
   /payments:
     get:
@@ -1771,6 +1799,11 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ChangeRequest"
+    ChangeRequestUpdate:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ChangeRequestUpdate"
     HolidaysSearchRequest:
       content:
         application/json:
@@ -2505,6 +2538,7 @@ components:
           type: string
         middle_name:
           type: string
+          nullable: true
         uses_second_eform_version:
           type: boolean
         previous_leaves:
@@ -2996,6 +3030,11 @@ components:
           format: uuid
           example: "2f0f58a0-fcad-465b-b474-ee6c961cd6e3"
           nullable: true
+        computed_earliest_submission_date:
+          type: string
+          format: date
+          example: "2022-07-04"
+          nullable: true
 
     ComputedStartDates:
       type: object
@@ -3105,38 +3144,7 @@ components:
             - Serious Health Condition - Employee
           example: "Child Bonding"
         reason_qualifier_one:
-          type: string
-          enum:
-            - Not Work Related
-            - Work Related
-            - Blood
-            - Blood Stem Cell
-            - Bone Marrow
-            - Organ
-            - Other
-            - Postnatal Disability
-            - Prenatal Care
-            - Prenatal Disability
-            - Adoption
-            - Foster Care
-            - Newborn
-            - Pregnancy Related
-            - Right to Leave
-            - Serious Health Condition
-            - Sickness - Non-Serious Health Condition
-            - Childcare
-            - Counseling
-            - Financial & Legal Arrangements
-            - Military Events & Related Activities
-            - Other Additional Activities
-            - Post Deployment Activities - Including Bereavement
-            - Rest & Recuperation
-            - Short Notice Deployment
-            - Closure of School/Childcare
-            - Quarantine/Isolation - Not Sick
-            - Birth Disability
-            - Childcare and School Activities
-          example: "Newborn"
+          $ref: "#/components/schemas/ReasonQualifierOne"
         reason_qualifier_two:
           type: string
           nullable: true
@@ -3664,18 +3672,8 @@ components:
             - Care for a Family Member
           example: "Child Bonding"
         reason_qualifier:
-          type: string
+          $ref: "#/components/schemas/ReasonQualifierOne"
           nullable: true
-          enum:
-            - Newborn
-            - Serious Health Condition
-            - Work Related Accident/Injury
-            - Adoption
-            - Foster Care
-            - Not Work Related
-            - Sickness
-            - Postnatal Disability
-          example: "Newborn"
         reduced_schedule_leave_periods:
           type: array
           nullable: true
@@ -3724,6 +3722,40 @@ components:
             - By Telephone
             - Other
           example: "In Writing"
+
+    ReasonQualifierOne:
+      type: string
+      example: "Newborn"
+      enum:
+        - Not Work Related
+        - Work Related
+        - Blood
+        - Blood Stem Cell
+        - Bone Marrow
+        - Organ
+        - Other
+        - Postnatal Disability
+        - Prenatal Care
+        - Prenatal Disability
+        - Adoption
+        - Foster Care
+        - Newborn
+        - Pregnancy Related
+        - Right to Leave
+        - Serious Health Condition
+        - Sickness - Non-Serious Health Condition
+        - Childcare
+        - Counseling
+        - Financial & Legal Arrangements
+        - Military Events & Related Activities
+        - Other Additional Activities
+        - Post Deployment Activities - Including Bereavement
+        - Rest & Recuperation
+        - Short Notice Deployment
+        - Closure of School/Childcare
+        - Quarantine/Isolation - Not Sick
+        - Birth Disability
+        - Childcare and School Activities
 
     ReducedScheduleLeavePeriods:
       type: object
@@ -4520,6 +4552,23 @@ components:
             - Modification
             - Withdrawal
             - Medical To Bonding Transition
+        start_date: 
+          $ref: "#/components/schemas/Date"
+          nullable: true
+        end_date:
+          $ref: "#/components/schemas/Date"
+          nullable: true
+
+    ChangeRequestUpdate:
+      type: object
+      properties:
+        change_request_type:
+          type: string
+          enum:
+            - Modification
+            - Withdrawal
+            - Medical To Bonding Transition
+          nullable: true
         start_date: 
           $ref: "#/components/schemas/Date"
           nullable: true
