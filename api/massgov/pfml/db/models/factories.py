@@ -345,7 +345,6 @@ class EmployeePushToFineosQueueFactory(BaseFactory):
     employer_id = None
     action = "UPDATE_NEW_EMPLOYER"
     modified_at = Generators.UtcNow
-    process_id = 1
 
 
 class EmployerPushToFineosQueueFactoryFactory(BaseFactory):
@@ -356,7 +355,6 @@ class EmployerPushToFineosQueueFactoryFactory(BaseFactory):
     employer_id = None
     action = "INSERT"
     modified_at = Generators.UtcNow
-    process_id = 1
     family_exemption = None
     medical_exemption = None
     exemption_commence_date = None
