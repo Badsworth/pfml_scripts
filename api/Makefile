@@ -517,6 +517,7 @@ test: ## Run tests, set $args to pass flags to `pytest`
 test-coverage: ## Run tests run
 	$(PY_RUN_CMD) coverage run --branch --source=massgov -m pytest $(XDIST) $(args)
 	$(PY_RUN_CMD) coverage report
+	$(PY_RUN_CMD) coverage lcov
 
 test-changed: ## Run only tests that have changed
 	$(PY_RUN_CMD) python -m pytest --testmon
