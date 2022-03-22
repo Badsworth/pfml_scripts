@@ -217,6 +217,9 @@ pub-payments-process-snapshot:
 pub-payments-mock-generate:
 	$(PY_RUN_CMD)  pub-payments-mock-generate $(DECODE_LOG)
 
+pub-payments-backfill-data:
+	$(PY_RUN_CMD)  pub-payments-backfill-data --steps run-pei-line-item-backfill $(DECODE_LOG)
+
 pub-payments-process-1099-documents:
 	$(PY_RUN_CMD) pub-payments-process-1099-documents --steps ALL $(DECODE_LOG)
 

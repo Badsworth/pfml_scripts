@@ -15,7 +15,7 @@ exports[`Footer renders footer with default settings 1`] = `
         class="ma__site-logo"
       >
         <a
-          href="https://www.mass.gov/orgs/department-of-family-and-medical-leave"
+          href="https://mass.gov/dfml"
           title="Go to DFML homepage"
         >
           <img
@@ -78,7 +78,7 @@ exports[`Footer renders footer with default settings 1`] = `
             Privacy Policy
           </a>
           <a
-            href="https://www.mass.gov/info-details/massachusetts-department-of-family-and-medical-leave-informed-consent-agreement"
+            href="https://mass.gov/paidleave-informedconsent"
           >
             Data Sharing Agreement
           </a>
@@ -136,7 +136,7 @@ exports[`Footer renders footer with default settings 1`] = `
               />
             </svg>
             <a
-              href="https://www.mass.gov/orgs/department-of-family-and-medical-leave"
+              href="https://mass.gov/dfml"
             >
               Department of Family and Medical Leave (DFML)
             </a>

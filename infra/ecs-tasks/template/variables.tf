@@ -156,6 +156,18 @@ variable "dor_fineos_etl_schedule_expression_daylight_savings" {
   default     = "cron(30 4 * * ? *)"
 }
 
+variable "standalone_fineos_import_employee_updates_schedule_expression_standard" {
+  description = "Schedule for DOR FINEOS import employee updates in standard time 12 hours after the main ETL job"
+  type        = string
+  default     = "cron(30 17 * * ? *)"
+}
+
+variable "standalone_fineos_import_employee_updates_schedule_expression_daylight_savings" {
+  description = "Schedule for DOR FINEOS import employee updates in daylight time 12 hours after the main ETL job"
+  type        = string
+  default     = "cron(30 16 * * ? *)"
+}
+
 variable "eolwd_moveit_sftp_uri" {
   description = "URI for LWD MOVEit instance"
   type        = string
@@ -321,6 +333,12 @@ variable "enable_employer_reimbursement_payments" {
 
 variable "enable_pub_payments_copy_audit_report_schedule" {
   description = "Enable scheduling for 'pub-payments-copy-audit-report' ECS task"
+  type        = bool
+  default     = false
+}
+
+variable "enable_standalone_fineos_import_employee_updates" {
+  description = "Enable scheduling for 'standalone-fineos-import-employee-updates' ECS task"
   type        = bool
   default     = false
 }

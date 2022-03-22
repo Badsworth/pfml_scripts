@@ -921,7 +921,7 @@ python-versions = "*"
 
 [[package]]
 name = "moto"
-version = "3.0.5"
+version = "3.1.0"
 description = "A library that allows your python tests to easily mock out the boto library"
 category = "dev"
 optional = false
@@ -960,6 +960,7 @@ batch = ["docker (>=2.5.1)"]
 cloudformation = ["docker (>=2.5.1)", "PyYAML (>=5.1)", "cfn-lint (>=0.4.0)"]
 cognitoidp = ["python-jose[cryptography] (>=3.1.0,<4.0.0)", "ecdsa (!=0.15)"]
 ds = ["sshpubkeys (>=3.1.0)"]
+dynamodb = ["docker (>=2.5.1)"]
 dynamodb2 = ["docker (>=2.5.1)"]
 dynamodbstreams = ["docker (>=2.5.1)"]
 ec2 = ["sshpubkeys (>=3.1.0)"]
@@ -1819,21 +1820,22 @@ pymysql = ["pymysql (<1)", "pymysql"]
 
 [[package]]
 name = "sqlalchemy-stubs"
-version = "0.3"
-description = "SQLAlchemy stubs and mypy plugin"
+version = "0.4"
+description = ""
 category = "dev"
 optional = false
 python-versions = "*"
-develop = true
+develop = false
 
 [package.dependencies]
-mypy = ">=0.720"
+mypy = ">=0.790"
 typing-extensions = ">=3.7.4"
 
 [package.source]
 type = "git"
 url = "https://github.com/dropbox/sqlalchemy-stubs"
-reference = "55470ceab8149db983411d5c094c9fe16343c58b"
+reference = "8495c229cf8a31d75fcea36090e07c0e4b867605"
+resolved_reference = "8495c229cf8a31d75fcea36090e07c0e4b867605"
 
 [[package]]
 name = "sqlalchemy-utils"
@@ -2144,7 +2146,7 @@ api-only-dependencies = ["connexion", "flask-bouncer", "flask_cors", "Flask-HTTP
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "7282d6b244854394221abd33470a705cd76311abb17cf5524b87f13914829466"
+content-hash = "0d4bd72a2fac8f7db5adba401a1d9642e527d136bfe980baf01db9a7aa4ce234"
 
 [metadata.files]
 alembic = [
@@ -2711,8 +2713,8 @@ mccabe = [
     {file = "mccabe-0.6.1.tar.gz", hash = "sha256:dd8d182285a0fe56bace7f45b5e7d1a6ebcbf524e8f3bd87eb0f125271b8831f"},
 ]
 moto = [
-    {file = "moto-3.0.5-py2.py3-none-any.whl", hash = "sha256:077dd5b96267bbb81fc7677b6d5cc3099ca99a371bd7e90932b6d3ff997106c6"},
-    {file = "moto-3.0.5.tar.gz", hash = "sha256:85f2ece0ad0305aa13a39139ce648ab3afe1c04cb32ac1db8d5e5e9117d4d10e"},
+    {file = "moto-3.1.0-py2.py3-none-any.whl", hash = "sha256:d45b9b1ed8db073109392ec3dd473a3bf79a2dd2bf740042819e019f3e054947"},
+    {file = "moto-3.1.0.tar.gz", hash = "sha256:c4327b34228cc3d446e8e5434af5f997ab4c5f85cdf93a201833dca1ca0c0717"},
 ]
 msal = [
     {file = "msal-1.16.0-py2.py3-none-any.whl", hash = "sha256:a421a43413335099228f1d9ad93f7491d7c7c40044108290e4923fe58f41a332"},

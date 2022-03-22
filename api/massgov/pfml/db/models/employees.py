@@ -249,6 +249,10 @@ class LkMFADeliveryPreference(Base):
         self.mfa_delivery_preference_id = mfa_delivery_preference_id
         self.mfa_delivery_preference_description = mfa_delivery_preference_description
 
+    @typed_hybrid_property
+    def description(self) -> str:
+        return self.mfa_delivery_preference_description
+
 
 class LkMFADeliveryPreferenceUpdatedBy(Base):
     __tablename__ = "lk_mfa_delivery_preference_updated_by"
@@ -262,6 +266,10 @@ class LkMFADeliveryPreferenceUpdatedBy(Base):
         self.mfa_delivery_preference_updated_by_description = (
             mfa_delivery_preference_updated_by_description
         )
+
+    @typed_hybrid_property
+    def description(self) -> str:
+        return self.mfa_delivery_preference_updated_by_description
 
 
 class AbsencePeriod(Base, TimestampMixin):
@@ -782,6 +790,13 @@ class ChangeRequest(Base, TimestampMixin):
     def type(self) -> str:
         return self.change_request_type_instance.description
 
+    @typed_hybrid_property
+    def application(self):
+        if not self.claim:
+            return None
+
+        return self.claim.application  # type: ignore
+
 
 class Claim(Base, TimestampMixin):
     __tablename__ = "claim"
@@ -1073,6 +1088,8 @@ class Payment(Base, TimestampMixin):
     fineos_employee_middle_name = Column(Text)
     fineos_employee_last_name = Column(Text)
 
+    payee_name = Column(Text)
+
     claim = relationship("Claim", back_populates="payments")
     employee = relationship("Employee")
     claim_type = relationship(LkClaimType)
@@ -1303,7 +1320,7 @@ class User(Base, TimestampMixin):
         if mfa_preference is None:
             return None
 
-        return mfa_preference.mfa_delivery_preference_description
+        return mfa_preference.description
 
     @hybrid_method
     def mfa_phone_number_last_four(self) -> Optional[str]:
@@ -1547,6 +1564,25 @@ class ImportLog(Base, TimestampMixin):
     report = Column(Text)
     start = Column(TIMESTAMP(timezone=True), index=True)
     end = Column(TIMESTAMP(timezone=True))
+    report_queue_item = relationship(
+        "ImportLogReportQueue",
+        back_populates="import_log",
+        uselist=False,
+        passive_deletes=True,
+        cascade="all, delete-orphan",
+    )
+
+
+class ImportLogReportQueue(Base, TimestampMixin):
+    __tablename__ = "import_log_report_queue"
+    import_log_report_queue_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    import_log_id = Column(
+        Integer,
+        ForeignKey("import_log.import_log_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    import_log = cast(ImportLog, relationship("ImportLog", back_populates="report_queue_item"))
 
 
 class ReferenceFile(Base, TimestampMixin):
@@ -2069,6 +2105,8 @@ class ReferenceFileType(LookupTable):
     DUA_EMPLOYER_UNIT_FILE = LkReferenceFileType(40, "DUA employer unit", 1)
 
     MANUAL_PUB_REJECT_FILE = LkReferenceFileType(41, "Manual PUB Reject File", 1)
+
+    FINEOS_VBI_TASKREPORT_SOM_EXTRACT = LkReferenceFileType(41, "VBI TaskReport Som extract", 1)
 
 
 class Title(LookupTable):

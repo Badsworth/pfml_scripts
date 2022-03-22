@@ -178,14 +178,18 @@ NameError: name 'non_existent_function' is not defined$""",
     assert last_line["message"] == "test exception"
 
 
-FakeRequest = collections.namedtuple("FakeRequest", ("method", "path", "headers"))
+FakeRequest = collections.namedtuple("FakeRequest", ("method", "path", "headers", "url_rule"))
 
 
 def test_log_message_with_flask_request_context(capsys, monkeypatch):
     massgov.pfml.util.logging.init("test_logging_1234")
     monkeypatch.setattr(flask, "has_request_context", lambda: True)
     monkeypatch.setattr(
-        flask, "request", FakeRequest("POST", "/test/path", headers={"x-amzn-requestid": "123"})
+        flask,
+        "request",
+        FakeRequest(
+            "POST", "/test/path", headers={"x-amzn-requestid": "123"}, url_rule="/test/path/<foo>"
+        ),
     )
 
     user = UserFactory.build()
@@ -230,13 +234,19 @@ def test_log_message_with_flask_request_context(capsys, monkeypatch):
         "current_user.has_role_PFML_CRM",
         "azure_user.sub_id",
         "mass_pfml_agent_id",
+        "request.method",
+        "request.path",
+        "request.url_rule",
     }
     assert last_line["name"] == "massgov.pfml.test.logging"
     assert last_line["levelname"] == "INFO"
     assert last_line["funcName"] == "test_log_message_with_flask_request_context"
     assert last_line["threadName"] == "MainThread"
     assert last_line["method"] == "POST"
+    assert last_line["request.method"] == "POST"
     assert last_line["path"] == "/test/path"
+    assert last_line["request.path"] == "/test/path"
+    assert last_line["request.url_rule"] == "/test/path/<foo>"
     assert last_line["request_id"] == "123"
     assert last_line["message"] == "test request context"
     assert last_line["current_user.user_id"] == str(user.user_id)

@@ -31,6 +31,8 @@ class ReportName(str, Enum):
     TAX_WITHHOLDING_CUMULATIVE_REPORT = "tax-withholding-cumulative-report"
 
 
+REPORT_NAMES = [x for x in ReportName]
+
 # Reports grouped by processing tasks
 PROCESS_FINEOS_EXTRACT_REPORTS: List[ReportName] = [
     ReportName.CLAIMANT_EXTRACT_ERROR_REPORT,

@@ -1,166 +1,42 @@
 import { Tooltip } from "nr1";
 import React from "react";
-import { labelEnv } from "../common";
+import { labelEnv, msToTime, setDefault } from "../common";
 import { E2EQuery } from "../common/components/E2EQuery";
 import { DAO, DAORunDetails } from "../common/DAO";
 import { Tags } from "../common/components/Tags";
 import { format } from "date-fns";
+import { GridRow } from "./TestGridRow";
 
-class GridRow extends React.Component {
-  constructor(props) {
-    super(props);
-    this.spec = props.spec;
-    this.file = props.file;
-    this.runs = props.runs;
-
-    this.runs.map(({ runId }) => {
-      this.calculateFileStatus(runId);
-    });
-  }
-
-  progressStyle = (runOverview) => {
-    let width;
-    if (runOverview.percent === null || runOverview.status === "skip") {
-      width = 100;
-    } else {
-      width = runOverview.percent;
-    }
-
-    return { width: `${width}%` };
-  };
-
-  progressDisplay(runOverview) {
-    if (runOverview.percent === null) {
-      return "N/A";
-    } else if (runOverview.status === "skip") {
-      return "SKIP";
-    } else if (runOverview.percent === 100) {
-      return "PASS";
-    } else {
-      return `${runOverview.percent}%`;
-    }
-  }
-
-  progressClass(runOverview) {
-    if (runOverview.status === null) {
-      return "na";
-    } else if (runOverview.percent === "pass") {
-      if (runOverview.totalTries > runOverview.totalBlocks) {
-        return "flake";
-      }
-      if (runOverview.skip) {
-        return "skip";
-      }
-    }
-
-    return runOverview.status;
-  }
-
-  getOverallStatus = (runOverview) => {
-    if (runOverview === "unknown" || runOverview?.totalBlocks === 0) {
-      return `N/A`;
-    }
-
-    if (runOverview.totalBlocks === runOverview.pass) {
-      return "PASS";
-    } else {
-      return `${Math.round(
-        (runOverview.pass / runOverview.totalBlocks) * 100
-      )}%`;
-    }
-  };
-
-  /**
-   * Calculate the overall status of the run for this file.
-   * We needed to do this after all data was populated.
-   *
-   * @param runId
-   * @returns {string}
-   */
-  calculateFileStatus(runId) {
-    let _rOverview = this.spec.overview[runId];
-
-    _rOverview.percent = null;
-    if (_rOverview?.totalBlocks !== 0) {
-      _rOverview.percent = Math.round(
-        (_rOverview.pass / _rOverview.totalBlocks) * 100
-      );
-    }
-
-    // Iterate through all blocks in the run, and determine the overall status
-    _rOverview.status = Object.keys(this.spec.blocks).reduce((s, block) => {
-      const runStatus = this.spec.blocks[block].runs[runId].status;
-      //First Iteration
-      if (s === null) {
-        return runStatus;
-      }
-      //Fail always wins status
-      if (runStatus === "fail") {
-        return runStatus;
-      }
-      if (s === "skip" && runStatus === "pass") {
-        return runStatus;
-      }
-      return s;
-    }, null);
-  }
-
-  render() {
-    if (!this.spec) {
-      return <span></span>;
-    }
-    return [
-      <tr>
-        <td>
-          <span
-            className={`indicator ${this.progressClass(
-              this.spec.overview[this.runs[0].runId]
-            )}`}
-          />
-        </td>
-        <td className="filename">{this.file}</td>
-        {this.runs.map(({ runId }) => {
-          const runOverview = this.spec.overview[runId];
-          return [
-            <td />,
-            <td>
-              <div
-                className={`runProgress clickable ${this.progressClass(
-                  runOverview
-                )}`}
-              >
-                <div
-                  className={`progress ${this.progressClass(runOverview)}`}
-                  style={this.progressStyle(runOverview)}
-                >
-                  {this.progressDisplay(runOverview)}
-                </div>
-              </div>
-            </td>,
-          ];
-        })}
-      </tr>,
-    ];
-  }
+export function TestGridHeader({ run, index, date }) {
+  date = setDefault(date, true);
+  return (
+    <Tooltip
+      placementType={Tooltip.PLACEMENT_TYPE.BOTTOM}
+      text={`${format(run.startTime, "PPp")} - ${format(run.endTime, "PPp")}\n
+                              Run ID: ${run.runId}
+                              Environment: ${labelEnv(run.environment)}
+                              Compute Time: ${msToTime(run.computeTimeMs)}
+                              `}
+      additionalInfoLink={{
+        to: run.cypressUrl,
+        label: "View in Cypress",
+      }}
+    >
+      <span className="TestGridHeader">
+        <span className="indexNumber">
+          {index + 1}
+          <Tags tags={run.tags} />
+        </span>
+        {date && <span className="date">{format(run.startTime, "PPp")}</span>}
+      </span>
+    </Tooltip>
+  );
 }
 
 export default class TestGrid extends React.Component {
   constructor(props) {
     super(props);
     this.runIds = props.runIds;
-  }
-
-  msToTime(duration) {
-    var milliseconds = Math.floor((duration % 1000) / 100),
-      seconds = Math.floor((duration / 1000) % 60),
-      minutes = Math.floor((duration / (1000 * 60)) % 60),
-      hours = Math.floor((duration / (1000 * 60 * 60)) % 24);
-
-    hours = hours < 10 ? "0" + hours : hours;
-    minutes = minutes < 10 ? "0" + minutes : minutes;
-    seconds = seconds < 10 ? "0" + seconds : seconds;
-
-    return hours + ":" + minutes + ":" + seconds + "." + milliseconds;
   }
 
   /**
@@ -202,34 +78,11 @@ export default class TestGrid extends React.Component {
                         </th>
                       </tr>
                       <tr>
-                        <th />
                         <th>File</th>
                         {overview.map((run, i) => [
                           <th />,
                           <th width="150px" className="colProgress">
-                            <Tooltip
-                              placementType={Tooltip.PLACEMENT_TYPE.BOTTOM}
-                              text={`${format(run.startTime, "PPp")} - ${format(
-                                run.endTime,
-                                "PPp"
-                              )}\n
-                              Run ID: ${run.runId}
-                              Environment: ${labelEnv(run.environment)}
-                              Compute Time: ${this.msToTime(run.computeTimeMs)}
-                              `}
-                              additionalInfoLink={{
-                                to: run.cypressUrl,
-                                label: "View in Cypress",
-                              }}
-                            >
-                              <span>
-                                {i + 1}
-                                <Tags tags={run.tags} />
-                                <span className="date">
-                                  {format(run.startTime, "PPp")}
-                                </span>
-                              </span>
-                            </Tooltip>
+                            <TestGridHeader run={run} index={i} />
                           </th>,
                         ])}
                       </tr>
@@ -296,6 +149,7 @@ export default class TestGrid extends React.Component {
           status: null,
           category: null,
           tryNumber: 0,
+          blockCount: 0,
           messages: [],
           check: [],
         };
@@ -474,14 +328,18 @@ export default class TestGrid extends React.Component {
       }
 
       // Dont count a block for a run if it already has a message in it.
-      if (!_runBlock.messages.length) {
+      if (!_runBlock.blockCount) {
         _overview.totalBlocks++;
       }
 
-      _runBlock.messages.push({
-        message: datum.anonymizedMessage,
-        tryNumber: datum.tryNumber,
-      });
+      _runBlock.blockCount++;
+
+      if (datum.anonymizedMessage) {
+        _runBlock.messages.push({
+          message: datum.anonymizedMessage,
+          tryNumber: datum.tryNumber,
+        });
+      }
     });
 
     return { overview: runOverview, groups: ret };

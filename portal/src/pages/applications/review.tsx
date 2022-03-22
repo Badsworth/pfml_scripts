@@ -4,8 +4,8 @@ import {
 } from "../../models/PaymentPreference";
 import {
   DocumentType,
-  findDocumentsByLeaveReason,
   findDocumentsByTypes,
+  getLeaveCertificationDocs,
 } from "../../models/Document";
 import EmployerBenefit, {
   EmployerBenefitType,
@@ -96,10 +96,7 @@ export const Review = (
     claim.application_id
   );
 
-  const certificationDocuments = findDocumentsByLeaveReason(
-    documents,
-    get(claim, "leave_details.reason")
-  );
+  const certificationDocuments = getLeaveCertificationDocs(documents);
   const idDocuments = findDocumentsByTypes(documents, [
     DocumentType.identityVerification,
   ]);
@@ -351,34 +348,37 @@ export const Review = (
         </ReviewRow>
       )}
 
-      {isEmployed && ( // only display this if the claimant is Employed
+      {isEmployed &&
+        get(claim, "leave_details.employer_notification_date") && ( // only display this if the claimant is Employed and date is set
+          <ReviewRow
+            level={reviewRowLevel}
+            label={t("pages.claimsReview.employerNotifiedLabel")}
+          >
+            {t("pages.claimsReview.employerNotifiedValue", {
+              context: (!!get(
+                claim,
+                "leave_details.employer_notified"
+              )).toString(),
+              date: formatDate(
+                get(claim, "leave_details.employer_notification_date")
+              ).short(),
+            })}
+          </ReviewRow>
+        )}
+
+      {workPattern.work_pattern_type && (
         <ReviewRow
           level={reviewRowLevel}
-          label={t("pages.claimsReview.employerNotifiedLabel")}
+          label={t("pages.claimsReview.workPatternTypeLabel")}
         >
-          {t("pages.claimsReview.employerNotifiedValue", {
-            context: (!!get(
-              claim,
-              "leave_details.employer_notified"
-            )).toString(),
-            date: formatDate(
-              get(claim, "leave_details.employer_notification_date")
-            ).short(),
+          {t("pages.claimsReview.workPatternTypeValue", {
+            context: findKeyByValue(
+              WorkPatternType,
+              get(claim, "work_pattern.work_pattern_type")
+            ),
           })}
         </ReviewRow>
       )}
-
-      <ReviewRow
-        level={reviewRowLevel}
-        label={t("pages.claimsReview.workPatternTypeLabel")}
-      >
-        {t("pages.claimsReview.workPatternTypeValue", {
-          context: findKeyByValue(
-            WorkPatternType,
-            get(claim, "work_pattern.work_pattern_type")
-          ),
-        })}
-      </ReviewRow>
 
       {workPattern.work_pattern_days &&
         workPattern.work_pattern_type === WorkPatternType.fixed &&
@@ -454,28 +454,31 @@ export const Review = (
         </ReviewRow>
       )}
 
-      {claim.isBondingLeave && reasonQualifier === ReasonQualifier.newBorn && (
-        <ReviewRow
-          level={reviewRowLevel}
-          label={t("pages.claimsReview.childBirthDateLabel")}
-        >
-          {formatDateRange(get(claim, "leave_details.child_birth_date"))}
-        </ReviewRow>
-      )}
+      {claim.isBondingLeave &&
+        reasonQualifier === ReasonQualifier.newBorn &&
+        claim.leave_details.child_birth_date && (
+          <ReviewRow
+            level={reviewRowLevel}
+            label={t("pages.claimsReview.childBirthDateLabel")}
+          >
+            {formatDateRange(claim.leave_details.child_birth_date)}
+          </ReviewRow>
+        )}
 
       {claim.isBondingLeave &&
         [ReasonQualifier.adoption, ReasonQualifier.fosterCare].includes(
           reasonQualifier
-        ) && (
+        ) &&
+        claim.leave_details.child_placement_date && (
           <ReviewRow
             level={reviewRowLevel}
             label={t("pages.claimsReview.childPlacementDateLabel")}
           >
-            {formatDateRange(get(claim, "leave_details.child_placement_date"))}
+            {formatDateRange(claim.leave_details.child_placement_date)}
           </ReviewRow>
         )}
 
-      {claim.isCaringLeave && (
+      {claim.isCaringLeave && claim.hasCaringLeaveMetadata && (
         <React.Fragment>
           <ReviewRow
             level={reviewRowLevel}

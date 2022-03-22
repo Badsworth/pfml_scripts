@@ -18,7 +18,7 @@ exports[`Start renders the page 1`] = `
     <p>
       We need true answers to every question so that we can manage the program the way the law requires. You can read more about the 
       <a
-        href="https://www.mass.gov/info-details/massachusetts-department-of-family-and-medical-leave-informed-consent-agreement"
+        href="https://mass.gov/paidleave-informedconsent"
         rel="noopener"
         target="_blank"
       >

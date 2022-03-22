@@ -15,6 +15,7 @@ from massgov.pfml.db.models.employees import (
     LkState,
     Payment,
     PaymentMethod,
+    PaymentTransactionType,
     State,
     StateLog,
 )
@@ -63,6 +64,8 @@ def _random_payment_with_state_log(
         payment_method=method,
         experian_address_pair=address_pair,
         payment_end_state_message="Add to PUB check file",
+        fineos_employee_first_name="LONG NAME" * 5,
+        fineos_employee_last_name="LONG NAME" * 5,
     ).get_or_create_payment_with_state(state)
 
     return payment
@@ -86,7 +89,9 @@ def test_create_check_file_eligible_payment_error(
 
     caplog.set_level(logging.ERROR)  # noqa: B1
 
-    ez_check_file, positive_pay_file = pub_check.create_check_file(test_db_session)
+    ez_check_file, positive_pay_file = None, None
+    with pytest.raises(Exception, match="Encountered issue with creating PUB Check Files"):
+        ez_check_file, positive_pay_file = pub_check.create_check_file(test_db_session)
     assert ez_check_file is None
     assert positive_pay_file is None
 
@@ -283,18 +288,18 @@ def test_format_check_memo_failure(initialize_factories_session, test_db_session
     (
         ("Short name", "David", "Ortiz", "David Ortiz"),
         (
-            "80 letter last name includes 4 letters from first name",
+            "35 letter last name includes 4 letters from first name",
             "Clara",
-            ("1234567890" * 9)[:80],
-            "Clar " + ("1234567890" * 9)[:80],
+            ("1234567890" * 9)[:35],
+            "Clar " + ("1234567890" * 9)[:35],
         ),
-        ("84 letter last name", "Amelia", ("1234567890" * 9)[:84], ("1234567890" * 9)[:84]),
-        ("85 letter last name", "Kevin", ("1234567890" * 9)[:85], ("1234567890" * 9)[:85]),
+        ("39 letter last name", "Amelia", ("1234567890" * 9)[:39], ("1234567890" * 9)[:39]),
+        ("40 letter last name", "Kevin", ("1234567890" * 9)[:40], ("1234567890" * 9)[:40]),
         (
-            "100 letter last name trimmed to 85 characters",
+            "50 letter last name trimmed to 40 characters",
             "Susan",
-            ("1234567890" * 10),
-            ("1234567890" * 9)[:85],
+            ("1234567890" * 5),
+            ("1234567890" * 9)[:40],
         ),
     ),
 )
@@ -309,4 +314,29 @@ def test_format_employee_name_for_ez_check_success(
     payment = PaymentFactory(
         fineos_employee_first_name=first_name, fineos_employee_last_name=last_name
     )
-    assert pub_check._format_employee_name_for_ez_check(payment) == expected_result
+    assert pub_check._format_name_for_ez_check(payment) == expected_result
+
+
+@pytest.mark.parametrize(
+    "_description, payee_name, expected_result",
+    (
+        ("Short name", "ACME Corp.", "ACME Corp."),
+        (
+            "Long name trimmed to 40 characters",
+            "Accelerated Critical Mechanical Engineering Corporation of the United States of America",
+            "Accelerated Critical Mechanical Engineer",
+        ),
+    ),
+)
+def test_format_employer_name_for_ez_check_success(
+    initialize_factories_session,
+    test_db_session,
+    _description,
+    payee_name,
+    expected_result,
+):
+    payment = PaymentFactory(
+        payment_transaction_type_id=PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id,
+        payee_name=payee_name,
+    )
+    assert pub_check._format_name_for_ez_check(payment) == expected_result

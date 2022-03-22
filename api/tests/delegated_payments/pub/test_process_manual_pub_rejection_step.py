@@ -166,7 +166,10 @@ def test_process_manual_pub_reject_records_payment_eft_sent_state(
         local_test_db_session, pub_individual_id=123
     ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT)
 
-    reject_record = ManualPubReject(1, "P123,reject notes", "P123", "reject notes")
+    reject_notes = (
+        FineosWritebackTransactionStatus.INVALID_ROUTING_NUMBER.transaction_status_description
+    )
+    reject_record = ManualPubReject(1, f"P123,{reject_notes}", "P123", reject_notes)
     process_manual_pub_rejection_step.process_manual_pub_reject_records([reject_record])
 
     assert_fineos_writeback_status(
@@ -199,7 +202,10 @@ def test_process_manual_pub_reject_records_payment_change_notification_state(
         local_test_db_session, pub_individual_id=123
     ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION)
 
-    reject_record = ManualPubReject(1, "P123,reject notes", "P123", "reject notes")
+    reject_notes = (
+        FineosWritebackTransactionStatus.INVALID_ROUTING_NUMBER.transaction_status_description
+    )
+    reject_record = ManualPubReject(1, f"P123,{reject_notes}", "P123", reject_notes)
     process_manual_pub_rejection_step.process_manual_pub_reject_records([reject_record])
 
     assert_fineos_writeback_status(
@@ -303,6 +309,54 @@ def test_process_manual_pub_reject_records_payment_not_in_expected_state(
     assert metrics[process_manual_pub_rejection_step.Metrics.UNEXPECTED_PAYMENT_STATE_COUNT] == 1
 
 
+def test_process_manual_pub_reject_records_missing_reject_notes(
+    process_manual_pub_rejection_step, local_test_db_session
+):
+    DelegatedPaymentFactory(
+        local_test_db_session, pub_individual_id=123
+    ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION)
+
+    reject_record = ManualPubReject(1, "P123,", "P123", "")
+    process_manual_pub_rejection_step.process_manual_pub_reject_records([reject_record])
+
+    # No writeback
+    writeback_details = local_test_db_session.query(FineosWritebackDetails).all()
+    assert len(writeback_details) == 0
+
+    assert_pub_error(
+        local_test_db_session,
+        PubErrorType.MANUAL_PUB_REJECT_ERROR,
+        "Empty reject note for payment",
+    )
+
+    metrics = process_manual_pub_rejection_step.log_entry.metrics
+    assert metrics[process_manual_pub_rejection_step.Metrics.MISSING_REJECT_NOTES] == 1
+
+
+def test_process_manual_pub_reject_records_missing_reject_notes_mapping(
+    process_manual_pub_rejection_step, local_test_db_session
+):
+    DelegatedPaymentFactory(
+        local_test_db_session, pub_individual_id=123
+    ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION)
+
+    reject_record = ManualPubReject(1, "P123,reject notes", "P123", "reject notes")
+    process_manual_pub_rejection_step.process_manual_pub_reject_records([reject_record])
+
+    # No writeback
+    writeback_details = local_test_db_session.query(FineosWritebackDetails).all()
+    assert len(writeback_details) == 0
+
+    assert_pub_error(
+        local_test_db_session,
+        PubErrorType.MANUAL_PUB_REJECT_ERROR,
+        "Missing reject note writeback status mapping for payment in manual invalidation file",
+    )
+
+    metrics = process_manual_pub_rejection_step.log_entry.metrics
+    assert metrics[process_manual_pub_rejection_step.Metrics.MISSING_REJECT_NOTES_MAPPING] == 1
+
+
 def test_process_manual_pub_reject_records_invalid_id(
     process_manual_pub_rejection_step, local_test_db_session
 ):
@@ -378,7 +432,7 @@ def test_process_manual_pub_reject_step_full(
 
     # Validate the PUB EFT state
     assert_pub_eft_prenote_state(
-        local_test_db_session, pub_eft.pub_eft_id, PrenoteState.REJECTED, "2nd Notes"
+        local_test_db_session, pub_eft.pub_eft_id, PrenoteState.REJECTED, "invalid routing number"
     )
 
     errors = local_test_db_session.query(PubError).all()
@@ -390,7 +444,7 @@ def test_process_manual_pub_reject_step_full(
     assert errors[0].line_number == 2
     assert errors[0].payment_id == payment.payment_id
     assert errors[0].pub_eft_id is None
-    assert errors[0].message == 'Payment manually rejected with notes "1st Notes"'
+    assert errors[0].message == 'Payment manually rejected with notes "Invalid Routing Number"'
     assert (
         errors[0].pub_error_type_id
         == PubErrorType.MANUAL_PUB_REJECT_PAYMENT_PROCESSED.pub_error_type_id
@@ -400,7 +454,7 @@ def test_process_manual_pub_reject_step_full(
     assert errors[1].line_number == 3
     assert errors[1].payment_id is None
     assert errors[1].pub_eft_id == pub_eft.pub_eft_id
-    assert errors[1].message == 'EFT manually rejected with notes "2nd Notes"'
+    assert errors[1].message == 'EFT manually rejected with notes "invalid routing number"'
     assert (
         errors[1].pub_error_type_id
         == PubErrorType.MANUAL_PUB_REJECT_EFT_PROCESSED.pub_error_type_id

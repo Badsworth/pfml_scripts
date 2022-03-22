@@ -486,13 +486,13 @@ describe("Checklist", () => {
       );
     });
 
-    it("does not enable Review and Submit when there is a document type mismatch", () => {
+    it("does not enable Review and Submit when there is a no certification document", () => {
       const warnings: Issue[] = [];
       const customProps = {
         documents: [
           {
             application_id: "mock-claim-id",
-            document_type: DocumentType.certification[LeaveReason.pregnancy],
+            document_type: DocumentType.requestForInfoNotice,
           },
           {
             application_id: "mock-claim-id",

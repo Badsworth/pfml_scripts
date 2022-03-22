@@ -16,7 +16,7 @@ from massgov.pfml.db.models.employees import (
 )
 
 from ..lookup import LookupTable
-from .base import Base, TimestampMixin, deprecated_column, uuid_gen
+from .base import Base, TimestampMixin, uuid_gen
 from .common import PostgreSQLUUID
 from .common import XMLType as XML
 
@@ -943,23 +943,14 @@ class MmarsPaymentData(Base, TimestampMixin):
     doc_last_modified_by = Column(Text)
     doc_last_modified_on = Column(TIMESTAMP)
     NoFilter = Column(Text)
-    payment_id = deprecated_column(
-        PostgreSQLUUID, ForeignKey("payment.payment_id"), index=True, nullable=True
-    )
 
     claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True, nullable=True)
-    employee_id = Column(
-        PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True, nullable=True
-    )
-    payment_i_value = Column(Text)
-
-    claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True, nullable=True)
-    claim = relationship(Claim)
+    claim = cast(Optional[Claim], relationship(Claim))
 
     employee_id = Column(
         PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True, nullable=True
     )
-    employee = relationship(Employee)
+    employee = cast(Optional[Employee], relationship(Employee))
     payment_i_value = Column(Text)
 
 
@@ -1204,6 +1195,10 @@ class FineosWritebackTransactionStatus(LookupTable):
 
     INVALID_ROUTING_NUMBER = LkFineosWritebackTransactionStatus(
         30, "Invalid Routing Number", PENDING_ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    PUB_PAYMENT_RETURNED = LkFineosWritebackTransactionStatus(
+        31, "PUB Payment Returned", PENDING_ACTIVE_WRITEBACK_RECORD_STATUS
     )
 
 
@@ -1472,9 +1467,7 @@ class LinkSplitPayment(Base, TimestampMixin):
     related_payment_id = Column(PostgreSQLUUID, ForeignKey("payment.payment_id"), primary_key=True)
 
     payment = relationship(Payment, foreign_keys=[payment_id])
-    related_payment = cast(
-        "Optional[Payment]", relationship(Payment, foreign_keys=[related_payment_id])
-    )
+    related_payment = relationship(Payment, foreign_keys=[related_payment_id])
 
 
 #### Writeback Status Mapping Configuration

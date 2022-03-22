@@ -26,6 +26,7 @@ from massgov.pfml.api.models.common import (
     MaskedPhoneResponse,
     get_computed_start_dates,
     get_earliest_start_date,
+    get_earliest_submission_date,
     get_leave_reason,
 )
 from massgov.pfml.db.models.applications import Application, ApplicationPaymentPreference, Document
@@ -49,6 +50,7 @@ class ApplicationResponse(PydanticBaseModel):
     organization_unit_id: Optional[UUID4]
     organization_unit_selection: Optional[OrganizationUnitSelection]
     tax_identifier: Optional[MaskedTaxIdFormattedStr]
+    employee_id: Optional[UUID4]
     employer_fein: Optional[FEINFormattedStr]
     fineos_absence_id: Optional[str]
     first_name: Optional[str]
@@ -94,6 +96,7 @@ class ApplicationResponse(PydanticBaseModel):
     computed_start_dates: Optional[ComputedStartDates]
     split_from_application_id: Optional[UUID4]
     split_into_application_id: Optional[UUID4]
+    computed_earliest_submission_date: Optional[date]
 
     @classmethod
     def from_orm(cls, application: Application) -> "ApplicationResponse":
@@ -125,8 +128,14 @@ class ApplicationResponse(PydanticBaseModel):
         if application.claim is not None:
             application_response.fineos_absence_id = application.claim.fineos_absence_id
 
+        if application.employee is not None:
+            application_response.employee_id = application.employee.employee_id
+
         application_response.updated_time = application_response.updated_at
         application_response.computed_start_dates = _get_computed_start_dates(application)
+        application_response.computed_earliest_submission_date = get_earliest_submission_date(
+            application
+        )
 
         return application_response
 

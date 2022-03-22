@@ -376,6 +376,7 @@ WRITEBACK_SCENARIOS: Dict[
     WritebackStatus.ADDRESS_VALIDATION_ERROR: delayed,
     WritebackStatus.BANK_PROCESSING_ERROR: delayed,
     WritebackStatus.INVALID_ROUTING_NUMBER: delayed,
+    WritebackStatus.PUB_PAYMENT_RETURNED: delayed,
     WritebackStatus.VOID_CHECK: delayed,
     WritebackStatus.STOP_CHECK: delayed,
     WritebackStatus.STALE_CHECK: delayed,
