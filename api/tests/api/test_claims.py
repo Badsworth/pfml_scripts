@@ -61,6 +61,7 @@ from massgov.pfml.db.queries.managed_requirements import (
 from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 from massgov.pfml.fineos import models
 from massgov.pfml.fineos.mock_client import MockFINEOSClient
+from massgov.pfml.fineos.models.customer_api import AbsenceDetails
 from massgov.pfml.fineos.models.group_client_api import (
     Base64EncodedFileData,
     ManagedRequirementDetails,
@@ -553,10 +554,8 @@ class TestGetClaimReview:
         assert response_data["residential_address"]["state"] == "GA"
         assert response_data["residential_address"]["zip"] == "30303"
 
-    @mock.patch("massgov.pfml.api.claims.upsert_absence_period_from_fineos_period")
     def test_employers_receive_proper_claim_using_correct_fineos_web_id(
         self,
-        mock_upsert_absence_period,
         client,
         employer_user,
         employer_auth_token,
@@ -816,7 +815,7 @@ class TestGetClaimReview:
         return "NTN-20133-ABS-01"
 
     @pytest.fixture
-    def absence_details_data(self, absence_id):
+    def mock_absence_details(self, absence_id):
         return {
             "startDate": "2021-01-01",
             "endDate": "2021-01-31",
@@ -881,26 +880,40 @@ class TestGetClaimReview:
         }
 
     @pytest.fixture
-    def mock_absence_details_create(self, absence_details_data):
-        return PeriodDecisions.parse_obj(absence_details_data)
+    def mock_customer_absence_details(self, mock_absence_details):
+        # Our claim review endpoint uses a mixture of decisions and periods at
+        # the moment, and we want their data to be consistent.
+        return {
+            "absenceId": mock_absence_details["decisions"][0]["absence"]["id"],
+            "absencePeriods": [
+                {
+                    "absenceType": decision["period"]["type"],
+                    "id": decision["period"]["periodReference"],
+                    "startDate": decision["period"]["startDate"],
+                    "endDate": decision["period"]["endDate"],
+                    "status": decision["period"]["status"],
+                    "reason": decision["period"]["leaveRequest"]["reasonName"],
+                    "reasonQualifier1": decision["period"]["leaveRequest"]["qualifier1"],
+                    "reasonQualifier2": decision["period"]["leaveRequest"]["qualifier2"],
+                    "requestStatus": decision["period"]["leaveRequest"]["decisionStatus"],
+                }
+                for decision in mock_absence_details["decisions"]
+            ],
+        }
 
     @pytest.fixture
-    def mock_absence_details_no_decisions(self, absence_details_data):
-        empty_decisions = absence_details_data.copy()
+    def mock_period_decisions_create(self, mock_absence_details):
+        return PeriodDecisions.parse_obj(mock_absence_details)
+
+    @pytest.fixture
+    def mock_absence_details_create(self, mock_customer_absence_details):
+        return AbsenceDetails.parse_obj(mock_customer_absence_details)
+
+    @pytest.fixture
+    def mock_absence_details_no_decisions(self, mock_absence_details):
+        empty_decisions = mock_absence_details.copy()
         empty_decisions["decisions"] = []
         return PeriodDecisions.parse_obj(empty_decisions)
-
-    @pytest.fixture
-    def mock_absence_details_update(self, absence_details_data):
-        absence_details = absence_details_data.copy()
-        decisions = []
-        for decision in absence_details["decisions"]:
-            decision["period"]["startDate"] = datetime.today()
-            decision["period"]["endDate"] = datetime.today()
-            decision["period"]["status"] = "Pending"
-            decisions.append(decision)
-        absence_details["decisions"] = decisions
-        return PeriodDecisions.parse_obj(absence_details)
 
     @pytest.fixture
     def employer(self):
@@ -920,7 +933,7 @@ class TestGetClaimReview:
         return claim
 
     def _assert_absence_period_data(self, test_db_session, claim, period):
-        period_id = period.periodReference.split("-")
+        period_id = period.id.split("-")
         class_id = int(period_id[1])
         index_id = int(period_id[2])
         db_period = (
@@ -937,7 +950,7 @@ class TestGetClaimReview:
         assert db_period.absence_period_end_date == period.endDate
         assert (
             db_period.leave_request_decision.leave_request_decision_description
-            == period.leaveRequest.decisionStatus
+            == period.requestStatus
         )
 
     def _assert_no_absence_period_data_for_claim(self, test_db_session, claim):
@@ -952,7 +965,7 @@ class TestGetClaimReview:
     @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence_period_decisions")
     def test_employer_get_claim_review_raises_withdrawn_claim_when_no_decisions(
         self,
-        mock_get_absence,
+        mock_get_decisions,
         test_db_session,
         client,
         employer_auth_token,
@@ -960,7 +973,7 @@ class TestGetClaimReview:
         claim,
     ):
         self._assert_no_absence_period_data_for_claim(test_db_session, claim)
-        mock_get_absence.return_value = mock_absence_details_no_decisions
+        mock_get_decisions.return_value = mock_absence_details_no_decisions
         response = client.get(
             f"/v1/employers/claims/{claim.fineos_absence_id}/review",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -970,31 +983,42 @@ class TestGetClaimReview:
         self._assert_no_absence_period_data_for_claim(test_db_session, claim)
 
     @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence_period_decisions")
-    def test_employer_get_claim_review_creates_absence_period(
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")
+    def test_employer_get_claim_review_returns_and_creates_absence_period(
         self,
         mock_get_absence,
+        mock_get_decisions,
+        mock_absence_details_create,
+        mock_period_decisions_create,
         test_db_session,
         client,
         employer_auth_token,
-        mock_absence_details_create,
         claim,
     ):
         self._assert_no_absence_period_data_for_claim(test_db_session, claim)
+
+        mock_get_decisions.return_value = mock_period_decisions_create
         mock_get_absence.return_value = mock_absence_details_create
+
         response = client.get(
             f"/v1/employers/claims/{claim.fineos_absence_id}/review",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
         )
+        absence_period_responses = response.get_json()["data"]["absence_periods"]
+        expected_fineos_absence_periods = mock_absence_details_create.dict()["absencePeriods"]
 
-        assert response.status_code == 200
-        for decision in mock_absence_details_create.decisions:
-            self._assert_absence_period_data(test_db_session, claim, decision.period)
+        assert len(absence_period_responses) == 2
+        assert absence_period_responses[0]["reason"] == expected_fineos_absence_periods[0]["reason"]
+        assert absence_period_responses[1]["reason"] == expected_fineos_absence_periods[1]["reason"]
+
+        for period in mock_absence_details_create.absencePeriods:
+            self._assert_absence_period_data(test_db_session, claim, period)
 
     @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence_period_decisions")
     def test_employer_get_claim_review_withdrawn_claim_no_absence_period_decisions(
-        self, mock_get_absence, client, employer_auth_token, claim
+        self, mock_get_decisions, client, employer_auth_token, claim
     ):
-        mock_get_absence.return_value = PeriodDecisions()
+        mock_get_decisions.return_value = PeriodDecisions()
         response = client.get(
             f"/v1/employers/claims/{claim.fineos_absence_id}/review",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -1002,49 +1026,54 @@ class TestGetClaimReview:
         assert response.status_code == 403
 
     @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence_period_decisions")
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")
     def test_employer_get_claim_review_updates_absence_period(
         self,
         mock_get_absence,
+        mock_get_decisions,
+        mock_absence_details_create,
+        mock_period_decisions_create,
         test_db_session,
         client,
         employer_auth_token,
-        mock_absence_details_create,
-        mock_absence_details_update,
         claim,
     ):
         self._assert_no_absence_period_data_for_claim(test_db_session, claim)
-        absence_periods = [decision.period for decision in mock_absence_details_create.decisions]
-        for absence_period in absence_periods:
+        for absence_period in mock_absence_details_create.absencePeriods:
+            stale_absence_period = absence_period.copy()
+            stale_absence_period.requestStatus = None
+
             upsert_absence_period_from_fineos_period(
                 test_db_session, claim.claim_id, absence_period, {}
             )
-        mock_get_absence.return_value = mock_absence_details_update
+
+        mock_get_decisions.return_value = mock_period_decisions_create
+        mock_get_absence.return_value = mock_absence_details_create
+
         response = client.get(
             f"/v1/employers/claims/{claim.fineos_absence_id}/review",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
         )
 
         assert response.status_code == 200
-        for decision in mock_absence_details_update.decisions:
-            self._assert_absence_period_data(test_db_session, claim, decision.period)
+        for absence_period in mock_absence_details_create.absencePeriods:
+            self._assert_absence_period_data(test_db_session, claim, absence_period)
 
-    @mock.patch("massgov.pfml.api.claims.upsert_absence_period_from_fineos_period")
+    @mock.patch("massgov.pfml.api.claims.sync_customer_api_absence_periods_to_db")
     @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence_period_decisions")
     def test_employer_get_claim_review_creates_absence_period_failure(
         self,
-        mock_get_absence,
-        mock_upsert_absence_periods_from_fineos_decisions,
+        mock_get_decisions,
+        mock_sync_customer_api_absence_periods_to_db,
         test_db_session,
         client,
-        mock_absence_details_create,
+        mock_period_decisions_create,
         employer_auth_token,
         claim,
     ):
         self._assert_no_absence_period_data_for_claim(test_db_session, claim)
-        mock_upsert_absence_periods_from_fineos_decisions.side_effect = Exception(
-            "Unexpected failure"
-        )
-        mock_get_absence.return_value = mock_absence_details_create
+        mock_sync_customer_api_absence_periods_to_db.side_effect = Exception("Unexpected failure")
+        mock_get_decisions.return_value = mock_period_decisions_create
         response = client.get(
             f"/v1/employers/claims/{claim.fineos_absence_id}/review",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -1054,9 +1083,9 @@ class TestGetClaimReview:
 
     @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence_period_decisions")
     def test_employer_get_claim_returns_absence_periods_from_fineos(
-        self, mock_get_absence, client, employer_auth_token, mock_absence_details_create, claim
+        self, mock_get_decisions, client, employer_auth_token, mock_period_decisions_create, claim
     ):
-        mock_get_absence.return_value = mock_absence_details_create
+        mock_get_decisions.return_value = mock_period_decisions_create
         response = client.get(
             f"/v1/employers/claims/{claim.fineos_absence_id}/review",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -1064,7 +1093,7 @@ class TestGetClaimReview:
         response_data = response.get_json()["data"]
         absence_periods = response_data["absence_periods"]
         assert response.status_code == 200
-        periods = [decision.period for decision in mock_absence_details_create.decisions]
+        periods = [decision.period for decision in mock_period_decisions_create.decisions]
         for fineos_period_data, absence_data in zip(periods, absence_periods):
             class_id, index_id = split_fineos_absence_period_id(fineos_period_data.periodReference)
             assert absence_data["fineos_leave_request_id"] is None
