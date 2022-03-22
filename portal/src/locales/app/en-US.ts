@@ -637,6 +637,10 @@ const errors = {
       required: "Upload at least one file to continue.",
     },
     fineos_client: "$t(shared.documentsUploadError)",
+    rules: {
+      document_requirement_already_satisfied:
+        "You have already satisfied the requirements for this document. If you would like to update the existing documentation, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
+    },
   },
   employers: {
     comment: {
