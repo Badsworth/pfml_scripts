@@ -697,6 +697,15 @@ const errors = {
   },
   network:
     "Sorry, an error was encountered. This may occur for a variety of reasons, including temporarily losing an internet connection or an unexpected error in our system. If this continues to happen, you may call the Paid Family Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>",
+  payments: {
+    payment_preference: {
+      retype_account_number: {
+        required: "Retype your account number",
+        mismatch:
+          "The account numbers you entered do not match. Make sure the numbers are exactly the same.",
+      },
+    },
+  },
   users: {
     email_address: {
       exists: "$t(shared.auth.emailError_exists)",
@@ -1679,6 +1688,10 @@ const pages: {
       "It can take us additional time to set up direct deposit with your bank. Your first payment might be a check sent to the address you listed as your mailing address.",
     choiceHintCheck:
       "You will receive your checks at the address you listed as your mailing address.",
+    retypeAccountNumberHint:
+      "Make sure your account numbers match exactly. You can't copy and paste into this field.",
+    retypeAccountNumberLabel: "Retype account number",
+    retypeAccountNumberRequired: "Retype your account number",
     routingNumberHint:
       "This is the 9-digit number found on the lower left corner of a check or deposit slip.",
     routingNumberLabel: "Routing number",
