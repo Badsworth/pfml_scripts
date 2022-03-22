@@ -351,7 +351,9 @@ def get_earliest_start_date(application: db_application_models.Application) -> O
 
 def get_latest_end_date(application: db_application_models.Application) -> Optional[date]:
     leave_period_end_dates = [
-        leave_period.end_date for leave_period in application.all_leave_periods
+        leave_period.end_date
+        for leave_period in application.all_leave_periods
+        if leave_period.end_date
     ]
 
     return max(leave_period_end_dates, default=None)
