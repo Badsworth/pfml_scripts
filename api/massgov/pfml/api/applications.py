@@ -134,11 +134,6 @@ def deprecated_applications_import():
 
 
 def applications_import():
-    if not app.get_app_config().enable_application_import:
-        return response_util.error_response(
-            status_code=Forbidden, message="Application import not currently available", errors=[]
-        ).to_api_response()
-
     application = Application(application_id=uuid4())
     ensure(CREATE, application)
 
