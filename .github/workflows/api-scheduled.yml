@@ -3,7 +3,7 @@ name: API Nightly Security Check
 on:
   workflow_dispatch:
   schedule:
-  # scheduled to run nightly at 1 PM EST
+  # scheduled to run nightly at 2 PM EDT
     - cron: '0 18 * * *'
 
 defaults:
