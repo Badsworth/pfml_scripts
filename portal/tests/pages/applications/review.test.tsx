@@ -522,6 +522,27 @@ describe("Review Page", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("conditionally renders intermittent leave frequency depending on if it is set", () => {
+    const textMatch = /Frequency of intermittent/;
+    const claim = new MockBenefitsApplicationBuilder()
+      .part1Complete()
+      .intermittent()
+      .create();
+
+    setup({ claim });
+    expect(
+      screen.queryAllByRole("heading", { name: textMatch })
+    ).not.toHaveLength(0);
+
+    cleanup();
+
+    claim.leave_details.intermittent_leave_periods[0].frequency = null;
+    setup({ claim });
+    expect(
+      screen.queryByRole("heading", { name: textMatch })
+    ).not.toBeInTheDocument();
+  });
+
   it("renders WeeklyTimeTable for the reduced leave period when work pattern is Fixed", () => {
     const claim = new MockBenefitsApplicationBuilder()
       .part1Complete()
