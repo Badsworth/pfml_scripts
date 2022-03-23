@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional
 from uuid import UUID
 
 import boto3
-from pydantic import BaseSettings, Field, parse_obj_as, validator
+from pydantic import BaseSettings, Field, ValidationError, parse_obj_as, validator
 
 import massgov
 import massgov.pfml.util.aws.sts as aws_sts
@@ -31,7 +31,8 @@ from massgov.pfml.util.bg import background_task
 from massgov.pfml.util.csv import CSVSourceWrapper
 from massgov.pfml.util.datetime import utcnow
 from massgov.pfml.util.logging import log_every
-from massgov.pfml.util.pydantic import PydanticBaseModelEmptyStrIsNone
+from massgov.pfml.util.logging.pydantic import validation_error_log_attrs
+from massgov.pfml.util.pydantic import PydanticBaseModelRemoveEmptyStrFields
 
 logger = logging.get_logger(__name__)
 
@@ -52,12 +53,13 @@ class ImportFineosEmployeeUpdatesReport:
     no_ssn_present_count: int = 0
     errored_employees_count: int = 0
     errored_employee_occupation_count: int = 0
+    validation_error_count: int = 0
     end: Optional[str] = None
     process_duration_in_seconds: float = 0
 
 
-class EmployeeDataLoadFeedLine(PydanticBaseModelEmptyStrIsNone):
-    EMPLOYEEIDENTIFIER: Optional[UUID] = None
+class EmployeeDataLoadFeedLine(PydanticBaseModelRemoveEmptyStrFields):
+    EMPLOYEEIDENTIFIER: UUID
     EMPLOYEETITLE: Optional[str] = None
     EMPLOYEEDATEOFBIRTH: Optional[date] = None
     EMPLOYEEGENDER: Optional[str] = None
@@ -185,11 +187,29 @@ def process_fineos_updates(
         report.total_employees_received_count += 1
         try:
             process_csv_row(db_session, row, report)
-        except Exception:
-            logger.exception(
-                f"Unhandled issue processing CSV row with file: {file} at line {line_count}. Continuing processing."
-            )
+        except Exception as e:
             db_session.rollback()
+
+            employee_id = row.get("EMPLOYEEIDENTIFIER", None)
+            employer_fineos_id = row.get("ORG_CUSTOMERNO", None)
+            log_attrs = {
+                "employee_id": employee_id,
+                "fineos_employer_id": employer_fineos_id,
+                "input_filename": file,
+                "input_file_path": file_path,
+                "line_count": line_count,
+            }
+
+            if isinstance(e, ValidationError):
+                log_attrs |= validation_error_log_attrs(e)
+                report.validation_error_count += 1
+                logger.exception("Data validation issue for row", extra=log_attrs)
+                continue
+
+            logger.exception(
+                f"Unhandled issue processing CSV row with file: {file} at line {line_count}. Continuing processing.",
+                extra=log_attrs,
+            )
 
     end_time = utcnow()
     report.end = end_time.isoformat()
@@ -206,9 +226,6 @@ def process_csv_row(
     row = EmployeeDataLoadFeedLine.parse_obj(row_dict)
 
     employee_id = row.EMPLOYEEIDENTIFIER
-    if not employee_id:
-        raise ValueError("Employee ID is required to process row")
-
     employee: Optional[Employee] = db_session.query(Employee).get(employee_id)
 
     if employee is None:

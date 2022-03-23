@@ -562,6 +562,7 @@ def test_fineos_updates_junk_ee_id(
     assert report.no_ssn_present_count == 0
     assert report.errored_employee_occupation_count == 0
     assert report.total_employees_received_count == 3
+    assert report.validation_error_count == 2
 
-    assert "value is not a valid uuid" in caplog.text
-    assert "Employee ID is required to process row" in caplog.text
+    assert "EMPLOYEEIDENTIFIER\n  value is not a valid uuid" in caplog.text
+    assert "EMPLOYEEIDENTIFIER\n  field required" in caplog.text
