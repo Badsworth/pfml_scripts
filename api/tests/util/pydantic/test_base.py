@@ -1,10 +1,16 @@
 import uuid
 from typing import Optional
 
+import pydantic
+import pytest
 from sqlalchemy import Column, Integer, String
 
 from massgov.pfml.db.models.base import Base
-from massgov.pfml.util.pydantic import PydanticBaseModel, PydanticBaseModelEmptyStrIsNone
+from massgov.pfml.util.pydantic import (
+    PydanticBaseModel,
+    PydanticBaseModelEmptyStrIsNone,
+    PydanticBaseModelRemoveEmptyStrFields,
+)
 
 
 class PydanticTestModel(Base):
@@ -48,7 +54,61 @@ def test_empty_str_is_none():
         required="", not_required="", not_required_alt="", not_required_num=3
     )
 
+    assert model.__fields_set__ == {
+        "required",
+        "not_required",
+        "not_required_alt",
+        "not_required_num",
+    }
+
     assert model.required == ""
     assert model.not_required is None
     assert model.not_required_alt is None
+    assert model.not_required_num == 3
+
+
+class RemoveEmptyStrFieldsTestModel(PydanticBaseModelRemoveEmptyStrFields):
+    required: str
+    not_required: Optional[str] = None
+    not_required_alt: Optional[str] = "foo"
+    not_required_num: Optional[int] = 1
+
+
+def test_remove_empty_str_fields_empty_required_errors():
+    with pytest.raises(pydantic.ValidationError) as exc_info:
+        RemoveEmptyStrFieldsTestModel.parse_obj({"required": ""})
+
+    assert exc_info.value.errors()[0]["type"] == "value_error.missing"
+    assert exc_info.value.errors()[0]["loc"] == ("required",)
+    assert exc_info.value.errors()[0]["msg"] == "field required"
+
+
+@pytest.mark.parametrize(
+    "model",
+    [
+        pytest.param(
+            RemoveEmptyStrFieldsTestModel.parse_obj(
+                {
+                    "required": "bar",
+                    "not_required": "",
+                    "not_required_alt": "",
+                    "not_required_num": 3,
+                }
+            ),
+            id="parse_obj",
+        ),
+        pytest.param(
+            RemoveEmptyStrFieldsTestModel(
+                required="bar", not_required="", not_required_alt="", not_required_num=3
+            ),
+            id="direct_construction",
+        ),
+    ],
+)
+def test_remove_empty_str_fields_optional_fields_use_default(model):
+    assert model.__fields_set__ == {"required", "not_required_num"}
+
+    assert model.required == "bar"
+    assert model.not_required is None
+    assert model.not_required_alt == "foo"
     assert model.not_required_num == 3
