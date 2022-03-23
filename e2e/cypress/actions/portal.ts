@@ -689,6 +689,16 @@ export function addPaymentInfo(
     case "Elec Funds Transfer":
       cy.findByLabelText("Routing number").type(routing_number as string);
       cy.findByLabelText("Account number").type(account_number as string);
+      cy.get(".usa-form .usa-fieldset .usa-form-group label").then(
+        (element) => {
+          if (element.text().includes("Retype account number")) {
+            cy.findByLabelText("Retype account number").type(
+              account_number as string
+            );
+          }
+        }
+      );
+
       inFieldsetLabelled("Account type", () => {
         cy.get("input[type='radio']").check(bank_account_type as string, {
           force: true,
