@@ -41,7 +41,7 @@ def get_contributing_employer_or_employee_issue(
             return ValidationErrorDetail(
                 field="employer_fein",
                 type=IssueType.require_non_exempt_employer,
-                message=require_employer_issue.message
+                message=require_employer_issue.message,
             )
 
         # Employer was not in DOR data, or we haven't yet created the corresponding record in FINEOS
