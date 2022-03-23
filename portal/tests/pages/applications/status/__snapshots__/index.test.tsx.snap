@@ -37,7 +37,7 @@ exports[`Status LeaveDetails renders page separated by keys if object of absence
         <p>
           View your approval notice below for more details about your benefit amount, and how to appeal if your benefits appear incorrect. Learn more about the 
           <a
-            href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
+            href="https://mass.gov/pfml/appeal"
             rel="noopener noreferrer"
             target="_blank"
           >
@@ -191,7 +191,7 @@ exports[`Status displays a description for the Approved request decision 1`] = `
   <p>
     View your approval notice below for more details about your benefit amount, and how to appeal if your benefits appear incorrect. Learn more about the 
     <a
-      href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
+      href="https://mass.gov/pfml/appeal"
       rel="noopener noreferrer"
       target="_blank"
     >
@@ -235,7 +235,7 @@ exports[`Status displays a description for the Denied request decision 1`] = `
   <p>
     If you would like to appeal, you must submit your request within 10 calendar days of the date on your denial notice. Learn more about the 
     <a
-      href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
+      href="https://mass.gov/pfml/appeal"
       rel="noopener noreferrer"
       target="_blank"
     >
@@ -319,7 +319,7 @@ exports[`Status displays a description for the Withdrawn request decision 1`] = 
 exports[`Status manage your application displays manage approved application link if any of the claim statuses on an application are Approved 1`] = `
 <a
   data-testid="manageApprovedApplicationLink"
-  href="https://www.mass.gov/info-details/managing-your-approved-paid-family-or-medical-leave-claim"
+  href="https://mass.gov/pfml/manage-leave"
   rel="noopener noreferrer"
   target="_blank"
 >
@@ -495,7 +495,7 @@ exports[`Status renders the page if the only errors are DocumentsLoadError 1`] =
           <p>
             View your approval notice below for more details about your benefit amount, and how to appeal if your benefits appear incorrect. Learn more about the 
             <a
-              href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
+              href="https://mass.gov/pfml/appeal"
               rel="noopener noreferrer"
               target="_blank"
             >
@@ -579,7 +579,7 @@ exports[`Status renders the page if the only errors are DocumentsLoadError 1`] =
         >
           If you would like to appeal the final decision, you can do so using mail, fax, or our 
           <a
-            href="https://www.mass.gov/forms/request-an-appeal-for-paid-family-and-medical-leave"
+            href="https://mass.gov/PaidLeaveDecisionAppeal"
             rel="noreferrer noopener"
             target="_blank"
           >
@@ -617,7 +617,7 @@ exports[`Status renders the page if the only errors are DocumentsLoadError 1`] =
           See more 
           <a
             data-testid="manageApprovedApplicationLink"
-            href="https://www.mass.gov/info-details/managing-your-approved-paid-family-or-medical-leave-claim"
+            href="https://mass.gov/pfml/manage-leave"
             rel="noopener noreferrer"
             target="_blank"
           >
@@ -769,7 +769,7 @@ exports[`Status renders the page with claim detail 1`] = `
           <p>
             View your approval notice below for more details about your benefit amount, and how to appeal if your benefits appear incorrect. Learn more about the 
             <a
-              href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
+              href="https://mass.gov/pfml/appeal"
               rel="noopener noreferrer"
               target="_blank"
             >
@@ -853,7 +853,7 @@ exports[`Status renders the page with claim detail 1`] = `
         >
           If you would like to appeal the final decision, you can do so using mail, fax, or our 
           <a
-            href="https://www.mass.gov/forms/request-an-appeal-for-paid-family-and-medical-leave"
+            href="https://mass.gov/PaidLeaveDecisionAppeal"
             rel="noreferrer noopener"
             target="_blank"
           >
@@ -891,7 +891,7 @@ exports[`Status renders the page with claim detail 1`] = `
           See more 
           <a
             data-testid="manageApprovedApplicationLink"
-            href="https://www.mass.gov/info-details/managing-your-approved-paid-family-or-medical-leave-claim"
+            href="https://mass.gov/pfml/manage-leave"
             rel="noopener noreferrer"
             target="_blank"
           >
@@ -1043,7 +1043,7 @@ exports[`Status renders the page with claim detail when there is absence_case_id
           <p>
             View your approval notice below for more details about your benefit amount, and how to appeal if your benefits appear incorrect. Learn more about the 
             <a
-              href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
+              href="https://mass.gov/pfml/appeal"
               rel="noopener noreferrer"
               target="_blank"
             >
@@ -1127,7 +1127,7 @@ exports[`Status renders the page with claim detail when there is absence_case_id
         >
           If you would like to appeal the final decision, you can do so using mail, fax, or our 
           <a
-            href="https://www.mass.gov/forms/request-an-appeal-for-paid-family-and-medical-leave"
+            href="https://mass.gov/PaidLeaveDecisionAppeal"
             rel="noreferrer noopener"
             target="_blank"
           >
@@ -1165,7 +1165,7 @@ exports[`Status renders the page with claim detail when there is absence_case_id
           See more 
           <a
             data-testid="manageApprovedApplicationLink"
-            href="https://www.mass.gov/info-details/managing-your-approved-paid-family-or-medical-leave-claim"
+            href="https://mass.gov/pfml/manage-leave"
             rel="noopener noreferrer"
             target="_blank"
           >
@@ -1268,7 +1268,7 @@ exports[`Status timeline when there is a pending bonding absence period and clai
   <p>
     Once your child is born, submit proof of birth so that we can review your application. Learn more about 
     <a
-      href="https://www.mass.gov/info-details/required-documents-for-your-paid-family-and-medical-leave-pfml-application#for-family-leave-applications-"
+      href="https://mass.gov/paidleavedocuments"
       rel="noopener noreferrer"
       target="_blank"
     >

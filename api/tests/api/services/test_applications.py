@@ -1,11 +1,13 @@
 import unittest.mock as mock
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 import pytest
+from freezegun import freeze_time
 
 import massgov
 from massgov.pfml.api.services.administrator_fineos_actions import EformTypes
 from massgov.pfml.api.services.applications import (
+    _split_start_end_dates,
     set_application_absence_and_leave_period,
     set_customer_contact_detail_fields,
     set_customer_detail_fields,
@@ -14,6 +16,7 @@ from massgov.pfml.api.services.applications import (
     set_other_incomes_from_fineos,
     set_other_leaves,
     set_payment_preference_fields,
+    split_application_by_date,
 )
 from massgov.pfml.api.validation.exceptions import (
     IssueType,
@@ -22,14 +25,26 @@ from massgov.pfml.api.validation.exceptions import (
 )
 from massgov.pfml.db.models.absences import AbsenceReason
 from massgov.pfml.db.models.applications import (
+    AmountFrequency,
+    ConcurrentLeave,
     ContinuousLeavePeriod,
     DayOfWeek,
+    EmployerBenefit,
     EmploymentStatus,
     LeaveReason,
     LeaveReasonQualifier,
 )
 from massgov.pfml.db.models.employees import BankAccountType, Gender, PaymentMethod
-from massgov.pfml.db.models.factories import ApplicationFactory
+from massgov.pfml.db.models.factories import (
+    ApplicationFactory,
+    ConcurrentLeaveFactory,
+    ContinuousLeavePeriodFactory,
+    EmployerBenefitFactory,
+    IntermittentLeavePeriodFactory,
+    OtherIncomeFactory,
+    ReducedScheduleLeavePeriodFactory,
+)
+from massgov.pfml.fineos import exception
 from massgov.pfml.fineos.mock.eform import (
     MOCK_EFORM_EMPLOYER_RESPONSE_V2,
     MOCK_EFORM_OTHER_INCOME_V1,
@@ -75,17 +90,31 @@ def application():
 @pytest.fixture
 def continuous_leave_periods():
     return [
-        TimeOffLeavePeriod(
+        AbsencePeriod(
+            id="PL-14449-0000002238",
+            reason="Pregnancy/Maternity",
+            reasonQualifier1="Foster Care",
+            reasonQualifier2="",
             startDate=date(2021, 1, 1),
             endDate=date(2021, 2, 9),
-            status="known",
-            lastDayWorked=date(2020, 12, 30),
-            startDateFullDay=True,
-            startDateOffHours=1,
-            startDateOffMinutes=5,
-            endDateOffHours=4,
-            endDateOffMinutes=0,
-            endDateFullDay=True,
+            absenceType="Continuous",
+            requestStatus="Pending",
+        )
+    ]
+
+
+@pytest.fixture
+def continuous_leave_periods_not_open():
+    return [
+        AbsencePeriod(
+            id="PL-14449-0000002238",
+            reason="Pregnancy/Maternity",
+            reasonQualifier1="Foster Care",
+            reasonQualifier2="",
+            startDate=date(2021, 1, 1),
+            endDate=date(2021, 2, 9),
+            absenceType="Continuous",
+            requestStatus="Approved",
         )
     ]
 
@@ -214,13 +243,17 @@ def reduced_leave_periods():
         ReportedReducedScheduleLeavePeriod(
             startDate=date(2021, 1, 29),
             endDate=date(2021, 3, 29),
-            sundayOffMinutes=10,
+            sundayOffMinutes=0,  # day with only minutes
+            mondayOffHours=7,
             mondayOffMinutes=15,
-            tuesdayOffMinutes=20,
+            tuesdayOffHours=8,  # day with only hours
+            wednesdayOffHours=7,
             wednesdayOffMinutes=40,
+            thursdayOffHours=6,
             thursdayOffMinutes=45,
+            fridayOffHours=6,
             fridayOffMinutes=25,
-            saturdayOffMinutes=12,
+            # saturday = day with no hours or minutes
         )
     ]
 
@@ -230,33 +263,33 @@ def absence_details(continuous_leave_periods, intermittent_leave_periods, reduce
     return AbsenceDetails(
         creationDate=datetime(2020, 10, 10),
         notificationDate=date(2020, 10, 20),
-        reportedTimeOff=continuous_leave_periods,
-        absencePeriods=intermittent_leave_periods,
+        reportedTimeOff=[],
+        absencePeriods=continuous_leave_periods + intermittent_leave_periods,
         reportedReducedSchedule=reduced_leave_periods,
     )
 
 
 @pytest.fixture
 def absence_details_without_open_absence_period(
-    continuous_leave_periods, intermittent_leave_periods_not_open, reduced_leave_periods
+    continuous_leave_periods_not_open, intermittent_leave_periods_not_open, reduced_leave_periods
 ):
     return AbsenceDetails(
         creationDate=datetime(2020, 10, 10),
         notificationDate=date(2020, 10, 20),
-        reportedTimeOff=continuous_leave_periods,
-        absencePeriods=intermittent_leave_periods_not_open,
+        reportedTimeOff=[],
+        absencePeriods=continuous_leave_periods_not_open + intermittent_leave_periods_not_open,
         reportedReducedSchedule=reduced_leave_periods,
     )
 
 
 @pytest.fixture
 def absence_details_invalid_leave_reason(
-    continuous_leave_periods, intermittent_leave_periods_invalid_leave_reason, reduced_leave_periods
+    intermittent_leave_periods_invalid_leave_reason, reduced_leave_periods
 ):
     return AbsenceDetails(
         creationDate=datetime(2020, 10, 10),
         notificationDate=date(2020, 10, 20),
-        reportedTimeOff=continuous_leave_periods,
+        reportedTimeOff=[],
         absencePeriods=intermittent_leave_periods_invalid_leave_reason,
         reportedReducedSchedule=reduced_leave_periods,
     )
@@ -264,14 +297,13 @@ def absence_details_invalid_leave_reason(
 
 @pytest.fixture
 def absence_details_invalid_leave_reason_qualifier(
-    continuous_leave_periods,
     intermittent_leave_periods_invalid_leave_reason_qualifier,
     reduced_leave_periods,
 ):
     return AbsenceDetails(
         creationDate=datetime(2020, 10, 10),
         notificationDate=date(2020, 10, 20),
-        reportedTimeOff=continuous_leave_periods,
+        reportedTimeOff=[],
         absencePeriods=intermittent_leave_periods_invalid_leave_reason_qualifier,
         reportedReducedSchedule=reduced_leave_periods,
     )
@@ -285,12 +317,6 @@ def _compare_continuous_leave(
     assert continuous_leave.application_id == application.application_id
     assert continuous_leave.start_date == fineos_continuous_leave.startDate
     assert continuous_leave.end_date == fineos_continuous_leave.endDate
-    assert continuous_leave.start_date_full_day == fineos_continuous_leave.startDateFullDay
-    assert continuous_leave.start_date_off_hours == fineos_continuous_leave.startDateOffHours
-    assert continuous_leave.start_date_off_minutes == fineos_continuous_leave.startDateOffMinutes
-    assert continuous_leave.end_date_full_day == fineos_continuous_leave.endDateFullDay
-    assert continuous_leave.end_date_off_hours == fineos_continuous_leave.endDateOffHours
-    assert continuous_leave.end_date_off_minutes == fineos_continuous_leave.endDateOffMinutes
 
 
 def _compare_intermittent_leave(application, intermittent_leave, fineos_intermittent_leave):
@@ -310,13 +336,25 @@ def _compare_reduced_leave(application, reduced_leave, fineos_reduced_leave):
     assert reduced_leave.application_id == application.application_id
     assert reduced_leave.start_date == fineos_reduced_leave.startDate
     assert reduced_leave.end_date == fineos_reduced_leave.endDate
-    assert reduced_leave.sunday_off_minutes == fineos_reduced_leave.sundayOffMinutes
-    assert reduced_leave.monday_off_minutes == fineos_reduced_leave.mondayOffMinutes
-    assert reduced_leave.tuesday_off_minutes == fineos_reduced_leave.tuesdayOffMinutes
-    assert reduced_leave.wednesday_off_minutes == fineos_reduced_leave.wednesdayOffMinutes
-    assert reduced_leave.thursday_off_minutes == fineos_reduced_leave.thursdayOffMinutes
-    assert reduced_leave.friday_off_minutes == fineos_reduced_leave.fridayOffMinutes
-    assert reduced_leave.saturday_off_minutes == fineos_reduced_leave.saturdayOffMinutes
+    assert (
+        reduced_leave.sunday_off_minutes == fineos_reduced_leave.sundayOffMinutes
+    )  # sunday has only minutes
+    assert reduced_leave.monday_off_minutes == fineos_reduced_leave.mondayOffMinutes + (
+        fineos_reduced_leave.mondayOffHours * 60
+    )
+    assert (
+        reduced_leave.tuesday_off_minutes == fineos_reduced_leave.tuesdayOffHours * 60
+    )  # tuesday has only hours
+    assert reduced_leave.wednesday_off_minutes == fineos_reduced_leave.wednesdayOffMinutes + (
+        fineos_reduced_leave.wednesdayOffHours * 60
+    )
+    assert reduced_leave.thursday_off_minutes == fineos_reduced_leave.thursdayOffMinutes + (
+        fineos_reduced_leave.thursdayOffHours * 60
+    )
+    assert reduced_leave.friday_off_minutes == fineos_reduced_leave.fridayOffMinutes + (
+        fineos_reduced_leave.fridayOffHours * 60
+    )
+    assert reduced_leave.saturday_off_minutes is None
 
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")
@@ -331,13 +369,13 @@ def test_set_application_absence_and_leave_period(
     assert len(application.continuous_leave_periods) == 1
     assert application.has_continuous_leave_periods
     continuous_leave = application.continuous_leave_periods[0]
-    fineos_continuous_leave = absence_details.reportedTimeOff[0]
+    fineos_continuous_leave = absence_details.absencePeriods[0]
     _compare_continuous_leave(application, continuous_leave, fineos_continuous_leave)
 
     assert len(application.intermittent_leave_periods) == 1
     assert application.has_intermittent_leave_periods
     intermittent_leave = application.intermittent_leave_periods[0]
-    fineos_intermittent_leave = absence_details.absencePeriods[0]
+    fineos_intermittent_leave = absence_details.absencePeriods[1]
     _compare_intermittent_leave(application, intermittent_leave, fineos_intermittent_leave)
 
     assert len(application.reduced_schedule_leave_periods) == 1
@@ -356,8 +394,6 @@ def test_set_application_absence_and_leave_period(
     assert application.completed_time is None
 
     assert application.submitted_time == absence_details.creationDate
-    assert application.employer_notification_date == absence_details.notificationDate
-    assert application.employer_notified
     assert application.has_future_child_date is False
 
     absence_details.absencePeriods[0].reason = "Child Bonding"
@@ -386,14 +422,14 @@ def test_set_application_absence_and_leave_period_without_open_absence_period(
     assert len(application.continuous_leave_periods) == 1
     assert application.has_continuous_leave_periods
     continuous_leave = application.continuous_leave_periods[0]
-    fineos_continuous_leave = absence_details_without_open_absence_period.reportedTimeOff[0]
+    fineos_continuous_leave = absence_details_without_open_absence_period.absencePeriods[0]
     _compare_continuous_leave(application, continuous_leave, fineos_continuous_leave)
 
     assert len(application.intermittent_leave_periods) == 3
     assert application.has_intermittent_leave_periods
 
     intermittent_leave = application.intermittent_leave_periods[0]
-    fineos_intermittent_leave = absence_details_without_open_absence_period.absencePeriods[0]
+    fineos_intermittent_leave = absence_details_without_open_absence_period.absencePeriods[1]
     _compare_intermittent_leave(application, intermittent_leave, fineos_intermittent_leave)
 
     assert len(application.reduced_schedule_leave_periods) == 1
@@ -403,21 +439,16 @@ def test_set_application_absence_and_leave_period_without_open_absence_period(
     _compare_reduced_leave(application, reduced_leave, fineos_reduced_leave)
 
     assert application.leave_reason_id == LeaveReason.get_id(
-        absence_details_without_open_absence_period.absencePeriods[1].reason
+        absence_details_without_open_absence_period.absencePeriods[2].reason
     )
     assert application.leave_reason_qualifier_id == LeaveReasonQualifier.get_id(
-        absence_details_without_open_absence_period.absencePeriods[1].reasonQualifier1
+        absence_details_without_open_absence_period.absencePeriods[2].reasonQualifier1
     )
 
     assert application.pregnant_or_recent_birth is True
     assert application.completed_time is not None
 
     assert application.submitted_time == absence_details_without_open_absence_period.creationDate
-    assert (
-        application.employer_notification_date
-        == absence_details_without_open_absence_period.notificationDate
-    )
-    assert application.employer_notified
 
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")
@@ -609,6 +640,25 @@ def test_set_employment_status_and_occupations_work_pattern_not_fixed(
     set_employment_status_and_occupations(fineos_client, fineos_web_id, application)
     assert application.employment_status_id == EmploymentStatus.EMPLOYED.employment_status_id
     assert application.hours_worked_per_week == 37.5
+    assert application.work_pattern is None
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_week_based_work_pattern")
+def test_set_employment_status_and_occupations_work_pattern_fineos_error(
+    mock_get_week_based_work_pattern, fineos_client, fineos_web_id, application, user
+):
+    # FINEOS returns a 403 Forbidden error for Variable work patterns
+    error_msg = """{
+        "error" : "User does not have permission to access the resource or the instance data",
+        "correlationId" : "1234"
+    }"""
+    error = exception.FINEOSForbidden("get_week_based_work_pattern", 200, 403, error_msg)
+    mock_get_week_based_work_pattern.side_effect = error
+    set_employment_status_and_occupations(fineos_client, fineos_web_id, application)
+    # data from the get_customer_occupations_customer_api() call is unaffected
+    assert application.employment_status_id == EmploymentStatus.EMPLOYED.employment_status_id
+    assert application.hours_worked_per_week == 37.5
+    # due to 403 error, no work_pattern is set
     assert application.work_pattern is None
 
 
@@ -906,8 +956,8 @@ def test_set_other_leaves_includes_minutes(
     assert application.has_previous_leaves_other_reason is True
     test_db_session.refresh(application)
     # values from MOCK_CUSTOMER_EFORM_OTHER_LEAVES
-    assert application.previous_leaves_other_reason[0].leave_minutes == 120
-    assert application.previous_leaves_other_reason[0].worked_per_week_minutes == 40
+    assert application.previous_leaves_other_reason[0].leave_minutes == 2400
+    assert application.previous_leaves_other_reason[0].worked_per_week_minutes == 1245
 
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.customer_get_eform_summary")
@@ -1163,6 +1213,7 @@ def test_set_other_incomes_from_fineos(
         EFormSummary(eformId=2, eformType=EformTypes.OTHER_INCOME),  # should not be parsed
         EFormSummary(eformId=3, eformType=EformTypes.OTHER_LEAVES),  # should not be parsed
     ]
+
     mock_customer_get_eform.return_value = EForm(
         eformId=211714,
         eformType="Other Income - current version",
@@ -1191,6 +1242,7 @@ def test_set_other_incomes_from_fineos(
                 name="V2ReceiveWageReplacement",
                 enumValue=ModelEnum(domainName="YesNoI'veApplied", instanceValue="Yes"),
             ),
+            EFormAttribute(name="V2OtherIncomeNonEmployerBenefitAmount1", decimalValue=100.0),
         ],
     )
     set_other_incomes_from_fineos(
@@ -1201,12 +1253,17 @@ def test_set_other_incomes_from_fineos(
         absence_case_id,
         eform_summaries=eform_summaries,
     )
+
     assert application.has_other_incomes is True
+    assert application.other_incomes[0].income_amount_dollars == 100
+    assert (
+        application.other_incomes[0].income_type_id == 7
+    )  # OTHER EMPLOYER INCOME TYPE (lk_other_income_type)
     assert len(application.other_incomes) == 1
 
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.customer_get_eform")
-def test_set_other_incomes_from_fineos_employer_income(
+def test_set_other_incomes_with_multiple_different_income_types(
     mock_customer_get_eform,
     fineos_client,
     fineos_web_id,
@@ -1214,16 +1271,11 @@ def test_set_other_incomes_from_fineos_employer_income(
     test_db_session,
     absence_case_id,
 ):
-    eform_summaries = [
-        EFormSummary(eformId=1, eformType=EformTypes.OTHER_INCOME_V2),
-        EFormSummary(eformId=2, eformType=EformTypes.OTHER_INCOME),  # should not be parsed
-        EFormSummary(eformId=3, eformType=EformTypes.OTHER_LEAVES),  # should not be parsed
-    ]
+
     mock_customer_get_eform.return_value = EForm(
         eformId=211714,
         eformType="Other Income - current version",
         eformAttributes=[
-            # Minimum info needed to create Previous Leaves, both other and same reason:
             EFormAttribute(
                 name="V2OtherIncomeNonEmployerBenefitStartDate",
                 dateValue="2021-05-04",
@@ -1237,15 +1289,24 @@ def test_set_other_incomes_from_fineos_employer_income(
                 enumValue=ModelEnum(domainName="FrequencyEforms", instanceValue="Per Month"),
             ),
             EFormAttribute(
-                name="V2OtherIncomeNonEmployerBenefitWRT",
+                name="V2OtherIncomeNonEmployerBenefitWRT1",
                 enumValue=ModelEnum(
-                    domainName="WageReplacementType2", instanceValue="Workers Compensation"
+                    domainName="WageReplacementType2", instanceValue="Jones Act benefits"
+                ),
+            ),
+            EFormAttribute(
+                name="V2OtherIncomeNonEmployerBenefitWRT2",
+                enumValue=ModelEnum(
+                    domainName="WageReplacementType2",
+                    instanceValue="Disability benefits under a governmental retirement plan such as STRS or PERS",
                 ),
             ),
             EFormAttribute(
                 name="V2ReceiveWageReplacement",
                 enumValue=ModelEnum(domainName="YesNoI'veApplied", instanceValue="Yes"),
             ),
+            EFormAttribute(name="V2OtherIncomeNonEmployerBenefitAmount1", decimalValue=100.0),
+            EFormAttribute(name="V2OtherIncomeNonEmployerBenefitAmount2", decimalValue=200.0),
         ],
     )
     set_other_incomes_from_fineos(
@@ -1254,7 +1315,590 @@ def test_set_other_incomes_from_fineos_employer_income(
         application,
         test_db_session,
         absence_case_id,
-        eform_summaries=eform_summaries,
+        eform_summaries=[EFormSummary(eformId=1, eformType=EformTypes.OTHER_INCOME_V2)],
     )
-    assert application.has_other_incomes is False
-    assert len(application.other_incomes) == 0
+    assert application.has_other_incomes is True
+
+    assert application.other_incomes[0].income_amount_dollars == 100
+    assert application.other_incomes[0].income_type_id == 5  # (lk_other_income_type)
+
+    assert application.other_incomes[1].income_amount_dollars == 200
+    assert application.other_incomes[1].income_type_id == 4  # (lk_other_income_type)
+
+    assert len(application.other_incomes) == 2
+
+
+class TestSplitApplicationByDate:
+    class TestSplitStartEndDates:
+        def test_dates_exclusively_after_split(self):
+            with freeze_time("2021-06-14"):
+                split_on_date = date.today()
+                start_date = split_on_date + timedelta(days=10)
+                end_date = split_on_date + timedelta(days=20)
+                dates_before, dates_after = _split_start_end_dates(
+                    start_date, end_date, split_on_date
+                )
+                assert dates_before is None
+                assert dates_after is not None
+                assert dates_after.start_date == start_date
+                assert dates_after.end_date == end_date
+
+        def test_dates_exclusively_before_split(self):
+            with freeze_time("2021-06-14"):
+                split_on_date = date.today()
+                start_date = split_on_date - timedelta(days=20)
+                end_date = split_on_date - timedelta(days=10)
+                dates_before, dates_after = _split_start_end_dates(
+                    start_date, end_date, split_on_date
+                )
+
+                assert dates_after is None
+                assert dates_before is not None
+                assert dates_before.start_date == start_date
+                assert dates_before.end_date == end_date
+
+        def test_start_date_equals_split_date(self):
+            with freeze_time("2021-06-14"):
+                split_on_date = date.today()
+                start_date = split_on_date
+                end_date = split_on_date + timedelta(days=20)
+                dates_before, dates_after = _split_start_end_dates(
+                    start_date, end_date, split_on_date
+                )
+
+                assert dates_before is not None
+                assert dates_before.start_date == start_date
+                assert dates_before.end_date == start_date
+                assert dates_after is not None
+                assert dates_after.start_date == split_on_date + timedelta(days=1)
+                assert dates_after.end_date == end_date
+
+        def test_end_date_equals_split_date(self):
+            with freeze_time("2021-06-14"):
+                split_on_date = date.today()
+                start_date = split_on_date - timedelta(days=10)
+                end_date = split_on_date
+                dates_before, dates_after = _split_start_end_dates(
+                    start_date, end_date, split_on_date
+                )
+
+                assert dates_before is not None
+                assert dates_before.start_date == start_date
+                assert dates_before.end_date == end_date
+                assert dates_after is None
+
+        def test_end_date_before_start_date(self):
+            with freeze_time("2021-06-14"):
+                split_on_date = date.today()
+                start_date = split_on_date - timedelta(days=10)
+                end_date = start_date - timedelta(days=1)
+                dates_before, dates_after = _split_start_end_dates(
+                    start_date, end_date, split_on_date
+                )
+
+                assert dates_before is None
+                assert dates_after is None
+
+        def test_split_date(self):
+            with freeze_time("2021-06-14"):
+                split_on_date = date.today()
+                start_date = split_on_date - timedelta(days=10)
+                end_date = split_on_date + timedelta(days=10)
+                dates_before, dates_after = _split_start_end_dates(
+                    start_date, end_date, split_on_date
+                )
+
+                assert dates_before.start_date == start_date
+                assert dates_before.end_date == split_on_date
+                assert dates_after.start_date == split_on_date + timedelta(1)
+                assert dates_after.end_date == end_date
+
+    def _verify_leave_period(self, leave_period, start_date, end_date, application_id):
+        assert leave_period.application_id == application_id
+        if isinstance(leave_period, ConcurrentLeave):
+            assert leave_period.leave_start_date == start_date
+            assert leave_period.leave_end_date == end_date
+        else:
+            assert leave_period.start_date == start_date
+            assert leave_period.end_date == end_date
+
+    def _verify_benefit(self, benefit, start_date, end_date, amount, application_id):
+        assert benefit.application_id == application_id
+        if isinstance(benefit, EmployerBenefit):
+            assert benefit.benefit_start_date == start_date
+            assert benefit.benefit_end_date == end_date
+            assert benefit.benefit_amount_dollars == amount
+        else:
+            assert benefit.income_start_date == start_date
+            assert benefit.income_end_date == end_date
+            assert benefit.income_amount_dollars == amount
+
+    def test_split_no_leave_periods_or_benefits(self, application, test_db_session):
+        split_on_date = date.today()
+        split_app_1, split_app_2 = split_application_by_date(
+            test_db_session, application, split_on_date
+        )
+        test_db_session.refresh(split_app_1)
+        test_db_session.refresh(split_app_2)
+
+        assert split_app_1.application_id == application.application_id
+        assert split_app_2.application_id != application.application_id
+        assert split_app_1.application_id != split_app_2.application_id
+        assert split_app_1.split_into_application_id == split_app_2.application_id
+        assert split_app_2.split_from_application_id == split_app_1.application_id
+        assert split_app_1.claim_id is None
+        assert split_app_2.claim_id is None
+
+    def test_leave_periods_multiple_dates(self, application, test_db_session):
+        with freeze_time("2021-06-14"):
+            split_on_date = date.today()
+            start_date_1 = split_on_date - timedelta(days=20)
+            end_date_1 = split_on_date - timedelta(days=10)
+
+            start_date_2 = split_on_date - timedelta(days=10)
+            end_date_2 = split_on_date + timedelta(days=10)
+
+            start_date_3 = split_on_date + timedelta(days=10)
+            end_date_3 = split_on_date + timedelta(days=20)
+
+            application.continuous_leave_periods = [
+                ContinuousLeavePeriodFactory.create(
+                    start_date=start_date_1,
+                    end_date=end_date_1,
+                ),
+                ContinuousLeavePeriodFactory.create(
+                    start_date=start_date_2,
+                    end_date=end_date_2,
+                ),
+                ContinuousLeavePeriodFactory.create(
+                    start_date=start_date_3,
+                    end_date=end_date_3,
+                ),
+            ]
+
+            split_app_1, split_app_2 = split_application_by_date(
+                test_db_session, application, split_on_date
+            )
+            test_db_session.refresh(split_app_1)
+            test_db_session.refresh(split_app_2)
+
+            # Apply a consistent ordering to the leave periods before validating
+            split_app_1_leave_periods = split_app_1.continuous_leave_periods
+            split_app_1_leave_periods.sort(key=lambda lp: lp.start_date)
+            split_app_2_leave_periods = split_app_2.continuous_leave_periods
+            split_app_2_leave_periods.sort(key=lambda lp: lp.start_date)
+
+            assert len(split_app_1.continuous_leave_periods) == 2
+            assert len(split_app_2.continuous_leave_periods) == 2
+            self._verify_leave_period(
+                split_app_1_leave_periods[0], start_date_1, end_date_1, split_app_1.application_id
+            )
+            self._verify_leave_period(
+                split_app_1_leave_periods[1],
+                start_date_2,
+                split_on_date,
+                split_app_1.application_id,
+            )
+            self._verify_leave_period(
+                split_app_2_leave_periods[0],
+                split_on_date + timedelta(days=1),
+                end_date_2,
+                split_app_2.application_id,
+            )
+            self._verify_leave_period(
+                split_app_2_leave_periods[1], start_date_3, end_date_3, split_app_2.application_id
+            )
+
+    def test_split_multiple_type_of_leave_periods(self, application, test_db_session):
+        split_on_date = date.today()
+        application.continuous_leave_periods = [
+            ContinuousLeavePeriodFactory.create(
+                start_date=split_on_date - timedelta(days=10),
+                end_date=split_on_date + timedelta(days=10),
+            )
+        ]
+        application.intermittent_leave_periods = [
+            IntermittentLeavePeriodFactory.create(
+                start_date=split_on_date - timedelta(days=10),
+                end_date=split_on_date + timedelta(days=10),
+            )
+        ]
+        application.reduced_schedule_leave_periods = [
+            ReducedScheduleLeavePeriodFactory.create(
+                start_date=split_on_date - timedelta(days=10),
+                end_date=split_on_date + timedelta(days=10),
+            )
+        ]
+        application.concurrent_leave = ConcurrentLeaveFactory.create(
+            leave_start_date=split_on_date - timedelta(days=10),
+            leave_end_date=split_on_date + timedelta(days=10),
+            application=application,
+        )
+        application.has_concurrent_leave = True
+
+        split_app_1, split_app_2 = split_application_by_date(
+            test_db_session, application, split_on_date
+        )
+        test_db_session.refresh(split_app_1)
+        test_db_session.refresh(split_app_2)
+
+        assert len(split_app_1.all_leave_periods) == 3
+        assert len(split_app_2.all_leave_periods) == 3
+        for leave_period in split_app_1.all_leave_periods:
+            self._verify_leave_period(
+                leave_period,
+                split_on_date - timedelta(days=10),
+                split_on_date,
+                split_app_1.application_id,
+            )
+
+        for leave_period in split_app_2.all_leave_periods:
+            self._verify_leave_period(
+                leave_period,
+                split_on_date + timedelta(days=1),
+                split_on_date + timedelta(days=10),
+                split_app_2.application_id,
+            )
+
+        self._verify_leave_period(
+            split_app_1.concurrent_leave,
+            split_on_date - timedelta(days=10),
+            split_on_date,
+            split_app_1.application_id,
+        )
+        self._verify_leave_period(
+            split_app_2.concurrent_leave,
+            split_on_date + timedelta(days=1),
+            split_on_date + timedelta(days=10),
+            split_app_2.application_id,
+        )
+
+    def test_multiple_benefits(self, application, test_db_session):
+        with freeze_time("2021-06-14"):
+            split_on_date = date.today()
+            start_date = split_on_date - timedelta(days=10)
+            end_date = split_on_date + timedelta(days=20)
+
+            application.employer_benefits = [
+                EmployerBenefitFactory.create(
+                    application_id=application.application_id,
+                    benefit_start_date=start_date,
+                    benefit_end_date=end_date,
+                    benefit_amount_dollars=100,
+                )
+            ]
+            application.other_incomes = [
+                OtherIncomeFactory.create(
+                    application_id=application.application_id,
+                    income_start_date=start_date,
+                    income_end_date=end_date,
+                    income_amount_dollars=200,
+                )
+            ]
+
+            split_app_1, split_app_2 = split_application_by_date(
+                test_db_session, application, split_on_date
+            )
+            test_db_session.refresh(split_app_1)
+            test_db_session.refresh(split_app_2)
+
+            assert len(split_app_1.employer_benefits) == 1
+            assert len(split_app_2.employer_benefits) == 1
+            assert len(split_app_1.other_incomes) == 1
+            assert len(split_app_2.other_incomes) == 1
+            for benefit in split_app_1.employer_benefits:
+                self._verify_benefit(
+                    benefit, start_date, split_on_date, 100, split_app_1.application_id
+                )
+            for benefit in split_app_2.employer_benefits:
+                self._verify_benefit(
+                    benefit, split_on_date + timedelta(1), end_date, 100, split_app_2.application_id
+                )
+            for income in split_app_1.other_incomes:
+                self._verify_benefit(
+                    income, start_date, split_on_date, 200, split_app_1.application_id
+                )
+            for income in split_app_2.other_incomes:
+                self._verify_benefit(
+                    income, split_on_date + timedelta(1), end_date, 200, split_app_2.application_id
+                )
+
+    def test_benefit_all_at_once_frequency_scenario_uneven_split(
+        self, application, test_db_session
+    ):
+        with freeze_time("2021-06-14"):
+            split_on_date = date.today()
+            start_date = split_on_date - timedelta(days=20)
+            end_date = split_on_date + timedelta(days=14)
+
+            application.employer_benefits = [
+                EmployerBenefitFactory.create(
+                    application_id=application.application_id,
+                    benefit_start_date=start_date,
+                    benefit_end_date=end_date,
+                    benefit_amount_dollars=1000,
+                    benefit_amount_frequency_id=AmountFrequency.ALL_AT_ONCE.amount_frequency_id,
+                )
+            ]
+            split_app_1, split_app_2 = split_application_by_date(
+                test_db_session, application, split_on_date
+            )
+            test_db_session.refresh(split_app_1)
+            test_db_session.refresh(split_app_2)
+
+            assert len(split_app_1.employer_benefits) == 1
+            assert len(split_app_2.employer_benefits) == 1
+            for benefit in split_app_1.employer_benefits:
+                self._verify_benefit(
+                    benefit, start_date, split_on_date, 600, split_app_1.application_id
+                )
+            for benefit in split_app_2.employer_benefits:
+                self._verify_benefit(
+                    benefit, split_on_date + timedelta(1), end_date, 400, split_app_2.application_id
+                )
+
+    def test_benefit_all_at_once_frequency_scenario_even_split(self, application, test_db_session):
+        with freeze_time("2022-03-05"):
+            split_on_date = date.today()
+            start_date = split_on_date - timedelta(days=4)
+            end_date = split_on_date + timedelta(days=5)
+
+            application.employer_benefits = [
+                EmployerBenefitFactory.create(
+                    application_id=application.application_id,
+                    benefit_start_date=start_date,
+                    benefit_end_date=end_date,
+                    benefit_amount_dollars=1000,
+                    benefit_amount_frequency_id=AmountFrequency.ALL_AT_ONCE.amount_frequency_id,
+                )
+            ]
+            split_app_1, split_app_2 = split_application_by_date(
+                test_db_session, application, split_on_date
+            )
+            test_db_session.refresh(split_app_1)
+            test_db_session.refresh(split_app_2)
+
+            assert len(split_app_1.employer_benefits) == 1
+            assert len(split_app_2.employer_benefits) == 1
+            for benefit in split_app_1.employer_benefits:
+                self._verify_benefit(
+                    benefit, start_date, split_on_date, 500, split_app_1.application_id
+                )
+            for benefit in split_app_2.employer_benefits:
+                self._verify_benefit(
+                    benefit, split_on_date + timedelta(1), end_date, 500, split_app_2.application_id
+                )
+
+    def test_benefit_multiple_types_and_frequency(self, application, test_db_session):
+        with freeze_time("2021-06-14"):
+            split_on_date = date.today()
+            start_date = split_on_date - timedelta(days=20)
+            end_date = split_on_date + timedelta(days=14)
+
+            application.employer_benefits = [
+                EmployerBenefitFactory.create(
+                    application_id=application.application_id,
+                    benefit_start_date=start_date,
+                    benefit_end_date=end_date,
+                    benefit_amount_dollars=1000,
+                    benefit_amount_frequency_id=AmountFrequency.ALL_AT_ONCE.amount_frequency_id,
+                ),
+                EmployerBenefitFactory.create(
+                    application_id=application.application_id,
+                    benefit_start_date=start_date,
+                    benefit_end_date=end_date,
+                    benefit_amount_dollars=300,
+                    benefit_amount_frequency_id=AmountFrequency.PER_MONTH.amount_frequency_id,
+                ),
+            ]
+            application.other_incomes = [
+                OtherIncomeFactory.create(
+                    application_id=application.application_id,
+                    income_start_date=start_date,
+                    income_end_date=end_date,
+                    income_amount_dollars=200,
+                    income_amount_frequency_id=AmountFrequency.PER_DAY.amount_frequency_id,
+                )
+            ]
+            split_app_1, split_app_2 = split_application_by_date(
+                test_db_session, application, split_on_date
+            )
+            test_db_session.refresh(split_app_1)
+            test_db_session.refresh(split_app_2)
+
+            assert len(split_app_1.employer_benefits) == 2
+            assert len(split_app_2.employer_benefits) == 2
+            assert len(split_app_1.other_incomes) == 1
+            assert len(split_app_2.other_incomes) == 1
+            for benefit in split_app_1.employer_benefits:
+                amount = (
+                    600
+                    if benefit.benefit_amount_frequency_id
+                    == AmountFrequency.ALL_AT_ONCE.amount_frequency_id
+                    else 300
+                )
+                self._verify_benefit(
+                    benefit, start_date, split_on_date, amount, split_app_1.application_id
+                )
+            for benefit in split_app_2.employer_benefits:
+                amount = (
+                    400
+                    if benefit.benefit_amount_frequency_id
+                    == AmountFrequency.ALL_AT_ONCE.amount_frequency_id
+                    else 300
+                )
+                self._verify_benefit(
+                    benefit,
+                    split_on_date + timedelta(1),
+                    end_date,
+                    amount,
+                    split_app_2.application_id,
+                )
+            for income in split_app_1.other_incomes:
+                self._verify_benefit(
+                    income, start_date, split_on_date, 200, split_app_1.application_id
+                )
+            for income in split_app_2.other_incomes:
+                self._verify_benefit(
+                    income, split_on_date + timedelta(1), end_date, 200, split_app_2.application_id
+                )
+
+    def test_split_app_leave_periods_and_benefits(self, application, test_db_session):
+        with freeze_time("2021-06-14"):
+            split_on_date = date.today()
+            start_date = split_on_date - timedelta(days=20)
+            end_date = split_on_date + timedelta(days=14)
+
+            application.continuous_leave_periods = [
+                ContinuousLeavePeriodFactory.create(
+                    start_date=split_on_date - timedelta(days=10),
+                    end_date=split_on_date + timedelta(days=10),
+                )
+            ]
+            application.intermittent_leave_periods = [
+                IntermittentLeavePeriodFactory.create(
+                    start_date=split_on_date - timedelta(days=10),
+                    end_date=split_on_date + timedelta(days=10),
+                )
+            ]
+            application.reduced_schedule_leave_periods = [
+                ReducedScheduleLeavePeriodFactory.create(
+                    start_date=split_on_date - timedelta(days=10),
+                    end_date=split_on_date + timedelta(days=10),
+                )
+            ]
+            application.concurrent_leave = ConcurrentLeaveFactory.create(
+                leave_start_date=split_on_date - timedelta(days=10),
+                leave_end_date=split_on_date + timedelta(days=10),
+                application=application,
+            )
+            application.has_concurrent_leave = True
+
+            application.employer_benefits = [
+                EmployerBenefitFactory.create(
+                    application_id=application.application_id,
+                    benefit_start_date=start_date,
+                    benefit_end_date=end_date,
+                    benefit_amount_dollars=1000,
+                    benefit_amount_frequency_id=AmountFrequency.ALL_AT_ONCE.amount_frequency_id,
+                ),
+                EmployerBenefitFactory.create(
+                    application_id=application.application_id,
+                    benefit_start_date=start_date,
+                    benefit_end_date=end_date,
+                    benefit_amount_dollars=300,
+                    benefit_amount_frequency_id=AmountFrequency.PER_MONTH.amount_frequency_id,
+                ),
+            ]
+            application.other_incomes = [
+                OtherIncomeFactory.create(
+                    application_id=application.application_id,
+                    income_start_date=start_date,
+                    income_end_date=end_date,
+                    income_amount_dollars=200,
+                    income_amount_frequency_id=AmountFrequency.PER_DAY.amount_frequency_id,
+                )
+            ]
+            split_app_1, split_app_2 = split_application_by_date(
+                test_db_session, application, split_on_date
+            )
+            test_db_session.commit()
+            test_db_session.refresh(split_app_1)
+            test_db_session.refresh(split_app_2)
+
+            assert len(split_app_1.all_leave_periods) == 3
+            assert split_app_1.has_continuous_leave_periods is True
+            assert split_app_1.has_intermittent_leave_periods is True
+            assert split_app_1.has_reduced_schedule_leave_periods is True
+            assert split_app_1.has_employer_benefits is True
+            assert split_app_1.has_other_incomes is True
+            assert len(split_app_2.all_leave_periods) == 3
+            assert split_app_2.has_continuous_leave_periods is True
+            assert split_app_2.has_intermittent_leave_periods is True
+            assert split_app_2.has_reduced_schedule_leave_periods is True
+            assert split_app_2.has_employer_benefits is True
+            assert split_app_2.has_other_incomes is True
+            for leave_period in split_app_1.all_leave_periods:
+                self._verify_leave_period(
+                    leave_period,
+                    split_on_date - timedelta(days=10),
+                    split_on_date,
+                    split_app_1.application_id,
+                )
+
+            for leave_period in split_app_2.all_leave_periods:
+                self._verify_leave_period(
+                    leave_period,
+                    split_on_date + timedelta(days=1),
+                    split_on_date + timedelta(days=10),
+                    split_app_2.application_id,
+                )
+
+            self._verify_leave_period(
+                split_app_1.concurrent_leave,
+                split_on_date - timedelta(days=10),
+                split_on_date,
+                split_app_1.application_id,
+            )
+            self._verify_leave_period(
+                split_app_2.concurrent_leave,
+                split_on_date + timedelta(days=1),
+                split_on_date + timedelta(days=10),
+                split_app_2.application_id,
+            )
+            for benefit in split_app_1.employer_benefits:
+                amount = (
+                    600
+                    if benefit.benefit_amount_frequency_id
+                    == AmountFrequency.ALL_AT_ONCE.amount_frequency_id
+                    else 300
+                )
+                self._verify_benefit(
+                    benefit,
+                    start_date,
+                    split_on_date,
+                    amount,
+                    split_app_1.application_id,
+                )
+            for benefit in split_app_2.employer_benefits:
+                amount = (
+                    400
+                    if benefit.benefit_amount_frequency_id
+                    == AmountFrequency.ALL_AT_ONCE.amount_frequency_id
+                    else 300
+                )
+                self._verify_benefit(
+                    benefit,
+                    split_on_date + timedelta(1),
+                    end_date,
+                    amount,
+                    split_app_2.application_id,
+                )
+            for income in split_app_1.other_incomes:
+                self._verify_benefit(
+                    income, start_date, split_on_date, 200, split_app_1.application_id
+                )
+            for income in split_app_2.other_incomes:
+                self._verify_benefit(
+                    income, split_on_date + timedelta(1), end_date, 200, split_app_2.application_id
+                )

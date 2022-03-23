@@ -1,0 +1,58 @@
+# Scripted Releases Github Actions Workflow 
+
+name: Scripted Releases
+
+on:
+  workflow_dispatch:
+    inputs:
+      application:
+        description: |
+          ⚠️ Only edit the above dropdown if you do not wish to use the GHA Workflow from main
+          --------------------------------------------
+          1️⃣ Application
+        required: true
+        type: choice
+        options:
+          - api
+          - portal
+          - foobar
+      scripted-release-task:
+        description: |
+          2️⃣ Scripted Release Task
+        required: true
+        type: choice
+        options:
+          - start-release
+          - update-release
+          - finalize-release
+          - hotfix
+          - major-release
+      arguments:
+        description: |
+          3️⃣ Arguments - 
+          🤔 check bin/ci/README.md for help
+        required: false
+        type: string
+
+jobs:
+  run-scripted-releases:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PMFL repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install Poetry
+        working-directory: ./bin/ci
+        # Installing with curl requires an extra step to add poetry to $PATH 
+        run: pip install poetry
+
+      - name: Install Poetry dependencies 
+        working-directory: ./bin/ci
+        run: poetry install
+      
+      - name: Run scripted releases with Poetry 
+        working-directory: ./bin/ci
+        run: poetry run scripted-releases -a ${{ github.event.inputs.application }} ${{ github.event.inputs.scripted-release-task }} ${{ github.event.inputs.arguments }}
+

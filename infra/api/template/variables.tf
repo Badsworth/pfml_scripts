@@ -360,11 +360,6 @@ variable "use_claim_status_url" {
   default     = true
 }
 
-variable "enable_application_import" {
-  description = "Enable or disable claimant application import"
-  type        = string
-}
-
 variable "enable_employee_endpoints" {
   description = "Specifies if the /employees/* API endpoints are enabled"
   type        = string

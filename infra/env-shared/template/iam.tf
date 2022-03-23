@@ -98,7 +98,7 @@ resource "aws_iam_role_policy" "files_executor_policy" {
         Action = [
           "s3:ListBucket"
         ]
-        Resource = "${each.value.bucket}*"
+        Resource = "${each.value.bucket.arn}*"
         Condition = {
           StringLike = {
             "s3:prefix" : "${each.value.object_prefix}*"
@@ -114,7 +114,7 @@ resource "aws_iam_role_policy" "files_executor_policy" {
           "s3:DeleteObject",
           "s3:AbortMultipartUpload"
         ]
-        Resource = "${each.value.bucket}/${each.value.object_prefix}*"
+        Resource = "${each.value.bucket.arn}/${each.value.object_prefix}*"
       }
     ]
   })

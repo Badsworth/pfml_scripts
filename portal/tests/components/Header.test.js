@@ -24,7 +24,7 @@ describe("Header", () => {
 
       expect(backToMassLink).toHaveAttribute(
         "href",
-        "https://www.mass.gov/topics/paid-family-and-medical-leave-in-massachusetts"
+        "https://mass.gov/PaidLeave"
       );
       expect(backToMassLink).toHaveClass("usa-button");
       expect(backToMassLink).toMatchSnapshot();

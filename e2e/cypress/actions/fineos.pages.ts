@@ -107,7 +107,9 @@ export class ClaimPage {
   }
 
   paidLeave(cb: (page: PaidLeavePage) => unknown): this {
-    cy.findByText("Absence Paid Leave Case", { selector: "a" }).click();
+    cy.findByText("Absence Paid Leave Case", { selector: "a" }).click({
+      force: true,
+    });
     cb(new PaidLeavePage());
     cy.findByText("Absence Case", { selector: "a" }).click();
     return this;
@@ -317,12 +319,15 @@ export class ClaimPage {
   // This will deny extended time in the Leave Details.
   // No assert ClaimStatus for Declined for the absence case
   // won't say "Declined".
-  denyExtendedTime(reason: string): this {
+  denyExtendedTime(reason: string, upgrade: boolean): this {
+    const selector = upgrade
+      ? 'a[title="Deny the pending/in review leave request"]'
+      : 'a[title="Deny the Pending Leave Request"]';
     waitForAjaxComplete();
     cy.get("table[id$='leaveRequestListviewWidget']").within(() => {
       cy.get("tr.ListRowSelected").click();
     });
-    cy.get('a[title="Deny the Pending Leave Request"]').click({
+    cy.get(selector).click({
       force: true,
     });
     cy.get('span[id="leaveRequestDenialDetailsWidget"]')
@@ -592,14 +597,16 @@ class AdjudicationPage {
     return this;
   }
 
-  acceptLeavePlan() {
+  acceptLeavePlan(): this {
     this.onTab("Manage Request");
     cy.get("input[type='submit'][value='Accept']").click({ force: true });
+    return this;
   }
 
-  rejectLeavePlan() {
+  rejectLeavePlan(): this {
     this.onTab("Manage Request");
     cy.get("input[type='submit'][value='Reject']").click({ force: true });
+    return this;
   }
 
   editPlanDecision(planDecision: PlanDecisions) {
@@ -626,6 +633,14 @@ class AdjudicationPage {
 
   exitWithoutSaving(): this {
     clickBottomWidgetButton("Cancel");
+    return this;
+  }
+
+  clickOK(): void {
+    cy.get("#footerButtonsBar input[value='OK']").click();
+  }
+
+  doNothing(): this {
     return this;
   }
 }
@@ -3511,8 +3526,26 @@ class LeaveDetailsPage {
     return new AdjudicationPage();
   }
 
-  inReview(): AdjudicationPage {
-    cy.get('input[type="submit"][value="Review"]').click();
+  inReview(upgrade: boolean): AdjudicationPage {
+    if (upgrade) {
+      cy.contains("button", "Review").click({ force: true });
+      cy.wait("@reactRender");
+      cy.get(`.ant-modal`)
+        .should("be.visible")
+        .within(() => {
+          cy.get('input[id="secondOption"][type="radio"]').click();
+          cy.contains("button", "OK").click();
+        });
+      waitForAjaxComplete();
+      cy.contains(
+        'span[id$="_openReviewDocumentLabel"]',
+        "The leave request is now in review"
+      );
+      waitForAjaxComplete();
+      cy.wait(500);
+    } else {
+      cy.get('input[type="submit"][value="Review"]').click();
+    }
     return new AdjudicationPage();
   }
 
