@@ -77,11 +77,7 @@ describe("Submit medical application via the web portal: Adjudication Approval &
           claimPage.shouldHaveStatus("Availability", "Time Available");
           claimPage.shouldHaveStatus("Restriction", "Passed");
           claimPage.shouldHaveStatus("PlanDecision", "Accepted");
-          if (config("HAS_APRIL_UPGRADE") === "true") {
-            claimPage.approve("Approved", true);
-          } else {
-            claimPage.approve("Approved", false);
-          }
+          claimPage.approve("Approved", config("HAS_APRIL_UPGRADE") === "true");
           claimPage.triggerNotice("Designation Notice");
         });
       });

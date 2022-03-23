@@ -1088,6 +1088,8 @@ class Payment(Base, TimestampMixin):
     fineos_employee_middle_name = Column(Text)
     fineos_employee_last_name = Column(Text)
 
+    payee_name = Column(Text)
+
     claim = relationship("Claim", back_populates="payments")
     employee = relationship("Employee")
     claim_type = relationship(LkClaimType)

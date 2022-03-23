@@ -32,11 +32,7 @@ describe("Appeal Hearing Notification & Notice Confirmation", () => {
           adjudicate.certificationPeriods((cert) => cert.prefill());
           adjudicate.acceptLeavePlan();
         });
-        if (config("HAS_APRIL_UPGRADE") === "true") {
-          claimPage.approve("Approved", true);
-        } else {
-          claimPage.approve("Approved", false);
-        }
+        claimPage.approve("Approved", config("HAS_APRIL_UPGRADE") === "true");
       });
     });
   });

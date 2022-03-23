@@ -1,6 +1,8 @@
+from dataclasses import dataclass
+from datetime import date, timedelta
 from decimal import Decimal
 from re import Pattern
-from typing import Any, Dict, List, Literal, Optional, Type, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Type, Union
 from uuid import UUID
 
 import phonenumbers
@@ -48,6 +50,7 @@ from massgov.pfml.db.models.applications import (
 from massgov.pfml.db.models.applications import LeaveReason as DBLeaveReason
 from massgov.pfml.db.models.applications import (
     LeaveReasonQualifier,
+    LkAmountFrequency,
     LkPhoneType,
     OtherIncome,
     OtherIncomeType,
@@ -75,7 +78,7 @@ from massgov.pfml.db.models.employees import (
     User,
 )
 from massgov.pfml.db.models.geo import GeoState
-from massgov.pfml.fineos import AbstractFINEOSClient
+from massgov.pfml.fineos import AbstractFINEOSClient, exception
 from massgov.pfml.fineos.models.customer_api import AbsencePeriodStatus, PhoneNumber
 from massgov.pfml.fineos.models.customer_api.spec import (
     AbsenceDetails,
@@ -83,7 +86,6 @@ from massgov.pfml.fineos.models.customer_api.spec import (
     EForm,
     EFormSummary,
     ReportedReducedScheduleLeavePeriod,
-    ReportedTimeOffLeavePeriod,
 )
 from massgov.pfml.fineos.transforms.from_fineos.eforms import (
     TransformConcurrentLeaveFromOtherLeaveEform,
@@ -1077,18 +1079,12 @@ def set_customer_detail_fields(
 
 
 def _parse_continuous_leave_period(
-    application_id: UUID, time_off: ReportedTimeOffLeavePeriod
+    application_id: UUID, absence_period: AbsencePeriod
 ) -> ContinuousLeavePeriod:
     return ContinuousLeavePeriod(
         application_id=application_id,
-        start_date=time_off.startDate,
-        end_date=time_off.endDate,
-        start_date_full_day=time_off.startDateFullDay,
-        start_date_off_hours=time_off.startDateOffHours,
-        start_date_off_minutes=time_off.startDateOffMinutes,
-        end_date_full_day=time_off.endDateFullDay,
-        end_date_off_hours=time_off.endDateOffHours,
-        end_date_off_minutes=time_off.endDateOffMinutes,
+        start_date=absence_period.startDate,
+        end_date=absence_period.endDate,
     )
 
 
@@ -1149,10 +1145,17 @@ def _set_continuous_leave_periods(
 ) -> None:
 
     continuous_leave_periods: List[ContinuousLeavePeriod] = []
-    if absence_details.reportedTimeOff:
-        for time_off in absence_details.reportedTimeOff:
-            time_off_leave = _parse_continuous_leave_period(application.application_id, time_off)
-            continuous_leave_periods.append(time_off_leave)
+
+    if absence_details.absencePeriods:
+        for absence_period in absence_details.absencePeriods:
+            if (
+                absence_period.absenceType
+                == AbsencePeriodType.CONTINUOUS.absence_period_type_description
+            ):
+                continuous_leave = _parse_continuous_leave_period(
+                    application.application_id, absence_period
+                )
+                continuous_leave_periods.append(continuous_leave)
 
     application.continuous_leave_periods = continuous_leave_periods
     application.has_continuous_leave_periods = len(continuous_leave_periods) > 0
@@ -1167,6 +1170,8 @@ def _set_intermittent_leave_periods(
         for absence_period in absence_details.absencePeriods:
             if (
                 absence_period.absenceType
+                == AbsencePeriodType.INTERMITTENT.absence_period_type_description
+                or absence_period.absenceType
                 == AbsencePeriodType.EPISODIC.absence_period_type_description
             ):
 
@@ -1174,7 +1179,6 @@ def _set_intermittent_leave_periods(
                     application.application_id, absence_period
                 )
                 intermittent_leave_periods.append(intermittent_leave)
-
     application.intermittent_leave_periods = intermittent_leave_periods
     application.has_intermittent_leave_periods = len(intermittent_leave_periods) > 0
 
@@ -1300,10 +1304,6 @@ def set_application_absence_and_leave_period(
         )
         _set_has_future_child_date(application, absence_period)
     application.submitted_time = absence_details.creationDate
-    application.employer_notification_date = absence_details.notificationDate
-    application.employer_notified = application.employer_notification_date is not None
-
-    return
 
 
 def minutes_from_hours_minutes(hours: int, minutes: int) -> int:
@@ -1347,9 +1347,26 @@ def set_employment_status_and_occupations(
     if occupation.occupationId is None:
         return
 
-    fineos_work_patterns = fineos_client.get_week_based_work_pattern(
-        fineos_web_id, occupation.occupationId
-    )
+    fineos_work_patterns = None
+    try:
+        fineos_work_patterns = fineos_client.get_week_based_work_pattern(
+            fineos_web_id, occupation.occupationId
+        )
+    except exception.FINEOSForbidden:
+        # Known FINEOS limitation, where it responds with a 403 for Variable work pattern types
+        logger.info(
+            "Received FINEOS forbidden response when getting week-based work pattern.",
+            extra={
+                "absence_case_id": application.claim.fineos_absence_id
+                if application.claim
+                else None,
+                "occupationId": occupation.occupationId,
+            },
+        )
+
+    if fineos_work_patterns is None:
+        return
+
     if fineos_work_patterns.workPatternType != WorkPatternType.FIXED.work_pattern_type_description:
         newrelic_util.log_and_capture_exception(
             f"Application work pattern type is not {WorkPatternType.FIXED.work_pattern_type_description}",
@@ -1664,9 +1681,319 @@ def set_other_incomes_from_fineos(
             [
                 income
                 for income in TransformOtherIncomeNonEmployerEform.from_fineos(eform)
-                if income.income_type == apps_common_io.OtherIncomeType.other_employer
+                if income.income_type in set(apps_common_io.OtherIncomeType)
             ]
         )
-
     application.has_other_incomes = len(other_incomes) > 0
     set_other_incomes(db_session, other_incomes, application)
+
+
+@dataclass
+class StartEndDates:
+    start_date: date
+    end_date: date
+
+
+SplitLeaveResults = Tuple[Optional[StartEndDates], Optional[StartEndDates]]
+
+
+def _split_start_end_dates(start_date: date, end_date: date, split_date: date) -> SplitLeaveResults:
+    """
+    Splits a start and end date into two separate date ranges around the past in split_date.
+    If the start date comes after the end date the dates cannot be split.
+    """
+    if start_date > end_date:
+        return (None, None)
+
+    if start_date > split_date and end_date > split_date:
+        return (None, StartEndDates(start_date, end_date))
+    elif start_date <= split_date and end_date <= split_date:
+        return (StartEndDates(start_date, end_date), None)
+    elif start_date == split_date:
+        return (
+            StartEndDates(start_date, start_date),
+            StartEndDates(start_date + timedelta(days=1), end_date),
+        )
+    else:
+        return (
+            StartEndDates(start_date, split_date),
+            StartEndDates(split_date + timedelta(days=1), end_date),
+        )
+
+
+LeavePeriod = Union[
+    ContinuousLeavePeriod, IntermittentLeavePeriod, ReducedScheduleLeavePeriod, ConcurrentLeave
+]
+
+
+def _split_leave_period(
+    leave_period: LeavePeriod, split_date: date, new_application: Application
+) -> Tuple[Optional[LeavePeriod], Optional[LeavePeriod]]:
+    start_date: Optional[date]
+    end_date: Optional[date]
+
+    if isinstance(leave_period, ConcurrentLeave):
+        start_date = leave_period.leave_start_date
+        end_date = leave_period.leave_end_date
+    else:
+        start_date = leave_period.start_date
+        end_date = leave_period.end_date
+
+    if not start_date or not end_date:
+        # This case should not be encountered in reality, but columns are technically nullable
+        # If any values are missing, the leave period cannot be split
+        raise Exception("Leave period cannot be split as it does not have start and end dates")
+
+    (start_end_dates_before_split, start_end_dates_after_split) = _split_start_end_dates(
+        start_date, end_date, split_date
+    )
+
+    if not start_end_dates_after_split:
+        return (leave_period, None)
+
+    new_leave_period: LeavePeriod
+    if isinstance(leave_period, ConcurrentLeave):
+        new_leave_period = leave_period.copy(
+            leave_start_date=start_end_dates_after_split.start_date,
+            leave_end_date=start_end_dates_after_split.end_date,
+            application_id=new_application.application_id,
+        )
+    else:
+        new_leave_period = leave_period.copy(
+            start_date=start_end_dates_after_split.start_date,
+            end_date=start_end_dates_after_split.end_date,
+            application_id=new_application.application_id,
+        )
+
+    if not start_end_dates_before_split:
+        return (None, new_leave_period)
+
+    if isinstance(leave_period, ConcurrentLeave):
+        leave_period.leave_start_date = start_end_dates_before_split.start_date
+        leave_period.leave_end_date = start_end_dates_before_split.end_date
+    else:
+        leave_period.start_date = start_end_dates_before_split.start_date
+        leave_period.end_date = start_end_dates_before_split.end_date
+    return (leave_period, new_leave_period)
+
+
+def _split_benefit(
+    benefit: Union[EmployerBenefit, OtherIncome], split_date: date, new_application: Application
+) -> Tuple[
+    Optional[Union[EmployerBenefit, OtherIncome]], Optional[Union[EmployerBenefit, OtherIncome]]
+]:
+    start_date: Optional[date]
+    end_date: Optional[date]
+    amount: Optional[Decimal]
+    frequency: LkAmountFrequency
+    if isinstance(benefit, EmployerBenefit):
+        start_date = benefit.benefit_start_date
+        end_date = benefit.benefit_end_date
+        amount = benefit.benefit_amount_dollars
+        frequency = benefit.benefit_amount_frequency
+    else:
+        start_date = benefit.income_start_date
+        end_date = benefit.income_end_date
+        amount = benefit.income_amount_dollars
+        frequency = benefit.income_amount_frequency
+
+    if not start_date or not end_date or not amount or not frequency:
+        # This case should not be encountered in reality, but columns are technically nullable
+        # If any values are missing, the benefit cannot be split
+        raise Exception("Unable to split benefit or income as it was missing the required fields")
+
+    (start_end_dates_before_split, start_end_dates_after_split) = _split_start_end_dates(
+        start_date, end_date, split_date
+    )
+
+    if not start_end_dates_after_split:
+        return (benefit, None)
+
+    new_benefit: Union[EmployerBenefit, OtherIncome]
+    if isinstance(benefit, EmployerBenefit):
+        new_benefit = benefit.copy(
+            benefit_start_date=start_end_dates_after_split.start_date,
+            benefit_end_date=start_end_dates_after_split.end_date,
+            application_id=new_application.application_id,
+        )
+    else:
+        new_benefit = benefit.copy(
+            income_start_date=start_end_dates_after_split.start_date,
+            income_end_date=start_end_dates_after_split.end_date,
+            application_id=new_application.application_id,
+        )
+
+    if not start_end_dates_before_split:
+        return (None, new_benefit)
+
+    before_split_amount: Optional[Decimal] = None
+    after_split_amount: Optional[Decimal] = None
+    if frequency.amount_frequency_id == AmountFrequency.ALL_AT_ONCE.amount_frequency_id:
+        totals_days_in_benefit = (end_date - start_date).days + 1
+        days_before_split = (
+            start_end_dates_before_split.end_date - start_end_dates_before_split.start_date
+        ).days + 1
+        days_after_split = days_after_split = (
+            start_end_dates_after_split.end_date - start_end_dates_after_split.start_date
+        ).days + 1
+        before_split_amount = round(amount * Decimal(days_before_split / totals_days_in_benefit), 2)
+        after_split_amount = round(amount * Decimal(days_after_split / totals_days_in_benefit), 2)
+
+    if isinstance(benefit, EmployerBenefit) and isinstance(new_benefit, EmployerBenefit):
+        benefit.benefit_start_date = start_end_dates_before_split.start_date
+        benefit.benefit_end_date = start_end_dates_before_split.end_date
+        if before_split_amount and after_split_amount:
+            benefit.benefit_amount_dollars = before_split_amount
+            new_benefit.benefit_amount_dollars = after_split_amount
+    elif isinstance(benefit, OtherIncome) and isinstance(new_benefit, OtherIncome):
+        benefit.income_start_date = start_end_dates_before_split.start_date
+        benefit.income_end_date = start_end_dates_before_split.end_date
+        if before_split_amount and after_split_amount:
+            benefit.income_amount_dollars = before_split_amount
+            new_benefit.income_amount_dollars = after_split_amount
+
+    return (benefit, new_benefit)
+
+
+def split_application_by_date(
+    db_session: db.Session, application: Application, date_to_split_on: date
+) -> Tuple[Application, Application]:
+    application_after_split_date = application.copy()
+    db_session.add(application_after_split_date)
+    # Flush the new application to the database so it has an id
+    db_session.flush()
+    application_before_split_date = application
+
+    # Set the split by
+    application_after_split_date.split_from_application_id = (
+        application_before_split_date.application_id
+    )
+
+    continuous_leave_periods_after_split_date = []
+    intermittent_leave_periods_after_split_date = []
+    reduced_schedule_leave_periods_after_split_date = []
+    for leave_period in application_before_split_date.all_leave_periods:
+        try:
+            (leave_period_before_split_date, leave_period_after_split_date) = _split_leave_period(
+                leave_period, date_to_split_on, application_after_split_date
+            )
+        except Exception:
+            logger.exception("Unable to split leave period")
+            continue
+        if isinstance(leave_period, ContinuousLeavePeriod):
+            if leave_period_after_split_date:
+                continuous_leave_periods_after_split_date.append(leave_period_after_split_date)
+            if not leave_period_before_split_date:
+                db_session.delete(leave_period)
+                application_before_split_date.continuous_leave_periods.remove(leave_period)
+        elif isinstance(leave_period, IntermittentLeavePeriod):
+            if leave_period_after_split_date:
+                intermittent_leave_periods_after_split_date.append(leave_period_after_split_date)
+            if not leave_period_before_split_date:
+                db_session.delete(leave_period)
+                application_before_split_date.intermittent_leave_periods.remove(leave_period)
+        elif isinstance(leave_period, ReducedScheduleLeavePeriod):
+            if leave_period_after_split_date:
+                reduced_schedule_leave_periods_after_split_date.append(
+                    leave_period_after_split_date
+                )
+            if not leave_period_before_split_date:
+                db_session.delete(leave_period)
+                application_before_split_date.reduced_schedule_leave_periods.remove(leave_period)
+    application_after_split_date.continuous_leave_periods = (
+        continuous_leave_periods_after_split_date
+    )
+    application_after_split_date.intermittent_leave_periods = (
+        intermittent_leave_periods_after_split_date
+    )
+    application_after_split_date.reduced_schedule_leave_periods = (
+        reduced_schedule_leave_periods_after_split_date
+    )
+
+    # Re-calcuate the boolean values after splitting the leave periods
+    application_after_split_date.has_continuous_leave_periods = (
+        len(application_after_split_date.continuous_leave_periods) != 0
+    )
+    application_after_split_date.has_intermittent_leave_periods = (
+        len(application_after_split_date.intermittent_leave_periods) != 0
+    )
+    application_after_split_date.has_reduced_schedule_leave_periods = (
+        len(application_after_split_date.reduced_schedule_leave_periods) != 0
+    )
+
+    application_before_split_date.has_continuous_leave_periods = (
+        len(application_before_split_date.continuous_leave_periods) != 0
+    )
+    application_before_split_date.has_intermittent_leave_periods = (
+        len(application_before_split_date.intermittent_leave_periods) != 0
+    )
+    application_before_split_date.has_reduced_schedule_leave_periods = (
+        len(application_before_split_date.reduced_schedule_leave_periods) != 0
+    )
+
+    # an application can only have a single concurrent leave
+    # and is not returned by Application.all_leave_periods
+    if application_before_split_date.has_concurrent_leave:
+        try:
+            (leave_period_before_split_date, leave_period_after_split_date) = _split_leave_period(
+                application_before_split_date.concurrent_leave,
+                date_to_split_on,
+                application_after_split_date,
+            )
+        except Exception:
+            logger.exception("Unable to split concurrent leave")
+        if leave_period_after_split_date:
+            application_after_split_date.concurrent_leave = leave_period_after_split_date
+            application_after_split_date.has_concurrent_leave = True
+        else:
+            application_after_split_date.has_concurrent_leave = False
+
+        if not leave_period_before_split_date:
+            db_session.delete(application_before_split_date.concurrent_leave)
+            application_before_split_date.concurrent_leave = None  # type: ignore
+            application_before_split_date.has_concurrent_leave = False
+
+    for benefit in application_before_split_date.employer_benefits:
+        try:
+            (benefit_before_split_date, benefit_after_split_date) = _split_benefit(
+                benefit, date_to_split_on, application_after_split_date
+            )
+        except Exception:
+            logger.exception("Unable to split employer benefit")
+            continue
+        if benefit_after_split_date and isinstance(benefit_after_split_date, EmployerBenefit):
+            application_after_split_date.employer_benefits.append(benefit_after_split_date)
+        if not benefit_before_split_date:
+            db_session.delete(benefit)
+            application_before_split_date.employer_benefits.remove(benefit)
+
+    # Re-calculate the has_employer benefits boolean
+    application_after_split_date.has_employer_benefits = (
+        len(application_after_split_date.employer_benefits) != 0
+    )
+    application_before_split_date.has_employer_benefits = (
+        len(application_before_split_date.employer_benefits) != 0
+    )
+
+    for income in application_before_split_date.other_incomes:
+        try:
+            (income_before_split_date, income_after_split_date) = _split_benefit(
+                income, date_to_split_on, application_after_split_date
+            )
+        except Exception:
+            logger.exception("Unable to split other income")
+            continue
+        if income_after_split_date and isinstance(income_after_split_date, OtherIncome):
+            application_after_split_date.other_incomes.append(income_after_split_date)
+        if not income_before_split_date:
+            db_session.delete(income)
+            application_before_split_date.other_incomes.remove(income)
+
+    application_after_split_date.has_other_incomes = (
+        len(application_after_split_date.other_incomes) != 0
+    )
+    application_before_split_date.has_other_incomes = (
+        len(application_before_split_date.other_incomes) != 0
+    )
+
+    return (application_before_split_date, application_after_split_date)

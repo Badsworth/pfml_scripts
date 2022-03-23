@@ -77,6 +77,10 @@ export function before(credentials?: Credentials): void {
     /(ajax\/pagerender\.jsp|sharedpages\/ajax\/listviewpagerender\.jsp|AJAXRequestHandler\.do)/
   ).as("ajaxRender");
 
+  cy.intercept(
+    /(frameworks\/private\/api\/(translations|react))|(suite-react\/locales\/en)/
+  ).as("reactRender");
+
   if (config("ENVIRONMENT") === "uat" || config("ENVIRONMENT") === "breakfix") {
     SSO(credentials);
   }

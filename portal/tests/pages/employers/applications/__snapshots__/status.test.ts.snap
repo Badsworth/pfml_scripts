@@ -105,7 +105,7 @@ exports[`Status renders the page for a completed claim 1`] = `
   >
     A decision has been made for this application. No action is required of you, but you can download a copy of the decision notice for details. Your employee has the right to appeal this decision under Massachusetts regulations (
     <a
-      href="https://www.mass.gov/regulations/458-CMR-200-family-and-medical-leave"
+      href="https://mass.gov/pfml/regulations"
       rel="noopener"
       target="_blank"
     >

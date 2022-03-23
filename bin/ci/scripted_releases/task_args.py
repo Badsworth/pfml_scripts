@@ -25,7 +25,7 @@ def configure_update_release_args(raw_args: list, subparsers: argparse._SubParse
     update_handler.add_argument(
         "-r", metavar="release_version", dest="release_version", type=str, default='',
         required=(not is_interactive_mode(raw_args)),
-        help="The full name of an API or Portal release branch, "
+        help="The full name of a release branch, "
              "e.g.: '-r release/api/v1.2.0' or '-r release/portal/v4.0'."
     )
 
@@ -61,7 +61,7 @@ def configure_finalize_release_args(raw_args: list, subparsers: argparse._SubPar
     finalize_handler.add_argument(
         "-r", metavar="release_version", dest="release_version",
         required=(not is_interactive_mode(raw_args)),
-        help="The full name of an API or Portal release branch, "
+        help="The full name of a release branch, "
              "e.g.: '-r release/api/v1.2.0' or '-r release/portal/v4.0'."
     )
 
@@ -82,7 +82,7 @@ def configure_hotfix_args(raw_args: list, subparsers: argparse._SubParsersAction
     hotfix_handler.add_argument(
         "-r", metavar="release_version", dest="release_version", type=str, default='',
         required=(not is_interactive_mode(raw_args)),
-        help="The full name of a finalized API or Portal release branch, "
+        help="The full name of a finalized release branch, "
              "e.g.: '-r release/api/v1.2.0' or '-r release/portal/v4.0'."
     )
 

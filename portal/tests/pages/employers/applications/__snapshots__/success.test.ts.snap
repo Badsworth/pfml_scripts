@@ -18,7 +18,7 @@ exports[`Success renders the page 1`] = `
   <p>
     If your organization has a paid disability, family, or medical leave policy for employees, you may qualify for 
     <a
-      href="https://www.mass.gov/forms/request-reimbursement-for-your-employees-paid-leave-benefits"
+      href="https://mass.gov/pfml/reimbursement"
       rel="noreferrer noopener"
       target="_blank"
     >

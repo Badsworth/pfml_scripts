@@ -1,3 +1,4 @@
+/* eslint sort-keys: ["error", "asc"] */
 import React from "react";
 import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
@@ -9,6 +10,20 @@ import { useTranslation } from "../locales/i18n";
  */
 const links: { [i18nComponentName: string]: JSX.Element } = {
   "add-org-link": <a href={routes.employers.addOrganization} />,
+  "applying-self-or-unemployed": (
+    <a
+      target="_blank"
+      rel="noreferrer noopener"
+      href={routes.external.massgov.applyingSelfOrUnemployed}
+    />
+  ),
+  "applying-to-military-leave": (
+    <a
+      target="_blank"
+      rel="noreferrer noopener"
+      href={routes.external.massgov.applyingToMilitaryLeave}
+    />
+  ),
   "file-a-return-link": (
     <a
       target="_blank"
@@ -37,6 +52,13 @@ const links: { [i18nComponentName: string]: JSX.Element } = {
       href={routes.external.massgov.caseCreationErrorGuide}
     />
   ),
+  "scheduling-leave-guide": (
+    <a
+      target="_blank"
+      rel="noreferrer noopener"
+      href={routes.external.massgov.schedulingLeaveGuide}
+    />
+  ),
 };
 
 /**
@@ -51,10 +73,10 @@ const useErrorI18nComponents = () => {
     "contact-center-phone-link": (
       <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
     ),
-    ul: <ul className="usa-list" />,
-    li: <li />,
     /* eslint-disable jsx-a11y/heading-has-content */
     h3: <h3 />,
+    li: <li />,
+    ul: <ul className="usa-list" />,
   };
 
   return i18nComponents;

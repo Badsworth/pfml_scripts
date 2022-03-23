@@ -5,7 +5,7 @@ import newrelic.agent
 import massgov
 import massgov.pfml.api.app as app
 from massgov.pfml.api.models.claims.responses import DetailedClaimResponse
-from massgov.pfml.api.services.fineos_actions import get_absence_periods
+from massgov.pfml.api.services.fineos_actions import get_absence_periods_from_claim
 from massgov.pfml.db.models.employees import Claim
 from massgov.pfml.db.queries.absence_periods import (
     convert_fineos_absence_period_to_claim_response_absence_period,
@@ -25,7 +25,7 @@ def get_claim_detail(claim: Claim, log_attributes: Dict) -> DetailedClaimRespons
 
     with app.db_session() as db_session:
         try:
-            absence_periods = get_absence_periods(claim, db_session)
+            absence_periods = get_absence_periods_from_claim(claim, db_session)
         except exception.FINEOSForbidden as error:
             if _is_withdrawn_claim_error(error):
                 raise ClaimWithdrawnError
