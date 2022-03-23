@@ -535,7 +535,7 @@ test-coverage-report: ## Open HTML test coverage report
 	$(PY_RUN_CMD) coverage html --directory .coverage_report
 	$(OPEN_CMD) .coverage_report/index.html
 
-COVERAGE_POSTPROC := | perl -pe "s/^(\S+) +.* (\d+%)/::info file=api\/\1,line=1::Coverage \2/"
+COVERAGE_POSTPROC := | perl -pe "s/^(\S+) +.* (\d+%)/::notice file=api\/\1::Test coverage \2/"
 
 test-coverage-report-changed: ## Coverage report on changed files in this branch
 	FILES=$$(git diff --name-only --relative main | tr '\n' ','); \
