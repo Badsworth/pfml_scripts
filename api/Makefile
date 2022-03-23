@@ -535,6 +535,12 @@ test-coverage-report: ## Open HTML test coverage report
 	$(PY_RUN_CMD) coverage html --directory .coverage_report
 	$(OPEN_CMD) .coverage_report/index.html
 
+COVERAGE_POSTPROC := | perl -pe "s/^(\S+) +.* (\d+%)/::info file=api\/\1,line=1::Coverage \2/"
+
+test-coverage-report-changed: ## Coverage report on changed files in this branch
+	FILES=$$(git diff --name-only --relative main | tr '\n' ','); \
+	$(PY_RUN_CMD) coverage report --show-missing --skip-empty --include=$$FILES $(COVERAGE_POSTPROC)
+
 test-coverage-combine: ## Combine coverage report for CI
 	mv .coverage .coverage.api
 	$(PY_RUN_CMD) coverage combine --keep .coverage.api
