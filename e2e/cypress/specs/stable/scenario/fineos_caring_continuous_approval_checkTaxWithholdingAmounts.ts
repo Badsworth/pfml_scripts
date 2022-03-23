@@ -82,11 +82,10 @@ describe("Approve claim created in Fineos, then check Tax Withholding deductions
                   true
                 )
               );
-            if (config("HAS_APRIL_UPGRADE") === "true") {
-              claimPage.approve("Approved", true);
-            } else {
-              claimPage.approve("Approved", false);
-            }
+            claimPage.approve(
+              "Approved",
+              config("HAS_APRIL_UPGRADE") === "true"
+            );
           });
       });
     });
