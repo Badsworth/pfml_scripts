@@ -662,6 +662,48 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /change-request/{change_request_id}/documents:
+    post:
+      summary: Upload Document
+      operationId: massgov.pfml.api.change_requests.upload_document_for_change_request
+      tags:
+        - ChangeRequest
+        - Documents
+      parameters:
+        - name: change_request_id
+          in: path
+          schema:
+            type: string
+            format: uuid
+            example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
+          description: ID of Change Request to submit documents for
+          required: true
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/DocumentUploadRequest"
+            encoding:
+              file:
+                contentType: application/pdf, image/jpeg, image/png, image/tiff, image/heic
+      responses:
+        "200":
+          description: A successful request returns a 200 status code.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessfulResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/DocumentResponse"
+        "400":
+          description: An unsuccessful request returns a 400 status code if one or more errors occurred.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /payments:
     get:
       summary: Retrieve payments with status for a specified absence ID
