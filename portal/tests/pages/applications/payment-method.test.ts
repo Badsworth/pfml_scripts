@@ -81,7 +81,7 @@ describe("PaymentMethod", () => {
     ).not.toBeInTheDocument();
 
     userEvent.type(
-      screen.getByRole("textbox", { name: /Account number/i }),
+      screen.getByRole("textbox", { name: "Account number" }),
       "121000358"
     );
     expect(
@@ -89,7 +89,7 @@ describe("PaymentMethod", () => {
     ).toBeInTheDocument();
 
     userEvent.type(
-      screen.getByRole("textbox", { name: /Account number/i }),
+      screen.getByRole("textbox", { name: "Account number" }),
       "987654321" // typical account number
     );
     userEvent.click(
@@ -102,6 +102,78 @@ describe("PaymentMethod", () => {
         /Your account number looks similar to a routing number/
       )
     ).not.toBeInTheDocument();
+  });
+
+  it("throws an error when the account number has not been retyped", async () => {
+    setup();
+    const account_number = "987654321";
+    const routing_number = "123456789";
+
+    userEvent.click(
+      screen.getByRole("radio", {
+        name: /Direct deposit into my bank account/i,
+      })
+    );
+    userEvent.type(
+      screen.getByRole("textbox", { name: /Routing number/i }),
+      routing_number
+    );
+    userEvent.type(
+      screen.getByRole("textbox", { name: "Account number" }),
+      account_number
+    );
+    userEvent.click(
+      screen.getByRole("radio", {
+        name: /Checking/i,
+      })
+    );
+
+    userEvent.click(screen.getByRole("button", { name: /submit/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Retype your account number/)
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("throws an error when the retyped account number and account number do not match", async () => {
+    setup();
+    const account_number = "987654321";
+    const routing_number = "123456789";
+
+    userEvent.click(
+      screen.getByRole("radio", {
+        name: /Direct deposit into my bank account/i,
+      })
+    );
+    userEvent.type(
+      screen.getByRole("textbox", { name: /Routing number/i }),
+      routing_number
+    );
+    userEvent.type(
+      screen.getByRole("textbox", { name: "Account number" }),
+      account_number
+    );
+    userEvent.type(
+      screen.getByRole("textbox", { name: /Retype account number/i }),
+      "1111111111"
+    );
+    userEvent.click(
+      screen.getByRole("radio", {
+        name: /Checking/i,
+      })
+    );
+
+    userEvent.click(screen.getByRole("button", { name: /submit/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          /The account numbers you entered do not match. Make sure the numbers are exactly the same./
+        )
+      ).toBeInTheDocument();
+    });
   });
 
   it("submits direct deposit answers", async () => {
@@ -119,7 +191,11 @@ describe("PaymentMethod", () => {
       routing_number
     );
     userEvent.type(
-      screen.getByRole("textbox", { name: /Account number/i }),
+      screen.getByRole("textbox", { name: "Account number" }),
+      account_number
+    );
+    userEvent.type(
+      screen.getByRole("textbox", { name: /Retype account number/i }),
       account_number
     );
     userEvent.click(
@@ -139,6 +215,7 @@ describe("PaymentMethod", () => {
             bank_account_type: BankAccountType.checking,
             routing_number,
             payment_method: PaymentPreferenceMethod.ach,
+            retype_account_number: account_number,
           },
         }
       );
@@ -165,6 +242,7 @@ describe("PaymentMethod", () => {
             bank_account_type: null,
             routing_number: null,
             payment_method: PaymentPreferenceMethod.check,
+            retype_account_number: null,
           },
         }
       );

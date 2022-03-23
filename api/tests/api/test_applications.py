@@ -814,7 +814,17 @@ class TestApplicationsImport:
                         durationBasis="Days",
                     ),
                     requestStatus="Pending",
-                )
+                ),
+                AbsencePeriod(
+                    id="PL-14449-0000002238",
+                    reason="Pregnancy/Maternity",
+                    reasonQualifier1="Foster Care",
+                    reasonQualifier2="",
+                    startDate=date(2021, 1, 1),
+                    endDate=date(2021, 1, 10),
+                    absenceType="Continuous",
+                    requestStatus="Pending",
+                ),
             ],
             reportedReducedSchedule=[
                 ReportedReducedScheduleLeavePeriod(

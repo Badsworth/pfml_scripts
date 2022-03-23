@@ -33,15 +33,16 @@ terraform {
 module "tasks" {
   source = "../../template"
 
-  environment_name              = "prod"
-  st_use_mock_dor_data          = false
-  st_decrypt_dor_data           = true
-  st_file_limit_specified       = true
-  st_employer_update_limit      = 1500
-  service_docker_tag            = local.service_docker_tag
-  vpc_id                        = data.aws_vpc.vpc.id
-  app_subnet_ids                = data.aws_subnet_ids.vpc_app.ids
-  enforce_execute_sql_read_only = true
+  environment_name                   = "prod"
+  st_use_mock_dor_data               = false
+  st_decrypt_dor_data                = true
+  st_file_limit_specified            = true
+  st_employee_export_limit_specified = true
+  st_employer_update_limit           = 1500
+  service_docker_tag                 = local.service_docker_tag
+  vpc_id                             = data.aws_vpc.vpc.id
+  app_subnet_ids                     = data.aws_subnet_ids.vpc_app.ids
+  enforce_execute_sql_read_only      = true
 
   cognito_user_pool_id                       = "us-east-1_UwxnhD1cG"
   fineos_client_customer_api_url             = "https://prd-api.masspfml.fineos.com/customerapi/"
@@ -81,10 +82,11 @@ module "tasks" {
 
   enable_register_admins_job = true
 
-  enable_pub_automation_fineos           = true
-  enable_pub_automation_create_pub_files = true
-  enable_pub_automation_process_returns  = true
-  enable_fineos_import_iaww              = true
+  enable_pub_automation_fineos                     = true
+  enable_pub_automation_create_pub_files           = true
+  enable_pub_automation_process_returns            = true
+  enable_fineos_import_iaww                        = true
+  enable_standalone_fineos_import_employee_updates = true
 
   enable_reductions_send_claimant_lists_to_agencies_schedule = true
   enable_reductions_process_agency_data_schedule             = true
@@ -96,8 +98,10 @@ module "tasks" {
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com", "EOL-DL-DFML-ITSUPPORT@MassMail.State.MA.US"]
 
   # Daily at [20:30 Eastern]
-  dor_fineos_etl_schedule_expression_standard         = "cron(30 1 * * ? *)"
-  dor_fineos_etl_schedule_expression_daylight_savings = "cron(30 0 * * ? *)"
+  dor_fineos_etl_schedule_expression_standard                                    = "cron(30 1 * * ? *)"
+  dor_fineos_etl_schedule_expression_daylight_savings                            = "cron(30 0 * * ? *)"
+  standalone_fineos_import_employee_updates_schedule_expression_standard         = "cron(30 13 * * ? *)"
+  standalone_fineos_import_employee_updates_schedule_expression_daylight_savings = "cron(30 12 * * ? *)"
 
   pdf_api_host                    = "http://localhost:5000"
   enable_generate_1099_pdf        = "0"

@@ -9,8 +9,32 @@ from tests.conftest import get_mock_logger
 
 
 @pytest.fixture
+def auth_token():
+    return "user cognito auth token"
+
+
+@pytest.fixture
 def last_enabled_at():
     return datetime(2022, 1, 2, 0, 0, 0, tzinfo=timezone.utc)
+
+
+class TestHandleMfaEnabled:
+    mock_logger = get_mock_logger()
+
+    @mock.patch("massgov.pfml.mfa.set_user_mfa")
+    def test_success(self, mock_set_user_mfa, auth_token):
+        mfa_actions.handle_mfa_enabled(auth_token)
+
+        mock_set_user_mfa.assert_any_call(True, auth_token)
+
+    @mock.patch("massgov.pfml.mfa.logger", mock_logger)
+    @mock.patch("massgov.pfml.mfa.set_user_mfa")
+    def test_logging(self, mock_set_user_mfa, auth_token):
+        mfa_actions.handle_mfa_enabled(auth_token)
+
+        self.mock_logger.info.assert_any_call(
+            "MFA enabled for user",
+        )
 
 
 class TestHandleMfaDisabled:

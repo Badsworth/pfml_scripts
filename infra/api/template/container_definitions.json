@@ -66,7 +66,6 @@
       { "name": "NEW_PLAN_PROOFS_ACTIVE_AT", "value": "${new_plan_proofs_active_at}" },
       { "name": "USE_CLAIM_STATUS_URL", "value": "${use_claim_status_url}" },
       { "name": "ENABLE_DOCUMENT_MULTIPART_UPLOAD", "value": "${enable_document_multipart_upload}" },
-      { "name": "ENABLE_APPLICATION_IMPORT", "value": "${enable_application_import}" },
       { "name": "ENABLE_EMPLOYEE_ENDPOINTS", "value": "${enable_employee_endpoints}" }
     ],
     "secrets": [

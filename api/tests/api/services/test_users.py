@@ -85,19 +85,6 @@ class TestUpdateUser:
             == "User"
         )
 
-    def test_audit_trail_as_admin(self, user, test_db_session):
-        update_request = UserUpdateRequest(mfa_delivery_preference="SMS")
-        update_user(test_db_session, user, update_request, updated_by=MFAUpdatedBy.ADMIN)
-
-        test_db_session.commit()
-        test_db_session.refresh(user)
-
-        assert user.mfa_delivery_preference_updated_by_id == 2
-        assert (
-            user.mfa_delivery_preference_updated_by.mfa_delivery_preference_updated_by_description
-            == "Admin"
-        )
-
     @mock.patch("massgov.pfml.api.services.users._update_mfa_preference_audit_trail")
     def test_audit_trail_not_updated_if_mfa_preference_isnt_updated(
         self, mock_audit_trail, user, test_db_session

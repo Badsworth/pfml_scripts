@@ -12,7 +12,7 @@ from massgov.pfml.api.models.applications.responses import DocumentResponse
 from massgov.pfml.db.models.applications import DocumentType, LeaveReason
 from massgov.pfml.db.models.factories import ApplicationFactory, ClaimFactory, DocumentFactory
 from massgov.pfml.fineos import fineos_client, models
-from massgov.pfml.fineos.exception import FINEOSUnprocessableEntity
+from massgov.pfml.fineos.exception import FINEOSForbidden, FINEOSUnprocessableEntity
 
 
 @pytest.fixture(autouse=True)
@@ -1046,3 +1046,21 @@ def test_document_upload_doesnt_return_error_rule(
         "message": "Issue encountered while attempting to upload the document.",
         "type": "fineos_client",
     }
+
+
+@mock.patch("massgov.pfml.api.services.document_upload.upload_document")
+def test_document_upload_withdrawn_error(
+    mock_upload, client, consented_user, consented_user_token, test_db_session
+):
+    error = FINEOSForbidden("upload_document", 200, 403)
+    mock_upload.side_effect = error
+
+    response = document_upload_helper(
+        client=client,
+        user=consented_user,
+        auth_token=consented_user_token,
+        form_data=document_upload_payload_helper(VALID_FORM_DATA, valid_file()),
+    )
+
+    assert response["status_code"] == 403
+    assert response["errors"][0]["type"] == "fineos_claim_withdrawn"

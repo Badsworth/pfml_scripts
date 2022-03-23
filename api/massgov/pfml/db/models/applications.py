@@ -2,11 +2,10 @@ import datetime
 from decimal import Decimal
 from enum import Enum
 from itertools import chain
-from typing import Optional
+from typing import TYPE_CHECKING, Optional, Union
 
 from sqlalchemy import TIMESTAMP, Boolean, Column, Date, ForeignKey, Integer, Numeric, Text, case
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import backref, object_session, relationship
 
 import massgov.pfml.util.logging
@@ -31,6 +30,13 @@ from massgov.pfml.util.decimals import round_nearest_hundredth
 from ..lookup import LookupTable
 from .base import Base, TimestampMixin, deprecated_column, uuid_gen
 from .common import PostgreSQLUUID, StrEnum
+
+# (typed_hybrid_property) https://github.com/dropbox/sqlalchemy-stubs/issues/98
+if TYPE_CHECKING:
+    # Use this to make hybrid_property's have the same typing as a normal property until stubs are improved.
+    typed_hybrid_property = property
+else:
+    from sqlalchemy.ext.hybrid import hybrid_property as typed_hybrid_property
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -70,7 +76,7 @@ class LkLeaveReason(Base):
             LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id: ClaimType.MEDICAL_LEAVE.claim_type_id,
         }
 
-    @hybrid_property
+    @typed_hybrid_property
     def absence_to_claim_type(self) -> int:
         if not self._map:
             self._map = self.generate_map()
@@ -452,8 +458,12 @@ class Application(Base, TimestampMixin):
         )
         return units
 
-    @hybrid_property
-    def all_leave_periods(self) -> Optional[list]:
+    @typed_hybrid_property
+    def all_leave_periods(
+        self,
+    ) -> list[
+        Union["ContinuousLeavePeriod", "ReducedScheduleLeavePeriod", "IntermittentLeavePeriod"]
+    ]:
         leave_periods = list(
             chain(
                 self.continuous_leave_periods,
@@ -461,18 +471,27 @@ class Application(Base, TimestampMixin):
                 self.reduced_schedule_leave_periods,
             )
         )
-        return leave_periods
+        return leave_periods  # type: ignore
 
-    @hybrid_property
+    @typed_hybrid_property
     def split_into_application_id(self):
         return self.split_into_application.application_id if self.split_into_application else None  # type: ignore
 
-    @hybrid_property
+    @typed_hybrid_property
     def fineos_absence_id(self) -> Optional[str]:
         if not self.claim:
             return None
 
         return self.claim.fineos_absence_id
+
+    def copy(self):
+        table = self.__table__
+        non_pk_columns = [
+            k for k in table.columns.keys() if k not in table.primary_key.columns.keys()
+        ]
+        data = {c: getattr(self, c) for c in non_pk_columns}
+        copy = self.__class__(**data)
+        return copy
 
 
 class CaringLeaveMetadata(Base, TimestampMixin):
@@ -629,7 +648,7 @@ class WorkPatternDay(Base, TimestampMixin):
     day_of_week = relationship(LkDayOfWeek)
     relationship(WorkPattern, back_populates="work_pattern_days")
 
-    @hybrid_property
+    @typed_hybrid_property
     def sort_order(self):
         """Set sort order of Sunday to 0"""
         day_of_week_is_sunday = self.day_of_week_id == 7

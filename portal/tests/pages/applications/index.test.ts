@@ -74,7 +74,6 @@ describe("Applications", () => {
         endDate.toISOString()
       ).short()}. Most Massachusetts employees are eligible for up to 26 weeks of combined family and medical leave per benefit year.`
     );
-    expect(screen.getByText(/Your current/i)).toBeInTheDocument();
     expect(screen.getByText(byText)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "benefit year" })).toHaveAttribute(
       "href",

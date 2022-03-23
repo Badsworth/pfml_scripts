@@ -15,6 +15,7 @@ import massgov.pfml.util.logging
 import massgov.pfml.util.pdf as pdf_util
 from massgov.pfml.api.authorization.flask import CREATE, EDIT, ensure
 from massgov.pfml.api.constants.application import ID_DOC_TYPES
+from massgov.pfml.api.exceptions import ClaimWithdrawn
 from massgov.pfml.api.models.applications.common import ContentType as AllowedContentTypes
 from massgov.pfml.api.models.applications.common import DocumentType as IoDocumentTypes
 from massgov.pfml.api.models.applications.requests import DocumentRequestBody
@@ -30,7 +31,7 @@ from massgov.pfml.api.validation.exceptions import (
     ValidationException,
 )
 from massgov.pfml.db.models.applications import Application, Document, DocumentType, LeaveReason
-from massgov.pfml.fineos.exception import FINEOSUnprocessableEntity
+from massgov.pfml.fineos.exception import FINEOSForbidden, FINEOSUnprocessableEntity
 from massgov.pfml.util.logging.applications import get_application_log_attributes
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -182,6 +183,11 @@ def upload_document_to_fineos(
                 extra=log_attributes,
                 exc_info=True,
             )
+
+            if isinstance(err, FINEOSForbidden):
+                # Through testing, we've identified Fineos returning 403 errors when cases are Withdrawn:
+                # https://lwd.atlassian.net/browse/PSD-2530
+                raise ClaimWithdrawn()
 
             if isinstance(err, FINEOSUnprocessableEntity):
                 message = "Issue encountered while attempting to upload the document."

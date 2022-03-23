@@ -45,12 +45,7 @@ describe("Claim date change", () => {
           task.close("Bonding Certification Review");
           task.close("ID Review");
         });
-
-        if (config("HAS_APRIL_UPGRADE") === "true") {
-          claimPage.approve("Approved", true);
-        } else {
-          claimPage.approve("Approved", false);
-        }
+        claimPage.approve("Approved", config("HAS_APRIL_UPGRADE") === "true");
       });
     });
   });
@@ -67,14 +62,13 @@ describe("Claim date change", () => {
               task.add("Approved Leave Start Date Change");
               task.editActivityDescription(
                 "Approved Leave Start Date Change",
-                `Date change request: Move to ${startDate} - ${endDate}`
+                `Date change request: Move to ${startDate} - ${endDate}`,
+                config("HAS_APRIL_UPGRADE") === "true" ? true : false
               );
             });
             if (config("HAS_APRIL_UPGRADE") === "true") {
               claimPage.reviewClaim(true);
-              const claimReviewed =
-                fineosPages.ClaimPage.visit(fineos_absence_id);
-              claimReviewed.adjudicateUpgrade((adjudication) => {
+              claimPage.adjudicateUpgrade((adjudication) => {
                 // These steps might need to be updated after FINEOS demo (3/10/22) of the changes from in Review
                 // process going on in the background. SOP might be updated if so this will need to be updated.
                 adjudication.certificationPeriods((certificationPeriods) =>
@@ -87,13 +81,11 @@ describe("Claim date change", () => {
                   certificationPeriods.prefill()
                 );
               });
-              claimReviewed.shouldHaveStatus("PlanDecision", "Undecided");
-              claimReviewed.outstandingRequirements(
-                (outstandingRequirements) => {
-                  outstandingRequirements.add();
-                }
-              );
-              claimReviewed.tasks((task) => {
+              claimPage.shouldHaveStatus("PlanDecision", "Undecided");
+              claimPage.outstandingRequirements((outstandingRequirements) => {
+                outstandingRequirements.add();
+              });
+              claimPage.tasks((task) => {
                 task.close("Approved Leave Start Date Change");
                 task.add("Update Paid Leave Case");
               });

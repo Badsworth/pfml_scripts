@@ -1,7 +1,7 @@
 import uuid
 from typing import Optional
 
-from sqlalchemy import Column, Integer
+from sqlalchemy import Column, Integer, String
 
 from massgov.pfml.db.models.base import Base
 from massgov.pfml.util.pydantic import PydanticBaseModel, PydanticBaseModelEmptyStrIsNone
@@ -11,6 +11,7 @@ class PydanticTestModel(Base):
     __tablename__ = f"lk_pydantic_test_{uuid.uuid4()}"
     id = Column(Integer, primary_key=True, autoincrement=True)
     secret = Column(Integer)
+    foo = Column(String)
 
 
 class ModelForTest(PydanticBaseModel):
@@ -22,6 +23,17 @@ def test_orm_mode():
     res = ModelForTest.from_orm(model)
     assert res.id == model.id
     assert res.dict().get("secret") is None
+
+
+def test_copy(test_db_session):
+    original = PydanticTestModel(secret=10, foo="bar")
+    test_db_session.add(original)
+    test_db_session.flush()
+    assert original.id is not None
+    copy = original.copy(foo="test")
+    assert copy.secret == 10
+    assert copy.foo == "test"
+    assert copy.id is None
 
 
 class EmptyStrIsNoneTestModel(PydanticBaseModelEmptyStrIsNone):

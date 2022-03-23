@@ -45,7 +45,7 @@ class TestGetClaimDetail:
 
             return get_claim_detail(claim, {})
 
-    @mock.patch("massgov.pfml.api.services.claims.get_absence_periods")
+    @mock.patch("massgov.pfml.api.services.claims.get_absence_periods_from_claim")
     def test_withdrawn_claim_exception(self, mock_get_absence_periods, app, claim):
         error = {
             "error": "User does not have permission to access the resource or the instance data",
@@ -62,7 +62,7 @@ class TestGetClaimDetail:
         error = exc_info.value
         assert type(error) == ClaimWithdrawnError
 
-    @mock.patch("massgov.pfml.api.services.claims.get_absence_periods")
+    @mock.patch("massgov.pfml.api.services.claims.get_absence_periods_from_claim")
     def test_no_absence_periods_exception(self, mock_get_absence_periods, app, claim):
         mock_get_absence_periods.return_value = []
 
@@ -72,7 +72,7 @@ class TestGetClaimDetail:
         error_msg = str(exc_info.value)
         assert error_msg == "No absence periods found for claim"
 
-    @mock.patch("massgov.pfml.api.services.claims.get_absence_periods")
+    @mock.patch("massgov.pfml.api.services.claims.get_absence_periods_from_claim")
     def test_success(self, mock_get_absence_periods, app, claim, fineos_absence_period):
         mock_get_absence_periods.return_value = [fineos_absence_period]
 
@@ -87,7 +87,7 @@ class TestGetClaimDetail:
 
         assert period == expected_period
 
-    @mock.patch("massgov.pfml.api.services.claims.get_absence_periods")
+    @mock.patch("massgov.pfml.api.services.claims.get_absence_periods_from_claim")
     def test_success_with_managed_requirements(
         self, mock_get_absence_periods, app, claim, fineos_absence_period, managed_requirements
     ):

@@ -72,7 +72,7 @@ exports[`Success renders content tailored to Caring Leave 1`] = `
       <li>
         You have already taken leave since January 1, 2021 for 
         <a
-          href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
+          href="https://mass.gov/pfml/qualifying-reason"
           rel="noopener noreferrer"
           target="_blank"
         >
@@ -169,7 +169,7 @@ exports[`Success renders content tailored to Caring Leave 1`] = `
     </a>
      to find out more about how benefits are determined. For a rough estimate of how much you might receive, 
     <a
-      href="https://calculator.digital.mass.gov/pfml/yourbenefits/"
+      href="https://mass.gov/pfml/benefits-calculator"
       rel="noreferrer noopener"
       target="_blank"
     >
@@ -288,7 +288,7 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
       <li>
         You have already taken leave since January 1, 2021 for 
         <a
-          href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
+          href="https://mass.gov/pfml/qualifying-reason"
           rel="noopener noreferrer"
           target="_blank"
         >
@@ -377,7 +377,7 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
     </a>
      to find out more about how benefits are determined. For a rough estimate of how much you might receive, 
     <a
-      href="https://calculator.digital.mass.gov/pfml/yourbenefits/"
+      href="https://mass.gov/pfml/benefits-calculator"
       rel="noreferrer noopener"
       target="_blank"
     >
@@ -560,7 +560,7 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
     </a>
      to find out more about how benefits are determined. For a rough estimate of how much you might receive, 
     <a
-      href="https://calculator.digital.mass.gov/pfml/yourbenefits/"
+      href="https://mass.gov/pfml/benefits-calculator"
       rel="noreferrer noopener"
       target="_blank"
     >
@@ -743,7 +743,7 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
     </a>
      to find out more about how benefits are determined. For a rough estimate of how much you might receive, 
     <a
-      href="https://calculator.digital.mass.gov/pfml/yourbenefits/"
+      href="https://mass.gov/pfml/benefits-calculator"
       rel="noreferrer noopener"
       target="_blank"
     >
@@ -928,7 +928,7 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
       <li>
         You have already taken leave since January 1, 2021 for 
         <a
-          href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
+          href="https://mass.gov/pfml/qualifying-reason"
           rel="noopener noreferrer"
           target="_blank"
         >
@@ -1017,7 +1017,7 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
     </a>
      to find out more about how benefits are determined. For a rough estimate of how much you might receive, 
     <a
-      href="https://calculator.digital.mass.gov/pfml/yourbenefits/"
+      href="https://mass.gov/pfml/benefits-calculator"
       rel="noreferrer noopener"
       target="_blank"
     >
@@ -1202,7 +1202,7 @@ exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
       <li>
         You have already taken leave since January 1, 2021 for 
         <a
-          href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
+          href="https://mass.gov/pfml/qualifying-reason"
           rel="noopener noreferrer"
           target="_blank"
         >
@@ -1291,7 +1291,7 @@ exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
     </a>
      to find out more about how benefits are determined. For a rough estimate of how much you might receive, 
     <a
-      href="https://calculator.digital.mass.gov/pfml/yourbenefits/"
+      href="https://mass.gov/pfml/benefits-calculator"
       rel="noreferrer noopener"
       target="_blank"
     >
@@ -1410,7 +1410,7 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
       <li>
         You have already taken leave since January 1, 2021 for 
         <a
-          href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
+          href="https://mass.gov/pfml/qualifying-reason"
           rel="noopener noreferrer"
           target="_blank"
         >
@@ -1499,7 +1499,7 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
     </a>
      to find out more about how benefits are determined. For a rough estimate of how much you might receive, 
     <a
-      href="https://calculator.digital.mass.gov/pfml/yourbenefits/"
+      href="https://mass.gov/pfml/benefits-calculator"
       rel="noreferrer noopener"
       target="_blank"
     >
@@ -1684,7 +1684,7 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
       <li>
         You have already taken leave since January 1, 2021 for 
         <a
-          href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
+          href="https://mass.gov/pfml/qualifying-reason"
           rel="noopener noreferrer"
           target="_blank"
         >
@@ -1767,7 +1767,7 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
     </a>
      to find out more about how benefits are determined. For a rough estimate of how much you might receive, 
     <a
-      href="https://calculator.digital.mass.gov/pfml/yourbenefits/"
+      href="https://mass.gov/pfml/benefits-calculator"
       rel="noreferrer noopener"
       target="_blank"
     >

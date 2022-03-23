@@ -190,6 +190,9 @@
                 "Name": "fineos-eligibility-feed-export",
                 "Environment": [
                   { "Name": "ELIGIBILITY_FEED_MODE", "Value": "updates" },
+                  %{if st_employee_export_limit_specified}
+                  { "Name": "ELIGIBILITY_FEED_EXPORT_EMPLOYEE_LIMIT", "Value": "100000" },
+                  %{endif}
                   %{if st_file_limit_specified}
                   { "Name": "ELIGIBILITY_FEED_EXPORT_FILE_NUMBER_LIMIT", "Value": "20000" },
                   %{endif}

@@ -211,4 +211,13 @@ describe("InputText", () => {
     userEvent.type(field, "000");
     expect(onChange).toHaveBeenCalledTimes(4);
   });
+
+  it("disables paste when requested", () => {
+    setup({ disablePaste: true });
+
+    const field = screen.getByRole("textbox");
+    userEvent.paste(field, "blah");
+
+    expect(field.getAttribute("value")).toEqual(""); // eslint-disable-line
+  });
 });

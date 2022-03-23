@@ -8,6 +8,7 @@ import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.api.validation.claim_rules as claim_rules
 import massgov.pfml.util.logging
+from massgov.pfml.api.models.applications.requests import DocumentRequestBody
 from massgov.pfml.api.models.claims.common import ChangeRequest
 from massgov.pfml.api.models.claims.requests import ChangeRequestUpdate
 from massgov.pfml.api.models.claims.responses import ChangeRequestResponse
@@ -15,6 +16,7 @@ from massgov.pfml.api.services.change_requests import (
     add_change_request_to_db,
     get_change_requests_from_db,
     update_change_request_db,
+    upload_document,
 )
 from massgov.pfml.api.services.claims import get_claim_from_db
 from massgov.pfml.db.models.employees import ChangeRequest as change_request_db_model
@@ -156,3 +158,14 @@ def update_change_request(change_request_id: str) -> flask.Response:
         status_code=200,
         warnings=issues,
     ).to_api_response()
+
+
+# TODO (PORTAL-1997): add tests for this method
+def upload_document_for_change_request(change_request_id, body, file):
+    with app.db_session() as db_session:
+        change_request = get_or_404(db_session, change_request_db_model, change_request_id)
+
+    # Parse the document details from the form body
+    document_details: DocumentRequestBody = DocumentRequestBody.parse_obj(body)
+
+    return upload_document(change_request, document_details, file, db_session)
