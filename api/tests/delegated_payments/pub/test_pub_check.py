@@ -15,6 +15,7 @@ from massgov.pfml.db.models.employees import (
     LkState,
     Payment,
     PaymentMethod,
+    PaymentTransactionType,
     State,
     StateLog,
 )
@@ -313,4 +314,29 @@ def test_format_employee_name_for_ez_check_success(
     payment = PaymentFactory(
         fineos_employee_first_name=first_name, fineos_employee_last_name=last_name
     )
-    assert pub_check._format_employee_name_for_ez_check(payment) == expected_result
+    assert pub_check._format_name_for_ez_check(payment) == expected_result
+
+
+@pytest.mark.parametrize(
+    "_description, payee_name, expected_result",
+    (
+        ("Short name", "ACME Corp.", "ACME Corp."),
+        (
+            "Long name trimmed to 40 characters",
+            "Accelerated Critical Mechanical Engineering Corporation of the United States of America",
+            "Accelerated Critical Mechanical Engineer",
+        ),
+    ),
+)
+def test_format_employer_name_for_ez_check_success(
+    initialize_factories_session,
+    test_db_session,
+    _description,
+    payee_name,
+    expected_result,
+):
+    payment = PaymentFactory(
+        payment_transaction_type_id=PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id,
+        payee_name=payee_name,
+    )
+    assert pub_check._format_name_for_ez_check(payment) == expected_result

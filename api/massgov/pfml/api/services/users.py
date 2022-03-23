@@ -20,13 +20,12 @@ def update_user(
     db_session: db.Session,
     user: User,
     update_request: UserUpdateRequest,
-    updated_by: MFAUpdatedBy = MFAUpdatedBy.USER,
 ) -> User:
     for key in update_request.__fields_set__:
         value = getattr(update_request, key)
 
         if key == "mfa_delivery_preference":
-            _update_mfa_preference(db_session, user, key, value, updated_by)
+            _update_mfa_preference(db_session, user, value)
             continue
 
         if key == "mfa_phone_number":
@@ -39,7 +38,9 @@ def update_user(
 
 
 def _update_mfa_preference(
-    db_session: db.Session, user: User, key: str, value: Optional[str], updated_by: MFAUpdatedBy
+    db_session: db.Session,
+    user: User,
+    value: Optional[str],
 ) -> None:
     existing_mfa_preference = user.mfa_preference_description()
     if value == existing_mfa_preference:
@@ -50,10 +51,13 @@ def _update_mfa_preference(
         if value is not None
         else None
     )
-    setattr(user, key, mfa_preference)
+    # the type checker doesn't know that user.mfa_delivery_preference can be None so
+    # ignore the type warning
+    user.mfa_delivery_preference = mfa_preference  # type: ignore
 
     # Keep a copy of the last updated timestamp before we update it. This is used later for logging
     # feature metrics
+    updated_by = MFAUpdatedBy.USER
     last_updated_at = user.mfa_delivery_preference_updated_at
 
     _update_mfa_preference_audit_trail(db_session, user, updated_by)
@@ -71,16 +75,15 @@ def _update_mfa_preference_audit_trail(
     # when a user changes their security preferences
     # we want to record an audit trail of who made the change, and when
     now = datetime.now(timezone.utc)
-    mfa_delivery_preference_updated_at = "mfa_delivery_preference_updated_at"
-    setattr(user, mfa_delivery_preference_updated_at, now)
+    user.mfa_delivery_preference_updated_at = now
 
     if updated_by == MFAUpdatedBy.ADMIN:
         mfa_updated_by = db_lookups.by_value(db_session, LkMFADeliveryPreferenceUpdatedBy, "Admin")
     else:
         mfa_updated_by = db_lookups.by_value(db_session, LkMFADeliveryPreferenceUpdatedBy, "User")
 
-    mfa_delivery_preference_updated_by = "mfa_delivery_preference_updated_by"
-    setattr(user, mfa_delivery_preference_updated_by, mfa_updated_by)
+    mfa_updated_by = cast(LkMFADeliveryPreferenceUpdatedBy, mfa_updated_by)
+    user.mfa_delivery_preference_updated_by = mfa_updated_by
 
 
 def admin_disable_mfa(

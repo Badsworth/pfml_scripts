@@ -2,7 +2,6 @@ import mimetypes
 import uuid
 from datetime import date
 from enum import Enum
-from itertools import groupby
 from typing import Dict, List, Optional, Tuple
 
 import pydantic
@@ -11,7 +10,6 @@ from pydantic.types import UUID4
 import massgov.pfml.db
 import massgov.pfml.fineos.models
 import massgov.pfml.util.logging as logging
-import massgov.pfml.util.newrelic.events as newrelic_util
 from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
 from massgov.pfml.api.exceptions import ClaimWithdrawn, ObjectNotFound
 from massgov.pfml.api.models.claims.common import (
@@ -21,30 +19,26 @@ from massgov.pfml.api.models.claims.common import (
     PreviousLeave,
     StandardLeavePeriod,
 )
-from massgov.pfml.api.models.claims.responses import (
-    AbsencePeriodResponse,
-    ClaimReviewResponse,
-    DocumentResponse,
-)
+from massgov.pfml.api.models.claims.responses import ClaimReviewResponse, DocumentResponse
 from massgov.pfml.api.models.common import (
     ComputedStartDates,
     ConcurrentLeave,
     EmployerBenefit,
     get_computed_start_dates,
 )
+from massgov.pfml.api.services.fineos_actions import get_absence_periods
 from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
 from massgov.pfml.db.models.employees import Employer, User, UserLeaveAdministrator
 from massgov.pfml.db.queries.absence_periods import (
     convert_fineos_absence_period_to_claim_response_absence_period,
 )
 from massgov.pfml.fineos.common import DOWNLOADABLE_DOC_TYPES, SUB_CASE_DOC_TYPES
+from massgov.pfml.fineos.models.customer_api.spec import AbsencePeriod as FineosAbsencePeriod
 from massgov.pfml.fineos.models.group_client_api import (
     Base64EncodedFileData,
     GroupClientDocument,
     ManagedRequirementDetails,
-    PeriodDecisions,
 )
-from massgov.pfml.fineos.models.group_client_api.spec import Decision
 from massgov.pfml.fineos.models.leave_admin_creation import CreateOrUpdateLeaveAdmin
 from massgov.pfml.fineos.transforms.from_fineos.eforms import (
     TransformConcurrentLeaveFromOtherLeaveEform,
@@ -372,93 +366,17 @@ def _parse_eform_data(
     )
 
 
-def _group_by_absence_period_reference(
-    ungrouped_decisions: List[Decision], log_attributes: Dict
-) -> List[Decision]:
-    """The group client's absence-period-decisions endpoint returns absence periods in
-    a more granular fashion than the Customer API's absence-periods endpoint. We prefer
-    one absence period per leave request, which is the behavior of the absence-periods endpoint.
-    This method mimics the Customer API absence-periods endpoint's behavior."""
-
-    transformed_decisions: List[Decision] = []
-    groups = groupby(
-        ungrouped_decisions, key=lambda d: d.period.periodReference if d.period else None
-    )
-
-    for _period_reference, decisions_iterator in groups:
-        decisions_group = list(decisions_iterator)
-
-        start_dates = filter(
-            None, [d.period.startDate if d.period else None for d in decisions_group]
-        )
-        earliest_start_date = min(start_dates, default=None)
-
-        end_dates = filter(None, [d.period.endDate if d.period else None for d in decisions_group])
-        latest_end_date = max(end_dates, default=None)
-
-        # We assume that the first decision has the same period type and status as
-        # the other decisions with the same period reference. We're introducing a
-        # check and logging here to help validate this assumption.
-        unique_period_types = set(d.period.type if d.period else None for d in decisions_group)
-        unique_period_statuses = set(d.period.status if d.period else None for d in decisions_group)
-        if len(unique_period_types) != 1 or len(unique_period_statuses) != 1:
-            newrelic_util.log_and_capture_exception(
-                "Multiple decisions with the same period reference have different period types or statuses",
-                extra={
-                    **log_attributes,
-                    "unique_period_types": str(unique_period_types),
-                    "unique_period_statuses": str(unique_period_statuses),
-                },
-            )
-
-        decision = decisions_group[0]
-        if decision.period:
-            decision.period.startDate = earliest_start_date
-            decision.period.endDate = latest_end_date
-
-        transformed_decisions.append(decision)
-
-    logger.info(
-        "Grouped absence case decisions by period reference",
-        extra={
-            **log_attributes,
-            "fineos_decisions_count": len(ungrouped_decisions),
-            "grouped_decisions_count": len(transformed_decisions),
-        },
-    )
-
-    return transformed_decisions
-
-
-def _parse_absence_period_responses(
-    absence_period_decisions: List[Decision], log_attributes: Dict
-) -> List[AbsencePeriodResponse]:
-    absence_period_responses = []
-
-    for decision in absence_period_decisions:
-        if decision.period is None:
-            newrelic_util.log_and_capture_exception(
-                "Failed to extract period from fineos decision.", extra=log_attributes
-            )
-        else:
-            absence_period_responses.append(
-                convert_fineos_absence_period_to_claim_response_absence_period(
-                    decision.period, log_attributes
-                )
-            )
-
-    return absence_period_responses
-
-
 def get_claim_as_leave_admin(
     fineos_user_id: str,
     absence_id: str,
     employer: Employer,
+    db_session: massgov.pfml.db.Session,
     fineos_client: Optional[massgov.pfml.fineos.AbstractFINEOSClient] = None,
-) -> Tuple[ClaimReviewResponse, List[ManagedRequirementDetails], PeriodDecisions]:
+) -> Tuple[ClaimReviewResponse, List[ManagedRequirementDetails], List[FineosAbsencePeriod]]:
     """
-    Given an absence ID, gets a full claim for the claim review page by calling multiple endpoints from FINEOS
+    Gets all absence case details from Fineos for a Leave Admin to review.
     """
+
     log_attributes = {
         "fineos_user_id": fineos_user_id,
         "absence_id": absence_id,
@@ -469,53 +387,66 @@ def get_claim_as_leave_admin(
     if not fineos_client:
         fineos_client = massgov.pfml.fineos.create_client()
 
-    # parse absence periods and eventually sync them back to the database
-    absence_periods = fineos_client.get_absence_period_decisions(fineos_user_id, absence_id)
-
-    if not absence_periods.decisions:
+    # Retrieve absence periods and eventually sync them back to the database.
+    # In order to mitigate security concerns and continue to ensure this leave admin
+    # should have access to the absence case, we first perform a Group Client
+    # call before making a Fineos Customer API call. The Customer API is used because
+    # the Fineos Group Client didn't include an endpoint for retrieving absence periods.
+    # See: https://lwd.atlassian.net/l/c/KYnUpPEq
+    absence_period_decisions = fineos_client.get_absence_period_decisions(
+        fineos_user_id, absence_id
+    )
+    if not absence_period_decisions.decisions:
         logger.error(
             "Did not receive leave period decisions for absence periods", extra=log_attributes
         )
         raise ClaimWithdrawn()
 
-    absence_period_responses = _parse_absence_period_responses(
-        _group_by_absence_period_reference(absence_periods.decisions, log_attributes),
-        log_attributes,
+    # We retrieve the Employee from Fineos, rather than through the Claim in our DB,
+    # since it's not guranteed that the Employee will be set yet for cases created
+    # through the contact center.
+    fineos_employee = absence_period_decisions.decisions[0].employee
+    if fineos_employee is None or fineos_employee.id is None:
+        raise ValueError("Absence period is missing an associated employee or ID")
+
+    customer_info = fineos_client.get_customer_info(fineos_user_id, fineos_employee.id)
+    tax_identifier = customer_info.idNumber
+    if tax_identifier is None:
+        raise ValueError("Employee tax identifier was empty")
+
+    absence_periods = get_absence_periods(
+        absence_id,
+        tax_identifier,
+        employer.employer_fein,
+        db_session,
+        str(employer.fineos_employer_id),
     )
 
     # TODO (PORTAL-1118):
     #   The status gets overwritten in the review endpoint by DB claim status in order to match the status shown to claimants.
     #   Once the status page is surfacing absence periods, we can remove this.
-    first_period = absence_periods.decisions[0].period
+    first_period = absence_period_decisions.decisions[0].period
     status = (first_period.status if first_period else None) or "Unknown"
 
     # TODO (PORTAL-1118):
     #   This field is deprecated. Once the review page is surfacing absence periods, we can remove this.
-    leave_details = _get_leave_details(absence_periods.dict())
+    leave_details = _get_leave_details(absence_period_decisions.dict())
 
     # Calculate the claimant's hours_worked_per_week.
-    fineos_employee = absence_periods.decisions[0].employee
-    if fineos_employee is None or fineos_employee.id is None:
-        raise ValueError("Absence period is missing an associated employee or ID")
-
     customer_occupations = fineos_client.get_customer_occupations(
         fineos_user_id, fineos_employee.id
     )
-
     if customer_occupations.elements is None:
         raise ValueError("No customer occupations were returned")
-
     hours_worked_per_week = customer_occupations.elements[0].hrsWorkedPerWeek
 
     # Determine if the claim needs a review from the leave admin.
     managed_reqs = fineos_client.get_managed_requirements(fineos_user_id, absence_id)
 
-    # Pull existing eforms data for the claim
+    # Pull existing eforms data, like "Employer benefits", for the claim
     eform_data = _parse_eform_data(fineos_client, fineos_user_id, absence_id, log_attributes)
 
-    # Get claimant and employer details
-    customer_info = fineos_client.get_customer_info(fineos_user_id, fineos_employee.id)
-
+    # Parse claimant and employer details
     if customer_info.address is None:
         claimant_address = Address()
     else:
@@ -531,7 +462,7 @@ def get_claim_as_leave_admin(
     employer_info_for_review = EmployerInfoForReview.from_orm(employer)
 
     # Get computed start dates based on absence_periods
-    computed_start_dates = _get_computed_start_dates(absence_periods.dict())
+    computed_start_dates = _get_computed_start_dates(absence_period_decisions.dict())
 
     return (
         ClaimReviewResponse(
@@ -543,7 +474,12 @@ def get_claim_as_leave_admin(
             residential_address=claimant_address,
             leave_details=leave_details,
             status=status,
-            absence_periods=absence_period_responses,
+            absence_periods=[
+                convert_fineos_absence_period_to_claim_response_absence_period(
+                    absence_period, log_attributes
+                )
+                for absence_period in absence_periods
+            ],
             computed_start_dates=computed_start_dates,
         ),
         managed_reqs,

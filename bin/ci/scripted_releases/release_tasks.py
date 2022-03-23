@@ -12,11 +12,11 @@ def start(args):
 
     with git_utils.rollback():
         # getting the proper tags/branches for the release.
-        # NB: most_recent_tag() will return incorrect results on main
+        # NB: get_latest_version() will return incorrect results on main
         # (compared to the correct result on a release branch)
         # ...but it will return a "correct enough" tag for the purposes of just bumping its minor version number.
         git_utils.fetch_remotes()
-        recent_tag, tag_sha = git_utils.most_recent_tag(args.app, "main")
+        recent_tag, tag_sha = git_utils.get_latest_version(args.app, "main")
 
         v = git_utils.to_semver(recent_tag)  # convert tag to semver object
         version_name = git_utils.from_semver(v.bump_minor(), args.app)
@@ -40,7 +40,7 @@ def update(args):
     logger.warning("Merge conflicts must be resolved manually.")
 
     git_utils.fetch_remotes()
-    recent_tag, tag_sha = git_utils.most_recent_tag(args.app, args.release_version)
+    recent_tag, tag_sha = git_utils.get_latest_version(args.app, args.release_version)
     v = git_utils.to_semver(recent_tag)
 
     if not git_utils.branch_exists(args.release_version):
@@ -96,7 +96,7 @@ def finalize(args):
         git_utils.checkout(args.release_version)
         logger.info(f"Checked out '{args.release_version}'.")
 
-        latest_rc, rc_commit_hash = git_utils.most_recent_tag(args.app, args.release_version)
+        latest_rc, rc_commit_hash = git_utils.get_latest_version(args.app, args.release_version)
         v = git_utils.to_semver(latest_rc)
         formal_release_number = git_utils.from_semver(v.finalize_version(), args.app)
 
@@ -114,7 +114,7 @@ def hotfix(args):  # production hotfix, args are a branch name and a list of com
     logger.warning("Merge conflicts must be resolved manually.")
 
     git_utils.fetch_remotes()
-    recent_tag, tag_sha = git_utils.most_recent_tag(args.app, args.release_version)
+    recent_tag, tag_sha = git_utils.get_latest_version(args.app, args.release_version)
     v = git_utils.to_semver(recent_tag)
 
     if not git_utils.branch_exists(args.release_version):
@@ -163,7 +163,7 @@ def major(args):
         with git_utils.rollback():
             # getting the proper tags/branches for the release
             git_utils.fetch_remotes()
-            recent_tag, tag_sha = git_utils.most_recent_tag(args.app, "main")
+            recent_tag, tag_sha = git_utils.get_latest_version(args.app, "main")
 
             v = git_utils.to_semver(recent_tag)  # convert tag to semver object
             version_name = git_utils.from_semver(v.bump_major(), args.app)

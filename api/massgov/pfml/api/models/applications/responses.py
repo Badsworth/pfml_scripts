@@ -26,6 +26,7 @@ from massgov.pfml.api.models.common import (
     MaskedPhoneResponse,
     get_computed_start_dates,
     get_earliest_start_date,
+    get_earliest_submission_date,
     get_leave_reason,
 )
 from massgov.pfml.db.models.applications import Application, ApplicationPaymentPreference, Document
@@ -95,6 +96,7 @@ class ApplicationResponse(PydanticBaseModel):
     computed_start_dates: Optional[ComputedStartDates]
     split_from_application_id: Optional[UUID4]
     split_into_application_id: Optional[UUID4]
+    computed_earliest_submission_date: Optional[date]
 
     @classmethod
     def from_orm(cls, application: Application) -> "ApplicationResponse":
@@ -131,6 +133,9 @@ class ApplicationResponse(PydanticBaseModel):
 
         application_response.updated_time = application_response.updated_at
         application_response.computed_start_dates = _get_computed_start_dates(application)
+        application_response.computed_earliest_submission_date = get_earliest_submission_date(
+            application
+        )
 
         return application_response
 

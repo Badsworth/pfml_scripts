@@ -917,7 +917,7 @@ exports[`ComponentWithUser renders the appropriate identification upload content
         </ul>
         <p>
           <a
-            href="https://www.mass.gov/info-details/identity-proof-for-paid-leave"
+            href="https://mass.gov/pfmlsubmitinfo"
             rel="noopener noreferrer"
             target="_blank"
           >

@@ -45,11 +45,10 @@ describe("Report of intermittent leave hours notification", () => {
                 .certificationPeriods((certPeriods) => certPeriods.prefill())
                 .acceptLeavePlan();
             });
-            if (config("HAS_APRIL_UPGRADE") === "true") {
-              claimPage.approve("Completed", true);
-            } else {
-              claimPage.approve("Completed", false);
-            }
+            claimPage.approve(
+              "Completed",
+              config("HAS_APRIL_UPGRADE") === "true"
+            );
             claimPage.triggerNotice("Designation Notice");
             waitForAjaxComplete();
           });
@@ -87,6 +86,8 @@ describe("Report of intermittent leave hours notification", () => {
                   // Just casting to string instead of asserting here.
                   timeSpanHoursStart: claim.metadata.spanHoursStart + "",
                   timeSpanHoursEnd: claim.metadata.spanHoursEnd + "",
+                  upgrade:
+                    config("HAS_APRIL_UPGRADE") === "true" ? true : false,
                 });
               return recordActualTime.nextStep((additionalReporting) => {
                 additionalReporting
@@ -94,6 +95,8 @@ describe("Report of intermittent leave hours notification", () => {
                     reported_by: "Employee",
                     received_via: "Phone",
                     accepted: "Yes",
+                    upgrade:
+                      config("HAS_APRIL_UPGRADE") === "true" ? true : false,
                   })
                   .finishRecordingActualLeave();
               });

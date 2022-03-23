@@ -37,7 +37,7 @@
                     <td><a href="{{ url_for('dashboard_batch', key=key)}}/{{ entry.import_log_id }}">{{ entry.import_log_id }}</a></td>
                     <td>{{ entry.start.strftime("%Y-%m-%d %H:%M:%S") if entry.start }}</td>
                     <td><a href="{{ url_for('dashboard_batch', key=key)}}/{{ entry.source }}">{{ entry.source }}</a></td>
-                    <td>{{ entry.import_type }}</td>
+                    <td><a href="{{ url_for('dashboard_batch_type', key=key, batch_type=entry.import_type) }}">{{ entry.import_type }}</a></td>
                     <td>{{ entry.status }}</td>
                     <td title="{{ entry.end.strftime('%Y-%m-%d %H:%M:%S') if entry.end }}">{{
                         (entry.end - entry.start).total_seconds()|round(1, 'floor') ~ "s" if (entry.start and entry.end) }}</td>

@@ -43,6 +43,14 @@ export default class Navigation extends React.PureComponent {
         >
           Beta - Environment Overview
         </Link>
+        <Link
+          className={this.active === "view-daily-overview" ? "active" : ""}
+          to={navigation.getOpenNerdletLocation({
+            id: "view-daily-overview",
+          })}
+        >
+          Beta - Daily Overview
+        </Link>
       </nav>
     );
   }

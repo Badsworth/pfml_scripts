@@ -975,6 +975,19 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
   }
 
   /**
+   * @param {string | null} [computed_earliest_submission_date]
+   * @returns {MockBenefitsApplicationBuilder}
+   */
+  computedEarliestSubmissionDate(computed_earliest_submission_date = null) {
+    set(
+      this.claimAttrs,
+      "computed_earliest_submission_date",
+      computed_earliest_submission_date
+    );
+    return this;
+  }
+
+  /**
    * @returns {BenefitsApplication}
    */
   create() {

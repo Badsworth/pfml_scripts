@@ -16,7 +16,10 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
 )
-from massgov.pfml.db.models.payments import FineosWritebackTransactionStatus
+from massgov.pfml.db.models.payments import (
+    FineosWritebackTransactionStatus,
+    LkFineosWritebackTransactionStatus,
+)
 from massgov.pfml.db.models.state import Flow
 from massgov.pfml.delegated_payments import delegated_config, delegated_payments_util
 from massgov.pfml.delegated_payments.pub.manual_pub_reject_file_parser import (
@@ -41,6 +44,11 @@ EXPECTED_STATES = [
 ]
 
 EXPECTED_STATE_IDS = set([state.state_id for state in EXPECTED_STATES])
+
+EXPECTED_NOTE_STATUSES = [
+    FineosWritebackTransactionStatus.INVALID_ROUTING_NUMBER,
+    FineosWritebackTransactionStatus.PUB_PAYMENT_RETURNED,
+]
 
 
 class ProcessManualPubRejectionStep(ProcessFilesInPathStep):
@@ -82,6 +90,8 @@ class ProcessManualPubRejectionStep(ProcessFilesInPathStep):
             "payment_switching_change_notification_to_error_count"
         )
         PAYMENT_REJECTED_SUCCESSFULLY_COUNT = "payment_rejected_successfully_count"
+        MISSING_REJECT_NOTES = "missing_reject_notes"
+        MISSING_REJECT_NOTES_MAPPING = "missing_reject_notes_mapping"
 
     def __init__(
         self,
@@ -356,7 +366,12 @@ class ProcessManualPubRejectionStep(ProcessFilesInPathStep):
             )
             self.increment(self.Metrics.PAYMENT_SWITCHING_CHANGE_NOTIFICATION_TO_ERROR_COUNT)
 
-        # All of these get written back as "Invalid Routing Number"
+        writeback_transaction_status = self.convert_reject_notes_to_writeback_status(
+            manual_pub_reject, payment
+        )
+        if writeback_transaction_status is None:
+            return
+
         create_payment_finished_state_log_with_writeback(
             payment=payment,
             payment_end_state=State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
@@ -364,7 +379,7 @@ class ProcessManualPubRejectionStep(ProcessFilesInPathStep):
                 "Payment failed due to manual PUB EFT rejection file inclusion",
                 line_number=str(manual_pub_reject.line_number),
             ),
-            writeback_transaction_status=FineosWritebackTransactionStatus.INVALID_ROUTING_NUMBER,
+            writeback_transaction_status=writeback_transaction_status,
             db_session=self.db_session,
             import_log_id=self.get_import_log_id(),
         )
@@ -381,6 +396,41 @@ class ProcessManualPubRejectionStep(ProcessFilesInPathStep):
 
         self.increment(self.Metrics.PAYMENT_REJECTED_SUCCESSFULLY_COUNT)
         logger.info("Payment record manually rejected", extra=extra)
+
+    def convert_reject_notes_to_writeback_status(
+        self, manual_pub_reject: ManualPubReject, payment: Payment
+    ) -> Optional[LkFineosWritebackTransactionStatus]:
+        rejected_notes = manual_pub_reject.notes
+        log_extra = delegated_payments_util.get_traceable_payment_details(payment)
+        msg = None
+
+        if not rejected_notes:
+            msg = "Empty reject note for payment"
+            self.increment(self.Metrics.MISSING_REJECT_NOTES)
+
+        if rejected_notes:
+            for status in EXPECTED_NOTE_STATUSES:
+                if status.transaction_status_description.lower() in rejected_notes.lower():
+                    return status
+
+        if not msg:
+            self.increment(self.Metrics.MISSING_REJECT_NOTES_MAPPING)
+            log_extra |= {"rejected_notes": rejected_notes}
+            msg = "Missing reject note writeback status mapping for payment in manual invalidation file"
+
+        # If the reject notes do not contain one of the expected
+        # writeback status descriptions log an error so a low
+        # priority alert will be created
+        logger.error(msg, extra=log_extra)
+        self.add_pub_error(
+            pub_error_type=PubErrorType.MANUAL_PUB_REJECT_ERROR,
+            message=msg,
+            line_number=manual_pub_reject.line_number,
+            raw_data=manual_pub_reject.raw_line,
+            details=log_extra,
+        )
+
+        return None
 
     def get_extra_for_log(
         self,

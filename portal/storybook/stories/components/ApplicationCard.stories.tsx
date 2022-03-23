@@ -11,6 +11,7 @@ import { Props } from "types/common";
 import React from "react";
 import { Story } from "@storybook/react";
 import { createMockBenefitsApplicationDocument } from "lib/mock-helpers/createMockDocument";
+import dayjs from "dayjs";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 export default {
@@ -33,6 +34,12 @@ export default {
         ],
       },
     },
+    "Earliest submission date": {
+      control: {
+        type: "radio",
+        options: ["No date (null)", "Today", "Tomorrow"],
+      },
+    },
     Reason: {
       control: {
         type: "radio",
@@ -49,14 +56,21 @@ export default {
 };
 
 const claimScenarios = {
-  "Started, no EIN": new MockBenefitsApplicationBuilder().create(),
-  "Started, with EIN": new MockBenefitsApplicationBuilder().employed().create(),
-  "Part 1 submitted": new MockBenefitsApplicationBuilder().submitted().create(),
-  Completed: new MockBenefitsApplicationBuilder().completed().create(),
+  "Started, no EIN": new MockBenefitsApplicationBuilder(),
+  "Started, with EIN": new MockBenefitsApplicationBuilder(),
+  "Part 1 submitted": new MockBenefitsApplicationBuilder().submitted(),
+  Completed: new MockBenefitsApplicationBuilder().completed(),
+} as const;
+
+const earliestSubmissionDate = {
+  "No date (null)": null,
+  Today: dayjs().format("YYYY-MM-DD"),
+  Tomorrow: dayjs().subtract(-1, "day").format("YYYY-MM-DD"),
 } as const;
 
 type Args = Omit<Props<typeof ApplicationCard>, "claim"> & {
   claim: keyof typeof claimScenarios;
+  "Earliest submission date": keyof typeof earliestSubmissionDate;
   Notices: "Denied" | "Withdrawn" | "No notices" | "Loading";
   Reason: LeaveReasonType;
 };
@@ -93,7 +107,15 @@ const Template: Story<Args> = (args) => {
   });
 
   const defaultReason = args.claim === "Completed" ? LeaveReason.medical : null;
-  const claim = claimScenarios[args.claim];
+
+  const claim = claimScenarios[args.claim]
+    .computedEarliestSubmissionDate(
+      args["Earliest submission date"]
+        ? earliestSubmissionDate[args["Earliest submission date"]]
+        : null
+    )
+    .create();
+
   claim.leave_details = claim.leave_details ?? {};
   claim.leave_details.reason = args.Reason ? args.Reason : defaultReason;
 

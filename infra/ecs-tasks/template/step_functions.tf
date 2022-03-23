@@ -58,13 +58,14 @@ locals {
     {
       app_name = "pfml-api"
 
-      st_states_name            = local.st_states_name
-      st_states_comment         = local.st_state_details.comment
-      st_task_definition_suffix = local.st_state_details.task_definition_suffix
-      st_overrides              = local.st_state_details.overrides
-      st_decrypt_value          = local.st_decrypt_value
-      st_file_limit_specified   = var.st_file_limit_specified
-      st_employer_update_limit  = var.st_employer_update_limit
+      st_states_name                     = local.st_states_name
+      st_states_comment                  = local.st_state_details.comment
+      st_task_definition_suffix          = local.st_state_details.task_definition_suffix
+      st_overrides                       = local.st_state_details.overrides
+      st_decrypt_value                   = local.st_decrypt_value
+      st_file_limit_specified            = var.st_file_limit_specified
+      st_employee_export_limit_specified = var.st_employee_export_limit_specified
+      st_employer_update_limit           = var.st_employer_update_limit
 
       cluster_arn           = data.aws_ecs_cluster.cluster.arn
       environment_name      = var.environment_name

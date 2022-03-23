@@ -48,11 +48,21 @@ def init(app, dashboard_password):
             data = process_entries(db_session, batch_name)
         return flask.render_template("dashboards.html", data=data, now=utcnow(), key=key)
 
+    @app.route("/dashboard/<key>/batch/type/<batch_type>")
+    def dashboard_batch_type(key, batch_type):
+        if not secrets.compare_digest(key, dashboard_password):
+            raise NotFound
+        with massgov.pfml.api.app.db_session() as db_session:
+            data = process_entries(db_session, batch_type=batch_type)
+        return flask.render_template("dashboards.html", data=data, now=utcnow(), key=key)
 
-def process_entries(db_session: db.Session, batch_name: Optional[str] = None) -> dict:
+
+def process_entries(
+    db_session: db.Session, batch_name: Optional[str] = None, batch_type: Optional[str] = None
+) -> dict:
     data: dict = {"filtered": [], "processed": []}
 
-    entries = import_jobs_get(db_session, batch_name)
+    entries = import_jobs_get(db_session, batch_name, batch_type)
 
     for entry in entries:
         report = json.loads(entry.get("report")) if entry.get("report") else None
@@ -76,10 +86,12 @@ class ImportLogResponse(PydanticBaseModel):
     end: Optional[datetime]
 
 
-def import_jobs_get(db_session, source=None):
+def import_jobs_get(db_session, source=None, batch_type=None):
     query = db_session.query(ImportLog)
     if source is not None:
         query = query.filter(ImportLog.source == source)
+    elif batch_type is not None:
+        query = query.filter(ImportLog.import_type == batch_type)
     import_logs = query.order_by(ImportLog.import_log_id.desc()).limit(1000)
 
     import_logs_response = list(

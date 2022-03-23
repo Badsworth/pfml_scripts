@@ -130,7 +130,7 @@
     "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-long-business-intelligence-tool",
     "TWILIO_NUMBERS": "7853699162,8045342087",
     "HAS_CHANNEL_SWITCHING": "false",
-    "HAS_MARCH_RELEASE": "false"
+    "HAS_MARCH_RELEASE": "true"
   },
   "performance": {
     "PORTAL_BASEURL": "https://paidleave-performance.mass.gov",
