@@ -170,27 +170,32 @@ def create_cognito_account(
     return response["UserSub"]
 
 
-def disable_user_mfa(email: str) -> None:
+def set_user_mfa(mfa_enabled: bool, cognito_auth_token: str) -> None:
     cognito_client = create_cognito_client()
-    cognito_user_pool_id = app.get_config().cognito_user_pool_id
 
     try:
-        cognito_client.admin_set_user_mfa_preference(
-            SMSMfaSettings={"Enabled": False}, Username=email, UserPoolId=cognito_user_pool_id
+        cognito_client.set_user_mfa_preference(
+            SMSMfaSettings={
+                "Enabled": mfa_enabled,
+            },
+            AccessToken=cognito_auth_token,
         )
     except Exception as error:
+        log_attr = {"mfa_enabled": mfa_enabled}
         if isinstance(error, ClientError) and "InvalidParameterException" in str(error.__class__):
             logger.error(
                 "Error updating MFA preference in Cognito - Invalid parameter in request",
                 exc_info=error,
+                extra=log_attr,
             )
         elif isinstance(error, ClientError) and "UserNotFoundException" in str(error.__class__):
             logger.error(
-                "Error updating MFA preference in Cognito - User not found with email",
+                "Error updating MFA preference in Cognito - User not found",
                 exc_info=error,
+                extra=log_attr,
             )
         else:
-            logger.error("Error updating MFA preference in Cognito", exc_info=error)
+            logger.error("Error updating MFA preference in Cognito", exc_info=error, extra=log_attr)
 
         raise error
 

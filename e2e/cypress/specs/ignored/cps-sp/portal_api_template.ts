@@ -67,11 +67,7 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
             true
           );
         });
-        if (config("HAS_APRIL_UPGRADE") === "true") {
-          claimPage.approve("Approved", true);
-        } else {
-          claimPage.approve("Approved", false);
-        }
+        claimPage.approve("Approved", config("HAS_APRIL_UPGRADE") === "true");
       });
     });
   });

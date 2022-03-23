@@ -49,6 +49,16 @@ class Base:
         """
         return self.dict().items()
 
+    def copy(self, **kwargs):
+        table = self.__table__  # type: ignore
+        non_pk_columns = [
+            k for k in table.columns.keys() if k not in table.primary_key.columns.keys()
+        ]
+        data = {c: getattr(self, c) for c in non_pk_columns}
+        data.update(kwargs)
+        copy = self.__class__(**data)  # type: ignore
+        return copy
+
 
 def uuid_gen() -> uuid.UUID:
     return uuid.uuid4()

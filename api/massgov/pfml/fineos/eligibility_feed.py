@@ -70,6 +70,9 @@ class EligibilityFeedExportConfig(BaseSettings):
     export_file_number_limit: Optional[int] = Field(
         None, env="ELIGIBILITY_FEED_EXPORT_FILE_NUMBER_LIMIT"
     )  # Only applies to "updates" mode
+    export_total_employee_limit: Optional[int] = Field(
+        None, env="ELIGIBILITY_FEED_EXPORT_EMPLOYEE_LIMIT"
+    )
     bundle_count: PositiveInt = PositiveInt(1)  # Only applies to "full" mode currently
     employer_ids: str = Field(
         None, env="ELIGIBILITY_FEED_LIST_OF_EMPLOYER_IDS"
@@ -268,6 +271,7 @@ class EligibilityFeedExportReport:
     employers_skipped_count: int = 0
     employers_error_count: int = 0
     employee_and_employer_pairs_total_count: int = 0
+    employees_pending_export_total_count: int = 0
 
 
 OutputTransportParams = Dict[str, Any]
@@ -419,6 +423,7 @@ def process_employee_updates(
     fineos: AbstractFINEOSClient,
     output_dir_path: str,
     output_transport_params: Optional[OutputTransportParams] = None,
+    export_total_employee_limit: Optional[int] = None,
     export_file_number_limit: Optional[int] = None,
 ) -> EligibilityFeedExportReport:
     start_time = utcnow()
@@ -429,6 +434,7 @@ def process_employee_updates(
         extra={
             "output_dir_path": output_dir_path,
             "export_file_number_limit": export_file_number_limit,
+            "export_total_employee_limit": export_total_employee_limit,
         },
     )
 
@@ -451,6 +457,12 @@ def process_employee_updates(
         )
         .distinct(EmployeePushToFineosQueue.employee_id)
     )
+
+    total_employees_to_update = updated_employee_ids_query.count()
+    report.employees_pending_export_total_count = total_employees_to_update
+
+    if export_total_employee_limit:
+        updated_employee_ids_query = updated_employee_ids_query.limit(export_total_employee_limit)
 
     update_batch_to_processing(db_session, updated_employee_ids_query, process_id)
     db_session.commit()
@@ -517,7 +529,6 @@ def process_employees_for_employer(
     employee_ids: List[EmployeeId],
     report: EligibilityFeedExportReport,
     output_transport_params: Optional[OutputTransportParams] = None,
-    export_file_number_limit: Optional[int] = None,
     process_id: int = 1,
 ) -> None:
     report.employers_total_count += 1

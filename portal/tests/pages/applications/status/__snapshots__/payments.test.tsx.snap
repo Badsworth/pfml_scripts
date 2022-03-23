@@ -264,7 +264,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
           <li>
             If you believe we’ve cancelled your payments for an incorrect reason, you can 
             <a
-              href="https://www.mass.gov/forms/request-an-appeal-for-paid-family-and-medical-leave"
+              href="https://mass.gov/PaidLeaveDecisionAppeal"
               rel="noreferrer noopener"
               target="_blank"
             >
@@ -304,7 +304,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       <p>
         The payment amount you see on this page may be less than the maximum benefit amount due to 
         <a
-          href="https://www.mass.gov/info-details/how-other-leave-and-benefits-can-affect-your-paid-family-and-medical-leave"
+          href="https://mass.gov/pfml-benefit-reductions"
           rel="noopener noreferrer"
           target="_blank"
         >

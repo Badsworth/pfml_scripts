@@ -206,6 +206,8 @@ class FineosPaymentData(MockData):
             "fineos_employee_last_name", fake.last_name()
         )
 
+        self.payee_name = self.get_value("payee_name", fake.company())
+
         self.fineos_address_effective_from = self.get_value(
             "fineos_address_effective_from", "2021-01-01 12:00:00"
         )
@@ -280,6 +282,7 @@ class FineosPaymentData(MockData):
             vpei_record["PAYEEBANKSORT"] = self.routing_nbr
             vpei_record["PAYEEACCOUNTN"] = self.account_nbr
             vpei_record["PAYEEACCOUNTT"] = self.account_type
+            vpei_record["PAYEEFULLNAME"] = self.payee_name
             vpei_record["EVENTTYPE"] = self.event_type
             vpei_record["PAYEEIDENTIFI"] = self.payee_identifier
             vpei_record["EVENTREASON"] = self.event_reason
@@ -589,6 +592,8 @@ def generate_payment_extract_files(
         if scenario_descriptor.payment_close_to_cap:
             # The cap is $850.00
             payment_amount = "800.00"
+        elif scenario_descriptor.payment_over_cap:
+            payment_amount = "860.00"
         else:
             payment_amount = "100.00"
 
@@ -640,6 +645,19 @@ def generate_payment_extract_files(
             ssn = "SITPAYEE001"
             payment_amount = "22.00"
 
+        # Set the payee name
+        if (
+            scenario_descriptor.payment_transaction_type
+            == PaymentTransactionType.EMPLOYER_REIMBURSEMENT
+        ):
+            payee_name = scenario_data.employer.employer_name
+        else:
+            payee_name = (
+                str(scenario_data.employee.fineos_employee_first_name)
+                + " "
+                + str(scenario_data.employee.fineos_employee_last_name)
+            )
+
         fineos_payments_data = FineosPaymentData(
             generate_defaults=True,
             c_value=c_value,
@@ -667,6 +685,7 @@ def generate_payment_extract_files(
             event_type=event_type,
             event_reason=event_reason,
             payee_identifier=payee_identifier,
+            payee_name=payee_name,
             amalgamationc=amalgamationc,
             payment_type=payment_type,
             claim_type=claim_type,

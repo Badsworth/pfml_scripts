@@ -12,6 +12,22 @@ describe("BenefitsApplication", () => {
     emptyClaim = new MockBenefitsApplicationBuilder().create();
   });
 
+  describe("#hasIntermittentLeaveFrequency", () => {
+    it("returns true when the intermittent leave period has a non-zero value", () => {
+      const claim = new MockBenefitsApplicationBuilder()
+        .intermittent()
+        .create();
+
+      expect(claim.hasIntermittentLeaveFrequency).toBe(true);
+
+      claim.leave_details.intermittent_leave_periods[0].frequency = 0;
+      expect(claim.hasIntermittentLeaveFrequency).toBe(false);
+
+      claim.leave_details.intermittent_leave_periods[0].frequency = null;
+      expect(claim.hasIntermittentLeaveFrequency).toBe(false);
+    });
+  });
+
   describe("#isCompleted", () => {
     it("returns true when the Claim status is 'completed'", () => {
       const completedClaim = new MockBenefitsApplicationBuilder()

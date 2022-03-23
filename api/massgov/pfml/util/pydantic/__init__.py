@@ -22,9 +22,10 @@ class PydanticBaseModel(pydantic.BaseModel):
 
 class PydanticBaseModelEmptyStrIsNone(pydantic.BaseModel):
     @pydantic.validator("*", pre=True)
-    def empty_str_to_none(cls, v):  # noqa: B902
-        if v == "":
+    def empty_str_to_none(cls, v, field):  # noqa: B902
+        if field.allow_none and v == "":
             return None
+
         return v
 
 

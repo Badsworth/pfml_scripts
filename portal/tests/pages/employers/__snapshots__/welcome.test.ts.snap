@@ -173,7 +173,7 @@ exports[`Employer welcome renders page 1`] = `
       >
         <li>
           <a
-            href="https://www.mass.gov/info-details/employer-paid-leave-application-review-guide"
+            href="https://mass.gov/pmfl-leave-administrators"
             rel="noopener"
             target="_blank"
           >
@@ -182,11 +182,11 @@ exports[`Employer welcome renders page 1`] = `
         </li>
         <li>
           <a
-            href="https://www.mass.gov/forms/request-reimbursement-for-your-employees-paid-leave-benefits"
+            href="https://mass.gov/PaidLeaveReimbursement"
             rel="noopener"
             target="_blank"
           >
-            Employer reimbursements
+            Request to be reimbursed for paid leave benefits
           </a>
         </li>
       </ul>

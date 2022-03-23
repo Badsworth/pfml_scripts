@@ -53,6 +53,9 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
             ["Absence Paid Leave Payments Failure", 1],
             ["Payment Change Request Received", 3],
             ["Manual Intervention required to Approve Periods", 1],
+            ["Employer Reimbursement", 3],
+            ["Employer Reimbursement Adjustment", 15],
+            ["Returned Payment Received", 3],
             // ["Conduct Hearing", 15], //Can't find task
             // ["Schedule Hearing", 15], //Can't find task
             // ["Review Appeal", 15], //Can't find task
@@ -80,6 +83,9 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
             "Employer Paid Leave Policy",
             "Employer Proof of Payment",
             "Employer Response Additional Documentation",
+            "Employer Reimbursement Appeals Formstack",
+            "Employer Reimbursement Formstack",
+            "Employer Reimbursement Policy",
             "Family Member Active Duty Service Proof",
             "Identification Proof",
             "Other Case Documentation",

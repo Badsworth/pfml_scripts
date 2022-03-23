@@ -12,7 +12,7 @@ const flagsConfig = {
   defaults: {
     // When enabled, the "Find my application" flow is displayed.
     // TODO (PORTAL-1327): Remove channelSwitching flag once enabled everywhere.
-    channelSwitching: false,
+    channelSwitching: true,
 
     // When this flag is enabled, the user can see the "Employment status"
     // question in the claimant flow (CP-1204)
@@ -37,7 +37,7 @@ const flagsConfig = {
 
     // Show multiple leave request UI updates to leave admins (dashboard++)
     // TODO (PORTAL-1560) Remove flag
-    employerShowMultiLeaveDashboard: false,
+    employerShowMultiLeaveDashboard: true,
 
     // When this flag true, you can BYPASS maintenance pages that are currently present.
     // See docs/portal/maintenance-pages.md for more details.
@@ -51,7 +51,7 @@ const flagsConfig = {
     pfmlTerriyay: false,
 
     // When this flag is true, PDF files up to 10mb are sent to the API.
-    sendLargePdfToApi: false,
+    sendLargePdfToApi: true,
 
     // TODO (PORTAL-1893) This flag should be enabled when the /holidays endpoint is ready for production.
     // The /holidays endpoint is still under development, but the holiday alert component is done.

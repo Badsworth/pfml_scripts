@@ -17,6 +17,7 @@ import Lead from "../../components/core/Lead";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { Trans } from "react-i18next";
+import { ValidationError } from "../../errors";
 import { isPotentialRoutingNumber } from "../../utils/isPotentialRoutingNumber";
 import tracker from "src/services/tracker";
 import useFormState from "../../hooks/useFormState";
@@ -26,6 +27,7 @@ import { useTranslation } from "../../locales/i18n";
 const bankAccountTypeField = "payment_preference.bank_account_type";
 const routingNumberField = "payment_preference.routing_number";
 const accountNumberField = "payment_preference.account_number";
+const retypeAccountNumberField = "payment_preference.retype_account_number";
 const paymentMethodField = "payment_preference.payment_method";
 
 export const fields = [
@@ -49,11 +51,43 @@ export const PaymentMethod = (props: WithBenefitsApplicationProps) => {
   const payment_method = get(formState, paymentMethodField);
   const requestData = cloneDeep(formState);
 
+  const showMissingRetypedAccountNumberError = () => {
+    const validationIssue = {
+      field: "payment_preference.retype_account_number",
+      type: "required",
+      namespace: "payments",
+    };
+    appLogic.catchError(new ValidationError([validationIssue]));
+  };
+
+  const showMismatchedAccountNumberError = () => {
+    const validationIssue = {
+      field: "payment_preference.retype_account_number",
+      type: "mismatch",
+      namespace: "payments",
+    };
+    appLogic.catchError(new ValidationError([validationIssue]));
+  };
+
   const handleSubmit = async () => {
-    if (payment_method !== PaymentPreferenceMethod.ach) {
+    appLogic.clearErrors();
+    if (payment_method === PaymentPreferenceMethod.ach) {
+      if (requestData.payment_preference.retype_account_number == null) {
+        showMissingRetypedAccountNumberError();
+        return;
+      }
+      if (
+        requestData.payment_preference.retype_account_number.trim() !==
+        requestData.payment_preference.account_number.trim()
+      ) {
+        showMismatchedAccountNumberError();
+        return;
+      }
+    } else {
       set(requestData, routingNumberField, null);
       set(requestData, bankAccountTypeField, null);
       set(requestData, accountNumberField, null);
+      set(requestData, retypeAccountNumberField, null);
     }
     await appLogic.benefitsApplications.submitPaymentPreference(
       claim.application_id,
@@ -132,6 +166,7 @@ export const PaymentMethod = (props: WithBenefitsApplicationProps) => {
           "payment_preference.account_number",
           "payment_preference.bank_account_type",
           "payment_preference.routing_number",
+          "payment_preference.retype_account_number",
         ]}
         getField={getField}
         updateFields={updateFields}
@@ -162,6 +197,19 @@ export const PaymentMethod = (props: WithBenefitsApplicationProps) => {
             onChange={handleAccountNumberChange}
             pii
           />
+
+          <InputText
+            {...getFunctionalInputProps(
+              "payment_preference.retype_account_number"
+            )}
+            label={t("pages.claimsPaymentMethod.retypeAccountNumberLabel")}
+            hint={t("pages.claimsPaymentMethod.retypeAccountNumberHint")}
+            inputMode="numeric"
+            smallLabel
+            pii
+            disablePaste
+          />
+
           <ConditionalContent visible={displayAccountNumWarning}>
             <Alert state="warning" autoWidth>
               {t("pages.claimsPaymentMethod.accountNumberWarning")}

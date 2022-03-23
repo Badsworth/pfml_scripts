@@ -100,6 +100,5 @@ module "api" {
   azure_ad_parent_group     = "TSS-SG-PFML_ADMIN_PORTAL_NON_PROD"
   azure_ad_tenant_id        = "3e861d16-48b7-4a0e-9806-8c04d81b7b2a"
 
-  enable_application_import = "1"
   enable_employee_endpoints = "1"
 }

@@ -16,6 +16,7 @@ from massgov.pfml.db.models.employees import (
     Payment,
     PaymentCheck,
     PaymentMethod,
+    PaymentTransactionType,
     ReferenceFile,
     ReferenceFileType,
     State,
@@ -240,7 +241,7 @@ def _convert_payment_to_check_issue_entry(payment: Payment) -> CheckIssueEntry:
         issue_date=cast(date, payment.payment_date),
         amount=payment.amount,
         payee_id=payment.pub_individual_id,
-        payee_name=_format_employee_name_for_ez_check(payment),
+        payee_name=_format_name_for_ez_check(payment),
         account_number=int(os.environ.get("DFML_PUB_ACCOUNT_NUMBER")),  # type: ignore
     )
 
@@ -266,7 +267,7 @@ def _convert_payment_to_ez_check_record(payment: Payment, check_number: int) -> 
         check_date=cast(date, payment.payment_date),
         amount=payment.amount,
         memo=_format_check_memo(payment),
-        payee_name=_format_employee_name_for_ez_check(payment),
+        payee_name=_format_name_for_ez_check(payment),
         address_line_1=cast(str, address.address_line_one),
         address_line_2=address.address_line_two,
         city=cast(str, address.city),
@@ -291,22 +292,32 @@ def _format_check_memo(payment: Payment) -> str:
 
 # Follow same truncation rules as described for the ACH file names.
 # https://lwd.atlassian.net/wiki/spaces/API/pages/1313800323/PUB+ACH+File+Format
-def _format_employee_name_for_ez_check(payment: Payment) -> str:
-    fineos_first_name = payment.fineos_employee_first_name or ""
-    fineos_employee_last_name = payment.fineos_employee_last_name or ""
+def _format_name_for_ez_check(payment: Payment) -> str:
 
-    # If last name is > 40 characters, truncate to 40.
-    last_name = fineos_employee_last_name[: Constants.EZ_CHECK_MAX_NAME_LENGTH]
-    remaining_characters = Constants.EZ_CHECK_MAX_NAME_LENGTH - len(last_name)
+    if (
+        payment.payment_transaction_type_id
+        == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+    ):
+        payee_name = payment.payee_name or ""
+        formatted_payee_name = payee_name[: Constants.EZ_CHECK_MAX_NAME_LENGTH]
+        return formatted_payee_name
+    else:
+        fineos_first_name = payment.fineos_employee_first_name or ""
+        fineos_employee_last_name = payment.fineos_employee_last_name or ""
 
-    # If last name is exactly 39 or 40 characters just use last name.
-    if remaining_characters <= 1:
-        return last_name
+        # If last name is > 40 characters, truncate to 40.
+        last_name = fineos_employee_last_name[: Constants.EZ_CHECK_MAX_NAME_LENGTH]
+        remaining_characters = Constants.EZ_CHECK_MAX_NAME_LENGTH - len(last_name)
 
-    # If last name < 40 characters use full last name and truncate the first name to use the
-    # remaining space.
-    remaining_characters = remaining_characters - 1  # Make room for the space character.
-    return "{} {}".format(fineos_first_name[:remaining_characters], last_name)
+        # If last name is exactly 39 or 40 characters just use last name.
+        if remaining_characters <= 1:
+            return last_name
+
+        # If last name < 40 characters use full last name and truncate the first name to use the
+        # remaining space.
+        # Make room for the space character.
+        remaining_characters = remaining_characters - 1
+        return "{} {}".format(fineos_first_name[:remaining_characters], last_name)
 
 
 def _get_ez_check_header() -> EzCheckHeader:

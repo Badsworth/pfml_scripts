@@ -30,6 +30,7 @@ dor_mock/
 
 # Mock FINEOS files
 fineos_mock/
+fineos_daily_mock/
 
 # eligibility export files
 eligibility_export/

@@ -21,7 +21,7 @@ describe("Start", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("link")).toHaveAttribute(
       "href",
-      "https://www.mass.gov/info-details/massachusetts-department-of-family-and-medical-leave-informed-consent-agreement"
+      "https://mass.gov/paidleave-informedconsent"
     );
   });
 
