@@ -67,6 +67,8 @@ class IssueRule(str, Enum):
     # Disallow suspicious attempts for potential fraud cases.
     # Intentionally vague to avoid leaking this is for fraud prevention
     disallow_attempts = "disallow_attempts"
+    # Restrict claimants from trying several SSN/FEIN combinations
+    max_ssn_fein_update_attempts = "max_ssn_fein_update_attempts"
     # Employee must have wages from the Employer
     require_employee = "require_employee"
 
