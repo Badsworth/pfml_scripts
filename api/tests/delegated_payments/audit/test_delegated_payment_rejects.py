@@ -143,6 +143,7 @@ def test_rejects_column_validation(test_db_session, payment_rejects_step):
 
     payment_audit_data = PaymentAuditData(
         payment=payment,
+        employer_reimbursement_payment=None,
         is_first_time_payment=True,
         previously_rejected_payment_count=1,
         previously_errored_payment_count=1,
@@ -205,6 +206,7 @@ def test_valid_combination_of_reject_and_skip(
 
     payment_audit_data = PaymentAuditData(
         payment=payment,
+        employer_reimbursement_payment=None,
         is_first_time_payment=True,
         previously_rejected_payment_count=1,
         previously_errored_payment_count=1,
@@ -368,13 +370,9 @@ def test_transition_audit_pending_payment_state(test_db_session, payment_rejects
     )
 
     # Reject notes have a weird character in them
-    payment_6 = PaymentFactory.create()
-    state_log_util.create_finished_state_log(
-        payment_6,
-        State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
-        state_log_util.build_outcome("test"),
+    payment_6 = DelegatedPaymentFactory(
         test_db_session,
-    )
+    ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT)
 
     payment_rejects_step.transition_audit_pending_payment_state(
         payment_6, True, False, "InvalidPayment" + "\ufffd" + "PaidDate"
@@ -852,7 +850,7 @@ def test_transition_audit_pending_payment_state_withholdings(test_db_session, pa
         withholding_payment_state_log.end_state_id
         == State.FEDERAL_WITHHOLDING_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE.state_id
     )
-    assert withholding_payment_state_log.outcome["message"] == "Record is skipped"
+    assert withholding_payment_state_log.outcome["message"] == "Payment skipped"
 
     expected_writeback_transaction_status = FineosWritebackTransactionStatus.PENDING_PAYMENT_AUDIT
     writeback_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
@@ -1025,6 +1023,399 @@ def test_transition_audit_pending_payment_state_withholdings(test_db_session, pa
     assert (
         withholding_writeback_details.transaction_status_id
         == expected_withholding_writeback_transaction_status.transaction_status_id
+    )
+
+
+def test_transition_audit_pending_payment_employer_reimbursement_rejected_primary(
+    test_db_session, payment_rejects_step
+):
+    # Test Rejection of Primary
+    payment_1 = DelegatedPaymentFactory(
+        test_db_session, payment_method=PaymentMethod.CHECK
+    ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT)
+
+    # Create a Employer Reimbursement
+    employer_reimbursement_payment_1 = DelegatedPaymentFactory(
+        test_db_session,
+        payment_method=PaymentMethod.CHECK,
+        payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+    ).get_or_create_payment_with_state(State.EMPLOYER_REIMBURSEMENT_RELATED_PENDING_AUDIT)
+
+    # Create the Payment Relationship
+    related_1 = LinkSplitPaymentFactory.create(
+        payment=payment_1, related_payment=employer_reimbursement_payment_1
+    )
+
+    assert related_1 is not None
+
+    payment_rejects_step.transition_audit_pending_payment_state(
+        payment_1, True, False, "Example notes"
+    )
+
+    payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
+        payment_1, Flow.DELEGATED_PAYMENT, test_db_session
+    )
+
+    employer_reimbursement_payment_state_log: Optional[
+        StateLog
+    ] = state_log_util.get_latest_state_log_in_flow(
+        employer_reimbursement_payment_1, Flow.DELEGATED_PAYMENT, test_db_session
+    )
+
+    assert payment_state_log is not None
+    assert employer_reimbursement_payment_state_log is not None
+
+    assert (
+        payment_state_log.end_state_id
+        == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT.state_id
+    )
+    assert payment_state_log.outcome["message"] == "Payment rejected with notes: Example notes"
+
+    assert (
+        employer_reimbursement_payment_state_log.end_state_id
+        == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT.state_id
+    )
+
+    expected_writeback_transaction_status = (
+        FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION
+    )
+    writeback_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
+        payment_1, Flow.DELEGATED_PEI_WRITEBACK, test_db_session
+    )
+    assert writeback_state_log is not None
+    assert writeback_state_log.end_state_id == State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id
+    assert (
+        writeback_state_log.outcome["message"]
+        == expected_writeback_transaction_status.transaction_status_description
+    )
+
+    writeback_details = (
+        test_db_session.query(FineosWritebackDetails)
+        .filter(FineosWritebackDetails.payment_id == payment_1.payment_id)
+        .one_or_none()
+    )
+    assert writeback_details is not None
+    assert (
+        writeback_details.transaction_status_id
+        == expected_writeback_transaction_status.transaction_status_id
+    )
+
+    expected_employer_reimbursement_writeback_transaction_status = (
+        FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION
+    )
+    employer_reimbursement_writeback_state_log: Optional[
+        StateLog
+    ] = state_log_util.get_latest_state_log_in_flow(
+        employer_reimbursement_payment_1, Flow.DELEGATED_PEI_WRITEBACK, test_db_session
+    )
+    assert employer_reimbursement_writeback_state_log is not None
+    assert (
+        employer_reimbursement_writeback_state_log.end_state_id
+        == State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id
+    )
+    assert (
+        employer_reimbursement_writeback_state_log.outcome["message"]
+        == expected_employer_reimbursement_writeback_transaction_status.transaction_status_description
+    )
+
+    employer_reimbursement_writeback_details = (
+        test_db_session.query(FineosWritebackDetails)
+        .filter(FineosWritebackDetails.payment_id == employer_reimbursement_payment_1.payment_id)
+        .one_or_none()
+    )
+    assert employer_reimbursement_writeback_details is not None
+    assert (
+        employer_reimbursement_writeback_details.transaction_status_id
+        == expected_employer_reimbursement_writeback_transaction_status.transaction_status_id
+    )
+
+
+def test_transition_audit_pending_payment_employer_reimbursement_accepted_primary(
+    test_db_session, payment_rejects_step
+):
+    # Test Acceptance of Primary
+    payment_2 = DelegatedPaymentFactory(
+        test_db_session, payment_method=PaymentMethod.CHECK
+    ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT)
+
+    # Create a Employer Reimbursement
+    employer_reimbursement_payment_2 = DelegatedPaymentFactory(
+        test_db_session,
+        payment_method=PaymentMethod.CHECK,
+        payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+    ).get_or_create_payment_with_state(State.EMPLOYER_REIMBURSEMENT_RELATED_PENDING_AUDIT)
+
+    # Create the Payment Relationship
+    related_2 = LinkSplitPaymentFactory.create(
+        payment=payment_2, related_payment=employer_reimbursement_payment_2
+    )
+    assert related_2 is not None
+
+    payment_rejects_step.transition_audit_pending_payment_state(payment_2, False, False)
+
+    payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
+        payment_2, Flow.DELEGATED_PAYMENT, test_db_session
+    )
+
+    employer_reimbursement_payment_state_log: Optional[
+        StateLog
+    ] = state_log_util.get_latest_state_log_in_flow(
+        employer_reimbursement_payment_2, Flow.DELEGATED_PAYMENT, test_db_session
+    )
+
+    assert payment_state_log is not None
+    assert employer_reimbursement_payment_state_log is not None
+
+    assert payment_state_log.end_state_id == ACCEPTED_STATE.state_id
+    assert payment_state_log.outcome["message"] == ACCEPTED_OUTCOME["message"]
+
+    assert employer_reimbursement_payment_state_log.end_state_id == ACCEPTED_STATE.state_id
+    assert (
+        employer_reimbursement_payment_state_log.outcome["message"] == ACCEPTED_OUTCOME["message"]
+    )
+
+
+def test_transition_audit_pending_payment_employer_reimbursement_skipped_primary(
+    test_db_session, payment_rejects_step
+):
+    # Test Skip of Primary
+    payment_3 = DelegatedPaymentFactory(
+        test_db_session, payment_method=PaymentMethod.ACH
+    ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT)
+
+    # Create a Employer Reimbursement
+    employer_reimbursement_payment_3 = DelegatedPaymentFactory(
+        test_db_session,
+        payment_method=PaymentMethod.CHECK,
+        payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+    ).get_or_create_payment_with_state(State.EMPLOYER_REIMBURSEMENT_RELATED_PENDING_AUDIT)
+
+    # Create the Payment Relationship
+    related_3 = LinkSplitPaymentFactory.create(
+        payment=payment_3, related_payment=employer_reimbursement_payment_3
+    )
+    assert related_3 is not None
+
+    payment_rejects_step.transition_audit_pending_payment_state(payment_3, False, True)
+
+    payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
+        payment_3, Flow.DELEGATED_PAYMENT, test_db_session
+    )
+
+    employer_reimbursement_payment_state_log: Optional[
+        StateLog
+    ] = state_log_util.get_latest_state_log_in_flow(
+        employer_reimbursement_payment_3, Flow.DELEGATED_PAYMENT, test_db_session
+    )
+
+    assert payment_state_log is not None
+    assert employer_reimbursement_payment_state_log is not None
+
+    assert (
+        payment_state_log.end_state_id
+        == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE.state_id
+    )
+    assert payment_state_log.outcome["message"] == "Payment skipped"
+
+    assert (
+        employer_reimbursement_payment_state_log.end_state_id
+        == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE.state_id
+    )
+    assert employer_reimbursement_payment_state_log.outcome["message"] == "Payment skipped"
+
+    expected_writeback_transaction_status = FineosWritebackTransactionStatus.PENDING_PAYMENT_AUDIT
+    writeback_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
+        payment_3, Flow.DELEGATED_PEI_WRITEBACK, test_db_session
+    )
+    assert writeback_state_log is not None
+    assert writeback_state_log.end_state_id == State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id
+    assert (
+        writeback_state_log.outcome["message"]
+        == expected_writeback_transaction_status.transaction_status_description
+    )
+
+    writeback_details = (
+        test_db_session.query(FineosWritebackDetails)
+        .filter(FineosWritebackDetails.payment_id == payment_3.payment_id)
+        .one_or_none()
+    )
+    assert writeback_details is not None
+    assert (
+        writeback_details.transaction_status_id
+        == expected_writeback_transaction_status.transaction_status_id
+    )
+
+    expected_employer_reimbursement_writeback_transaction_status = (
+        FineosWritebackTransactionStatus.PENDING_PAYMENT_AUDIT
+    )
+    employer_reimbursement_writeback_state_log: Optional[
+        StateLog
+    ] = state_log_util.get_latest_state_log_in_flow(
+        employer_reimbursement_payment_3, Flow.DELEGATED_PEI_WRITEBACK, test_db_session
+    )
+    assert employer_reimbursement_writeback_state_log is not None
+    assert (
+        employer_reimbursement_writeback_state_log.end_state_id
+        == State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id
+    )
+    assert (
+        employer_reimbursement_writeback_state_log.outcome["message"]
+        == expected_employer_reimbursement_writeback_transaction_status.transaction_status_description
+    )
+
+    employer_reimbursement_writeback_details = (
+        test_db_session.query(FineosWritebackDetails)
+        .filter(FineosWritebackDetails.payment_id == employer_reimbursement_payment_3.payment_id)
+        .one_or_none()
+    )
+    assert employer_reimbursement_writeback_details is not None
+    assert (
+        employer_reimbursement_writeback_details.transaction_status_id
+        == expected_employer_reimbursement_writeback_transaction_status.transaction_status_id
+    )
+
+
+def test_transition_audit_pending_payment_rejected_employer_reimbursement(
+    test_db_session, payment_rejects_step
+):
+    # Test Rejection of Employer Reimbursement
+    # Create a Employer Reimbursement
+    employer_reimbursement_payment_4 = DelegatedPaymentFactory(
+        test_db_session,
+        payment_method=PaymentMethod.CHECK,
+        payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+    ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT)
+
+    payment_rejects_step.transition_audit_pending_payment_state(
+        employer_reimbursement_payment_4, True, False, "Example notes"
+    )
+
+    employer_reimbursement_payment_state_log: Optional[
+        StateLog
+    ] = state_log_util.get_latest_state_log_in_flow(
+        employer_reimbursement_payment_4, Flow.DELEGATED_PAYMENT, test_db_session
+    )
+
+    assert employer_reimbursement_payment_state_log is not None
+
+    assert (
+        employer_reimbursement_payment_state_log.end_state_id
+        == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT.state_id
+    )
+    assert (
+        employer_reimbursement_payment_state_log.outcome["message"]
+        == "Payment rejected with notes: Example notes"
+    )
+
+    expected_writeback_transaction_status = (
+        FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION
+    )
+    writeback_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
+        employer_reimbursement_payment_4, Flow.DELEGATED_PEI_WRITEBACK, test_db_session
+    )
+    assert writeback_state_log is not None
+    assert writeback_state_log.end_state_id == State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id
+    assert (
+        writeback_state_log.outcome["message"]
+        == expected_writeback_transaction_status.transaction_status_description
+    )
+
+    writeback_details = (
+        test_db_session.query(FineosWritebackDetails)
+        .filter(FineosWritebackDetails.payment_id == employer_reimbursement_payment_4.payment_id)
+        .one_or_none()
+    )
+    assert writeback_details is not None
+    assert (
+        writeback_details.transaction_status_id
+        == expected_writeback_transaction_status.transaction_status_id
+    )
+
+
+def test_transition_audit_pending_payment_accepted_employer_reimbursement(
+    test_db_session, payment_rejects_step
+):
+    # Test Acceptance of Employer Reimbursement
+    # Create a Employer Reimbursement
+    employer_reimbursement_payment_5 = DelegatedPaymentFactory(
+        test_db_session,
+        payment_method=PaymentMethod.CHECK,
+        payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+    ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT)
+
+    payment_rejects_step.transition_audit_pending_payment_state(
+        employer_reimbursement_payment_5, False, False
+    )
+
+    employer_reimbursement_payment_state_log: Optional[
+        StateLog
+    ] = state_log_util.get_latest_state_log_in_flow(
+        employer_reimbursement_payment_5, Flow.DELEGATED_PAYMENT, test_db_session
+    )
+
+    assert employer_reimbursement_payment_state_log is not None
+    assert employer_reimbursement_payment_state_log.end_state_id == ACCEPTED_STATE.state_id
+    assert (
+        employer_reimbursement_payment_state_log.outcome["message"] == ACCEPTED_OUTCOME["message"]
+    )
+
+
+def test_transition_audit_pending_payment_skipped_employer_reimbursement(
+    test_db_session, payment_rejects_step
+):
+    # Test Skip of Employer Reimbursement
+    # Create a Employer Reimbursement
+    employer_reimbursement_payment_6 = DelegatedPaymentFactory(
+        test_db_session,
+        payment_method=PaymentMethod.CHECK,
+        payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+    ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT)
+
+    payment_rejects_step.transition_audit_pending_payment_state(
+        employer_reimbursement_payment_6, False, True
+    )
+
+    employer_reimbursement_payment_state_log: Optional[
+        StateLog
+    ] = state_log_util.get_latest_state_log_in_flow(
+        employer_reimbursement_payment_6, Flow.DELEGATED_PAYMENT, test_db_session
+    )
+
+    assert employer_reimbursement_payment_state_log is not None
+
+    assert (
+        employer_reimbursement_payment_state_log.end_state_id
+        == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE.state_id
+    )
+    assert employer_reimbursement_payment_state_log.outcome["message"] == "Payment skipped"
+
+    expected_employer_reimbursement_writeback_transaction_status = (
+        FineosWritebackTransactionStatus.PENDING_PAYMENT_AUDIT
+    )
+    employer_reimbursement_writeback_state_log: Optional[
+        StateLog
+    ] = state_log_util.get_latest_state_log_in_flow(
+        employer_reimbursement_payment_6, Flow.DELEGATED_PEI_WRITEBACK, test_db_session
+    )
+    assert employer_reimbursement_writeback_state_log is not None
+    assert (
+        employer_reimbursement_writeback_state_log.end_state_id
+        == State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id
+    )
+    assert (
+        employer_reimbursement_writeback_state_log.outcome["message"]
+        == expected_employer_reimbursement_writeback_transaction_status.transaction_status_description
+    )
+
+    employer_reimbursement_writeback_details = (
+        test_db_session.query(FineosWritebackDetails)
+        .filter(FineosWritebackDetails.payment_id == employer_reimbursement_payment_6.payment_id)
+        .one_or_none()
+    )
+    assert employer_reimbursement_writeback_details is not None
+    assert (
+        employer_reimbursement_writeback_details.transaction_status_id
+        == expected_employer_reimbursement_writeback_transaction_status.transaction_status_id
     )
 
 

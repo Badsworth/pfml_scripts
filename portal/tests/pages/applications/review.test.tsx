@@ -141,6 +141,25 @@ describe("Review Page", () => {
     expect(screen.queryByText(/Tax withholding/)).not.toBeInTheDocument();
   });
 
+  it("conditionally renders employer notification date", () => {
+    // Applications imported from Fineos as part of Channel Switching won't have this field
+    const textMatch = /Notified employer/;
+    const claim = new MockBenefitsApplicationBuilder()
+      .part1Complete()
+      .notifiedEmployer()
+      .create();
+
+    setup({ claim });
+    expect(screen.queryAllByText(textMatch)).toHaveLength(2);
+
+    cleanup();
+
+    claim.leave_details.employer_notified = null;
+    claim.leave_details.employer_notification_date = null;
+    setup({ claim });
+    expect(screen.queryByText(textMatch)).not.toBeInTheDocument();
+  });
+
   it("displays tax information for review when tax Pref is set", () => {
     setup({
       claim: new MockBenefitsApplicationBuilder()
@@ -347,6 +366,27 @@ describe("Review Page", () => {
         screen.getByText(/Average weekly hours/i).nextSibling
       ).toHaveTextContent("40h");
     });
+
+    it("conditionally renders work pattern type", () => {
+      const textMatch = /Work schedule type/;
+      const claim = new MockBenefitsApplicationBuilder()
+        .part1Complete()
+        .fixedWorkPattern()
+        .create();
+
+      setup({ claim });
+      expect(
+        screen.queryAllByRole("heading", { name: textMatch })
+      ).not.toHaveLength(0);
+
+      cleanup();
+
+      claim.work_pattern = null;
+      setup({ claim });
+      expect(
+        screen.queryByRole("heading", { name: textMatch })
+      ).not.toBeInTheDocument();
+    });
   });
 
   it("does not render ACH content when payment method is Check", () => {
@@ -476,6 +516,27 @@ describe("Review Page", () => {
     cleanup();
 
     claim.leave_details.child_placement_date = null;
+    setup({ claim });
+    expect(
+      screen.queryByRole("heading", { name: textMatch })
+    ).not.toBeInTheDocument();
+  });
+
+  it("conditionally renders intermittent leave frequency depending on if it is set", () => {
+    const textMatch = /Frequency of intermittent/;
+    const claim = new MockBenefitsApplicationBuilder()
+      .part1Complete()
+      .intermittent()
+      .create();
+
+    setup({ claim });
+    expect(
+      screen.queryAllByRole("heading", { name: textMatch })
+    ).not.toHaveLength(0);
+
+    cleanup();
+
+    claim.leave_details.intermittent_leave_periods[0].frequency = null;
     setup({ claim });
     expect(
       screen.queryByRole("heading", { name: textMatch })

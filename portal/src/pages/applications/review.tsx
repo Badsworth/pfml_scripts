@@ -348,34 +348,37 @@ export const Review = (
         </ReviewRow>
       )}
 
-      {isEmployed && ( // only display this if the claimant is Employed
+      {isEmployed &&
+        get(claim, "leave_details.employer_notification_date") && ( // only display this if the claimant is Employed and date is set
+          <ReviewRow
+            level={reviewRowLevel}
+            label={t("pages.claimsReview.employerNotifiedLabel")}
+          >
+            {t("pages.claimsReview.employerNotifiedValue", {
+              context: (!!get(
+                claim,
+                "leave_details.employer_notified"
+              )).toString(),
+              date: formatDate(
+                get(claim, "leave_details.employer_notification_date")
+              ).short(),
+            })}
+          </ReviewRow>
+        )}
+
+      {workPattern.work_pattern_type && (
         <ReviewRow
           level={reviewRowLevel}
-          label={t("pages.claimsReview.employerNotifiedLabel")}
+          label={t("pages.claimsReview.workPatternTypeLabel")}
         >
-          {t("pages.claimsReview.employerNotifiedValue", {
-            context: (!!get(
-              claim,
-              "leave_details.employer_notified"
-            )).toString(),
-            date: formatDate(
-              get(claim, "leave_details.employer_notification_date")
-            ).short(),
+          {t("pages.claimsReview.workPatternTypeValue", {
+            context: findKeyByValue(
+              WorkPatternType,
+              get(claim, "work_pattern.work_pattern_type")
+            ),
           })}
         </ReviewRow>
       )}
-
-      <ReviewRow
-        level={reviewRowLevel}
-        label={t("pages.claimsReview.workPatternTypeLabel")}
-      >
-        {t("pages.claimsReview.workPatternTypeValue", {
-          context: findKeyByValue(
-            WorkPatternType,
-            get(claim, "work_pattern.work_pattern_type")
-          ),
-        })}
-      </ReviewRow>
 
       {workPattern.work_pattern_days &&
         workPattern.work_pattern_type === WorkPatternType.fixed &&
@@ -581,7 +584,7 @@ export const Review = (
           : t("pages.claimsReview.leavePeriodNotSelected")}
       </ReviewRow>
 
-      {claim.isIntermittent && (
+      {claim.hasIntermittentLeaveFrequency && (
         <ReviewRow
           level={reviewRowLevel}
           label={t("pages.claimsReview.intermittentFrequencyDurationLabel")}

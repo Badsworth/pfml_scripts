@@ -272,6 +272,12 @@ def test_employees_search_with_phone_number(client, snow_user_headers):
 
     assert_employee_search_response_data(response, [employee_1])
     data = response.get_json()
+
+    # assert cell phone comes back with the correct type
+    cell_phone = data["data"][0]["phone_numbers"][1]
+    assert cell_phone["phone_number"] == "224-705-2345"
+    assert cell_phone["phone_type"] == "Cell"
+
     assert_employee_search_response_paging_data(data)
 
 

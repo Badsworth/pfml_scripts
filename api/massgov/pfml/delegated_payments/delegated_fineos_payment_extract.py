@@ -393,6 +393,20 @@ class PaymentData:
             custom_validator_func=payments_util.lookup_validator(BankAccountType),
         )
 
+        #######################################
+        # BEGIN - VALIDATION OF PARAMETERS REQUIRED FOR CHECKS + EMPLOYER REIMBURSEMENT PAYMENT
+        #######################################
+        if (
+            self.payment_transaction_type.payment_transaction_type_id
+            == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+        ):
+            self.full_name = payments_util.validate_db_input(
+                "PAYEEFULLNAME",
+                pei_record,
+                self.validation_container,
+                self.is_employer_reimbursement,
+            )
+
     def get_payment_amount(self, pei_record: FineosExtractVpei) -> Optional[Decimal]:
         raw_payment_amount = payments_util.validate_db_input(
             "AMOUNT_MONAMT",
@@ -1070,6 +1084,11 @@ class PaymentExtractStep(Step):
         payment.fineos_extraction_date = get_now_us_eastern().date()
         payment.fineos_extract_import_log_id = self.get_import_log_id()
         payment.leave_request_decision = payment_data.leave_request_decision
+
+        # Set the payee name.
+        # For payments that are not paid to the claimant (e.g. - employer reimbursements), we use this name.
+        # For claimant payments will use other fields for the claimant name.
+        payment.payee_name = payment_data.full_name
 
         # This is used later in the post-processing step to filter out
         # adhoc payments from the weekly maximum check.

@@ -10,7 +10,7 @@ exports[`Index renders landing page content 1`] = `
   >
     People who work in Massachusetts can now apply for Paid Family and Medical Leave. Learn more about this 
     <a
-      href="https://www.mass.gov/topics/paid-family-and-medical-leave-in-massachusetts"
+      href="https://mass.gov/PaidLeave"
       rel="noopener"
       target="_blank"
     >

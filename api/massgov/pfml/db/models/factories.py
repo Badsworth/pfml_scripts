@@ -345,7 +345,6 @@ class EmployeePushToFineosQueueFactory(BaseFactory):
     employer_id = None
     action = "UPDATE_NEW_EMPLOYER"
     modified_at = Generators.UtcNow
-    process_id = 1
 
 
 class EmployerPushToFineosQueueFactoryFactory(BaseFactory):
@@ -356,7 +355,6 @@ class EmployerPushToFineosQueueFactoryFactory(BaseFactory):
     employer_id = None
     action = "INSERT"
     modified_at = Generators.UtcNow
-    process_id = 1
     family_exemption = None
     medical_exemption = None
     exemption_commence_date = None
@@ -499,6 +497,11 @@ class PaymentFactory(BaseFactory):
 
     fineos_employee_first_name = factory.Faker("first_name")
     fineos_employee_last_name = factory.Faker("last_name")
+
+    payee_name = factory.Faker("company")
+    payment_transaction_type_id = (
+        employee_models.PaymentTransactionType.STANDARD.payment_transaction_type_id
+    )
 
 
 class PaymentDetailsFactory(BaseFactory):

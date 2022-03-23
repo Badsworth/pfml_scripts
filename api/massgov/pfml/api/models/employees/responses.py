@@ -64,16 +64,7 @@ class EmployeeForPfmlCrmResponse(EmployeeBasicResponse):
     def from_orm(cls, employee: Employee) -> "EmployeeForPfmlCrmResponse":
         employee_response = cast(EmployeeForPfmlCrmResponse, super().from_orm(employee))
 
-        employee_response.phone_numbers = list()
-        if employee.phone_number:
-            phone_response = PhoneResponse.from_orm(employee.phone_number)
-            phone_response.phone_type = PhoneType.Phone
-            employee_response.phone_numbers.append(phone_response)
-
-        if employee.cell_phone_number:
-            phone_response = PhoneResponse.from_orm(employee.cell_phone_number)
-            phone_response.phone_type = PhoneType.Phone
-            employee_response.phone_numbers.append(phone_response)
+        employee_response.phone_numbers = employee_response_phone_numbers(employee)
 
         return employee_response
 

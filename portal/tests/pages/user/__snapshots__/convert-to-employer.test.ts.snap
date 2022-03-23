@@ -52,7 +52,7 @@ exports[`ConvertToEmployer renders form when user has no claims 1`] = `
       >
         Your Employer Identification Number is a 
         <a
-          href="https://www.mass.gov/info-details/finding-your-employers-federal-employer-identification-number-fein"
+          href="https://mass.gov/pfml/ein"
           rel="noopener"
           target="_blank"
         >

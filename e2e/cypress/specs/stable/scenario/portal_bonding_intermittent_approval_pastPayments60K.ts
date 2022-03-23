@@ -75,11 +75,10 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
             });
           });
           claimPage.shouldHaveStatus("Availability", "As Certified");
-          if (config("HAS_APRIL_UPGRADE") === "true") {
-            claimPage.approve("Completed", true);
-          } else {
-            claimPage.approve("Completed", false);
-          }
+          claimPage.approve(
+            "Completed",
+            config("HAS_APRIL_UPGRADE") === "true"
+          );
         });
       });
     }
@@ -114,6 +113,7 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
                 // Just casting to string instead of asserting here.
                 timeSpanHoursStart: claim.metadata.spanHoursStart + "",
                 timeSpanHoursEnd: claim.metadata.spanHoursEnd + "",
+                upgrade: config("HAS_APRIL_UPGRADE") === "true" ? true : false,
               });
             return recordActualTime.nextStep((additionalReporting) => {
               additionalReporting
@@ -121,6 +121,8 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
                   reported_by: "Employee",
                   received_via: "Phone",
                   accepted: "Yes",
+                  upgrade:
+                    config("HAS_APRIL_UPGRADE") === "true" ? true : false,
                 })
                 .finishRecordingActualLeave();
             });

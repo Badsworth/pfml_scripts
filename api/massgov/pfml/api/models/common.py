@@ -1,3 +1,4 @@
+import datetime
 from datetime import date, timedelta
 from decimal import Decimal
 from enum import Enum
@@ -14,6 +15,7 @@ import massgov.pfml.db.models.verifications as db_verification_models
 import massgov.pfml.util.pydantic.mask as mask
 from massgov.pfml.api.constants.application import (
     CARING_LEAVE_EARLIEST_START_DATE,
+    MAX_DAYS_IN_ADVANCE_TO_SUBMIT,
     PFML_PROGRAM_LAUNCH_DATE,
 )
 from massgov.pfml.api.validation.exceptions import (
@@ -336,6 +338,9 @@ def get_computed_start_dates(
     return computed_start_dates
 
 
+# TODO API-2558
+# https://lwd.atlassian.net/browse/API-2558
+# Move this and get_earliest_submission_date into Application DB model
 def get_earliest_start_date(application: db_application_models.Application) -> Optional[date]:
     all_leave_periods = application.all_leave_periods
     leave_period_start_dates = [
@@ -344,12 +349,32 @@ def get_earliest_start_date(application: db_application_models.Application) -> O
     return min(leave_period_start_dates, default=None)
 
 
+def get_latest_end_date(application: db_application_models.Application) -> Optional[date]:
+    leave_period_end_dates = [
+        leave_period.end_date
+        for leave_period in application.all_leave_periods
+        if leave_period.end_date
+    ]
+
+    return max(leave_period_end_dates, default=None)
+
+
 def get_leave_reason(application: db_application_models.Application) -> Optional[str]:
     return (
         db_application_models.LeaveReason.get_description(application.leave_reason_id)
         if application.leave_reason_id
         else None
     )
+
+
+# returns None if there is no leave start date, or the application has already been submitted
+def get_earliest_submission_date(application: db_application_models.Application) -> Optional[date]:
+    earliest_start_date = get_earliest_start_date(application)
+
+    if earliest_start_date is None or application.submitted_time is not None:
+        return None
+
+    return earliest_start_date - datetime.timedelta(days=MAX_DAYS_IN_ADVANCE_TO_SUBMIT)
 
 
 # search stuff
