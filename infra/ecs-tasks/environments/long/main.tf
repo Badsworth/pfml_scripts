@@ -66,7 +66,7 @@ module "tasks" {
 
   # TODO: Values from FINEOS.
   fineos_data_export_path       = "s3://fin-somdev-data-export/DT4/dataexports"
-  fineos_adhoc_data_export_path = "s3://fin-somdev-data-export/DT4/dataextracts/AdHocExtract"
+  fineos_adhoc_data_export_path = "s3://fin-somdev-data-export/DT4/dataExtracts/AdHocExtract"
   fineos_data_import_path       = "s3://fin-somdev-data-import/DT4/peiupdate"
   fineos_error_export_path      = "s3://fin-somdev-data-export/DT4/errorExtracts"
   fineos_report_export_path     = "s3://fin-somdev-data-export/DT4/reportExtract"
