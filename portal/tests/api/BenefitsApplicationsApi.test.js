@@ -327,7 +327,7 @@ describe("BenefitsApplicationsApi", () => {
 
       global.fetch = mockFetch({
         response: {
-          data: { existingApplication: { ...claim }, splitApplication: null },
+          data: { existing_application: { ...claim }, split_application: null },
         },
         status: 201,
       });

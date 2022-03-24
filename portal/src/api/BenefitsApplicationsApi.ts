@@ -102,8 +102,8 @@ export default class BenefitsApplicationsApi extends BaseApi {
     const { data } = await this.request<
       | BenefitsApplication
       | {
-          existingApplication: BenefitsApplication;
-          splitApplication: BenefitsApplication | null;
+          existing_application: BenefitsApplication;
+          split_application: BenefitsApplication | null;
         }
     >("POST", `${application_id}/submit_application`, undefined, {
       additionalHeaders: splitClaimsAcrossByEnabled
@@ -113,9 +113,9 @@ export default class BenefitsApplicationsApi extends BaseApi {
     // TODO (API-2447)
     // This should get cleaned up as part of completing
     // But is a temporary handler for the API potentially return different shapes
-    if ("existingApplication" in data) {
+    if ("existing_application" in data) {
       return {
-        claim: new BenefitsApplication(data.existingApplication),
+        claim: new BenefitsApplication(data.existing_application),
       };
     }
     return {
