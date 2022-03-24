@@ -28,7 +28,7 @@ from massgov.pfml.rmv.models import RmvAcknowledgement
 from massgov.pfml.util.decimals import round_nearest_hundredth
 
 from ..lookup import LookupTable
-from .base import Base, TimestampMixin, deprecated_column, uuid_gen
+from .base import Base, TimestampMixin, uuid_gen
 from .common import PostgreSQLUUID, StrEnum
 
 # (typed_hybrid_property) https://github.com/dropbox/sqlalchemy-stubs/issues/98
@@ -277,7 +277,6 @@ class Application(Base, TimestampMixin):
     tax_identifier_id = Column(
         PostgreSQLUUID, ForeignKey("tax_identifier.tax_identifier_id"), index=True
     )
-    nickname = deprecated_column(Text)
     requestor = Column(Integer)
     claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), nullable=True, unique=True)
     has_mailing_address = Column(Boolean)
