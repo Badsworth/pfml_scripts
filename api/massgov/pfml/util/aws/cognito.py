@@ -170,7 +170,7 @@ def create_cognito_account(
     return response["UserSub"]
 
 
-def set_user_mfa(mfa_enabled: bool, cognito_auth_token: str) -> None:
+def _set_user_mfa(mfa_enabled: bool, cognito_auth_token: str) -> None:
     cognito_client = create_cognito_client()
 
     try:
@@ -198,6 +198,14 @@ def set_user_mfa(mfa_enabled: bool, cognito_auth_token: str) -> None:
             logger.error("Error updating MFA preference in Cognito", exc_info=error, extra=log_attr)
 
         raise error
+
+
+def enable_user_mfa(cognito_auth_token: str) -> None:
+    _set_user_mfa(True, cognito_auth_token)
+
+
+def disable_user_mfa(cognito_auth_token: str) -> None:
+    _set_user_mfa(False, cognito_auth_token)
 
 
 def admin_disable_user_mfa(email: str) -> None:
