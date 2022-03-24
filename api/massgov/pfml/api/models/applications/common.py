@@ -355,6 +355,7 @@ class OtherIncomeType(str, LookupEnum):
     jones_act = "Jones Act benefits"
     railroad_retirement = "Railroad Retirement benefits"
     other_employer = "Earnings from another employment/self-employment"
+    unknown = "Unknown"
 
 
 class OtherIncome(PydanticBaseModel):
