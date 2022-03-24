@@ -290,7 +290,7 @@ def applications_update(application_id):
             data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
         ).to_api_response()
 
-    if existing_application.nbr_of_retries >= 5:
+    if existing_application.nbr_of_retries >= app.get_config().limit_ssn_fein_max_attempts:
         message = "Application {} could not be updated. Maximum number of attempts reached.".format(
             existing_application.application_id
         )
