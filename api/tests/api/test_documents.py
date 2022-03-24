@@ -809,6 +809,34 @@ def test_documents_get_missing_content_type(
     assert response["status_code"] == 200
 
 
+@mock.patch(
+    "massgov.pfml.api.services.fineos_actions.fineos_document_response_to_document_response"
+)
+def test_documents_get_missing_document_type(
+    mock_get_documents, client, consented_user, consented_user_token
+):
+    claim = ClaimFactory.create(
+        fineos_notification_id="NTN-111", fineos_absence_id="NTN-111-ABS-01"
+    )
+    application = ApplicationFactory.create(user=consented_user, claim=claim)
+    mock_get_documents.return_value = DocumentResponse(
+        user_id=str(consented_user.user_id),
+        application_id=str(application.application_id),
+        content_type="application/pdf",
+        created_at="2021-01-01",
+        fineos_document_id="3011",
+        name="test.pdf",
+        description="Mock File",
+    )
+
+    response = client.get(
+        "/v1/applications/{}/documents".format(application.application_id),
+        headers={"Authorization": f"Bearer {consented_user_token}"},
+    ).get_json()
+
+    assert response["status_code"] == 200
+
+
 def test_documents_get_date_created(
     client, consented_user, consented_user_token, test_db_session, monkeypatch
 ):

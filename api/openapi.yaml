@@ -3483,7 +3483,14 @@ components:
             - Approved Time Cancelled
             - Change Request Approved
             - Change Request Denied
+            - Received Correspondence
+            - Leave Request Review
+            - Request for more Information
+            - Additional Evidence Information eForm
+            - Other Income - current version
+            - Other Leaves - current version
           example: "Passport"
+          nullable: true
         content_type:
           type: string
           example: "image/png"
