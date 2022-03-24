@@ -533,7 +533,12 @@ def applications_submit(application_id):
         message="Application {} submitted without errors".format(
             existing_application.application_id
         ),
-        data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
+        data={
+            "existing_application": ApplicationResponse.from_orm(existing_application).dict(
+                exclude_none=True
+            ),
+            "split_application": None,
+        },
         status_code=201,
     ).to_api_response()
 

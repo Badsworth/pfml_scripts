@@ -3865,9 +3865,17 @@ def test_application_post_submit_app(client, user, auth_token, test_db_session):
     assert not response_body.get("errors")
     assert not response_body.get("warnings")
     # Simplified check to confirm Application was included in response:
-    assert response_body.get("data").get("application_id") == str(application.application_id)
-    assert response_body.get("data").get("fineos_absence_id") == "NTN-259-ABS-01"
-    assert response_body.get("data").get("status") == ApplicationStatus.Submitted.value
+    assert response_body.get("data").get("existing_application").get("application_id") == str(
+        application.application_id
+    )
+    assert (
+        response_body.get("data").get("existing_application").get("fineos_absence_id")
+        == "NTN-259-ABS-01"
+    )
+    assert (
+        response_body.get("data").get("existing_application").get("status")
+        == ApplicationStatus.Submitted.value
+    )
     test_db_session.refresh(application)
     assert application.submitted_time
 
@@ -3960,9 +3968,14 @@ def test_application_post_submit_fineos_register_api_errors(
         test_db_session.refresh(application)
         assert application.submitted_time is None
         # Simplified check to confirm Application was included in response:
-        assert response_body.get("data").get("application_id") == str(application.application_id)
-        assert not response_body.get("data").get("fineos_absence_id")
-        assert response_body.get("data").get("status") == ApplicationStatus.Started.value
+        assert response_body.get("data").get("existing_application").get("application_id") == str(
+            application.application_id
+        )
+        assert not response_body.get("data").get("existing_application").get("fineos_absence_id")
+        assert (
+            response_body.get("data").get("existing_application").get("status")
+            == ApplicationStatus.Started.value
+        )
 
 
 def test_application_post_submit_complete_intake_fineos_api_errors(
@@ -4072,7 +4085,10 @@ def test_application_post_submit_app_already_submitted(client, user, auth_token,
     assert not response_body.get("errors")
     assert not response_body.get("warnings")
     # Just verify that it was marked as submitted
-    assert response_body.get("data").get("status") == ApplicationStatus.Submitted.value
+    assert (
+        response_body.get("data").get("existing_application").get("status")
+        == ApplicationStatus.Submitted.value
+    )
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
     # This is generated randomly and changes each time.

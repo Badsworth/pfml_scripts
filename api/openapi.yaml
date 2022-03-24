@@ -1039,7 +1039,13 @@ paths:
                   - $ref: "#/components/schemas/SuccessfulResponse"
                   - properties:
                       data:
-                        $ref: "#/components/schemas/ApplicationResponse"
+                        type: object
+                        properties:
+                          existing_application:
+                            $ref: "#/components/schemas/ApplicationResponse"
+                          split_application:
+                            $ref: "#/components/schemas/ApplicationResponse"
+                        required: [existing_application]
         "400":
           $ref: "#/components/responses/BadRequest"
         "503":
