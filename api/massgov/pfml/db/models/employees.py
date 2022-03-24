@@ -718,30 +718,52 @@ class Employee(Base, TimestampMixin):
     def get_organization_units(self, employer: Employer) -> list[OrganizationUnit]:
         if not self.fineos_customer_number:
             return []
-        return (
+
+        occupation_org_units = (
             object_session(self)
             .query(OrganizationUnit)
-            .join(EmployeeOccupation)
-            .join(DuaReportingUnit)
             .join(
-                DuaEmployeeDemographics,
+                EmployeeOccupation,
                 and_(
-                    DuaReportingUnit.dua_id
-                    == DuaEmployeeDemographics.employer_reporting_unit_number,
-                    DuaReportingUnit.employer_id == EmployeeOccupation.employer_id,
+                    EmployeeOccupation.employee_id == self.employee_id,
+                    EmployeeOccupation.employer_id == employer.employer_id,
+                    EmployeeOccupation.organization_unit_id
+                    == OrganizationUnit.organization_unit_id,
                 ),
             )
-            .filter(DuaEmployeeDemographics.fineos_customer_number == self.fineos_customer_number)
             .filter(
                 OrganizationUnit.fineos_id is not None,
-                DuaReportingUnit.organization_unit_id is not None,
-                DuaEmployeeDemographics.employer_fein == employer.employer_fein,
-                EmployeeOccupation.employee_id == self.employee_id,
-                EmployeeOccupation.employer_id == employer.employer_id,
             )
             .distinct()
             .all()
         )
+
+        dua_demo_org_units = (
+            object_session(self)
+            .query(OrganizationUnit)
+            .join(
+                DuaEmployeeDemographics,
+                and_(
+                    DuaEmployeeDemographics.fineos_customer_number == self.fineos_customer_number,
+                ),
+            )
+            .join(
+                DuaReportingUnit,
+                and_(
+                    DuaReportingUnit.organization_unit_id == OrganizationUnit.organization_unit_id,
+                    DuaReportingUnit.dua_id
+                    == DuaEmployeeDemographics.employer_reporting_unit_number,
+                    DuaReportingUnit.employer_id == employer.employer_id,
+                ),
+            )
+            .filter(
+                OrganizationUnit.fineos_id is not None,
+            )
+            .distinct()
+            .all()
+        )
+
+        return occupation_org_units + dua_demo_org_units
 
 
 class EmployeePushToFineosQueue(Base, TimestampMixin):

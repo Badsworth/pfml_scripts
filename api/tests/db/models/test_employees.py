@@ -14,9 +14,15 @@ from massgov.pfml.db.models.employees import (
 )
 from massgov.pfml.db.models.factories import (
     ClaimFactory,
+    DuaEmployeeDemographicsFactory,
+    DuaReportingUnitFactory,
+    EmployeeFactory,
+    EmployeeOccupationFactory,
+    EmployeeWithFineosNumberFactory,
     EmployerFactory,
     EmployerQuarterlyContributionFactory,
     ManagedRequirementFactory,
+    OrganizationUnitFactory,
     UserFactory,
     VerificationFactory,
 )
@@ -176,3 +182,126 @@ def test_latest_follow_up_date(
         .one_or_none()
     )
     assert not test_claim_nomatch_filter
+
+
+def test_employee_get_organization_units_no_fineos_customer_number(
+    test_db_session, initialize_factories_session
+):
+    employee = EmployeeFactory.create()
+    employer = EmployerFactory.create()
+
+    org_units = employee.get_organization_units(employer)
+
+    assert org_units == []
+
+
+def test_employee_get_organization_units_for_unassociated_employer(
+    test_db_session, initialize_factories_session
+):
+    employee = EmployeeWithFineosNumberFactory.create()
+    employer = EmployerFactory.create()
+
+    org_units = employee.get_organization_units(employer)
+
+    assert org_units == []
+
+
+def test_employee_get_organization_units_not_if_org_unit_is_not_on_occupation_or_dua(
+    test_db_session, initialize_factories_session
+):
+    employee = EmployeeWithFineosNumberFactory.create()
+    employer = EmployerFactory.create()
+
+    EmployeeOccupationFactory.create(employee=employee, employer=employer)
+
+    OrganizationUnitFactory(employer=employer)
+
+    org_units = employee.get_organization_units(employer)
+
+    assert org_units == []
+
+
+def test_employee_get_organization_units_success_through_occupation(
+    test_db_session, initialize_factories_session
+):
+    employee = EmployeeWithFineosNumberFactory.create()
+    employer = EmployerFactory.create()
+    org_unit = OrganizationUnitFactory(employer=employer)
+
+    EmployeeOccupationFactory.create(
+        employee=employee, employer=employer, organization_unit=org_unit
+    )
+
+    assert org_unit.fineos_id is not None
+    assert employee.fineos_customer_number is not None
+
+    # an unassociated org unit
+    OrganizationUnitFactory.create(employer=employer)
+
+    org_units = employee.get_organization_units(employer)
+
+    assert len(org_units) == 1
+    assert org_units[0].organization_unit_id == org_unit.organization_unit_id
+
+
+def test_employee_get_organization_units_success_through_dua_demographics(
+    test_db_session, initialize_factories_session
+):
+    employee = EmployeeWithFineosNumberFactory.create()
+    employer = EmployerFactory.create()
+    org_unit = OrganizationUnitFactory.create(employer=employer)
+
+    assert org_unit.fineos_id is not None
+    assert employee.fineos_customer_number is not None
+
+    reporting_unit_with_org_unit = DuaReportingUnitFactory.create(
+        organization_unit=org_unit, employer=employer
+    )
+
+    DuaEmployeeDemographicsFactory.create(
+        fineos_customer_number=employee.fineos_customer_number,
+        employer_fein=employer.employer_fein,
+        employer_reporting_unit_number=reporting_unit_with_org_unit.dua_id,
+    )
+
+    # an unassociated org unit
+    OrganizationUnitFactory.create(employer=employer)
+
+    org_units = employee.get_organization_units(employer)
+
+    assert len(org_units) == 1
+    assert org_units[0].organization_unit_id == org_unit.organization_unit_id
+
+
+def test_employee_get_organization_units_success_through_both_occupation_and_dua_demographics(
+    test_db_session, initialize_factories_session
+):
+    employee = EmployeeWithFineosNumberFactory.create()
+    employer = EmployerFactory.create()
+
+    occupation_org_unit = OrganizationUnitFactory(employer=employer)
+
+    EmployeeOccupationFactory.create(
+        employee=employee, employer=employer, organization_unit=occupation_org_unit
+    )
+
+    dua_org_unit = OrganizationUnitFactory.create(employer=employer)
+
+    reporting_unit_with_org_unit = DuaReportingUnitFactory.create(
+        organization_unit=dua_org_unit, employer=employer
+    )
+
+    DuaEmployeeDemographicsFactory.create(
+        fineos_customer_number=employee.fineos_customer_number,
+        employer_fein=employer.employer_fein,
+        employer_reporting_unit_number=reporting_unit_with_org_unit.dua_id,
+    )
+
+    # an unassociated org unit
+    OrganizationUnitFactory.create(employer=employer)
+
+    org_units = employee.get_organization_units(employer)
+
+    assert len(org_units) == 2
+    assert org_units[0].organization_unit_id == occupation_org_unit.organization_unit_id
+    assert org_units[1].organization_unit_id == dua_org_unit.organization_unit_id
