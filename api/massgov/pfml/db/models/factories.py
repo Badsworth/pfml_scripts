@@ -1302,9 +1302,6 @@ class DuaReportingUnitFactory(BaseFactory):
     dua_id = factory.Sequence(lambda n: n)
     dba = None
 
-    employer = factory.SubFactory(EmployerFactory)
-    employer_id = factory.LazyAttribute(lambda d: d.employer.employer_id)
-
     organization_unit = factory.SubFactory(OrganizationUnitFactory)
     organization_unit_id = factory.LazyAttribute(lambda d: d.organization_unit.organization_unit_id)
 

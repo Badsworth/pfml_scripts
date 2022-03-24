@@ -193,8 +193,7 @@ def set_employee_occupation_from_demographic_data(
 
         found_reporting_unit = (
             db_session.query(DuaReportingUnit).filter(
-                DuaReportingUnit.dua_id == employer_reporting_unit_number,
-                DuaReportingUnit.employer_id == existing_employer.employer_id,
+                DuaReportingUnit.dua_id == employer_reporting_unit_number
             )
         ).one_or_none()
 

@@ -100,9 +100,7 @@ def test_set_employee_occupation_from_demographics_data(
 
         org_unit = OrganizationUnitFactory(name="Foo", employer=employer)
 
-        reporting_unit_with_org_unit = DuaReportingUnitFactory(
-            organization_unit=org_unit, employer=employer
-        )
+        reporting_unit_with_org_unit = DuaReportingUnitFactory(organization_unit=org_unit)
 
         # Rows pointing to an employee we don't have a record of shouldn't crash things
         DuaEmployeeDemographicsFactory(
@@ -188,9 +186,7 @@ def test_set_employee_occupation_from_demographics_data(
 
         # No matching Org Unit for the listed DUA Reporting Unit
         reporting_unit_no_org_unit = DuaReportingUnitFactory(
-            organization_unit=None,
-            organization_unit_id=None,
-            employer=employer,
+            organization_unit=None, organization_unit_id=None
         )
 
         employee_no_matching_dua_reporting_unit = EmployeeWithFineosNumberFactory()
@@ -290,12 +286,8 @@ def test_set_employee_occupation_from_demographics_data_multiple_dua_records(
         org_unit_one = OrganizationUnitFactory(employer=employer)
         org_unit_two = OrganizationUnitFactory(employer=employer)
 
-        reporting_unit_one = DuaReportingUnitFactory(
-            organization_unit=org_unit_one, employer=employer
-        )
-        reporting_unit_two = DuaReportingUnitFactory(
-            organization_unit=org_unit_two, employer=employer
-        )
+        reporting_unit_one = DuaReportingUnitFactory(organization_unit=org_unit_one)
+        reporting_unit_two = DuaReportingUnitFactory(organization_unit=org_unit_two)
 
         employee = EmployeeWithFineosNumberFactory()
 
@@ -345,12 +337,8 @@ def test_set_employee_occupation_from_demographics_data_multiple_dua_records_tim
         org_unit_one = OrganizationUnitFactory(employer=employer)
         org_unit_two = OrganizationUnitFactory(employer=employer)
 
-        reporting_unit_one = DuaReportingUnitFactory(
-            organization_unit=org_unit_one, employer=employer
-        )
-        reporting_unit_two = DuaReportingUnitFactory(
-            organization_unit=org_unit_two, employer=employer
-        )
+        reporting_unit_one = DuaReportingUnitFactory(organization_unit=org_unit_one)
+        reporting_unit_two = DuaReportingUnitFactory(organization_unit=org_unit_two)
 
         employee = EmployeeWithFineosNumberFactory()
 
@@ -410,12 +398,8 @@ def test_set_employee_occupation_from_demographics_data_multiple_employers(
         org_unit_one = OrganizationUnitFactory(employer=employer_one)
         org_unit_two = OrganizationUnitFactory(employer=employer_two)
 
-        reporting_unit_one = DuaReportingUnitFactory(
-            organization_unit=org_unit_one, employer=employer_one
-        )
-        reporting_unit_two = DuaReportingUnitFactory(
-            organization_unit=org_unit_two, employer=employer_two
-        )
+        reporting_unit_one = DuaReportingUnitFactory(organization_unit=org_unit_one)
+        reporting_unit_two = DuaReportingUnitFactory(organization_unit=org_unit_two)
 
         employee = EmployeeWithFineosNumberFactory()
 
@@ -477,12 +461,8 @@ def test_set_employee_occupation_from_demographics_data_missing_ids(
         org_unit_one = OrganizationUnitFactory(employer=employer)
         org_unit_two = OrganizationUnitFactory(employer=employer)
 
-        reporting_unit_one = DuaReportingUnitFactory(
-            organization_unit=org_unit_one, employer=employer
-        )
-        reporting_unit_two = DuaReportingUnitFactory(
-            organization_unit=org_unit_two, employer=employer
-        )
+        reporting_unit_one = DuaReportingUnitFactory(organization_unit=org_unit_one)
+        reporting_unit_two = DuaReportingUnitFactory(organization_unit=org_unit_two)
 
         # null customer number
         employee_one = EmployeeFactory(fineos_customer_number=None)
@@ -532,9 +512,7 @@ def test_set_employee_occupation_from_demographics_data_short_feins(
 
         org_unit_one = OrganizationUnitFactory(employer=employer_one)
 
-        reporting_unit_one = DuaReportingUnitFactory(
-            organization_unit=org_unit_one, employer=employer_one
-        )
+        reporting_unit_one = DuaReportingUnitFactory(organization_unit=org_unit_one)
 
         employee = EmployeeWithFineosNumberFactory()
 
@@ -587,9 +565,7 @@ def test_set_employee_occupation_from_demographics_data_mismatched_employer_caug
 
         employer_two = EmployerFactory()
         org_unit_two = OrganizationUnitFactory(employer=employer_two)
-        reporting_unit_two = DuaReportingUnitFactory(
-            organization_unit=org_unit_two, employer=employer_two
-        )
+        reporting_unit_two = DuaReportingUnitFactory(organization_unit=org_unit_two)
 
         employee = EmployeeWithFineosNumberFactory()
 
@@ -611,7 +587,7 @@ def test_set_employee_occupation_from_demographics_data_mismatched_employer_caug
 
         metrics = log_entry.metrics
 
-        assert metrics["missing_dua_reporting_unit_count"] == 1
+        assert metrics["dua_reporting_unit_mismatched_employer_count"] == 1
 
         assert employee_occupation_one.organization_unit_id is None
 
