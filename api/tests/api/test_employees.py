@@ -398,12 +398,14 @@ def test_get_employee_basic_response(client, employee_different_fineos_name, sno
     assert employee_data["first_name"] == "Foo2"
     assert employee_data["middle_name"] == "Baz2"
     assert employee_data["last_name"] == "Bar2"
+    assert employee_data["tax_identifier"] is not None
+    assert employee_data["tax_identifier_last4"] is not None
 
 
 def test_employee_for_pfml_crm_response(client, employee, snow_user_headers, user, test_db_session):
     tax_identifier = TaxIdentifierFactory.create(tax_identifier="587777091")
     employee = EmployeeFactory.create(
-        tax_identifier_id=tax_identifier.tax_identifier_id,
+        tax_identifier=tax_identifier,
         first_name="Foo",
         last_name="Bar",
         middle_name="Baz",
@@ -429,9 +431,12 @@ def test_employee_for_pfml_crm_response(client, employee, snow_user_headers, use
     response_body = response.get_json()
 
     employee_data = response_body.get("data")
-    assert employee_data["tax_identifier"] is not None
     assert employee_data["date_of_birth"] == "****-01-01"
     assert employee_data["addresses"][0] == MaskedAddress.from_orm(address)
+    assert employee_data["tax_identifier"] == "587-77-7091"
+    assert employee_data["tax_identifier_last4"] == tax_identifier.tax_identifier_last4
+    assert employee_data["email_address"] is not None
+    assert len(employee_data["phone_numbers"]) == 1
 
 
 def test_employee_with_claims_no_id_proof(
