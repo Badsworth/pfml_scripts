@@ -407,15 +407,16 @@ class PaymentAuditReportStep(Step):
                 payment, linked_payments
             )
 
-            # Determine if there is an employer reimbursement related to this payment.
+            employer_reimbursement_amount: decimal.Decimal = (
+                self.calculate_employer_reimbursement_amount(payment, linked_payments)
+            )
+
             employer_reimbursement: Optional[Payment] = None
-            employer_reimbursement_amount: decimal.Decimal = decimal.Decimal(0)
             if (
                 payment.payment_transaction_type_id
                 == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
             ):
                 employer_reimbursement = payment
-                employer_reimbursement_amount = employer_reimbursement.amount
             else:
                 for linked_payment in linked_payments:
                     if (
@@ -423,8 +424,7 @@ class PaymentAuditReportStep(Step):
                         == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
                     ):
                         employer_reimbursement = linked_payment
-                        employer_reimbursement_amount = employer_reimbursement.amount
-                        # Assume we will never have more than one Employer Reimbursement linked, so we can break
+                        # Even if we have more than one Employer Reimbursement linked, take the first one and break
                         break
 
             # Clear the net payment amount for some transaction types (e.g. - Employer Reimbursements, and orphaned Tax Withholdings) in the audit report
