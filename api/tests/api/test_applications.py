@@ -419,7 +419,7 @@ class TestApplicationsImport:
         assert test_db_session.query(Application).one_or_none() is None
 
         response = client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json=valid_request_body,
         )
@@ -441,7 +441,7 @@ class TestApplicationsImport:
     ):
         ApplicationFactory.create(user=user, claim=claim)
         response = client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json=valid_request_body,
         )
@@ -470,7 +470,7 @@ class TestApplicationsImport:
         monkeypatch.setattr(mock_cognito, "admin_get_user", admin_get_user)
 
         response = client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json=valid_request_body,
         )
@@ -488,7 +488,7 @@ class TestApplicationsImport:
     ):
         ApplicationFactory.create(user=user_with_mfa, claim=claim)
         response = client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json=valid_request_body,
         )
@@ -503,7 +503,7 @@ class TestApplicationsImport:
 
     def test_applications_import_missing_required_fields(self, client, auth_token, claim):
         response = client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json={"absence_case_id": None, "tax_identifier": None},
         )
@@ -526,7 +526,7 @@ class TestApplicationsImport:
         absence_case_id = "NTN-111-ABS-01"
 
         response = client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json={
                 "absence_case_id": absence_case_id,
@@ -552,7 +552,7 @@ class TestApplicationsImport:
 
         absence_case_id = claim.fineos_absence_id
         response = client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json={
                 "absence_case_id": absence_case_id,
@@ -573,7 +573,7 @@ class TestApplicationsImport:
 
         absence_case_id = claim.fineos_absence_id
         response = client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json={
                 "absence_case_id": absence_case_id,
@@ -587,7 +587,7 @@ class TestApplicationsImport:
     def test_applications_import_unauthenticated_post(self, client, test_db_session):
         absence_case_id = "NTN-111-ABS-01"
         response = client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {''}"},
             json={"absence_case_id": absence_case_id},
         )
@@ -603,7 +603,7 @@ class TestApplicationsImport:
         absence_case_id = "NTN-111-ABS-01"
         # Employer cannot access this endpoint
         response = client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
             json={"absence_case_id": absence_case_id},
         )
@@ -627,7 +627,7 @@ class TestApplicationsImport:
         mock_read_customer_details.return_value = customer_details
 
         client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json=valid_request_body,
         )
@@ -652,7 +652,7 @@ class TestApplicationsImport:
         self, client, test_db_session, auth_token, claim, valid_request_body
     ):
         client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json=valid_request_body,
         )
@@ -686,7 +686,7 @@ class TestApplicationsImport:
         assert test_db_session.query(Application).one_or_none() is None
 
         response = client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json=valid_request_body,
         )
@@ -714,7 +714,7 @@ class TestApplicationsImport:
         assert test_db_session.query(Application).one_or_none() is None
 
         response = client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json=valid_request_body,
         )
@@ -734,7 +734,7 @@ class TestApplicationsImport:
         mock_get_payment_preferences.return_value = None
 
         client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json=valid_request_body,
         )
@@ -765,7 +765,7 @@ class TestApplicationsImport:
         mock_read_customer_contact_details.return_value = customer_contact_details
 
         client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json=valid_request_body,
         )
@@ -867,7 +867,7 @@ class TestApplicationsImport:
         assert test_db_session.query(ReducedScheduleLeavePeriod).one_or_none() is None
 
         response = client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json=valid_request_body,
         )
@@ -905,7 +905,7 @@ class TestApplicationsImport:
         mock_get_absence.return_value = absence_details_invalid
 
         response = client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json=valid_request_body,
         )
@@ -916,7 +916,7 @@ class TestApplicationsImport:
         self, client, test_db_session, auth_token, claim, valid_request_body
     ):
         client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json=valid_request_body,
         )

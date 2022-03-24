@@ -5095,11 +5095,11 @@ class TestGetClaimsEndpoint:
     class TestClaimsMultipleParamsOld:
         @pytest.fixture
         def employee(self):
-            return EmployeeFactory.create()
+            return EmployeeFactory.create(first_name="Abbie", last_name="Gail")
 
         @pytest.fixture
         def other_employee(self):
-            return EmployeeFactory.create()
+            return EmployeeFactory.create(first_name="John", last_name="Deer")
 
         @pytest.fixture(autouse=True)
         def load_test_db(
@@ -5279,11 +5279,11 @@ class TestGetClaimsEndpoint:
     class TestClaimsMultipleParams:
         @pytest.fixture
         def employee(self):
-            return EmployeeFactory.create()
+            return EmployeeFactory.create(first_name="Abbie", last_name="Gail")
 
         @pytest.fixture
         def other_employee(self):
-            return EmployeeFactory.create()
+            return EmployeeFactory.create(first_name="John", last_name="Deer")
 
         @pytest.fixture(autouse=True)
         def load_test_db(

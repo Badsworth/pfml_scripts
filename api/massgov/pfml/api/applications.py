@@ -128,14 +128,7 @@ def applications_get():
     ).to_api_response()
 
 
-# TODO (PORTAL-1832): Once Portal sends requests to /application-imports, this method and
-# the /applications/import endpoint can be removed. It may also make sense to rename the
-# method below to application_imports() (swap the plural) at that time.
-def deprecated_applications_import():
-    return applications_import()
-
-
-def applications_import():
+def application_imports():
     application = Application(application_id=uuid4())
     ensure(CREATE, application)
 
