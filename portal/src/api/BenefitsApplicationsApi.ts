@@ -99,17 +99,25 @@ export default class BenefitsApplicationsApi extends BaseApi {
     const splitClaimsAcrossByEnabled = Boolean(
       isFeatureEnabled("splitClaimsAcrossBY")
     );
-    const { data } = await this.request<BenefitsApplication>(
-      "POST",
-      `${application_id}/submit_application`,
-      undefined,
-      {
-        additionalHeaders: splitClaimsAcrossByEnabled
-          ? { "X-FF-Split-Claims-Across-BY": "true" }
-          : {},
-      }
-    );
-
+    const { data } = await this.request<
+      | BenefitsApplication
+      | {
+          existingApplication: BenefitsApplication;
+          splitApplication: BenefitsApplication | null;
+        }
+    >("POST", `${application_id}/submit_application`, undefined, {
+      additionalHeaders: splitClaimsAcrossByEnabled
+        ? { "X-FF-Split-Claims-Across-BY": "true" }
+        : {},
+    });
+    // TODO (API-2447)
+    // This should get cleaned up as part of completing
+    // But is a temporary handler for the API potentially return different shapes
+    if ("existingApplication" in data) {
+      return {
+        claim: new BenefitsApplication(data.existingApplication),
+      };
+    }
     return {
       claim: new BenefitsApplication(data),
     };

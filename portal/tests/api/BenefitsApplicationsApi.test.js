@@ -319,6 +319,25 @@ describe("BenefitsApplicationsApi", () => {
         }
       );
     });
+
+    it("should handle an API response with a split application", async () => {
+      claim = new BenefitsApplication({
+        application_id: "mock-application_id",
+      });
+
+      global.fetch = mockFetch({
+        response: {
+          data: { existingApplication: { ...claim }, splitApplication: null },
+        },
+        status: 201,
+      });
+      const { claim: claimResponse } = await claimsApi.submitClaim(
+        claim.application_id
+      );
+
+      expect(claimResponse).toBeInstanceOf(BenefitsApplication);
+      expect(claimResponse).toEqual(claim);
+    });
   });
 
   describe("submitPaymentPreference", () => {
