@@ -383,10 +383,6 @@ class TestEnableUserMfa:
     def mock_cognito(self, magic_mock_cognito):
         return magic_mock_cognito
 
-    @pytest.fixture
-    def auth_token(self):
-        return "user cognito auth token"
-
     @mock.patch("massgov.pfml.util.aws.cognito.create_cognito_client")
     def test_success(self, mock_create_cognito, mock_cognito, auth_token):
         mock_create_cognito.return_value = mock_cognito
