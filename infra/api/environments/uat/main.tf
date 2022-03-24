@@ -90,5 +90,5 @@ module "api" {
 
   enable_document_multipart_upload = "1"
   enable_employee_endpoints        = "1"
-  limit_ssn_fein_attempts          = "5"
+  limit_ssn_fein_max_attempts      = "5"
 }

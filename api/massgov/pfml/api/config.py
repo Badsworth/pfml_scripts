@@ -28,7 +28,7 @@ class AppConfig:
     cognito_user_pool_client_id: str
     cognito_user_pool_keys_url: str
     enable_employee_endpoints: bool
-    limit_ssn_fein_attempts: int
+    limit_ssn_fein_max_attempts: int
     rmv_api_behavior: RMVAPIBehavior
     rmv_check_mock_success: bool
     enable_application_fraud_check: bool
@@ -56,7 +56,7 @@ def get_config() -> AppConfig:
         cognito_user_pool_client_id=os.environ.get("COGNITO_USER_POOL_CLIENT_ID", ""),
         cognito_user_pool_keys_url=os.environ.get("COGNITO_USER_POOL_KEYS_URL", ""),
         enable_employee_endpoints=os.environ.get("ENABLE_EMPLOYEE_ENDPOINTS", "0") == "1",
-        limit_ssn_fein_attempts=int(os.environ.get("LIMIT_SSN_FEIN_ATTEMPTS", 5)),
+        limit_ssn_fein_max_attempts=int(os.environ.get("LIMIT_SSN_FEIN_MAX_ATTEMPTS", 5)),
         rmv_api_behavior=RMVAPIBehavior(
             os.environ.get("RMV_API_BEHAVIOR", RMVAPIBehavior.MOCK.value)
         ),

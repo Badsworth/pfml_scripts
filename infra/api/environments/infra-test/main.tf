@@ -68,7 +68,7 @@ module "api" {
   ]
   enable_application_fraud_check = "0"
   enable_employee_endpoints      = "1"
-  limit_ssn_fein_attempts        = "5"
+  limit_ssn_fein_max_attempts    = "5"
   release_version                = var.release_version
 
   cognito_user_pool_arn       = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/us-east-1_8OEJk2XeD"
