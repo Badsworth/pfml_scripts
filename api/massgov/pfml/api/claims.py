@@ -71,11 +71,11 @@ from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import (
     EmployerClaimReviewEFormBuilder,
     EmployerClaimReviewV1EFormBuilder,
 )
+from massgov.pfml.util.logging.absence_periods import log_absence_period_response
 from massgov.pfml.util.logging.claims import (
     get_claim_log_attributes,
     get_claim_review_log_attributes,
     get_managed_requirements_log_attributes,
-    log_absence_period,
     log_get_claim_metrics,
     log_managed_requirement,
 )
@@ -386,7 +386,7 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
         )
 
         for period in fineos_claim_review_response.absence_periods:
-            log_absence_period(
+            log_absence_period_response(
                 fineos_absence_id, period, "get_claim_review - Found absence period for claim"
             )
 
