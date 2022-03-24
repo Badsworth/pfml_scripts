@@ -3044,6 +3044,9 @@ components:
           format: date
           example: "2022-07-04"
           nullable: true
+        computed_application_split:
+          $ref: "#/components/schemas/ComputedApplicationSplit"
+          nullable: true
 
     ComputedStartDates:
       type: object
@@ -3059,6 +3062,32 @@ components:
           example: "2021-01-01"
           nullable: true
 
+    ComputedApplicationSplit:
+      type: object
+      properties:
+        crossed_benefit_year:
+          $ref: '#/components/schemas/BenefitYearResponse'
+        application_dates_in_benefit_year: 
+          $ref: '#/components/schemas/StartEndDates'
+        application_dates_outside_benefit_year: 
+          $ref: '#/components/schemas/StartEndDates'
+        application_outside_benefit_year_submittable_on: 
+          type: string
+          format: date
+          example: "2020-11-02"
+
+    StartEndDates:
+      type: object
+      properties:
+        start_date: 
+          type: string
+          format: date
+          example: "2021-01-01"
+        end_date: 
+          type: string
+          format: date
+          example: "2021-01-12"
+    
     DocumentUploadRequest:
       type: object
       properties:

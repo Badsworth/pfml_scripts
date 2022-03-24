@@ -8,7 +8,7 @@ import pytest
 import massgov.pfml.fineos.mock_client
 from massgov.pfml.api.app import get_app_config
 from massgov.pfml.api.models.applications.common import ContentType as AllowedContentTypes
-from massgov.pfml.api.models.applications.responses import DocumentResponse
+from massgov.pfml.api.models.applications.common import DocumentResponse
 from massgov.pfml.db.models.applications import Document, DocumentType, LeaveReason
 from massgov.pfml.db.models.factories import ApplicationFactory, ClaimFactory, DocumentFactory
 from massgov.pfml.fineos import fineos_client, models
