@@ -59,7 +59,7 @@ def handle_mfa_disabled(
             )
         else:
             if sync_cognito_preferences:
-                cognito.enable_user_mfa(cognito_auth_token)
+                cognito.disable_user_mfa(cognito_auth_token)
 
             _send_mfa_disabled_email(user.email_address, user.mfa_phone_number_last_four())
     except Exception as error:

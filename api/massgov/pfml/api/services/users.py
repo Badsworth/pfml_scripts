@@ -86,7 +86,7 @@ def _update_mfa_preference(
     if value == "Opt Out" and existing_mfa_preference is not None:
         handle_mfa_disabled(user, last_updated_at, sync_cognito_preferences, cognito_auth_token)
     elif value == "SMS" and sync_cognito_preferences:
-        handle_mfa_enabled(user, cognito_auth_token)
+        handle_mfa_enabled(cognito_auth_token)
 
 
 def _update_mfa_preference_audit_trail(

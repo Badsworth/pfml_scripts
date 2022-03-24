@@ -110,7 +110,7 @@ class TestUpdateUser:
         update_request = UserUpdateRequest(mfa_delivery_preference="SMS")
         update_user(test_db_session, user_with_mfa, update_request, True, auth_token)
 
-        mock_handle_mfa_enabled.assert_called_once_with(user_with_mfa, auth_token)
+        mock_handle_mfa_enabled.assert_called_once_with(auth_token)
 
     @mock.patch("massgov.pfml.api.services.users._update_mfa_preference_audit_trail")
     def test_audit_trail_not_updated_if_mfa_preference_isnt_updated(
