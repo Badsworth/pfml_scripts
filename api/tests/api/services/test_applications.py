@@ -7,7 +7,6 @@ from freezegun import freeze_time
 import massgov
 from massgov.pfml.api.services.administrator_fineos_actions import EformTypes
 from massgov.pfml.api.services.applications import (
-    _split_start_end_dates,
     set_application_absence_and_leave_period,
     set_customer_contact_detail_fields,
     set_customer_detail_fields,
@@ -17,6 +16,7 @@ from massgov.pfml.api.services.applications import (
     set_other_leaves,
     set_payment_preference_fields,
     split_application_by_date,
+    split_start_end_dates,
 )
 from massgov.pfml.api.validation.exceptions import (
     IssueType,
@@ -1335,7 +1335,7 @@ class TestSplitApplicationByDate:
                 split_on_date = date.today()
                 start_date = split_on_date + timedelta(days=10)
                 end_date = split_on_date + timedelta(days=20)
-                dates_before, dates_after = _split_start_end_dates(
+                dates_before, dates_after = split_start_end_dates(
                     start_date, end_date, split_on_date
                 )
                 assert dates_before is None
@@ -1348,7 +1348,7 @@ class TestSplitApplicationByDate:
                 split_on_date = date.today()
                 start_date = split_on_date - timedelta(days=20)
                 end_date = split_on_date - timedelta(days=10)
-                dates_before, dates_after = _split_start_end_dates(
+                dates_before, dates_after = split_start_end_dates(
                     start_date, end_date, split_on_date
                 )
 
@@ -1362,7 +1362,7 @@ class TestSplitApplicationByDate:
                 split_on_date = date.today()
                 start_date = split_on_date
                 end_date = split_on_date + timedelta(days=20)
-                dates_before, dates_after = _split_start_end_dates(
+                dates_before, dates_after = split_start_end_dates(
                     start_date, end_date, split_on_date
                 )
 
@@ -1378,7 +1378,7 @@ class TestSplitApplicationByDate:
                 split_on_date = date.today()
                 start_date = split_on_date - timedelta(days=10)
                 end_date = split_on_date
-                dates_before, dates_after = _split_start_end_dates(
+                dates_before, dates_after = split_start_end_dates(
                     start_date, end_date, split_on_date
                 )
 
@@ -1392,7 +1392,7 @@ class TestSplitApplicationByDate:
                 split_on_date = date.today()
                 start_date = split_on_date - timedelta(days=10)
                 end_date = start_date - timedelta(days=1)
-                dates_before, dates_after = _split_start_end_dates(
+                dates_before, dates_after = split_start_end_dates(
                     start_date, end_date, split_on_date
                 )
 
@@ -1404,7 +1404,7 @@ class TestSplitApplicationByDate:
                 split_on_date = date.today()
                 start_date = split_on_date - timedelta(days=10)
                 end_date = split_on_date + timedelta(days=10)
-                dates_before, dates_after = _split_start_end_dates(
+                dates_before, dates_after = split_start_end_dates(
                     start_date, end_date, split_on_date
                 )
 

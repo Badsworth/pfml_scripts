@@ -1,5 +1,4 @@
 import base64
-from typing import Optional
 from uuid import UUID, uuid4
 
 import connexion
@@ -14,10 +13,10 @@ import massgov.pfml.api.util.response as response_util
 import massgov.pfml.api.validation.application_rules as application_rules
 import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
-from massgov.pfml import db
 from massgov.pfml.api.authorization.flask import CREATE, EDIT, READ, ensure
 from massgov.pfml.api.claims import get_claim_from_db
 from massgov.pfml.api.exceptions import ClaimWithdrawn
+from massgov.pfml.api.models.applications.common import DocumentResponse
 from massgov.pfml.api.models.applications.requests import (
     ApplicationImportRequestBody,
     ApplicationRequestBody,
@@ -25,13 +24,9 @@ from massgov.pfml.api.models.applications.requests import (
     PaymentPreferenceRequestBody,
     TaxWithholdingPreferenceRequestBody,
 )
-from massgov.pfml.api.models.applications.responses import ApplicationResponse, DocumentResponse
-from massgov.pfml.api.models.common import (
-    OrderDirection,
-    get_earliest_start_date,
-    get_latest_end_date,
-)
-from massgov.pfml.api.services.applications import get_document_by_id
+from massgov.pfml.api.models.applications.responses import ApplicationResponse
+from massgov.pfml.api.models.common import OrderDirection
+from massgov.pfml.api.services.applications import get_application_split, get_document_by_id
 from massgov.pfml.api.services.document_upload import upload_document_to_fineos
 from massgov.pfml.api.services.fineos_actions import (
     complete_intake,
@@ -54,7 +49,6 @@ from massgov.pfml.api.validation.exceptions import (
     ValidationException,
 )
 from massgov.pfml.db.models.applications import Application, DocumentType, LeaveReason
-from massgov.pfml.db.models.employees import BenefitYear
 from massgov.pfml.fineos.exception import (
     FINEOSClientError,
     FINEOSEntityNotFound,
@@ -357,40 +351,6 @@ def get_fineos_submit_issues_response(err, existing_application):
         raise err
 
 
-def _get_crossed_benefit_year(
-    application: Application, db_session: db.Session
-) -> Optional[BenefitYear]:
-    """
-    If a leave period spans a benefit year, the application needs to be broken up into
-    separate ones that will each get submitted.
-    """
-    if application.split_from_application_id is not None:
-        return None
-
-    latest_end_date = get_latest_end_date(application)
-    earliest_start_date = get_earliest_start_date(application)
-    if earliest_start_date is None or latest_end_date is None:
-        return None
-
-    if not application.employee:
-        return None
-
-    # Find any benefit year for the employee where the end_date falls between
-    # the leave start and end dates, excluding a benefit year end_date equals
-    # the leave end_date since benefit years are inclusive
-    by = (
-        db_session.query(BenefitYear)
-        .filter(
-            BenefitYear.employee_id == application.employee.employee_id,
-            BenefitYear.end_date.between(earliest_start_date, latest_end_date),
-            BenefitYear.end_date != latest_end_date,
-        )
-        .one_or_none()
-    )
-
-    return by
-
-
 def applications_submit(application_id):
     split_claims_across_by_enabled = (
         connexion.request.headers.get("X-FF-Split-Claims-Across-BY") == "true"
@@ -464,9 +424,9 @@ def applications_submit(application_id):
         # assume that just complete_intake needs to be reattempted.
         if not existing_application.claim:
             if split_claims_across_by_enabled:
-                crossed_by = _get_crossed_benefit_year(existing_application, db_session)
+                application_split = get_application_split(existing_application, db_session)
                 logger.info(
-                    f"application would have been split: {crossed_by != None}",
+                    f"application would have been split: {application_split != None}",
                     extra=log_attributes,
                 )
             try:

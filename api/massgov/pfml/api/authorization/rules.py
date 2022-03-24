@@ -5,7 +5,7 @@ from bouncer.models import RuleList
 from flask_bouncer import Bouncer  # noqa: F401
 
 from massgov.pfml.api.authentication.azure import AzureUser
-from massgov.pfml.api.models.applications.responses import DocumentResponse
+from massgov.pfml.api.models.applications.common import DocumentResponse
 from massgov.pfml.db.models.applications import (
     Application,
     Document,
