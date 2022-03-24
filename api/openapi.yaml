@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Paid Leave API
   description: An API for managing leave within Massachusetts Paid Family and Medical Leave.
-  version: "2022-02-17"
+  version: "2022-03-21"
 
 servers:
   - url: /v1
@@ -869,7 +869,7 @@ paths:
       summary: >
         Creates a new application in the PFML database from a FINEOS application that was created through the
         contact center.
-      operationId: massgov.pfml.api.applications.applications_import
+      operationId: massgov.pfml.api.applications.application_imports
       responses:
         "201":
           $ref: "#/components/responses/ApplicationImportedResponse"
@@ -980,39 +980,6 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
       requestBody:
         $ref: "#/components/requestBodies/ApplicationRequestBody"
-
-  /applications/import:
-    post:
-      tags:
-        - Applications
-      summary: >
-        Creates a new application in the PFML database from a FINEOS application that was created through the
-        contact center.
-      operationId: massgov.pfml.api.applications.deprecated_applications_import
-      responses:
-        "201":
-          $ref: "#/components/responses/ApplicationImportedResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
-          description: Application with requested absence_case_id was not found.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "503":
-          description: Application could not be completed in Claims Processing System.
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/ApplicationResponse"
-      requestBody:
-        $ref: '#/components/requestBodies/ApplicationImportRequestBody'
-
 
   /applications/{application_id}/submit_application:
     post:
