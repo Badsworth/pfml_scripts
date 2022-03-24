@@ -1,16 +1,16 @@
 """Add ssn fein max update attempts
 
-Revision ID: 8e0745846466
-Revises: 615482bbbbd2
-Create Date: 2022-03-24 14:57:33.146425
+Revision ID: bef9b08038d1
+Revises: 60419262fc32
+Create Date: 2022-03-24 19:15:41.297367
 
 """
 import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "8e0745846466"
-down_revision = "615482bbbbd2"
+revision = "bef9b08038d1"
+down_revision = "60419262fc32"
 branch_labels = None
 depends_on = None
 
