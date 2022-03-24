@@ -67,11 +67,7 @@ describe("Create a new caring leave claim in FINEOS and check multiple secure ac
           adjudicate.certificationPeriods((cert) => cert.prefill());
           adjudicate.acceptLeavePlan();
         });
-        if (config("HAS_APRIL_UPGRADE") === "true") {
-          claimPage.approve("Approved", true);
-        } else {
-          claimPage.approve();
-        }
+        claimPage.approve("Approved", config("HAS_APRIL_UPGRADE") === "true");
       });
     });
 

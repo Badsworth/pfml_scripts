@@ -189,23 +189,6 @@ def upload_document_to_fineos(
                 # https://lwd.atlassian.net/browse/PSD-2530
                 raise ClaimWithdrawn()
 
-            if isinstance(err, FINEOSUnprocessableEntity):
-                message = "Issue encountered while attempting to upload the document."
-                return response_util.error_response(
-                    status_code=BadRequest,
-                    message=message,
-                    errors=[
-                        ValidationErrorDetail(
-                            type=IssueType.fineos_client,
-                            message=message,
-                            rule=IssueRule.document_requirement_already_satisfied
-                            if "is not required for the case provided" in err.message  # noqa: B306
-                            else None,
-                        )
-                    ],
-                    data=document_details.dict(),
-                ).to_api_response()
-
             # Bubble any other issues up to the API error handlers
             raise
 
@@ -227,12 +210,32 @@ def upload_document_to_fineos(
             if document_details.mark_evidence_received:
                 mark_single_document_as_received(application, document, db_session)
                 logger.info("document_upload - evidence marked as received", extra=log_attributes)
-        except Exception:
+        except Exception as err:
             logger.warning(
                 "document_upload failure - failure marking evidence as received",
                 extra=log_attributes,
                 exc_info=True,
             )
+
+            if isinstance(err, FINEOSUnprocessableEntity):
+                # Drop the new document metadata row so the new document isn't saved to the DB. It will still
+                # be saved to FINEOS
+                db_session.expunge(document)
+                message = "Issue encountered while attempting to upload the document."
+                return response_util.error_response(
+                    status_code=BadRequest,
+                    message=message,
+                    errors=[
+                        ValidationErrorDetail(
+                            type=IssueType.fineos_client,
+                            message=message,
+                            rule=IssueRule.document_requirement_already_satisfied
+                            if "is not required for the case provided" in err.message  # noqa: B306
+                            else None,
+                        )
+                    ],
+                    data=document_details.dict(),
+                ).to_api_response()
 
             # We don't expect any errors here, raise an error if we get one.
             # FINEOS Unavailability errors will bubble up and be returned as 503

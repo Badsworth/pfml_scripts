@@ -419,16 +419,21 @@ export class ClaimPage {
     if (upgrade) {
       // Note in the new workflow for putting a claim into Review we are going directly to the Adjudication
       // instead of click on the Absence Hub. Then clicking the Adjudication button on the Absence Hub tab.
-      cy.findByText("Review").click();
-      cy.get('input[type="radio"][id*="secondOption"]').click();
-      cy.get(".ant-modal-footer").within(() => {
-        cy.findByText("OK", {
-          selector: "span",
-        }).click({
-          force: true,
+      cy.contains("button", "Review").click({ force: true });
+      cy.wait("@reactRender");
+      cy.get(`.ant-modal`)
+        .should("be.visible")
+        .within(() => {
+          cy.get('input[id="secondOption"][type="radio"]').click();
+          cy.contains("button", "OK").click();
         });
-      });
       waitForAjaxComplete();
+      cy.contains(
+        'span[id$="_openReviewDocumentLabel"]',
+        "The leave request is now in review"
+      );
+      waitForAjaxComplete();
+      cy.wait(500);
     } else {
       cy.get('input[title="Review a Leave Request"').click();
       waitForAjaxComplete();
@@ -809,7 +814,8 @@ class OutstandingRequirementsPage {
     cy.get(
       "#AddManagedRequirementPopupWidget_PopupWidgetWrapper input[type='submit'][value='Ok']"
     ).click();
-    cy.get("#footerButtonsBar input[value='OK']").click();
+    cy.get("#footerButtonsBar input[value='OK']").click({ force: true });
+    cy.wait(300);
   }
 
   complete(receipt: string, reason: string, hasAccess: boolean): this {
@@ -983,14 +989,22 @@ class TasksPage {
     return this;
   }
 
-  editActivityDescription(name: string, comment: string): this {
+  editActivityDescription(
+    name: string,
+    comment: string,
+    upgrade: boolean | null | undefined = false
+  ): this {
     cy.contains("td", "Approved Leave Start Date Change").click();
     cy.wait("@ajaxRender");
     cy.get('input[title="Edit this Activity"').click();
     cy.wait("@ajaxRender");
-    cy.get("textarea[name*='BasicDetailsWidget1_un11_Description']").type(
-      comment
-    );
+    if (upgrade) {
+      cy.get("textarea[name*='BasicDetailsWidget1_']").type(comment);
+    } else {
+      cy.get("textarea[name*='BasicDetailsWidget1_un11_Description']").type(
+        comment
+      );
+    }
     cy.wait(150);
     cy.get("#footerButtonsBar input[value='OK']").click();
     return this;
@@ -3406,6 +3420,7 @@ type EpisodicLeavePeriodDescription = {
   endDate: string;
   timeSpanHoursStart: string;
   timeSpanHoursEnd: string;
+  upgrade: boolean;
 };
 
 class RecordActualTime {
@@ -3414,6 +3429,7 @@ class RecordActualTime {
     endDate,
     timeSpanHoursStart,
     timeSpanHoursEnd,
+    upgrade,
   }: EpisodicLeavePeriodDescription) {
     // Select the episodic leave period.
     cy.findByTitle("Episodic").click();
@@ -3423,36 +3439,65 @@ class RecordActualTime {
     cy.get(".popup-container").within(() => {
       // Wait for focus to be captured on the "Last Day Worked" field. This happens automatically, and only occurs
       // when the popup is ready for interaction. Annoyingly, it gets captured 2x on render, forcing us to wait as well.
-      cy.findByLabelText("Last day worked").should("have.focus");
+      if (upgrade) {
+        const startDateFormatted = format(parseISO(startDate), "MM/dd/yyyy");
+        const endDateFormatted = format(parseISO(endDate), "MM/dd/yyyy");
+        // Start date
+        cy.findByLabelText("Absence start date")
+          .focus()
+          .type(`{selectall}{backspace}${startDateFormatted}`)
+          .blur();
+        // After entering the date and losing focus, the form re-renders and captures focus again
+        // Wait for the form to capture focus
+        waitForAjaxComplete();
+        cy.findByLabelText("Absence start date").should("have.focus");
 
-      const startDateFormatted = format(parseISO(startDate), "MM/dd/yyyy");
-      const endDateFormatted = format(parseISO(endDate), "MM/dd/yyyy");
-      // Start date
-      cy.findByLabelText("Absence start date")
-        .focus()
-        .type(`{selectall}{backspace}${startDateFormatted}`)
-        .blur();
-      // After entering the date and losing focus, the form re-renders and captures focus again
-      // Wait for the form to capture focus
-      waitForAjaxComplete();
-      cy.findByLabelText("Absence start date").should("have.focus");
+        // End date, same thing about focus
+        cy.findByLabelText("Absence end date")
+          .focus()
+          .type(`{selectall}{backspace}${endDateFormatted}`)
+          .blur();
+        waitForAjaxComplete();
+        cy.findByLabelText("Absence end date").should("have.focus");
+        cy.get(
+          `input[id^="timeOffAbsencePeriodDetailsWidget"][id$="timeSpanHoursStartDate"]`
+        ).type(`{selectall}{backspace}${timeSpanHoursStart}`);
+        cy.get(
+          `input[id^="timeOffAbsencePeriodDetailsWidget"][id$="timeSpanHoursEndDate"]`
+        ).type(`{selectall}{backspace}${timeSpanHoursEnd}`);
+        // Submit the actual period
+        cy.findByText("OK").click();
+      } else {
+        cy.findByLabelText("Last day worked").should("have.focus");
+        const startDateFormatted = format(parseISO(startDate), "MM/dd/yyyy");
+        const endDateFormatted = format(parseISO(endDate), "MM/dd/yyyy");
+        // Start date
+        cy.findByLabelText("Absence start date")
+          .focus()
+          .type(`{selectall}{backspace}${startDateFormatted}`)
+          .blur();
+        // After entering the date and losing focus, the form re-renders and captures focus again
+        // Wait for the form to capture focus
+        waitForAjaxComplete();
+        cy.findByLabelText("Absence start date").should("have.focus");
 
-      // End date, same thing about focus
-      cy.findByLabelText("Absence end date")
-        .focus()
-        .type(`{selectall}{backspace}${endDateFormatted}`)
-        .blur();
-      waitForAjaxComplete();
-      cy.findByLabelText("Absence end date").should("have.focus");
+        // End date, same thing about focus
+        cy.findByLabelText("Absence end date")
+          .focus()
+          .type(`{selectall}{backspace}${endDateFormatted}`)
+          .blur();
+        waitForAjaxComplete();
+        cy.findByLabelText("Absence end date").should("have.focus");
 
-      cy.get(
-        `input[id^="timeOffAbsencePeriodDetailsWidget"][id$="timeSpanHoursStartDate"]`
-      ).type(`{selectall}{backspace}${timeSpanHoursStart}`);
-      cy.get(
-        `input[id^="timeOffAbsencePeriodDetailsWidget"][id$="timeSpanHoursEndDate"]`
-      ).type(`{selectall}{backspace}${timeSpanHoursEnd}`);
-      // Submit the actual period
-      cy.findByText("OK").click();
+        cy.get(
+          `input[id^="timeOffAbsencePeriodDetailsWidget"][id$="timeSpanHoursStartDate"]`
+        ).type(`{selectall}{backspace}${timeSpanHoursStart}`);
+        cy.get(
+          `input[id^="timeOffAbsencePeriodDetailsWidget"][id$="timeSpanHoursEndDate"]`
+        ).type(`{selectall}{backspace}${timeSpanHoursEnd}`);
+        // Submit the actual period
+        cy.findByText("OK").click();
+      }
     });
     return this;
   }
@@ -3478,24 +3523,45 @@ type AdditionalDetails = {
   accepted?: "Yes" | "No" | "Unknown";
   additional_notes?: string;
   reporting_party?: string;
+  upgrade: boolean;
 };
 
 export class AdditionalReporting {
   reportAdditionalDetails(details: AdditionalDetails): this {
     // Select the period
-    cy.contains("td", "Time off period").click({ force: true });
-    if (details.reported_by) {
-      cy.findByLabelText("Reported By").select(details.reported_by);
-      waitForAjaxComplete();
+    if (details.upgrade) {
+      cy.contains("td", "Incapacity").click({ force: true });
+      if (details.reported_by) {
+        cy.findByLabelText("Reported by").select(details.reported_by);
+        waitForAjaxComplete();
+      }
+      if (details.reporting_party)
+        cy.findByLabelText("Reporting Party Name").type(
+          details.reporting_party
+        );
+      if (details.received_via)
+        cy.findByLabelText("Received via").select(details.received_via);
+      if (details.accepted)
+        cy.findByLabelText("Manager accepted").select(details.accepted);
+      if (details.reporting_party)
+        cy.findByLabelText("Additional notes").type(details.reporting_party);
+    } else {
+      cy.contains("td", "Time off period").click({ force: true });
+      if (details.reported_by) {
+        cy.findByLabelText("Reported By").select(details.reported_by);
+        waitForAjaxComplete();
+      }
+      if (details.reporting_party)
+        cy.findByLabelText("Reporting Party Name").type(
+          details.reporting_party
+        );
+      if (details.received_via)
+        cy.findByLabelText("Received Via").select(details.received_via);
+      if (details.accepted)
+        cy.findByLabelText("Manager Accepted").select(details.accepted);
+      if (details.reporting_party)
+        cy.findByLabelText("Additional Notes").type(details.reporting_party);
     }
-    if (details.reporting_party)
-      cy.findByLabelText("Reporting Party Name").type(details.reporting_party);
-    if (details.received_via)
-      cy.findByLabelText("Received Via").select(details.received_via);
-    if (details.accepted)
-      cy.findByLabelText("Manager Accepted").select(details.accepted);
-    if (details.reporting_party)
-      cy.findByLabelText("Additional Notes").type(details.reporting_party);
     cy.get("input[id*='applyActualTime']").click();
     waitForAjaxComplete();
     return this;

@@ -149,11 +149,10 @@ describe("Claimant uses portal to report other leaves and benefits, receives cor
                     })
                     .acceptLeavePlan();
                 });
-              if (config("HAS_APRIL_UPGRADE") === "true") {
-                claimPage.approve("Approved", true);
-              } else {
-                claimPage.approve("Approved", false);
-              }
+              claimPage.approve(
+                "Approved",
+                config("HAS_APRIL_UPGRADE") === "true"
+              );
               claimPage.paidLeave((leaveCase) => {
                 const { other_incomes, employer_benefits } = claim;
                 assertIsTypedArray(other_incomes, isValidOtherIncome);

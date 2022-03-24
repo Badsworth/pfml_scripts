@@ -220,18 +220,21 @@ def test_employees_search_wildcard_rejects_invalid(client, snow_user_headers):
         first_name="Bobby", last_name=employee_1.last_name, email_address="example@example.com"
     )
 
-    terms = {"first_name": "Bob%", "last_name": employee_1.last_name}
+    terms = {"first_name": "Bo%", "last_name": employee_1.last_name}
 
     response = client.post("/v1/employees/search", json={"terms": terms}, headers=snow_user_headers)
 
     assert response.status_code == 400
     response_body = response.get_json()
-    assert "Name fields must only contain alphanumeric characters " in str(response_body)
+    assert "Must contain at least 3 alphanumeric characters." in str(response_body)
 
-    terms = {"email_address": "e@"}
+    terms = {"email_address": "_@-.ab"}
     response = client.post("/v1/employees/search", json={"terms": terms}, headers=snow_user_headers)
 
     assert response.status_code == 400
+    response_body = response.get_json()
+
+    assert "Must contain at least 3 alphanumeric characters." in str(response_body)
 
 
 def test_employees_search_wildcard_name(client, snow_user_headers):
@@ -341,6 +344,13 @@ def test_employees_search(client, snow_user_headers):
         phone_number="+12247052345",
     )
     EmployeeFactory(
+        fineos_employee_last_name="O'Keefe",
+        first_name="Kennedy",
+        last_name="O'Keefe",
+        email_address="kennedy@okeefe.com",
+        phone_number="+12247052346",
+    )
+    EmployeeFactory(
         first_name="Will",
         last_name="Farrel",
         email_address="mars@example.com",
@@ -359,6 +369,20 @@ def test_employees_search(client, snow_user_headers):
     data = response.get_json()
     paging = dict(order=order, paging=paging)
     assert_employee_search_response_paging_data(data, paging)
+
+    terms_special_chars = {"first_name": "Kennedy", "last_name": "O'Keefe"}
+    body_special_chars = {"terms": terms_special_chars, "order": order, "paging": paging}
+
+    response_special_chars = client.post(
+        "/v1/employees/search", json=body_special_chars, headers=snow_user_headers
+    )
+    data = response_special_chars.get_json()
+
+    assert response_special_chars.status_code == 200
+
+    data = response_special_chars.get_json()["data"]
+    assert len(data) == 1
+    assert data[0]["last_name"] == "O'Keefe"
 
 
 def test_get_employee_basic_response(client, employee_different_fineos_name, snow_user_headers):

@@ -51,11 +51,7 @@ describe("Submitting a Medical pregnancy claim and adding bonding leave in Fineo
               .certificationPeriods((certPreiods) => certPreiods.prefill())
               .acceptLeavePlan();
           });
-        if (config("HAS_APRIL_UPGRADE") === "true") {
-          claimPage.approve("Approved", true);
-        } else {
-          claimPage.approve("Approved", false);
-        }
+        claimPage.approve("Approved", config("HAS_APRIL_UPGRADE") === "true");
         fineos.addBondingLeaveFlow(new Date());
       });
     });
