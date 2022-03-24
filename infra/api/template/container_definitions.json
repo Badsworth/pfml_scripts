@@ -66,7 +66,8 @@
       { "name": "NEW_PLAN_PROOFS_ACTIVE_AT", "value": "${new_plan_proofs_active_at}" },
       { "name": "USE_CLAIM_STATUS_URL", "value": "${use_claim_status_url}" },
       { "name": "ENABLE_DOCUMENT_MULTIPART_UPLOAD", "value": "${enable_document_multipart_upload}" },
-      { "name": "ENABLE_EMPLOYEE_ENDPOINTS", "value": "${enable_employee_endpoints}" }
+      { "name": "ENABLE_EMPLOYEE_ENDPOINTS", "value": "${enable_employee_endpoints}" },
+      { "name": "LIMIT_SSN_FEIN_ATTEMPTS", "value": "${limit_ssn_fein_attempts}" }
     ],
     "secrets": [
       { "name": "NEW_RELIC_LICENSE_KEY", "valueFrom": "/service/${app_name}/common/newrelic-license-key"},

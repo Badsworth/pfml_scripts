@@ -365,3 +365,9 @@ variable "enable_employee_endpoints" {
   type        = string
   default     = "0"
 }
+
+variable "limit_ssn_fein_attempts" {
+  description = "Whether or not to limit failed SSS/FEIN combinations"
+  type        = string
+  default     = "0"
+}
