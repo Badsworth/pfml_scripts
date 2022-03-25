@@ -124,6 +124,8 @@ class Constants:
 
     NACHA_FILE_FORMAT = f"%Y-%m-%d-%H-%M-%S-{FILE_NAME_PUB_NACHA}"
 
+    VBI_TASK_REPORT_STATUS_OPEN = "928000"
+
     # When processing payments, certain states
     # are allowed to be restarted (mainly error states)
     # If we receive a payment record from FINEOS while
@@ -579,6 +581,7 @@ class ValidationReason(str, Enum):
     LEAVE_REQUEST_IN_REVIEW = "LeaveRequestInReview"
     UNEXPECTED_RECORD_VARIANCE = "UnexpectedRecordVariance"
     EMPLOYER_EXEMPT = "EmployerExempt"
+    OPEN_OTHER_INCOME_TASKS = "OpenOtherIncomeTasks"
 
 
 @dataclass(frozen=True, eq=True)
@@ -1567,6 +1570,41 @@ def get_earliest_absence_period_for_payment_leave_request(
         .order_by(AbsencePeriod.absence_period_start_date.asc())
         .first()
     )
+
+
+def get_open_tasks(
+    db_session: db.Session, absence_case_number: str, tasknames: list[str]
+) -> List[FineosExtractVbiTaskReportSom]:
+    open_tasks = []
+
+    latest_vbi_task_report_extract_reference_file = (
+        db_session.query(ReferenceFile)
+        .filter(
+            ReferenceFile.reference_file_type_id
+            == ReferenceFileType.FINEOS_VBI_TASKREPORT_SOM_EXTRACT.reference_file_type_id
+        )
+        .order_by(ReferenceFile.created_at.desc())
+        .first()
+    )
+
+    if latest_vbi_task_report_extract_reference_file:
+        open_tasks = (
+            db_session.query(FineosExtractVbiTaskReportSom)
+            .filter(
+                FineosExtractVbiTaskReportSom.status == Constants.VBI_TASK_REPORT_STATUS_OPEN,
+                FineosExtractVbiTaskReportSom.casenumber == absence_case_number,
+                FineosExtractVbiTaskReportSom.reference_file_id
+                == latest_vbi_task_report_extract_reference_file.reference_file_id,
+                FineosExtractVbiTaskReportSom.tasktypename.in_(tasknames),
+            )
+            .all()
+        )
+    else:
+        raise Exception(
+            "No VBI Task Report Som files consumed. This would only happen the first time you run in an env and have no extracts, make sure FINEOS has created extracts"
+        )
+
+    return open_tasks
 
 
 def get_earliest_matching_payment(
