@@ -3633,8 +3633,13 @@ type NoteTypes = "Leave Request Review";
 class NotesPage {
   /** Adds a note of a given type and asserts it has been added succesfully. */
   addNote(type: NoteTypes, text: string) {
-    cy.findByText("Create New").click();
-    cy.findByText(type, { selector: "span" }).click();
+    cy.get("#widgetListMenu").findByText("Create New").click({ force: true });
+    const selector = "#widgetListMenu .right-side-drop li:nth-child(2)";
+    cy.get(selector)
+      .findByText("Leave Request Review", {
+        selector: "span",
+      })
+      .click();
     waitForAjaxComplete();
     cy.get(`#CaseNotesPopupWidgetAdd_PopupWidgetWrapper`)
       .should("be.visible")
