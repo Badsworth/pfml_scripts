@@ -16,10 +16,10 @@ import BenefitsApplication, {
   EmploymentStatus,
   WorkPatternType,
 } from "../models/BenefitsApplication";
+import { Issue, ValidationError } from "../errors";
 
 import { ClaimSteps } from "../models/Step";
 import { UploadType } from "../pages/applications/upload/index";
-import { ValidationError } from "../errors";
 import { fields as addressFields } from "../pages/applications/address";
 import { fields as concurrentLeavesDetailsFields } from "../pages/applications/concurrent-leaves-details";
 import { fields as concurrentLeavesFields } from "../pages/applications/concurrent-leaves";
@@ -62,7 +62,7 @@ import { fields as workPatternTypeFields } from "../pages/applications/work-patt
 export interface ClaimantFlowContext {
   claim?: BenefitsApplication;
   isAdditionalDoc?: boolean;
-  errors?: ValidationError[];
+  warnings?: Issue[];
 }
 
 type ClaimFlowGuardFn = (context: ClaimantFlowContext) => boolean;
@@ -103,15 +103,13 @@ export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.fixed,
   isVariableWorkPattern: ({ claim }) =>
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.variable,
-  includesUserNotFoundError: ({ claim, errors }) => {
-    return (
-      (errors || []).some(
-        (error) =>
-          error.issues[0].rule === "require_employee" ||
-          error.issues[0].type === "no_ee_er_match"
-      ) && get(claim, "status") !== "In Review"
-    );
-  },
+  includesUserNotFoundError: ({ claim, warnings }) =>
+    (warnings || []).some(
+      (warning) =>
+        warning.rule === "require_employee" ||
+        warning.rule === "require_contributing_employer" ||
+        warning.rule === "require_non_exempt_employer"
+    ) && get(claim, "status") !== "In Review",
 };
 
 /**
@@ -626,15 +624,15 @@ const claimantFlow: {
     },
     [routes.applications.employmentStatus]: {
       meta: {
-        applicableRules: [
-          // Show this error after we've gathered SSN and EIN
-          "require_employee",
-        ],
         step: ClaimSteps.employerInformation,
         fields: employmentStatusFields,
       },
       on: {
         CONTINUE: [
+          {
+            target: routes.applications.missingEmployeeEmployerMatch,
+            cond: "includesUserNotFoundError",
+          },
           {
             target: routes.applications.department,
             cond: "hasEmployerWithDepartments",
@@ -647,30 +645,48 @@ const claimantFlow: {
             target: routes.applications.checklist,
           },
         ],
-        ERROR: [
-          {
-            target: routes.applications.missingEeErMatch,
-            cond: "includesUserNotFoundError",
-          },
-        ],
       },
     },
-    [routes.applications.missingEeErMatch]: {
+    [routes.applications.missingEmployeeEmployerMatch]: {
+      meta: {},
       on: {
         // if claimant successfully fixes the issue, continue through normal flow
         CONTINUE: [
           {
-            target: routes.applications.department,
-          },
-        ],
-        // if there's still an error, start user not found submission flow
-        ERROR: [
-          {
-            target: routes.applications.userNotFoundPageOne,
+            target:
+              routes.applications.beginAdditionalEmployeeEmployerInformation,
             cond: "includesUserNotFoundError",
           },
           {
-            target: routes.applications.employmentStatus,
+            target: routes.applications.department,
+            cond: "hasEmployerWithDepartments",
+          },
+          {
+            target: routes.applications.notifiedEmployer,
+            cond: "isEmployed",
+          },
+          {
+            target: routes.applications.checklist,
+          },
+        ],
+      },
+    },
+    [routes.applications.beginAdditionalEmployeeEmployerInformation]: {
+      meta: {},
+      on: {
+        CONTINUE: [
+          {
+            target: routes.applications.employeeStartDate,
+          },
+        ],
+      },
+    },
+    [routes.applications.employeeStartDate]: {
+      meta: {},
+      on: {
+        CONTINUE: [
+          {
+            target: routes.applications.employeeStartDate,
           },
         ],
       },
@@ -738,6 +754,10 @@ const claimantFlow: {
           {
             target: routes.applications.success,
             cond: "isCompleted",
+          },
+          {
+            target: routes.applications.missingEmployeeEmployerMatch,
+            cond: "includesUserNotFoundError",
           },
           {
             target: routes.applications.checklist,

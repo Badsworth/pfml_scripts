@@ -154,10 +154,24 @@ const useBenefitsApplicationsLogic = ({
     errorsLogic.clearErrors();
 
     try {
-      const { claim, warnings } = await applicationsApi.updateClaim(
+      let { claim, warnings } = await applicationsApi.updateClaim(
         application_id,
         patchData
       );
+
+      warnings = [
+        ...warnings,
+        /*{
+          namespace: "applications",
+          rule: "require_contributing_employer",
+          message: "",
+        },*/
+        /*{
+          namespace: "applications",
+          rule: "require_non_exempt_employer",
+          message: "",
+        }*/
+      ];
 
       const issues = getRelevantIssues([], warnings, [portalFlow.page]);
 
@@ -170,32 +184,12 @@ const useBenefitsApplicationsLogic = ({
       // which still received the updates in the request. This is important
       // for situations like leave periods, where the API passes us back
       // a leave_period_id field for making subsequent updates.
-      const params = { claim_id: claim.application_id };
       if (issues.length) {
-        const errorPageRoute = portalFlow.getNextPageRoute(
-          "ERROR",
-          {
-            claim,
-            errors: [
-              {
-                issues,
-                name: "no_ee_er_match",
-                message:
-                  "Couldn't find Employee in our system. Confirm that you have the correct EIN.",
-              },
-            ],
-          },
-          params
-        );
-
-        if (errorPageRoute) {
-          portalFlow.goTo(errorPageRoute);
-        } else {
-          throw new ValidationError(issues);
-        }
-      } else {
-        portalFlow.goToNextPage({ claim }, params);
+        throw new ValidationError(issues);
       }
+
+      const params = { claim_id: claim.application_id };
+      portalFlow.goToNextPage({ claim, warnings }, params);
     } catch (error) {
       errorsLogic.catchError(error);
     }
