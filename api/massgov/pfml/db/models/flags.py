@@ -1,11 +1,11 @@
 """ Grouping for tables related to feature flags """
 # ORM models for feature flags
 #
-from collections.abc import Iterable
-
 # A model's ORM representation should always match the database so we can
 # properly read and write data. If you make a change, follow the instructions
 # in the API README to generate an associated table migration.
+
+from collections.abc import Iterable
 from typing import Optional
 
 from sqlalchemy import TIMESTAMP, Boolean, Column, ForeignKey, Integer, Text
