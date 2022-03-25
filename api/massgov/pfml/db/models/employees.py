@@ -1127,6 +1127,33 @@ class PaymentDetails(Base, TimestampMixin):
     business_net_amount = Column(Numeric(asdecimal=True), nullable=False)
 
     payment = relationship(Payment)
+    payment_lines = cast(
+        List["PaymentLine"], relationship("PaymentLine", back_populates="payment_details")
+    )
+
+
+class PaymentLine(Base, TimestampMixin):
+    __tablename__ = "payment_line"
+    payment_line_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
+    vpei_payment_line_id = Column(
+        PostgreSQLUUID,
+        ForeignKey("fineos_extract_vpei_payment_line.vpei_payment_line_id"),
+        nullable=False,
+    )
+    payment_id = Column(PostgreSQLUUID, ForeignKey("payment.payment_id"), index=True)
+    payment_details_id = Column(
+        PostgreSQLUUID, ForeignKey("payment_details.payment_details_id"), index=True, nullable=True
+    )
+
+    payment_line_c_value = Column(Text, index=True, nullable=False)
+    payment_line_i_value = Column(Text, index=True, nullable=False)
+
+    amount = Column(Numeric(asdecimal=True), nullable=False)
+    line_type = Column(Text, nullable=False)
+
+    payment = relationship(Payment)
+    payment_details = relationship(PaymentDetails)
 
 
 class PaymentCheck(Base, TimestampMixin):

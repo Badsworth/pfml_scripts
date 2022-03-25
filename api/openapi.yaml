@@ -3396,7 +3396,51 @@ components:
         transaction_date_could_change:
           type: boolean
           example: false
-  
+        payment_details:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaymentDetailsResponse"
+    
+    PaymentDetailsResponse:
+      type: object
+      properties:
+        payment_detail_id:
+          type: string
+          format: uuid
+          example: "fabd09ed-0ea9-4091-843e-2e37d2c61482"
+        payment_detail_c_value:
+          type: string
+        payment_detail_i_value:
+          type: string
+        period_start_date:
+          type: string
+          format: date
+        period_end_date:
+          type: string
+          format: date
+        amount:
+          type: number
+        payment_lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaymentLinesResponse"
+    
+    PaymentLinesResponse:
+      type: object
+      properties:
+        payment_line_id:
+          type: string
+          format: uuid
+          example: "fabd09ed-0ea9-4091-843e-2e37d2c61482"
+        payment_line_c_value:
+          type: string
+        payment_line_i_value:
+          type: string
+        amount:
+          type: number
+        line_type:
+          type: string
+
     ChangeRequestsResponse:
       type: array
       items:
