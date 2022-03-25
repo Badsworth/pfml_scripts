@@ -58,11 +58,16 @@ from massgov.pfml.db.models.factories import (
     ConcurrentLeaveFactory,
     ContinuousLeavePeriodFactory,
     DocumentFactory,
+    DuaEmployeeDemographicsFactory,
+    DuaReportingUnitFactory,
     EmployeeFactory,
+    EmployeeOccupationFactory,
+    EmployeeWithFineosNumberFactory,
     EmployerBenefitFactory,
     EmployerFactory,
     IntermittentLeavePeriodFactory,
     LeaveReasonFactory,
+    OrganizationUnitFactory,
     OtherIncomeFactory,
     PreviousLeaveOtherReasonFactory,
     PreviousLeaveSameReasonFactory,
@@ -383,6 +388,42 @@ def test_applications_get_computed_application_split_no_split(
     application_split = response_body.get("computed_application_split")
 
     assert application_split is None
+
+
+def test_applications_get_organization_units(
+    client, user, auth_token, test_db_session, initialize_factories_session
+):
+    employee = EmployeeWithFineosNumberFactory.create()
+    employer = EmployerFactory.create()
+    org_unit = OrganizationUnitFactory(employer=employer)
+
+    EmployeeOccupationFactory.create(
+        employee=employee, employer=employer, organization_unit=org_unit
+    )
+
+    reporting_unit_with_org_unit = DuaReportingUnitFactory.create(
+        organization_unit=org_unit, employer=employer
+    )
+
+    DuaEmployeeDemographicsFactory.create(
+        fineos_customer_number=employee.fineos_customer_number,
+        employer_fein=employer.employer_fein,
+        employer_reporting_unit_number=reporting_unit_with_org_unit.dua_id,
+    )
+
+    application = ApplicationFactory.create(
+        tax_identifier=employee.tax_identifier, user=user, employer_fein=employer.employer_fein
+    )
+
+    response = client.get(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 200
+    response_body = response.get_json().get("data")
+    assert len(response_body["employee_organization_units"]) > 0
+    assert len(response_body["employer_organization_units"]) > 0
 
 
 def test_applications_get_all_for_user(client, user, auth_token):

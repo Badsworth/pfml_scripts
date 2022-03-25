@@ -725,8 +725,11 @@ class Employee(Base, TimestampMixin):
             .join(DuaReportingUnit)
             .join(
                 DuaEmployeeDemographics,
-                DuaReportingUnit.dua_id == DuaEmployeeDemographics.employer_reporting_unit_number,
-                DuaReportingUnit.employer_id == EmployeeOccupation.employer_id,
+                and_(
+                    DuaReportingUnit.dua_id
+                    == DuaEmployeeDemographics.employer_reporting_unit_number,
+                    DuaReportingUnit.employer_id == EmployeeOccupation.employer_id,
+                ),
             )
             .filter(DuaEmployeeDemographics.fineos_customer_number == self.fineos_customer_number)
             .filter(
