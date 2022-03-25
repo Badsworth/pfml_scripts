@@ -56,7 +56,10 @@ function initialize() {
  * is loaded. See docs/portal/monitoring.md for details.
  */
 function newrelicReady() {
-  return typeof window?.newrelic !== "undefined";
+  return (
+    // Can't use optional chaining here because you get a ReferenceError when `window` is never declared
+    typeof window !== "undefined" && typeof window.newrelic !== "undefined"
+  );
 }
 
 /**
