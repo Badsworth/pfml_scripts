@@ -4,8 +4,15 @@ import { Page, chromium, errors } from "playwright-chromium";
 import defaultConfig, { ConfigFunction } from "../config";
 import { v4 as uuid } from "uuid";
 import * as util from "../util/playwright";
-import { ClaimStatus, Credentials, FineosTasks } from "../types";
-import { isAfter, isToday } from "date-fns";
+import {
+  ClaimStatus,
+  Credentials,
+  FineosCloseTaskStep,
+  FineosTasks,
+} from "../types";
+import { format, isAfter, isToday } from "date-fns";
+import { FineosCorrespondanceType } from "../../cypress/actions/fineos.enums";
+
 export type FineosBrowserOptions = {
   credentials?: Credentials;
   debug: boolean;
@@ -186,6 +193,28 @@ export class Claim extends FineosPage {
     });
     await this.assertClaimStatus("Declined");
   }
+
+  async addActivity(activity: "Employer Reimbursement Process"): Promise<void> {
+    await this.page.click("span:has-text('Add Activity')");
+    await this.page.click(`span:has-text('${activity}')`);
+  }
+  async addCorrespondence(
+    action: FineosCorrespondanceType,
+    filename?: string
+  ): Promise<void> {
+    await this.page.click("span:has-text('Correspondence')");
+    await this.page.click(`span:has-text('${action}')`);
+    await this.page.waitForLoadState("domcontentloaded");
+    if (filename) {
+      await this.page.setInputFiles(
+        'input[type="file"][id="uploadpath"]',
+        filename
+      );
+    }
+    await this.page.waitForLoadState("domcontentloaded");
+    await this.page.click('#footerButtonsBar input[type="submit"][value="OK"]');
+    await this.page.waitForLoadState("domcontentloaded");
+  }
 }
 
 class Adjudication extends FineosPage {
@@ -291,6 +320,20 @@ export class Tasks extends FineosPage {
       this.page.waitForNavigation(),
       this.page.click("#footerButtonsBar input[value='Next']"),
     ]);
+  }
+  async closeWithAdditionalSelection(
+    task: FineosTasks,
+    selection: FineosCloseTaskStep
+  ): Promise<void> {
+    await util.clickTab(this.page, "Tasks");
+    await util.selectListTableRow(
+      this.page,
+      `table[id*='TasksForCaseWidget'] tr:has-text('${task}')`
+    );
+    await this.page.click('input[type="submit"][value="Close"]');
+    await this.page.click(`td:has-text('${selection}')`);
+    await this.page.click("#footerButtonsBar input[value='OK']");
+    await this.page.waitForLoadState("domcontentloaded");
   }
 }
 
@@ -587,4 +630,148 @@ export class EmployerAddressPage extends FineosPage {
       }
     }
   }
+}
+
+export class PaidLeave extends FineosPage {
+  constructor(page: Page) {
+    super(page);
+  }
+
+  static async visit(page: Page, fineos_absence_id: string) {
+    await util.gotoCase(page, fineos_absence_id);
+    const link = await page.waitForSelector(
+      "a:has-text('Absence Paid Leave Case')"
+    );
+    await util.click(page, link);
+    await page.waitForLoadState("domcontentloaded");
+    return new PaidLeave(page);
+  }
+
+  async addErReimbursment(reimbursement: ReimbursmentEntry): Promise<void> {
+    const [start, end] = reimbursement.leavePeriod;
+    await this.onTab(
+      "Financials",
+      "Recurring Payments",
+      "Benefit Amount and Adjustments"
+    );
+    await this.page.click(
+      `input[name^="BalancedPayeeOffsetsAndDeductions"]:has-text('Add')`
+    );
+    await util.waitForStablePage(this.page);
+    await delay(350);
+    await this.page.fill(
+      'label:text-is("Start Date")',
+      format(new Date(start), "MM/dd/yyyy")
+    );
+    await util.waitForStablePage(this.page);
+    await delay(350);
+    await this.page.fill(
+      'label:text-is("End Date")',
+      format(new Date(end), "MM/dd/yyyy")
+    );
+    await util.waitForStablePage(this.page);
+    await delay(350);
+    await this.page.fill(
+      'input[type="text"][id$="adjustmentAmountMoney"]',
+      numToPaymentFormat(reimbursement.amount)
+    );
+    await this.page.click('input[type="submit"][value="Add"]');
+    await this.page.click("#footerButtonsBar input[value='OK']");
+    await util.waitForStablePage(this.page);
+    await delay(500);
+  }
+
+  async changeAutoPayStatus(status: boolean): Promise<void> {
+    await this.onTab("Financials", "Recurring Payments", "Payment Details");
+    await this.page.click("input[value='Edit']");
+    await util.waitForStablePage(this.page);
+    if (status) {
+      await this.page.check("input[type='checkbox'][name*='AutoPay_CHECKBOX']");
+    } else {
+      await this.page.uncheck(
+        "input[type='checkbox'][name*='AutoPay_CHECKBOX']"
+      );
+    }
+    await util.waitForStablePage(this.page);
+    await delay(350);
+    const okBtn = await this.page.waitForSelector(
+      "#footerButtonsBar input[value='OK']"
+    );
+    await okBtn.click();
+    await util.waitForStablePage(this.page);
+    await delay(350);
+  }
+
+  async approveCertPeriods(): Promise<void> {
+    await this.onTab("Financials", "Recurring Payments", "Periods");
+    await this.page.click("input[value='Edit']");
+    await util.waitForStablePage(this.page);
+    const selector = await this.page.waitForSelector(
+      "select[id$='statusEnumBean']"
+    );
+    await selector.selectOption("1");
+    await this.page.click("#footerButtonsBar input[value='OK']");
+  }
+
+  async editProcessingDates(startDate: Date): Promise<void> {
+    await this.onTab("Financials", "Payment History", "Amounts Pending");
+    await util.waitForStablePage(this.page);
+    // get amount of payments for first pay period, this will vary depending on whether SIT/FIT is opted in or there is an ER reimbursment
+    const paymentRowsToEdit = (
+      await this.page.$$(
+        `table[id^='amountspendingtabWidget'] tr:has-text('${format(
+          startDate,
+          "MM/dd/yyyy"
+        )}')`
+      )
+    ).length;
+    for (let i = 0; i < paymentRowsToEdit; i++) {
+      await util.waitForStablePage(this.page);
+      // Must query for payment rows every time we go through the edit process.
+      const paymentRows = await this.page.$$(
+        `table[id^='amountspendingtabWidget'] tr:has-text('${format(
+          startDate,
+          "MM/dd/yyyy"
+        )}')`
+      );
+      // Go through payment rows for first pay period and find first row that doesn't contain today's date.
+      // If the row contains todays date that row has already been edited
+      for (let j = 0; j < paymentRows.length; j++) {
+        const content = await paymentRows[j].innerText();
+        if (content && !content.includes(format(new Date(), "MM/dd/yyyy"))) {
+          await paymentRows[j].click();
+          await this.page.click("input[value='Edit']");
+          await util.waitForStablePage(this.page);
+          await delay(500);
+          const checkbox = await this.page.waitForSelector(
+            'input[type="checkbox"][id$="overrideprocessingdate_CHECKBOX"]'
+          );
+          await checkbox.click();
+          await util.waitForStablePage(this.page);
+          await delay(500);
+          await this.page.fill(
+            'input[type="text"][id$="processingDate"]',
+            format(new Date(), "MM/dd/yyyy")
+          );
+          await util.waitForStablePage(this.page);
+          await delay(500);
+          await this.page.click("#footerButtonsBar input[value='OK']");
+          await util.waitForStablePage(this.page);
+          await delay(500);
+          break;
+        }
+      }
+    }
+  }
+}
+
+type ReimbursmentEntry = {
+  leavePeriod: [Date, Date];
+  amount: number;
+};
+function numToPaymentFormat(num: number): string {
+  const decimal = num % 1 ? "" : ".00";
+  return `${new Intl.NumberFormat("en-US", {
+    style: "decimal",
+  }).format(num)}${decimal}`;
 }
