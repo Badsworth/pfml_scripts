@@ -24,6 +24,7 @@ from massgov.pfml.db.models.employees import AbsencePeriod, Claim, LeaveRequestD
 from massgov.pfml.fineos.models.customer_api import AbsencePeriod as FineosAbsencePeriod
 from massgov.pfml.fineos.models.group_client_api import Period
 from massgov.pfml.fineos.models.group_client_api.spec import LeaveRequest
+from massgov.pfml.util.logging.absence_periods import get_absence_period_log_attributes
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -102,7 +103,7 @@ def create_absence_period_from_fineos_id_and_claim_id(
 
 
 def parse_fineos_period_leave_request(
-    db_absence_period: AbsencePeriod, leave_request: LeaveRequest, log_attributes: Dict
+    db_absence_period: AbsencePeriod, leave_request: LeaveRequest
 ) -> AbsencePeriod:
     if leave_request.qualifier1:
         db_absence_period.absence_reason_qualifier_one_id = AbsenceReasonQualifierOne.get_id(
@@ -151,7 +152,15 @@ def upsert_absence_period_from_fineos_period(
     db_absence_period.absence_period_end_date = fineos_period.endDate
     db_absence_period.absence_period_type_id = AbsencePeriodType.get_id(fineos_period.type)
     db_absence_period = parse_fineos_period_leave_request(
-        db_absence_period, fineos_period.leaveRequest, log_attributes
+        db_absence_period, fineos_period.leaveRequest
+    )
+
+    logger.info(
+        "Updating Absence Period Table",
+        extra={
+            **log_attributes,
+            **get_absence_period_log_attributes(db_absence_period),
+        },
     )
     db_session.add(db_absence_period)
     return

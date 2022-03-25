@@ -33,6 +33,7 @@ from massgov.pfml.db.models.applications import (
     EmploymentStatus,
     LeaveReason,
     LeaveReasonQualifier,
+    OtherIncomeType,
 )
 from massgov.pfml.db.models.employees import BankAccountType, Gender, PaymentMethod
 from massgov.pfml.db.models.factories import (
@@ -1326,6 +1327,71 @@ def test_set_other_incomes_with_multiple_different_income_types(
     assert application.other_incomes[1].income_type_id == 4  # (lk_other_income_type)
 
     assert len(application.other_incomes) == 2
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.customer_get_eform")
+def test_set_other_incomes_from_fineos_without_frequency_or_type(
+    mock_customer_get_eform,
+    fineos_client,
+    fineos_web_id,
+    application,
+    test_db_session,
+    absence_case_id,
+):
+    eform_summaries = [
+        EFormSummary(eformId=1, eformType=EformTypes.OTHER_INCOME_V2),
+    ]
+
+    mock_customer_get_eform.return_value = EForm(
+        eformId=211714,
+        eformType="Other Income - current version",
+        eformAttributes=[
+            # Minimum info needed to create Previous Leaves, both other and same reason:
+            EFormAttribute(
+                name="V2OtherIncomeNonEmployerBenefitStartDate",
+                dateValue="2021-05-04",
+            ),
+            EFormAttribute(
+                name="V2OtherIncomeNonEmployerBenefitEndDate",
+                dateValue="2021-05-05",
+            ),
+            EFormAttribute(
+                name="V2OtherIncomeNonEmployerBenefitFrequency",
+                enumValue=ModelEnum(domainName="FrequencyEforms", instanceValue="Not Provided"),
+            ),
+            EFormAttribute(
+                name="V2OtherIncomeNonEmployerBenefitWRT",
+                enumValue=ModelEnum(
+                    domainName="WageReplacementType2",
+                    instanceValue="Please Select",
+                ),
+            ),
+            EFormAttribute(
+                name="V2ReceiveWageReplacement",
+                enumValue=ModelEnum(domainName="YesNoI'veApplied", instanceValue="Yes"),
+            ),
+            EFormAttribute(name="V2OtherIncomeNonEmployerBenefitAmount1", decimalValue=100.0),
+        ],
+    )
+    set_other_incomes_from_fineos(
+        fineos_client,
+        fineos_web_id,
+        application,
+        test_db_session,
+        absence_case_id,
+        eform_summaries=eform_summaries,
+    )
+
+    assert application.has_other_incomes is True
+    assert application.other_incomes[0].income_amount_dollars == 100
+    assert (
+        application.other_incomes[0].income_amount_frequency_id
+        == AmountFrequency.UNKNOWN.amount_frequency_id
+    )
+    assert (
+        application.other_incomes[0].income_type_id == OtherIncomeType.UNKNOWN.other_income_type_id
+    )
+    assert len(application.other_incomes) == 1
 
 
 class TestSplitApplicationByDate:

@@ -4062,6 +4062,7 @@ components:
             - Per Week
             - Per Month
             - In Total
+            - Unknown
           example: "Per Month"
         income_type:
           type: string
@@ -4074,6 +4075,7 @@ components:
             - Jones Act benefits
             - Railroad Retirement benefits
             - Earnings from another employment/self-employment
+            - Unknown
           example: "SSDI"
 
     ApplicationSearchResults:
