@@ -222,28 +222,28 @@ export const PORTAL_BONDING_FOSTERCARE_REDUCED_2: ScenarioSpecification = {
 };
 
 export const PORTAL_CARING_SERIOUSHEALTH_CONTINUOUS: ScenarioSpecification = {
-    employee: { mass_id: true, wages: "eligible" },
-    claim: {
-      label: "PORTAL_CARING_SERIOUSHEALTH_CONTINUOUS",
-      work_pattern_spec: "standard",
-      has_continuous_leave_periods: true,
-      reason: "Care for a Family Member",
-      leave_dates: [parseISO("2022-05-23"), parseISO("2022-08-08")],
-      is_withholding_tax: false,
-      docs: {
-        MASSID: {},
-        CARING: {},
-      },
-      employerResponse: {
-        hours_worked_per_week: 40,
-        employer_decision: "Approve",
-      },
-      metadata: {
-        postSubmit: "APPROVEDOCS",
-        amount: 15,
-      },
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "PORTAL_CARING_SERIOUSHEALTH_CONTINUOUS",
+    work_pattern_spec: "standard",
+    has_continuous_leave_periods: true,
+    reason: "Care for a Family Member",
+    leave_dates: [parseISO("2022-05-23"), parseISO("2022-08-08")],
+    is_withholding_tax: false,
+    docs: {
+      MASSID: {},
+      CARING: {},
     },
-  };
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+    },
+    metadata: {
+      postSubmit: "APPROVEDOCS",
+      amount: 15,
+    },
+  },
+};
 
 export const PERF_APRIL_A: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
@@ -439,4 +439,3 @@ export const PERF_APRIL_H: ScenarioSpecification = {
     },
   },
 };
-
