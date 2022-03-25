@@ -1386,11 +1386,15 @@ class PaymentExtractStep(Step):
             payment.payment_transaction_type_id
             == PaymentTransactionType.ZERO_DOLLAR.payment_transaction_type_id
         ):
-            end_state = State.DELEGATED_PAYMENT_PROCESSED_ZERO_PAYMENT
-            message = "Zero dollar payment processed"
-            self._manage_pei_writeback_state(
-                payment, FineosWritebackTransactionStatus.PROCESSED, payment_data
-            )
+            if(payment.disb_amount > payment.amount):
+                end_state = State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
+                message = "Zero dollar payment processed"
+            else:
+                end_state = State.DELEGATED_PAYMENT_PROCESSED_ZERO_PAYMENT
+                message = "Zero dollar payment processed"
+                self._manage_pei_writeback_state(
+                    payment, FineosWritebackTransactionStatus.PROCESSED, payment_data
+                )
             self.increment(self.Metrics.ZERO_DOLLAR_PAYMENT_COUNT)
 
         # Overpayments are added to to the FINEOS writeback + a report

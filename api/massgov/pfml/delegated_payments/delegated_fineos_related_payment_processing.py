@@ -191,9 +191,14 @@ class RelatedPaymentsProcessingStep(Step):
                 .filter(Payment.claim_id == payment.claim_id)
                 .filter(Payment.period_start_date <= payment.period_start_date)
                 .filter(Payment.period_end_date >= payment.period_end_date)
+                # .filter(
+                #     Payment.payment_transaction_type_id
+                #     == PaymentTransactionType.STANDARD.payment_transaction_type_id
+                # )
                 .filter(
-                    Payment.payment_transaction_type_id
-                    == PaymentTransactionType.STANDARD.payment_transaction_type_id
+                    Payment.payment_transaction_type_id.in_(
+                        PaymentTransactionType.STANDARD.payment_transaction_type_id,PaymentTransactionType.ZERO_DOLLAR.payment_transaction_type_id
+                    )
                 )
                 .filter(
                     Payment.fineos_extract_import_log_id == payment.fineos_extract_import_log_id
