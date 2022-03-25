@@ -21,7 +21,6 @@ export const GROUPS = [
 ];
 export const ENV_NOT_CONFIGURED = ["prod", "infra-test"];
 export const ENV_OFFLINE = {
-  trn2: "Env expected offline",
 };
 
 export const extractGroup = (item, name) => {
