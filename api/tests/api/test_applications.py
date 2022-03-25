@@ -15,9 +15,9 @@ import massgov.pfml.fineos.mock_client
 import massgov.pfml.fineos.models
 import massgov.pfml.util.datetime as datetime_util
 import tests.api
-from massgov.pfml.api.applications import _get_crossed_benefit_year
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
 from massgov.pfml.api.models.applications.responses import ApplicationStatus
+from massgov.pfml.api.services.applications import get_application_split, get_crossed_benefit_year
 from massgov.pfml.api.services.fineos_actions import LeaveNotificationReason
 from massgov.pfml.api.util.paginate.paginator import DEFAULT_PAGE_SIZE
 from massgov.pfml.api.validation.exceptions import IssueRule, IssueType
@@ -58,11 +58,16 @@ from massgov.pfml.db.models.factories import (
     ConcurrentLeaveFactory,
     ContinuousLeavePeriodFactory,
     DocumentFactory,
+    DuaEmployeeDemographicsFactory,
+    DuaReportingUnitFactory,
     EmployeeFactory,
+    EmployeeOccupationFactory,
+    EmployeeWithFineosNumberFactory,
     EmployerBenefitFactory,
     EmployerFactory,
     IntermittentLeavePeriodFactory,
     LeaveReasonFactory,
+    OrganizationUnitFactory,
     OtherIncomeFactory,
     PreviousLeaveOtherReasonFactory,
     PreviousLeaveSameReasonFactory,
@@ -319,6 +324,108 @@ def test_applications_get_employee_id(client, user, auth_token, test_db_session)
     assert response_body.get("employee_id") == str(employee.employee_id)
 
 
+@freeze_time("2021-10-25")
+def test_applications_get_computed_application_split(
+    client, user, auth_token, test_db_session, initialize_factories_session
+):
+    employee = EmployeeFactory.create()
+
+    # note: BY end date will be 01/01/2022
+    BenefitYearFactory.create(employee=employee)
+
+    application = ApplicationFactory.create(tax_identifier=employee.tax_identifier, user=user)
+
+    leave_period = IntermittentLeavePeriodFactory.create(
+        start_date=date(2021, 12, 15),
+        end_date=date(2022, 3, 10),
+        application_id=application.application_id,
+    )
+    test_db_session.add(leave_period)
+    test_db_session.commit()
+    test_db_session.refresh(application)
+
+    response = client.get(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    assert response.status_code == 200
+    response_body = response.get_json().get("data")
+    application_split = response_body.get("computed_application_split")
+
+    assert application_split is not None
+    assert application_split["crossed_benefit_year"]["benefit_year_start_date"] == "2021-01-03"
+    assert application_split["crossed_benefit_year"]["benefit_year_end_date"] == "2022-01-01"
+    assert application_split["application_dates_in_benefit_year"]["start_date"] == "2021-12-15"
+    assert application_split["application_dates_in_benefit_year"]["end_date"] == "2022-01-01"
+    assert application_split["application_dates_outside_benefit_year"]["start_date"] == "2022-01-02"
+    assert application_split["application_dates_outside_benefit_year"]["end_date"] == "2022-03-10"
+    assert application_split["application_outside_benefit_year_submittable_on"] == "2021-11-03"
+
+
+@freeze_time("2021-10-25")
+def test_applications_get_computed_application_split_no_split(
+    client, user, auth_token, test_db_session, initialize_factories_session
+):
+    employee = EmployeeFactory.create()
+
+    application = ApplicationFactory.create(tax_identifier=employee.tax_identifier, user=user)
+
+    leave_period = IntermittentLeavePeriodFactory.create(
+        start_date=date(2021, 12, 15),
+        end_date=date(2022, 3, 10),
+        application_id=application.application_id,
+    )
+    test_db_session.add(leave_period)
+    test_db_session.commit()
+    test_db_session.refresh(application)
+
+    response = client.get(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    assert response.status_code == 200
+    response_body = response.get_json().get("data")
+    application_split = response_body.get("computed_application_split")
+
+    assert application_split is None
+
+
+def test_applications_get_organization_units(
+    client, user, auth_token, test_db_session, initialize_factories_session
+):
+    employee = EmployeeWithFineosNumberFactory.create()
+    employer = EmployerFactory.create()
+    org_unit = OrganizationUnitFactory(employer=employer)
+
+    EmployeeOccupationFactory.create(
+        employee=employee, employer=employer, organization_unit=org_unit
+    )
+
+    reporting_unit_with_org_unit = DuaReportingUnitFactory.create(
+        organization_unit=org_unit, employer=employer
+    )
+
+    DuaEmployeeDemographicsFactory.create(
+        fineos_customer_number=employee.fineos_customer_number,
+        employer_fein=employer.employer_fein,
+        employer_reporting_unit_number=reporting_unit_with_org_unit.dua_id,
+    )
+
+    application = ApplicationFactory.create(
+        tax_identifier=employee.tax_identifier, user=user, employer_fein=employer.employer_fein
+    )
+
+    response = client.get(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 200
+    response_body = response.get_json().get("data")
+    assert len(response_body["employee_organization_units"]) > 0
+    assert len(response_body["employer_organization_units"]) > 0
+
+
 def test_applications_get_all_for_user(client, user, auth_token):
     applications = sorted(
         [ApplicationFactory.create(user=user), ApplicationFactory.create(user=user)],
@@ -419,7 +526,7 @@ class TestApplicationsImport:
         assert test_db_session.query(Application).one_or_none() is None
 
         response = client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json=valid_request_body,
         )
@@ -441,7 +548,7 @@ class TestApplicationsImport:
     ):
         ApplicationFactory.create(user=user, claim=claim)
         response = client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json=valid_request_body,
         )
@@ -470,7 +577,7 @@ class TestApplicationsImport:
         monkeypatch.setattr(mock_cognito, "admin_get_user", admin_get_user)
 
         response = client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json=valid_request_body,
         )
@@ -488,7 +595,7 @@ class TestApplicationsImport:
     ):
         ApplicationFactory.create(user=user_with_mfa, claim=claim)
         response = client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json=valid_request_body,
         )
@@ -503,7 +610,7 @@ class TestApplicationsImport:
 
     def test_applications_import_missing_required_fields(self, client, auth_token, claim):
         response = client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json={"absence_case_id": None, "tax_identifier": None},
         )
@@ -526,7 +633,7 @@ class TestApplicationsImport:
         absence_case_id = "NTN-111-ABS-01"
 
         response = client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json={
                 "absence_case_id": absence_case_id,
@@ -552,7 +659,7 @@ class TestApplicationsImport:
 
         absence_case_id = claim.fineos_absence_id
         response = client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json={
                 "absence_case_id": absence_case_id,
@@ -573,7 +680,7 @@ class TestApplicationsImport:
 
         absence_case_id = claim.fineos_absence_id
         response = client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json={
                 "absence_case_id": absence_case_id,
@@ -587,7 +694,7 @@ class TestApplicationsImport:
     def test_applications_import_unauthenticated_post(self, client, test_db_session):
         absence_case_id = "NTN-111-ABS-01"
         response = client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {''}"},
             json={"absence_case_id": absence_case_id},
         )
@@ -603,7 +710,7 @@ class TestApplicationsImport:
         absence_case_id = "NTN-111-ABS-01"
         # Employer cannot access this endpoint
         response = client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
             json={"absence_case_id": absence_case_id},
         )
@@ -627,7 +734,7 @@ class TestApplicationsImport:
         mock_read_customer_details.return_value = customer_details
 
         client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json=valid_request_body,
         )
@@ -652,7 +759,7 @@ class TestApplicationsImport:
         self, client, test_db_session, auth_token, claim, valid_request_body
     ):
         client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json=valid_request_body,
         )
@@ -686,7 +793,7 @@ class TestApplicationsImport:
         assert test_db_session.query(Application).one_or_none() is None
 
         response = client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json=valid_request_body,
         )
@@ -714,7 +821,7 @@ class TestApplicationsImport:
         assert test_db_session.query(Application).one_or_none() is None
 
         response = client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json=valid_request_body,
         )
@@ -734,7 +841,7 @@ class TestApplicationsImport:
         mock_get_payment_preferences.return_value = None
 
         client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json=valid_request_body,
         )
@@ -765,7 +872,7 @@ class TestApplicationsImport:
         mock_read_customer_contact_details.return_value = customer_contact_details
 
         client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json=valid_request_body,
         )
@@ -867,7 +974,7 @@ class TestApplicationsImport:
         assert test_db_session.query(ReducedScheduleLeavePeriod).one_or_none() is None
 
         response = client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json=valid_request_body,
         )
@@ -905,7 +1012,7 @@ class TestApplicationsImport:
         mock_get_absence.return_value = absence_details_invalid
 
         response = client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json=valid_request_body,
         )
@@ -916,7 +1023,7 @@ class TestApplicationsImport:
         self, client, test_db_session, auth_token, claim, valid_request_body
     ):
         client.post(
-            "/v1/applications/import",
+            "/v1/application-imports",
             headers={"Authorization": f"Bearer {auth_token}"},
             json=valid_request_body,
         )
@@ -6075,9 +6182,59 @@ def test_get_crossed_benefit_year(initialize_factories_session, test_db_session)
     by = BenefitYearFactory.create(
         start_date=by_start_date, end_date=by_end_date, employee=employee
     )
+
+    start_date = by_end_date - timedelta(days=10)
+    end_date = by_end_date + timedelta(days=10)
+
+    assert (
+        get_crossed_benefit_year(employee.employee_id, start_date, end_date, test_db_session) == by
+    )
+
+    start_date = by_end_date - timedelta(days=20)
+    end_date = by_end_date - timedelta(days=10)
+
+    assert (
+        get_crossed_benefit_year(employee.employee_id, start_date, end_date, test_db_session)
+        is None
+    )
+
+    start_date = by_end_date - timedelta(days=10)
+    end_date = by_end_date
+
+    assert (
+        get_crossed_benefit_year(employee.employee_id, start_date, end_date, test_db_session)
+        is None
+    )
+
+    start_date = by_end_date
+    end_date = by_end_date + timedelta(days=10)
+
+    assert (
+        get_crossed_benefit_year(employee.employee_id, start_date, end_date, test_db_session) == by
+    )
+
+
+def test_get_crossed_benefit_year_no_benefit_year(initialize_factories_session, test_db_session):
+    end_date = date(2022, 3, 1)
+    start_date = end_date - timedelta(days=12)
+    employee = EmployeeFactory.create()
+
+    assert (
+        get_crossed_benefit_year(employee.employee_id, start_date, end_date, test_db_session)
+        is None
+    )
+
+
+def test_get_application_split(initialize_factories_session, test_db_session):
+    by_end_date = date(2022, 3, 1)
+    by_start_date = by_end_date - timedelta(weeks=52)
+    employee = EmployeeFactory.create()
+    by = BenefitYearFactory.create(
+        start_date=by_start_date, end_date=by_end_date, employee=employee
+    )
     application: Application = ApplicationFactory.create(tax_identifier=employee.tax_identifier)
 
-    assert _get_crossed_benefit_year(application, by) is None
+    assert get_application_split(application, by) is None
 
     application.continuous_leave_periods = [
         ContinuousLeavePeriodFactory.create(
@@ -6092,7 +6249,15 @@ def test_get_crossed_benefit_year(initialize_factories_session, test_db_session)
         )
     ]
 
-    assert _get_crossed_benefit_year(application, test_db_session) == by
+    split = get_application_split(application, test_db_session)
+    assert split.crossed_benefit_year == by
+    assert split.application_dates_in_benefit_year.start_date == by_end_date - timedelta(days=10)
+    assert split.application_dates_in_benefit_year.end_date == by_end_date
+    assert split.application_dates_outside_benefit_year.start_date == by_end_date + timedelta(
+        days=1
+    )
+    assert split.application_dates_outside_benefit_year.end_date == by_end_date + timedelta(days=10)
+    assert split.application_outside_benefit_year_submittable_on == by_end_date - timedelta(days=59)
 
     application.continuous_leave_periods = [
         ContinuousLeavePeriodFactory.create(
@@ -6100,7 +6265,7 @@ def test_get_crossed_benefit_year(initialize_factories_session, test_db_session)
         )
     ]
 
-    assert _get_crossed_benefit_year(application, test_db_session) is None
+    assert get_application_split(application, test_db_session) is None
 
     application.continuous_leave_periods = [
         ContinuousLeavePeriodFactory.create(
@@ -6108,7 +6273,7 @@ def test_get_crossed_benefit_year(initialize_factories_session, test_db_session)
         )
     ]
 
-    assert _get_crossed_benefit_year(application, test_db_session) is None
+    assert get_application_split(application, test_db_session) is None
 
     application.continuous_leave_periods = [
         ContinuousLeavePeriodFactory.create(
@@ -6116,23 +6281,18 @@ def test_get_crossed_benefit_year(initialize_factories_session, test_db_session)
         )
     ]
 
-    assert _get_crossed_benefit_year(application, test_db_session) == by
+    split = get_application_split(application, test_db_session)
+    assert split.crossed_benefit_year == by
+    assert split.application_dates_in_benefit_year.start_date == by_end_date
+    assert split.application_dates_in_benefit_year.end_date == by_end_date
+    assert split.application_dates_outside_benefit_year.start_date == by_end_date + timedelta(
+        days=1
+    )
+    assert split.application_dates_outside_benefit_year.end_date == by_end_date + timedelta(days=10)
+    assert split.application_outside_benefit_year_submittable_on == by_end_date - timedelta(days=59)
 
 
-def test_get_crossed_benefit_year_no_benefit_year(initialize_factories_session, test_db_session):
-    end_date = date(2022, 3, 1)
-    start_date = end_date - timedelta(days=12)
-    employee = EmployeeFactory.create()
-    application: Application = ApplicationFactory.create(tax_identifier=employee.tax_identifier)
-
-    application.continuous_leave_periods = [
-        ContinuousLeavePeriodFactory.create(start_date=start_date, end_date=end_date)
-    ]
-
-    assert _get_crossed_benefit_year(application, test_db_session) is None
-
-
-def test_get_crossed_benefit_year_app_already_split():
+def test_get_application_split_app_already_split():
     by_end_date = date(2022, 3, 1)
     by_start_date = by_end_date - timedelta(weeks=52)
     by = BenefitYearFactory.build(start_date=by_start_date, end_date=by_end_date)
@@ -6145,7 +6305,7 @@ def test_get_crossed_benefit_year_app_already_split():
         )
     ]
     application.split_from_application_id = already_split_app.application_id
-    assert _get_crossed_benefit_year(application, by) is None
+    assert get_application_split(application, by) is None
 
 
 def test_computed_earliest_submission_date(client, user, auth_token, test_db_session):

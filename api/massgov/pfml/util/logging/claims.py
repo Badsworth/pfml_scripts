@@ -5,11 +5,11 @@ from typing import Any, Dict, List, Optional
 import massgov.pfml.util.logging
 from massgov.pfml.api.models.claims.common import EmployerClaimReview
 from massgov.pfml.api.models.claims.responses import (
-    AbsencePeriodResponse,
     DetailedClaimResponse,
     ManagedRequirementResponse,
 )
 from massgov.pfml.db.models.employees import Claim
+from massgov.pfml.util.logging.absence_periods import log_absence_period_response
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -72,7 +72,7 @@ def log_get_claim_metrics(claim: DetailedClaimResponse) -> None:
         period_dict[period.request_decision].append(period)
 
         # log individual absence period info as well
-        log_absence_period(
+        log_absence_period_response(
             claim.fineos_absence_id, period, "get_claim - Found absence period for claim"
         )
 
@@ -119,22 +119,6 @@ def log_get_claim_metrics(claim: DetailedClaimResponse) -> None:
                 )
 
     logger.info("get_claim success", extra=log_attributes)
-
-
-def log_absence_period(
-    fineos_absence_id: Optional[str], absence_period: AbsencePeriodResponse, message: str
-) -> None:
-    log_attributes = {
-        "absence_id": fineos_absence_id,
-        "absence_case_id": fineos_absence_id,
-        "leave_request_id": absence_period.fineos_leave_request_id,
-        "reason": absence_period.reason,
-        "request_decision": absence_period.request_decision,
-        "start_date": absence_period.absence_period_start_date,
-        "end_date": absence_period.absence_period_end_date,
-    }
-
-    logger.info(message, extra=log_attributes)
 
 
 def log_managed_requirement(

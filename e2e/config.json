@@ -83,7 +83,8 @@
     "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-training-business-intelligence-tool",
     "TWILIO_NUMBERS": "7853699328,8106349678",
     "HAS_CHANNEL_SWITCHING": "false",
-    "HAS_MARCH_RELEASE": "false"
+    "HAS_MARCH_RELEASE": "false",
+    "HAS_EMPLOYER_REIMBURSEMENTS": "true"
   },
   "trn2": {
     "PORTAL_BASEURL": "https://paidleave-trn2.dfml.eol.mass.gov",
@@ -98,6 +99,7 @@
     "DOR_IMPORT_URI": "s3://massgov-pfml-trn2-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-trn2-dor-fineos-etl",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false",
+    "HAS_ORGUNITS_SETUP": "false",
     "HAS_FINEOS_JANUARY_RELEASE": "false",
     "HAS_LARGE_FILE_COMPRESSION": "true",
     "HAS_FEB_RELEASE": "false",
@@ -121,6 +123,7 @@
     "DOR_IMPORT_URI": "s3://massgov-pfml-long-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-long-dor-fineos-etl",
     "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
+    "HAS_ORGUNITS_SETUP": "false",
     "HAS_FINEOS_JANUARY_RELEASE": "true",
     "HAS_LARGE_FILE_COMPRESSION": "true",
     "HAS_EMPLOYER_REIMBURSEMENTS": "true",

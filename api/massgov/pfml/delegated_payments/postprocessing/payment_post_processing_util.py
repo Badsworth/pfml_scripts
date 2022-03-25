@@ -213,7 +213,7 @@ class PayPeriodGroup:
     def add_payment_from_details(
         self, payment_details: PaymentDetails, payment_scenario: PaymentScenario
     ) -> None:
-        amount = payment_details.business_net_amount
+        amount = get_payment_detail_amount(payment_details)
         payment = payment_details.payment
 
         details_to_update = None
@@ -244,15 +244,19 @@ def get_all_paid_payments_associated_with_employee(
 
     # Get all payment IDs of payments associated with the same employee
     # That aren't the payments we're attempting to validate, that are
-    # standard payments (eg. no cancellations, overpayments, etc.) that are
+    # standard/employer reimbursement payments (eg. no cancellations, overpayments, etc.) that are
     # not adhoc payments (adhoc payments don't factor into the calculation whatsoever)
     subquery = (
         db_session.query(Payment.payment_id)
         .join(Claim)
         .filter(
             Claim.employee_id == employee_id,
-            Payment.payment_transaction_type_id
-            == PaymentTransactionType.STANDARD.payment_transaction_type_id,
+            Payment.payment_transaction_type_id.in_(
+                [
+                    PaymentTransactionType.STANDARD.payment_transaction_type_id,
+                    PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id,
+                ]
+            ),
             Payment.payment_id.notin_(current_payment_ids),
             Payment.is_adhoc_payment != True,  # noqa: E712
         )
@@ -313,6 +317,69 @@ def get_all_overpayments_associated_with_employee(
     return overpayment_containers
 
 
+def get_payment_detail_amount(payment_detail: PaymentDetails) -> Decimal:
+    """
+    Get the amount for a payment.
+
+    To explain this, let's use an example scenario
+    for a payment with various reductions and splits.
+
+    * Base Amount: $1000
+    * Reduction for DIA: $100
+    * Employer Reimbursement (Split Payment): $300
+    * State Tax (Split Payment): 5%
+    * Federal Tax (Split Payment): 10%
+
+    First reductions get applied.
+    $1000 - $200 = $800 -> This is the business net amount
+    and includes all of the split amounts still within it.
+
+    Then employer reimbursements is applied:
+    $800 - $300 = $500
+
+    Then taxes both get applied as a percentage:
+    State tax   = .05 * $500 = $25
+    Federal tax = .10 * $500 = $50
+
+    And those are reduced from the running total:
+    $500 - $25 - $50 = $425 -> This is the balancing amount
+    and also the amount that the claimant will actually receive.
+
+    ---
+    With that info, note that we process employer reimbursements
+    as actual payments. We would receive two payments for:
+    $425 to the claimant
+    $300 to the employer
+
+    But we use the business net amount. For employer reimbursements
+    this is just the amount split off ($300) so can use as-is.
+
+    If we use the business net amount of the primary payment, it would
+    be for $800, but part of that is already accounted for in the
+    employer reimbursement payment. If we did the max weekly logic,
+    we'd think $800 + $300 was used in a week, which is wrong (it's just $800)
+
+    To work around this, for any standard payments, we check if the
+    payment lines contain employer reimbursement records and decrement
+    that from the amount used. This would mean we'd use $500 and $300
+    which would get us to the correct total of $800 again.
+    """
+
+    amount = payment_detail.business_net_amount
+
+    if (
+        payment_detail.payment.payment_transaction_type_id
+        == PaymentTransactionType.STANDARD.payment_transaction_type_id
+    ):
+        for payment_line in payment_detail.payment_lines:  # type: ignore
+            if payment_line.line_type == "Employer Reimbursement":
+                # Employer reimbursements are negative, so
+                # we are adding the negative amount to reduce it.
+                amount += payment_line.amount
+
+    return amount
+
+
 def make_payment_log(payment: Payment, include_amount: bool = False) -> str:
     log_message = f"C={payment.fineos_pei_c_value},I={payment.fineos_pei_i_value},AbsenceCaseId={payment.claim.fineos_absence_id}"
     if include_amount:
@@ -331,12 +398,11 @@ def get_reduction_amount(payment_amount: Decimal, amount_available: Decimal) -> 
 def make_payment_detail_log(
     payment_detail: PaymentDetails, amount_available: Optional[Decimal] = None
 ) -> str:
-    msg = f"[StartDate={payment_detail.period_start_date},EndDate={payment_detail.period_end_date},Amount=${payment_detail.business_net_amount}]"
+    payment_detail_amount = get_payment_detail_amount(payment_detail)
+    msg = f"[StartDate={payment_detail.period_start_date},EndDate={payment_detail.period_end_date},Amount=${payment_detail_amount}]"
 
     if amount_available is not None:
-        reduction_amount = get_reduction_amount(
-            payment_detail.business_net_amount, amount_available
-        )
+        reduction_amount = get_reduction_amount(payment_detail_amount, amount_available)
         if reduction_amount == Decimal(0):
             msg += " does not require a reduction for this pay period."
         else:
@@ -455,8 +521,8 @@ class MaximumWeeklyBenefitsAuditMessageBuilder:
                 ):
                     continue
 
-                for payment_details in payment_detail_group.payment_details:
-                    amount_attempting_to_pay += payment_details.business_net_amount
+                for payment_detail in payment_detail_group.payment_details:
+                    amount_attempting_to_pay += get_payment_detail_amount(payment_detail)
 
             reduction_amount = get_reduction_amount(amount_attempting_to_pay, amount_available)
             pay_period_overview_msg += f"; Over the cap by ${reduction_amount}"

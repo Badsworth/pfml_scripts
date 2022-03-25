@@ -4,6 +4,7 @@ from typing import List, Optional
 
 from pydantic import UUID4
 
+import massgov.pfml.util.logging
 from massgov.pfml.api.models.claims.common import (
     Address,
     ChangeRequestType,
@@ -22,6 +23,8 @@ from massgov.pfml.util.pydantic.types import (
     MaskedDateStr,
     MaskedTaxIdFormattedStr,
 )
+
+logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 class ManagedRequirementResponse(PydanticBaseModel):
@@ -57,9 +60,17 @@ def remap_absence_period_type(period_type: Optional[str]) -> Optional[str]:
     for the Portal by remapping to a smaller set of possible period types."""
 
     if period_type == AbsencePeriodType.EPISODIC.absence_period_type_description:
+        logger.info(
+            "Remapping Absence Period type from 'Episodic' to 'Intermittent'",
+            extra={"absence_period_type": period_type},
+        )
         return AbsencePeriodType.INTERMITTENT.absence_period_type_description
 
     if period_type == AbsencePeriodType.TIME_OFF_PERIOD.absence_period_type_description:
+        logger.info(
+            "Remapping Absence Period type from 'Time off period' to 'Continuous'",
+            extra={"absence_period_type": period_type},
+        )
         return AbsencePeriodType.CONTINUOUS.absence_period_type_description
 
     return period_type

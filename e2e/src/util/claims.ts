@@ -1,3 +1,4 @@
+import { ApplicationResponse } from "./../_api";
 import {
   ApplicationLeaveDetails,
   ApplicationRequestBody,

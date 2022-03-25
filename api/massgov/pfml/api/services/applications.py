@@ -19,10 +19,18 @@ import massgov.pfml.util.logging
 import massgov.pfml.util.newrelic.events as newrelic_util
 import massgov.pfml.util.pydantic.mask as mask
 from massgov.pfml.api.models.applications.common import Address as ApiAddress
-from massgov.pfml.api.models.applications.common import LeaveReason, PaymentPreference
+from massgov.pfml.api.models.applications.common import (
+    DocumentResponse,
+    LeaveReason,
+    PaymentPreference,
+)
 from massgov.pfml.api.models.applications.requests import ApplicationRequestBody
-from massgov.pfml.api.models.applications.responses import DocumentResponse
-from massgov.pfml.api.models.common import LookupEnum
+from massgov.pfml.api.models.common import (
+    LookupEnum,
+    get_earliest_start_date,
+    get_earliest_submission_date,
+    get_latest_end_date,
+)
 from massgov.pfml.api.services.administrator_fineos_actions import EformTypes
 from massgov.pfml.api.services.fineos_actions import get_documents
 from massgov.pfml.api.util.response import Response
@@ -69,6 +77,7 @@ from massgov.pfml.db.models.applications import (
 from massgov.pfml.db.models.employees import (
     Address,
     AddressType,
+    BenefitYear,
     Claim,
     LeaveRequestDecision,
     LkAddressType,
@@ -1688,39 +1697,6 @@ def set_other_incomes_from_fineos(
     set_other_incomes(db_session, other_incomes, application)
 
 
-@dataclass
-class StartEndDates:
-    start_date: date
-    end_date: date
-
-
-SplitLeaveResults = Tuple[Optional[StartEndDates], Optional[StartEndDates]]
-
-
-def _split_start_end_dates(start_date: date, end_date: date, split_date: date) -> SplitLeaveResults:
-    """
-    Splits a start and end date into two separate date ranges around the past in split_date.
-    If the start date comes after the end date the dates cannot be split.
-    """
-    if start_date > end_date:
-        return (None, None)
-
-    if start_date > split_date and end_date > split_date:
-        return (None, StartEndDates(start_date, end_date))
-    elif start_date <= split_date and end_date <= split_date:
-        return (StartEndDates(start_date, end_date), None)
-    elif start_date == split_date:
-        return (
-            StartEndDates(start_date, start_date),
-            StartEndDates(start_date + timedelta(days=1), end_date),
-        )
-    else:
-        return (
-            StartEndDates(start_date, split_date),
-            StartEndDates(split_date + timedelta(days=1), end_date),
-        )
-
-
 LeavePeriod = Union[
     ContinuousLeavePeriod, IntermittentLeavePeriod, ReducedScheduleLeavePeriod, ConcurrentLeave
 ]
@@ -1744,7 +1720,7 @@ def _split_leave_period(
         # If any values are missing, the leave period cannot be split
         raise Exception("Leave period cannot be split as it does not have start and end dates")
 
-    (start_end_dates_before_split, start_end_dates_after_split) = _split_start_end_dates(
+    (start_end_dates_before_split, start_end_dates_after_split) = split_start_end_dates(
         start_date, end_date, split_date
     )
 
@@ -1802,7 +1778,7 @@ def _split_benefit(
         # If any values are missing, the benefit cannot be split
         raise Exception("Unable to split benefit or income as it was missing the required fields")
 
-    (start_end_dates_before_split, start_end_dates_after_split) = _split_start_end_dates(
+    (start_end_dates_before_split, start_end_dates_after_split) = split_start_end_dates(
         start_date, end_date, split_date
     )
 
@@ -1997,3 +1973,106 @@ def split_application_by_date(
     )
 
     return (application_before_split_date, application_after_split_date)
+
+
+@dataclass
+class StartEndDates:
+    start_date: date
+    end_date: date
+
+
+SplitLeaveResults = Tuple[Optional[StartEndDates], Optional[StartEndDates]]
+
+
+def split_start_end_dates(start_date: date, end_date: date, split_date: date) -> SplitLeaveResults:
+    """
+    Splits a start and end date into two separate date ranges around the past in split_date.
+    If the start date comes after the end date the dates cannot be split.
+    """
+    if start_date > end_date:
+        return (None, None)
+
+    if start_date > split_date and end_date > split_date:
+        return (None, StartEndDates(start_date, end_date))
+    elif start_date <= split_date and end_date <= split_date:
+        return (StartEndDates(start_date, end_date), None)
+    elif start_date == split_date:
+        return (
+            StartEndDates(start_date, start_date),
+            StartEndDates(start_date + timedelta(days=1), end_date),
+        )
+    else:
+        return (
+            StartEndDates(start_date, split_date),
+            StartEndDates(split_date + timedelta(days=1), end_date),
+        )
+
+
+@dataclass
+class ApplicationSplit:
+    crossed_benefit_year: BenefitYear
+    application_dates_in_benefit_year: StartEndDates
+    application_dates_outside_benefit_year: StartEndDates
+    application_outside_benefit_year_submittable_on: date
+
+
+def get_application_split(
+    application: Application,
+    db_session: db.Session,
+) -> Optional[ApplicationSplit]:
+    """
+    If a leave period spans a benefit year, the application needs to be broken up into
+    separate ones that will each get submitted.
+    """
+    if application.split_from_application_id is not None:
+        return None
+
+    latest_end_date = get_latest_end_date(application)
+    earliest_start_date = get_earliest_start_date(application)
+    if earliest_start_date is None or latest_end_date is None:
+        return None
+
+    if not application.employee:
+        return None
+
+    crossed_benefit_year = get_crossed_benefit_year(
+        application.employee.employee_id, earliest_start_date, latest_end_date, db_session
+    )
+
+    if crossed_benefit_year is None:
+        return None
+
+    [dates_in_benefit_year, dates_outside_benefit_year] = split_start_end_dates(
+        earliest_start_date, latest_end_date, crossed_benefit_year.end_date
+    )
+    if dates_in_benefit_year is None or dates_outside_benefit_year is None:
+        return None
+
+    return ApplicationSplit(
+        crossed_benefit_year=crossed_benefit_year,
+        application_dates_in_benefit_year=dates_in_benefit_year,
+        application_dates_outside_benefit_year=dates_outside_benefit_year,
+        application_outside_benefit_year_submittable_on=get_earliest_submission_date(
+            dates_outside_benefit_year.start_date
+        ),
+    )
+
+
+def get_crossed_benefit_year(
+    employee_id: UUID, start_date: date, end_date: date, db_session: db.Session
+) -> Optional[BenefitYear]:
+
+    # Find any benefit year for the employee where the end_date falls between
+    # the leave start and end dates, excluding a benefit year end_date equals
+    # the leave end_date since benefit years are inclusive
+    by = (
+        db_session.query(BenefitYear)
+        .filter(
+            BenefitYear.employee_id == employee_id,
+            BenefitYear.end_date.between(start_date, end_date),
+            BenefitYear.end_date != end_date,
+        )
+        .one_or_none()
+    )
+
+    return by

@@ -1,3 +1,4 @@
+import { APIClaimSpec } from "./../generation/Claim";
 import {
   ClaimGenerator,
   DehydratedClaim,
@@ -11,7 +12,7 @@ import {
 } from "../util/credentials";
 import { Fineos } from "../submission/fineos.pages";
 import { assertValidClaim } from "../util/typeUtils";
-import { closeDocuments } from "../submission/PostSubmit";
+import { addERReimbursment } from "../submission/PostSubmit";
 import {
   ApplicationSubmissionResponse,
   Credentials,
@@ -57,19 +58,17 @@ async function submitClaimToAPI(
     });
 }
 (async () => {
-  const claim = await generateClaim("BHAP1ER");
+  const claim = await generateClaim("MED_ERRE");
   const res = await submitClaimToAPI(claim);
   assertValidClaim(claim.claim);
   console.log(res.fineos_absence_id);
   await Fineos.withBrowser(
     async (page) => {
-      // await approveClaim(page, claim, res.fineos_absence_id);
-      await closeDocuments(
+      await addERReimbursment(
         page,
         claim as unknown as GeneratedClaim,
         res.fineos_absence_id
       );
-      // const claimPage = await Claim.visit(page, res.fineos_absence_id);
     },
     { debug: true }
   );

@@ -368,13 +368,19 @@ def get_leave_reason(application: db_application_models.Application) -> Optional
 
 
 # returns None if there is no leave start date, or the application has already been submitted
-def get_earliest_submission_date(application: db_application_models.Application) -> Optional[date]:
+def get_application_earliest_submission_date(
+    application: db_application_models.Application,
+) -> Optional[date]:
     earliest_start_date = get_earliest_start_date(application)
 
     if earliest_start_date is None or application.submitted_time is not None:
         return None
 
-    return earliest_start_date - datetime.timedelta(days=MAX_DAYS_IN_ADVANCE_TO_SUBMIT)
+    return get_earliest_submission_date(earliest_start_date)
+
+
+def get_earliest_submission_date(start_date: date) -> date:
+    return start_date - datetime.timedelta(days=MAX_DAYS_IN_ADVANCE_TO_SUBMIT)
 
 
 # search stuff

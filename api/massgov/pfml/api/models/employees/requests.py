@@ -26,12 +26,17 @@ class EmployeeSearchTerms(PydanticBaseModel):
             raise ValueError("must contain at least 3 alphanumeric characters")
         return v
 
+    # This is identical to the validator above but copied in case name validation diverges
+    # from email validation in the future
     @validator("first_name", "last_name")
-    def check_name_content(cls, v):  # noqa: B902
-        if not (v.isalnum() and len(v) >= 3):
-            raise ValueError(
-                "Name fields must only contain alphanumeric characters and have at least 3 of them"
-            )
+    def check_name_alpha_characters_content(cls, v):  # noqa: B902
+        alphanumeric_count = 0
+        for c in v:
+            if c.isalnum():
+                alphanumeric_count += 1
+
+        if alphanumeric_count < 3:
+            raise ValueError("must contain at least 3 alphanumeric characters")
         return v
 
     @root_validator(pre=True)
