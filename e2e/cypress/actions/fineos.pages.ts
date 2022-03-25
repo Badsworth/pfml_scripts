@@ -1642,11 +1642,18 @@ class AvailabilityPage {
     });
   }
 
-  assertDailyWeight(amount_weeks: string): this {
-    cy.contains("table.ListTable", "Weight");
-    const selector =
-      ".divListviewGrid .ListTable td[id*='ListviewWidgetWeight0']";
-    cy.get(selector).should("contain.text", amount_weeks);
+  assertDailyWeight(amount_weeks: string, upgrade: boolean): this {
+    if (upgrade) {
+      cy.contains(".ant-table-wrapper .ant-table-container", "Weight");
+      const selector =
+        ".ant-table-wrapper .ant-table-container .ant-table-body td:nth-child(12)";
+      cy.get(selector).should("contain.text", amount_weeks);
+    } else {
+      cy.contains("table.ListTable", "Weight");
+      const selector =
+        ".divListviewGrid .ListTable td[id*='ListviewWidgetWeight0']";
+      cy.get(selector).should("contain.text", amount_weeks);
+    }
     cy.screenshot();
     fineos.clickBottomWidgetButton("Close");
     return this;
