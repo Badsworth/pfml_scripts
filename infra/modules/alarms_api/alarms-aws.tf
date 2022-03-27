@@ -4,6 +4,7 @@ locals {
     "export-leave-admins-created",
     "fineos-error-extract-tool",
     "fineos-data-export-tool",
+    "fineos-import-employee-updates",
     "fineos-report-extracts-tool",
     "reductions-process-agency-data",
     "reductions-send-claimant-lists",

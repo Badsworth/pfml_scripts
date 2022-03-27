@@ -34,7 +34,6 @@ env:
   workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
   version: ${{ github.event.inputs.version || 'main' }}
   deployment_env: ${{ github.event.inputs.deployment_env || 'test' }}
-  deploys_channel: "C01PADH2BJ8" # massgov-pfml-teamx
   nodeVersion: 15.x
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   terraformVersion: 0.14.7
@@ -349,3 +348,38 @@ jobs:
           workflow: GH Pages deploy
           token: ${{ secrets.PFML_DEVOPS_TOKEN }}
           ref: main
+
+  post-to-teams:
+  # posts to mass-pfml-deploys-shared in teams
+    name: post end status to teams
+    needs: [deploy-info, postdeploy-info]
+    if: always() && (needs.postdeploy-info.outputs.deploy-state == 'failure' || needs.postdeploy-info.outputs.deploy-state == 'timed_out')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Pull teams uri from SSM
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/admin/common/teams-deploy-uri"
+          env_variable_name: "teams_uri"
+
+      - name: Post to Teams
+        run: |
+          RESPONSE=$(curl -fsLS -X POST ${{ env.TEAMS_URI }} \
+          --header 'Content-Type: application/json' \
+          --data '{
+            "@type": "MessageCard",
+            "themeColor": "2986CC",
+            "title": "Admin Portal Deploy Failure",
+            "text": "Admin Portal deploy #${{ github.run_number }} ${{ needs.postdeploy-info.outputs.deploy-state }} in **${{ env.deployment_env}}**: [workflow run](${{ env.workflow_self_link }})"
+            }'
+          )

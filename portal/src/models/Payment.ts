@@ -18,7 +18,6 @@ export type WritebackTransactionStatus =
   | "EFT Account Information Error"
   | "EFT Pending Bank Validation"
   | "Payment System Error"
-  | "Max Weekly Benefits Exceeded"
   | "Address Validation Error"
   | "Pending Payment Audit"
   | "Bank Processing Error"
@@ -43,35 +42,44 @@ export type WritebackTransactionStatus =
   | "PUB Check Undeliverable"
   | "PUB Check Stale";
 
-type DisplayDelayTime = {
+type ProcessingDaysPerDelay = {
   [key in WritebackTransactionStatus]: number;
 };
 
-export const DISPLAY_DELAY_TIME: Partial<DisplayDelayTime> = {
+export const PROCESSING_DAYS_PER_DELAY: Partial<ProcessingDaysPerDelay> = {
   "Address Validation Error": 2,
+  "Bank Processing Error": 0,
+  "EFT Account Information Error": 0,
+  "Exempt Employer": 0,
+  "InvalidPayment NameMismatch": 0,
+  "Leave Plan In Review": 0,
+  "Max Weekly Benefits Exceeded": 5,
 };
 
 /* 
-  isAfterDelayProcessingTime calculates if the current date is after the delay resolve time.
-  We want to show the delay message after the contact center is given the time to resolve it
-  (expected times per delay reason in DISPLAY_DELAY_TIME); 
-  this current logic is exclusive of the current date returns true of the delay time + transaction date is after the current date
+  Payments can be delayed for any of the reasons listed in the WritebackTransactionStatus type.
+  The amount of time it takes the contact center to process a delayed payment varies by the reason mapped in PROCESSING_DAYS_PER_DELAY.
+  We will only show information about the delay after the contact center has had enough time to resolve the payment
+  isAfterDelayProcessingTime calculates if the current date is after the time it should have taken to 
+  process the delay which would be the transaction date + the number of days it takes to
+  process that delay reason (3 days by default).
 */
 
 export const isAfterDelayProcessingTime = (
   writeback_transaction_status: WritebackTransactionStatus,
-  transaction_date: string
+  transaction_date: string,
+  transaction_date_could_change: boolean
 ): boolean => {
   const todaysDate = dayjs();
-  const delayRenderDays = DISPLAY_DELAY_TIME[writeback_transaction_status];
-  const transactionDate = dayjs(transaction_date);
 
-  return delayRenderDays !== undefined
-    ? todaysDate.isAfter(
-        transactionDate.addBusinessDays(delayRenderDays),
-        "day"
-      )
-    : true;
+  const transactionDate = dayjs(transaction_date);
+  const daysToProcess =
+    PROCESSING_DAYS_PER_DELAY[writeback_transaction_status] ?? 3;
+  const showImmediately = daysToProcess === 0 || transaction_date_could_change;
+  return (
+    showImmediately ||
+    todaysDate.isAfter(transactionDate.addBusinessDays(daysToProcess), "day")
+  );
 };
 
 /**

@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Paid Leave API
   description: An API for managing leave within Massachusetts Paid Family and Medical Leave.
-  version: "2022-02-17"
+  version: "2022-03-21"
 
 servers:
   - url: /v1
@@ -506,7 +506,7 @@ paths:
   /change-request:
     post:
       summary: Create a change request record
-      operationId: massgov.pfml.api.claims.post_change_request
+      operationId: massgov.pfml.api.change_requests.post_change_request
       tags:
         - ChangeRequest
       parameters:
@@ -517,10 +517,7 @@ paths:
             example: "NTN-00-ABS-00"
           required: true
       requestBody:
-        content:
-          application/json:
-            schema: 
-              $ref: "#/components/schemas/ChangeRequest"
+        $ref: "#/components/requestBodies/ChangeRequest"
       responses:
         "201":
           description: A successful request returns a 201
@@ -543,7 +540,7 @@ paths:
 
     get:
       summary: Get list of change requests for a claim
-      operationId: massgov.pfml.api.claims.get_change_requests
+      operationId: massgov.pfml.api.change_requests.get_change_requests
       tags:
         - ChangeRequest
       parameters:
@@ -572,11 +569,69 @@ paths:
                             nullable: false
                           change_requests:
                               $ref: "#/components/schemas/ChangeRequestsResponse"
+
+  /change-request/{change_request_id}:
+    delete:
+      summary: Delete an in-progress ChangeRequest
+      operationId: massgov.pfml.api.change_requests.delete_change_request
+      tags:
+        - ChangeRequest
+      parameters:
+        - name: change_request_id
+          in: path
+          schema:
+            type: string
+            format: uuid
+            example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
+          description: ID of the change request to delete
+          required: true
+      responses:
+        "200":
+          description: Change Request successfully deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessfulResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"  
+    patch:
+      summary: Update an in-progress ChangeRequest
+      operationId: massgov.pfml.api.change_requests.update_change_request
+      tags:
+        - ChangeRequest
+      parameters:
+        - name: change_request_id
+          in: path
+          schema:
+            type: string
+            format: uuid
+            example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
+          description: ID of the change request to delete
+          required: true
+      requestBody:
+        $ref: "#/components/requestBodies/ChangeRequestUpdate"
+      responses:
+        "200":
+          description: Change Request successfully updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessfulResponse'
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/ChangeRequestResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"  
                               
   /change-request/{change_request_id}/submit:
     post:
       summary: Submit a completed change request to FINEOS
-      operationId: massgov.pfml.api.claims.submit_change_request
+      operationId: massgov.pfml.api.change_requests.submit_change_request
       tags:
         - ChangeRequest
       parameters:
@@ -607,12 +662,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /change-request/{change_request_id}:
-    delete:
-      summary: Delete an in-progress ChangeRequest
-      operationId: massgov.pfml.api.claims.delete_change_request
+  /change-request/{change_request_id}/documents:
+    post:
+      summary: Upload Document
+      operationId: massgov.pfml.api.change_requests.upload_document_for_change_request
       tags:
         - ChangeRequest
+        - Documents
       parameters:
         - name: change_request_id
           in: path
@@ -620,19 +676,33 @@ paths:
             type: string
             format: uuid
             example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
-          description: ID of the change request to delete
+          description: ID of Change Request to submit documents for
           required: true
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/DocumentUploadRequest"
+            encoding:
+              file:
+                contentType: application/pdf, image/jpeg, image/png, image/tiff, image/heic
       responses:
         "200":
-          description: Change Request successfully deleted
+          description: A successful request returns a 200 status code.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SuccessfulResponse"
+                allOf:
+                  - $ref: "#/components/schemas/SuccessfulResponse"
+                  - properties:
+                      data:
+                        $ref: "#/components/schemas/DocumentResponse"
         "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"   
+          description: An unsuccessful request returns a 400 status code if one or more errors occurred.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /payments:
     get:
@@ -799,7 +869,7 @@ paths:
       summary: >
         Creates a new application in the PFML database from a FINEOS application that was created through the
         contact center.
-      operationId: massgov.pfml.api.applications.applications_import
+      operationId: massgov.pfml.api.applications.application_imports
       responses:
         "201":
           $ref: "#/components/responses/ApplicationImportedResponse"
@@ -910,39 +980,6 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
       requestBody:
         $ref: "#/components/requestBodies/ApplicationRequestBody"
-
-  /applications/import:
-    post:
-      tags:
-        - Applications
-      summary: >
-        Creates a new application in the PFML database from a FINEOS application that was created through the
-        contact center.
-      operationId: massgov.pfml.api.applications.deprecated_applications_import
-      responses:
-        "201":
-          $ref: "#/components/responses/ApplicationImportedResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
-          description: Application with requested absence_case_id was not found.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "503":
-          description: Application could not be completed in Claims Processing System.
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: "#/components/schemas/ErrorResponse"
-                  - properties:
-                      data:
-                        $ref: "#/components/schemas/ApplicationResponse"
-      requestBody:
-        $ref: '#/components/requestBodies/ApplicationImportRequestBody'
-
 
   /applications/{application_id}/submit_application:
     post:
@@ -1632,6 +1669,7 @@ components:
       type: apiKey
       in: header
       name: Mass-PFML-Agent-ID
+      x-apikeyInfoFunc: massgov.pfml.api.authentication.validate_agent_id
       description: |
         Some clients are required to provide a non-empty value for this header in order to authenticate.
 
@@ -1771,6 +1809,11 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ChangeRequest"
+    ChangeRequestUpdate:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ChangeRequestUpdate"
     HolidaysSearchRequest:
       content:
         application/json:
@@ -2505,6 +2548,7 @@ components:
           type: string
         middle_name:
           type: string
+          nullable: true
         uses_second_eform_version:
           type: boolean
         previous_leaves:
@@ -2617,10 +2661,6 @@ components:
               format: uuid
               example: "2f0f58a0-fcad-465b-b474-ee6c961cd6e3"
               nullable: true
-            application_nickname:
-              type: string
-              nullable: true
-              example: "My bonding leave request"
             tax_identifier:
               $ref: "#/components/schemas/SsnItin"
               nullable: true
@@ -2780,10 +2820,6 @@ components:
     ApplicationResponse:
       type: object
       properties:
-        application_nickname:
-          type: string
-          example: "My bonding leave request"
-          nullable: true
         organization_unit_id:
           type: string
           format: uuid
@@ -2799,6 +2835,11 @@ components:
           nullable: true
         tax_identifier:
           $ref: "#/components/schemas/MaskedSsnItin"
+          nullable: true
+        employee_id:
+          type: string
+          format: uuid
+          example: '2a340cf8-6d2a-4f82-a075-73588d003f8f'
           nullable: true
         employer_id:
           type: string
@@ -2999,6 +3040,14 @@ components:
           format: uuid
           example: "2f0f58a0-fcad-465b-b474-ee6c961cd6e3"
           nullable: true
+        computed_earliest_submission_date:
+          type: string
+          format: date
+          example: "2022-07-04"
+          nullable: true
+        computed_application_split:
+          $ref: "#/components/schemas/ComputedApplicationSplit"
+          nullable: true
 
     ComputedStartDates:
       type: object
@@ -3014,6 +3063,32 @@ components:
           example: "2021-01-01"
           nullable: true
 
+    ComputedApplicationSplit:
+      type: object
+      properties:
+        crossed_benefit_year:
+          $ref: '#/components/schemas/BenefitYearResponse'
+        application_dates_in_benefit_year: 
+          $ref: '#/components/schemas/StartEndDates'
+        application_dates_outside_benefit_year: 
+          $ref: '#/components/schemas/StartEndDates'
+        application_outside_benefit_year_submittable_on: 
+          type: string
+          format: date
+          example: "2020-11-02"
+
+    StartEndDates:
+      type: object
+      properties:
+        start_date: 
+          type: string
+          format: date
+          example: "2021-01-01"
+        end_date: 
+          type: string
+          format: date
+          example: "2021-01-12"
+    
     DocumentUploadRequest:
       type: object
       properties:
@@ -3108,38 +3183,7 @@ components:
             - Serious Health Condition - Employee
           example: "Child Bonding"
         reason_qualifier_one:
-          type: string
-          enum:
-            - Not Work Related
-            - Work Related
-            - Blood
-            - Blood Stem Cell
-            - Bone Marrow
-            - Organ
-            - Other
-            - Postnatal Disability
-            - Prenatal Care
-            - Prenatal Disability
-            - Adoption
-            - Foster Care
-            - Newborn
-            - Pregnancy Related
-            - Right to Leave
-            - Serious Health Condition
-            - Sickness - Non-Serious Health Condition
-            - Childcare
-            - Counseling
-            - Financial & Legal Arrangements
-            - Military Events & Related Activities
-            - Other Additional Activities
-            - Post Deployment Activities - Including Bereavement
-            - Rest & Recuperation
-            - Short Notice Deployment
-            - Closure of School/Childcare
-            - Quarantine/Isolation - Not Sick
-            - Birth Disability
-            - Childcare and School Activities
-          example: "Newborn"
+          $ref: "#/components/schemas/ReasonQualifierOne"
         reason_qualifier_two:
           type: string
           nullable: true
@@ -3469,7 +3513,14 @@ components:
             - Approved Time Cancelled
             - Change Request Approved
             - Change Request Denied
+            - Received Correspondence
+            - Leave Request Review
+            - Request for more Information
+            - Additional Evidence Information eForm
+            - Other Income - current version
+            - Other Leaves - current version
           example: "Passport"
+          nullable: true
         content_type:
           type: string
           example: "image/png"
@@ -3667,18 +3718,8 @@ components:
             - Care for a Family Member
           example: "Child Bonding"
         reason_qualifier:
-          type: string
+          $ref: "#/components/schemas/ReasonQualifierOne"
           nullable: true
-          enum:
-            - Newborn
-            - Serious Health Condition
-            - Work Related Accident/Injury
-            - Adoption
-            - Foster Care
-            - Not Work Related
-            - Sickness
-            - Postnatal Disability
-          example: "Newborn"
         reduced_schedule_leave_periods:
           type: array
           nullable: true
@@ -3727,6 +3768,40 @@ components:
             - By Telephone
             - Other
           example: "In Writing"
+
+    ReasonQualifierOne:
+      type: string
+      example: "Newborn"
+      enum:
+        - Not Work Related
+        - Work Related
+        - Blood
+        - Blood Stem Cell
+        - Bone Marrow
+        - Organ
+        - Other
+        - Postnatal Disability
+        - Prenatal Care
+        - Prenatal Disability
+        - Adoption
+        - Foster Care
+        - Newborn
+        - Pregnancy Related
+        - Right to Leave
+        - Serious Health Condition
+        - Sickness - Non-Serious Health Condition
+        - Childcare
+        - Counseling
+        - Financial & Legal Arrangements
+        - Military Events & Related Activities
+        - Other Additional Activities
+        - Post Deployment Activities - Including Bereavement
+        - Rest & Recuperation
+        - Short Notice Deployment
+        - Closure of School/Childcare
+        - Quarantine/Isolation - Not Sick
+        - Birth Disability
+        - Childcare and School Activities
 
     ReducedScheduleLeavePeriods:
       type: object
@@ -3988,6 +4063,7 @@ components:
             - Per Week
             - Per Month
             - In Total
+            - Unknown
           example: "Per Month"
         income_type:
           type: string
@@ -4000,6 +4076,7 @@ components:
             - Jones Act benefits
             - Railroad Retirement benefits
             - Earnings from another employment/self-employment
+            - Unknown
           example: "SSDI"
 
     ApplicationSearchResults:
@@ -4523,6 +4600,23 @@ components:
             - Modification
             - Withdrawal
             - Medical To Bonding Transition
+        start_date: 
+          $ref: "#/components/schemas/Date"
+          nullable: true
+        end_date:
+          $ref: "#/components/schemas/Date"
+          nullable: true
+
+    ChangeRequestUpdate:
+      type: object
+      properties:
+        change_request_type:
+          type: string
+          enum:
+            - Modification
+            - Withdrawal
+            - Medical To Bonding Transition
+          nullable: true
         start_date: 
           $ref: "#/components/schemas/Date"
           nullable: true

@@ -47,6 +47,7 @@ class PaymentAuditData:
     """Wrapper class to create payment audit report"""
 
     payment: Payment
+    employer_reimbursement_payment: Optional[Payment]
     is_first_time_payment: bool
     previously_errored_payment_count: int
     previously_rejected_payment_count: int
@@ -57,9 +58,13 @@ class PaymentAuditData:
     net_payment_amount: str
     federal_withholding_amount: str
     state_withholding_amount: str
+    employer_reimbursement_amount: str
     federal_withholding_i_value: str
     state_withholding_i_value: str
+<<<<<<< HEAD
     employer_reimbursement_amount: str
+=======
+>>>>>>> origin
     employer_reimbursement_i_value: str
 
 
@@ -112,6 +117,7 @@ def build_audit_report_row(
     payment: Payment = payment_audit_data.payment
     claim: Claim = payment.claim
     employee: Employee = claim.employee
+    employer_reimbursement: Optional[Payment] = payment_audit_data.employer_reimbursement_payment
 
     address: Optional[Address] = None
     experian_address_pair: Optional[ExperianAddressPair] = payment.experian_address_pair
@@ -126,6 +132,23 @@ def build_audit_report_row(
             else experian_address_pair.fineos_address
         )
         is_address_verified = "Y" if experian_address is not None else "N"
+
+    employer_address: Optional[Address] = None
+    employer_experian_address_pair: Optional[ExperianAddressPair] = (
+        employer_reimbursement.experian_address_pair if employer_reimbursement else None
+    )
+    employer_experian_address: Optional[Address] = None
+    employer_is_address_verified = "N"
+
+    if employer_reimbursement:
+        if employer_experian_address_pair:
+            employer_experian_address = employer_experian_address_pair.experian_address
+            employer_address = (
+                employer_experian_address
+                if employer_experian_address is not None
+                else employer_experian_address_pair.fineos_address
+            )
+            employer_is_address_verified = "Y" if employer_experian_address is not None else "N"
 
     employer: Employer = claim.employer
 
@@ -163,7 +186,20 @@ def build_audit_report_row(
         state=address.geo_state.geo_state_description if address and address.geo_state else None,
         zip=address.zip_code if address else None,
         is_address_verified=is_address_verified,
+<<<<<<< HEAD
         employer_name=None,
+=======
+        employer_id=str(employer.fineos_employer_id) if employer else None,
+        employer_payee_name=employer_reimbursement.payee_name if employer_reimbursement else None,
+        employer_address_line_1=employer_address.address_line_one if employer_address else None,
+        employer_address_line_2=employer_address.address_line_two if employer_address else None,
+        employer_city=employer_address.city if employer_address else None,
+        employer_state=employer_address.geo_state.geo_state_description
+        if employer_address and employer_address.geo_state
+        else None,
+        employer_zip=employer_address.zip_code if employer_address else None,
+        employer_is_address_verified=employer_is_address_verified,
+>>>>>>> origin
         payment_preference=get_payment_preference(payment),
         scheduled_payment_date=payment.payment_date.isoformat() if payment.payment_date else None,
         payment_period_start_date=payment_period_start_date,
@@ -182,7 +218,6 @@ def build_audit_report_row(
         state_withholding_i_value=str(payment_audit_data.state_withholding_i_value),
         employer_reimbursement_i_value=str(payment_audit_data.employer_reimbursement_i_value),
         child_support_i_value=None,
-        employer_id=str(employer.fineos_employer_id) if employer else None,
         absence_case_creation_date=payment.absence_case_creation_date.isoformat()
         if payment.absence_case_creation_date
         else None,

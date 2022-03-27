@@ -451,7 +451,7 @@ exports[`Review Page PreviousLeaveList renders other reason list 1`] = `
           From this employer
         </li>
         <li>
-          Leave was for caring for a family member
+          Family leave to care for a family member
         </li>
         <li>
           Hours worked at time of leave: 
@@ -490,7 +490,7 @@ exports[`Review Page PreviousLeaveList renders other reason list 1`] = `
           From a different employer
         </li>
         <li>
-          Leave was for bonding with a child after birth or placement
+          Family leave to bond with a child after birth or placement
         </li>
         <li>
           Hours worked at time of leave: 
@@ -1167,7 +1167,7 @@ exports[`Review Page renders Review page with Part 1 content and edit links when
               From this employer
             </li>
             <li>
-              Leave was for caring for a family member
+              Family leave to care for a family member
             </li>
             <li>
               Hours worked at time of leave: 

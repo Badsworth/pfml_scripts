@@ -41,8 +41,10 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVpei,
     FineosExtractVpeiClaimDetails,
     FineosExtractVpeiPaymentDetails,
+    FineosExtractVpeiPaymentLine,
     FineosWritebackTransactionStatus,
     LkFineosWritebackTransactionStatus,
+    PaymentLine,
 )
 from massgov.pfml.db.models.state import Flow, LkState, State
 from massgov.pfml.delegated_payments.step import Step
@@ -89,6 +91,15 @@ PAYMENT_OUT_TRANSACTION_TYPE = "PaymentOut"
 AUTO_ALT_EVENT_REASON = "Automatic Alternate Payment"
 
 TAX_IDENTIFICATION_NUMBER = "Tax Identification Number"
+
+# TASKTYPENAME of VBI Task Report Som for other income-related tasks
+OTHER_INCOME_TASKTYPENAMES = [
+    "Employee Reported Other Income",
+    "Escalate Employer Reported Other Income",
+    "Escalate employer reported accrued paid leave (PTO)",
+    "Employee reported accrued paid leave (PTO)",
+    "Employee Reported Other Leave",
+]
 
 
 class PaymentData:
@@ -138,7 +149,8 @@ class PaymentData:
     account_nbr: Optional[str] = None
     raw_account_type: Optional[str] = None
 
-    payment_detail_records: Optional[List[PaymentDetails]] = None
+    payment_detail_records: List[PaymentDetails]
+    payment_line_records: List[PaymentLine]
 
     payment_transaction_type: LkPaymentTransactionType
     payment_relevant_party: LkPaymentRelevantParty
@@ -147,6 +159,7 @@ class PaymentData:
     is_employer_reimbursement: bool
     is_employer_reimbursement_enabled: bool
     is_payment_intended_for_pub: bool
+    is_payment_detail_expected: bool
 
     def __init__(
         self,
@@ -154,6 +167,7 @@ class PaymentData:
         i_value: str,
         pei_record: FineosExtractVpei,
         payment_details: List[FineosExtractVpeiPaymentDetails],
+        payment_lines: List[FineosExtractVpeiPaymentLine],
         claim_details: Optional[FineosExtractVpeiClaimDetails],
         requested_absence_record: Optional[FineosExtractVbiRequestedAbsence],
         count_incrementer: Optional[Callable[[str], None]] = None,
@@ -164,6 +178,9 @@ class PaymentData:
         self.c_value = c_value
         self.i_value = i_value
         self.pei_record = pei_record
+
+        self.payment_detail_records = []
+        self.payment_line_records = []
 
         #######################################
         # BEGIN - VALIDATION OF PARAMETERS ALWAYS REQUIRED FOR ALL PAYMENTS
@@ -210,20 +227,40 @@ class PaymentData:
 
         self.payment_transaction_type = self.get_payment_transaction_type()
 
-        # Process the payment details records in order to get specific
-        # pay-period information for payments. Note that some non-standard payments
-        # like overpayment recoveries will never have payment details.
-        if (
-            not payment_details
-            and self.payment_transaction_type.payment_transaction_type_id
+        # Overpayment recoveries (of several different types) do not
+        # have payment detail records as they don't have pay periods
+        self.is_payment_detail_expected = (
+            self.payment_transaction_type.payment_transaction_type_id
             not in payments_util.Constants.OVERPAYMENT_TYPES_WITHOUT_PAYMENT_DETAILS_IDS
-        ):
+        )
+
+        # Process the payment details records in order to get specific
+        # pay-period information for payments.
+        if not payment_details and self.is_payment_detail_expected:
             self.validation_container.add_validation_issue(
-                payments_util.ValidationReason.MISSING_DATASET, "payment_details"
+                payments_util.ValidationReason.MISSING_DATASET, "payment_details", "payment_details"
             )
 
         if payment_details:
             self.aggregate_payment_details(payment_details)
+
+        # We always expect payment lines, except for zero dollar tax withholdings
+        # which don't end up with payment line records for whatever reason
+        is_tax_withholding = self.payment_relevant_party.payment_relevant_party_id in [
+            PaymentRelevantParty.FEDERAL_TAX.payment_relevant_party_id,
+            PaymentRelevantParty.STATE_TAX.payment_relevant_party_id,
+        ]
+        is_zero_dollar = (
+            self.payment_transaction_type.payment_transaction_type_id
+            == PaymentTransactionType.ZERO_DOLLAR.payment_transaction_type_id
+        )
+        if not payment_lines and not (is_tax_withholding and is_zero_dollar):
+            self.validation_container.add_validation_issue(
+                payments_util.ValidationReason.MISSING_DATASET, "payment_lines", "payment_lines"
+            )
+
+        if payment_lines:
+            self.aggregate_payment_lines(payment_lines)
 
         # We only want to do specific checks if it is a standard payment
         # There is no need to error a cancellation/overpayment/etc. if the payment
@@ -364,6 +401,20 @@ class PaymentData:
             eft_required,
             custom_validator_func=payments_util.lookup_validator(BankAccountType),
         )
+
+        #######################################
+        # BEGIN - VALIDATION OF PARAMETERS REQUIRED FOR CHECKS + EMPLOYER REIMBURSEMENT PAYMENT
+        #######################################
+        if (
+            self.payment_transaction_type.payment_transaction_type_id
+            == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+        ):
+            self.full_name = payments_util.validate_db_input(
+                "PAYEEFULLNAME",
+                pei_record,
+                self.validation_container,
+                self.is_employer_reimbursement,
+            )
 
     def get_payment_amount(self, pei_record: FineosExtractVpei) -> Optional[Decimal]:
         raw_payment_amount = payments_util.validate_db_input(
@@ -529,8 +580,21 @@ class PaymentData:
         """
         start_periods = []
         end_periods = []
-        self.payment_detail_records = []
         for payment_detail_row in payment_details:
+            payment_details_c_value = payments_util.validate_db_input(
+                "C",
+                payment_detail_row,
+                self.validation_container,
+                True,
+            )
+
+            payment_details_i_value = payments_util.validate_db_input(
+                "I",
+                payment_detail_row,
+                self.validation_container,
+                True,
+            )
+
             row_start_period = payments_util.validate_db_input(
                 "PAYMENTSTARTP",
                 payment_detail_row,
@@ -574,6 +638,8 @@ class PaymentData:
             if all(
                 field is not None
                 for field in [
+                    payment_details_c_value,
+                    payment_details_i_value,
                     row_start_period,
                     row_end_period,
                     row_amount_post_tax,
@@ -582,6 +648,10 @@ class PaymentData:
             ):
                 self.payment_detail_records.append(
                     PaymentDetails(
+                        payment_details_id=uuid.uuid4(),
+                        vpei_payment_details_id=payment_detail_row.vpei_payment_details_id,
+                        payment_details_c_value=payment_details_c_value,
+                        payment_details_i_value=payment_details_i_value,
                         period_start_date=datetime_str_to_date(row_start_period),
                         period_end_date=datetime_str_to_date(row_end_period),
                         amount=Decimal(cast(str, row_amount_post_tax)),
@@ -593,6 +663,99 @@ class PaymentData:
             self.payment_start_period = min(start_periods)
         if end_periods:
             self.payment_end_period = max(end_periods)
+
+    def aggregate_payment_lines(self, payment_lines: List[FineosExtractVpeiPaymentLine]) -> None:
+        """
+        Iterate over the list of payment lines and validate
+        their values. If valid, create a payment line record
+        in the DB.
+
+        Also connects the payment line to the payment detail
+        record that it is associated with at the same time.
+        """
+        # Create a mapping for payment detail C/I value
+        # as we'll reference it below
+        payment_detail_mapping = {}
+        for payment_detail in self.payment_detail_records:
+            key = (payment_detail.payment_details_c_value, payment_detail.payment_details_i_value)
+            payment_detail_mapping[key] = payment_detail
+
+        for payment_line in payment_lines:
+            payment_line_c_value = payments_util.validate_db_input(
+                "C",
+                payment_line,
+                self.validation_container,
+                True,
+            )
+
+            payment_line_i_value = payments_util.validate_db_input(
+                "I",
+                payment_line,
+                self.validation_container,
+                True,
+            )
+
+            amount = payments_util.validate_db_input(
+                "AMOUNT_MONAMT",
+                payment_line,
+                self.validation_container,
+                True,
+                custom_validator_func=payments_util.amount_validator,
+            )
+
+            line_type = payments_util.validate_db_input(
+                "LINETYPE",
+                payment_line,
+                self.validation_container,
+                True,
+            )
+
+            payment_detail_class_id = payments_util.validate_db_input(
+                "PAYMENTDETAILCLASSID",
+                payment_line,
+                self.validation_container,
+                True,
+            )
+            payment_detail_index_id = payments_util.validate_db_input(
+                "PAYMENTDETAILINDEXID",
+                payment_line,
+                self.validation_container,
+                True,
+            )
+
+            related_payment_detail: Optional[PaymentDetails] = payment_detail_mapping.get(
+                (payment_detail_class_id, payment_detail_index_id), None
+            )
+            if not related_payment_detail and self.is_payment_detail_expected:
+                self.validation_container.add_validation_issue(
+                    payments_util.ValidationReason.MISSING_DATASET,
+                    f"Payment detail with C={payment_detail_class_id},I={payment_detail_index_id} not found for payment line",
+                    "payment_detail",
+                )
+
+            if all(
+                field is not None
+                for field in [
+                    payment_line_c_value,
+                    payment_line_i_value,
+                    amount,
+                    line_type,
+                ]
+            ):
+
+                self.payment_line_records.append(
+                    PaymentLine(
+                        vpei_payment_line_id=payment_line.vpei_payment_line_id,
+                        # Payment ID gets set after we create the payment
+                        payment_details_id=related_payment_detail.payment_details_id
+                        if related_payment_detail
+                        else None,
+                        payment_line_c_value=cast(str, payment_line_c_value),
+                        payment_line_i_value=cast(str, payment_line_i_value),
+                        amount=Decimal(cast(str, amount)),
+                        line_type=cast(str, line_type),
+                    )
+                )
 
     def payment_period_date_validator(
         self, payment_period_date_str: str
@@ -648,6 +811,7 @@ class PaymentExtractStep(Step):
         IN_REVIEW_LEAVE_REQUEST_COUNT = "in_review_leave_request_count"
         OVERPAYMENT_COUNT = "overpayment_count"
         PAYMENT_DETAILS_RECORD_COUNT = "payment_details_record_count"
+        PAYMENT_LINE_RECORD_COUNT = "payment_line_record_count"
         PEI_RECORD_COUNT = "pei_record_count"
         PRENOTE_PAST_WAITING_PERIOD_APPROVED_COUNT = "prenote_past_waiting_period_approved_count"
         PROCESSED_PAYMENT_COUNT = "processed_payment_count"
@@ -930,6 +1094,11 @@ class PaymentExtractStep(Step):
         payment.fineos_extract_import_log_id = self.get_import_log_id()
         payment.leave_request_decision = payment_data.leave_request_decision
 
+        # Set the payee name.
+        # For payments that are not paid to the claimant (e.g. - employer reimbursements), we use this name.
+        # For claimant payments will use other fields for the claimant name.
+        payment.payee_name = payment_data.full_name
+
         # This is used later in the post-processing step to filter out
         # adhoc payments from the weekly maximum check.
         payment.is_adhoc_payment = payment_data.is_adhoc_payment()
@@ -961,10 +1130,13 @@ class PaymentExtractStep(Step):
 
         self.db_session.add(payment)
 
-        if payment_data.payment_detail_records:
-            for payment_detail in payment_data.payment_detail_records:
-                payment_detail.payment = payment
-                self.db_session.add(payment_detail)
+        for payment_detail in payment_data.payment_detail_records:
+            payment_detail.payment = payment
+            self.db_session.add(payment_detail)
+
+        for payment_line in payment_data.payment_line_records:
+            payment_line.payment = payment
+            self.db_session.add(payment_line)
 
         return payment
 
@@ -1137,6 +1309,18 @@ class PaymentExtractStep(Step):
                 message = f"Employer {employer.fineos_employer_id} is exempt for dates {employer.exemption_commence_date} - {employer.exemption_cease_date}"
                 payment_data.validation_container.add_validation_issue(
                     payments_util.ValidationReason.EMPLOYER_EXEMPT, message
+                )
+
+        # If it is not an adhoc payment and it has certain kinds of open
+        # tasks, we reject it and add it to the error report
+        if not payment.is_adhoc_payment and payment_data.absence_case_number is not None:
+            open_other_income_tasks = payments_util.get_open_tasks(
+                self.db_session, payment_data.absence_case_number, OTHER_INCOME_TASKTYPENAMES
+            )
+            if len(open_other_income_tasks) > 0:
+                payment_data.validation_container.add_validation_issue(
+                    payments_util.ValidationReason.OPEN_OTHER_INCOME_TASKS,
+                    f"TASKTYPENAMES: {[task.tasktypename for task in open_other_income_tasks]}",
                 )
 
         # Specify whether the Payment has an address update
@@ -1344,6 +1528,7 @@ class PaymentExtractStep(Step):
         has_leave_request_in_review = False
         has_pending_prenote = False
         has_rejected_prenote = False
+        has_open_other_income_tasks = False
 
         for reason in validation_reasons:
             # Some issues are either due to the data setup in our system
@@ -1382,6 +1567,9 @@ class PaymentExtractStep(Step):
             elif reason == payments_util.ValidationReason.EFT_PRENOTE_REJECTED:
                 has_rejected_prenote = True
 
+            elif reason == payments_util.ValidationReason.OPEN_OTHER_INCOME_TASKS:
+                has_open_other_income_tasks = True
+
             # Otherwise the issue is any of the other validation reasons
             # which all will set the payment to Active so the payment can
             # be fixed and reissued.
@@ -1402,6 +1590,9 @@ class PaymentExtractStep(Step):
         # Exempt employer would block payment, so later scenarios irrelevant
         if has_exempt_employer:
             return FineosWritebackTransactionStatus.EXEMPT_EMPLOYER
+
+        if has_open_other_income_tasks:
+            return FineosWritebackTransactionStatus.SELF_REPORTED_ADDITIONAL_INCOME
 
         # Leave requests in review take next precendence
         if has_leave_request_in_review:
@@ -1450,6 +1641,22 @@ class PaymentExtractStep(Step):
                 .all()
             )
             self.increment(self.Metrics.PAYMENT_DETAILS_RECORD_COUNT, len(payment_details_records))
+
+            # We expect multiple payment line records for each payment
+            # joined on the C/I value. Each of these represents
+            # a specific amount+type that makes up the payment
+            # eg. $500 for base benefit, or -$50 removed for tax
+            payment_line_records = (
+                self.db_session.query(FineosExtractVpeiPaymentLine)
+                .filter(
+                    FineosExtractVpeiPaymentLine.c_pymnteif_paymentlines == c_value,
+                    FineosExtractVpeiPaymentLine.i_pymnteif_paymentlines == i_value,
+                    FineosExtractVpeiPaymentLine.reference_file_id
+                    == reference_file.reference_file_id,
+                )
+                .all()
+            )
+            self.increment(self.Metrics.PAYMENT_LINE_RECORD_COUNT, len(payment_line_records))
 
             # We expect only one claim details record
             # joined on the C/I value
@@ -1520,6 +1727,7 @@ class PaymentExtractStep(Step):
                 i_value,
                 raw_payment_record,
                 payment_details_records,
+                payment_line_records,
                 claim_details_record,
                 requested_absence_record,
                 count_incrementer=self.increment,
@@ -1597,7 +1805,9 @@ class PaymentExtractStep(Step):
         for raw_payment_record in raw_payment_records:
             self.increment(self.Metrics.PEI_RECORD_COUNT)
             self.process_payment_record(
-                raw_payment_record, reference_file, latest_claimant_extract_reference_file
+                raw_payment_record,
+                reference_file,
+                latest_claimant_extract_reference_file,
             )
 
         reference_file.processed_import_log_id = self.get_import_log_id()

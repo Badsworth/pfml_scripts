@@ -689,6 +689,16 @@ export function addPaymentInfo(
     case "Elec Funds Transfer":
       cy.findByLabelText("Routing number").type(routing_number as string);
       cy.findByLabelText("Account number").type(account_number as string);
+      cy.get(".usa-form .usa-fieldset .usa-form-group label").then(
+        (element) => {
+          if (element.text().includes("Retype account number")) {
+            cy.findByLabelText("Retype account number").type(
+              account_number as string
+            );
+          }
+        }
+      );
+
       inFieldsetLabelled("Account type", () => {
         cy.get("input[type='radio']").check(bank_account_type as string, {
           force: true,
@@ -2214,15 +2224,19 @@ export function completeFlowMFA(number: string): void {
 }
 
 export function acceptMFA(): void {
+  //Backward Compatability
+  // Yes, I want to add a phone number for verifying logins. -> Yes, I want to add a phone number for additional security.
   cy.contains(
-    "Yes, I want to add a phone number for verifying logins."
+    /(Yes, I want to add a phone number for verifying logins.|Yes, I want to add a phone number for additional security.)/
   ).click();
   cy.contains("button", "Save and continue").click();
 }
 
 export function declineMFA(): void {
+  //Backward Compatability
+  // No, I do not want to add a phone number for verifying logins. -> No, I do not want to add a phone number.
   cy.contains(
-    "No, I do not want to add a phone number for verifying logins."
+    /(No, I do not want to add a phone number for verifying logins.|No, I do not want to add a phone number.)/
   ).click();
   cy.contains("button", "Save and continue").click();
 }

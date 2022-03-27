@@ -15,7 +15,7 @@ import massgov.pfml.util.logging
 from massgov.pfml import db
 from massgov.pfml.api.authorization.flask import CREATE, ensure
 from massgov.pfml.api.models.notifications.requests import NotificationRequest
-from massgov.pfml.api.services.fineos_actions import get_absence_periods
+from massgov.pfml.api.services.fineos_actions import get_absence_periods_from_claim
 from massgov.pfml.api.services.managed_requirements import (
     get_fineos_managed_requirements_from_notification,
 )
@@ -153,7 +153,7 @@ def notifications_post():
                     "Unable to find Employee or Employee has no tax_identifier, can't get absence periods"
                 )
             else:
-                absence_periods = get_absence_periods(claim, db_session)
+                absence_periods = get_absence_periods_from_claim(claim, db_session)
                 sync_customer_api_absence_periods_to_db(
                     absence_periods, claim, db_session, log_attributes
                 )

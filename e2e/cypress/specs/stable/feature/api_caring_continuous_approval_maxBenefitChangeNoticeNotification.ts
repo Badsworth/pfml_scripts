@@ -42,11 +42,7 @@ describeIf(
               )
               .acceptLeavePlan();
           });
-          if (config("HAS_APRIL_UPGRADE") === "true") {
-            claimPage.approve("Completed", true);
-          } else {
-            claimPage.approve();
-          }
+          claimPage.approve("Approved", config("HAS_APRIL_UPGRADE") === "true");
           claimPage.triggerNotice("Designation Notice");
         });
       });

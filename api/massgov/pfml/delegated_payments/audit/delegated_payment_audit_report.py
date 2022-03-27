@@ -399,14 +399,6 @@ class PaymentAuditReportStep(Step):
 
             previously_paid_payments = self.previously_paid_payments(payment)
 
-            # Clear the net payment amount for orphaned Tax Withholdings in the audit report
-            net_payment_amount = payment.amount
-            if payment.payment_transaction_type_id in [
-                PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,
-                PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id,
-            ]:
-                net_payment_amount = decimal.Decimal(0)
-
             linked_payments = _get_split_payments(self.db_session, payment)
             federal_withholding_amount: decimal.Decimal = self.calculate_federal_withholding_amount(
                 payment, linked_payments
@@ -414,12 +406,50 @@ class PaymentAuditReportStep(Step):
             state_withholding_amount: decimal.Decimal = self.calculate_state_withholding_amount(
                 payment, linked_payments
             )
+
+            employer_reimbursement_amount: decimal.Decimal = (
+                self.calculate_employer_reimbursement_amount(payment, linked_payments)
+            )
+
+            employer_reimbursement: Optional[Payment] = None
+            if (
+                payment.payment_transaction_type_id
+                == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+            ):
+                employer_reimbursement = payment
+            else:
+                for linked_payment in linked_payments:
+                    if (
+                        linked_payment.payment_transaction_type_id
+                        == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+                    ):
+                        employer_reimbursement = linked_payment
+                        # Even if we have more than one Employer Reimbursement linked, take the first one and break
+                        break
+
+            # Clear the net payment amount for some transaction types (e.g. - Employer Reimbursements, and orphaned Tax Withholdings) in the audit report
+            net_payment_amount = payment.amount
+            if payment.payment_transaction_type_id in [
+                PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,
+                PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id,
+                PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id,
+            ]:
+                net_payment_amount = decimal.Decimal(0)
+
+            # Calculate Gross Payment Amount in audit report
+            gross_payment_amount: decimal.Decimal = (
+                net_payment_amount
+                + federal_withholding_amount
+                + state_withholding_amount
+                + employer_reimbursement_amount
+            )
             employer_reimbursement_amount: decimal.Decimal = (
                 self.calculate_employer_reimbursement_amount(payment, linked_payments)
             )
 
             payment_audit_data = PaymentAuditData(
                 payment=payment,
+                employer_reimbursement_payment=employer_reimbursement,
                 is_first_time_payment=is_first_time_payment,
                 previously_errored_payment_count=self.previously_errored_payment_count(payment),
                 previously_rejected_payment_count=self.previously_rejected_payment_count(payment),
@@ -428,12 +458,16 @@ class PaymentAuditReportStep(Step):
                 previously_paid_payments_string=self.format_previously_paid_payments(
                     previously_paid_payments
                 ),
+<<<<<<< HEAD
                 gross_payment_amount=str(
                     net_payment_amount
                     + federal_withholding_amount
                     + state_withholding_amount
                     + employer_reimbursement_amount
                 ),
+=======
+                gross_payment_amount=str(gross_payment_amount if gross_payment_amount > 0 else ""),
+>>>>>>> origin
                 net_payment_amount=str(net_payment_amount if net_payment_amount > 0 else ""),
                 federal_withholding_amount=str(
                     federal_withholding_amount if federal_withholding_amount > 0 else ""

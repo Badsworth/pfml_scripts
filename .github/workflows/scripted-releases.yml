@@ -1,0 +1,84 @@
+# Scripted Releases Github Actions Workflow 
+
+name: Scripted Releases
+
+on:
+  workflow_dispatch:
+    inputs:
+      application:
+        description: |
+          ⚠️ Only edit the above dropdown if you do not wish to use the GHA Workflow from main
+          --------------------------------------------
+          1️⃣ Application
+        required: true
+        type: choice
+        options:
+          - api
+          - portal
+          - foobar
+      scripted-release-task:
+        description: |
+          2️⃣ Scripted Release Task
+        required: true
+        type: choice
+        options:
+          - start-release
+          - update-release
+          - finalize-release
+          - hotfix
+          - major-release
+      arguments:
+        description: |
+          3️⃣ Arguments - 
+          🤔 check bin/ci/README.md for help
+        required: false
+        type: string
+
+jobs:
+  run-scripted-releases:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PMFL repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install Poetry
+        working-directory: ./bin/ci
+        # Installing with curl requires an extra step to add poetry to $PATH 
+        run: pip install poetry
+
+      - name: Install Poetry dependencies 
+        working-directory: ./bin/ci
+        run: poetry install
+      
+      - name: Run scripted releases with Poetry 
+        working-directory: ./bin/ci
+        run: poetry run scripted-releases -a ${{ github.event.inputs.application }} ${{ github.event.inputs.scripted-release-task }} ${{ github.event.inputs.arguments }}
+
+  create-release-notes:
+    runs-on: ubuntu-latest
+    # prevent test application from creating release notes
+    if: "!contains(github.event.inputs.application, 'foobar')"
+    needs: run-scripted-releases
+
+    steps:
+      - name: Checkout PFML repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Fetch tags
+        id: version
+        working-directory: ./${{ github.event.inputs.application }}
+        run: |
+          tag=$(git for-each-ref --sort=-committerdate refs/tags --count=1 --format='%(refname:short)')
+          echo "::set-output name=tag::$tag"
+
+      - name: publish to GitHub
+        working-directory: ./${{ github.event.inputs.application }}
+        env:
+        # using the devops token because it should have a higher scope which should allow posting release notes for upper envs
+          GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
+        run: |
+          gh release create ${{ steps.version.outputs.tag }} --notes "$(make release-notes)"

@@ -100,7 +100,20 @@ def _process_azure_token(db_session: Session, decoded_token: dict[str, Any]) -> 
     parent_group = AzureGroup.get_instance(db_session, description=azure_config.parent_group)  # type: ignore
     access = parent_group.azure_group_guid in group_guids
 
+    log_attributes = {
+        "group_guids": ",".join(group_guids),
+        "parent_group_guid": parent_group.azure_group_guid,
+        "family_name": decoded_token.get("family_name", ""),
+        "given_name": decoded_token.get("given_name", ""),
+        "unique_name": decoded_token.get("unique_name", ""),
+        "authority": azure_config.authority if azure_config is not None else "",
+        "client_id": azure_config.client_id if azure_config is not None else "",
+    }
     if not access:
+        logger.warning(
+            "You do not have the correct group to access the Admin Portal.",
+            extra=log_attributes,
+        )
         raise Unauthorized("You do not have the correct group to access the Admin Portal.")
 
     filter_params = [
@@ -119,6 +132,10 @@ def _process_azure_token(db_session: Session, decoded_token: dict[str, Any]) -> 
     )
 
     if len(permissions) == 0:
+        logger.warning(
+            "You do not have the correct permissions to access the Admin Portal.",
+            extra=log_attributes,
+        )
         raise Unauthorized("You do not have the correct permissions to access the Admin Portal.")
 
     # Not using "current_user" to prevent it from being mistakenly used as User type
@@ -192,6 +209,13 @@ def decode_jwt(token):
         process_token = _process_azure_token if is_azure_token else _process_cognito_token
         process_token(db_session, decoded_token)
     return decoded_token
+
+
+def validate_agent_id(mass_pfml_agent_id: Any, required_scopes: Any) -> str:
+    if mass_pfml_agent_id is None or mass_pfml_agent_id.strip() == "":
+        raise Unauthorized("Invalid required header: Mass-PFML-Agent-ID")
+
+    return mass_pfml_agent_id
 
 
 def build_auth_code_flow() -> Optional[dict[str, Optional[Union[str, list]]]]:

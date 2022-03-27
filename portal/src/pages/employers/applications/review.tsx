@@ -28,9 +28,9 @@ import ReviewHeading from "../../../components/ReviewHeading";
 import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import WeeklyHoursWorkedRow from "../../../features/employer-review/WeeklyHoursWorkedRow";
-import { findDocumentsByLeaveReason } from "../../../models/Document";
 import findErrorMessageForField from "../../../utils/findErrorMessageForField";
 import formatDate from "../../../utils/formatDate";
+import { getLeaveCertificationDocs } from "../../../models/Document";
 import { getSoonestReviewableFollowUpDate } from "../../../models/ManagedRequirement";
 import isBlank from "../../../utils/isBlank";
 import leaveReasonToPreviousLeaveReason from "../../../utils/leaveReasonToPreviousLeaveReason";
@@ -173,10 +173,7 @@ export const Review = (props: WithEmployerClaimProps) => {
   const allDocuments = claimDocumentsMap.get(absenceId)?.items || [];
 
   const leaveReason = claim.leave_details?.reason as LeaveReasonType;
-  const certificationDocuments = findDocumentsByLeaveReason(
-    allDocuments,
-    leaveReason
-  );
+  const certificationDocuments = getLeaveCertificationDocs(allDocuments);
 
   const handleBenefitInputAdd = () => {
     updateFields({

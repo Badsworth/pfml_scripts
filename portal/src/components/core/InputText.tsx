@@ -105,6 +105,10 @@ export interface InputTextProps {
    * saving it back to the API.
    */
   valueType?: "integer" | "float" | "string";
+  /**
+   * Disable pasting for a field (only should be used on payment method page)
+   */
+  disablePaste?: boolean;
 }
 
 /**
@@ -141,6 +145,11 @@ function InputText({ type = "text", ...props }: InputTextProps) {
     onFocus: props.onFocus,
   });
 
+  const handleDisablePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    return false;
+  };
+
   const field = (
     <input
       autoComplete={props.autoComplete}
@@ -154,6 +163,7 @@ function InputText({ type = "text", ...props }: InputTextProps) {
       onBlur={props.pii ? handleBlur : props.onBlur}
       onFocus={props.pii ? handleFocus : props.onFocus}
       onChange={props.onChange}
+      onPaste={props.disablePaste ? handleDisablePaste : undefined}
       ref={props.inputRef}
       type={type}
       value={props.value}

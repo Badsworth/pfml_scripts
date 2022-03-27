@@ -75,6 +75,7 @@ resource "aws_ecs_task_definition" "app" {
       fineos_client_wscomposer_user_id           = var.fineos_client_wscomposer_user_id
       fineos_client_oauth2_url                   = var.fineos_client_oauth2_url
       fineos_client_oauth2_client_id             = var.fineos_client_oauth2_client_id
+      fineos_is_running_v21                      = var.fineos_is_running_v21
       pfml_email_address                         = var.pfml_email_address
       bounce_forwarding_email_address            = var.bounce_forwarding_email_address
       bounce_forwarding_email_address_arn        = var.bounce_forwarding_email_address_arn
@@ -90,7 +91,6 @@ resource "aws_ecs_task_definition" "app" {
       new_plan_proofs_active_at                  = var.new_plan_proofs_active_at
       use_claim_status_url                       = var.use_claim_status_url
       enable_document_multipart_upload           = var.enable_document_multipart_upload
-      enable_application_import                  = var.enable_application_import
       enable_employee_endpoints                  = var.enable_employee_endpoints
     }
   )

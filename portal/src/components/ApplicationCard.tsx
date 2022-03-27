@@ -8,9 +8,11 @@ import LeaveReason from "../models/LeaveReason";
 import LegalNoticeList from "./LegalNoticeList";
 import React from "react";
 import Spinner from "./core/Spinner";
+import { Trans } from "react-i18next";
 import { WithUserProps } from "src/hoc/withUser";
 import { createRouteWithQuery } from "../utils/routeWithParams";
 import findKeyByValue from "../utils/findKeyByValue";
+import formatDate from "../utils/formatDate";
 import hasDocumentsLoadError from "../utils/hasDocumentsLoadError";
 import isBlank from "../utils/isBlank";
 import routes from "../routes";
@@ -225,6 +227,20 @@ export const ApplicationCard = (props: ApplicationCardProps) => {
             </p>
           </Alert>
         )}
+        {claim.isEarliestSubmissionDateInFuture && (
+          <Alert state="warning" noIcon>
+            <p>
+              <Trans
+                i18nKey="components.applicationCard.earliestSubmissionDateInFuture"
+                values={{
+                  earliest_submission_date: formatDate(
+                    claim.computed_earliest_submission_date
+                  ).short(),
+                }}
+              />
+            </p>
+          </Alert>
+        )}
         <Heading level="2">
           {t("components.applicationCard.heading", {
             context:
@@ -237,6 +253,19 @@ export const ApplicationCard = (props: ApplicationCardProps) => {
             {t("components.applicationCard.applicationID")}
             <br />
             <strong>{claim.fineos_absence_id}</strong>
+          </p>
+        )}
+
+        {claim.leaveStartDate && claim.leaveEndDate && (
+          <p>
+            {t("components.applicationCard.leaveDatesLabel")}
+            <br />
+            <strong>
+              {t("components.applicationCard.leaveDates", {
+                start: formatDate(claim.leaveStartDate).short(),
+                end: formatDate(claim.leaveEndDate).short(),
+              })}
+            </strong>
           </p>
         )}
 

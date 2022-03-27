@@ -841,8 +841,7 @@ def test_build_customer_model_no_mass_id(user):
 
     assert application.mass_id is None
 
-    assert customer_model.classExtensionInformation[0].name == "MassachusettsID"
-    assert customer_model.classExtensionInformation[0].stringValue == ""
+    assert customer_model.classExtensionInformation[0].name != "MassachusettsID"
 
 
 def test_build_customer_address(user):
@@ -1525,7 +1524,7 @@ class TestRegisterEmployeeWithClaim:
         assert str(error) == expected
 
 
-class TestGetAbsencePeriods:
+class TestGetAbsencePeriodsFromClaim:
     # Run `initialize_factories_session` for all tests,
     # so that it doesn't need to be manually included
     @pytest.fixture(autouse=True)
@@ -1536,7 +1535,7 @@ class TestGetAbsencePeriods:
         claim.fineos_absence_id = None
 
         with pytest.raises(Exception) as exc_info:
-            fineos_actions.get_absence_periods(claim, test_db_session)
+            fineos_actions.get_absence_periods_from_claim(claim, test_db_session)
 
         error = exc_info.value
         assert type(error) == Exception
@@ -1551,7 +1550,9 @@ class TestGetAbsencePeriods:
         # TODO (PORTAL-752): don't use magic string here
         claim.fineos_absence_id = "NTN-304363-ABS-01"
 
-        fineos_absence_periods = fineos_actions.get_absence_periods(claim, test_db_session)
+        fineos_absence_periods = fineos_actions.get_absence_periods_from_claim(
+            claim, test_db_session
+        )
         absence_periods = [
             convert_fineos_absence_period_to_claim_response_absence_period(
                 fineos_absence_period, {}
@@ -1565,7 +1566,7 @@ class TestGetAbsencePeriods:
                 absence_period_end_date=datetime.date(2021, 1, 30),
                 reason="Child Bonding",
                 reason_qualifier_one="Foster Care",
-                reason_qualifier_two="",
+                reason_qualifier_two=None,
                 period_type="Continuous",
                 request_decision="Pending",
                 evidence_status=None,
@@ -1606,7 +1607,62 @@ class TestGetAbsencePeriods:
         claim.fineos_absence_id = "NTN-304363-ABS-01"
 
         try:
-            fineos_actions.get_absence_periods(claim, test_db_session)
+            fineos_actions.get_absence_periods_from_claim(claim, test_db_session)
+        except FINEOSForbidden:
+            pass
+
+        assert "Unable to get absence periods" in caplog.text
+
+
+class TestGetAbsencePeriods:
+    # Run `initialize_factories_session` for all tests,
+    # so that it doesn't need to be manually included
+    @pytest.fixture(autouse=True)
+    def setup_factories(self, initialize_factories_session):
+        return
+
+    @mock.patch("massgov.pfml.api.services.fineos_actions.register_employee")
+    def test_success(self, mock_register, test_db_session, claim):
+        mock_register.return_value = "web_id"
+
+        # TODO (PORTAL-752): don't use magic string here
+        fineos_absence_periods = fineos_actions.get_absence_periods(
+            "NTN-304363-ABS-01", claim.employee_tax_identifier, claim.employer_fein, test_db_session
+        )
+
+        absence_periods = [
+            convert_fineos_absence_period_to_claim_response_absence_period(
+                fineos_absence_period, {}
+            )
+            for fineos_absence_period in fineos_absence_periods
+        ]
+        assert type(absence_periods[0]) == AbsencePeriodResponse
+        assert absence_periods == [
+            AbsencePeriodResponse(
+                absence_period_start_date=datetime.date(2021, 1, 29),
+                absence_period_end_date=datetime.date(2021, 1, 30),
+                reason="Child Bonding",
+                reason_qualifier_one="Foster Care",
+                reason_qualifier_two=None,
+                period_type="Continuous",
+                request_decision="Pending",
+                evidence_status=None,
+            )
+        ]
+
+    @mock.patch("massgov.pfml.api.services.fineos_actions.register_employee")
+    def test_with_fineos_error(self, mock_register, test_db_session, claim, caplog):
+        error = exception.FINEOSForbidden("get_absence", 200, 403, "Unable to get absence periods")
+        mock_register.side_effect = error
+
+        try:
+            # TODO (PORTAL-752): don't use magic string here
+            fineos_actions.get_absence_periods(
+                "NTN-304363-ABS-01",
+                claim.employee_tax_identifier,
+                claim.employer_fein,
+                test_db_session,
+            )
         except FINEOSForbidden:
             pass
 
@@ -1768,3 +1824,23 @@ class TestConvertChangeRequestToFineosModel:
 
         error = exc_info.value
         assert "Unknown type: Foo" in str(error)
+
+
+class TestBuildContactDetailsForFineosUpgrade:
+    def test_fineos_21_3(self, monkeypatch):
+        monkeypatch.setenv("FINEOS_IS_RUNNING_V21", "true")
+
+        application = ApplicationFactory.build()
+        contact_details = fineos_actions.build_contact_details(application)
+
+        assert contact_details.emailAddresses[0].emailAddress == application.user.email_address
+        assert contact_details.emailAddresses[0].emailAddressType == "Email"
+
+    def test_not_fineos_21_3(self, monkeypatch):
+        monkeypatch.setenv("FINEOS_IS_RUNNING_V21", "false")
+
+        application = ApplicationFactory.build()
+        contact_details = fineos_actions.build_contact_details(application)
+
+        assert contact_details.emailAddresses[0].emailAddress == application.user.email_address
+        assert "emailAddressType" not in contact_details.emailAddresses[0].dict()

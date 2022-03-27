@@ -8,11 +8,11 @@ import pytest
 import massgov.pfml.fineos.mock_client
 from massgov.pfml.api.app import get_app_config
 from massgov.pfml.api.models.applications.common import ContentType as AllowedContentTypes
-from massgov.pfml.api.models.applications.responses import DocumentResponse
-from massgov.pfml.db.models.applications import DocumentType, LeaveReason
+from massgov.pfml.api.models.applications.common import DocumentResponse
+from massgov.pfml.db.models.applications import Document, DocumentType, LeaveReason
 from massgov.pfml.db.models.factories import ApplicationFactory, ClaimFactory, DocumentFactory
 from massgov.pfml.fineos import fineos_client, models
-from massgov.pfml.fineos.exception import FINEOSUnprocessableEntity
+from massgov.pfml.fineos.exception import FINEOSForbidden, FINEOSUnprocessableEntity
 
 
 @pytest.fixture(autouse=True)
@@ -809,6 +809,34 @@ def test_documents_get_missing_content_type(
     assert response["status_code"] == 200
 
 
+@mock.patch(
+    "massgov.pfml.api.services.fineos_actions.fineos_document_response_to_document_response"
+)
+def test_documents_get_missing_document_type(
+    mock_get_documents, client, consented_user, consented_user_token
+):
+    claim = ClaimFactory.create(
+        fineos_notification_id="NTN-111", fineos_absence_id="NTN-111-ABS-01"
+    )
+    application = ApplicationFactory.create(user=consented_user, claim=claim)
+    mock_get_documents.return_value = DocumentResponse(
+        user_id=str(consented_user.user_id),
+        application_id=str(application.application_id),
+        content_type="application/pdf",
+        created_at="2021-01-01",
+        fineos_document_id="3011",
+        name="test.pdf",
+        description="Mock File",
+    )
+
+    response = client.get(
+        "/v1/applications/{}/documents".format(application.application_id),
+        headers={"Authorization": f"Bearer {consented_user_token}"},
+    ).get_json()
+
+    assert response["status_code"] == 200
+
+
 def test_documents_get_date_created(
     client, consented_user, consented_user_token, test_db_session, monkeypatch
 ):
@@ -1004,9 +1032,15 @@ def test_documents_get_not_submitted_application(
     assert len(response["data"]) == 0
 
 
+<<<<<<< HEAD
 @mock.patch("massgov.pfml.api.services.document_upload.upload_document")
 def test_document_upload_return_error_rule(
     mock_upload, client, consented_user, consented_user_token, test_db_session
+=======
+@mock.patch("massgov.pfml.api.services.document_upload.mark_single_document_as_received")
+def test_document_upload_requirement_already_satisfied_error(
+    mock_mark_received, client, consented_user, consented_user_token, test_db_session
+>>>>>>> origin
 ):
     error = FINEOSUnprocessableEntity(
         "upload_document",
@@ -1014,7 +1048,7 @@ def test_document_upload_return_error_rule(
         422,
         "A document of type Identification Proof is not required for the case provided",
     )
-    mock_upload.side_effect = error
+    mock_mark_received.side_effect = error
 
     response = document_upload_helper(
         client=client,
@@ -1026,12 +1060,24 @@ def test_document_upload_return_error_rule(
     assert response["status_code"] == 400
     assert response["errors"][0]["rule"] == "document_requirement_already_satisfied"
 
+    # document should not have been created
+    created_document = (
+        test_db_session.query(Document)
+        .filter(Document.user_id == consented_user.user_id)
+        .one_or_none()
+    )
+    assert created_document is None
+
 
 @mock.patch("massgov.pfml.api.services.document_upload.upload_document")
+<<<<<<< HEAD
 def test_document_upload_doesnt_return_error_rule(
+=======
+def test_document_upload_withdrawn_error(
+>>>>>>> origin
     mock_upload, client, consented_user, consented_user_token, test_db_session
 ):
-    error = FINEOSUnprocessableEntity("upload_document", 200, 422, "Unable to upload document")
+    error = FINEOSForbidden("upload_document", 200, 403)
     mock_upload.side_effect = error
 
     response = document_upload_helper(
@@ -1041,8 +1087,5 @@ def test_document_upload_doesnt_return_error_rule(
         form_data=document_upload_payload_helper(VALID_FORM_DATA, valid_file()),
     )
 
-    assert response["status_code"] == 400
-    assert response["errors"][0] == {
-        "message": "Issue encountered while attempting to upload the document.",
-        "type": "fineos_client",
-    }
+    assert response["status_code"] == 403
+    assert response["errors"][0]["type"] == "fineos_claim_withdrawn"

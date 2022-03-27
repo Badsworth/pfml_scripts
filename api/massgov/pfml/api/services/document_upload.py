@@ -15,10 +15,18 @@ import massgov.pfml.util.logging
 import massgov.pfml.util.pdf as pdf_util
 from massgov.pfml.api.authorization.flask import CREATE, EDIT, ensure
 from massgov.pfml.api.constants.application import ID_DOC_TYPES
+<<<<<<< HEAD
 from massgov.pfml.api.models.applications.common import ContentType as AllowedContentTypes
 from massgov.pfml.api.models.applications.common import DocumentType as IoDocumentTypes
 from massgov.pfml.api.models.applications.requests import DocumentRequestBody
 from massgov.pfml.api.models.applications.responses import DocumentResponse
+=======
+from massgov.pfml.api.exceptions import ClaimWithdrawn
+from massgov.pfml.api.models.applications.common import ContentType as AllowedContentTypes
+from massgov.pfml.api.models.applications.common import DocumentResponse
+from massgov.pfml.api.models.applications.common import DocumentType as IoDocumentTypes
+from massgov.pfml.api.models.applications.requests import DocumentRequestBody
+>>>>>>> origin
 from massgov.pfml.api.services.fineos_actions import (
     mark_single_document_as_received,
     upload_document,
@@ -30,7 +38,11 @@ from massgov.pfml.api.validation.exceptions import (
     ValidationException,
 )
 from massgov.pfml.db.models.applications import Application, Document, DocumentType, LeaveReason
+<<<<<<< HEAD
 from massgov.pfml.fineos.exception import FINEOSUnprocessableEntity
+=======
+from massgov.pfml.fineos.exception import FINEOSForbidden, FINEOSUnprocessableEntity
+>>>>>>> origin
 from massgov.pfml.util.logging.applications import get_application_log_attributes
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -183,6 +195,7 @@ def upload_document_to_fineos(
                 exc_info=True,
             )
 
+<<<<<<< HEAD
             if isinstance(err, FINEOSUnprocessableEntity):
                 message = "Issue encountered while attempting to upload the document."
                 return response_util.error_response(
@@ -199,6 +212,12 @@ def upload_document_to_fineos(
                     ],
                     data=document_details.dict(),
                 ).to_api_response()
+=======
+            if isinstance(err, FINEOSForbidden):
+                # Through testing, we've identified Fineos returning 403 errors when cases are Withdrawn:
+                # https://lwd.atlassian.net/browse/PSD-2530
+                raise ClaimWithdrawn()
+>>>>>>> origin
 
             # Bubble any other issues up to the API error handlers
             raise
@@ -221,13 +240,40 @@ def upload_document_to_fineos(
             if document_details.mark_evidence_received:
                 mark_single_document_as_received(application, document, db_session)
                 logger.info("document_upload - evidence marked as received", extra=log_attributes)
+<<<<<<< HEAD
         except Exception:
+=======
+        except Exception as err:
+>>>>>>> origin
             logger.warning(
                 "document_upload failure - failure marking evidence as received",
                 extra=log_attributes,
                 exc_info=True,
             )
 
+<<<<<<< HEAD
+=======
+            if isinstance(err, FINEOSUnprocessableEntity):
+                # Drop the new document metadata row so the new document isn't saved to the DB. It will still
+                # be saved to FINEOS
+                db_session.expunge(document)
+                message = "Issue encountered while attempting to upload the document."
+                return response_util.error_response(
+                    status_code=BadRequest,
+                    message=message,
+                    errors=[
+                        ValidationErrorDetail(
+                            type=IssueType.fineos_client,
+                            message=message,
+                            rule=IssueRule.document_requirement_already_satisfied
+                            if "is not required for the case provided" in err.message  # noqa: B306
+                            else None,
+                        )
+                    ],
+                    data=document_details.dict(),
+                ).to_api_response()
+
+>>>>>>> origin
             # We don't expect any errors here, raise an error if we get one.
             # FINEOS Unavailability errors will bubble up and be returned as 503
             # with a fineos_client issue type.

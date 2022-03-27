@@ -16,8 +16,9 @@ logger = logging.getLogger(__name__)
 repo = Repo(os.path.join(os.path.dirname(__file__), "../../.."))
 gitcmd = repo.git
 
-FORMAL_RELEASE_TAG_REGEX = re.compile(r"(api|portal|foobar)\/v([0-9]+)\.([0-9]+)(\.{0,1}([0-9]+){0,1})$")
-
+# regex to enforce pattern matching in tags
+PROD_RELEASE_VERSION_REGEX = re.compile(r"(api|portal|foobar)\/v([0-9]+)\.([0-9]+)(\.{0,1}([0-9]+){0,1})$")
+RELEASE_VERSION_REGEX = r"(api|portal|foobar)\/v([0-9]+)\.([0-9]+)(\.{0,1}([0-9]+){0,1})(\-rc\d+)?"
 
 @contextmanager
 def rollback(old_head=None) -> Generator:
@@ -55,6 +56,8 @@ def rollback(old_head=None) -> Generator:
         checkout(rollback_branch)
 
 
+# If this gives you an error saying it's rejected with "would clobber existing
+# tag" then manually run "git fetch --tags --force"
 def fetch_remotes():
     gitcmd.fetch("--all", "--tags")
 
@@ -91,13 +94,29 @@ def create_branch(branch_name):
 def current_branch():
     return gitcmd.rev_parse("--abbrev-ref", "HEAD")
 
+def collect_tags(app, branch_name):
+    return gitcmd.tag("--list", f"{app}/v*.*", f"origin/{branch_name}").split()
 
-def most_recent_tag(app, release_branch):
-    # git python returns git output as a single string, hence the string manipulation
-    t = gitcmd.tag("--list", "--sort=-version:refname", f"{app}/v*", f"origin/{release_branch}").split("\n")[0]
-    sha = gitcmd.rev_parse(t)
-    logger.info(f"Latest {app} tag on '{release_branch}' is '{t}' with commit SHA '{sha[0:9]}'")
-    return t, sha
+def get_sha(tag):
+    return gitcmd.rev_parse(tag)
+
+def get_latest_version(app, branch_name):
+    """Return the latest semantic version on a particular branch"""
+    tag_list = collect_tags(app,branch_name)
+    tags = []
+    for item in tag_list:
+        # check if it matches regex then append to list
+        if re.match(RELEASE_VERSION_REGEX, item):
+            tags.append(to_semver(item))
+
+    # returns the highest semver from list, which should be the most recent
+    latest_tag = max(tags)
+  
+    # convert back to str
+    tag = from_semver(latest_tag, app)
+    sha = get_sha(tag)
+    logger.info(f"Latest {app} tag on '{branch_name}' is '{tag}' with commit SHA '{sha[0:9]}'")
+    return tag, sha
 
 
 def is_finalized(release_branch) -> bool:
@@ -108,7 +127,7 @@ def is_finalized(release_branch) -> bool:
     version_series_tags: list = gitcmd.tag("-l", release_branch_version_series).split("\n")
     logger.debug(f"Found these release tags: {version_series_tags}")
 
-    formal_release_statuses = list(bool(FORMAL_RELEASE_TAG_REGEX.match(tag)) for tag in version_series_tags)
+    formal_release_statuses = list(bool(PROD_RELEASE_VERSION_REGEX.match(tag)) for tag in version_series_tags)
     logger.debug(f"Formal-release status of those tags: {tuple(zip(version_series_tags, formal_release_statuses))}")
 
     if any(formal_release_statuses):
@@ -142,6 +161,10 @@ def to_semver(version_str: str) -> semver.VersionInfo:
         # portal versions don't have a third number, which makes their versions invalid semver
         ver = "0." + version_str.split("portal/v")[-1]
         return semver.VersionInfo.parse(ver)
+    elif version_str.startswith("admin-portal/v"):
+        # The same as portal above.
+        ver = "0." + version_str.split("admin-portal/v")[-1]
+        return semver.VersionInfo.parse(ver)
     elif version_str.startswith("api/v"):
         return semver.VersionInfo.parse(version_str.split("api/v")[-1])
     elif version_str.startswith("foobar/v"):
@@ -153,6 +176,8 @@ def to_semver(version_str: str) -> semver.VersionInfo:
 def from_semver(sem_ver: semver.VersionInfo, app) -> str:
     if app == "portal":
         return "portal/v" + str(sem_ver).split(".", 1)[1]
+    elif app == "admin-portal":
+        return "admin-portal/v" + str(sem_ver).split(".", 1)[1]
     elif app == "api":
         return "api/v" + str(sem_ver)
     elif app == "foobar":

@@ -150,10 +150,16 @@ def test_employees_search_snow_allowed(client, snow_user_headers):
         first_name="John", last_name="Smith", email_address="test@example.com"
     )
 
-    EmployeeFactory.create(first_name=employee.first_name)
-    EmployeeFactory.create(last_name=employee.last_name)
+    EmployeeFactory.create(
+        first_name=employee.first_name, last_name="Black", email_address="example@example.com"
+    )
+    EmployeeFactory.create(
+        first_name="Mark", last_name=employee.last_name, email_address="example@example.com"
+    )
     employee_2 = EmployeeFactory.create(
-        first_name=employee.first_name, last_name=employee.last_name
+        first_name=employee.first_name,
+        last_name=employee.last_name,
+        email_address="example@example.com",
     )
     terms = {"first_name": employee.first_name, "last_name": employee.last_name}
     order = {"by": "created_at", "direction": "ascending"}
@@ -207,26 +213,37 @@ def test_employees_search_nonexisting_employee(client, snow_user_headers):
 
 
 def test_employees_search_wildcard_rejects_invalid(client, snow_user_headers):
-    employee_1 = EmployeeFactory(first_name="Bob", last_name="Black")
-    EmployeeFactory(first_name="Bobby", last_name=employee_1.last_name)
+    employee_1 = EmployeeFactory(
+        first_name="Bob", last_name="Black", email_address="test@example.com"
+    )
+    EmployeeFactory(
+        first_name="Bobby", last_name=employee_1.last_name, email_address="example@example.com"
+    )
 
-    terms = {"first_name": "Bob%", "last_name": employee_1.last_name}
+    terms = {"first_name": "Bo%", "last_name": employee_1.last_name}
 
     response = client.post("/v1/employees/search", json={"terms": terms}, headers=snow_user_headers)
 
     assert response.status_code == 400
     response_body = response.get_json()
-    assert "Name fields must only contain alphanumeric characters " in str(response_body)
+    assert "Must contain at least 3 alphanumeric characters." in str(response_body)
 
-    terms = {"email_address": "e@"}
+    terms = {"email_address": "_@-.ab"}
     response = client.post("/v1/employees/search", json={"terms": terms}, headers=snow_user_headers)
 
     assert response.status_code == 400
+    response_body = response.get_json()
+
+    assert "Must contain at least 3 alphanumeric characters." in str(response_body)
 
 
 def test_employees_search_wildcard_name(client, snow_user_headers):
-    employee_1 = EmployeeFactory(first_name="Bob", last_name="Smith")
-    employee_2 = EmployeeFactory(first_name="Bobby", last_name=employee_1.last_name)
+    employee_1 = EmployeeFactory(
+        first_name="Bob", last_name="Smith", email_address="test@example.com"
+    )
+    employee_2 = EmployeeFactory(
+        first_name="Bobby", last_name=employee_1.last_name, email_address="example@example.com"
+    )
     # different first name, same last name
     EmployeeFactory(first_name="Jane", last_name=employee_1.last_name)
     # different first and last name
@@ -243,20 +260,40 @@ def test_employees_search_wildcard_name(client, snow_user_headers):
 
 
 def test_employees_search_with_phone_number(client, snow_user_headers):
-    employee_1 = EmployeeFactory(cell_phone_number="+12247052345")
-    EmployeeFactory(first_name=employee_1.first_name)
+    employee_1 = EmployeeFactory(
+        first_name="Bob",
+        last_name="Smith",
+        email_address="test@example.com",
+        cell_phone_number="+12247052345",
+    )
+    EmployeeFactory(
+        first_name=employee_1.first_name, last_name="Black", email_address="example@example.com"
+    )
     terms = {"phone_number": employee_1.cell_phone_number}
 
     response = client.post("/v1/employees/search", json={"terms": terms}, headers=snow_user_headers)
 
     assert_employee_search_response_data(response, [employee_1])
     data = response.get_json()
+
+    # assert cell phone comes back with the correct type
+    cell_phone = data["data"][0]["phone_numbers"][1]
+    assert cell_phone["phone_number"] == "224-705-2345"
+    assert cell_phone["phone_type"] == "Cell"
+
     assert_employee_search_response_paging_data(data)
 
 
 def test_employees_search_with_fineos_customer_number(client, snow_user_headers):
-    employee_1 = EmployeeFactory(fineos_customer_number="111111")
-    EmployeeFactory(first_name=employee_1.first_name)
+    employee_1 = EmployeeFactory(
+        first_name="Bob",
+        last_name="Smith",
+        email_address="test@example.com",
+        fineos_customer_number="111111",
+    )
+    EmployeeFactory(
+        first_name=employee_1.first_name, last_name="Black", email_address="example@example.com"
+    )
     terms = {"fineos_customer_number": employee_1.fineos_customer_number}
 
     response = client.post("/v1/employees/search", json={"terms": terms}, headers=snow_user_headers)
@@ -268,8 +305,12 @@ def test_employees_search_with_fineos_customer_number(client, snow_user_headers)
 
 
 def test_employees_search_with_email_address(client, snow_user_headers):
-    employee_1 = EmployeeFactory(first_name="Will", email_address="test@example.com")
-    EmployeeFactory(first_name=employee_1.first_name)
+    employee_1 = EmployeeFactory(
+        first_name="Will", last_name="Witten", email_address="test@example.com"
+    )
+    EmployeeFactory(
+        first_name=employee_1.first_name, last_name="Smith", email_address="example@example.com"
+    )
     terms = {"email_address": employee_1.email_address}
 
     response = client.post("/v1/employees/search", json={"terms": terms}, headers=snow_user_headers)
@@ -282,22 +323,38 @@ def test_employees_search_with_email_address(client, snow_user_headers):
 
 def test_employees_search(client, snow_user_headers):
     employee_1 = EmployeeFactory(
-        first_name="will", last_name="smith", cell_phone_number="+12247052345"
+        first_name="will",
+        last_name="smith",
+        email_address="test@example.com",
+        cell_phone_number="+12247052345",
     )
     employee_2 = EmployeeFactory(
         fineos_employee_first_name="Will",
         fineos_employee_last_name="Smith",
         first_name="john",
         last_name="doe",
+        email_address="example@example.com",
         cell_phone_number="+12247052345",
     )
     employee_3 = EmployeeFactory(
         fineos_employee_last_name="smith",
         first_name="Will",
         last_name="doe",
+        email_address="test@example.com",
         phone_number="+12247052345",
     )
-    EmployeeFactory(first_name="Will")
+    EmployeeFactory(
+        fineos_employee_last_name="O'Keefe",
+        first_name="Kennedy",
+        last_name="O'Keefe",
+        email_address="kennedy@okeefe.com",
+        phone_number="+12247052346",
+    )
+    EmployeeFactory(
+        first_name="Will",
+        last_name="Farrel",
+        email_address="mars@example.com",
+    )
 
     terms = {"first_name": "will", "last_name": "Smith", "phone_number": "+12247052345"}
     order = {"by": "created_at", "direction": "descending"}
@@ -313,6 +370,20 @@ def test_employees_search(client, snow_user_headers):
     paging = dict(order=order, paging=paging)
     assert_employee_search_response_paging_data(data, paging)
 
+    terms_special_chars = {"first_name": "Kennedy", "last_name": "O'Keefe"}
+    body_special_chars = {"terms": terms_special_chars, "order": order, "paging": paging}
+
+    response_special_chars = client.post(
+        "/v1/employees/search", json=body_special_chars, headers=snow_user_headers
+    )
+    data = response_special_chars.get_json()
+
+    assert response_special_chars.status_code == 200
+
+    data = response_special_chars.get_json()["data"]
+    assert len(data) == 1
+    assert data[0]["last_name"] == "O'Keefe"
+
 
 def test_get_employee_basic_response(client, employee_different_fineos_name, snow_user_headers):
     response = client.get(
@@ -327,12 +398,14 @@ def test_get_employee_basic_response(client, employee_different_fineos_name, sno
     assert employee_data["first_name"] == "Foo2"
     assert employee_data["middle_name"] == "Baz2"
     assert employee_data["last_name"] == "Bar2"
+    assert employee_data["tax_identifier"] is not None
+    assert employee_data["tax_identifier_last4"] is not None
 
 
 def test_employee_for_pfml_crm_response(client, employee, snow_user_headers, user, test_db_session):
     tax_identifier = TaxIdentifierFactory.create(tax_identifier="587777091")
     employee = EmployeeFactory.create(
-        tax_identifier_id=tax_identifier.tax_identifier_id,
+        tax_identifier=tax_identifier,
         first_name="Foo",
         last_name="Bar",
         middle_name="Baz",
@@ -358,9 +431,12 @@ def test_employee_for_pfml_crm_response(client, employee, snow_user_headers, use
     response_body = response.get_json()
 
     employee_data = response_body.get("data")
-    assert employee_data["tax_identifier"] is not None
     assert employee_data["date_of_birth"] == "****-01-01"
     assert employee_data["addresses"][0] == MaskedAddress.from_orm(address)
+    assert employee_data["tax_identifier"] == "587-77-7091"
+    assert employee_data["tax_identifier_last4"] == tax_identifier.tax_identifier_last4
+    assert employee_data["email_address"] is not None
+    assert len(employee_data["phone_numbers"]) == 1
 
 
 def test_employee_with_claims_no_id_proof(

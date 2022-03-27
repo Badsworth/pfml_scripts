@@ -33,7 +33,7 @@ exports[`ConcurrentLeavesIntroIntro renders the page 1`] = `
         </strong>
          In some cases, using accrued paid leave after the 7-day waiting period has ended can cause your PFML benefits to stop. You will need to re-apply to receive PFML benefits again. To avoid this, use accrued paid leave only at the start or end of your PFML leave. 
         <a
-          href="https://www.mass.gov/info-details/how-other-leave-and-benefits-can-affect-your-paid-family-and-medical-leave#paid-time-off-through-your-employer-"
+          href="https://mass.gov/pfml/pto"
           rel="noreferrer noopener"
           target="_blank"
         >

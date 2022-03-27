@@ -11,6 +11,11 @@ Use either Poetry or `pip` to bootstrap the project's dependencies before you us
 
 - To install the necessary dependencies, cd into this directory (bin/ci) and run `poetry install`.
 
+🟢 Scripted Releases is now available through Github Actions 🟢
+  - No installation steps required and no CLI needed.
+  - Job located here - [Scripted Releases](https://github.com/EOLWD/pfml/actions/workflows/scripted-releases.yml)
+  - ⚠️ Merge conflicts must be resolved manually using `git` then the Action can be re-ran ⚠️
+
 ---
 
 ## Usage Instructions
@@ -18,6 +23,17 @@ Use either Poetry or `pip` to bootstrap the project's dependencies before you us
 There's a multitude of ways to use this project to accomplish your release tasks. Choose whichever works best for you.
 
 You can always provide the `-h / --help` flag instead of any other args to see detailed usage and syntax instructions.
+
+### ...via Github Actions
+- Github Actions utilizes Poetry to run Scripted Releases.
+- Just select the **Application**, **Scripted Release Task**, and **Arguments** (not required for `start-release` task)
+- Examples:
+  - 1️⃣**Application**: `api` 2️⃣**Scripted Release Task**: `start-release` 3️⃣**Arguments**:
+  - 1️⃣**Application**: `api` 2️⃣**Scripted Release Task**: `update-release` 3️⃣**Arguments**: `-r release/api/v2.25.0 --with-branch main`
+  - 1️⃣**Application**: `api` 2️⃣**Scripted Release Task**: `finalize-release` 3️⃣**Arguments**: `-r release/api/v2.25.0`
+  - 1️⃣**Application**: `api` 2️⃣**Scripted Release Task**: `hotfix` 3️⃣**Arguments**: `-r release/api/v2.25.0 -c DEADBEEF -c ABADCAFE`
+  - 1️⃣**Application**: `portal` 2️⃣**Scripted Release Task**: `update-release` 3️⃣**Arguments**: `-r release/portal/v49.0 -c ABCDEFGH`
+- ⚠️ Merge conflicts must be resolved manually using `git` then the Action can be re-ran ⚠️
 
 ### ...via Poetry
 - Once you've got the project installed, run these scripts from `bin/ci` with `poetry run scripted-releases <args>`.
@@ -27,16 +43,22 @@ You can always provide the `-h / --help` flag instead of any other args to see d
   - `poetry run scripted-releases -a portal update-release -r release/portal/v49.0 --with-branch main`
   - `poetry run scripted-releases -a portal finalize-release -r release/portal/v49.0`
   - `poetry run scripted-releases -a portal hotfix -r release/portal/v49.0 -c DEADBEEF -c ABADCAFE`
+  - `poetry run scripted-releases -a admin-portal update-release -r release/admin-portal/v2.0 --with-branch main`
+  - `poetry run scripted-releases -a admin-portal finalize-release -r release/admin-portal/v2.0`
+  - `poetry run scripted-releases -a admin-portal hotfix -r release/admin-portal/v2.0 -c DEADBEEF -c ABADCAFE`
 
 ### ...via API or Portal makefiles
-- There are some convenient hooks for invoking the various release tasks from either API or Portal makefiles.
-- To use the script this way, first CD into the API or Portal root directories, then use `make` to start your task.
+- There are some convenient hooks for invoking the various release tasks from the API, Portal or Admin Portal makefiles.
+- To use the script this way, first CD into the directory, then use `make` to start your task.
 - Examples:
   - `someone@nava: ~/code/pfml/api $ make start-release`
   - `someone@nava: ~/code/pfml/api $ make update-release args="-r release/api/v2.25.0 -c DEADBEEF"`
   - `someone@nava: ~/code/pfml/portal $ make update-release args="-r release/portal/v49.0 --with-branch main"`
   - `someone@nava: ~/code/pfml/portal $ make finalize-release args="-r release/portal/v49.0"`
   - `someone@nava: ~/code/pfml/portal $ make hotfix args="-r release/portal/v49.0 -c DEADBEEF -c ABADCAFE"`
+  - `someone@nava: ~/code/pfml/admin $ make update-release args="-r release/portal/v49.0 --with-branch main"`
+  - `someone@nava: ~/code/pfml/admin $ make finalize-release args="-r release/portal/v49.0"`
+  - `someone@nava: ~/code/pfml/admin $ make hotfix args="-r release/portal/v49.0 -c DEADBEEF -c ABADCAFE"`
 - NOTE: You don't need to provide the `-a / --app` arg when running tasks from the makefiles.
   (The Makefile sets it automatically.)
 
@@ -50,6 +72,9 @@ You can always provide the `-h / --help` flag instead of any other args to see d
   - `python release.py -a portal update-release -r release/portal/v49.0 --with-branch main`
   - `python release.py -a portal finalize-release -r release/portal/v49.0`
   - `python release.py -a portal hotfix -r release/portal/v49.0 -c DEADBEEF -c ABADCAFE`
+  - `python release.py -a admin-portal update-release -r release/admin-portal/v2.0 --with-branch main`
+  - `python release.py -a admin-portal finalize-release -r release/admin-portal/v2.0`
+  - `python release.py -a admin-portal hotfix -r release/admin-portal/v2.0 -c DEADBEEF -c ABADCAFE`
 
 ---
 

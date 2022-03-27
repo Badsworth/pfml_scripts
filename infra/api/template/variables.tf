@@ -247,6 +247,12 @@ variable "fineos_aws_iam_role_external_id" {
   default     = null
 }
 
+variable "fineos_is_running_v21" {
+  description = "If the connected FINEOS environment is running the 21.3 upgrade (April 2022 deployment)"
+  type        = string
+  default     = "false"
+}
+
 variable "service_now_base_url" {
   description = "URL for Service Now post requests"
   type        = string
@@ -352,11 +358,6 @@ variable "use_claim_status_url" {
   description = "Whether or not to direct claimants to the claim status page. Can enable this when Claim Status is launched."
   type        = bool
   default     = true
-}
-
-variable "enable_application_import" {
-  description = "Enable or disable claimant application import"
-  type        = string
 }
 
 variable "enable_employee_endpoints" {

@@ -50,6 +50,8 @@ module "tasks" {
   fineos_eligibility_feed_output_directory_path       = "s3://fin-somdev-data-import/TRN2"
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/TRN2/dataexports"
 
+  fineos_is_running_v21 = "true"
+
   # These can be kept blank.
   eolwd_moveit_sftp_uri   = ""
   pfml_error_reports_path = "s3://massgov-pfml-trn2-agency-transfer/error-reports/outbound"
@@ -62,7 +64,7 @@ module "tasks" {
 
   # TODO: Values from FINEOS.
   fineos_data_export_path       = "s3://fin-somdev-data-export/TRN2/dataexports"
-  fineos_adhoc_data_export_path = "s3://fin-somdev-data-export/TRN2/dataextracts/AdHocExtract"
+  fineos_adhoc_data_export_path = "s3://fin-somdev-data-export/TRN2/dataExtracts/AdHocExtract"
   fineos_data_import_path       = "s3://fin-somdev-data-import/TRN2/peiupdate"
   fineos_error_export_path      = "s3://fin-somdev-data-export/TRN2/errorExtracts"
   fineos_report_export_path     = "s3://fin-somdev-data-export/TRN2/reportExtract"

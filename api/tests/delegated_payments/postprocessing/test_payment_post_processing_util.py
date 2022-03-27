@@ -25,6 +25,15 @@ def test_get_all_paid_payments_associated_with_employee(
         employee, Decimal("800.00"), local_test_db_session, has_processed_state=True
     )
 
+    # A paid employer reimbursement (will be found)
+    paid_employer_reimbursement_container = _create_payment_container(
+        employee,
+        Decimal("800.00"),
+        local_test_db_session,
+        has_processed_state=True,
+        payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+    )
+
     # A payment we have received payment confirmation from PUB (will be found)
     payment_success_with_pub_container = _create_payment_container(
         employee, Decimal("800.00"), local_test_db_session, has_processed_state=True
@@ -50,9 +59,26 @@ def test_get_all_paid_payments_associated_with_employee(
     # Another payment in the same state (won't be found)
     _create_payment_container(employee, Decimal("100.00"), local_test_db_session)
 
+    # An employer reimbursement in the same state (won't be found)
+    _create_payment_container(
+        employee,
+        Decimal("100.00"),
+        local_test_db_session,
+        payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+    )
+
     # A previously errored payment (won't be found)
     _create_payment_container(
         employee, Decimal("100.00"), local_test_db_session, has_errored_state=True
+    )
+
+    # A previously errored employer reimbursement payment (won't be found)
+    _create_payment_container(
+        employee,
+        Decimal("100.00"),
+        local_test_db_session,
+        has_errored_state=True,
+        payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
     )
 
     # An adhoc payment in a success state (won't be found)
@@ -62,6 +88,16 @@ def test_get_all_paid_payments_associated_with_employee(
         local_test_db_session,
         has_processed_state=True,
         is_adhoc_payment=True,
+    )
+
+    # An adhoc employer reimbursement payment in a success state (won't be found)
+    _create_payment_container(
+        employee,
+        Decimal("100.00"),
+        local_test_db_session,
+        has_processed_state=True,
+        is_adhoc_payment=True,
+        payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
     )
 
     # Not technically possible, but an overpayment in the success state (won't be found)
@@ -91,12 +127,13 @@ def test_get_all_paid_payments_associated_with_employee(
     active_payments = payment_post_processing_util.get_all_paid_payments_associated_with_employee(
         employee.employee_id, [payment_container.payment.payment_id], local_test_db_session
     )
-    assert len(active_payments) == 3
+    assert len(active_payments) == 4
     assert set([active_payment.payment.payment_id for active_payment in active_payments]) == set(
         [
             payment_sent_to_pub_container.payment.payment_id,
             payment_success_with_pub_container.payment.payment_id,
             payment_change_notification_with_pub_container.payment.payment_id,
+            paid_employer_reimbursement_container.payment.payment_id,
         ]
     )
 

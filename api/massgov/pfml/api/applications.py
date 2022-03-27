@@ -15,6 +15,11 @@ import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import CREATE, EDIT, READ, ensure
 from massgov.pfml.api.claims import get_claim_from_db
+<<<<<<< HEAD
+=======
+from massgov.pfml.api.exceptions import ClaimWithdrawn
+from massgov.pfml.api.models.applications.common import DocumentResponse
+>>>>>>> origin
 from massgov.pfml.api.models.applications.requests import (
     ApplicationImportRequestBody,
     ApplicationRequestBody,
@@ -22,9 +27,13 @@ from massgov.pfml.api.models.applications.requests import (
     PaymentPreferenceRequestBody,
     TaxWithholdingPreferenceRequestBody,
 )
-from massgov.pfml.api.models.applications.responses import ApplicationResponse, DocumentResponse
+from massgov.pfml.api.models.applications.responses import ApplicationResponse
 from massgov.pfml.api.models.common import OrderDirection
+<<<<<<< HEAD
 from massgov.pfml.api.services.applications import get_document_by_id
+=======
+from massgov.pfml.api.services.applications import get_application_split, get_document_by_id
+>>>>>>> origin
 from massgov.pfml.api.services.document_upload import upload_document_to_fineos
 from massgov.pfml.api.services.fineos_actions import (
     complete_intake,
@@ -119,19 +128,7 @@ def applications_get():
     ).to_api_response()
 
 
-# TODO (PORTAL-1832): Once Portal sends requests to /application-imports, this method and
-# the /applications/import endpoint can be removed. It may also make sense to rename the
-# method below to application_imports() (swap the plural) at that time.
-def deprecated_applications_import():
-    return applications_import()
-
-
-def applications_import():
-    if not app.get_app_config().enable_application_import:
-        return response_util.error_response(
-            status_code=Forbidden, message="Application import not currently available", errors=[]
-        ).to_api_response()
-
+def application_imports():
     application = Application(application_id=uuid4())
     ensure(CREATE, application)
 
@@ -362,6 +359,9 @@ def get_fineos_submit_issues_response(err, existing_application):
 
 
 def applications_submit(application_id):
+    split_claims_across_by_enabled = (
+        connexion.request.headers.get("X-FF-Split-Claims-Across-BY") == "true"
+    )
     with app.db_session() as db_session:
         current_user = app.current_user()
         existing_application = get_or_404(db_session, Application, application_id)
@@ -430,6 +430,12 @@ def applications_submit(application_id):
         # Only send to fineos if fineos_absence_id isn't set on the claim. If it is set,
         # assume that just complete_intake needs to be reattempted.
         if not existing_application.claim:
+            if split_claims_across_by_enabled:
+                application_split = get_application_split(existing_application, db_session)
+                logger.info(
+                    f"application would have been split: {application_split != None}",
+                    extra=log_attributes,
+                )
             try:
                 send_to_fineos(existing_application, db_session, current_user)
             # TODO (CP-2350): improve handling of FINEOS validation rules
@@ -550,7 +556,16 @@ def document_upload(application_id, body, file):
     # Parse the document details from the form body
     document_details: DocumentRequestBody = DocumentRequestBody.parse_obj(body)
 
+<<<<<<< HEAD
     return upload_document_to_fineos(application, document_details, file)
+=======
+    try:
+        response = upload_document_to_fineos(application, document_details, file)
+    except ClaimWithdrawn as err:
+        return err.to_api_response()
+
+    return response
+>>>>>>> origin
 
 
 def documents_get(application_id):

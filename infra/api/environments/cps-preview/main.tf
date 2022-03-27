@@ -107,6 +107,5 @@ module "api" {
   azure_ad_tenant_id        = "3e861d16-48b7-4a0e-9806-8c04d81b7b2a"
 
   enable_document_multipart_upload = "1"
-  enable_application_import        = "1"
   enable_employee_endpoints        = "1"
 }

@@ -41,10 +41,12 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVbiLeavePlanRequestedAbsence,
     FineosExtractVbiRequestedAbsence,
     FineosExtractVbiRequestedAbsenceSom,
+    FineosExtractVbiTaskReportSom,
     FineosExtractVPaidLeaveInstruction,
     FineosExtractVpei,
     FineosExtractVpeiClaimDetails,
     FineosExtractVpeiPaymentDetails,
+    FineosExtractVpeiPaymentLine,
     PaymentLog,
 )
 from massgov.pfml.db.models.state import LkState, State
@@ -60,6 +62,7 @@ ExtractTable = Union[
     Type[FineosExtractVpei],
     Type[FineosExtractVpeiClaimDetails],
     Type[FineosExtractVpeiPaymentDetails],
+    Type[FineosExtractVpeiPaymentLine],
     Type[FineosExtractVbiRequestedAbsenceSom],
     Type[FineosExtractEmployeeFeed],
     Type[FineosExtractVbiRequestedAbsence],
@@ -69,6 +72,7 @@ ExtractTable = Union[
     Type[FineosExtractVbiLeavePlanRequestedAbsence],
     Type[FineosExtractVPaidLeaveInstruction],
     Type[FineosExtractVbi1099DataSom],
+    Type[FineosExtractVbiTaskReportSom],
 ]
 
 
@@ -78,11 +82,18 @@ class FineosExtract:
 
     table: ExtractTable = field(compare=False, repr=False)
 
-    # Note field names is simply a list
-    # of fields we care about. Extracts
-    # will contain many additional fields
-    # that we do not use.
+    # Note field names is simply a list of fields we care about. Extracts will
+    # contain many additional fields that we do not use. This is the list of
+    # fields that is required to be present, otherwise we throw an exception
+    # (see validate_columns_present())
     field_names: List[str] = field(compare=False, repr=False)
+
+    # This allows us to optionally specify filters on fields, in which case we
+    # will only process rows that match *all* of these filters.
+    # usage is field_filters = {"field_name1": re.compile(r"expression1""), ...}
+    field_filters: Dict[str, List[str]] = field(
+        default_factory=lambda: {}, compare=False, repr=False
+    )
 
 
 class Constants:
@@ -107,10 +118,13 @@ class Constants:
 
     PEI_EXPECTED_FILE_NAME = "vpei.csv"
     PAYMENT_DETAILS_EXPECTED_FILE_NAME = "vpeipaymentdetails.csv"
+    PAYMENT_LINE_EXPECTED_FILE_NAME = "vpeipaymentline.csv"
     CLAIM_DETAILS_EXPECTED_FILE_NAME = "vpeiclaimdetails.csv"
     REQUESTED_ABSENCE_FILE_NAME = "VBI_REQUESTEDABSENCE.csv"
 
     NACHA_FILE_FORMAT = f"%Y-%m-%d-%H-%M-%S-{FILE_NAME_PUB_NACHA}"
+
+    VBI_TASK_REPORT_STATUS_OPEN = "928000"
 
     # When processing payments, certain states
     # are allowed to be restarted (mainly error states)
@@ -270,6 +284,7 @@ class FineosExtractConstants:
             "PAYEEACCOUNTT",
             "EVENTTYPE",
             "PAYEEIDENTIFI",
+            "PAYEEFULLNAME",
             "EVENTREASON",
             "AMALGAMATIONC",
             "PAYMENTTYPE",
@@ -280,12 +295,29 @@ class FineosExtractConstants:
         file_name="vpeipaymentdetails.csv",
         table=FineosExtractVpeiPaymentDetails,
         field_names=[
+            "C",
+            "I",
             "PECLASSID",
             "PEINDEXID",
             "PAYMENTSTARTP",
             "PAYMENTENDPER",
             "BALANCINGAMOU_MONAMT",
             "BUSINESSNETBE_MONAMT",
+        ],
+    )
+
+    PAYMENT_LINE = FineosExtract(
+        file_name="vpeipaymentline.csv",
+        table=FineosExtractVpeiPaymentLine,
+        field_names=[
+            "C",
+            "I",
+            "AMOUNT_MONAMT",
+            "LINETYPE",
+            "PAYMENTDETAILCLASSID",
+            "PAYMENTDETAILINDEXID",
+            "C_PYMNTEIF_PAYMENTLINES",
+            "I_PYMNTEIF_PAYMENTLINES",
         ],
     )
 
@@ -444,6 +476,34 @@ class FineosExtractConstants:
         ],
     )
 
+    VBI_TASKREPORT_SOM = FineosExtract(
+        file_name="VBI_TASKREPORT_SOM.csv",
+        table=FineosExtractVbiTaskReportSom,
+        field_names=[
+            "TASKID",
+            "TASKTABLEID",
+            "CREATIONDATE",
+            "STARTDATE",
+            "CLOSEDDATE",
+            "ONHOLDUNTILDATE",
+            "STATUS",
+            "TASKTYPENAME",
+            "CASETYPE",
+            "NOTIFICATIONNUMBER",
+            "CASENUMBER",
+        ],
+        field_filters={
+            "STATUS": ["928000"],
+            "TASKTYPENAME": [
+                "Employee Reported Other Income",
+                "Escalate Employer Reported Other Income",
+                "Escalate employer reported accrued paid leave (PTO)",
+                "Employee reported accrued paid leave (PTO)",
+                "Employee Reported Other Leave",
+            ],
+        },
+    )
+
 
 CLAIMANT_EXTRACT_FILES = [
     FineosExtractConstants.VBI_REQUESTED_ABSENCE_SOM,
@@ -457,6 +517,7 @@ PAYMENT_EXTRACT_FILES = [
     FineosExtractConstants.VPEI,
     FineosExtractConstants.CLAIM_DETAILS,
     FineosExtractConstants.PAYMENT_DETAILS,
+    FineosExtractConstants.PAYMENT_LINE,
 ]
 PAYMENT_EXTRACT_FILE_NAMES = [extract_file.file_name for extract_file in PAYMENT_EXTRACT_FILES]
 
@@ -479,6 +540,11 @@ REQUEST_1099_EXTRACT_FILES = [FineosExtractConstants.VBI_1099DATA_SOM]
 
 REQUEST_1099_EXTRACT_FILES_NAMES = [
     extract_file.file_name for extract_file in REQUEST_1099_EXTRACT_FILES
+]
+
+VBI_TASKREPORT_SOM_EXTRACT_FILES = [FineosExtractConstants.VBI_TASKREPORT_SOM]
+VBI_TASKREPORT_SOM_EXTRACT_FILE_NAMES = [
+    extract_file.file_name for extract_file in VBI_TASKREPORT_SOM_EXTRACT_FILES
 ]
 
 
@@ -515,6 +581,7 @@ class ValidationReason(str, Enum):
     LEAVE_REQUEST_IN_REVIEW = "LeaveRequestInReview"
     UNEXPECTED_RECORD_VARIANCE = "UnexpectedRecordVariance"
     EMPLOYER_EXEMPT = "EmployerExempt"
+    OPEN_OTHER_INCOME_TASKS = "OpenOtherIncomeTasks"
 
 
 @dataclass(frozen=True, eq=True)
@@ -783,6 +850,11 @@ def get_fineos_max_history_date(export_type: LkReferenceFileType) -> datetime:
         == ReferenceFileType.FINEOS_1099_DATA_EXTRACT.reference_file_type_id
     ):
         datestring = date_config.fineos_1099_data_extract_max_history_date
+    elif (
+        export_type.reference_file_type_id
+        == ReferenceFileType.FINEOS_VBI_TASKREPORT_SOM_EXTRACT.reference_file_type_id
+    ):
+        datestring = date_config.fineos_vbi_taskreport_som_extract_max_history_date
 
     else:
         raise ValueError(f"Incorrect export_type {export_type} provided")
@@ -1147,7 +1219,7 @@ def create_staging_table_instance(
     data: Dict,
     db_cls: ExtractTable,
     ref_file: ReferenceFile,
-    fineos_extract_import_log_id: Optional[int],
+    fineos_extract_import_log_id: Optional[int] = None,
     ignore_properties: Optional[List[Any]] = None,
 ) -> base.Base:
     """We return an instance of cls, with matching properties from data and cls. If there are any
@@ -1405,6 +1477,14 @@ def get_unconfigured_fineos_columns(record: Dict[str, Any], db_cls: ExtractTable
     return unconfigured_columns
 
 
+def matches_all_filters(record: Dict[str, Any], extract: FineosExtract) -> bool:
+    for field_name, allowed_values in extract.field_filters.items():
+        field_value = record[field_name.lower()]
+        if field_value not in allowed_values:
+            return False
+    return True
+
+
 def is_employer_exempt_for_payment(payment: Payment, claim: Claim, employer: Employer) -> bool:
     # Adhoc payments always skip the exempt employer check
     if payment.is_adhoc_payment:
@@ -1492,6 +1572,41 @@ def get_earliest_absence_period_for_payment_leave_request(
     )
 
 
+def get_open_tasks(
+    db_session: db.Session, absence_case_number: str, tasknames: list[str]
+) -> List[FineosExtractVbiTaskReportSom]:
+    open_tasks = []
+
+    latest_vbi_task_report_extract_reference_file = (
+        db_session.query(ReferenceFile)
+        .filter(
+            ReferenceFile.reference_file_type_id
+            == ReferenceFileType.FINEOS_VBI_TASKREPORT_SOM_EXTRACT.reference_file_type_id
+        )
+        .order_by(ReferenceFile.created_at.desc())
+        .first()
+    )
+
+    if latest_vbi_task_report_extract_reference_file:
+        open_tasks = (
+            db_session.query(FineosExtractVbiTaskReportSom)
+            .filter(
+                FineosExtractVbiTaskReportSom.status == Constants.VBI_TASK_REPORT_STATUS_OPEN,
+                FineosExtractVbiTaskReportSom.casenumber == absence_case_number,
+                FineosExtractVbiTaskReportSom.reference_file_id
+                == latest_vbi_task_report_extract_reference_file.reference_file_id,
+                FineosExtractVbiTaskReportSom.tasktypename.in_(tasknames),
+            )
+            .all()
+        )
+    else:
+        raise Exception(
+            "No VBI Task Report Som files consumed. This would only happen the first time you run in an env and have no extracts, make sure FINEOS has created extracts"
+        )
+
+    return open_tasks
+
+
 def get_earliest_matching_payment(
     db_session: db.Session, fineos_pei_c_value: str, fineos_pei_i_value: str
 ) -> Optional[Payment]:
@@ -1507,3 +1622,12 @@ def get_earliest_matching_payment(
         .order_by(Payment.created_at.asc())
         .first()
     )
+
+
+def get_payment_transaction_type_id(payment: Payment) -> int:
+    transaction_type_id = (
+        payment.payment_transaction_type_id
+        if payment.payment_transaction_type_id is not None
+        else 0
+    )
+    return transaction_type_id

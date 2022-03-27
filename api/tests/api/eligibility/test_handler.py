@@ -965,6 +965,14 @@ def test_benefit_years_search_end_date_within(
     )
     assert_benefit_year_search_response(response, [])
 
+    # benefit year's end date equals the end of the requested date range
+    response = client.post(
+        "/v1/benefit-years/search",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"terms": {"end_date_within": ["2019-12-20", "2019-12-28"]}},
+    )
+    assert_benefit_year_search_response(response, [])
+
     # testing invalid inputs for end_date_within
     response = client.post(
         "/v1/benefit-years/search",

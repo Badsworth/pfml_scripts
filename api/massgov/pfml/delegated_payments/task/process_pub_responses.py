@@ -113,19 +113,25 @@ def _process_pub_responses(
 
     if config.process_nacha_responses:
         process_nacha_return_files_step = ProcessNachaReturnFileStep(
-            db_session=db_session, log_entry_db_session=log_entry_db_session
+            db_session=db_session,
+            log_entry_db_session=log_entry_db_session,
+            should_add_to_report_queue=True,
         )
         run_repeated_step(process_nacha_return_files_step)
 
     if config.process_check_responses:
         process_check_return_file_step = ProcessCheckReturnFileStep(
-            db_session=db_session, log_entry_db_session=log_entry_db_session
+            db_session=db_session,
+            log_entry_db_session=log_entry_db_session,
+            should_add_to_report_queue=True,
         )
         run_repeated_step(process_check_return_file_step)
 
     if config.process_manual_rejects:
         process_manual_pub_reject_step = ProcessManualPubRejectionStep(
-            db_session=db_session, log_entry_db_session=log_entry_db_session
+            db_session=db_session,
+            log_entry_db_session=log_entry_db_session,
+            should_add_to_report_queue=True,
         )
         run_repeated_step(process_manual_pub_reject_step)
 
@@ -139,6 +145,11 @@ def _process_pub_responses(
             db_session=db_session,
             log_entry_db_session=log_entry_db_session,
             report_names=PROCESS_PUB_RESPONSES_REPORTS,
+            sources_to_clear_from_report_queue=[
+                ProcessCheckReturnFileStep,
+                ProcessNachaReturnFileStep,
+                ProcessManualPubRejectionStep,
+            ],
         ).run()
 
     payments_util.create_success_file(start_time, "pub-payments-process-pub-returns")

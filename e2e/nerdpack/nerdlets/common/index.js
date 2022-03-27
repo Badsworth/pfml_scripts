@@ -12,7 +12,13 @@ export const ENVS = [
   "test",
   "infra-test",
 ];
-export const GROUPS = ["Stable", "Unstable", "Morning", "Integration"];
+export const GROUPS = [
+  "Stable",
+  "Unstable",
+  "Morning",
+  "Integration",
+  "Targeted",
+];
 export const ENV_NOT_CONFIGURED = ["prod", "infra-test"];
 export const ENV_OFFLINE = {
   trn2: "Env expected offline",
@@ -64,4 +70,17 @@ export function setDefault(val, def) {
     return def;
   }
   return val;
+}
+
+export function msToTime(duration) {
+  var milliseconds = Math.floor((duration % 1000) / 100),
+    seconds = Math.floor((duration / 1000) % 60),
+    minutes = Math.floor((duration / (1000 * 60)) % 60),
+    hours = Math.floor((duration / (1000 * 60 * 60)) % 24);
+
+  hours = hours < 10 ? "0" + hours : hours;
+  minutes = minutes < 10 ? "0" + minutes : minutes;
+  seconds = seconds < 10 ? "0" + seconds : seconds;
+
+  return hours + ":" + minutes + ":" + seconds + "." + milliseconds;
 }

@@ -49,11 +49,7 @@ describe("Approve claim created in Fineos, then check Tax Withholding deductions
           );
         }
         customer
-          .createNotification(
-            claim.claim,
-            claim.is_withholding_tax,
-            config("HAS_APRIL_UPGRADE") === "true"
-          )
+          .createNotification(claim.claim, claim.is_withholding_tax)
           .then((fineos_absence_id) => {
             cy.log(fineos_absence_id);
             cy.stash("submission", {
@@ -86,11 +82,10 @@ describe("Approve claim created in Fineos, then check Tax Withholding deductions
                   true
                 )
               );
-            if (config("HAS_APRIL_UPGRADE") === "true") {
-              claimPage.approve("Approved", true);
-            } else {
-              claimPage.approve("Approved", false);
-            }
+            claimPage.approve(
+              "Approved",
+              config("HAS_APRIL_UPGRADE") === "true"
+            );
           });
       });
     });

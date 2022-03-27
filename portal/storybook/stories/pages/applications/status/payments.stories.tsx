@@ -41,6 +41,9 @@ const APPROVAL_TIME = {
 const DELAY_TRANSACTION_TYPE: { [key: string]: WritebackTransactionStatus } = {
   ADDRESS_VALIDATION_ERROR: "Address Validation Error",
   BANK_PROCESSING_ERROR: "Bank Processing Error",
+  DUA_ADDITIONAL_INCOME: "DUA Additional Income",
+  MAX_WEEKLY_BENEFITS_EXCEEDED: "Max Weekly Benefits Exceeded",
+  PENDING_PAYMENT_AUDIT: "Pending Payment Audit",
 };
 
 const PAYMENT_METHOD = {
@@ -51,6 +54,7 @@ const PAYMENT_METHOD = {
 const TRANSACTION_DATE = {
   BEFORE_TWO_DAYS: "Two business days before today",
   BEFORE_FIVE_DAYS: "Five business days before today",
+  BEFORE_TEN_DAYS: "Ten business days before today",
   SAME_DAY: "Same day",
 };
 
@@ -70,11 +74,14 @@ const mappedApprovalDate: { [key: string]: string } = {
 };
 
 const mappedTransactionDate: { [key: string]: string } = {
-  "After two business days": STATIC_DATES.current_date
+  "Two business days before today": STATIC_DATES.current_date
     .subtractBusinessDays(2)
     .format("YYYY-MM-DD"),
-  "After five business days": STATIC_DATES.current_date
+  "Five business days before today": STATIC_DATES.current_date
     .subtractBusinessDays(5)
+    .format("YYYY-MM-DD"),
+  "Ten business days before today": STATIC_DATES.current_date
+    .subtractBusinessDays(10)
     .format("YYYY-MM-DD"),
   "Same day": STATIC_DATES.current_date.format("YYYY-MM-DD"),
 };
@@ -204,6 +211,9 @@ export const DefaultStory = (
           payment_method: args["Payment method"],
           status: "Delayed",
           transaction_date: mappedTransactionDate[args["Transaction date"]],
+          transaction_date_could_change:
+            args["Delay transaction type"] ===
+            DELAY_TRANSACTION_TYPE.PENDING_PAYMENT_AUDIT,
           writeback_transaction_status: args["Delay transaction type"],
         },
         false,

@@ -5,9 +5,12 @@ from unittest import mock
 import pytest
 from freezegun import freeze_time
 
-from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
+from massgov.pfml.api.models.applications.common import (
+    DocumentResponse,
+    DurationBasis,
+    FrequencyIntervalBasis,
+)
 from massgov.pfml.api.models.applications.requests import ApplicationImportRequestBody
-from massgov.pfml.api.models.applications.responses import DocumentResponse
 from massgov.pfml.api.validation.application_rules import (
     get_always_required_issues,
     get_application_complete_issues,

@@ -88,6 +88,7 @@ class RelatedPaymentsProcessingStep(Step):
                     Payment.payment_transaction_type_id.in_(
                         self.LIST_OF_RELATED_TRANSACTION_TYPE_IDS
                     )
+<<<<<<< HEAD
                 )
                 .filter(
                     Payment.fineos_extract_import_log_id == payment.fineos_extract_import_log_id
@@ -175,7 +176,105 @@ class RelatedPaymentsProcessingStep(Step):
 
                 related_payment_log_details = payments_util.get_traceable_payment_details(
                     related_payment
+=======
+>>>>>>> origin
                 )
+                .filter(
+                    Payment.fineos_extract_import_log_id == payment.fineos_extract_import_log_id
+                )
+                .all()
+            )
+
+            # Otherwise we will have one or more employer reimbursement payments
+            # if it is employer reimbursement payment get the state of the payment
+            # if the employer reimbursement state is in error state , set the primary payment state to error and create writeback.
+            for related_payment in related_payment_records:
+                if (
+                    related_payment.payment_transaction_type_id
+                    != PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+                ):
+                    continue
+                related_payment_state_log = state_log_util.get_latest_state_log_in_flow(
+                    related_payment, Flow.DELEGATED_PAYMENT, self.db_session
+                )
+                if related_payment_state_log is None:
+                    raise Exception(
+                        "State log record not found for the related payment id: %s",
+                        related_payment.payment_id,
+                    )
+                if (
+                    related_payment_state_log.end_state_id
+                    != State.EMPLOYER_REIMBURSEMENT_READY_FOR_PROCESSING.state_id
+                ):
+                    if (
+                        related_payment_state_log.end_state_id
+                        in payments_util.Constants.RESTARTABLE_PAYMENT_STATE_IDS
+                    ):
+                        end_state = State.DELEGATED_PAYMENT_CASCADED_ERROR_RESTARTABLE
+                    else:
+                        end_state = State.DELEGATED_PAYMENT_CASCADED_ERROR
+
+                    transaction_status: Optional[
+                        LkFineosWritebackTransactionStatus
+                    ] = self._get_payment_writeback_transaction_status(related_payment)
+
+                    message = (
+                        "Employer reimbursement failed validation, need to wait for it to be fixed."
+                    )
+                    state_log_util.create_finished_state_log(
+                        end_state=end_state,
+                        outcome=state_log_util.build_outcome(message),
+                        associated_model=payment,
+                        db_session=self.db_session,
+                    )
+                    logger.info(
+                        "Payment added to state %s",
+                        end_state.state_description,
+                        extra=extra,
+                    )
+
+                    related_payment_log_details = payments_util.get_traceable_payment_details(
+                        related_payment
+                    )
+
+                    if transaction_status:
+                        stage_payment_fineos_writeback(
+                            payment=payment,
+                            writeback_transaction_status=transaction_status,
+                            outcome=state_log_util.build_outcome(message),
+                            db_session=self.db_session,
+                            import_log_id=self.get_import_log_id(),
+                        )
+                        logger.info(
+                            "Primary payment errored because related payment has %s",
+                            transaction_status.transaction_status_description,
+                            extra=related_payment_log_details,
+                        )
+                    else:
+                        logger.error(
+                            "Writeback details not found for the related payment",
+                            extra=related_payment_log_details,
+                        )
+
+    def _get_standard_payments(self, db_session: db.Session) -> List[Payment]:
+        state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
+            associated_class=state_log_util.AssociatedClass.PAYMENT,
+            end_state=State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
+            db_session=db_session,
+        )
+        return [state_log.payment for state_log in state_logs]
+
+    def sync_related_payments_to_primary(self) -> None:
+        # get employer reimbursement and withholding payment records
+        related_payments: List[Payment] = self._get_related_payments()
+
+        if not related_payments:
+            logger.info("No related payment records found.")
+            return
+        for payment in related_payments:
+
+            if payment.claim is None:
+                raise Exception("Claim not found for related payment id: %s ", payment.payment_id)
 
                 if transaction_status:
                     stage_payment_fineos_writeback(

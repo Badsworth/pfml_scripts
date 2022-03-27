@@ -1,5 +1,6 @@
 import logging  # noqa: B1
 import os
+import uuid
 from datetime import date, datetime
 
 import boto3
@@ -18,6 +19,7 @@ from massgov.pfml.db.models.employees import (
     PaymentCheck,
     PrenoteState,
     PubEft,
+    ReferenceFile,
     ReferenceFileType,
 )
 from massgov.pfml.db.models.factories import (
@@ -33,7 +35,11 @@ from massgov.pfml.db.models.factories import (
     ReferenceFileFactory,
 )
 from massgov.pfml.db.models.geo import Country, GeoState
-from massgov.pfml.db.models.payments import FineosExtractVpei, PaymentLog
+from massgov.pfml.db.models.payments import (
+    FineosExtractVbiTaskReportSom,
+    FineosExtractVpei,
+    PaymentLog,
+)
 from massgov.pfml.delegated_payments.delegated_payments_util import (
     find_existing_address_pair,
     find_existing_eft,
@@ -1445,3 +1451,73 @@ def test_get_unconfigured_fineos_columns():
     )
 
     assert unconfigured_columns == ["addressline8", "addressline9"]
+
+
+def test_get_open_tasks(test_db_session):
+    reference_file_id = uuid.uuid4()
+    reference_file = ReferenceFile(
+        file_location="fake_file_location",
+        reference_file_type_id=ReferenceFileType.FINEOS_VBI_TASKREPORT_SOM_EXTRACT.reference_file_type_id,
+        reference_file_id=reference_file_id,
+    )
+    test_db_session.add(reference_file)
+
+    mock_task_1 = FineosExtractVbiTaskReportSom(
+        status="928000",
+        casenumber="mock_casenum_1",
+        tasktypename="Employee Reported Other Income",
+        reference_file_id=reference_file_id,
+    )
+    mock_task_2 = FineosExtractVbiTaskReportSom(
+        status="928001",
+        casenumber="mock_casenum_1",
+        tasktypename="Employee Reported Other Income",
+        reference_file_id=reference_file_id,
+    )
+    mock_task_3 = FineosExtractVbiTaskReportSom(
+        status="928000",
+        casenumber="mock_casenum_1",
+        tasktypename="Adjudicate Absence",
+        reference_file_id=reference_file_id,
+    )
+    mock_task_4 = FineosExtractVbiTaskReportSom(
+        status="928000",
+        casenumber="mock_casenum_2",
+        tasktypename="Employee Reported Other Income",
+        reference_file_id=reference_file_id,
+    )
+    mock_task_5 = FineosExtractVbiTaskReportSom(
+        status="928001",
+        casenumber="mock_casenum_3",
+        tasktypename="Employee Reported Other Income",
+        reference_file_id=reference_file_id,
+    )
+    test_db_session.add(mock_task_1)
+    test_db_session.add(mock_task_2)
+    test_db_session.add(mock_task_3)
+    test_db_session.add(mock_task_4)
+    test_db_session.add(mock_task_5)
+
+    # Check that we only return open tasks from the correct absence case
+    tasks = payments_util.get_open_tasks(
+        test_db_session, "mock_casenum_1", ["Employee Reported Other Income"]
+    )
+    assert len(tasks) == 1
+    assert tasks[0].casenumber == "mock_casenum_1"
+    assert tasks[0].tasktypename == "Employee Reported Other Income"
+
+    # Check that we return all open tasks with matching task names
+    tasks = payments_util.get_open_tasks(
+        test_db_session, "mock_casenum_1", ["Employee Reported Other Income", "Adjudicate Absence"]
+    )
+    assert len(tasks) == 2
+    assert tasks[0].casenumber == "mock_casenum_1"
+    assert tasks[0].tasktypename in ("Employee Reported Other Income", "Adjudicate Absence")
+    assert tasks[1].casenumber == "mock_casenum_1"
+    assert tasks[1].tasktypename in ("Employee Reported Other Income", "Adjudicate Absence")
+
+    # Check that if there are no open tasks, we return an empty list
+    tasks = payments_util.get_open_tasks(
+        test_db_session, "mock_casenum_3", ["Employee Reported Other Income"]
+    )
+    assert len(tasks) == 0

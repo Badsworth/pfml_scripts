@@ -1,8 +1,8 @@
 import {
   DocumentType,
   filterByApplication,
-  findDocumentsByLeaveReason,
   findDocumentsByTypes,
+  getLeaveCertificationDocs,
   getLegalNotices,
 } from "src/models/Document";
 import LeaveReason from "src/models/LeaveReason";
@@ -33,48 +33,6 @@ describe("filterByApplication", () => {
     expect(filterByApplication(documents, "b")).toEqual([
       applicationBDocument1,
     ]);
-  });
-});
-
-describe("findDocumentsByLeaveReason", () => {
-  const documentsList = [
-    createMockBenefitsApplicationDocument({
-      document_type: DocumentType.certification[LeaveReason.medical],
-    }),
-    createMockBenefitsApplicationDocument({
-      document_type: DocumentType.certification[LeaveReason.medical],
-    }),
-  ];
-
-  it("returns an empty array when no documents are found", () => {
-    const documents = findDocumentsByLeaveReason(
-      documentsList,
-      LeaveReason.bonding
-    );
-    expect(documents).toEqual([]);
-  });
-
-  it("returns an array with all of the matching documents when the leave reason matches the doc type", () => {
-    const testDocs = [
-      createMockBenefitsApplicationDocument({
-        document_type: DocumentType.identityVerification,
-      }),
-      createMockBenefitsApplicationDocument({
-        document_type: DocumentType.identityVerification,
-      }),
-    ];
-    const documents = findDocumentsByLeaveReason(
-      [...documentsList, ...testDocs],
-      LeaveReason.medical
-    );
-
-    expect(documents).toHaveLength(2);
-    expect(documents).toEqual(documentsList);
-  });
-
-  it("returns an empty array when the documents list is empty", () => {
-    const documents = findDocumentsByLeaveReason([], LeaveReason.medical);
-    expect(documents).toEqual([]);
   });
 });
 
@@ -157,6 +115,33 @@ describe("findDocumentsByTypes", () => {
     ]);
 
     expect(documents).toHaveLength(2);
+  });
+});
+
+describe("getLeaveCertificationDocs", () => {
+  it("filters out legal notices and ID proof documents", () => {
+    const allDocuments = [
+      createMockBenefitsApplicationDocument({
+        document_type: DocumentType.approvalNotice,
+      }),
+      createMockBenefitsApplicationDocument({
+        document_type: DocumentType.identityVerification,
+      }),
+      createMockBenefitsApplicationDocument({
+        document_type: DocumentType.certification.medicalCertification,
+      }),
+      createMockBenefitsApplicationDocument({
+        document_type:
+          DocumentType.certification["Serious Health Condition - Employee"],
+      }),
+    ];
+
+    const certDocs = getLeaveCertificationDocs(allDocuments);
+
+    expect(certDocs.map((d) => d.document_type)).toEqual([
+      DocumentType.certification.medicalCertification,
+      DocumentType.certification["Serious Health Condition - Employee"],
+    ]);
   });
 });
 

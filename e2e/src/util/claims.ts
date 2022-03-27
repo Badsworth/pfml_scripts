@@ -1,3 +1,4 @@
+import { ApplicationResponse } from "./../_api";
 import {
   ApplicationLeaveDetails,
   ApplicationRequestBody,
@@ -12,7 +13,7 @@ import { isNotNull } from "./typeUtils";
 import { parseISO, format, min } from "date-fns";
 
 export function extractLeavePeriod(
-  { leave_details }: ApplicationRequestBody,
+  { leave_details }: ApplicationRequestBody | NonNullable<ApplicationResponse>,
   leaveType: keyof LeavePeriods = "continuous_leave_periods"
 ): [Date, Date] {
   if (isNotNull(leave_details)) {
@@ -137,7 +138,9 @@ export function extractLatestLeaveDate(
 }
 
 export function extractLeavePeriodType(
-  leaveDetails: ApplicationLeaveDetails
+  leaveDetails:
+    | ApplicationLeaveDetails
+    | NonNullable<ApplicationResponse["leave_details"]>
 ): NonNullable<AbsencePeriodResponse["period_type"]> {
   const leavePeriodTypes = {
     intermittent_leave_periods: "Intermittent",
