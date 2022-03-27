@@ -683,7 +683,7 @@ def _process_claims_request(claim_request: ClaimSearchRequest, method_name: str)
                 )
                 query.add_request_decision_filter(request_decisions)
 
-            query.add_order_by(pagination_context)
+            query.add_order_by(pagination_context, is_reviewable)
 
             page = query.get_paginated_results(pagination_context)
             page_data_log_attributes = make_paging_meta_data_from_paginator(

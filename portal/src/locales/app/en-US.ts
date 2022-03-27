@@ -627,13 +627,13 @@ const errors = {
   documents: {
     file: {
       clientSideError_size:
-        "We could not upload: {{disallowedFileNames}}. Files must be smaller than {{ sizeLimit }} MB.",
+        "We could not upload: {{disallowedFileNames}}. Files must be smaller than {{ sizeLimit }} MB.<br />You may fax or mail color copies of your documents if you prefer. <mail-fax-instructions>Follow the fax and mail instructions</mail-fax-instructions>.",
       clientSideError_sizeAndType:
-        "We could not upload: {{disallowedFileNames}}. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than {{ sizeLimit }} MB.",
+        "We could not upload: {{disallowedFileNames}}. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than {{ sizeLimit }} MB.<br />You may fax or mail color copies of your documents if you prefer. <mail-fax-instructions>Follow the fax and mail instructions</mail-fax-instructions>.",
       clientSideError_type:
-        "We could not upload: {{disallowedFileNames}}. Choose a PDF or an image file (.jpg, .jpeg, .png).",
+        "We could not upload: {{disallowedFileNames}}. Choose a PDF or an image file (.jpg, .jpeg, .png).<br />You may fax or mail color copies of your documents if you prefer. <mail-fax-instructions>Follow the fax and mail instructions</mail-fax-instructions>.",
       file_size:
-        "We could not upload all files. Files must be smaller than {{ fileSizeMaxMB }} MB.",
+        "We could not upload all files. Files must be smaller than {{ fileSizeMaxMB }} MB.<br />You may fax or mail color copies of your documents if you prefer. <mail-fax-instructions>Follow the fax and mail instructions</mail-fax-instructions>.",
       required: "Upload at least one file to continue.",
     },
     fineos_client: "$t(shared.documentsUploadError)",
@@ -2880,9 +2880,9 @@ const components: {
   },
   documentRequirements: {
     body_certification:
-      "<ul><li>The text must be clear and readable</li><li>Upload every page of the document where you or your health care provider have entered information</li><li>Each file you upload must be smaller than 4.5 MB</li></ul><p>It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p>",
+      "<ul><li>The text must be clear and readable</li><li>Upload every page of the document where you or your health care provider have entered information</li><li>Each file you upload must be smaller than 4.5 MB</li></ul>",
     body_id:
-      "<ul><li>The image of the card must be in full color</li><li>The text must be clear and readable</li><li>The front and back can be in one file, or in two separate files</li><li>Each file must be smaller than 4.5 MB</li></ul><p>It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the <mail-fax-instructions-link>fax and mail instructions</mail-fax-instructions-link>.</p>",
+      "<ul><li>The image of the card must be in full color</li><li>The text must be clear and readable</li><li>The front and back can be in one file, or in two separate files</li><li>Each file must be smaller than 4.5 MB</li></ul>",
     header: "Document Requirements:",
   },
   downloadableDocument: {

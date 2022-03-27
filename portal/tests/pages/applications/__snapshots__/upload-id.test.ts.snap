@@ -51,17 +51,6 @@ exports[`UploadId after documents have been loaded when the user doesn't have a 
                 Each file must be smaller than 4.5 MB
               </li>
             </ul>
-            <p>
-              It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the 
-              <a
-                href="https://www.mass.gov/pfmlsubmitinfo"
-                rel="noopener"
-                target="_blank"
-              >
-                fax and mail instructions
-              </a>
-              .
-            </p>
           </div>
         </div>
       </div>
