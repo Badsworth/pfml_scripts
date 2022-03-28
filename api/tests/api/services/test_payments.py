@@ -543,7 +543,25 @@ def test_get_payments_with_status(test_db_session, caplog):
         writeback_transaction_status=FineosWritebackTransactionStatus.PAYMENT_AUDIT_IN_PROGRESS,
     )
 
-    payment_factory1.create_payment_line(payment2b)
+    # Attach payment details + lines to them
+    payment_2a_details = payment_factory1.create_payment_details(payment2a)
+    payment_2a_line1 = payment_factory1.create_payment_line(
+        payment2b,
+        payment_details=payment_2a_details,
+        payment_details_id=payment_2a_details.payment_details_id,
+    )
+
+    payment_2b_details = payment_factory1.create_payment_details(payment2b)
+    payment_2b_line1 = payment_factory1.create_payment_line(
+        payment2b,
+        payment_details=payment_2b_details,
+        payment_details_id=payment_2b_details.payment_details_id,
+    )
+    payment_2b_line2 = payment_factory1.create_payment_line(
+        payment2b,
+        payment_details=payment_2b_details,
+        payment_details_id=payment_2b_details.payment_details_id,
+    )
 
     # Create a payment that is just cancelled (but in its own week, so returned)
     payment3 = payment_factory1.create_related_payment(weeks_later=2, amount=400)
@@ -582,6 +600,40 @@ def test_get_payments_with_status(test_db_session, caplog):
             log_dict[f"payment[{i}].payment_type"]
             == expected_payment.payment_transaction_type.payment_transaction_type_description
         )
+
+        # Check that payment details and lines were returned properly (if any)
+        if i == 0 or i == 3:
+            assert len(resp_payment["payment_details"]) == 0
+        elif i == 1:
+            assert len(resp_payment["payment_details"]) == 1
+            assert (
+                resp_payment["payment_details"][0]["payment_detail_id"]
+                == payment_2a_details.payment_details_id
+            )
+
+            assert len(resp_payment["payment_details"][0]["payment_lines"]) == 1
+            assert (
+                resp_payment["payment_details"][0]["payment_lines"][0]["payment_line_id"]
+                == payment_2a_line1.payment_line_id
+            )
+
+        elif i == 2:
+            assert len(resp_payment["payment_details"]) == 1
+            assert (
+                resp_payment["payment_details"][0]["payment_detail_id"]
+                == payment_2b_details.payment_details_id
+            )
+
+            assert len(resp_payment["payment_details"][0]["payment_lines"]) == 2
+            assert (
+                resp_payment["payment_details"][0]["payment_lines"][0]["payment_line_id"]
+                == payment_2b_line1.payment_line_id
+            )
+            assert (
+                resp_payment["payment_details"][0]["payment_lines"][1]["payment_line_id"]
+                == payment_2b_line2.payment_line_id
+            )
+
         if i != 3:
             assert (
                 log_dict[f"payment[{i}].writeback_transaction_status"]

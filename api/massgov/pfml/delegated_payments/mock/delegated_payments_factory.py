@@ -1,3 +1,4 @@
+import uuid
 from datetime import date, timedelta
 from decimal import Decimal
 from typing import Any, Dict, Optional
@@ -37,6 +38,7 @@ from massgov.pfml.db.models.factories import (
     PubEftFactory,
     TaxIdentifierFactory,
 )
+from massgov.pfml.db.models.payments import FineosExtractVpeiPaymentLine
 from massgov.pfml.delegated_payments.mock.mock_util import MockData, generate_routing_nbr_from_ssn
 from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
     stage_payment_fineos_writeback,
@@ -545,7 +547,15 @@ class DelegatedPaymentFactory(MockData):
         return PaymentDetailsFactory.create(**params)
 
     def create_payment_line(self, payment, **kwargs):
-        params = {"payment": payment, "payment_id": payment.payment_id} | kwargs
+        # need to add so that creating the PaymentLine in the db doesn't throw an invalid foreign key error
+        vpei_payment_line_id = uuid.uuid4()
+        self.db_session.add(FineosExtractVpeiPaymentLine(vpei_payment_line_id=vpei_payment_line_id))
+
+        params = {
+            "payment": payment,
+            "payment_id": payment.payment_id,
+            "vpei_payment_line_id": vpei_payment_line_id,
+        } | kwargs
         return PaymentLineFactory.create(**params)
 
     def create_all(self):
