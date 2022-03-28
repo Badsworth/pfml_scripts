@@ -652,7 +652,6 @@ def test_get_payments_with_status(test_db_session, caplog):
             log_dict[f"payment[{i}].payment_type"]
             == expected_payment.payment_transaction_type.payment_transaction_type_description
         )
-
         if i != 3:
             assert (
                 log_dict[f"payment[{i}].writeback_transaction_status"]

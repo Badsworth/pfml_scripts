@@ -15,7 +15,6 @@ from massgov.pfml.db.models.employees import (
     BankAccountType,
     Employee,
     Payment,
-    PaymentLine,
     PaymentMethod,
     PaymentRelevantParty,
     PaymentTransactionType,
@@ -43,6 +42,7 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVpeiPaymentLine,
     FineosWritebackDetails,
     FineosWritebackTransactionStatus,
+    PaymentLine,
 )
 from massgov.pfml.db.models.state import Flow, LkState, State
 from massgov.pfml.delegated_payments.delegated_payments_util import (
