@@ -35,7 +35,7 @@ def handle_mfa_enabled(cognito_auth_token: str) -> None:
 def handle_mfa_disabled(
     user: User,
     last_enabled_at: Optional[datetime],
-    sync_cognito_preferences: bool,
+    save_to_cognito: bool,
     cognito_auth_token: str,
 ) -> None:
     """Helper method for handling necessary actions after MFA is disabled for a user. This handles logging,
@@ -47,7 +47,7 @@ def handle_mfa_disabled(
 
     updated_by = MFAUpdatedBy.USER
     log_attributes = _collect_log_attributes(updated_by, last_enabled_at)
-    log_attributes.update({"sync_cognito_preferences": sync_cognito_preferences})
+    log_attributes.update({"save_to_cognito": save_to_cognito})
     logger.info("MFA disabled for user", extra=log_attributes)
 
     try:
@@ -58,7 +58,7 @@ def handle_mfa_disabled(
                 extra=log_attributes,
             )
         else:
-            if sync_cognito_preferences:
+            if save_to_cognito:
                 cognito.disable_user_mfa(cognito_auth_token)
 
             _send_mfa_disabled_email(user.email_address, user.mfa_phone_number_last_four())

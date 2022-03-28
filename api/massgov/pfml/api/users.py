@@ -198,10 +198,12 @@ def users_patch(user_id):
     auth_header = headers.get("Authorization")
     assert auth_header
     # todo (PORTAL-1828): Remove X-FF-Sync-Cognito-Preferences feature flag header
-    sync_cognito_preferences = headers.get("X-FF-Sync-Cognito-Preferences", None) == "true"
+    save_mfa_preference_to_cognito = headers.get("X-FF-Sync-Cognito-Preferences", None) == "true"
     cognito_auth_token = auth_header[7:]
 
-    updated_user = update_user(db_session, user, body, sync_cognito_preferences, cognito_auth_token)
+    updated_user = update_user(
+        db_session, user, body, save_mfa_preference_to_cognito, cognito_auth_token
+    )
     data = UserResponse.from_orm(updated_user).dict()
 
     return response_util.success_response(

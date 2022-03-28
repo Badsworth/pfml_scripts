@@ -75,7 +75,7 @@ class TestHandleMfaDisabled:
                 "last_enabled_at": mock.ANY,
                 "time_since_enabled_in_sec": mock.ANY,
                 "updated_by": "user",
-                "sync_cognito_preferences": False,
+                "save_to_cognito": False,
             },
         )
         assert (
@@ -128,7 +128,7 @@ class TestHandleMfaDisabled:
                 "last_enabled_at": mock.ANY,
                 "time_since_enabled_in_sec": mock.ANY,
                 "updated_by": "user",
-                "sync_cognito_preferences": True,
+                "save_to_cognito": True,
             },
         )
 

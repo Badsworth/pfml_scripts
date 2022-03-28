@@ -132,7 +132,7 @@ class TestUpdateUser:
 
         self.mock_logger.info.assert_any_call(
             "MFA updated for user",
-            extra={"mfa_preference": "SMS", "sync_cognito_preferences": False},
+            extra={"mfa_preference": "SMS", "save_mfa_preference_to_cognito": False},
         )
 
     @mock.patch("massgov.pfml.api.services.users.handle_mfa_disabled")

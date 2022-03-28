@@ -25,7 +25,7 @@ def update_user(
     db_session: db.Session,
     user: User,
     update_request: UserUpdateRequest,
-    sync_cognito_preferences: bool,
+    save_mfa_preference_to_cognito: bool,
     cognito_auth_token: str,
 ) -> User:
     for key in update_request.__fields_set__:
@@ -36,7 +36,7 @@ def update_user(
                 db_session,
                 user,
                 value,
-                sync_cognito_preferences,
+                save_mfa_preference_to_cognito,
                 cognito_auth_token,
             )
             continue
@@ -54,7 +54,7 @@ def _update_mfa_preference(
     db_session: db.Session,
     user: User,
     value: Optional[str],
-    sync_cognito_preferences: bool,
+    save_mfa_preference_to_cognito: bool,
     cognito_auth_token: str,
 ) -> None:
     existing_mfa_preference = user.mfa_preference_description()
@@ -79,13 +79,15 @@ def _update_mfa_preference(
 
     log_attributes = {
         "mfa_preference": value,
-        "sync_cognito_preferences": sync_cognito_preferences,
+        "save_mfa_preference_to_cognito": save_mfa_preference_to_cognito,
     }
     logger.info("MFA updated for user", extra=log_attributes)
 
     if value == "Opt Out" and existing_mfa_preference is not None:
-        handle_mfa_disabled(user, last_updated_at, sync_cognito_preferences, cognito_auth_token)
-    elif value == "SMS" and sync_cognito_preferences:
+        handle_mfa_disabled(
+            user, last_updated_at, save_mfa_preference_to_cognito, cognito_auth_token
+        )
+    elif value == "SMS" and save_mfa_preference_to_cognito:
         handle_mfa_enabled(cognito_auth_token)
 
 
