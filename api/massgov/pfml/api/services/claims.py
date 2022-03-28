@@ -6,7 +6,7 @@ import massgov
 import massgov.pfml.api.app as app
 from massgov.pfml.api.models.claims.responses import DetailedClaimResponse
 from massgov.pfml.api.services.fineos_actions import get_absence_periods_from_claim
-from massgov.pfml.db.models.employees import Claim
+from massgov.pfml.db.models.employees import Claim, Employee, TaxIdentifier
 from massgov.pfml.db.queries.absence_periods import (
     convert_fineos_absence_period_to_claim_response_absence_period,
     sync_customer_api_absence_periods_to_db,
@@ -76,3 +76,44 @@ def get_claim_from_db(fineos_absence_id: Optional[str]) -> Optional[Claim]:
         )
 
     return claim
+
+
+def maybe_update_employee_relationship(fineos_absence_id: str, tax_identifier: str) -> None:
+    """
+    Helper to add employee relationship to the claim if it is missing.
+
+    The association could be missing for claims created via the contact center directly in FINEOS
+    the notification endpoint fails to set the association, and if the leave admin visits the review page
+    prior to the nightly extract.
+    """
+
+    with app.db_session() as db_session:
+        claim = claim = (
+            db_session.query(Claim)
+            .filter(Claim.fineos_absence_id == fineos_absence_id)
+            .one_or_none()
+        )
+
+        if not claim:
+            return
+        if claim.employee_id:
+            return
+
+        try:
+            employee = (
+                db_session.query(Employee)
+                .join(TaxIdentifier)
+                .filter(TaxIdentifier.tax_identifier == tax_identifier)
+                .one_or_none()
+            )
+            if employee:
+                claim.employee_id = employee.employee_id
+        except Exception:
+            logger.warning(
+                "Failed to update employee relationship for claim",
+                extra={"absence_case_id": claim.fineos_absence_id, "claim_id": claim.claim_id},
+                exc_info=True,
+            )
+
+        db_session.commit()
+        return

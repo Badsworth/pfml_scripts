@@ -1,10 +1,10 @@
-import EmployeePool from "../generation/Employee";
+import EmployeePool, { Employee } from "../generation/Employee";
 import AuthenticationManager from "../submission/AuthenticationManager";
 import { getAuthManager } from "../util/common";
 import { EventEmitter } from "events";
 import * as scenarios from "../scenarios/lst";
 import { ClaimGenerator, GeneratedClaim } from "../generation/Claim";
-import { Credentials, LSTScenarios } from "../types";
+import { Credentials, LSTScenarios, OAuthCreds } from "../types";
 import faker from "faker";
 import { approveClaim } from "../submission/PostSubmit";
 import { Fineos } from "../submission/fineos.pages";
@@ -13,6 +13,7 @@ import getArtillerySubmitter from "./ArtilleryClaimSubmitter";
 import winston from "winston";
 import { getDataFromClaim, UsefulClaimData } from "./util";
 import shuffle from "../generation/shuffle";
+import { EmployeesResponse } from "../_api";
 
 type ArtilleryDocRanges = "small" | "med" | "large";
 type DocRangesToScenarios = Record<ArtilleryDocRanges, LSTScenarios[]>;
@@ -118,6 +119,73 @@ export default class ArtilleryPFMLInteractor {
         { debug: false }
       );
       return getDataFromClaim(claim);
+    });
+  }
+
+  getFirstValidEmployee(data: EmployeesResponse | undefined) {
+    if (data) {
+      for (const datum of data) {
+        if (datum.employee_id && datum.email_address) {
+          return datum.employee_id;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  async getEmployeeFromPool(): Promise<Employee> {
+    const pool = await this.employees();
+    const employee = pool.shuffle().slice(0, 1).getFirst();
+
+    if (
+      employee.first_name.length < 3 ||
+      employee.last_name.length < 3 ||
+      !/^[a-zA-Z0-9]*$/.test(employee.last_name)
+    ) {
+      return await this.getEmployeeFromPool();
+    } else {
+      return employee;
+    }
+  }
+
+  async getAPIToken(creds?: OAuthCreds) {
+    const apiCreds = creds ?? getAPICredentials();
+    const authenticator = getAuthManager();
+    return await authenticator.getAPIBearerToken(apiCreds);
+  }
+
+  searchEmployee(
+    employee: Employee,
+    ee: EventEmitter,
+    logger: winston.Logger,
+    token: string
+  ) {
+    return timed(ee, logger, "SearchEmployee", async () => {
+      logger.debug(
+        `Search For Employee Name ${employee.first_name} ${employee.last_name}`
+      );
+      const submitter = getArtillerySubmitter();
+      const submission = await submitter.lstSearch(
+        employee.first_name,
+        employee.last_name,
+        token
+      );
+      logger.debug(`Employees Found: ${submission.data.data?.length}`);
+      return this.getFirstValidEmployee(submission.data.data);
+    });
+  }
+
+  searchClaimant(
+    employeeId: string,
+    ee: EventEmitter,
+    logger: winston.Logger,
+    token: string
+  ) {
+    return timed(ee, logger, "SearchClaims", async () => {
+      const submitter = getArtillerySubmitter();
+      const claim = await submitter.claimSearch(employeeId, token);
+      logger.debug(`Claims Found: ${claim.data.data?.length}`);
     });
   }
 
@@ -230,5 +298,12 @@ function getClaimantCredentials(): Credentials {
   return {
     username: config("PORTAL_USERNAME"),
     password: config("PORTAL_PASSWORD"),
+  };
+}
+
+function getAPICredentials(): OAuthCreds {
+  return {
+    clientID: config("API_SNOW_CLIENT_ID"),
+    secretID: config("API_SNOW_CLIENT_SECRET"),
   };
 }

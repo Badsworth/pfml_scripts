@@ -8,16 +8,17 @@ class MockData:
         self.generate_defaults = generate_defaults
         self.kwargs = kwargs
 
-    def get_value(self, key, default):
+    def get_value(self, key, default, override_kwargs=None):
         # We want to support setting values as None
-        contains_value = key in self.kwargs
+        kwargs = override_kwargs if override_kwargs else self.kwargs
+        contains_value = key in kwargs
 
         if not contains_value:
             if self.generate_defaults:
                 return default
             return ""
 
-        return self.kwargs.get(key)
+        return kwargs.get(key)
 
 
 def generate_routing_nbr_from_ssn(ssn: str) -> Optional[str]:

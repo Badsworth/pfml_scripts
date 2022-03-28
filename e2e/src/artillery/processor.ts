@@ -178,6 +178,46 @@ export const adjudicateStored = wrap(
   }
 );
 
+/**
+ * Exported handler for submitting (only), followed by pushing the data to SQS.
+ */
+export const searchClaimants = wrap(
+  async (context: ArtilleryContext, ee: EventEmitter, logger: Logger) => {
+    const employee = await interactor.getEmployeeFromPool();
+    const token = await interactor.getAPIToken();
+
+    const employeeId = await timeRequest(context, ee, () => {
+      return interactor.searchEmployee(
+        employee,
+        ee,
+        logger.child({
+          employee_name: `${employee.first_name} ${employee.last_name}`,
+          stage: "searchForEmployee",
+        }),
+        token
+      );
+    });
+    if (employeeId !== null) {
+      return await timeRequest(context, ee, () => {
+        return interactor.searchClaimant(
+          employeeId,
+          ee,
+          logger.child({
+            employee_name: `${employee.first_name} ${employee.last_name}`,
+            enplopyee_id: employeeId,
+            stage: "searchForClaims",
+          }),
+          token
+        );
+      });
+    } else {
+      logger.info(
+        `No Employee ID Found for search ${employee.first_name} ${employee.last_name}`
+      );
+    }
+  }
+);
+
 class NoClaimsRemainingError extends Error {
   code: number;
   constructor() {

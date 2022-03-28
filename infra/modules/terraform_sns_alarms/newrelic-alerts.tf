@@ -92,7 +92,7 @@ resource "newrelic_nrql_alert_condition" "sns_sms_phone_carrier_unavailable" {
   }
 
   critical {
-    threshold_duration    = var.carrier_unavailable_period["critical"]
+    threshold_duration    = var.carrier_unavailable_period["warning"] # terraform will not allow to set threshold higher than 3600 seconds
     threshold             = local.phone_carrier_unavailable_threshold # threshold in aws_cloudwatch_metric_alarm
     operator              = local.newrelic_comparison_operator        # comparison_operator in aws_cloudwatch_metric_alarm
     threshold_occurrences = local.threshold_occurrences

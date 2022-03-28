@@ -35,7 +35,7 @@ exports[`Payments Checkback date implementation renders intro text for continous
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 11, 2021 to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, expect to be paid weekly.
+    Check back on November 12, 2021 to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, expect to be paid weekly.
   </p>
 </section>
 `;
@@ -45,7 +45,7 @@ exports[`Payments Checkback date implementation renders intro text for continous
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 9, 2021 to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.
+    Check back on November 10, 2021 to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.
   </p>
 </section>
 `;
@@ -55,7 +55,7 @@ exports[`Payments Checkback date implementation renders intro text for continous
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 9, 2021 to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.
+    Check back on November 10, 2021 to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.
   </p>
 </section>
 `;
@@ -65,7 +65,7 @@ exports[`Payments Checkback date implementation renders intro text for continous
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on January 20, 2022 to see when you can expect your first payment. You’ll receive one payment for your entire leave.
+    Check back on January 21, 2022 to see when you can expect your first payment. You’ll receive one payment for your entire leave.
   </p>
 </section>
 `;
@@ -75,7 +75,7 @@ exports[`Payments Checkback date implementation renders intro text for continuou
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 11, 2021 to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, expect to be paid weekly.
+    Check back on November 12, 2021 to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, expect to be paid weekly.
   </p>
 </section>
 `;
@@ -85,7 +85,7 @@ exports[`Payments Checkback date implementation renders intro text for continuou
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 9, 2021 to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.
+    Check back on November 10, 2021 to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.
   </p>
 </section>
 `;
@@ -95,7 +95,7 @@ exports[`Payments Checkback date implementation renders intro text for continuou
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 9, 2021 to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.
+    Check back on November 10, 2021 to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.
   </p>
 </section>
 `;
@@ -105,7 +105,7 @@ exports[`Payments Checkback date implementation renders intro text for continuou
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on January 20, 2022 to see when you can expect your first payment. You’ll receive one payment for your entire leave.
+    Check back on January 21, 2022 to see when you can expect your first payment. You’ll receive one payment for your entire leave.
   </p>
 </section>
 `;
@@ -115,7 +115,7 @@ exports[`Payments Checkback date implementation renders intro text for reduced s
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 11, 2021 to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.
+    Check back on November 12, 2021 to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.
   </p>
 </section>
 `;
@@ -125,7 +125,7 @@ exports[`Payments Checkback date implementation renders intro text for reduced s
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 9, 2021 to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.
+    Check back on November 10, 2021 to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.
   </p>
 </section>
 `;
@@ -135,7 +135,7 @@ exports[`Payments Checkback date implementation renders intro text for reduced s
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 9, 2021 to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.
+    Check back on November 10, 2021 to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.
   </p>
 </section>
 `;
@@ -145,7 +145,7 @@ exports[`Payments Checkback date implementation renders intro text for reduced s
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on January 20, 2022 to see when you can expect your first payment. You’ll receive one payment for your entire leave.
+    Check back on January 21, 2022 to see when you can expect your first payment. You’ll receive one payment for your entire leave.
   </p>
 </section>
 `;

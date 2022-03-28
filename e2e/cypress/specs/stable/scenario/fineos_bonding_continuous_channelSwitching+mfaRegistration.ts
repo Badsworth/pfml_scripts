@@ -3,6 +3,8 @@ import { assertValidClaim } from "util/typeUtils";
 import { fineos, fineosPages, portal } from "../../../actions";
 import { config } from "../../../actions/common";
 import { describeIf, getTwilioNumber, itIf } from "../../../util";
+import { add, format } from "date-fns";
+import faker from "faker";
 
 describeIf(
   config("MFA_ENABLED") === "true",
@@ -22,16 +24,30 @@ describeIf(
           cy.stash("claimantPhoneNumber", primary);
           cy.stash("claim", claim);
           assertValidClaim(claim.claim);
-          fineosPages.ClaimantPage.visit(claim.claim.tax_identifier)
-            .setPhoneNumber(primary)
-            .createNotification(claim.claim)
-            .then((fineos_absence_id) => {
-              cy.log(fineos_absence_id);
-              cy.stash("submission", {
-                fineos_absence_id: fineos_absence_id,
-                timestamp_from: Date.now(),
-              });
+          const customer = fineosPages.ClaimantPage.visit(
+            claim.claim.tax_identifier
+          );
+          // const customer = fineosPages.ClaimantPage.visit("005-46-5314")
+          customer.editPersonalIdentification(
+            {
+              date_of_birth: format(
+                faker.date.between(
+                  add(new Date(), { years: -65 }),
+                  add(new Date(), { years: -18 })
+                ),
+                "MM/dd/yyyy"
+              ),
+            },
+            config("HAS_APRIL_UPGRADE") === "true" ? true : false
+          );
+          customer.setPhoneNumber(primary);
+          customer.createNotification(claim.claim).then((fineos_absence_id) => {
+            cy.log(fineos_absence_id);
+            cy.stash("submission", {
+              fineos_absence_id: fineos_absence_id,
+              timestamp_from: Date.now(),
             });
+          });
         });
       }
     );

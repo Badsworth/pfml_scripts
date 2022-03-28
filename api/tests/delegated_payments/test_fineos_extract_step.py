@@ -36,9 +36,9 @@ from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
     FineosPaymentData,
     create_fineos_claimant_extract_files,
     create_fineos_payment_extract_files,
+    create_vbi_taskreport_som_extract_files,
     generate_iaww_extract_files,
     generate_payment_reconciliation_extract_files,
-    generate_vbi_taskreport_som_extract_files,
     get_vbi_taskreport_som_extract_filtered_records,
     get_vbi_taskreport_som_extract_records,
 )
@@ -481,8 +481,8 @@ def test_vbi_taskreport_som_extracts(
 
     # Create VBI Task Report Som extract files
     folder_path = os.path.join(f"s3://{mock_fineos_s3_bucket}", "DT2/dataexports/")
-    generate_vbi_taskreport_som_extract_files(
-        folder_path, datetime.strptime(date_str, "%Y-%m-%d-%H-%M-%S"), records=records
+    create_vbi_taskreport_som_extract_files(
+        records, folder_path, datetime.strptime(date_str, "%Y-%m-%d-%H-%M-%S")
     )
 
     # Run the extract
