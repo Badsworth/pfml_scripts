@@ -18,7 +18,7 @@ const routes = {
   applications: {
     address: "/applications/address",
     beginAdditionalEmployeeEmployerInformation:
-      "begin-additional-employee-employer-information",
+      "/applications/begin-additional-employee-employer-information",
     bondingLeaveAttestation: "/applications/bonding-leave-attestation",
     caringLeaveAttestation: "/applications/caring-leave-attestation",
     checklist: "/applications/checklist",
@@ -28,7 +28,7 @@ const routes = {
     dateOfBirth: "/applications/date-of-birth",
     dateOfChild: "/applications/date-of-child",
     department: "/applications/department",
-    employeeStartDate: "employee-start-date",
+    employeeStartDate: "/applications/employee-start-date",
     employerBenefits: "/applications/employer-benefits",
     employerBenefitsDetails: "/applications/employer-benefits-details",
     employerBenefitsIntro: "/applications/employer-benefits-intro",
@@ -96,7 +96,6 @@ const routes = {
     uploadCertification: "/applications/upload-certification",
     uploadDocsOptions: "/applications/upload-docs-options",
     uploadId: "/applications/upload-id",
-    userNotFoundPageOne: "/applications/userNotFoundPageOne",
     workPatternType: "/applications/work-pattern-type",
   },
   auth: {

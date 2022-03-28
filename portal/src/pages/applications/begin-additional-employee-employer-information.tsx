@@ -17,6 +17,7 @@ export const fields = [];
  * A form page to begin collecting additional information for an employee/employer match.
  */
 export const NoEeErMatchBegin = (props: WithBenefitsApplicationProps) => {
+  const { appLogic, claim } = props;
   const { t } = useTranslation();
 
   return (
@@ -35,7 +36,11 @@ export const NoEeErMatchBegin = (props: WithBenefitsApplicationProps) => {
       </p>
       <ButtonLink
         className="display-inline-flex flex-align-center flex-justify-center flex-column margin-right-0 margin-top-3"
-        href={routes.applications.employeeStartDate}
+        href={appLogic.portalFlow.getNextPageRoute(
+          "CONTINUE",
+          {},
+          { claim_id: claim.application_id }
+        )}
       >
         <div>
           {t(

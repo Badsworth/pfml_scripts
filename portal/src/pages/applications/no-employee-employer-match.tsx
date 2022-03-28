@@ -7,7 +7,6 @@ import FormLabel from "src/components/core/FormLabel";
 import InputText from "../../components/core/InputText";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
