@@ -220,10 +220,15 @@ class ChangeRequestResponse(PydanticBaseModel):
 
     @classmethod
     def from_orm(cls, change_request: ChangeRequest) -> "ChangeRequestResponse":
-        return cls(
-            fineos_absence_id=change_request.claim.fineos_absence_id,
-            change_request_type=change_request.change_request_type_instance.change_request_type_description,
-            start_date=change_request.start_date,
-            end_date=change_request.end_date,
-            submitted_time=change_request.submitted_time,
-        )
+        if change_request.claim.fineos_absence_id is not None:
+            return cls(
+                fineos_absence_id=change_request.claim.fineos_absence_id,
+                change_request_type=ChangeRequestType(
+                    change_request.change_request_type_instance.change_request_type_description
+                ),
+                start_date=change_request.start_date,
+                end_date=change_request.end_date,
+                submitted_time=change_request.submitted_time,
+            )
+        else:
+            raise ValueError("fineos_absence_id is empty")

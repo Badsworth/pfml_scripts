@@ -9,7 +9,7 @@ import massgov.pfml.api.util.response as response_util
 import massgov.pfml.api.validation.claim_rules as claim_rules
 import massgov.pfml.util.logging
 from massgov.pfml.api.models.applications.requests import DocumentRequestBody
-from massgov.pfml.api.models.claims.common import ChangeRequest
+from massgov.pfml.api.models.claims.common import ChangeRequest, ChangeRequestType
 from massgov.pfml.api.models.claims.requests import ChangeRequestUpdate
 from massgov.pfml.api.models.claims.responses import ChangeRequestResponse
 from massgov.pfml.api.services.change_requests import (
@@ -80,7 +80,7 @@ def get_change_requests(fineos_absence_id: str) -> flask.Response:
     for request in change_requests:
         change_request = ChangeRequestResponse(
             fineos_absence_id=fineos_absence_id,
-            change_request_type=request.type,
+            change_request_type=ChangeRequestType(request.type),
             start_date=request.start_date,
             end_date=request.end_date,
             submitted_time=request.submitted_time,

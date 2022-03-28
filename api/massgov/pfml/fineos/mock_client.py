@@ -365,9 +365,9 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
             phoneNumbers=[
                 models.customer_api.PhoneNumber(
                     id=1,
-                    intCode=1,
-                    areaCode=321,
-                    telephoneNo=4567890,
+                    intCode="1",
+                    areaCode="321",
+                    telephoneNo="4567890",
                     phoneNumberType=PhoneType.PHONE.phone_type_description,
                 )
             ]
@@ -516,31 +516,41 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         self, user_id: str, absence_id: str
     ) -> List[models.group_client_api.EFormSummary]:
         _capture_call("get_eform_summary", user_id, absence_id=absence_id)
-        return [
-            models.group_client_api.EFormSummary(
-                eformId=eform.eformId,
-                eformTypeId="PE-11212-%010i" % eform.eformId,
-                effectiveDateFrom=None,
-                effectiveDateTo=None,
-                eformType=eform.eformType,
-            )
-            for eform in self.mock_eforms
-        ]
+        results = []
+
+        for eform in self.mock_eforms:
+            if eform.eformType:
+                results.append(
+                    models.group_client_api.EFormSummary(
+                        eformId=eform.eformId,
+                        eformTypeId="PE-11212-%010i" % eform.eformId,
+                        effectiveDateFrom=None,
+                        effectiveDateTo=None,
+                        eformType=eform.eformType,
+                    )
+                )
+
+        return results
 
     def customer_get_eform_summary(
         self, user_id: str, absence_id: str
     ) -> List[models.customer_api.EFormSummary]:
         _capture_call("customer_get_eform_summary", user_id, absence_id=absence_id)
-        return [
-            models.customer_api.EFormSummary(
-                eformId=eform.eformId,
-                eformTypeId="PE-11212-%010i" % eform.eformId,
-                effectiveDateFrom=None,
-                effectiveDateTo=None,
-                eformType=eform.eformType,
-            )
-            for eform in self.mock_customer_eforms
-        ]
+        results = []
+
+        for eform in self.mock_customer_eforms:
+            if eform.eformType:
+                results.append(
+                    models.customer_api.EFormSummary(
+                        eformId=eform.eformId,
+                        eformTypeId="PE-11212-%010i" % eform.eformId,
+                        effectiveDateFrom=None,
+                        effectiveDateTo=None,
+                        eformType=eform.eformType,
+                    )
+                )
+
+        return results
 
     def get_eform(
         self, user_id: str, absence_id: str, eform_id: int

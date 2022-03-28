@@ -1,6 +1,7 @@
 import mimetypes
 import uuid
 from datetime import date
+from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional, Tuple
 
@@ -473,7 +474,7 @@ def get_claim_as_leave_admin(
             **employer_info_for_review.dict(),
             **eform_data.dict(),
             fineos_absence_id=absence_id,
-            hours_worked_per_week=hours_worked_per_week,
+            hours_worked_per_week=Decimal(hours_worked_per_week) if hours_worked_per_week else None,
             residential_address=claimant_address,
             leave_details=leave_details,
             status=status,

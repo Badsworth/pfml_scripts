@@ -485,15 +485,16 @@ def build_contact_details(
             # with the phone number they entered. Although you can add multiple phone
             # numbers in the Fineos UI, the Fineos API was preventing multiple phones
             # with the same phoneNumberType.
-            contact_details.phoneNumbers = [
-                massgov.pfml.fineos.models.customer_api.PhoneNumber(
-                    areaCode=area_code,
-                    id=application.phone.fineos_phone_id,
-                    intCode=int_code,
-                    telephoneNo=telephone_no,
-                    phoneNumberType=phone_number_type,
-                )
-            ]
+            if application.phone.fineos_phone_id:
+                contact_details.phoneNumbers = [
+                    massgov.pfml.fineos.models.customer_api.PhoneNumber(
+                        areaCode=area_code,
+                        id=application.phone.fineos_phone_id,
+                        intCode=str(int_code),
+                        telephoneNo=telephone_no,
+                        phoneNumberType=phone_number_type,
+                    )
+                ]
 
     return contact_details
 
@@ -1619,6 +1620,9 @@ def convert_change_request_to_fineos_model(
 
     is_withdrawal = change_request_type == ChangeRequestType.WITHDRAWAL.description
     if is_withdrawal:
+        assert claim.absence_period_start_date
+        assert claim.absence_period_end_date
+
         # A withdrawal removes all dates from a claim
         return LeavePeriodChangeRequest(
             reason=ChangeRequestReason(fullId=0, name="Employee Requested Removal"),
@@ -1632,6 +1636,9 @@ def convert_change_request_to_fineos_model(
 
     is_medical_to_bonding = change_request_type == ChangeRequestType.MEDICAL_TO_BONDING.description
     if is_medical_to_bonding:
+        assert change_request.start_date
+        assert change_request.end_date
+
         return LeavePeriodChangeRequest(
             reason=ChangeRequestReason(fullId=0, name="Add time for different Absence Reason"),
             additionalNotes="Medical to bonding transition",
@@ -1648,6 +1655,9 @@ def convert_change_request_to_fineos_model(
         and change_request.end_date > claim.absence_period_end_date
     )
     if is_extension:
+        assert change_request.start_date
+        assert change_request.end_date
+
         return LeavePeriodChangeRequest(
             reason=ChangeRequestReason(fullId=0, name="Add time for identical Absence Reason"),
             additionalNotes="Extension",
@@ -1665,6 +1675,7 @@ def convert_change_request_to_fineos_model(
     )
     if is_cancellation:
         assert change_request.end_date
+        assert claim.absence_period_end_date
 
         # In FINEOS, a cancellation means you are removing time.
         # So the date range represents the dates that will be removed from leave

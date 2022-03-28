@@ -20,10 +20,12 @@ import massgov.pfml.util.newrelic.events as newrelic_util
 import massgov.pfml.util.pydantic.mask as mask
 from massgov.pfml.api.models.applications.common import Address as ApiAddress
 from massgov.pfml.api.models.applications.common import (
+    BankAccountType,
     DocumentResponse,
     LeaveReason,
-    PaymentPreference,
 )
+from massgov.pfml.api.models.applications.common import PaymentMethod as CommonPaymentMethod
+from massgov.pfml.api.models.applications.common import PaymentPreference
 from massgov.pfml.api.models.applications.requests import ApplicationRequestBody
 from massgov.pfml.api.models.common import (
     LookupEnum,
@@ -108,7 +110,7 @@ from massgov.pfml.util.logging.applications import (
     get_absence_period_log_attributes,
     get_application_log_attributes,
 )
-from massgov.pfml.util.pydantic.types import Regexes
+from massgov.pfml.util.pydantic.types import FinancialRoutingNumber, Regexes
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -1455,13 +1457,13 @@ def set_payment_preference_fields(
     if preference.accountDetails is not None:
         payment_preference = PaymentPreference(
             account_number=preference.accountDetails.accountNo,
-            routing_number=preference.accountDetails.routingNumber,
-            bank_account_type=preference.accountDetails.accountType,
-            payment_method=preference.paymentMethod,
+            routing_number=FinancialRoutingNumber(preference.accountDetails.routingNumber),
+            bank_account_type=BankAccountType(preference.accountDetails.accountType),
+            payment_method=CommonPaymentMethod(preference.paymentMethod),
         )
     elif preference.paymentMethod == PaymentMethod.CHECK.payment_method_description:
         payment_preference = PaymentPreference(
-            payment_method=preference.paymentMethod,
+            payment_method=CommonPaymentMethod(preference.paymentMethod),
         )
     if payment_preference is not None:
         add_or_update_payment_preference(db_session, payment_preference, application)
@@ -1512,7 +1514,6 @@ def create_common_io_phone_from_fineos(
         int_code=phone.intCode,
         phone_number=f"{phone.areaCode}{phone.telephoneNo}",
         phone_type=db_phone.phone_type_description,
-        fineos_phone_id=phone.id,
     )
     return phone_to_create
 

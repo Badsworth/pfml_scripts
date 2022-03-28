@@ -147,7 +147,7 @@ def make_pagination_params(request: Union[flask.Request, SearchEnvelope]) -> Sea
         order_data["direction"] = OrderDirection(order_direction)
 
     return SearchEnvelope[None](  # type: ignore
-        terms=None, order=OrderData(**order_data), paging=PagingData(**page_data)
+        terms=None, order=OrderData(**order_data), paging=PagingData(**page_data)  # type: ignore
     )
 
 

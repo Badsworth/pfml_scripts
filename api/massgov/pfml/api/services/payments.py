@@ -245,26 +245,34 @@ def to_response_dict(payment_data: List[PaymentContainer], absence_case_id: Opti
         payment = payment_container.payment
         scenario_data = payment_container.get_scenario_data()
 
-        payments.append(
-            PaymentResponse(
-                payment_id=payment.payment_id,
-                fineos_c_value=payment.fineos_pei_c_value,
-                fineos_i_value=payment.fineos_pei_i_value,
-                period_start_date=payment.period_start_date,
-                period_end_date=payment.period_end_date,
-                amount=scenario_data.amount,
-                sent_to_bank_date=scenario_data.sent_date,
-                payment_method=payment.disb_method
-                and payment.disb_method.payment_method_description,
-                expected_send_date_start=scenario_data.expected_send_date_start,
-                expected_send_date_end=scenario_data.expected_send_date_end,
-                cancellation_date=scenario_data.cancellation_date,
-                status=scenario_data.status,
-                writeback_transaction_status=scenario_data.writeback_transaction_status,
-                transaction_date=scenario_data.transaction_date,
-                transaction_date_could_change=scenario_data.transaction_date_could_change,
-            ).dict()
-        )
+        if (
+            payment.fineos_pei_c_value
+            and payment.fineos_pei_i_value
+            and payment.period_start_date
+            and payment.period_end_date
+        ):
+            payment_method = str(
+                payment.disb_method and payment.disb_method.payment_method_description
+            )
+            payments.append(
+                PaymentResponse(
+                    payment_id=payment.payment_id,
+                    fineos_c_value=payment.fineos_pei_c_value,
+                    fineos_i_value=payment.fineos_pei_i_value,
+                    period_start_date=payment.period_start_date,
+                    period_end_date=payment.period_end_date,
+                    amount=scenario_data.amount,
+                    sent_to_bank_date=scenario_data.sent_date,
+                    payment_method=payment_method,
+                    expected_send_date_start=scenario_data.expected_send_date_start,
+                    expected_send_date_end=scenario_data.expected_send_date_end,
+                    cancellation_date=scenario_data.cancellation_date,
+                    status=scenario_data.status,
+                    writeback_transaction_status=scenario_data.writeback_transaction_status,
+                    transaction_date=scenario_data.transaction_date,
+                    transaction_date_could_change=scenario_data.transaction_date_could_change,
+                ).dict()
+            )
 
     return {"payments": payments, "absence_case_id": absence_case_id}
 
