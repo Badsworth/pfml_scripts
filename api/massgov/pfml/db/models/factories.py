@@ -520,7 +520,28 @@ class PaymentDetailsFactory(BaseFactory):
         "date_between_dates", date_start=date(2021, 1, 16), date_end=date(2021, 1, 28)
     )
 
+    payment_details_c_value = str(factory.Faker("random_int"))
+    payment_details_i_value = str(factory.Faker("random_int"))
+
     amount = Generators.Money
+    business_net_amount = factory.LazyAttribute(lambda a: a.amount)
+
+
+class PaymentLineFactory(BaseFactory):
+    class Meta:
+        model = employee_models.PaymentLine
+
+    payment_line_id = Generators.UuidObj
+    vpei_payment_line_id = Generators.UuidObj
+
+    payment = factory.SubFactory(PaymentFactory)
+    payment_id = factory.LazyAttribute(lambda a: a.payment.payment_id)
+
+    payment_line_c_value = "7692"
+    payment_line_i_value = str(factory.Faker("random_int"))
+
+    amount = factory.LazyAttribute(lambda a: a.payment.amount)
+    line_type = "Auto Gross Entitlement"
 
 
 class PaymentReferenceFileFactory(BaseFactory):

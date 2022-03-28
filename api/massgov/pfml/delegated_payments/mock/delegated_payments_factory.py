@@ -31,7 +31,9 @@ from massgov.pfml.db.models.factories import (
     ExperianAddressPairFactory,
     ImportLogFactory,
     OrganizationUnitFactory,
+    PaymentDetailsFactory,
     PaymentFactory,
+    PaymentLineFactory,
     PubEftFactory,
     TaxIdentifierFactory,
 )
@@ -531,6 +533,20 @@ class DelegatedPaymentFactory(MockData):
 
             return AbsencePeriodFactory.create(**params)
         return None
+
+    def create_payment_details(self, payment, **kwargs):
+        params = {
+            "payment": payment,
+            "payment_id": payment.payment_id,
+            "period_start_date": payment.period_start_date,
+            "period_end_date": payment.period_end_date,
+            "amount": payment.amount,
+        } | kwargs
+        return PaymentDetailsFactory.create(**params)
+
+    def create_payment_line(self, payment, **kwargs):
+        params = {"payment": payment, "payment_id": payment.payment_id} | kwargs
+        return PaymentLineFactory.create(**params)
 
     def create_all(self):
         if self.add_pub_eft:

@@ -543,6 +543,8 @@ def test_get_payments_with_status(test_db_session, caplog):
         writeback_transaction_status=FineosWritebackTransactionStatus.PAYMENT_AUDIT_IN_PROGRESS,
     )
 
+    payment_factory1.create_payment_line(payment2b)
+
     # Create a payment that is just cancelled (but in its own week, so returned)
     payment3 = payment_factory1.create_related_payment(weeks_later=2, amount=400)
     payment3_cancellation = payment_factory1.create_cancellation_payment(
