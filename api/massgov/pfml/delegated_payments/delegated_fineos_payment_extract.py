@@ -714,13 +714,13 @@ class PaymentData:
                 "PAYMENTDETAILCLASSID",
                 payment_line,
                 self.validation_container,
-                True,
+                self.is_payment_detail_expected,
             )
             payment_detail_index_id = payments_util.validate_db_input(
                 "PAYMENTDETAILINDEXID",
                 payment_line,
                 self.validation_container,
-                True,
+                self.is_payment_detail_expected,
             )
 
             related_payment_detail: Optional[PaymentDetails] = payment_detail_mapping.get(
