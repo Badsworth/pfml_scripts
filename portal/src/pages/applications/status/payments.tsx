@@ -673,10 +673,18 @@ export function paymentStatusViewHelper(
     let result;
     // claim is approved after second week of leave start date (includes retroactive)
     if (isRetroactive || !isApprovedBeforeFourteenthDayOfClaim) {
-      result = dayjs(_approvalDate).addBusinessDays(5);
+      // Wait 5 business days (1week) b/c of waiting week.
+      // Wait 1 business day b/c we send payments to the bank the day after FINEOS sends them to us.
+      result = dayjs(_approvalDate).addBusinessDays(5).addBusinessDays(1);
     } else {
       // claim is approved before the second week of leave start date (includes before leave starts)
-      result = dayjs(_initialClaimStartDate).add(14, "day").addBusinessDays(3);
+      // Wait 14 non-business days (2weeks).
+      // Wait 3 business days
+      // Wait 1 business day b/c we send payments to the bank the day after FINEOS sends them to us.
+      result = dayjs(_initialClaimStartDate)
+        .add(14, "day")
+        .addBusinessDays(3)
+        .addBusinessDays(1);
     }
 
     return formatDate(result.format()).full();
