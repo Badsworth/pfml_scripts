@@ -186,7 +186,7 @@ def test_employees_search_name_requirement(client, snow_user_headers):
     body_2 = {"terms": terms_2}
     terms_3 = {"email_address": "ac"}
     body_3 = {"terms": terms_3}
-    terms_4 = {"first_name": "a", "last_name": "1"}
+    terms_4 = {"first_name": "a", "last_name": "_"}
     body_4 = {"terms": terms_4}
 
     response_1 = client.post("/v1/employees/search", json=body_1, headers=snow_user_headers)
@@ -220,13 +220,13 @@ def test_employees_search_wildcard_rejects_invalid(client, snow_user_headers):
         first_name="Bobby", last_name=employee_1.last_name, email_address="example@example.com"
     )
 
-    terms = {"first_name": "Bo%", "last_name": employee_1.last_name}
+    terms = {"first_name": "!@%*", "last_name": employee_1.last_name}
 
     response = client.post("/v1/employees/search", json={"terms": terms}, headers=snow_user_headers)
 
     assert response.status_code == 400
     response_body = response.get_json()
-    assert "Must contain at least 3 alphanumeric characters." in str(response_body)
+    assert "Must contain at least 1 alphanumeric character." in str(response_body)
 
     terms = {"email_address": "_@-.ab"}
     response = client.post("/v1/employees/search", json={"terms": terms}, headers=snow_user_headers)
