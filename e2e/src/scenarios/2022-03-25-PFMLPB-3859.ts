@@ -156,12 +156,12 @@ export const PORTAL_SICKNESS_NONSERIOUS_INTERMITTENT_SITFIT: ScenarioSpecificati
         duration: 3,
         duration_basis: "Days",
       },
-      reason: "Care for a Family Member",
+      reason: "Serious Health Condition - Employee",
       leave_dates: [parseISO("2022-05-11"), parseISO("2022-06-29")],
       is_withholding_tax: true,
       docs: {
         MASSID: {},
-        CARING: {},
+        HCP: {},
       },
       employerResponse: {
         hours_worked_per_week: 40,
