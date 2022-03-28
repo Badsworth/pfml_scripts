@@ -87,12 +87,12 @@ from massgov.pfml.fineos.exception import (
 )
 from massgov.pfml.fineos.factory import FINEOSClientConfig
 from massgov.pfml.fineos.models.customer_api.spec import (
+    AbsenceDay,
     AbsenceDetails,
     AbsencePeriod,
     EpisodicLeavePeriodDetail,
     NotificationCaseSummary,
     ReadCustomerOccupation,
-    ReportedReducedScheduleLeavePeriod,
     TimeOffLeavePeriod,
 )
 from massgov.pfml.util.strings import format_tax_identifier
@@ -932,20 +932,19 @@ class TestApplicationsImport:
                     absenceType="Continuous",
                     requestStatus="Pending",
                 ),
-            ],
-            reportedReducedSchedule=[
-                ReportedReducedScheduleLeavePeriod(
+                AbsencePeriod(
+                    id="PL-14449-0000002239",
+                    reason="Pregnancy/Maternity",
+                    reasonQualifier1="Foster Care",
+                    reasonQualifier2="",
                     startDate=date(2021, 1, 29),
                     endDate=date(2021, 3, 29),
-                    sundayOffMinutes=10,
-                    mondayOffMinutes=15,
-                    tuesdayOffMinutes=20,
-                    wednesdayOffMinutes=40,
-                    thursdayOffMinutes=45,
-                    fridayOffMinutes=25,
-                    saturdayOffMinutes=12,
-                )
+                    absenceType="Reduced Schedule",
+                    requestStatus="Pending",
+                ),
             ],
+            absenceDays=[AbsenceDay(date=datetime(2021, 2, 1), timeRequested="4.25")],
+            reportedReducedSchedule=[],
         )
 
     @pytest.fixture
