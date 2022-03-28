@@ -13,6 +13,8 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 class Populate1099Step(Step):
     class Metrics(str, enum.Enum):
         IRS_1099_COUNT = "irs_1099_count"
+        REPRINT_COUNT = "reprint_count"
+        GENERATE_COUNT = "generate_count"
 
     def run_step(self) -> None:
 
@@ -118,6 +120,9 @@ class Populate1099Step(Step):
             correction_ind = False
             if claimant_row.CORRECTION_IND:
                 correction_ind = True
+                self.increment(self.Metrics.GENERATE_COUNT)
+            else:
+                self.increment(self.Metrics.REPRINT_COUNT)
 
             pfml_1099_payment = Pfml1099(
                 pfml_1099_id=uuid.uuid4(),
