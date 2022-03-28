@@ -186,7 +186,7 @@ def test_employees_search_name_requirement(client, snow_user_headers):
     body_2 = {"terms": terms_2}
     terms_3 = {"email_address": "ac"}
     body_3 = {"terms": terms_3}
-    terms_4 = {"first_name": "a", "last_name": "1"}
+    terms_4 = {"first_name": "a", "last_name": "_"}
     body_4 = {"terms": terms_4}
 
     response_1 = client.post("/v1/employees/search", json=body_1, headers=snow_user_headers)
@@ -220,13 +220,13 @@ def test_employees_search_wildcard_rejects_invalid(client, snow_user_headers):
         first_name="Bobby", last_name=employee_1.last_name, email_address="example@example.com"
     )
 
-    terms = {"first_name": "Bo%", "last_name": employee_1.last_name}
+    terms = {"first_name": "!@%*", "last_name": employee_1.last_name}
 
     response = client.post("/v1/employees/search", json={"terms": terms}, headers=snow_user_headers)
 
     assert response.status_code == 400
     response_body = response.get_json()
-    assert "Must contain at least 3 alphanumeric characters." in str(response_body)
+    assert "Must contain at least 1 alphanumeric character." in str(response_body)
 
     terms = {"email_address": "_@-.ab"}
     response = client.post("/v1/employees/search", json={"terms": terms}, headers=snow_user_headers)
@@ -398,12 +398,14 @@ def test_get_employee_basic_response(client, employee_different_fineos_name, sno
     assert employee_data["first_name"] == "Foo2"
     assert employee_data["middle_name"] == "Baz2"
     assert employee_data["last_name"] == "Bar2"
+    assert employee_data["tax_identifier"] is not None
+    assert employee_data["tax_identifier_last4"] is not None
 
 
 def test_employee_for_pfml_crm_response(client, employee, snow_user_headers, user, test_db_session):
     tax_identifier = TaxIdentifierFactory.create(tax_identifier="587777091")
     employee = EmployeeFactory.create(
-        tax_identifier_id=tax_identifier.tax_identifier_id,
+        tax_identifier=tax_identifier,
         first_name="Foo",
         last_name="Bar",
         middle_name="Baz",
@@ -429,9 +431,12 @@ def test_employee_for_pfml_crm_response(client, employee, snow_user_headers, use
     response_body = response.get_json()
 
     employee_data = response_body.get("data")
-    assert employee_data["tax_identifier"] is not None
     assert employee_data["date_of_birth"] == "****-01-01"
     assert employee_data["addresses"][0] == MaskedAddress.from_orm(address)
+    assert employee_data["tax_identifier"] == "587-77-7091"
+    assert employee_data["tax_identifier_last4"] == tax_identifier.tax_identifier_last4
+    assert employee_data["email_address"] is not None
+    assert len(employee_data["phone_numbers"]) == 1
 
 
 def test_employee_with_claims_no_id_proof(

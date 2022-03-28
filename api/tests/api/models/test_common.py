@@ -4,9 +4,19 @@ from massgov.pfml.api.constants.application import (
     CARING_LEAVE_EARLIEST_START_DATE,
     PFML_PROGRAM_LAUNCH_DATE,
 )
-from massgov.pfml.api.models.common import get_computed_start_dates, get_earliest_submission_date
+from massgov.pfml.api.models.common import (
+    get_application_earliest_submission_date,
+    get_computed_start_dates,
+    get_earliest_start_date,
+    get_latest_end_date,
+)
 from massgov.pfml.db.models.applications import LeaveReason
-from massgov.pfml.db.models.factories import ApplicationFactory, ContinuousLeavePeriodFactory
+from massgov.pfml.db.models.factories import (
+    ApplicationFactory,
+    ContinuousLeavePeriodFactory,
+    IntermittentLeavePeriodFactory,
+    ReducedScheduleLeavePeriodFactory,
+)
 
 
 def test_computed_start_dates_for_application_with_no_reason():
@@ -61,15 +71,71 @@ def test_computed_start_dates_for_caring_leave_with_prior_year_after_launch():
     assert computed_start_dates.other_reason.strftime("%A") == "Sunday"
 
 
-def test_get_earliest_submission_date():
+def test_get_application_earliest_submission_date():
     application = ApplicationFactory.build()
 
-    assert get_earliest_submission_date(application) is None
+    assert get_application_earliest_submission_date(application) is None
 
     application.continuous_leave_periods = [
         ContinuousLeavePeriodFactory.build(start_date=date(2053, 10, 1))
     ]
-    assert get_earliest_submission_date(application) == date(2053, 8, 2)
+    assert get_application_earliest_submission_date(application) == date(2053, 8, 2)
 
     application.submitted_time = date.today()
-    assert get_earliest_submission_date(application) is None
+    assert get_application_earliest_submission_date(application) is None
+
+
+def test_get_earliest_start_date(test_db_session, initialize_factories_session):
+    application = ApplicationFactory.create()
+
+    leave_periods = [
+        IntermittentLeavePeriodFactory.create(
+            start_date=date(2021, 1, 8),
+            end_date=date(2021, 1, 10),
+            application_id=application.application_id,
+        ),
+        ReducedScheduleLeavePeriodFactory.create(
+            start_date=date(2021, 1, 12),
+            end_date=date(2021, 1, 15),
+            application_id=application.application_id,
+        ),
+        ContinuousLeavePeriodFactory.create(
+            start_date=date(2021, 1, 1),
+            end_date=date(2021, 1, 5),
+            application_id=application.application_id,
+        ),
+    ]
+    for leave_period in leave_periods:
+        test_db_session.add(leave_period)
+    test_db_session.commit()
+
+    earliest_start_date = get_earliest_start_date(application)
+    assert earliest_start_date == date(2021, 1, 1)
+
+
+def test_get_latest_end_date(test_db_session, initialize_factories_session):
+    application = ApplicationFactory.create()
+
+    leave_periods = [
+        IntermittentLeavePeriodFactory.create(
+            start_date=date(2021, 1, 8),
+            end_date=date(2021, 1, 10),
+            application_id=application.application_id,
+        ),
+        ReducedScheduleLeavePeriodFactory.create(
+            start_date=date(2021, 1, 12),
+            end_date=date(2021, 1, 15),
+            application_id=application.application_id,
+        ),
+        ContinuousLeavePeriodFactory.create(
+            start_date=date(2021, 1, 1),
+            end_date=date(2021, 1, 5),
+            application_id=application.application_id,
+        ),
+    ]
+    for leave_period in leave_periods:
+        test_db_session.add(leave_period)
+    test_db_session.commit()
+
+    latest_end_date = get_latest_end_date(application)
+    assert latest_end_date == date(2021, 1, 15)

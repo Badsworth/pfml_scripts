@@ -801,6 +801,7 @@ class AmountFrequency(LookupTable):
     PER_WEEK = LkAmountFrequency(2, "Per Week")
     PER_MONTH = LkAmountFrequency(3, "Per Month")
     ALL_AT_ONCE = LkAmountFrequency(4, "In Total")
+    UNKNOWN = LkAmountFrequency(5, "Unknown")
 
 
 class EmployerBenefitType(LookupTable):
@@ -827,6 +828,7 @@ class OtherIncomeType(LookupTable):
     JONES_ACT = LkOtherIncomeType(5, "Jones Act benefits")
     RAILROAD_RETIREMENT = LkOtherIncomeType(6, "Railroad Retirement benefits")
     OTHER_EMPLOYER = LkOtherIncomeType(7, "Earnings from another employment/self-employment")
+    UNKNOWN = LkOtherIncomeType(8, "Unknown")
 
 
 class FINEOSWebIdExt(Base, TimestampMixin):

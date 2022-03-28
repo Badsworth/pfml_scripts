@@ -1,5 +1,6 @@
 import copy
 import json
+import uuid
 from datetime import date
 
 import pytest
@@ -35,6 +36,7 @@ from massgov.pfml.db.models.factories import (
 from massgov.pfml.db.models.geo import GeoState
 from massgov.pfml.db.models.payments import (
     FineosExtractVbiRequestedAbsence,
+    FineosExtractVbiTaskReportSom,
     FineosExtractVpei,
     FineosExtractVpeiClaimDetails,
     FineosExtractVpeiPaymentDetails,
@@ -186,6 +188,15 @@ def validate_non_standard_payment_state(non_standard_payment: Payment, payment_s
     )
 
 
+def validate_non_standard_employer_reimbursement_payment_state(
+    non_standard_payment: Payment, payment_state: LkState
+):
+    assert len(non_standard_payment.state_logs) == 1
+    assert set([state_log.end_state_id for state_log in non_standard_payment.state_logs]) == set(
+        [payment_state.state_id]
+    )
+
+
 def validate_withholding(
     withholding_payment: Payment,
     withholding_payment_data: FineosPaymentData,
@@ -228,6 +239,8 @@ def stage_data(
     import_log=None,
     claimant_reference_file=None,
     claimant_import_log=None,
+    vbi_task_report_reference_file=None,
+    vbi_task_report_import_log=None,
     additional_vpei_records=None,
     additional_payment_detail_records=None,
     additional_claim_detail_records=None,
@@ -246,6 +259,13 @@ def stage_data(
         )
     if not claimant_import_log:
         claimant_import_log = ImportLogFactory.create()
+
+    if not vbi_task_report_reference_file:
+        vbi_task_report_reference_file = ReferenceFileFactory.create(
+            reference_file_type_id=ReferenceFileType.FINEOS_VBI_TASKREPORT_SOM_EXTRACT.reference_file_type_id
+        )
+    if not vbi_task_report_import_log:
+        vbi_task_report_import_log = ImportLogFactory.create()
 
     for record in records:
         if record.include_vpei:
@@ -290,6 +310,15 @@ def stage_data(
                 FineosExtractVbiRequestedAbsence,
                 claimant_reference_file,
                 claimant_import_log.import_log_id,
+            )
+            db_session.add(instance)
+
+        if record.include_vbi_tasks:
+            instance = payments_util.create_staging_table_instance(
+                record.get_vbi_task_record(),
+                FineosExtractVbiTaskReportSom,
+                vbi_task_report_reference_file,
+                vbi_task_report_import_log.import_log_id,
             )
             db_session.add(instance)
 
@@ -1499,14 +1528,14 @@ def test_process_extract_additional_payment_types(
         missing_event_payment, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
     )
 
-    # Employer reimbursement should be in DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT
+    # Employer reimbursement should be in DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_RESTARTABLE
     employer_payment = (
         local_test_db_session.query(Payment)
         .filter(Payment.fineos_pei_i_value == employer_reimbursement_data.i_value)
         .one_or_none()
     )
-    validate_non_standard_payment_state(
-        employer_payment, State.DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT
+    validate_non_standard_employer_reimbursement_payment_state(
+        employer_payment, State.DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_RESTARTABLE
     )
 
 
@@ -1616,14 +1645,14 @@ def test_process_extract_additional_payment_types_can_be_missing_other_files(
     )
     assert cancellation_payment.claim_id is None
 
-    # Employer reimbursement should be in DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT
+    # Employer reimbursement should be in DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_RESTARTABLE
     employer_payment = (
         local_test_db_session.query(Payment)
         .filter(Payment.fineos_pei_i_value == employer_reimbursement_data.i_value)
         .one_or_none()
     )
-    validate_non_standard_payment_state(
-        employer_payment, State.DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT
+    validate_non_standard_employer_reimbursement_payment_state(
+        employer_payment, State.DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_RESTARTABLE
     )
     assert employer_payment.claim_id is None
 
@@ -1809,7 +1838,7 @@ def test_process_extract_additional_payment_types_can_be_missing_all_additional_
         missing_event_payment, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
     )
 
-    # Employer reimbursement should be in DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT
+    # Employer reimbursement should be in DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_RESTARTABLE
     employer_payment = (
         local_test_db_session.query(Payment)
         .filter(Payment.fineos_pei_i_value == employer_reimbursement_data.i_value)
@@ -1817,8 +1846,8 @@ def test_process_extract_additional_payment_types_can_be_missing_all_additional_
     )
     assert employer_payment.claim_id is None
     assert employer_payment.employee_id is None  # We don't fetch the employee for employers
-    validate_non_standard_payment_state(
-        employer_payment, State.DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT
+    validate_non_standard_employer_reimbursement_payment_state(
+        employer_payment, State.DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_RESTARTABLE
     )
 
 
@@ -3036,3 +3065,148 @@ def test_get_active_payment_state(payment_extract_step, test_db_session):
         # We should not find anything
         found_state = payment_extract_step.get_active_payment_state(new_payment)
         assert found_state is None
+
+
+def test_payment_data_validation_error_with_open_other_income_tasks(
+    local_payment_extract_step, local_test_db_session
+):
+    fineos_data = FineosPaymentData(include_vpei=False, include_payment_lines=False)
+    _, payment_data = make_payment_data_from_fineos_data(fineos_data)
+
+    # mock the corresponding vbi task report som extract
+    reference_file_id = uuid.uuid4()
+    reference_file = ReferenceFile(
+        file_location="fake_file_location",
+        reference_file_type_id=ReferenceFileType.FINEOS_VBI_TASKREPORT_SOM_EXTRACT.reference_file_type_id,
+        reference_file_id=reference_file_id,
+    )
+    local_test_db_session.add(reference_file)
+
+    mock_task = FineosExtractVbiTaskReportSom(
+        status="928000",
+        casenumber=fineos_data.absence_case_number,
+        tasktypename="Employee Reported Other Income",
+        reference_file_id=reference_file_id,
+    )
+    local_test_db_session.add(mock_task)
+
+    # this particular validation doesn't trigger until we add the record to the db
+    has_open_tasks_validation_issue = False
+    for issue in payment_data.validation_container.validation_issues:
+        if issue.reason == ValidationReason.OPEN_OTHER_INCOME_TASKS:
+            has_open_tasks_validation_issue = True
+    assert not has_open_tasks_validation_issue
+
+    _ = local_payment_extract_step.add_records_to_db(
+        payment_data,
+        None,
+        None,
+        ReferenceFileFactory.create(
+            reference_file_type_id=ReferenceFileType.FINEOS_PAYMENT_EXTRACT.reference_file_type_id
+        ),
+    )
+
+    has_open_tasks_validation_issue = False
+    for issue in payment_data.validation_container.validation_issues:
+        if (
+            issue.reason == ValidationReason.OPEN_OTHER_INCOME_TASKS
+            and issue.details == "TASKTYPENAMES: ['Employee Reported Other Income']"
+        ):
+            has_open_tasks_validation_issue = True
+    assert has_open_tasks_validation_issue
+
+
+def test_payments_with_open_other_income_tasks_added_to_error_report(
+    local_payment_extract_step, local_test_db_session
+):
+    payment_with_open_task = FineosPaymentData(
+        include_vbi_tasks=True,
+        task_status="928000",
+        task_tasktypename="Employee reported accrued paid leave (PTO)",
+    )
+    payment_adhoc_with_open_task = FineosPaymentData(
+        include_vbi_tasks=True,
+        task_status="928000",
+        task_tasktypename="Employee reported accrued paid leave (PTO)",
+    )
+    payment_adhoc_with_open_task.payment_type = "Adhoc"
+    payment_with_closed_task = FineosPaymentData(
+        include_vbi_tasks=True,
+        task_status="928001",
+        task_tasktypename="Employee reported accrued paid leave (PTO)",
+    )
+    payment_with_ignored_task = FineosPaymentData(
+        include_vbi_tasks=True,
+        task_status="928000",
+        task_tasktypename="Bill Regenerated without an Email Address Defined",
+    )
+    payment_with_no_tasks = FineosPaymentData()
+
+    add_db_records_from_fineos_data(local_test_db_session, payment_with_open_task)
+    add_db_records_from_fineos_data(local_test_db_session, payment_adhoc_with_open_task)
+    add_db_records_from_fineos_data(local_test_db_session, payment_with_closed_task)
+    add_db_records_from_fineos_data(local_test_db_session, payment_with_ignored_task)
+    add_db_records_from_fineos_data(local_test_db_session, payment_with_no_tasks)
+
+    payment_datasets = [
+        payment_with_open_task,
+        payment_adhoc_with_open_task,
+        payment_with_closed_task,
+        payment_with_ignored_task,
+        payment_with_no_tasks,
+    ]
+    stage_data(payment_datasets, local_test_db_session)
+
+    local_payment_extract_step.run()
+
+    payments = local_test_db_session.query(Payment).all()
+    assert len(payments) == len(payment_datasets)
+    for payment in payments:
+        state_log = state_log_util.get_latest_state_log_in_flow(
+            payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+        )
+
+        if (payment.fineos_pei_c_value == payment_with_open_task.c_value) and (
+            payment.fineos_pei_i_value == payment_with_open_task.i_value
+        ):
+            assert (
+                state_log.end_state_id
+                == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT.state_id
+            )
+        else:
+            assert state_log.end_state_id == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
+
+
+def test_fineos_writeback_of_payments_with_open_other_income_tasks(
+    local_payment_extract_step, local_test_db_session
+):
+    payment_with_open_task = FineosPaymentData(
+        include_vbi_tasks=True,
+        task_status="928000",
+        task_tasktypename="Employee reported accrued paid leave (PTO)",
+    )
+    add_db_records_from_fineos_data(local_test_db_session, payment_with_open_task)
+
+    payment_datasets = [payment_with_open_task]
+    stage_data(payment_datasets, local_test_db_session)
+
+    local_payment_extract_step.run()
+
+    payment = local_test_db_session.query(Payment).one_or_none()
+    assert payment
+
+    state_log = state_log_util.get_latest_state_log_in_flow(
+        payment, Flow.DELEGATED_PEI_WRITEBACK, local_test_db_session
+    )
+    assert state_log.end_state_id == State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id
+
+    writeback_details = (
+        local_test_db_session.query(FineosWritebackDetails)
+        .filter(FineosWritebackDetails.payment_id == payment.payment_id)
+        .one_or_none()
+    )
+    assert writeback_details
+    assert (
+        writeback_details.transaction_status_id
+        == FineosWritebackTransactionStatus.SELF_REPORTED_ADDITIONAL_INCOME.transaction_status_id
+    )

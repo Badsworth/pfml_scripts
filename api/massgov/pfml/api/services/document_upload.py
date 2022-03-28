@@ -17,9 +17,9 @@ from massgov.pfml.api.authorization.flask import CREATE, EDIT, ensure
 from massgov.pfml.api.constants.application import ID_DOC_TYPES
 from massgov.pfml.api.exceptions import ClaimWithdrawn
 from massgov.pfml.api.models.applications.common import ContentType as AllowedContentTypes
+from massgov.pfml.api.models.applications.common import DocumentResponse
 from massgov.pfml.api.models.applications.common import DocumentType as IoDocumentTypes
 from massgov.pfml.api.models.applications.requests import DocumentRequestBody
-from massgov.pfml.api.models.applications.responses import DocumentResponse
 from massgov.pfml.api.services.fineos_actions import (
     mark_single_document_as_received,
     upload_document,

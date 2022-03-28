@@ -13,6 +13,7 @@ from massgov.pfml.db.models.employees import (
     ImportLog,
     LkClaimType,
     Payment,
+    PaymentDetails,
     ReferenceFile,
 )
 
@@ -994,6 +995,32 @@ class MmarsPaymentRefunds(Base, TimestampMixin):
     payment = relationship(Payment)
 
 
+class PaymentLine(Base, TimestampMixin):
+    __tablename__ = "payment_line"
+    payment_line_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
+    vpei_payment_line_id = Column(
+        PostgreSQLUUID,
+        ForeignKey("fineos_extract_vpei_payment_line.vpei_payment_line_id"),
+        nullable=False,
+    )
+    payment_id = Column(PostgreSQLUUID, ForeignKey("payment.payment_id"), index=True)
+    payment_details_id = Column(
+        PostgreSQLUUID, ForeignKey("payment_details.payment_details_id"), index=True, nullable=True
+    )
+
+    payment_line_c_value = Column(Text, index=True, nullable=False)
+    payment_line_i_value = Column(Text, index=True, nullable=False)
+
+    amount = Column(Numeric(asdecimal=True), nullable=False)
+    line_type = Column(Text, nullable=False)
+
+    payment = relationship(Payment, back_populates="payment_lines")
+    payment_details = relationship(PaymentDetails, back_populates="payment_lines")
+
+    vpei_payment_line = relationship(FineosExtractVpeiPaymentLine)
+
+
 class FineosWritebackDetails(Base, TimestampMixin):
     __tablename__ = "fineos_writeback_details"
     fineos_writeback_details_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
@@ -1019,6 +1046,9 @@ class FineosWritebackDetails(Base, TimestampMixin):
 Payment.fineos_writeback_details = relationship(  # type: ignore
     FineosWritebackDetails, back_populates="payment", order_by="FineosWritebackDetails.created_at"
 )
+Payment.vpei = relationship(FineosExtractVpei)  # type: ignore
+Payment.payment_lines = relationship(PaymentLine, back_populates="payment")  # type: ignore
+PaymentDetails.payment_lines = relationship(PaymentLine, back_populates="payment_details")  # type: ignore
 
 
 class LkFineosWritebackTransactionStatus(Base):

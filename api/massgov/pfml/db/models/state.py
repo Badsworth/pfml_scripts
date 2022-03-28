@@ -620,6 +620,9 @@ class State(LookupTable):
     DELEGATED_PAYMENT_CASCADED_ERROR = LkState(
         216, "Delegated Payment Cascaded Error", Flow.DELEGATED_PAYMENT.flow_id
     )
+    DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_RESTARTABLE = LkState(
+        217, "Processed - Employer Reimbursement Restartable", Flow.DELEGATED_PAYMENT.flow_id
+    )
 
 
 def sync_lookup_tables(db_session):

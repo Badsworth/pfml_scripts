@@ -18,15 +18,36 @@ function missingKeyHandler(
   locales: readonly string[],
   namespace: string,
   key: string,
-  fallbackValue: string
+  fallbackValue: string,
+  _updateMissing: boolean,
+  // According to the docs, this is similar to the t() options,
+  // but the differences aren't super clear.
+  options: { [key: string]: unknown }
 ) {
-  tracker.trackEvent("Missing i18n", {
+  tracker.trackEvent("Missing i18n key", {
+    i18nContext: typeof options.context === "string" ? options.context : "",
     i18nKey: key,
     i18nLocales: JSON.stringify(locales),
     i18nNamespace: namespace,
   });
 
   return fallbackValue;
+}
+
+/**
+ * Gets called when an interpolation value is undefined.
+ * Not called if the value is an empty string or null.
+ */
+function missingInterpolationHandler(
+  text: string,
+  interpolationValues: string[]
+) {
+  tracker.trackEvent("Missing i18n interpolation value", {
+    i18nValueMissing: interpolationValues.join(", "),
+    // This is the entire i18n message, which can be quite long, so we truncate it.
+    // Primary reason for including this is to help identify the message to fix:
+    i18nTextStartsWith: text.substring(0, 40),
+  });
 }
 
 /**
@@ -54,6 +75,7 @@ export const initializeI18n = (
           format: formatValue as FormatFunction,
         },
         lng: locale,
+        missingInterpolationHandler,
         missingKeyHandler,
         resources,
         saveMissing: true, // required in order for missingKeyHandler to work

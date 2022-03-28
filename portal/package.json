@@ -42,7 +42,7 @@
     "dayjs": "^1.10.7",
     "dayjs-business-time": "^1.0.4",
     "downloadjs": "^1.4.7",
-    "i18next": "^20.2.2",
+    "i18next": "^20.6.1",
     "js-cookie": "^3.0.0",
     "lodash": "^4.17.21",
     "mockdate": "^3.0.5",

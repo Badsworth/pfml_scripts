@@ -1,4 +1,3 @@
-import uuid
 from datetime import date, timedelta
 from decimal import Decimal
 from typing import Any, Dict, Optional
@@ -38,7 +37,6 @@ from massgov.pfml.db.models.factories import (
     PubEftFactory,
     TaxIdentifierFactory,
 )
-from massgov.pfml.db.models.payments import FineosExtractVpeiPaymentLine
 from massgov.pfml.delegated_payments.mock.mock_util import MockData, generate_routing_nbr_from_ssn
 from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
     stage_payment_fineos_writeback,
@@ -536,27 +534,65 @@ class DelegatedPaymentFactory(MockData):
             return AbsencePeriodFactory.create(**params)
         return None
 
-    def create_payment_details(self, payment, **kwargs):
-        params = {
-            "payment": payment,
-            "payment_id": payment.payment_id,
-            "period_start_date": payment.period_start_date,
-            "period_end_date": payment.period_end_date,
-            "amount": payment.amount,
-        } | kwargs
-        return PaymentDetailsFactory.create(**params)
+    def create_payment_detail(self, **kwargs):
+        """
+        Create a payment detail record and attach
+        to a payment. A payment can have multiple
+        payment details.
+        """
+        payment = self.get_or_create_payment()
 
-    def create_payment_line(self, payment, **kwargs):
-        # need to add so that creating the PaymentLine in the db doesn't throw an invalid foreign key error
-        vpei_payment_line_id = uuid.uuid4()
-        self.db_session.add(FineosExtractVpeiPaymentLine(vpei_payment_line_id=vpei_payment_line_id))
+        # Payment detail records need
+        # to be attached to a payment
+        if not payment:
+            return None
 
-        params = {
-            "payment": payment,
-            "payment_id": payment.payment_id,
-            "vpei_payment_line_id": vpei_payment_line_id,
-        } | kwargs
-        return PaymentLineFactory.create(**params)
+        payment_details_c_value = self.get_value("payment_details_c_value", "7806", kwargs)
+        payment_details_i_value = self.get_value(
+            "payment_details_i_value", str(random_unique_int()), kwargs
+        )
+        vpei_payment_details_id = self.get_value("vpei_payment_details_id", None, kwargs)
+        # Unless specified, have these share the same value as was set on the payment
+        period_start_date = self.get_value("period_start_date", self.period_start_date, kwargs)
+        period_end_date = self.get_value("period_end_date", self.period_end_date, kwargs)
+        amount = self.get_value("amount", self.amount, kwargs)
+        business_net_amount = self.get_value("business_net_amount", self.amount, kwargs)
+
+        return PaymentDetailsFactory.create(
+            payment=payment,
+            payment_details_c_value=payment_details_c_value,
+            payment_details_i_value=payment_details_i_value,
+            vpei_payment_details_id=vpei_payment_details_id,
+            period_start_date=period_start_date,
+            period_end_date=period_end_date,
+            amount=amount,
+            business_net_amount=business_net_amount,
+        )
+
+    def create_payment_line(self, **kwargs):
+        """
+        Create a payment line record which
+        a payment can have multiple.
+        """
+        payment = self.get_or_create_payment()
+
+        # Payment line records need
+        # to be attached to a payment
+        if not payment:
+            return None
+
+        # If you want to associate with a payment detail, need
+        # to pass it in, otherwise it will only associate with the
+        # payment record.
+        payment_detail = self.get_value("payment_detail", None, kwargs)
+
+        # Unless specified, have the amount match the overall payment amount
+        amount = self.get_value("amount", self.amount, kwargs)
+        line_type = self.get_value("line_type", "Auto Gross Entitlement", kwargs)
+
+        return PaymentLineFactory.create(
+            payment=payment, payment_details=payment_detail, amount=amount, line_type=line_type
+        )
 
     def create_all(self):
         if self.add_pub_eft:
