@@ -818,6 +818,21 @@ class FINEOSWebIdExt(Base, TimestampMixin):
     fineos_web_id = Column(Text)
 
 
+class AdditionalUserNotFoundInfo(Base, TimestampMixin):
+    __tablename__ = "additional_user_not_found_info"
+    additional_user_not_found_info_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    application_id = Column(
+        PostgreSQLUUID, ForeignKey("application.application_id"), index=True, nullable=False
+    )
+    date_of_hire = Column(Date)
+    application = relationship("Application")
+    is_withholding_tax = Column(Boolean)
+    recently_acquired_or_merged = Column(Boolean)
+    application = relationship(
+        Application, backref=backref("additional_user_not_found_info", uselist=False)
+    )
+
+
 class LkDocumentType(Base):
     __tablename__ = "lk_document_type"
     document_type_id = Column(Integer, primary_key=True, autoincrement=True)

@@ -6,6 +6,7 @@ from typing import List, Optional
 from pydantic import UUID4
 
 from massgov.pfml.api.models.applications.common import (
+    AdditionalUserNotFoundInfo,
     EmploymentStatus,
     Gender,
     MaskedAddress,
@@ -40,8 +41,9 @@ from massgov.pfml.util.pydantic.types import (
 
 
 class ApplicationStatus(str, Enum):
-    Started = "Started"
     Completed = "Completed"
+    InReview = "In Review"
+    Started = "Started"
     Submitted = "Submitted"
 
 
@@ -77,6 +79,8 @@ class ApplicationResponse(PydanticBaseModel):
     mailing_address: Optional[MaskedAddress]
     residential_address: Optional[MaskedAddress]
     has_employer_benefits: Optional[bool]
+    additional_user_not_found_info: Optional[AdditionalUserNotFoundInfo]
+    nbr_of_retries: int
     employer_benefits: Optional[List[EmployerBenefit]]
     employee_organization_units: List[OrganizationUnit]
     employer_organization_units: List[OrganizationUnit]
@@ -122,6 +126,7 @@ class ApplicationResponse(PydanticBaseModel):
             application_response.status = ApplicationStatus.Completed
         elif application.submitted_time:
             application_response.status = ApplicationStatus.Submitted
+        # TODO if an indexing task has been created.
         else:
             application_response.status = ApplicationStatus.Started
 

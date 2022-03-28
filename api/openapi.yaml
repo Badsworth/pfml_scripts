@@ -2636,6 +2636,17 @@ components:
             - other_reason
             - same_reason
 
+    AdditionalUserNotFoundInfo:
+      type: object
+      properties:
+        date_of_hire:
+          $ref: '#/components/schemas/Date'
+        is_withholding_tax:
+          type: boolean
+        recently_acquired_or_merged:
+          type: boolean
+
+
     ApplicationRequestBody:
       allOf:
         - type: object
@@ -2784,6 +2795,9 @@ components:
               maxItems: 6
             concurrent_leave:
               $ref: "#/components/schemas/ConcurrentLeave"
+              nullable: true
+            additional_user_not_found_info:
+              $ref: "#/components/schemas/AdditionalUserNotFoundInfo"
               nullable: true
         - type: object
           properties:

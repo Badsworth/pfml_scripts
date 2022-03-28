@@ -6,6 +6,7 @@ from dateutil.relativedelta import relativedelta
 from pydantic import UUID4, validator
 
 from massgov.pfml.api.models.applications.common import (
+    AdditionalUserNotFoundInfo,
     Address,
     ApplicationLeaveDetails,
     DocumentType,
@@ -101,6 +102,8 @@ class ApplicationRequestBody(PydanticBaseModel):
     mailing_address: Optional[Address]
     residential_address: Optional[Address]
     has_employer_benefits: Optional[bool]
+    additional_user_not_found_info: Optional[AdditionalUserNotFoundInfo]
+    nbr_of_retries: Optional[int]
     employer_benefits: Optional[List[EmployerBenefit]]
     has_other_incomes: Optional[bool]
     other_incomes: Optional[List[OtherIncome]]
