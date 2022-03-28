@@ -245,7 +245,8 @@ def filter_and_sort_payments(payment_data: List[PaymentContainer]) -> List[Payme
 def get_payment_lines_responses(payment_detail: PaymentDetails) -> list[PaymentLinesResponse]:
     payment_lines = []
 
-    for payment_line in payment_detail.payment_lines:
+    # payment_lines is defined on PaymentDetails in db/models/payments.py
+    for payment_line in payment_detail.payment_lines:  # type: ignore
         payment_lines.append(
             PaymentLinesResponse(
                 payment_line_id=payment_line.payment_line_id,

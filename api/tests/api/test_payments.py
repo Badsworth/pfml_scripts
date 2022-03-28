@@ -154,6 +154,7 @@ def test_get_payments_200(
         "writeback_transaction_status": expected_description,
         "transaction_date": expected_transaction_date,
         "transaction_date_could_change": expected_transaction_date_could_change,
+        "payment_details": [],
     }
 
 
