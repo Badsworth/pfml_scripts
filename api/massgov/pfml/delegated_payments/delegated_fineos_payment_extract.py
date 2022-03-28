@@ -1395,11 +1395,8 @@ class PaymentExtractStep(Step):
                 end_state = State.PAYMENT_READY_FOR_ADDRESS_VALIDATION
                 message = "Success"
             else:
-                end_state = State.DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT
+                end_state = State.DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_RESTARTABLE
                 message = "Employer reimbursement payment processed"
-                self._manage_pei_writeback_state(
-                    payment, FineosWritebackTransactionStatus.PROCESSED, payment_data
-                )
             self.increment(self.Metrics.EMPLOYER_REIMBURSEMENT_COUNT)
 
         # Zero dollar payments are added to the FINEOS writeback + a report

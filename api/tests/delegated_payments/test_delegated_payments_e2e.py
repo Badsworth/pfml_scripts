@@ -463,7 +463,7 @@ def test_e2e_pub_payments(
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
             scenario_names=[ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT],
-            end_state=State.DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT,
+            end_state=State.DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_RESTARTABLE,
             db_session=test_db_session,
         )
 
@@ -701,6 +701,9 @@ def test_e2e_pub_payments(
         )
         # No payment created for this scenario
         stage_1_writeback_scenarios.remove(ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED)
+
+        # Removed writeback for employer remibursement payments
+        stage_1_writeback_scenarios.remove(ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT)
 
         assert_writeback_for_stage(test_dataset, stage_1_writeback_scenarios, test_db_session)
 
@@ -1303,7 +1306,8 @@ def test_e2e_pub_payments(
                         ScenarioName.UNKNOWN_LEAVE_REQUEST_DECISION,
                     ]
                 ),
-                "processed_writeback_transaction_status_count": len(stage_1_non_standard_payments),
+                "processed_writeback_transaction_status_count": len(stage_1_non_standard_payments)
+                - len([ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT]),
                 "payment_audit_in_progress_writeback_transaction_status_count": len(
                     stage_1_happy_path_scenarios
                 )
