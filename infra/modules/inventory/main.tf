@@ -4,7 +4,7 @@ data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
 locals {
-  auditors = jsondecode(file("../auditors.json"))
+  auditors = jsondecode(file("auditors.json"))
 }
 
 resource "aws_dynamodb_table" "inventory" {
@@ -37,8 +37,8 @@ data "aws_iam_policy_document" "auditor_iam_policy" {
 data "archive_file" "audit" {
   for_each    = local.auditors
   type        = "zip"
-  source_dir  = "../lambda_functions/audit_${each.key}"
-  output_path = "../lambda_functions/audit_lambda/audit_${each.key}.zip"
+  source_dir  = "lambda_functions/audit_${each.key}"
+  output_path = "lambda_functions/audit_lambda/audit_${each.key}.zip"
   excludes    = ["lambda_functions/audit_${each.key}/audit_${each.key}.zip"]
 }
 
