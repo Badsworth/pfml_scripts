@@ -1,8 +1,5 @@
 provider "aws" {}
 
-data "aws_region" "current" {}
-data "aws_caller_identity" "current" {}
-
 module "constants" {
   source = "../../constants"
 }
@@ -10,6 +7,16 @@ module "constants" {
 locals {
   prefix   = "massgov_pfml_audit_"
   auditors = jsondecode(file("auditors.json"))
+}
+
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+data "archive_file" "audit" {
+  for_each    = local.auditors
+  type        = "zip"
+  source_dir  = "lambda_functions/audit_${each.key}"
+  output_path = "lambda_functions/audit_${each.key}/audit_${each.key}.zip"
+  excludes    = ["audit_${each.key}.zip"]
 }
 
 resource "aws_cloudwatch_event_rule" "audit" {
@@ -47,14 +54,6 @@ resource "aws_dynamodb_table" "inventory" {
   }
 
   tags = merge({ "Name" = "${local.prefix}${each.key}" }, module.constants.common_tags)
-}
-
-data "archive_file" "audit" {
-  for_each    = local.auditors
-  type        = "zip"
-  source_dir  = "lambda_functions/audit_${each.key}"
-  output_path = "lambda_functions/audit_${each.key}/audit_${each.key}.zip"
-  excludes    = ["audit_${each.key}.zip"]
 }
 
 resource "aws_lambda_function" "audit" {
