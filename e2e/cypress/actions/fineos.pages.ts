@@ -3125,7 +3125,7 @@ export type AbsenceReasonDescription = {
  */
 export type PrimaryRelationshipDescription = {
   relationship_to_employee?: "Sibling - Brother/Sister" | "Child";
-  qualifier_1?: "Biological";
+  qualifier_1?: "Biological" | "Adopted" | "Foster";
   // @todo - currently unused, uncomment when you need to set
   // this field
   // qualifier_2?: "Equivalent Family Member" | "Opposite Sex" | "Same Sex";

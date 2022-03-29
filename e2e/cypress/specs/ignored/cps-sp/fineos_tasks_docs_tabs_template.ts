@@ -46,6 +46,7 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
 
           // [nameOfTask, SLA diff in days]
           const taskDiff: [FineosTasks, number][] = [
+            ["Additional Information Overdue Notification Task", 2],
             ["Overlapping Absence Request Exists", 3],
             ["Update Paid Leave Case", 1],
             ["Manual Intervention required to Approve Payments", 1],
@@ -131,6 +132,13 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
             "State of Mass",
             "Inbound Documents",
           ]);
+
+          // CPS-906-X (CPS-2408)
+          const documentType = "Identification Proof";
+          fineos.onTab("Search");
+          cy.findByLabelText("Business Type").type(`${documentType}{enter}`);
+          cy.screenshot("ID proof");
+
           clickBottomWidgetButton("Cancel");
         });
       });

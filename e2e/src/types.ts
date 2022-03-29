@@ -133,6 +133,7 @@ export type OtherTasks =
   | "Schedule Hearing"
   | "Send Decision Notice"
   | "Conduct Hearing"
+  | "Additional Information Overdue Notification Task"
   | "Employer Reimbursement"
   | "Autopay After Appeal Reminder"
   | "SOM Autopay After Appeal Reminder"
