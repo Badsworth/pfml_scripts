@@ -27,6 +27,13 @@ resource "aws_cloudwatch_event_rule" "security_hub_finding" {
       "detail-type": [
         "Security Hub Findings - Imported"
       ],
+      "detail": {
+        "findings": {
+          "Severity": {
+            "Label": ["CRITICAL", "HIGH", "MEDIUM"]
+          }
+        }
+      },
       "source": [
         "aws.securityhub"
       ]
@@ -34,7 +41,7 @@ resource "aws_cloudwatch_event_rule" "security_hub_finding" {
   PATTERN
 }
 
-resource "aws_cloudwatch_event_target" "security_hub_finding" {
+resource "aws_cloudwatch_event_target" "security_hub_finding_sns" {
   rule = aws_cloudwatch_event_rule.security_hub_finding.name
   target_id = "notify_sns_on_security_hub_finding"
   arn = var.security_hub_finding_notification_arn
