@@ -57,7 +57,7 @@ class Function:
         return self.get_vpc_config('SecurityGroupIds')
 
     def encryption(self):
-        return self.get('KMSKeyArn')
+        return self.configuration.get('KMSKeyArn', 'aws:lambda')
 
     def get_tags(self):
         return self.details.get('Tags')
