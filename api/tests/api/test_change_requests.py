@@ -1,3 +1,4 @@
+import io
 from datetime import date
 from typing import Dict
 from unittest import mock
@@ -253,3 +254,36 @@ class TestUpdateChangeRequest:
             response_body["message"]
             == "Could not find ChangeRequest with ID 009fa369-291b-403f-a85a-15e938c26f2f"
         )
+
+
+class TestUploadDocument:
+    def test_success(
+        self, application, change_request, client, consented_user, consented_user_token
+    ):
+
+        form_data = {"document_type": "Passport", "name": "passport.png", "description": "Passport"}
+        form_data["file"] = (io.BytesIO(b"abcdef"), "test.png")
+
+        application.user = consented_user
+
+        response = client.post(
+            "/v1/change-request/{}/documents".format(change_request.change_request_id),
+            headers={"Authorization": f"Bearer {consented_user_token}"},
+            content_type="multipart/form-data",
+            data=form_data,
+        )
+
+        response_json = response.get_json()
+
+        assert response_json["status_code"] == 200
+
+        response_data = response_json["data"]
+        assert response_data["content_type"] == "image/png"
+        assert response_data["description"] == "Passport"
+        assert response_data["document_type"] == "Passport"
+        assert (
+            response_data["fineos_document_id"] == "3011"
+        )  # See massgov/pfml/fineos/mock_client.py
+        assert response_data["name"] == "passport.png"
+        assert response_data["user_id"] == str(consented_user.user_id)
+        assert response_data["created_at"] is not None
