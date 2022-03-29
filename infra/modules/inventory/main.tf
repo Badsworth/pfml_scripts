@@ -15,14 +15,8 @@ locals {
 resource "aws_cloudwatch_event_rule" "audit" {
   for_each = auditors
   name          = "${local.prefix}${each.key}"
-  description   = "Notify when an EC2 instance changes state"
-  event_pattern = <<EOF
-{
-  "detail-type": [
-    "EC2 Instance State-change Notification"
-  ]
-}
-EOF
+  description   = "Invoke ${local.prefix}${each.key} Lambda Function on Saturday at 6am UTC"
+  schedule_expression = cron(0 6 ? * 6 *)
 }
 
 resource "aws_dynamodb_table" "inventory" {
