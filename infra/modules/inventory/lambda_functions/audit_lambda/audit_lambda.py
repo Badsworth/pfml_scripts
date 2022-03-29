@@ -89,7 +89,7 @@ class Function:
             'Runtime': self.runtime(),
             'Timeout': self.timeout(),
             'VpcId': self.vpc_id(),
-            'Code': self.get_code_location(),
+            'CodeLocation': self.get_code_location(),
         }
         for dictionary in (
             self.get_security_group_ids(),
