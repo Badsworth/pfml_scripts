@@ -7,19 +7,22 @@ resource "aws_cloudwatch_event_rule" "security_hub_finding" {
   is_enabled = true
   event_pattern = <<PATTERN
     {
-      "detail-type": [
-        "Security Hub Findings - Imported"
-      ],
+      "source": ["aws.securityhub"],
+      "detail-type": ["Security Hub Findings - Imported"],
       "detail": {
         "findings": {
+          "Compliance": {
+            "Status": ["FAILED"]
+          },
+          "RecordState": ["ACTIVE"],
           "Severity": {
             "Label": ["CRITICAL", "HIGH", "MEDIUM"]
+          },
+          "Workflow": {
+            "Status": ["NEW"]
           }
         }
-      },
-      "source": [
-        "aws.securityhub"
-      ]
+      }
     }
   PATTERN
 }
