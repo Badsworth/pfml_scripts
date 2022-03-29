@@ -10,7 +10,7 @@ data "aws_iam_policy_document" "auditor_iam_trust_policy" {
 }
 
 data "aws_iam_policy_document" "auditor_inventory_policy" {
-  for_each = locals.auditors
+  for_each = local.auditors
   statement {
     actions   = ["dynamodb:PutItem"]
     effect    = "Allow"
