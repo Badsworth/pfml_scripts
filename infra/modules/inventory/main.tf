@@ -5,10 +5,10 @@ data "aws_caller_identity" "current" {}
 
 module "constants" {
   source = "../../constants"
-  prefix = "massgov_pfml_audit_"
 }
 
 locals {
+  prefix = "massgov_pfml_audit_"
   auditors = jsondecode(file("auditors.json"))
 }
 
