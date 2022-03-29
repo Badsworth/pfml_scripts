@@ -196,6 +196,6 @@ module "sns_security_group_changes" {
 }
 
 module "security_hub_finding" {
-  source        = "../modules/terraform_event_bridge_rules"
-  sns_topic_arn = aws_sns_topic.sns_security_hub_finding.arn
+  source        = "../modules/security_hub_events_alarm"
+  security_hub_finding_notification_arn = aws_sns_topic.sns_security_hub_finding.arn
 }
