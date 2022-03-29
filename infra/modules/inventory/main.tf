@@ -27,8 +27,8 @@ data "archive_file" "audit" {
   for_each    = local.auditors
   type        = "zip"
   source_dir  = "lambda_functions/audit_${each.key}"
-  output_path = "lambda_functions/audit_lambda/audit_${each.key}.zip"
-  excludes    = ["lambda_functions/audit_${each.key}/audit_${each.key}.zip"]
+  output_path = "lambda_functions/audit_${each.key}/audit_${each.key}.zip"
+  excludes    = ["audit_${each.key}.zip"]
 }
 
 resource "aws_lambda_function" "audit" {
