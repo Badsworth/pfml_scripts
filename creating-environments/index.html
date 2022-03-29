@@ -1360,15 +1360,22 @@ cognito_user_pool_keys_url = &quot;https://cognito-idp.us-east-1.amazonaws.com/$
 <li>Follow <a href="../portal/creating-environments/">additional steps for new Portal environments</a>.</li>
 </ol>
 <h3 id="configuring-cognito">Configuring Cognito</h3>
+<p>Our Terraform scripts enable Advanced Security. However at the time of writing, <a href="https://github.com/hashicorp/terraform-provider-aws/issues/7007">Terraform didn't support more granular configuration of the Advanced Security settings</a>, so there are some manual steps needed.</p>
+<h4 id="enable-blocking-of-high-risk-logins-in-prod-environments">Enable blocking of high-risk logins in prod environments</h4>
 <p><strong>This is only required for environments that will not run E2E tests. For most environments this is not required.</strong></p>
 <p>In production, we block high-risk login attempts. This can also be configured for other environments if desired. High-risk login attempts aren't blocked in environments used for testing so that automated test scripts don't get blocked.</p>
-<p>Our Terraform scripts enable Advanced Security. however at the time of writing, <a href="https://github.com/hashicorp/terraform-provider-aws/issues/7007">Terraform didn't support more granular configuration of the Advanced Security settings</a>, so there are some manual steps needed:</p>
 <ol>
 <li>Log into the AWS Console and navigate to the Cognito User Pool for this environment.</li>
 <li>Click "Advanced Security" in the sidebar</li>
 <li><a href="https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pool-settings-advanced-security.html#cognito-user-pool-configure-advanced-security">Configure the adaptive authentication behavior</a>.</li>
-<li>On the same page in AWS customize the email notification messages by copy-and-pasting the HTML email templates from <a href="https://github.com/EOLWD/pfml/tree/main/infra/portal/templates/emails/"><code>infra/portal/templates/emails</code></a>.</li>
-<li>Ensure the email FROM address is <code>"NEWENV-SHORTHAND_Department of Family and Medical Leave" \&lt;PFML_DoNotReply@eol.mass.gov\&gt;"</code>.</li>
+</ol>
+<h4 id="customize-the-email-templates-cognito-sends-for-various-risk-related-login-actions">Customize the email templates Cognito sends for various risk-related login actions</h4>
+<ol>
+<li>Log into the AWS Console and navigate to the Cognito User Pool for this environment.</li>
+<li>Click "Advanced Security" in the sidebar.</li>
+<li>Customize the email notification messages by copy-and-pasting the HTML email templates from <a href="https://github.com/EOLWD/pfml/tree/main/infra/portal/templates/emails/"><code>infra/portal/templates/emails</code></a>.</li>
+<li>In order to see the UI for customizing the email notification messages at least one of the "Notify user" checkboxes must be checked for Low, Medium, or High risk logins</li>
+<li>Ensure the email FROM address is <code>"NEWENV-SHORTHAND_Department of Family and Medical Leave" \&lt;PFML_DoNotReply@eol.mass.gov\&gt;"</code> where <NEWENV-SHORTHAND> is the short moniker for the environment, such as STAGE or TEST.</li>
 </ol>
 <h2 id="4-integrating-with-fineos">4. Integrating with FINEOS</h2>
 <h3 id="configure-pfml-credentials-for-fineos">Configure PFML credentials for FINEOS</h3>
