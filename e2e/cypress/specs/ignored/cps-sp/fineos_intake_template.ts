@@ -14,6 +14,9 @@ import {
 } from "../../../../src/util/claims";
 import { waitForAjaxComplete } from "../../../actions/fineos";
 import { LeaveReason } from "../../../../src/generation/Claim";
+import faker from "faker";
+import { add, format } from "date-fns";
+import { config } from "../../../actions/common";
 
 const getLeaveType = (leaveReason: NonNullable<LeaveReason>): LeaveType => {
   const mapping: {
@@ -132,6 +135,25 @@ describe("Submit a claim through Fineos intake process, verify the Absence Case"
         cy.stash("claim", claim);
         // Go to the claimant page
         ClaimantPage.visit(claim.claim.tax_identifier)
+          // Adding date of birth and address for Claimants.
+          .addAddress({
+            city: faker.address.city(),
+            state: "MA",
+            zip: faker.address.zipCode(),
+            line_1: faker.address.streetAddress(),
+          })
+          .editPersonalIdentification(
+            {
+              date_of_birth: format(
+                faker.date.between(
+                  add(new Date(), { years: -65 }),
+                  add(new Date(), { years: -18 })
+                ),
+                "MM/dd/yyyy"
+              ),
+            },
+            config("HAS_APRIL_UPGRADE") === "true" ? true : false
+          )
           // Start intake process
           .startCreateNotification((occupationDetails) => {
             // @TODO CPS-906-P (CPS-1650)/Check that you can't submit 0 as amount of hours worked per week
