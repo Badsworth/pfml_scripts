@@ -553,11 +553,11 @@ def test_get_payments_with_details_and_lines(test_db_session):
     assert len(claim_1_response["payments"][0]["payment_details"][1]["payment_lines"]) == 0
 
     assert (
-        claim_1_response["payments"][0]["payment_details"][0]["payment_detail_id"]
+        claim_1_response["payments"][0]["payment_details"][0]["payment_details_id"]
         == payment_1_details_1.payment_details_id
     )
     assert (
-        claim_1_response["payments"][0]["payment_details"][1]["payment_detail_id"]
+        claim_1_response["payments"][0]["payment_details"][1]["payment_details_id"]
         == payment_1_details_2.payment_details_id
     )
 
@@ -572,7 +572,7 @@ def test_get_payments_with_details_and_lines(test_db_session):
     assert len(claim_2_response["payments"][0]["payment_details"][0]["payment_lines"]) == 2
 
     assert (
-        claim_2_response["payments"][0]["payment_details"][0]["payment_detail_id"]
+        claim_2_response["payments"][0]["payment_details"][0]["payment_details_id"]
         == payment_2_details.payment_details_id
     )
     assert (

@@ -6,18 +6,14 @@ from typing import Any, Dict, List, Optional, Tuple
 from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.expression import desc
 
-from massgov.pfml.api.models.payments.responses import (
-    PaymentDetailsResponse,
-    PaymentLinesResponse,
-    PaymentResponse,
-)
+from massgov.pfml.api.models.payments.responses import PaymentResponse
 from massgov.pfml.api.services.payments_services_util import (
     FrontendPaymentStatus,
     PaymentContainer,
     PaymentFilterReason,
 )
 from massgov.pfml.db import Session
-from massgov.pfml.db.models.employees import Claim, Payment, PaymentDetails, PaymentTransactionType
+from massgov.pfml.db.models.employees import Claim, Payment, PaymentTransactionType
 from massgov.pfml.util import logging
 
 logger = logging.get_logger(__name__)
@@ -242,53 +238,12 @@ def filter_and_sort_payments(payment_data: List[PaymentContainer]) -> List[Payme
     return payments_to_keep
 
 
-def get_payment_lines_responses(payment_detail: PaymentDetails) -> list[PaymentLinesResponse]:
-    payment_lines = []
-
-    # payment_lines is defined on PaymentDetails in db/models/payments.py
-    for payment_line in payment_detail.payment_lines:  # type: ignore
-        payment_lines.append(
-            PaymentLinesResponse(
-                payment_line_id=payment_line.payment_line_id,
-                payment_line_c_value=payment_line.payment_line_c_value,
-                payment_line_i_value=payment_line.payment_line_i_value,
-                amount=payment_line.amount,
-                line_type=payment_line.line_type,
-            )
-        )
-
-    return payment_lines
-
-
-def get_payment_details_responses(payment: Payment) -> list[PaymentDetailsResponse]:
-    payment_details = []
-
-    for payment_detail in payment.payment_details:
-        payment_lines = get_payment_lines_responses(payment_detail)
-
-        payment_details.append(
-            PaymentDetailsResponse(
-                payment_detail_id=payment_detail.payment_details_id,
-                payment_detail_c_value=payment_detail.payment_details_c_value,
-                payment_detail_i_value=payment_detail.payment_details_i_value,
-                period_start_date=payment_detail.period_start_date,
-                period_end_date=payment_detail.period_end_date,
-                amount=payment_detail.amount,
-                payment_lines=payment_lines,
-            )
-        )
-
-    return payment_details
-
-
 def to_response_dict(payment_data: List[PaymentContainer], absence_case_id: Optional[str]) -> Dict:
     payments = []
     for payment_container in payment_data:
         payment_container.is_valid_for_response = True
         payment = payment_container.payment
         scenario_data = payment_container.get_scenario_data()
-
-        payment_details = get_payment_details_responses(payment)
 
         payments.append(
             PaymentResponse(
@@ -308,7 +263,7 @@ def to_response_dict(payment_data: List[PaymentContainer], absence_case_id: Opti
                 writeback_transaction_status=scenario_data.writeback_transaction_status,
                 transaction_date=scenario_data.transaction_date,
                 transaction_date_could_change=scenario_data.transaction_date_could_change,
-                payment_details=payment_details,
+                payment_details=payment.payment_details,
             ).dict()
         )
 

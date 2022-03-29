@@ -3425,9 +3425,9 @@ components:
         payment_lines:
           type: array
           items:
-            $ref: "#/components/schemas/PaymentLinesResponse"
+            $ref: "#/components/schemas/PaymentLineResponse"
     
-    PaymentLinesResponse:
+    PaymentLineResponse:
       type: object
       properties:
         payment_line_id:
