@@ -1,5 +1,5 @@
 resource "aws_sns_topic" "sns_security_hub_finding" {
-  name              = "lwd-dfml-itsupport-aws-security-hub-finding"
+  name              = "aws-security-hub-findings"
   kms_master_key_id = data.aws_kms_key.main_kms_key.id
 }
 
