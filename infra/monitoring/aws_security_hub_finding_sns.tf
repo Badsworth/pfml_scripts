@@ -6,7 +6,6 @@ resource "aws_sns_topic" "sns_security_hub_finding" {
 resource "aws_sns_topic_subscription" "sns_security_hub_finding" {
   topic_arn              = aws_sns_topic.sns_security_hub_finding.arn
   protocol               = "email"
-  # endpoint               = "EOL-DL-DFML-ITSUPPORT@MassMail.State.MA.US"
-  endpoint               = "paz.tursun@mass.gov"
+  endpoint               = "EOL-DL-SecurityAdvisory@Mass.gov"
   endpoint_auto_confirms = true
 }
