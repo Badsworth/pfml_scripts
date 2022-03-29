@@ -213,6 +213,18 @@ class Phone(Base, TimestampMixin):
     phone_type_instance = relationship(LkPhoneType)
 
 
+class AdditionalUserNotFoundInfo(Base, TimestampMixin):
+    __tablename__ = "additional_user_not_found_info"
+    additional_user_not_found_info_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    application_id = Column(
+        PostgreSQLUUID, ForeignKey("application.application_id"), index=True, nullable=False
+    )
+    date_of_hire = Column(Date)
+    application = relationship("Application")
+    is_withholding_tax = Column(Boolean)
+    recently_acquired_or_merged = Column(Boolean)
+
+
 class ConcurrentLeave(Base, TimestampMixin):
     __tablename__ = "concurrent_leave"
     concurrent_leave_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
@@ -396,6 +408,9 @@ class Application(Base, TimestampMixin):
         "PreviousLeaveSameReason", back_populates="application", uselist=True
     )
     concurrent_leave = relationship("ConcurrentLeave", back_populates="application", uselist=False)
+    additional_user_not_found_info = relationship(
+        "AdditionalUserNotFoundInfo", back_populates="application", uselist=False
+    )
 
     @property
     def employee(self) -> Optional[Employee]:
@@ -816,21 +831,6 @@ class FINEOSWebIdExt(Base, TimestampMixin):
     employee_tax_identifier = Column(Text, primary_key=True)
     employer_fein = Column(Text, primary_key=True)
     fineos_web_id = Column(Text)
-
-
-class AdditionalUserNotFoundInfo(Base, TimestampMixin):
-    __tablename__ = "additional_user_not_found_info"
-    additional_user_not_found_info_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
-    application_id = Column(
-        PostgreSQLUUID, ForeignKey("application.application_id"), index=True, nullable=False
-    )
-    date_of_hire = Column(Date)
-    application = relationship("Application")
-    is_withholding_tax = Column(Boolean)
-    recently_acquired_or_merged = Column(Boolean)
-    application = relationship(
-        Application, backref=backref("additional_user_not_found_info", uselist=False)
-    )
 
 
 class LkDocumentType(Base):

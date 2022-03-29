@@ -32,6 +32,7 @@ from massgov.pfml.api.validation.exceptions import (
 )
 from massgov.pfml.db.models.absences import AbsencePeriodType
 from massgov.pfml.db.models.applications import (
+    AdditionalUserNotFoundInfo,
     AmountFrequency,
     Application,
     ApplicationPaymentPreference,
@@ -411,6 +412,12 @@ def update_from_request(
             set_concurrent_leave(db_session, body.concurrent_leave, application)
             continue
 
+        if key == "additional_user_not_found_info":
+            set_additional_user_not_found_info(
+                db_session, body.additional_user_not_found_info, application
+            )
+            continue
+
         if key == "previous_leaves_other_reason":
             set_previous_leaves(
                 db_session, body.previous_leaves_other_reason, application, "other_reason"
@@ -768,6 +775,29 @@ def delete_application_other_benefits(
         synchronize_session=False
     )
     db_session.refresh(application)
+
+
+def set_additional_user_not_found_info(
+    db_session: db.Session,
+    api_additional_user_not_found_info: Optional[
+        massgov.pfml.api.models.applications.common.AdditionalUserNotFoundInfo
+    ],
+    application: Application,
+) -> None:
+    if application.additional_user_not_found_info:
+        db_session.delete(application.additional_user_not_found_info)
+        db_session.refresh(application)
+
+    if not api_additional_user_not_found_info:
+        return
+
+    additional_user_not_found_info = AdditionalUserNotFoundInfo(
+        application_id=application.application_id,
+        is_withholding_tax=api_additional_user_not_found_info.is_withholding_tax,
+        recently_acquired_or_merged=api_additional_user_not_found_info.recently_acquired_or_merged,
+        date_of_hire=api_additional_user_not_found_info.date_of_hire,
+    )
+    db_session.add(additional_user_not_found_info)
 
 
 def set_employer_benefits(
