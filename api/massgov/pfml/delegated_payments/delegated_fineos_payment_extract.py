@@ -714,13 +714,13 @@ class PaymentData:
                 "PAYMENTDETAILCLASSID",
                 payment_line,
                 self.validation_container,
-                True,
+                self.is_payment_detail_expected,
             )
             payment_detail_index_id = payments_util.validate_db_input(
                 "PAYMENTDETAILINDEXID",
                 payment_line,
                 self.validation_container,
-                True,
+                self.is_payment_detail_expected,
             )
 
             related_payment_detail: Optional[PaymentDetails] = payment_detail_mapping.get(
@@ -1395,11 +1395,8 @@ class PaymentExtractStep(Step):
                 end_state = State.PAYMENT_READY_FOR_ADDRESS_VALIDATION
                 message = "Success"
             else:
-                end_state = State.DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT
+                end_state = State.DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_RESTARTABLE
                 message = "Employer reimbursement payment processed"
-                self._manage_pei_writeback_state(
-                    payment, FineosWritebackTransactionStatus.PROCESSED, payment_data
-                )
             self.increment(self.Metrics.EMPLOYER_REIMBURSEMENT_COUNT)
 
         # Zero dollar payments are added to the FINEOS writeback + a report

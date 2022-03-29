@@ -1,3 +1,4 @@
+import { Address } from "./../_api";
 import faker from "faker";
 import fs from "fs";
 import { formatISO } from "date-fns";
@@ -52,6 +53,7 @@ type EmployerGenerationSpec = {
   medical_exemption?: boolean;
   exemption_commence_date?: Date;
   exemption_cease_date?: Date;
+  address?: Address;
   metadata?: Record<string, unknown>;
 };
 
@@ -96,10 +98,10 @@ export class EmployerGenerator {
       accountKey: this.generateAccountKey(),
       name,
       fein,
-      street: faker.address.streetAddress(),
-      city: faker.address.city(),
-      state: "MA",
-      zip: faker.address.zipCode("#####-####"),
+      street: spec.address?.line_1 ?? faker.address.streetAddress(),
+      city: spec.address?.city ?? faker.address.city(),
+      state: spec.address?.state ?? "MA",
+      zip: spec.address?.zip ?? faker.address.zipCode("#####-####"),
       dba: name,
       family_exemption: spec.family_exemption || false,
       medical_exemption: spec.medical_exemption || false,

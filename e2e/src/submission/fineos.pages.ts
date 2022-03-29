@@ -12,7 +12,6 @@ import {
 } from "../types";
 import { format, isAfter, isToday } from "date-fns";
 import { FineosCorrespondanceType } from "../../cypress/actions/fineos.enums";
-
 export type FineosBrowserOptions = {
   credentials?: Credentials;
   debug: boolean;
@@ -716,6 +715,7 @@ export class PaidLeave extends FineosPage {
   async editProcessingDates(startDate: Date): Promise<void> {
     await this.onTab("Financials", "Payment History", "Amounts Pending");
     await util.waitForStablePage(this.page);
+    await delay(500);
     // get amount of payments for first pay period, this will vary depending on whether SIT/FIT is opted in or there is an ER reimbursment
     const paymentRowsToEdit = (
       await this.page.$$(
@@ -761,6 +761,18 @@ export class PaidLeave extends FineosPage {
           break;
         }
       }
+    }
+    // validate payment processing update was successful
+    await util.waitForStablePage(this.page);
+    await delay(500);
+    const matches = await this.page.$$(
+      `table[id^='amountspendingtabWidget'] tr td:nth-child(3):has-text('${format(
+        new Date(),
+        "MM/dd/yyyy"
+      )}')`
+    );
+    if (matches.length !== paymentRowsToEdit || paymentRowsToEdit === 0) {
+      throw Error("Failed to override payment processing date");
     }
   }
 }

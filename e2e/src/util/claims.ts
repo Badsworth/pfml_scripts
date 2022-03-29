@@ -1,8 +1,8 @@
-import { ApplicationResponse } from "./../_api";
 import {
   ApplicationLeaveDetails,
   ApplicationRequestBody,
   AbsencePeriodResponse,
+  ApplicationResponse,
 } from "../_api";
 import {
   ApplicationSubmissionResponse,
