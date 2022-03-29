@@ -50,17 +50,29 @@ class Function:
     def vpc_id(self):
         return self.get_vpc_config('VpcId')
 
-    def subnet_ids(self):
-        return self.get_vpc_config('SubnetIds')
+    def get_subnet_ids(self):
+        subnet_ids = self.get_vpc_config('SubnetIds')
+        return {
+            f'SubnetId{number}': subnet_ids[number]
+            for number in range(len(subnet_ids))
+        }
 
-    def security_group_ids(self):
-        return self.get_vpc_config('SecurityGroupIds')
+    def get_security_group_ids(self):
+        security_group_ids = self.get_vpc_config('SecurityGroupIds')
+        return {
+            f'SecurityGroupId{number}': security_group_ids[number]
+            for number in range(len(security_group_ids))
+        }
 
     def encryption(self):
         return self.configuration.get('KMSKeyArn', 'aws:lambda')
 
     def get_tags(self):
-        return self.details.get('Tags')
+        tags =  self.details.get('Tags')
+        result = {}
+        for key, value in tags.items():
+            result.update({key: value})
+        return result
 
     def get_code_location(self):
         return self.details['Code']['Location']
@@ -76,13 +88,15 @@ class Function:
             'MemorySize': self.memory_size(),
             'Runtime': self.runtime(),
             'Timeout': self.timeout(),
-            'SubnetIds': str(self.subnet_ids()),
-            'SecurityGroupIds': str(self.security_group_ids()),
             'VpcId': self.vpc_id(),
             'Code': self.get_code_location(),
         }
-        for key, value  in self.get_tags().items():
-            result.update({key: value})
+        for dictionary in (
+            self.get_security_group_ids(),
+            self.get_subnet_ids(),
+            self.get_tags(),
+        ):
+            result.update(dictionary)
         return result
 
 def region():
