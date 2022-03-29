@@ -10,10 +10,11 @@ data "aws_iam_policy_document" "auditor_iam_trust_policy" {
 }
 
 data "aws_iam_policy_document" "auditor_inventory_policy" {
+  for_each = locals.auditors
   statement {
     actions   = ["dynamodb:PutItem"]
     effect    = "Allow"
-    resources = ["arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.inventory.name}"]
+    resources = ["arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.inventory[each.key].name}"]
   }
 }
 
