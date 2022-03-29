@@ -18,7 +18,7 @@ data "aws_iam_policy_document" "auditor_dynamodb_policy" {
   }
 }
 
-data "aws_iam_policy_document" "auditor_policy" {
+data "aws_iam_policy_document" "auditor_inventory_policy" {
   for_each = local.auditors
   statement {
     actions   = each.value["actions"]
@@ -34,8 +34,8 @@ resource "aws_iam_role" "audit" {
   managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"]
 
   inline_policy {
-    name   = "auditor_policy"
-    policy = data.aws_iam_policy_document.auditor_policy[each.key].json
+    name   = "auditor_inventory_policy"
+    policy = data.aws_iam_policy_document.auditor_inventory_policy[each.key].json
   }
 
   inline_policy {
