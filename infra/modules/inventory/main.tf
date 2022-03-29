@@ -82,5 +82,5 @@ resource "aws_lambda_function" "audit_lambda" {
 data "archive_file" "audit_lambda" {
   type        = "zip"
   source_file = "lambda_functions/audit_lambda/audit_lambda.py"
-  output_path = "lambda_functions/audit_lambda/.zip/audit_lambda.zip"
+  output_path = "lambda_functions/audit_lambda/audit_lambda.zip"
 }
