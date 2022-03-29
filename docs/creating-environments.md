@@ -252,17 +252,25 @@ Note that the API will not be working until database migrations are run.
 
 ### Configuring Cognito
 
+Our Terraform scripts enable Advanced Security. However at the time of writing, [Terraform didn't support more granular configuration of the Advanced Security settings](https://github.com/hashicorp/terraform-provider-aws/issues/7007), so there are some manual steps needed.
+
+#### Enable blocking of high-risk logins in prod environments
+
 **This is only required for environments that will not run E2E tests. For most environments this is not required.**
 
 In production, we block high-risk login attempts. This can also be configured for other environments if desired. High-risk login attempts aren't blocked in environments used for testing so that automated test scripts don't get blocked.
 
-Our Terraform scripts enable Advanced Security. however at the time of writing, [Terraform didn't support more granular configuration of the Advanced Security settings](https://github.com/hashicorp/terraform-provider-aws/issues/7007), so there are some manual steps needed:
+1. Log into the AWS Console and navigate to the Cognito User Pool for this environment.
+1. Click "Advanced Security" in the sidebar
+1. [Configure the adaptive authentication behavior](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pool-settings-advanced-security.html#cognito-user-pool-configure-advanced-security).
+
+#### Customize the email templates Cognito sends for various risk-related login actions
 
 1. Log into the AWS Console and navigate to the Cognito User Pool for this environment.
-2. Click "Advanced Security" in the sidebar
-3. [Configure the adaptive authentication behavior](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pool-settings-advanced-security.html#cognito-user-pool-configure-advanced-security).
-4. On the same page in AWS customize the email notification messages by copy-and-pasting the HTML email templates from [`infra/portal/templates/emails`](../infra/portal/templates/emails/).
-5. Ensure the email FROM address is `"NEWENV-SHORTHAND_Department of Family and Medical Leave" \<PFML_DoNotReply@eol.mass.gov\>"`.
+1. Click "Advanced Security" in the sidebar.
+1. Customize the email notification messages by copy-and-pasting the HTML email templates from [`infra/portal/templates/emails`](../infra/portal/templates/emails/).
+   - In order to see the UI for customizing the email notification messages at least one of the "Notify user" checkboxes must be checked for Low, Medium, or High risk logins
+1. Ensure the email FROM address is `"NEWENV-SHORTHAND_Department of Family and Medical Leave" \<PFML_DoNotReply@eol.mass.gov\>"` where <NEWENV-SHORTHAND> is the short moniker for the environment, such as STAGE or TEST.
 
 ## 4. Integrating with FINEOS
 

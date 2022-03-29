@@ -39,10 +39,8 @@ from massgov.pfml.api.services.claims import (
 )
 from massgov.pfml.api.services.managed_requirements import update_employer_confirmation_requirements
 from massgov.pfml.api.util.claims import user_has_access_to_claim
-from massgov.pfml.api.util.paginate.paginator import (
-    PaginationAPIContext,
-    make_paging_meta_data_from_paginator,
-)
+from massgov.pfml.api.util.logging.search_request import search_request_log_info
+from massgov.pfml.api.util.paginate.paginator import PaginationAPIContext
 from massgov.pfml.api.validation.exceptions import (
     ContainsV1AndV2Eforms,
     IssueType,
@@ -670,16 +668,11 @@ def _process_claims_request(claim_request: ClaimSearchRequest, method_name: str)
             query.add_order_by(pagination_context, is_reviewable)
 
             page = query.get_paginated_results(pagination_context)
-            page_data_log_attributes = make_paging_meta_data_from_paginator(
-                pagination_context, page
-            ).to_dict()
+            request_log_info = search_request_log_info(claim_request, page)
 
     logger.info(
         f"{method_name} success",
-        extra={
-            **page_data_log_attributes,
-            **log_attributes,
-        },
+        extra={**request_log_info, **log_attributes},
     )
 
     response_model: Union[Type[ClaimForPfmlCrmResponse], Type[ClaimResponse]] = (

@@ -10,14 +10,11 @@ import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import READ, ensure
-from massgov.pfml.api.models.common import OrderDirection, search_request_log_info
+from massgov.pfml.api.models.common import OrderDirection
 from massgov.pfml.api.models.employees.requests import EmployeeSearchRequest
 from massgov.pfml.api.models.employees.responses import EmployeeForPfmlCrmResponse, EmployeeResponse
-from massgov.pfml.api.util.paginate.paginator import (
-    PaginationAPIContext,
-    make_paging_meta_data_from_paginator,
-    page_for_api_context,
-)
+from massgov.pfml.api.util.logging.search_request import search_request_log_info
+from massgov.pfml.api.util.paginate.paginator import PaginationAPIContext, page_for_api_context
 from massgov.pfml.db.models.employees import Employee, Role, TaxIdentifier
 from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.util.users import has_role_in
@@ -98,14 +95,11 @@ def employees_search() -> flask.Response:
 
             page = page_for_api_context(pagination_context, query)
 
-            search_request_log_attributes = search_request_log_info(request)
-            page_data_log_attributes = make_paging_meta_data_from_paginator(
-                pagination_context, page
-            ).to_dict()
+            search_request_log_attributes = search_request_log_info(request, page)
 
     logger.info(
         "Employees_search success",
-        extra={**page_data_log_attributes, **search_request_log_attributes},
+        extra=search_request_log_attributes,
     )
 
     response_model: Union[Type[EmployeeForPfmlCrmResponse], Type[EmployeeResponse]] = (
