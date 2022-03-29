@@ -2704,21 +2704,18 @@ const pages: {
       "People who work in Massachusetts can now apply for Paid Family and Medical Leave. Learn more about this <mass-paid-leave-link>new paid leave program</mass-paid-leave-link>.",
   },
   noEmployeeEmployerMatchFlow: {
-    beginAdditionalEmployeeEmployerInformationTitle:
-      "We still couldn't match you with the employer you entered.",
-    beginAdditionalEmployeeEmployerInformationDescription:
+    additionalUserNotFoundInfoFeinLabel: "Employer Identification Number (EIN)",
+    additionalUserNotFoundInfoSsnLabel: "Social Security Number",
+    beginAdditionalUserNotFoundInfoButton: "Save and continue",
+    beginAdditionalUserNotFoundInfoDescription:
       "We need to collect additional information to process your application.",
-    beginAdditionalEmployeeEmployerInformationButton: "Save and continue",
-    employeeStartDateTitle: "What was your start date at this employer?",
-    employeeStartDateDescription: "MM / DD / YY",
-    employeeStartDateHint:
-      "Please include the exact day of your start date if you know it. If you don't remember, you can leave it blank and fill in the month and year.",
+    beginAdditionalUserNotFoundInfoTitle:
+      "We still couldn't match you with the employer you entered.",
+    employeeStartDateLabel: "What was your start date at this employer?",
     noEmployeeEmployerMatchDescription:
       "This could happen if your Social Security Number or the employer's Employer Identification Number is entered incorrectly. Check and re-enter your Social Security Number and employer's Employer Identification Number. ",
     noEmployeeEmployerMatchTitle:
       "We couldn't match you with the employer you entered.",
-    noEmployeeEmployerMatchSsnLabel: "Social Security Number",
-    noEmployeeEmployerMatchFeinLabel: "Employer Identification Number (EIN)",
   },
   payments: {
     backButtonLabel: "$t(shared.backToYourApplicationsLink)",

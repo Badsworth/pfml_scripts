@@ -4,11 +4,9 @@ import withBenefitsApplication, {
 
 import BackButton from "src/components/BackButton";
 import ButtonLink from "src/components/ButtonLink";
-import FormLabel from "src/components/core/FormLabel";
 import Heading from "src/components/core/Heading";
 import React from "react";
 import Title from "src/components/core/Title";
-import routes from "src/routes";
 import { useTranslation } from "../../locales/i18n";
 
 export const fields = [];
@@ -16,12 +14,14 @@ export const fields = [];
 /**
  * A form page to begin collecting additional information for an employee/employer match.
  */
-export const NoEeErMatchBegin = (props: WithBenefitsApplicationProps) => {
+export const AdditionalUserNotFoundInfoBegin = (
+  props: WithBenefitsApplicationProps
+) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
   return (
-    <>
+    <React.Fragment>
       <BackButton />
       <Title small={true}>{t("pages.claimsEmploymentStatus.title")}</Title>
       <Heading level="2" size="1">
@@ -48,8 +48,8 @@ export const NoEeErMatchBegin = (props: WithBenefitsApplicationProps) => {
           )}
         </div>
       </ButtonLink>
-    </>
+    </React.Fragment>
   );
 };
 
-export default withBenefitsApplication(NoEeErMatchBegin);
+export default withBenefitsApplication(AdditionalUserNotFoundInfoBegin);

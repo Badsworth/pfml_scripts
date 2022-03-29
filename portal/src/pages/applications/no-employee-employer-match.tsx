@@ -16,7 +16,9 @@ export const fields = ["claim.tax_identifier", "claim.employer_fein"];
 /**
  * A form page to recapture the worker's SSN end FEIN.
  */
-export const NoEeErMatchSsnFien = (props: WithBenefitsApplicationProps) => {
+export const AdditionalUserNotFoundInfoSsnFien = (
+  props: WithBenefitsApplicationProps
+) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -73,4 +75,4 @@ export const NoEeErMatchSsnFien = (props: WithBenefitsApplicationProps) => {
   );
 };
 
-export default withBenefitsApplication(NoEeErMatchSsnFien);
+export default withBenefitsApplication(AdditionalUserNotFoundInfoSsnFien);

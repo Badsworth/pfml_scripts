@@ -161,16 +161,16 @@ const useBenefitsApplicationsLogic = ({
 
       warnings = [
         ...warnings,
-        /*{
+        /* {
           namespace: "applications",
           rule: "require_contributing_employer",
           message: "",
-        },*/
-        /*{
+        }, */
+        /* {
           namespace: "applications",
           rule: "require_non_exempt_employer",
           message: "",
-        }*/
+        } */
       ];
 
       const issues = getRelevantIssues([], warnings, [portalFlow.page]);
