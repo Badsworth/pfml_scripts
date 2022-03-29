@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-  <!-- Email sent for for blocked sign-ins -->
+  <!-- Email sent for MFA-required sign-ins (risk detected and MFA required) -->
   <!-- This template must be copy/pasted into the Cognito console when it's updated. It doesn't get updated as part of our normal deployment process -->
   <head>
     <title>HTML email context</title>
@@ -65,7 +65,7 @@
                 <tr>
                   <td style="padding: 18px">
                     <p>
-                      We blocked an unrecognized sign-in to your account with
+                      We observed an unrecognized sign-in to your account with
                       this&nbsp;information:
                     </p>
                     <ul>
@@ -74,11 +74,10 @@
                       <li>Location: {city}, {country}</li>
                     </ul>
                     <p>
-                      If this sign-in was by you, please
+                      If this sign-in was not by you, you should
                       <a href="https://paidleave.mass.gov/forgot-password"
                         >change your password</a
-                      >
-                      and sign in again.
+                      >.
                     </p>
                   </td>
                 </tr>
