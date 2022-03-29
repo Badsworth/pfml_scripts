@@ -1,8 +1,8 @@
 """Add additional user not found info
 
-Revision ID: bc387ccf1f93
-Revises: b9e3f491eba2
-Create Date: 2022-03-28 21:05:40.481606
+Revision ID: 27fdc9017492
+Revises: 60419262fc32
+Create Date: 2022-03-29 17:31:34.460317
 
 """
 import sqlalchemy as sa
@@ -10,8 +10,8 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "bc387ccf1f93"
-down_revision = "b9e3f491eba2"
+revision = "27fdc9017492"
+down_revision = "60419262fc32"
 branch_labels = None
 depends_on = None
 
@@ -37,6 +37,7 @@ def upgrade():
         ),
         sa.Column("application_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("date_of_hire", sa.Date(), nullable=True),
+        sa.Column("employer_name", sa.Text(), nullable=True),
         sa.Column("is_withholding_tax", sa.Boolean(), nullable=True),
         sa.Column("recently_acquired_or_merged", sa.Boolean(), nullable=True),
         sa.ForeignKeyConstraint(
