@@ -1,86 +1,77 @@
-provider "aws" {
-  region = "us-east-1"
+provider "aws" {}
+
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+
+locals {
+  auditors = jsondecode(file("../auditors.json"))
 }
 
-data "aws_region" "current" {
-}
-
-data "aws_caller_identity" "current" {
-}
-
-module "constants" {
-  source = "../../constants"
-}
-
-resource "aws_iam_role" "audit_lambda" {
-  name               = "audit_lambda"
-  assume_role_policy = data.aws_iam_policy_document.audit_lambda.json
-}
-resource "aws_iam_role_policy_attachment" "audit_lambda" {
-  role       = aws_iam_role.audit_lambda.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-}
-
-data "aws_iam_policy_document" "audit_lambda" {
-  statement {
-    actions = [
-      "sts:AssumeRole"
-    ]
-
-    effect = "Allow"
-
-    principals {
-      type = "Service"
-      identifiers = [
-        "lambda.amazonaws.com"
-      ]
-    }
-
-  }
-}
-
-resource "aws_dynamodb_table" "audit_lambda" {
-  name         = "audit_lambda"
+resource "aws_dynamodb_table" "inventory" {
+  for_each     = local.auditors
+  name         = "massgov_pfml_audit_${each.key}"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "ResourceName"
-  // range_key      = "FIXME"
 
   attribute {
     name = "ResourceName"
     type = "S"
   }
 
-  // attribute {
-  //   name = "FIXME"
-  //   type = "S"
-  // }
-
-  tags = module.constants.common_tags
-
+  tags = {
+    Name = "massgov_pfml_audit_${each.key}"
+  }
 }
 
+data "aws_iam_policy_document" "auditor_iam_policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    effect  = "Allow"
+    principals {
+      type       = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+  }
+}
 
-resource "aws_lambda_function" "audit_lambda" {
-  description      = "Audit Lambda Functions"
-  filename         = data.archive_file.audit_lambda.output_path
-  source_code_hash = data.archive_file.audit_lambda.output_base64sha256
-  function_name    = "massgov-pfml-audit-lambda"
-  handler          = "audit_lambda.handler"
-  role             = aws_iam_role.audit_lambda.arn
+data "archive_file" "audit" {
+  for_each    = local.auditors
+  type        = "zip"
+  source_dir  = "../lambda_functions/audit_${each.key}"
+  output_path = "../lambda_functions/audit_lambda/audit_${each.key}.zip"
+  excludes    = ["lambda_functions/audit_${each.key}/audit_${each.key}.zip"]
+}
+
+resource "aws_iam_role" "audit" {
+  for_each           = local.auditors
+  name               = "massgov_pfml_audit_${each.key}_role"
+  assume_role_policy = data.aws_iam_policy_document.auditor_iam_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "audit" {
+    for_each = local.auditors
+  role       = aws_iam_role.auditor_iam_role[each.key].name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_lambda_function" "audit" {
+  for_each         = local.auditors
+  description      = each.key
+  filename         = data.archive_file.auditor_function_package[each.key].output_path
+  source_code_hash = data.archive_file.auditor_function_package[each.key].output_base64sha256
+  function_name    = "massgov_pfml_audit_${each.key}"
+  handler          = "massgov_pfml_audit_${each.key}.handler"
+  role             = aws_iam_role.auditor_iam_role[each.key].arn
   runtime          = "python3.9"
 
   environment {
     variables = {
-      "AWS_REGION"           = data.aws_region.current,
-      "INVENTORY_TABLE_NAME" = aws_dynamodb_table.audit_lambda.name,
+      "AWS_REGION"           = data.aws_region.current.name,
+      "INVENTORY_TABLE_NAME" = aws_dynamodb_table.inventory[each.key].name,
     }
   }
 
-  tags = module.constants.common_tags
-}
-
-data "archive_file" "audit_lambda" {
-  type        = "zip"
-  source_file = "lambda_functions/audit_lambda/audit_lambda.py"
-  output_path = "lambda_functions/audit_lambda/audit_lambda.zip"
+  tags = {
+    Name = "audit_${each.key}"
+  }
 }
