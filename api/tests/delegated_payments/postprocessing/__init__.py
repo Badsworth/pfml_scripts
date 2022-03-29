@@ -13,33 +13,44 @@ from massgov.pfml.db.models.employees import (
     SharedPaymentConstants,
     State,
 )
-from massgov.pfml.db.models.factories import (
-    AbsencePeriodFactory,
-    ClaimFactory,
-    EmployerFactory,
-    PaymentDetailsFactory,
-)
+from massgov.pfml.db.models.factories import AbsencePeriodFactory, ClaimFactory, EmployerFactory
 from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_util import (
     PaymentContainer,
 )
 
 
-def _create_payment_periods(payment, total_amount, start_date, periods, length_of_period):
+def _create_payment_periods(
+    payment_factory,
+    total_amount,
+    start_date,
+    periods,
+    length_of_period,
+    employer_reimbursement_amount=None,
+):
     amount_per_period = total_amount / periods
 
     payment_periods = []
     for _ in range(periods):
         end_date = start_date + timedelta(length_of_period - 1)
 
-        payment_period = PaymentDetailsFactory.create(
-            payment=payment,
+        payment_period = payment_factory.create_payment_detail(
             business_net_amount=amount_per_period,
+            amount=100000,  # Very large - not used
             period_start_date=start_date,
             period_end_date=end_date,
-            amount=100000,
         )
+
         payment_periods.append(payment_period)
+
+        payment_factory.create_payment_line(payment_detail=payment_period)
+
+        if employer_reimbursement_amount:
+            payment_factory.create_payment_line(
+                payment_detail=payment_period,
+                line_type="Employer Reimbursement",
+                amount=employer_reimbursement_amount,
+            )
 
         # Increment after as it starts on the first period's day
         start_date = start_date + timedelta(length_of_period)
@@ -86,6 +97,7 @@ def _create_payment_container(
     payment_transaction_type=PaymentTransactionType.STANDARD,
     claim=None,
     add_single_absence_period=True,
+    employer_reimbursement_amount=None,
 ):
 
     if not start_date:
@@ -111,7 +123,9 @@ def _create_payment_container(
     payment = factory.get_or_create_payment()
 
     if not skip_pay_periods:
-        _create_payment_periods(payment, amount, start_date, periods, length_of_period)
+        _create_payment_periods(
+            factory, amount, start_date, periods, length_of_period, employer_reimbursement_amount
+        )
 
     if has_processed_state:
         state = random.choice(list(SharedPaymentConstants.PAID_STATES))

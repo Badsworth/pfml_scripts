@@ -1015,8 +1015,10 @@ class PaymentLine(Base, TimestampMixin):
     amount = Column(Numeric(asdecimal=True), nullable=False)
     line_type = Column(Text, nullable=False)
 
-    payment = relationship(Payment)
-    payment_details = relationship(PaymentDetails)
+    payment = relationship(Payment, back_populates="payment_lines")
+    payment_details = relationship(PaymentDetails, back_populates="payment_lines")
+
+    vpei_payment_line = relationship(FineosExtractVpeiPaymentLine)
 
 
 class FineosWritebackDetails(Base, TimestampMixin):
@@ -1044,6 +1046,9 @@ class FineosWritebackDetails(Base, TimestampMixin):
 Payment.fineos_writeback_details = relationship(  # type: ignore
     FineosWritebackDetails, back_populates="payment", order_by="FineosWritebackDetails.created_at"
 )
+Payment.vpei = relationship(FineosExtractVpei)  # type: ignore
+Payment.payment_lines = relationship(PaymentLine, back_populates="payment")  # type: ignore
+PaymentDetails.payment_lines = relationship(PaymentLine, back_populates="payment_details")  # type: ignore
 
 
 class LkFineosWritebackTransactionStatus(Base):

@@ -92,6 +92,15 @@ AUTO_ALT_EVENT_REASON = "Automatic Alternate Payment"
 
 TAX_IDENTIFICATION_NUMBER = "Tax Identification Number"
 
+# TASKTYPENAME of VBI Task Report Som for other income-related tasks
+OTHER_INCOME_TASKTYPENAMES = [
+    "Employee Reported Other Income",
+    "Escalate Employer Reported Other Income",
+    "Escalate employer reported accrued paid leave (PTO)",
+    "Employee reported accrued paid leave (PTO)",
+    "Employee Reported Other Leave",
+]
+
 
 class PaymentData:
     """A class for containing any and all payment data. Handles validation and
@@ -705,13 +714,13 @@ class PaymentData:
                 "PAYMENTDETAILCLASSID",
                 payment_line,
                 self.validation_container,
-                True,
+                self.is_payment_detail_expected,
             )
             payment_detail_index_id = payments_util.validate_db_input(
                 "PAYMENTDETAILINDEXID",
                 payment_line,
                 self.validation_container,
-                True,
+                self.is_payment_detail_expected,
             )
 
             related_payment_detail: Optional[PaymentDetails] = payment_detail_mapping.get(
@@ -1302,6 +1311,18 @@ class PaymentExtractStep(Step):
                     payments_util.ValidationReason.EMPLOYER_EXEMPT, message
                 )
 
+        # If it is not an adhoc payment and it has certain kinds of open
+        # tasks, we reject it and add it to the error report
+        if not payment.is_adhoc_payment and payment_data.absence_case_number is not None:
+            open_other_income_tasks = payments_util.get_open_tasks(
+                self.db_session, payment_data.absence_case_number, OTHER_INCOME_TASKTYPENAMES
+            )
+            if len(open_other_income_tasks) > 0:
+                payment_data.validation_container.add_validation_issue(
+                    payments_util.ValidationReason.OPEN_OTHER_INCOME_TASKS,
+                    f"TASKTYPENAMES: {[task.tasktypename for task in open_other_income_tasks]}",
+                )
+
         # Specify whether the Payment has an address update
         # TODO - is this still needed?
         payment.has_address_update = has_address_update
@@ -1374,11 +1395,8 @@ class PaymentExtractStep(Step):
                 end_state = State.PAYMENT_READY_FOR_ADDRESS_VALIDATION
                 message = "Success"
             else:
-                end_state = State.DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT
+                end_state = State.DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_RESTARTABLE
                 message = "Employer reimbursement payment processed"
-                self._manage_pei_writeback_state(
-                    payment, FineosWritebackTransactionStatus.PROCESSED, payment_data
-                )
             self.increment(self.Metrics.EMPLOYER_REIMBURSEMENT_COUNT)
 
         # Zero dollar payments are added to the FINEOS writeback + a report
@@ -1507,6 +1525,7 @@ class PaymentExtractStep(Step):
         has_leave_request_in_review = False
         has_pending_prenote = False
         has_rejected_prenote = False
+        has_open_other_income_tasks = False
 
         for reason in validation_reasons:
             # Some issues are either due to the data setup in our system
@@ -1545,6 +1564,9 @@ class PaymentExtractStep(Step):
             elif reason == payments_util.ValidationReason.EFT_PRENOTE_REJECTED:
                 has_rejected_prenote = True
 
+            elif reason == payments_util.ValidationReason.OPEN_OTHER_INCOME_TASKS:
+                has_open_other_income_tasks = True
+
             # Otherwise the issue is any of the other validation reasons
             # which all will set the payment to Active so the payment can
             # be fixed and reissued.
@@ -1565,6 +1587,9 @@ class PaymentExtractStep(Step):
         # Exempt employer would block payment, so later scenarios irrelevant
         if has_exempt_employer:
             return FineosWritebackTransactionStatus.EXEMPT_EMPLOYER
+
+        if has_open_other_income_tasks:
+            return FineosWritebackTransactionStatus.SELF_REPORTED_ADDITIONAL_INCOME
 
         # Leave requests in review take next precendence
         if has_leave_request_in_review:
@@ -1777,7 +1802,9 @@ class PaymentExtractStep(Step):
         for raw_payment_record in raw_payment_records:
             self.increment(self.Metrics.PEI_RECORD_COUNT)
             self.process_payment_record(
-                raw_payment_record, reference_file, latest_claimant_extract_reference_file
+                raw_payment_record,
+                reference_file,
+                latest_claimant_extract_reference_file,
             )
 
         reference_file.processed_import_log_id = self.get_import_log_id()

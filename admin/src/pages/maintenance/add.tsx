@@ -1,11 +1,11 @@
 import "react-datetime/css/react-datetime.css";
-
-//import { Flag, HttpError, patchFlagsByName } from "../../api";
+import { Flag, HttpError, patchAdminFlagsByName } from "../../api";
 import {
   Field,
   FieldHookConfig,
   Formik,
   FormikErrors,
+  FormikHelpers,
   FormikProps,
   useField,
   useFormikContext,
@@ -141,15 +141,6 @@ const DateTimeField = (props: FieldHookConfig<string>) => {
 export default function Maintenance() {
   const router = useRouter();
 
-  // Remove when Flag is in ../../api.
-  interface Flag {
-    start?: string | null;
-    end?: string | null;
-    name?: string;
-    options?: object;
-    enabled?: boolean;
-  }
-
   const handleCancelOnClick = (e: React.MouseEvent) => {
     e.preventDefault();
     router.push("/");
@@ -210,7 +201,8 @@ export default function Maintenance() {
   };
 
   const onSubmitHandler = async (
-    values: FormValues /*{ setSubmitting, setFieldError }*/,
+    values: FormValues,
+    actions: FormikHelpers<FormValues>,
   ) => {
     const flag: Flag = {};
     // TODO is this always enabled from this page?
@@ -226,31 +218,25 @@ export default function Maintenance() {
     flag.options = {
       name: values.name,
     };
-    /*
-    patchFlagsByName({ name: "maintenance" }, flag)
-    .then(
-      () => {
-        router.push("/maintenance");
-      },
-      (e) => {
-        if (e instanceof HttpError) {
+
+    patchAdminFlagsByName({ name: "maintenance" }, flag)
+      .then(() => router.push("/?saved=true"))
+      .catch((error) => {
+        if (error instanceof HttpError) {
           const errors =
-            (e.data?.errors as { field: string; message: string }[]) ??
-            [];
+            (error.data?.errors as { field: string; message: string }[]) ?? [];
           errors.map((error) => {
-            if (error.field in values) {
-              setFieldError(error.field, error.message);
+            const field =
+              error.field === "start" || error.field === "end"
+                ? `${error.field}_datetime`
+                : error.field;
+            if (field in values) {
+              actions.setFieldError(field, error.message);
             }
           });
         }
-      },
-    )
-    .finally(() => {
-      setSubmitting(false);
-    });
-    */
-    // Remove this push when above is uncommented.
-    router.push("/?saved=true");
+      })
+      .finally(() => actions.setSubmitting(false));
   };
 
   return (
@@ -312,12 +298,13 @@ export default function Maintenance() {
                         value="true"
                       />
                       Schedule
-                      <DateTimeField
-                        name="start_datetime"
-                        disabled={props.values.start_use_datetime === "false"}
-                        required={props.values.start_use_datetime === "true"}
-                      />
                     </label>
+
+                    <DateTimeField
+                      name="start_datetime"
+                      disabled={props.values.start_use_datetime === "false"}
+                      required={props.values.start_use_datetime === "true"}
+                    />
                   </fieldset>
                   <fieldset className="maintenance-configure__datetime-wrapper maintenance-configure__fieldset">
                     <legend>
@@ -340,12 +327,12 @@ export default function Maintenance() {
                         value="true"
                       />
                       Schedule
-                      <DateTimeField
-                        name="end_datetime"
-                        disabled={props.values.end_use_datetime === "false"}
-                        required={props.values.end_use_datetime === "true"}
-                      />
                     </label>
+                    <DateTimeField
+                      name="end_datetime"
+                      disabled={props.values.end_use_datetime === "false"}
+                      required={props.values.end_use_datetime === "true"}
+                    />
                   </fieldset>
                 </div>
 

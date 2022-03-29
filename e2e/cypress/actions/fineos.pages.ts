@@ -311,7 +311,7 @@ export class ClaimPage {
       .click({ force: true })
       .parents("li")
       .findByText(action)
-      .click();
+      .click({ force: true });
     document.uploadDocumentAlt(action);
     return this;
   }
@@ -1642,11 +1642,18 @@ class AvailabilityPage {
     });
   }
 
-  assertDailyWeight(amount_weeks: string): this {
-    cy.contains("table.ListTable", "Weight");
-    const selector =
-      ".divListviewGrid .ListTable td[id*='ListviewWidgetWeight0']";
-    cy.get(selector).should("contain.text", amount_weeks);
+  assertDailyWeight(amount_weeks: string, upgrade: boolean): this {
+    if (upgrade) {
+      cy.contains(".ant-table-wrapper .ant-table-container", "Weight");
+      const selector =
+        ".ant-table-wrapper .ant-table-container .ant-table-body td:nth-child(12)";
+      cy.get(selector).should("contain.text", amount_weeks);
+    } else {
+      cy.contains("table.ListTable", "Weight");
+      const selector =
+        ".divListviewGrid .ListTable td[id*='ListviewWidgetWeight0']";
+      cy.get(selector).should("contain.text", amount_weeks);
+    }
     cy.screenshot();
     fineos.clickBottomWidgetButton("Close");
     return this;
@@ -3626,8 +3633,13 @@ type NoteTypes = "Leave Request Review";
 class NotesPage {
   /** Adds a note of a given type and asserts it has been added succesfully. */
   addNote(type: NoteTypes, text: string) {
-    cy.findByText("Create New").click();
-    cy.findByText(type, { selector: "span" }).click();
+    cy.get("#widgetListMenu").findByText("Create New").click({ force: true });
+    const selector = "#widgetListMenu .right-side-drop li:nth-child(2)";
+    cy.get(selector)
+      .findByText("Leave Request Review", {
+        selector: "span",
+      })
+      .click();
     waitForAjaxComplete();
     cy.get(`#CaseNotesPopupWidgetAdd_PopupWidgetWrapper`)
       .should("be.visible")

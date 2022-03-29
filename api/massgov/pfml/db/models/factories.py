@@ -466,6 +466,35 @@ class ManagedRequirementFactory(BaseFactory):
     )
 
 
+class FineosExtractVpeiFactory(BaseFactory):
+    class Meta:
+        model = payment_models.FineosExtractVpei
+
+    c = "7326"
+    i = factory.Sequence(lambda n: "%d" % n)
+    amount_monamt = Generators.Money
+
+
+class FineosExtractVpeiPaymentDetailsFactory(BaseFactory):
+    class Meta:
+        model = payment_models.FineosExtractVpeiPaymentDetails
+
+    c = "7806"
+    i = factory.Sequence(lambda n: "%d" % n)
+    balancingamou_monamt = Generators.Money
+
+
+class FineosExtractVpeiPaymentLineFactory(BaseFactory):
+    class Meta:
+        model = payment_models.FineosExtractVpeiPaymentLine
+
+    c = "7692"
+    i = factory.Sequence(lambda n: "%d" % n)
+
+    amount_monamt = Generators.Money
+    linetype = "Auto Gross Entitlement"
+
+
 class PaymentFactory(BaseFactory):
     class Meta:
         model = employee_models.Payment
@@ -521,6 +550,30 @@ class PaymentDetailsFactory(BaseFactory):
     )
 
     amount = Generators.Money
+
+
+class PaymentLineFactory(BaseFactory):
+    class Meta:
+        model = payment_models.PaymentLine
+
+    payment_line_id = Generators.UuidObj
+
+    payment = factory.SubFactory(PaymentFactory)
+    payment_id = factory.LazyAttribute(lambda a: a.payment.payment_id)
+
+    payment_details = factory.SubFactory(PaymentDetailsFactory)
+    payment_details_id = factory.LazyAttribute(
+        lambda a: a.payment_details.payment_details_id if a.payment_details else None
+    )
+
+    payment_line_c_value = "7692"
+    payment_line_i_value = factory.Sequence(lambda n: "%d" % n)
+
+    amount = Generators.Money
+    line_type = "Auto Gross Entitlement"
+
+    vpei_payment_line = factory.SubFactory(FineosExtractVpeiPaymentLineFactory)
+    vpei_payment_line_id = factory.LazyAttribute(lambda a: a.vpei_payment_line.vpei_payment_line_id)
 
 
 class PaymentReferenceFileFactory(BaseFactory):

@@ -14,6 +14,7 @@ from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_util
     PayPeriodGroup,
     get_all_overpayments_associated_with_employee,
     get_all_paid_payments_associated_with_employee,
+    get_payment_detail_amount,
     make_payment_log,
 )
 from massgov.pfml.delegated_payments.weekly_max.max_weekly_benefit_amount_util import (
@@ -275,9 +276,8 @@ class MaximumWeeklyBenefitsStepProcessor(AbstractStepProcessor):
                     continue
 
                 for payment_detail in payment_details:
-                    if (
-                        pay_period.get_amount_available_in_pay_period()
-                        < payment_detail.business_net_amount
+                    if pay_period.get_amount_available_in_pay_period() < get_payment_detail_amount(
+                        payment_detail
                     ):
                         is_payable = False
                         payment_container.pay_periods_over_cap.append((pay_period, payment_detail))

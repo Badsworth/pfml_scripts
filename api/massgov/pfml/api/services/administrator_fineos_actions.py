@@ -26,6 +26,7 @@ from massgov.pfml.api.models.common import (
     EmployerBenefit,
     get_computed_start_dates,
 )
+from massgov.pfml.api.services.claims import maybe_update_employee_relationship
 from massgov.pfml.api.services.fineos_actions import get_absence_periods
 from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
 from massgov.pfml.db.models.employees import Employer, User, UserLeaveAdministrator
@@ -411,9 +412,11 @@ def get_claim_as_leave_admin(
 
     customer_info = fineos_client.get_customer_info(fineos_user_id, fineos_employee.id)
     tax_identifier = customer_info.idNumber
+
     if tax_identifier is None:
         raise ValueError("Employee tax identifier was empty")
 
+    maybe_update_employee_relationship(absence_id, tax_identifier)
     absence_periods = get_absence_periods(
         absence_id,
         tax_identifier,

@@ -46,7 +46,7 @@ def main():
 
     # VBI Taskreport Som extract
     fineos_extract_data.generate_vbi_taskreport_som_extract_files(
-        fineos_data_export_path, get_now_us_eastern()
+        scenario_dataset, fineos_data_export_path, get_now_us_eastern()
     )
 
 

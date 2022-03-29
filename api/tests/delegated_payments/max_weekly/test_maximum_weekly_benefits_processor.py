@@ -434,7 +434,6 @@ def test_validate_payments_not_exceeding_cap_other_payment_types(
         PaymentTransactionType.ZERO_DOLLAR,
         PaymentTransactionType.CANCELLATION,
         PaymentTransactionType.UNKNOWN,
-        PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
     ]
     for payment_type in other_payment_types:
         # Create the payment in various other states for each of them
@@ -665,3 +664,97 @@ def test_validate_payments_use_correct_maximum_benefit(
 
     validate_payment_failed(payment_container7)
     validate_payment_success(payment_container8)
+
+
+def test_validate_payments_with_employer_reimbursement(
+    maximum_weekly_processor, local_test_db_session
+):
+    employee = EmployeeFactory.create()
+
+    # Create two payments, one standard
+    # payment and one employer reimbursement
+    employer_reimbursement_payment = _create_payment_container(
+        employee,
+        Decimal("100.00"),
+        local_test_db_session,
+        start_date=date(2021, 8, 1),
+        payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,  # Sunday
+    )
+
+    # This is effectively a $700 payment because
+    # the $100 from the employer reimbursement will be subtracted
+    # during processing
+    standard_payment = _create_payment_container(
+        employee,
+        Decimal("800.00"),
+        local_test_db_session,
+        start_date=date(2021, 8, 1),
+        employer_reimbursement_amount=Decimal("-100.00"),  # Sunday
+    )
+
+    maximum_weekly_processor.process(employee, [employer_reimbursement_payment, standard_payment])
+
+    validate_payment_success(employer_reimbursement_payment)
+    validate_payment_success(standard_payment)
+
+    # Also test a scenario where the payments
+    # are still over the cap.
+    employee2 = EmployeeFactory.create()
+
+    employer_reimbursement_payment2 = _create_payment_container(
+        employee2,
+        Decimal("100.00"),
+        local_test_db_session,
+        start_date=date(2021, 8, 1),
+        payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,  # Sunday
+    )
+
+    # This is effectively a $800 payment because
+    # the $100 from the employer reimbursement will be subtracted
+    # during processing
+    standard_payment2 = _create_payment_container(
+        employee2,
+        Decimal("900.00"),
+        local_test_db_session,
+        start_date=date(2021, 8, 1),
+        employer_reimbursement_amount=Decimal("-100.00"),  # Sunday
+    )
+
+    maximum_weekly_processor.process(
+        employee2, [employer_reimbursement_payment2, standard_payment2]
+    )
+
+    validate_payment_success(employer_reimbursement_payment2)
+    validate_payment_failed(standard_payment2)
+
+    # Just show that adhoc payments still get to
+    # go through even if they're employer reimbursements
+    employee3 = EmployeeFactory.create()
+
+    employer_reimbursement_payment3 = _create_payment_container(
+        employee3,
+        Decimal("1000.00"),
+        local_test_db_session,
+        is_adhoc_payment=True,
+        start_date=date(2021, 8, 1),
+        payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,  # Sunday
+    )
+
+    # This is effectively a $800 payment because
+    # the $100 from the employer reimbursement will be subtracted
+    # during processing
+    standard_payment3 = _create_payment_container(
+        employee3,
+        Decimal("9000.00"),
+        local_test_db_session,
+        is_adhoc_payment=True,
+        start_date=date(2021, 8, 1),
+        employer_reimbursement_amount=Decimal("-100.00"),  # Sunday
+    )
+
+    maximum_weekly_processor.process(
+        employee2, [employer_reimbursement_payment3, standard_payment3]
+    )
+
+    validate_payment_success(employer_reimbursement_payment3)
+    validate_payment_success(standard_payment3)

@@ -2,7 +2,7 @@ import datetime
 from datetime import date, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, Generic, Optional, TypeVar, Union
+from typing import Generic, Optional, TypeVar, Union
 
 import phonenumbers
 from pydantic import UUID4, Field, validator
@@ -407,14 +407,3 @@ class SearchEnvelope(GenericModel, Generic[SearchTermsT]):
     terms: SearchTermsT
     order: OrderData = Field(default_factory=OrderData)
     paging: PagingData = Field(default_factory=PagingData)
-
-
-def search_request_log_info(request: SearchEnvelope[SearchTermsT]) -> Dict[str, Any]:
-    USER_PROVIDED_FIELDS = request.terms.__fields_set__
-    log_info = {}
-    for key, value in request.terms.dict().items():
-        if isinstance(value, str):
-            log_info.update({f"terms.{key}_length": len(value)})
-        log_info.update({f"terms.{key}_provided": (key in USER_PROVIDED_FIELDS)})
-
-    return log_info
