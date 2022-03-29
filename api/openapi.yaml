@@ -2641,6 +2641,9 @@ components:
       properties:
         date_of_hire:
           $ref: '#/components/schemas/Date'
+        employer_name:
+          type: string
+          maxLength: 256
         is_withholding_tax:
           type: boolean
         recently_acquired_or_merged:

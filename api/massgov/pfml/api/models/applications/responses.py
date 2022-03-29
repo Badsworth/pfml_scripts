@@ -80,7 +80,8 @@ class ApplicationResponse(PydanticBaseModel):
     residential_address: Optional[MaskedAddress]
     has_employer_benefits: Optional[bool]
     additional_user_not_found_info: Optional[AdditionalUserNotFoundInfo]
-    nbr_of_retries: int
+    # TODO After https://github.com/EOLWD/pfml/pull/7347 is merged it should no longer be optional.
+    nbr_of_retries: Optional[int]
     employer_benefits: Optional[List[EmployerBenefit]]
     employee_organization_units: List[OrganizationUnit]
     employer_organization_units: List[OrganizationUnit]

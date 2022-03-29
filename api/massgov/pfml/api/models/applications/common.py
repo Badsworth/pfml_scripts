@@ -208,6 +208,7 @@ class AdditionalUserNotFoundInfo(PydanticBaseModel):
     date_of_hire: Optional[date]
     is_withholding_tax: Optional[bool]
     recently_acquired_or_merged: Optional[bool]  # Or enum..?
+    employer_name: Optional[str]
     # # additional_user_not_found_info_id: Optional[UUID4] # Why is this here?
     # claimant_email_address: Optional[str] # Potentially different than the user's email?
     # # hours_worked_per_week: Optional[Decimal] # Why? It already exists on application and ApplicationRequestBody.
