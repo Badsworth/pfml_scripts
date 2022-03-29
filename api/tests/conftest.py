@@ -21,6 +21,7 @@ import sqlalchemy
 from jose import jwt
 from jose.constants import ALGORITHMS
 from pytest import Item
+from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
 import massgov.pfml.api.app
 import massgov.pfml.api.authentication as authentication
@@ -690,7 +691,7 @@ def test_db(test_db_schema):
     return engine
 
 
-Session = sqlalchemy.orm.sessionmaker()
+# Session = sqlalchemy.orm.sessionmaker()
 
 
 @pytest.fixture
@@ -698,7 +699,7 @@ def test_db_session(test_db):
     # Based on https://docs.sqlalchemy.org/en/13/orm/session_transaction.html#joining-a-session-into-an-external-transaction-such-as-for-test-suites
     connection = test_db.connect()
     trans = connection.begin()
-    session = Session(bind=connection)
+    session = scoped_session(sessionmaker(bind=connection))
 
     session.begin_nested()
 
