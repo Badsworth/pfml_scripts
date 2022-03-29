@@ -13,10 +13,26 @@ locals {
 }
 
 resource "aws_cloudwatch_event_rule" "audit" {
-  for_each = auditors
+  for_each = local.auditors
   name          = "${local.prefix}${each.key}"
   description   = "Invoke ${local.prefix}${each.key} Lambda Function on Saturday at 6am UTC"
-  schedule_expression = cron(0 6 ? * 6 *)
+  schedule_expression = "cron(0 6 ? * 6 *)"
+}
+
+resource "aws_cloudwatch_event_target" "audit" {
+  for_each = local.auditors
+  rule      = aws_cloudwatch_event_rule.audit[each.key].name
+  target_id = "${local.prefix}${each.key}"
+  arn       = "${aws_lambda_function.lambda.arn}"
+}
+
+resource "aws_lambda_permission" "audit" {
+  for_each = local.auditors
+  statement_id  = "Invoke${local.prefix}${each.key}"
+  action        = "lambda:InvokeFunction"
+  function_name = "${aws_lambda_function.audit[each.key].function_name}"
+  principal     = "events.amazonaws.com"
+  source_arn    = "${aws_cloudwatch_event_rule.audit[each.key].arn}"
 }
 
 resource "aws_dynamodb_table" "inventory" {
