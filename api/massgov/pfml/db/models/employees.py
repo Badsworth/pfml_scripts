@@ -2111,9 +2111,9 @@ class ReferenceFileType(LookupTable):
     DUA_EMPLOYER_FILE = LkReferenceFileType(39, "DUA employer", 1)
     DUA_EMPLOYER_UNIT_FILE = LkReferenceFileType(40, "DUA employer unit", 1)
 
-    MANUAL_PUB_REJECT_FILE = LkReferenceFileType(41, "Manual PUB Reject File", 1)
-
     FINEOS_VBI_TASKREPORT_SOM_EXTRACT = LkReferenceFileType(41, "VBI TaskReport Som extract", 1)
+
+    MANUAL_PUB_REJECT_FILE = LkReferenceFileType(42, "Manual PUB Reject File", 1)
 
 
 class Title(LookupTable):
