@@ -102,6 +102,7 @@
     "HAS_ORGUNITS_SETUP": "false",
     "HAS_FINEOS_JANUARY_RELEASE": "false",
     "HAS_LARGE_FILE_COMPRESSION": "true",
+    "HAS_EMPLOYER_REIMBURSEMENTS": "false",
     "HAS_FEB_RELEASE": "false",
     "HAS_APRIL_UPGRADE": "false",
     "MFA_ENABLED": "true",
