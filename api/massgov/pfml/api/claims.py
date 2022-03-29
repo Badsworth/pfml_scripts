@@ -39,10 +39,8 @@ from massgov.pfml.api.services.claims import (
 )
 from massgov.pfml.api.services.managed_requirements import update_employer_confirmation_requirements
 from massgov.pfml.api.util.claims import user_has_access_to_claim
-from massgov.pfml.api.util.paginate.paginator import (
-    PaginationAPIContext,
-    make_paging_meta_data_from_paginator,
-)
+from massgov.pfml.api.util.logging.search_request import search_request_log_info
+from massgov.pfml.api.util.paginate.paginator import PaginationAPIContext
 from massgov.pfml.api.validation.exceptions import (
     ContainsV1AndV2Eforms,
     IssueType,
@@ -57,7 +55,7 @@ from massgov.pfml.db.models.employees import (
     Role,
     UserLeaveAdministrator,
 )
-from massgov.pfml.db.queries.absence_periods import upsert_absence_period_from_fineos_period
+from massgov.pfml.db.queries.absence_periods import sync_customer_api_absence_periods_to_db
 from massgov.pfml.db.queries.get_claims_query import ActionRequiredStatusFilter, GetClaimsQuery
 from massgov.pfml.db.queries.managed_requirements import (
     commit_managed_requirements,
@@ -66,17 +64,16 @@ from massgov.pfml.db.queries.managed_requirements import (
 from massgov.pfml.fineos.models.group_client_api import (
     Base64EncodedFileData,
     ManagedRequirementDetails,
-    PeriodDecisions,
 )
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import (
     EmployerClaimReviewEFormBuilder,
     EmployerClaimReviewV1EFormBuilder,
 )
+from massgov.pfml.util.logging.absence_periods import log_absence_period_response
 from massgov.pfml.util.logging.claims import (
     get_claim_log_attributes,
     get_claim_review_log_attributes,
     get_managed_requirements_log_attributes,
-    log_absence_period,
     log_get_claim_metrics,
     log_managed_requirement,
 )
@@ -300,7 +297,7 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
 @requires(READ, "EMPLOYER_API")
 def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
     """
-    Calls out to the FINEOS Group Client API to retrieve claim data and returns it.
+    Calls out to various FINEOS API endpoints to retrieve leave data.
     The requesting user must be of the EMPLOYER role.
     """
     try:
@@ -324,11 +321,12 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
             (
                 fineos_claim_review_response,
                 fineos_managed_requirements,
-                absence_period_decisions,
+                fineos_absence_periods,
             ) = get_claim_as_leave_admin(
                 user_leave_admin.fineos_web_id,
                 fineos_absence_id,
                 employer,
+                db_session,
             )
         except (ContainsV1AndV2Eforms) as error:
             return response_util.error_response(
@@ -350,13 +348,15 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
         # If claim exists, handle db sync side effects and updates to response object
         if claim_from_db:
             log_attributes.update(get_claim_log_attributes(claim_from_db))
+            # TODO (PORTAL-1962): Set missing Claim.employee association using employee SSN retrieved from Fineos
 
             if claim_from_db.fineos_absence_status:
                 fineos_claim_review_response.status = (
                     claim_from_db.fineos_absence_status.absence_status_description
                 )
-            sync_absence_periods(
-                db_session, claim_from_db, absence_period_decisions, log_attributes
+
+            sync_customer_api_absence_periods_to_db(
+                fineos_absence_periods, claim_from_db, db_session, log_attributes
             )
 
             managed_requirements = sync_managed_requirements(
@@ -384,7 +384,7 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
         )
 
         for period in fineos_claim_review_response.absence_periods:
-            log_absence_period(
+            log_absence_period_response(
                 fineos_absence_id, period, "get_claim_review - Found absence period for claim"
             )
 
@@ -668,16 +668,11 @@ def _process_claims_request(claim_request: ClaimSearchRequest, method_name: str)
             query.add_order_by(pagination_context, is_reviewable)
 
             page = query.get_paginated_results(pagination_context)
-            page_data_log_attributes = make_paging_meta_data_from_paginator(
-                pagination_context, page
-            ).to_dict()
+            request_log_info = search_request_log_info(claim_request, page)
 
     logger.info(
         f"{method_name} success",
-        extra={
-            **page_data_log_attributes,
-            **log_attributes,
-        },
+        extra={**request_log_info, **log_attributes},
     )
 
     response_model: Union[Type[ClaimForPfmlCrmResponse], Type[ClaimResponse]] = (
@@ -761,23 +756,3 @@ def sync_managed_requirements(
             managed_requirements_from_db.append(managed_requirement)
     commit_managed_requirements(db_session)
     return managed_requirements_from_db
-
-
-def sync_absence_periods(
-    db_session: Session, claim: Claim, decisions: PeriodDecisions, log_attributes: dict
-) -> None:
-    """
-    Note that commit to db is responsibility of the caller
-    """
-    if not decisions.decisions:
-        return
-    absence_periods = [
-        decision.period for decision in decisions.decisions if decision.period is not None
-    ]
-    for absence_period in absence_periods:
-        upsert_absence_period_from_fineos_period(
-            db_session, claim.claim_id, absence_period, log_attributes
-        )
-    # only commit to db when every absence period has been succesfully synced
-    # otherwise rollback changes if any absence period upsert throws an exception
-    db_session.commit()

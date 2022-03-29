@@ -584,7 +584,7 @@ export const Review = (
           : t("pages.claimsReview.leavePeriodNotSelected")}
       </ReviewRow>
 
-      {claim.isIntermittent && (
+      {claim.hasIntermittentLeaveFrequency && (
         <ReviewRow
           level={reviewRowLevel}
           label={t("pages.claimsReview.intermittentFrequencyDurationLabel")}

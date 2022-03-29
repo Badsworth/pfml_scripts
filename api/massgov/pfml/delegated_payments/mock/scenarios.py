@@ -60,6 +60,9 @@ class ScenarioName(Enum):
     PRENOTE_WITH_EXISTING_EFT_ACCOUNT = "PRENOTE_WITH_EXISTING_EFT_ACCOUNT"
     CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED = "CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED"
 
+    # Open other-income tasks in VBI task report som extract
+    OPEN_OTHER_INCOME_TASK = "OPEN_OTHER_INCOME_TASK"
+
     # TODO not a real scenario - remove
     EFT_ACCOUNT_NOT_PRENOTED = "EFT_ACCOUNT_NOT_PRENOTED"
 
@@ -252,7 +255,10 @@ class ScenarioDescriptor:
 
     # Manual rejects
     manual_pub_reject_response: bool = False
-    manual_pub_reject_notes: str = "Manual Failure Test"
+    manual_pub_reject_notes: str = "Invalid Routing Number"
+
+    # Open other income tasks
+    has_open_other_income_tasks: bool = False
 
 
 SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
@@ -263,6 +269,10 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     ScenarioDescriptor(
         scenario_name=ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
         payment_method=PaymentMethod.CHECK,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.OPEN_OTHER_INCOME_TASK,
+        has_open_other_income_tasks=True,
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.ZERO_DOLLAR_PAYMENT,
@@ -471,14 +481,14 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     # ScenarioDescriptor(
     #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_WITH_STANDARD_PAYMENT,
     #     payment_transaction_type=PaymentTransactionType.STANDARD,
-    #     is_employer_reimbursement_records_exists = True,
+    #     is_employer_reimbursement_records_exists=True,
     #     payment_method=PaymentMethod.CHECK,
     #     fineos_extract_address_valid=True,
     # ),
     # ScenarioDescriptor(
     #     scenario_name=ScenarioName.STANDARD_PAYMENT_WITH_TW_AND_ER,
     #     payment_transaction_type=PaymentTransactionType.STANDARD,
-    #     is_employer_reimbursement_records_exists = True,
+    #     is_employer_reimbursement_records_exists=True,
     #     is_tax_withholding_records_exists=True,
     #     payment_method=PaymentMethod.CHECK,
     #     fineos_extract_address_valid=True,
@@ -486,7 +496,7 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     # ScenarioDescriptor(
     #     scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_WITH_STANDARD_PAYMENT_INVALID_ADDRESS,
     #     payment_transaction_type=PaymentTransactionType.STANDARD,
-    #     is_employer_reimbursement_records_exists = True,
+    #     is_employer_reimbursement_records_exists=True,
     #     fineos_extract_address_valid=False,
     #     payment_method=PaymentMethod.CHECK,
     # ),

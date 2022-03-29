@@ -2,6 +2,7 @@ import {
   ApplicationLeaveDetails,
   ApplicationRequestBody,
   AbsencePeriodResponse,
+  ApplicationResponse,
 } from "../_api";
 import {
   ApplicationSubmissionResponse,

@@ -13,12 +13,9 @@ import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import CREATE, ensure
 from massgov.pfml.api.models.applications.common import EligibilityEmploymentStatus
-from massgov.pfml.api.models.common import OrderDirection, SearchEnvelope, search_request_log_info
-from massgov.pfml.api.util.paginate.paginator import (
-    PaginationAPIContext,
-    make_paging_meta_data_from_paginator,
-    page_for_api_context,
-)
+from massgov.pfml.api.models.common import OrderDirection, SearchEnvelope
+from massgov.pfml.api.util.logging.search_request import search_request_log_info
+from massgov.pfml.api.util.paginate.paginator import PaginationAPIContext, page_for_api_context
 from massgov.pfml.db.models.applications import Application
 from massgov.pfml.db.models.employees import BenefitYear, Employee, Employer, TaxIdentifier
 from massgov.pfml.util.pydantic import PydanticBaseModel
@@ -108,13 +105,10 @@ def benefit_years_search():
             query = query.order_by(sort_fn(pagination_context.order_key))
             page = page_for_api_context(pagination_context, query)
 
-            search_request_log_attributes = search_request_log_info(request)
-            page_data_log_attributes = make_paging_meta_data_from_paginator(
-                pagination_context, page
-            ).to_dict()
+            search_request_log_attributes = search_request_log_info(request, page)
             logger.info(
                 "beneft_years_search success",
-                extra={**page_data_log_attributes, **search_request_log_attributes},
+                extra=search_request_log_attributes,
             )
 
             return response_util.paginated_success_response(

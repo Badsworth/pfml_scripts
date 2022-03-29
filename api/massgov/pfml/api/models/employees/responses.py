@@ -46,6 +46,9 @@ class EmployeeResponse(EmployeeBasicResponse):
 
         employee_response.phone_numbers = employee_response_phone_numbers(employee)
 
+        if employee.tax_identifier:
+            employee_response.tax_identifier_last4 = employee.tax_identifier.tax_identifier[-4:]
+
         return employee_response
 
 
@@ -63,8 +66,10 @@ class EmployeeForPfmlCrmResponse(EmployeeBasicResponse):
     @classmethod
     def from_orm(cls, employee: Employee) -> "EmployeeForPfmlCrmResponse":
         employee_response = cast(EmployeeForPfmlCrmResponse, super().from_orm(employee))
-
         employee_response.phone_numbers = employee_response_phone_numbers(employee)
+
+        if employee.tax_identifier:
+            employee_response.tax_identifier_last4 = employee.tax_identifier.tax_identifier[-4:]
 
         return employee_response
 

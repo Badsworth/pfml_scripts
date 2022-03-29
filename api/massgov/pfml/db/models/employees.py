@@ -488,9 +488,11 @@ class Employer(Base, TimestampMixin):
 
 class DuaReportingUnit(Base, TimestampMixin):
     __tablename__ = "dua_reporting_unit"
+    __table_args__ = (UniqueConstraint("dua_id", "employer_id"),)
     dua_reporting_unit_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
-    dua_id = Column(Text, unique=True, nullable=False)  # The Reporting Unit Number from DUA
+    dua_id = Column(Text, nullable=False)  # The Reporting Unit Number from DUA
     dba = Column(Text, nullable=True)
+    employer_id = Column(PostgreSQLUUID, ForeignKey("employer.employer_id"), nullable=False)
     organization_unit_id = Column(
         PostgreSQLUUID,
         ForeignKey("organization_unit.organization_unit_id"),
@@ -498,6 +500,7 @@ class DuaReportingUnit(Base, TimestampMixin):
         index=True,
     )
 
+    employer = relationship(Employer)
     organization_unit = relationship("OrganizationUnit", back_populates="dua_reporting_units")
 
 
@@ -722,7 +725,11 @@ class Employee(Base, TimestampMixin):
             .join(DuaReportingUnit)
             .join(
                 DuaEmployeeDemographics,
-                DuaReportingUnit.dua_id == DuaEmployeeDemographics.employer_reporting_unit_number,
+                and_(
+                    DuaReportingUnit.dua_id
+                    == DuaEmployeeDemographics.employer_reporting_unit_number,
+                    DuaReportingUnit.employer_id == EmployeeOccupation.employer_id,
+                ),
             )
             .filter(DuaEmployeeDemographics.fineos_customer_number == self.fineos_customer_number)
             .filter(
@@ -1087,6 +1094,8 @@ class Payment(Base, TimestampMixin):
     fineos_employee_first_name = Column(Text)
     fineos_employee_middle_name = Column(Text)
     fineos_employee_last_name = Column(Text)
+
+    payee_name = Column(Text)
 
     claim = relationship("Claim", back_populates="payments")
     employee = relationship("Employee")
@@ -2102,9 +2111,9 @@ class ReferenceFileType(LookupTable):
     DUA_EMPLOYER_FILE = LkReferenceFileType(39, "DUA employer", 1)
     DUA_EMPLOYER_UNIT_FILE = LkReferenceFileType(40, "DUA employer unit", 1)
 
-    MANUAL_PUB_REJECT_FILE = LkReferenceFileType(41, "Manual PUB Reject File", 1)
-
     FINEOS_VBI_TASKREPORT_SOM_EXTRACT = LkReferenceFileType(41, "VBI TaskReport Som extract", 1)
+
+    MANUAL_PUB_REJECT_FILE = LkReferenceFileType(42, "Manual PUB Reject File", 1)
 
 
 class Title(LookupTable):

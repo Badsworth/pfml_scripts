@@ -9,8 +9,32 @@ from tests.conftest import get_mock_logger
 
 
 @pytest.fixture
+def auth_token():
+    return "user cognito auth token"
+
+
+@pytest.fixture
 def last_enabled_at():
     return datetime(2022, 1, 2, 0, 0, 0, tzinfo=timezone.utc)
+
+
+class TestHandleMfaEnabled:
+    mock_logger = get_mock_logger()
+
+    @mock.patch("massgov.pfml.mfa.cognito.enable_user_mfa")
+    def test_success(self, mock_enable_user_mfa, auth_token):
+        mfa_actions.handle_mfa_enabled(auth_token)
+
+        mock_enable_user_mfa.assert_called_once_with(auth_token)
+
+    @mock.patch("massgov.pfml.mfa.logger", mock_logger)
+    @mock.patch("massgov.pfml.mfa.cognito.enable_user_mfa")
+    def test_logging(self, mock_enable_user_mfa, auth_token):
+        mfa_actions.handle_mfa_enabled(auth_token)
+
+        self.mock_logger.info.assert_any_call(
+            "MFA enabled for user",
+        )
 
 
 class TestHandleMfaDisabled:
@@ -101,7 +125,14 @@ class TestHandleMfaDisabled:
 
         mfa_actions.handle_mfa_disabled(user, last_enabled_at, MFAUpdatedBy.USER)
 
-        mock_send_email.assert_called()
+        mock_send_email.assert_called_once_with(
+            mock.ANY,
+            "MfaHasBeenDisabled",
+            "PFML_DoNotReply@eol.mass.gov",
+            "PFML_DoNotReply@eol.mass.gov",
+            "bounce_arn",
+            mock.ANY,
+        )
 
     @mock.patch("massgov.pfml.mfa.send_templated_email")
     @mock.patch("massgov.pfml.mfa.logger", mock_logger)
@@ -112,7 +143,14 @@ class TestHandleMfaDisabled:
 
         mfa_actions.handle_mfa_disabled(user, last_enabled_at, MFAUpdatedBy.USER)
 
-        mock_send_email.assert_called()
+        mock_send_email.assert_called_once_with(
+            mock.ANY,
+            "MfaHasBeenDisabled",
+            "PFML_DoNotReply@eol.mass.gov",
+            "PFML_DoNotReply@eol.mass.gov",
+            "bounce_arn",
+            mock.ANY,
+        )
 
 
 class TestHandleMfaDisabledByAdmin:
@@ -128,14 +166,14 @@ class TestHandleMfaDisabledByAdmin:
         user_with_mfa.email_address = "claimant@mock.nava.com"
         return user_with_mfa
 
-    @mock.patch("massgov.pfml.mfa.admin_disable_user_mfa")
+    @mock.patch("massgov.pfml.mfa.cognito.admin_disable_user_mfa")
     @mock.patch("massgov.pfml.mfa.send_templated_email")
     def test_success(self, mock_send_email, mock_disable_mfa, user, last_enabled_at, auth_token):
         mfa_actions.handle_mfa_disabled_by_admin(user, last_enabled_at)
 
         mock_disable_mfa.assert_called_once_with(user.email_address)
 
-    @mock.patch("massgov.pfml.mfa.admin_disable_user_mfa")
+    @mock.patch("massgov.pfml.mfa.cognito.admin_disable_user_mfa")
     @mock.patch("massgov.pfml.mfa.send_templated_email")
     @mock.patch("massgov.pfml.mfa.logger", mock_logger)
     def test_logging(self, mock_send_email, mock_disable_mfa, user, last_enabled_at):
@@ -154,7 +192,7 @@ class TestHandleMfaDisabledByAdmin:
             == "2022-01-02"
         )
 
-    @mock.patch("massgov.pfml.mfa.admin_disable_user_mfa")
+    @mock.patch("massgov.pfml.mfa.cognito.admin_disable_user_mfa")
     @mock.patch("massgov.pfml.mfa.send_templated_email")
     @mock.patch("massgov.pfml.mfa.logger", mock_logger)
     def test_with_no_last_enabled_at(self, mock_send_email, mock_disable_mfa, user):
@@ -168,7 +206,7 @@ class TestHandleMfaDisabledByAdmin:
             "MFA disabled for user", extra={"updated_by": "admin"}
         )
 
-    @mock.patch("massgov.pfml.mfa.admin_disable_user_mfa")
+    @mock.patch("massgov.pfml.mfa.cognito.admin_disable_user_mfa")
     @mock.patch("massgov.pfml.mfa.send_templated_email")
     @mock.patch("massgov.pfml.mfa.logger", mock_logger)
     def test_does_not_send_email_or_sync_to_cognito_when_aws_integration_is_disabled(
@@ -189,7 +227,7 @@ class TestHandleMfaDisabledByAdmin:
             },
         )
 
-    @mock.patch("massgov.pfml.mfa.admin_disable_user_mfa")
+    @mock.patch("massgov.pfml.mfa.cognito.admin_disable_user_mfa")
     @mock.patch("massgov.pfml.mfa.send_templated_email")
     def test_sends_email_and_syncs_to_cognito_when_environment_is_not_local(
         self, mock_send_email, mock_disable_mfa, user, last_enabled_at, monkeypatch

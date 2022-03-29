@@ -194,7 +194,20 @@ class PaymentRejectsStep(Step):
                     state=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.state),
                     zip=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.zip),
                     is_address_verified=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.is_address_verified),
-                    employer_name=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.employer_name),
+                    employer_id=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.employer_id),
+                    employer_payee_name=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.employer_payee_name),
+                    employer_address_line_1=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.employer_address_line_1
+                    ),
+                    employer_address_line_2=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.employer_address_line_2
+                    ),
+                    employer_city=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.employer_city),
+                    employer_state=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.employer_state),
+                    employer_zip=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.employer_zip),
+                    employer_is_address_verified=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.employer_is_address_verified
+                    ),
                     payment_preference=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.payment_preference),
                     scheduled_payment_date=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.scheduled_payment_date
@@ -239,7 +252,6 @@ class PaymentRejectsStep(Step):
                     child_support_i_value=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.child_support_i_value
                     ),
-                    employer_id=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.employer_id),
                     absence_case_creation_date=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.absence_case_creation_date
                     ),
@@ -622,7 +634,7 @@ class PaymentRejectsStep(Step):
 
         # parse the rejects file
         payment_rejects_rows: List[PaymentAuditCSV] = self.parse_payment_rejects_file(
-            payment_rejects_file_path
+            payment_rejects_file_path,
         )
         parsed_rows_count = len(payment_rejects_rows)
         self.set_metrics({self.Metrics.PARSED_ROWS_COUNT: parsed_rows_count})

@@ -210,6 +210,28 @@ describe("useClaimsLogic", () => {
       expect(appLogic.current.errors).toHaveLength(0);
     });
 
+    it("does not send another request if the previous attempt failed", async () => {
+      const { appLogic } = setup();
+
+      await act(async () => {
+        mockFetch({
+          status: 400,
+        });
+        await appLogic.current.claims.loadPage({ page_offset: 1 });
+      });
+
+      expect(global.fetch).toHaveBeenCalled();
+
+      await act(async () => {
+        mockFetch({
+          status: 400,
+        });
+        await appLogic.current.claims.loadPage({ page_offset: 1 });
+      });
+
+      expect(global.fetch).not.toHaveBeenCalled();
+    });
+
     it("catches exceptions thrown from the API module", async () => {
       jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
       mockFetch({

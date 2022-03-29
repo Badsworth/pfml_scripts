@@ -134,6 +134,7 @@ export type OtherTasks =
   | "Send Decision Notice"
   | "Conduct Hearing"
   | "Employer Reimbursement"
+  | "Autopay After Appeal Reminder"
   | "SOM Autopay After Appeal Reminder"
   | "DO NOT USE Autopay After Appeal Reminder"
   | "Employer Reimbursement Adjustment"

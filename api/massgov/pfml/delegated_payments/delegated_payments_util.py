@@ -27,6 +27,7 @@ from massgov.pfml.db.models.employees import (
     LkClaimType,
     LkReferenceFileType,
     Payment,
+    PaymentDetails,
     PaymentTransactionType,
     PubEft,
     ReferenceFile,
@@ -47,13 +48,14 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVpeiClaimDetails,
     FineosExtractVpeiPaymentDetails,
     FineosExtractVpeiPaymentLine,
+    PaymentLine,
     PaymentLog,
 )
 from massgov.pfml.db.models.state import LkState, State
 from massgov.pfml.util.collections.dict import filter_dict, make_keys_lowercase
 from massgov.pfml.util.compare import compare_attributes
 from massgov.pfml.util.converters.str_to_numeric import str_to_int
-from massgov.pfml.util.datetime import get_now_us_eastern
+from massgov.pfml.util.datetime import date_to_isoformat, get_now_us_eastern
 from massgov.pfml.util.routing_number_validation import validate_routing_number
 
 logger = logging.get_logger(__package__)
@@ -124,6 +126,8 @@ class Constants:
 
     NACHA_FILE_FORMAT = f"%Y-%m-%d-%H-%M-%S-{FILE_NAME_PUB_NACHA}"
 
+    VBI_TASK_REPORT_STATUS_OPEN = "928000"
+
     # When processing payments, certain states
     # are allowed to be restarted (mainly error states)
     # If we receive a payment record from FINEOS while
@@ -146,6 +150,7 @@ class Constants:
             State.STATE_WITHHOLDING_ERROR_RESTARTABLE,
             State.FEDERAL_WITHHOLDING_ERROR_RESTARTABLE,
             State.DELEGATED_PAYMENT_CASCADED_ERROR_RESTARTABLE,
+            State.DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_RESTARTABLE,
         ]
     )
     RESTARTABLE_PAYMENT_STATE_IDS = frozenset(
@@ -282,6 +287,7 @@ class FineosExtractConstants:
             "PAYEEACCOUNTT",
             "EVENTTYPE",
             "PAYEEIDENTIFI",
+            "PAYEEFULLNAME",
             "EVENTREASON",
             "AMALGAMATIONC",
             "PAYMENTTYPE",
@@ -578,6 +584,7 @@ class ValidationReason(str, Enum):
     LEAVE_REQUEST_IN_REVIEW = "LeaveRequestInReview"
     UNEXPECTED_RECORD_VARIANCE = "UnexpectedRecordVariance"
     EMPLOYER_EXEMPT = "EmployerExempt"
+    OPEN_OTHER_INCOME_TASKS = "OpenOtherIncomeTasks"
 
 
 @dataclass(frozen=True, eq=True)
@@ -1273,14 +1280,9 @@ def get_traceable_payment_details(
         "payment_id": payment.payment_id,
         "c_value": payment.fineos_pei_c_value,
         "i_value": payment.fineos_pei_i_value,
-        "period_start_date": payment.period_start_date.isoformat()
-        if payment.period_start_date
-        else None,
-        "period_end_date": payment.period_end_date.isoformat() if payment.period_end_date else None,
-        "fineos_extraction_date": payment.fineos_extraction_date.isoformat()
-        if payment.fineos_extraction_date
-        else None,
-        "payment_date": payment.payment_date.isoformat() if payment.payment_date else None,
+        "period_start_date": date_to_isoformat(payment.period_start_date),
+        "period_end_date": date_to_isoformat(payment.period_end_date),
+        "payment_date": date_to_isoformat(payment.payment_date),
         "payment_amount": str(payment.amount),
         "payment_method": payment.disb_method.payment_method_description
         if payment.disb_method
@@ -1309,6 +1311,45 @@ def get_traceable_payment_details(
         "relevant_party": payment.payment_relevant_party.payment_relevant_party_description
         if payment.payment_relevant_party
         else None,
+    }
+
+
+def get_traceable_payment_period_details(
+    payment_detail: PaymentDetails,
+) -> Dict[str, Optional[Any]]:
+    # For logging purposes, this returns useful, traceable details
+    # about a payment detail.
+    #
+    # DO NOT PUT PII IN THE RETURN OF THIS METHOD, IT'S MEANT FOR LOGGING
+    #
+
+    return {
+        "payment_details_id": payment_detail.payment_details_id,
+        "payment_details_c_value": payment_detail.payment_details_c_value,
+        "payment_details_i_value": payment_detail.payment_details_i_value,
+        "payment_details_period_start_date": date_to_isoformat(payment_detail.period_start_date),
+        "payment_details_period_end_date": date_to_isoformat(payment_detail.period_end_date),
+        "payment_details_balancing_amount": str(payment_detail.amount),
+        "payment_details_net_amount": str(payment_detail.business_net_amount),
+        "payment_details_payment_id": payment_detail.payment_id,
+    }
+
+
+def get_traceable_payment_line_details(payment_line: PaymentLine) -> Dict[str, Optional[Any]]:
+    # For logging purposes, this returns useful, traceable details
+    # about a payment line.
+    #
+    # DO NOT PUT PII IN THE RETURN OF THIS METHOD, IT'S MEANT FOR LOGGING
+    #
+
+    return {
+        "payment_line_id": payment_line.payment_line_id,
+        "payment_line_payment_id": payment_line.payment_id,
+        "payment_line_payment_details_id": payment_line.payment_details_id,
+        "payment_line_c_value": payment_line.payment_line_c_value,
+        "payment_line_i_value": payment_line.payment_line_i_value,
+        "payment_line_amount": payment_line.amount,
+        "payment_line_type": payment_line.line_type,
     }
 
 
@@ -1566,6 +1607,41 @@ def get_earliest_absence_period_for_payment_leave_request(
         .order_by(AbsencePeriod.absence_period_start_date.asc())
         .first()
     )
+
+
+def get_open_tasks(
+    db_session: db.Session, absence_case_number: str, tasknames: list[str]
+) -> List[FineosExtractVbiTaskReportSom]:
+    open_tasks = []
+
+    latest_vbi_task_report_extract_reference_file = (
+        db_session.query(ReferenceFile)
+        .filter(
+            ReferenceFile.reference_file_type_id
+            == ReferenceFileType.FINEOS_VBI_TASKREPORT_SOM_EXTRACT.reference_file_type_id
+        )
+        .order_by(ReferenceFile.created_at.desc())
+        .first()
+    )
+
+    if latest_vbi_task_report_extract_reference_file:
+        open_tasks = (
+            db_session.query(FineosExtractVbiTaskReportSom)
+            .filter(
+                FineosExtractVbiTaskReportSom.status == Constants.VBI_TASK_REPORT_STATUS_OPEN,
+                FineosExtractVbiTaskReportSom.casenumber == absence_case_number,
+                FineosExtractVbiTaskReportSom.reference_file_id
+                == latest_vbi_task_report_extract_reference_file.reference_file_id,
+                FineosExtractVbiTaskReportSom.tasktypename.in_(tasknames),
+            )
+            .all()
+        )
+    else:
+        raise Exception(
+            "No VBI Task Report Som files consumed. This would only happen the first time you run in an env and have no extracts, make sure FINEOS has created extracts"
+        )
+
+    return open_tasks
 
 
 def get_earliest_matching_payment(

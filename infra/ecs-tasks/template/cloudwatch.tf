@@ -553,6 +553,28 @@ module "pub-payments-copy-audit-report-scheduler" {
   ecs_task_role              = aws_iam_role.pub_payments_copy_audit_report_task_role.arn
 }
 
+module "standalone-fineos-import-employee-updates" {
+  source     = "../../modules/ecs_task_scheduler"
+  is_enabled = var.enable_standalone_fineos_import_employee_updates
+
+  task_name = "fineos-import-employee-updates"
+  # Every day at 4am ET (9am UTC)
+  schedule_expression_standard         = var.standalone_fineos_import_employee_updates_schedule_expression_standard
+  schedule_expression_daylight_savings = var.standalone_fineos_import_employee_updates_schedule_expression_daylight_savings
+  environment_name                     = var.environment_name
+
+  cluster_arn        = data.aws_ecs_cluster.cluster.arn
+  app_subnet_ids     = var.app_subnet_ids
+  security_group_ids = [aws_security_group.tasks.id]
+
+  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["fineos-import-employee-updates"].arn
+  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["fineos-import-employee-updates"].family
+  ecs_task_executor_role     = aws_iam_role.task_executor.arn
+  # Reuse the eventbridge_step_function arn since this is normally an individual step. This config runs only the
+  # import-employee-updates step offset by 12 hours.
+  ecs_task_role = aws_iam_role.eventbridge_step_functions.arn
+}
+
 # TODO uncomment when ready
 # The task will process fineos extract files for IAWW data.
 # Run fineos-import-iaww at 3am EST (4am EDT) Monday through Friday

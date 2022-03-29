@@ -345,7 +345,6 @@ class EmployeePushToFineosQueueFactory(BaseFactory):
     employer_id = None
     action = "UPDATE_NEW_EMPLOYER"
     modified_at = Generators.UtcNow
-    process_id = 1
 
 
 class EmployerPushToFineosQueueFactoryFactory(BaseFactory):
@@ -356,7 +355,6 @@ class EmployerPushToFineosQueueFactoryFactory(BaseFactory):
     employer_id = None
     action = "INSERT"
     modified_at = Generators.UtcNow
-    process_id = 1
     family_exemption = None
     medical_exemption = None
     exemption_commence_date = None
@@ -468,6 +466,35 @@ class ManagedRequirementFactory(BaseFactory):
     )
 
 
+class FineosExtractVpeiFactory(BaseFactory):
+    class Meta:
+        model = payment_models.FineosExtractVpei
+
+    c = "7326"
+    i = factory.Sequence(lambda n: "%d" % n)
+    amount_monamt = Generators.Money
+
+
+class FineosExtractVpeiPaymentDetailsFactory(BaseFactory):
+    class Meta:
+        model = payment_models.FineosExtractVpeiPaymentDetails
+
+    c = "7806"
+    i = factory.Sequence(lambda n: "%d" % n)
+    balancingamou_monamt = Generators.Money
+
+
+class FineosExtractVpeiPaymentLineFactory(BaseFactory):
+    class Meta:
+        model = payment_models.FineosExtractVpeiPaymentLine
+
+    c = "7692"
+    i = factory.Sequence(lambda n: "%d" % n)
+
+    amount_monamt = Generators.Money
+    linetype = "Auto Gross Entitlement"
+
+
 class PaymentFactory(BaseFactory):
     class Meta:
         model = employee_models.Payment
@@ -500,6 +527,11 @@ class PaymentFactory(BaseFactory):
     fineos_employee_first_name = factory.Faker("first_name")
     fineos_employee_last_name = factory.Faker("last_name")
 
+    payee_name = factory.Faker("company")
+    payment_transaction_type_id = (
+        employee_models.PaymentTransactionType.STANDARD.payment_transaction_type_id
+    )
+
 
 class PaymentDetailsFactory(BaseFactory):
     class Meta:
@@ -518,6 +550,30 @@ class PaymentDetailsFactory(BaseFactory):
     )
 
     amount = Generators.Money
+
+
+class PaymentLineFactory(BaseFactory):
+    class Meta:
+        model = payment_models.PaymentLine
+
+    payment_line_id = Generators.UuidObj
+
+    payment = factory.SubFactory(PaymentFactory)
+    payment_id = factory.LazyAttribute(lambda a: a.payment.payment_id)
+
+    payment_details = factory.SubFactory(PaymentDetailsFactory)
+    payment_details_id = factory.LazyAttribute(
+        lambda a: a.payment_details.payment_details_id if a.payment_details else None
+    )
+
+    payment_line_c_value = "7692"
+    payment_line_i_value = factory.Sequence(lambda n: "%d" % n)
+
+    amount = Generators.Money
+    line_type = "Auto Gross Entitlement"
+
+    vpei_payment_line = factory.SubFactory(FineosExtractVpeiPaymentLineFactory)
+    vpei_payment_line_id = factory.LazyAttribute(lambda a: a.vpei_payment_line.vpei_payment_line_id)
 
 
 class PaymentReferenceFileFactory(BaseFactory):
@@ -1298,6 +1354,9 @@ class DuaReportingUnitFactory(BaseFactory):
     dua_reporting_unit_id = Generators.UuidObj
     dua_id = factory.Sequence(lambda n: n)
     dba = None
+
+    employer = factory.SubFactory(EmployerFactory)
+    employer_id = factory.LazyAttribute(lambda d: d.employer.employer_id)
 
     organization_unit = factory.SubFactory(OrganizationUnitFactory)
     organization_unit_id = factory.LazyAttribute(lambda d: d.organization_unit.organization_unit_id)

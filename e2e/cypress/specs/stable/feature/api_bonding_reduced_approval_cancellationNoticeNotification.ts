@@ -54,11 +54,7 @@ describe("Approval (notifications/notices)", () => {
           .shouldHaveStatus("Availability", "Time Available")
           .shouldHaveStatus("Restriction", "Passed")
           .shouldHaveStatus("PlanDecision", "Accepted");
-        if (config("HAS_APRIL_UPGRADE") === "true") {
-          claimPage.approve("Approved", true);
-        } else {
-          claimPage.approve("Approved", false);
-        }
+        claimPage.approve("Approved", config("HAS_APRIL_UPGRADE") === "true");
         claimPage.triggerNotice("Designation Notice");
       });
     });

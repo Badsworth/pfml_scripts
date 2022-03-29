@@ -206,6 +206,8 @@ class FineosPaymentData(MockData):
             "fineos_employee_last_name", fake.last_name()
         )
 
+        self.payee_name = self.get_value("payee_name", fake.company())
+
         self.fineos_address_effective_from = self.get_value(
             "fineos_address_effective_from", "2021-01-01 12:00:00"
         )
@@ -280,6 +282,7 @@ class FineosPaymentData(MockData):
             vpei_record["PAYEEBANKSORT"] = self.routing_nbr
             vpei_record["PAYEEACCOUNTN"] = self.account_nbr
             vpei_record["PAYEEACCOUNTT"] = self.account_type
+            vpei_record["PAYEEFULLNAME"] = self.payee_name
             vpei_record["EVENTTYPE"] = self.event_type
             vpei_record["PAYEEIDENTIFI"] = self.payee_identifier
             vpei_record["EVENTREASON"] = self.event_reason
@@ -404,7 +407,7 @@ class FineosPaymentData(MockData):
 
         return vbi_1099_data_record
 
-    def get_vbi_task_record(self, **kwargs: str) -> Dict[str, Any]:
+    def get_vbi_task_record(self) -> Dict[str, Any]:
         vbi_task_record = OrderedDict()
 
         if self.include_vbi_tasks:
@@ -642,6 +645,19 @@ def generate_payment_extract_files(
             ssn = "SITPAYEE001"
             payment_amount = "22.00"
 
+        # Set the payee name
+        if (
+            scenario_descriptor.payment_transaction_type
+            == PaymentTransactionType.EMPLOYER_REIMBURSEMENT
+        ):
+            payee_name = scenario_data.employer.employer_name
+        else:
+            payee_name = (
+                str(scenario_data.employee.fineos_employee_first_name)
+                + " "
+                + str(scenario_data.employee.fineos_employee_last_name)
+            )
+
         fineos_payments_data = FineosPaymentData(
             generate_defaults=True,
             c_value=c_value,
@@ -669,6 +685,7 @@ def generate_payment_extract_files(
             event_type=event_type,
             event_reason=event_reason,
             payee_identifier=payee_identifier,
+            payee_name=payee_name,
             amalgamationc=amalgamationc,
             payment_type=payment_type,
             claim_type=claim_type,
@@ -990,16 +1007,13 @@ def get_vbi_taskreport_som_extract_filtered_records(
     return filtered_records
 
 
-def generate_vbi_taskreport_som_extract_files(
+def create_vbi_taskreport_som_extract_files(
+    records: List[Dict],
     folder_path: str,
     date_of_extract: datetime,
-    records: Optional[List[Dict[str, Any]]] = None,
 ) -> None:
 
     date_prefix = date_of_extract.strftime("%Y-%m-%d-%H-%M-%S-")
-
-    if records is None:
-        records = get_vbi_taskreport_som_extract_records()
 
     # create the extract file
     writer = _create_file(
@@ -1013,6 +1027,28 @@ def generate_vbi_taskreport_som_extract_files(
         writer.csv_writer.writerow(record)
 
     writer.file.close()
+
+
+def generate_vbi_taskreport_som_extract_files(
+    scenario_dataset: List[ScenarioData],
+    folder_path: str,
+    date_of_extract: datetime,
+) -> None:
+
+    records = []
+
+    for scenario_data in scenario_dataset:
+        scenario_descriptor = scenario_data.scenario_descriptor
+
+        if scenario_descriptor.has_open_other_income_tasks:
+            record = {
+                "STATUS": "928000",
+                "CASENUMBER": scenario_data.absence_case_id,
+                "TASKTYPENAME": "Employee Reported Other Income",
+            }
+            records.append(record)
+
+    create_vbi_taskreport_som_extract_files(records, folder_path, date_of_extract)
 
 
 def generate_iaww_extract_files(

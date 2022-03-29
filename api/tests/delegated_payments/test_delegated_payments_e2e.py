@@ -463,7 +463,7 @@ def test_e2e_pub_payments(
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
             scenario_names=[ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT],
-            end_state=State.DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT,
+            end_state=State.DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_RESTARTABLE,
             db_session=test_db_session,
         )
 
@@ -702,6 +702,9 @@ def test_e2e_pub_payments(
         # No payment created for this scenario
         stage_1_writeback_scenarios.remove(ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED)
 
+        # Removed writeback for employer remibursement payments
+        stage_1_writeback_scenarios.remove(ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT)
+
         assert_writeback_for_stage(test_dataset, stage_1_writeback_scenarios, test_db_session)
 
         # Now add records to the list for tax withholding scenarios so the counts
@@ -830,6 +833,7 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH,
                         ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
                         ScenarioName.IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION,
+                        ScenarioName.OPEN_OTHER_INCOME_TASK,
                     ]
                 ),
                 "cancellation_count": len(
@@ -883,6 +887,7 @@ def test_e2e_pub_payments(
                         ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
                         ScenarioName.TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED,
                         ScenarioName.IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION,
+                        ScenarioName.OPEN_OTHER_INCOME_TASK,
                     ]
                 ),
                 "employee_in_payment_extract_missing_in_db_count": 0,
@@ -902,6 +907,7 @@ def test_e2e_pub_payments(
                         ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
                         ScenarioName.TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED,
                         ScenarioName.IN_REVIEW_LEAVE_REQUEST_DECISION,
+                        ScenarioName.OPEN_OTHER_INCOME_TASK,
                     ]
                 ),
                 "new_eft_count": 0,
@@ -1300,7 +1306,8 @@ def test_e2e_pub_payments(
                         ScenarioName.UNKNOWN_LEAVE_REQUEST_DECISION,
                     ]
                 ),
-                "processed_writeback_transaction_status_count": len(stage_1_non_standard_payments),
+                "processed_writeback_transaction_status_count": len(stage_1_non_standard_payments)
+                - len([ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT]),
                 "payment_audit_in_progress_writeback_transaction_status_count": len(
                     stage_1_happy_path_scenarios
                 )
@@ -2964,7 +2971,9 @@ def generate_fineos_extract_files(scenario_dataset: List[ScenarioData], round: i
     )
 
     # vbi taskreport som extract
-    generate_vbi_taskreport_som_extract_files(fineos_data_export_path, get_now_us_eastern())
+    generate_vbi_taskreport_som_extract_files(
+        scenario_dataset, fineos_data_export_path, get_now_us_eastern()
+    )
     assert_files(
         fineos_data_export_path,
         payments_util.VBI_TASKREPORT_SOM_EXTRACT_FILE_NAMES,
@@ -3099,6 +3108,7 @@ def process_pub_responses(
 def setup_common_env_variables(monkeypatch):
     monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2021-04-30")
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2021-04-30")
+    monkeypatch.setenv("FINEOS_VBI_TASKREPORT_SOM_EXTRACT_MAX_HISTORY_DATE", "2021-04-30")
 
     monkeypatch.setenv("DFML_PUB_ACCOUNT_NUMBER", "123456789")
     monkeypatch.setenv("DFML_PUB_ROUTING_NUMBER", "234567890")

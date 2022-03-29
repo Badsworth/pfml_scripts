@@ -31,7 +31,7 @@ class ClaimWithdrawn(Forbidden):
 
         return response_util.error_response(
             status_code=Forbidden,
-            message="Claim has been withdrawn. Unable to display claim status.",
+            message="Claim has been withdrawn.",
             errors=[issue],
             data=None,
         ).to_api_response()

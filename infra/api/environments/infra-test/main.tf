@@ -67,7 +67,6 @@ module "api" {
     "https://paidleave-admin-infra-test.dfml.eol.mass.gov",
   ]
   enable_application_fraud_check = "0"
-  enable_application_import      = "1"
   enable_employee_endpoints      = "1"
   release_version                = var.release_version
 

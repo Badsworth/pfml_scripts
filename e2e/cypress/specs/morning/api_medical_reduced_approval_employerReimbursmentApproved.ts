@@ -69,11 +69,7 @@ import { config } from "../../actions/common";
             );
             adjudication.acceptLeavePlan();
           });
-          if (config("HAS_APRIL_UPGRADE") === "true") {
-            claimPage.approve("Approved", true);
-          } else {
-            claimPage.approve("Approved", false);
-          }
+          claimPage.approve("Approved", config("HAS_APRIL_UPGRADE") === "true");
           claimPage.tasks((task) => {
             task.closeWithAdditionalSelection(
               "Employer Reimbursement",
@@ -115,7 +111,7 @@ import { config } from "../../actions/common";
               .click({ force: true })
               .parents("li")
               .findByText("Employer Reimbursement Approval Notice")
-              .click();
+              .click({ force: true });
             fineos.clickBottomWidgetButton("Next");
             claimPage.documents((document) => {
               document.setDocumentComplete(
@@ -154,7 +150,13 @@ import { config } from "../../actions/common";
           });
           claimPage.tasks((task) => {
             task.close("Manual Intervention required to Approve Payments");
-            task.close("SOM Autopay After Appeal Reminder");
+            // The task has changed in DT4 from SOM Autopay After Appeal Reminder to Autopay After Appeal Reminder.
+            // Waiting on a response to see if this is the final way that task will display or being updated.
+            if (config("HAS_APRIL_UPGRADE") === "true") {
+              task.close("Autopay After Appeal Reminder");
+            } else {
+              task.close("SOM Autopay After Appeal Reminder");
+            }
           });
         });
       });

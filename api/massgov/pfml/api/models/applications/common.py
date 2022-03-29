@@ -373,6 +373,7 @@ class OtherIncomeType(str, LookupEnum):
     jones_act = "Jones Act benefits"
     railroad_retirement = "Railroad Retirement benefits"
     other_employer = "Earnings from another employment/self-employment"
+    unknown = "Unknown"
 
 
 class OtherIncome(PydanticBaseModel):
@@ -429,3 +430,21 @@ class Gender(str, LookupEnum):
     non_binary = "Non-binary"
     not_listed = "Gender not listed"
     no_answer = "Prefer not to answer"
+
+
+class DocumentResponse(PydanticBaseModel):
+    user_id: UUID4
+    application_id: UUID4
+    created_at: Optional[date]
+    document_type: Optional[str]
+    content_type: Optional[str]
+    fineos_document_id: Optional[str]
+    name: str
+    description: str
+
+    @classmethod
+    def from_orm(cls, document: db_application_models.Document) -> "DocumentResponse":
+        document_response = super().from_orm(document)
+        document_response.fineos_document_id = str(document.fineos_id)
+        document_response.document_type = document.document_type_instance.document_type_description
+        return document_response

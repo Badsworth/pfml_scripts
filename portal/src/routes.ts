@@ -130,8 +130,7 @@ const routes = {
       applyingToMilitaryLeave:
         "https://www.mass.gov/how-to/how-to-apply-for-military-related-paid-family-leave",
       approvalTimeline: "https://mass.gov/pfml/application-timeline",
-      benefitsCalculator:
-        "https://calculator.digital.mass.gov/pfml/yourbenefits/",
+      benefitsCalculator: "https://mass.gov/pfml/benefits-calculator",
       benefitsGuide_aboutBondingLeave:
         "https://www.mass.gov/family-leave-bonding",
       benefitsGuide_benefitYears:
@@ -144,59 +143,41 @@ const routes = {
       caregiverCertificationForm: "https://www.mass.gov/family-caring-form",
       caregiverRelationship:
         "https://www.mass.gov/family-caring-leave-relationships",
-      caseCreationErrorGuide:
-        "https://www.mass.gov/forms/apply-for-paid-leave-if-you-received-an-error",
-      consentAgreement:
-        "https://www.mass.gov/info-details/massachusetts-department-of-family-and-medical-leave-informed-consent-agreement",
-      dfml: "https://www.mass.gov/orgs/department-of-family-and-medical-leave",
-      dfmlRegulations:
-        "https://www.mass.gov/regulations/458-CMR-200-family-and-medical-leave",
-      employerAccount:
-        "https://www.mass.gov/how-to/creating-an-employer-account-to-review-paid-family-and-medical-leave-pfml-applications",
-      employerReimbursements:
-        "https://www.mass.gov/forms/request-reimbursement-for-your-employees-paid-leave-benefits",
-      employersGuide:
-        "https://www.mass.gov/info-details/employer-paid-leave-application-review-guide",
-      federalEmployerIdNumber:
-        "https://www.mass.gov/info-details/finding-your-employers-federal-employer-identification-number-fein",
+      caseCreationErrorGuide: "https://mass.gov/pfml/error",
+      consentAgreement: "https://mass.gov/paidleave-informedconsent",
+      dfml: "https://mass.gov/dfml",
+      dfmlRegulations: "https://mass.gov/pfml/regulations",
+      employerAccount: "https://www.mass.gov/pfml-verify-employer",
+      employerReimbursements: "https://mass.gov/pfml/reimbursement",
+      employerReimbursementsRequest: "https://mass.gov/PaidLeaveReimbursement",
+      employersGuide: "https://mass.gov/pmfl-leave-administrators",
+      federalEmployerIdNumber: "https://mass.gov/pfml/ein",
       feedbackClaimant: "https://www.mass.gov/paidleave-claimant-feedback",
       feedbackEmployer: "https://www.mass.gov/paidleave-employer-feedback",
       healthcareProviderForm: "https://www.mass.gov/medical-leave-form",
-      identityProof:
-        "https://www.mass.gov/info-details/identity-proof-for-paid-leave",
+      identityProof: "https://mass.gov/pfmlsubmitinfo",
       informedConsent: "https://www.mass.gov/paidleave-informedconsent",
       intermittentLeaveGuide:
         "https://www.mass.gov/intermittent-leave-instructions",
       mailFaxInstructions: "https://www.mass.gov/pfmlsubmitinfo",
-      manageApprovedApplication:
-        "https://www.mass.gov/info-details/managing-your-approved-paid-family-or-medical-leave-claim",
+      manageApprovedApplication: "https://mass.gov/pfml/manage-leave",
       medicalBonding: "https://www.mass.gov/pfml-medical-bonding",
       multipleBirths: "https://www.mass.gov/pfml-multiple-births",
-      onlineAppealsForm:
-        "https://www.mass.gov/forms/request-an-appeal-for-paid-family-and-medical-leave",
-      paidLeave:
-        "https://www.mass.gov/topics/paid-family-and-medical-leave-in-massachusetts",
+      onlineAppealsForm: "https://mass.gov/PaidLeaveDecisionAppeal",
+      paidLeave: "https://mass.gov/PaidLeave",
       pfml: "https://www.mass.gov/pfml",
       privacyPolicy: "https://www.mass.gov/privacypolicy",
-      proofOfBirthOrPlacement:
-        "https://www.mass.gov/info-details/required-documents-for-your-paid-family-and-medical-leave-pfml-application#for-family-leave-applications-",
-      reductionsOverview:
-        "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions",
-      requestAnAppealForPFML:
-        "https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim",
-      schedulingLeaveGuide:
-        "https://www.mass.gov/info-details/intermittent-and-reduced-leave-schedules",
+      proofOfBirthOrPlacement: "https://mass.gov/paidleavedocuments",
+      reductionsOverview: "https://mass.gov/pfml-benefit-reductions",
+      requestAnAppealForPFML: "https://mass.gov/pfml/appeal",
+      schedulingLeaveGuide: "https://mass.gov/pfml/leave-schedules",
       sevenDayWaitingPeriodInfo: "https://www.mass.gov/getting-paid",
-      taxGuide:
-        "https://www.mass.gov/service-details/find-a-tax-professional-to-help-with-your-taxes",
+      taxGuide: "https://mass.gov/taxassistance",
       taxLiability: "https://www.mass.gov/pfml-tax-liability",
-      usingAccruedPaidLeave:
-        "https://www.mass.gov/info-details/how-other-leave-and-benefits-can-affect-your-paid-family-and-medical-leave#paid-time-off-through-your-employer-",
-      usingOtherLeave:
-        "https://www.mass.gov/info-details/how-other-leave-and-benefits-can-affect-your-paid-family-and-medical-leave",
+      usingAccruedPaidLeave: "https://mass.gov/pfml/pto",
+      usingOtherLeave: "https://mass.gov/pfml-benefit-reductions",
       verifyEmployer: "https://www.mass.gov/pfml-verify-employer",
-      whenCanIUsePFML:
-        "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-",
+      whenCanIUsePFML: "https://mass.gov/pfml/qualifying-reason",
       whichPaidLeave: "https://www.mass.gov/which-paid-leave",
       zeroBalanceEmployer: "https://www.mass.gov/pfml-zero-balance-employer",
     },

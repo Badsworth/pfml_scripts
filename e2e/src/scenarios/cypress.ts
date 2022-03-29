@@ -538,6 +538,7 @@ export const CPS_SP: ScenarioSpecification = {
     leave_dates: [subDays(currentDate, 10), addDays(currentDate, 10)],
     // @todo this will start most recent Sunday with weeks.
     // leave_dates: [subWeeks(mostRecentSunday, 2), addWeeks(mostRecentSunday, 3)],
+    is_withholding_tax: true,
   },
 };
 

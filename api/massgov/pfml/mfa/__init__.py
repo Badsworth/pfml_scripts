@@ -4,9 +4,9 @@ from typing import Any, Dict, Optional
 
 import massgov.pfml.api.app as app
 import massgov.pfml.cognito.config as cognito_config
+import massgov.pfml.util.aws.cognito as cognito
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import MFADeliveryPreferenceUpdatedBy, User
-from massgov.pfml.util.aws.cognito import admin_disable_user_mfa
 from massgov.pfml.util.aws.ses import EmailRecipient, send_templated_email
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -17,6 +17,19 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 class MFAUpdatedBy(Enum):
     USER = MFADeliveryPreferenceUpdatedBy.USER.description.lower()
     ADMIN = MFADeliveryPreferenceUpdatedBy.ADMIN.description.lower()
+
+
+def handle_mfa_enabled(cognito_auth_token: str) -> None:
+    """Helper method for handling necessary actions after MFA is enabled for a user. This handles
+    logging and enabling MFA in Cognito"""
+
+    logger.info("MFA enabled for user")
+
+    try:
+        cognito.enable_user_mfa(cognito_auth_token)
+    except Exception as error:
+        logger.error("Error enabling MFA", exc_info=error)
+        raise error
 
 
 def handle_mfa_disabled(
@@ -105,7 +118,7 @@ def handle_mfa_disabled_by_admin(
                 extra=log_attributes,
             )
         else:
-            admin_disable_user_mfa(user.email_address)
+            cognito.admin_disable_user_mfa(user.email_address)
             _send_mfa_disabled_email(user.email_address, user.mfa_phone_number_last_four())
     except Exception as error:
         logger.error("Error disabling user MFA", exc_info=error)

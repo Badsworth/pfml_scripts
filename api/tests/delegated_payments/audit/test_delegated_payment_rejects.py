@@ -143,6 +143,7 @@ def test_rejects_column_validation(test_db_session, payment_rejects_step):
 
     payment_audit_data = PaymentAuditData(
         payment=payment,
+        employer_reimbursement_payment=None,
         is_first_time_payment=True,
         previously_rejected_payment_count=1,
         previously_errored_payment_count=1,
@@ -205,6 +206,7 @@ def test_valid_combination_of_reject_and_skip(
 
     payment_audit_data = PaymentAuditData(
         payment=payment,
+        employer_reimbursement_payment=None,
         is_first_time_payment=True,
         previously_rejected_payment_count=1,
         previously_errored_payment_count=1,

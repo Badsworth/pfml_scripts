@@ -115,6 +115,14 @@ class BenefitsApplication extends BaseBenefitsApplication {
   }
 
   /**
+   * Even if an application has intermittent leave, some Applications won't
+   * have the frequency and duration if they were imported from Fineos.
+   */
+  get hasIntermittentLeaveFrequency(): boolean {
+    return !!get(this, "leave_details.intermittent_leave_periods[0].frequency");
+  }
+
+  /**
    * Determine if applicable leave period start date(s) are in the future.
    */
   get isLeaveStartDateInFuture() {

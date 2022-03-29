@@ -25,9 +25,9 @@ import phonenumbers
 import massgov.pfml.db
 import massgov.pfml.fineos.models
 import massgov.pfml.util.logging as logging
+from massgov.pfml.api.models.applications.common import DocumentResponse
 from massgov.pfml.api.models.applications.common import LeaveReason as LeaveReasonApi
 from massgov.pfml.api.models.applications.common import OtherIncome
-from massgov.pfml.api.models.applications.responses import DocumentResponse
 from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit, PreviousLeave
 from massgov.pfml.db.models.applications import (
     Application,
@@ -1527,7 +1527,7 @@ def create_other_leaves_and_other_incomes_eforms(
         logger.info("Created Other Incomes eform", extra=log_attributes)
 
 
-def get_absence_periods(
+def get_absence_periods_from_claim(
     claim: Claim, db_session: massgov.pfml.db.Session
 ) -> List[FineosAbsencePeriod]:
     absence_id = claim.fineos_absence_id
@@ -1541,6 +1541,30 @@ def get_absence_periods(
         web_id = register_employee_with_claim(fineos, db_session, claim)
 
         # Get absence periods
+        response: AbsenceDetails = fineos.get_absence(web_id, absence_id)
+    except FINEOSClientError as ex:
+        logger.warn(
+            "Unable to get absence periods",
+            exc_info=ex,
+            extra={"absence_id": absence_id, "absence_case_id": absence_id},
+        )
+        raise
+    return response.absencePeriods or []
+
+
+def get_absence_periods(
+    absence_id: str,
+    employee_tax_id: str,
+    employer_fein: str,
+    db_session: massgov.pfml.db.Session,
+    fineos_employer_id: Optional[str] = None,
+) -> List[FineosAbsencePeriod]:
+    fineos = massgov.pfml.fineos.create_client()
+
+    try:
+        web_id = register_employee(
+            fineos, employee_tax_id, employer_fein, db_session, fineos_employer_id
+        )
         response: AbsenceDetails = fineos.get_absence(web_id, absence_id)
     except FINEOSClientError as ex:
         logger.warn(
