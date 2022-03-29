@@ -15,7 +15,7 @@ export const fields = ["claim.additional_user_not_found_info.date_of_hire"];
 /**
  * A form page to collect employee start date.
  */
-export const AdditionalUserNotFoundInfoEeStartDate = (
+export const AdditionalUserNotFoundInfoStartDate = (
   props: WithBenefitsApplicationProps
 ) => {
   const { appLogic, claim } = props;
@@ -51,4 +51,4 @@ export const AdditionalUserNotFoundInfoEeStartDate = (
   );
 };
 
-export default withBenefitsApplication(AdditionalUserNotFoundInfoEeStartDate);
+export default withBenefitsApplication(AdditionalUserNotFoundInfoStartDate);
