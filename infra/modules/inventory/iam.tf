@@ -9,7 +9,7 @@ data "aws_iam_policy_document" "auditor_iam_trust_policy" {
   }
 }
 
-data "aws_iam_policy_document" "auditor_inventory_policy" {
+data "aws_iam_policy_document" "auditor_dynamodb_policy" {
   for_each = local.auditors
   statement {
     actions   = ["dynamodb:PutItem"]
@@ -31,10 +31,15 @@ resource "aws_iam_role" "audit" {
   for_each           = local.auditors
   name               = "massgov_pfml_audit_${each.key}_role"
   assume_role_policy = data.aws_iam_policy_document.auditor_iam_trust_policy.json
-}
+  managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"]
 
-resource "aws_iam_role_policy_attachment" "audit" {
-  for_each   = local.auditors
-  role       = aws_iam_role.audit[each.key].name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+  inline_policy {
+    name   = "auditor_policy"
+    policy = data.aws_iam_policy_document.auditor_policy[each.key].json
+  }
+
+  inline_policy {
+    name   = "auditor_dynamodb_policy"
+    policy = data.aws_iam_policy_document.auditor_dynamodb_policy[each.key].json
+  }
 }
