@@ -3,6 +3,10 @@ provider "aws" {}
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
+module "constants" {
+  source = "../../constants"
+}
+
 locals {
   auditors = jsondecode(file("auditors.json"))
 }
@@ -18,9 +22,7 @@ resource "aws_dynamodb_table" "inventory" {
     type = "S"
   }
 
-  tags = {
-    Name = "massgov_pfml_audit_${each.key}"
-  }
+  tags = merge({ "Name" = "massgov_pfml_audit_${each.key}" }, module.constants.common_tags)
 }
 
 data "archive_file" "audit" {
@@ -48,7 +50,5 @@ resource "aws_lambda_function" "audit" {
     }
   }
 
-  tags = {
-    Name = "audit_${each.key}"
-  }
+  tags = merge({ "Name" = "massgov_pfml_audit_${each.key}" }, module.constants.common_tags)
 }

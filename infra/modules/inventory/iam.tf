@@ -28,9 +28,9 @@ data "aws_iam_policy_document" "auditor_policy" {
 }
 
 resource "aws_iam_role" "audit" {
-  for_each           = local.auditors
-  name               = "massgov_pfml_audit_${each.key}_role"
-  assume_role_policy = data.aws_iam_policy_document.auditor_iam_trust_policy.json
+  for_each            = local.auditors
+  name                = "massgov_pfml_audit_${each.key}_role"
+  assume_role_policy  = data.aws_iam_policy_document.auditor_iam_trust_policy.json
   managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"]
 
   inline_policy {
