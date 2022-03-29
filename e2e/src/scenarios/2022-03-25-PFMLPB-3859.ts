@@ -1,6 +1,8 @@
 import { ScenarioSpecification } from "../generation/Scenario";
 import { parseISO } from "date-fns";
 
+const error_tolerance_claim_amount =  2;
+
 export const PORTAL_PREGNANCY_POSTNATAL_DISABLIITY_CONTINUOUS: ScenarioSpecification =
   {
     employee: { mass_id: true, wages: "eligible" },
@@ -20,7 +22,7 @@ export const PORTAL_PREGNANCY_POSTNATAL_DISABLIITY_CONTINUOUS: ScenarioSpecifica
         employer_decision: "Approve",
       },
       metadata: {
-        amount: 12,
+        amount: 4 + error_tolerance_claim_amount,
       },
     },
   };
@@ -30,7 +32,8 @@ export const PORTAL_PREGNANCY_POSTNATAL_DISABLITITY_REDUCED: ScenarioSpecificati
     employee: { mass_id: true, wages: "eligible" },
     claim: {
       label: "PORTAL_PREGNANCY_POSTNATAL_DISABLITITY_REDUCED",
-      reduced_leave_spec: "0, 480, 480, 480, 480, 480, 0",
+      work_pattern_spec: "standard",
+      reduced_leave_spec: "0, 240, 240, 240, 240, 240, 0",
       reason: "Pregnancy/Maternity",
       leave_dates: [parseISO("2022-03-08"), parseISO("2022-03-25")],
       is_withholding_tax: false,
@@ -38,12 +41,8 @@ export const PORTAL_PREGNANCY_POSTNATAL_DISABLITITY_REDUCED: ScenarioSpecificati
         MASSID: {},
         PREGNANCY_MATERNITY_FORM: {},
       },
-      employerResponse: {
-        hours_worked_per_week: 40,
-        employer_decision: "Approve",
-      },
       metadata: {
-        amount: 5,
+        amount: 4 + error_tolerance_claim_amount,
       },
     },
   };
@@ -53,10 +52,8 @@ export const PORTAL_BONDING_ADOPTION_CONTINUOUS_SITFIT: ScenarioSpecification =
     employee: { mass_id: true, wages: "eligible" },
     claim: {
       label: "PORTAL_BONDING_ADOPTION_CONTINUOUS_SITFIT",
-      intermittent_leave_spec: {
-        duration: 3,
-        duration_basis: "Days",
-      },
+      work_pattern_spec: "standard",
+      has_continuous_leave_periods: true,
       reason: "Child Bonding",
       reason_qualifier: "Adoption",
       leave_dates: [parseISO("2022-03-13"), parseISO("2022-05-01")],
@@ -65,12 +62,8 @@ export const PORTAL_BONDING_ADOPTION_CONTINUOUS_SITFIT: ScenarioSpecification =
         MASSID: {},
         ADOPTIONCERT: {},
       },
-      employerResponse: {
-        hours_worked_per_week: 40,
-        employer_decision: "Approve",
-      },
       metadata: {
-        amount: 10,
+        amount: 4 + error_tolerance_claim_amount,
       },
     },
   };
@@ -78,23 +71,19 @@ export const PORTAL_BONDING_ADOPTION_CONTINUOUS_SITFIT: ScenarioSpecification =
 export const PORTAL_BONDING_FOSTERCARE_REDUCED: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
-    label: "PORTAL_BONDING_FOSTERCARE_REDUCED_2",
-    reduced_leave_spec: "0, 0, 240, 240, 240, 240, 0",
+    label: "PORTAL_BONDING_FOSTERCARE_REDUCED",
+    work_pattern_spec: "0,360,420,360,420,360,0",
+    reduced_leave_spec: "0, 180,240,180,240,180,0",
     leave_dates: [parseISO("2022-05-01"), parseISO("2022-07-10")],
     reason: "Child Bonding",
     reason_qualifier: "Foster Care",
-    bondingDate: "future",
     is_withholding_tax: false,
     docs: {
       MASSID: {},
       FOSTERPLACEMENT: {},
     },
-    employerResponse: {
-      hours_worked_per_week: 40,
-      employer_decision: "Approve",
-    },
     metadata: {
-      amount: 10,
+      amount: 4 + error_tolerance_claim_amount,
     },
   },
 };
@@ -103,55 +92,49 @@ export const PORTAL_BONDING_NEWBORN_REDUCED_SITFIT: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
     label: "PORTAL_BONDING_NEWBORN_REDUCED_SITFIT",
-    reduced_leave_spec: "0, 0, 240, 240, 240, 240, 0",
+    work_pattern_spec: "0,360,360,360,360,360,0",
+    reduced_leave_spec: "0, 180,180,180,180,180,0",
     leave_dates: [parseISO("2022-03-13"), parseISO("2022-05-01")],
     reason: "Child Bonding",
     reason_qualifier: "Newborn",
+    bondingDate: "past",
     is_withholding_tax: true,
     docs: {
       MASSID: {},
       BIRTHCERTIFICATE: {},
     },
-    employerResponse: {
-      hours_worked_per_week: 40,
-      employer_decision: "Approve",
-    },
     metadata: {
-      amount: 10,
+      amount: 4 + error_tolerance_claim_amount,
     },
   },
 };
 
-export const PORTAL_SICKNESS_NONSERIOUS_INTERMITTENT: ScenarioSpecification = {
-  employee: { mass_id: true, wages: "eligible" },
-  claim: {
-    label: "PORTAL_SICKNESS_NONSERIOUS_INTERMITTENT",
-    intermittent_leave_spec: {
-      duration: 3,
-      duration_basis: "Days",
-    },
-    reason: "Care for a Family Member",
-    leave_dates: [parseISO("2022-05-11"), parseISO("2022-06-29")],
-    is_withholding_tax: false,
-    docs: {
-      MASSID: {},
-      CARING: {},
-    },
-    employerResponse: {
-      hours_worked_per_week: 40,
-      employer_decision: "Approve",
-    },
-    metadata: {
-      amount: 10,
-    },
-  },
-};
+// export const PORTAL_SICKNESS_NONSERIOUS_INTERMITTENT: ScenarioSpecification = {
+//   employee: { mass_id: true, wages: "eligible" },
+//   claim: {
+//     label: "PORTAL_SICKNESS_NONSERIOUS_INTERMITTENT",
+//     intermittent_leave_spec: {
+//       duration: 3,
+//       duration_basis: "Days",
+//     },
+//     reason: "Care for a Family Member",
+//     leave_dates: [parseISO("2022-05-11"), parseISO("2022-06-29")],
+//     is_withholding_tax: false,
+//     docs: {
+//       MASSID: {},
+//       CARING: {},
+//     },
+//     metadata: {
+//       amount: 4 + error_tolerance_claim_amount,
+//     },
+//   },
+// };
 
-export const PORTAL_SICKNESS_NONSERIOUS_INTERMITTENT_SITFIT: ScenarioSpecification =
+export const PORTAL_MEDICAL_SERIOUS_INTERMITTENT_SITFIT: ScenarioSpecification =
   {
     employee: { mass_id: true, wages: "eligible" },
     claim: {
-      label: "PORTAL_SICKNESS_NONSERIOUS_INTERMITTENT_SITFIT",
+      label: "PORTAL_MEDICAL_SERIOUS_INTERMITTENT_SITFIT",
       intermittent_leave_spec: {
         duration: 3,
         duration_basis: "Days",
@@ -163,12 +146,8 @@ export const PORTAL_SICKNESS_NONSERIOUS_INTERMITTENT_SITFIT: ScenarioSpecificati
         MASSID: {},
         HCP: {},
       },
-      employerResponse: {
-        hours_worked_per_week: 40,
-        employer_decision: "Approve",
-      },
       metadata: {
-        amount: 12,
+        amount: 4 + error_tolerance_claim_amount,
       },
     },
   };
@@ -192,7 +171,8 @@ export const PORTAL_PREGNANCY_POSTNATAL_DISABLITIY_CONTINUOUS_SITFIT: ScenarioSp
         employer_decision: "Approve",
       },
       metadata: {
-        amount: 20,
+        postSubmit: "APPROVE",
+        amount: 4 + error_tolerance_claim_amount,
       },
     },
   };
@@ -201,11 +181,11 @@ export const PORTAL_BONDING_FOSTERCARE_REDUCED_2: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
     label: "PORTAL_BONDING_FOSTERCARE_REDUCED_2",
+    work_pattern_spec: "standard",
     reduced_leave_spec: "0, 240, 240, 240, 240, 240, 0",
     leave_dates: [parseISO("2022-05-23"), parseISO("2022-08-08")],
     reason: "Child Bonding",
     reason_qualifier: "Foster Care",
-    bondingDate: "future",
     is_withholding_tax: false,
     docs: {
       MASSID: {},
@@ -216,7 +196,7 @@ export const PORTAL_BONDING_FOSTERCARE_REDUCED_2: ScenarioSpecification = {
       employer_decision: "Approve",
     },
     metadata: {
-      amount: 10,
+      amount: 4 + error_tolerance_claim_amount,
     },
   },
 };
@@ -240,7 +220,7 @@ export const PORTAL_CARING_SERIOUSHEALTH_CONTINUOUS: ScenarioSpecification = {
     },
     metadata: {
       postSubmit: "APPROVEDOCS",
-      amount: 15,
+      amount: 4 + error_tolerance_claim_amount,
     },
   },
 };
@@ -264,7 +244,7 @@ export const PERF_APRIL_A: ScenarioSpecification = {
     },
     metadata: {
       postSubmit: "APPROVE",
-      amount: 20,
+      amount: 4 + error_tolerance_claim_amount,
     },
   },
 };
@@ -288,7 +268,7 @@ export const PERF_APRIL_B: ScenarioSpecification = {
     },
     metadata: {
       postSubmit: "APPROVE",
-      amount: 20,
+      amount: 8 + error_tolerance_claim_amount,
     },
   },
 };
@@ -312,7 +292,7 @@ export const PERF_APRIL_C: ScenarioSpecification = {
     },
     metadata: {
       postSubmit: "APPROVE",
-      amount: 5,
+      amount: 5 + error_tolerance_claim_amount,
     },
   },
 };
@@ -340,7 +320,7 @@ export const PERF_APRIL_D: ScenarioSpecification = {
     },
     metadata: {
       postSubmit: "APPROVE",
-      amount: 10,
+      amount: 8 + error_tolerance_claim_amount,
     },
   },
 };
@@ -363,7 +343,7 @@ export const PERF_APRIL_E: ScenarioSpecification = {
     },
     metadata: {
       postSubmit: "APPROVE",
-      amount: 12,
+      amount: 8 + error_tolerance_claim_amount,
     },
   },
 };
@@ -372,7 +352,7 @@ export const PERF_APRIL_F: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
     label: "PERF_APRIL_F",
-    work_pattern_spec: "standard",
+    work_pattern_spec: "0,420,420,480,420,420,0",
     has_continuous_leave_periods: true,
     reason: "Child Bonding",
     reason_qualifier: "Foster Care",
@@ -383,12 +363,12 @@ export const PERF_APRIL_F: ScenarioSpecification = {
       FOSTERPLACEMENT: {},
     },
     employerResponse: {
-      hours_worked_per_week: 40,
+      hours_worked_per_week: 36,
       employer_decision: "Approve",
     },
     metadata: {
       postSubmit: "APPROVE",
-      amount: 5,
+      amount: 5 + error_tolerance_claim_amount,
     },
   },
 };
@@ -397,7 +377,7 @@ export const PERF_APRIL_G: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
     label: "PERF_APRIL_G",
-    work_pattern_spec: "standard",
+    work_pattern_spec: "0,360,300,360,300,360,0",
     has_continuous_leave_periods: true,
     reason: "Pregnancy/Maternity",
     leave_dates: [parseISO("2022-04-17"), parseISO("2022-05-29")],
@@ -407,12 +387,12 @@ export const PERF_APRIL_G: ScenarioSpecification = {
       PREGNANCY_MATERNITY_FORM: {},
     },
     employerResponse: {
-      hours_worked_per_week: 40,
+      hours_worked_per_week: 28,
       employer_decision: "Approve",
     },
     metadata: {
       postSubmit: "APPROVE",
-      amount: 5,
+      amount: 5 + error_tolerance_claim_amount,
     },
   },
 };
@@ -435,7 +415,7 @@ export const PERF_APRIL_H: ScenarioSpecification = {
       employer_decision: "Approve",
     },
     metadata: {
-      amount: 10,
+      amount: 8 + error_tolerance_claim_amount,
     },
   },
 };
