@@ -11,6 +11,7 @@ resource "aws_cloudwatch_event_rule" "security_hub_finding" {
       "detail-type": ["Security Hub Findings - Imported"],
       "detail": {
         "findings": {
+          "AwsAccountId": ["498823821309"],
           "Compliance": {
             "Status": ["FAILED"]
           },
