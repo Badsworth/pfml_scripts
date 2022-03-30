@@ -3,7 +3,6 @@ from uuid import UUID, uuid4
 
 import connexion
 from flask import Response, request
-from pydantic import ValidationError
 from sqlalchemy import asc, desc
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound, ServiceUnavailable
 
@@ -13,7 +12,6 @@ import massgov.pfml.api.util.response as response_util
 import massgov.pfml.api.validation.application_rules as application_rules
 import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
-from massgov.pfml import db
 from massgov.pfml.api.authorization.flask import CREATE, EDIT, READ, ensure
 from massgov.pfml.api.claims import get_claim_from_db
 from massgov.pfml.api.exceptions import ClaimWithdrawn
@@ -35,14 +33,11 @@ from massgov.pfml.api.services.applications import (
 from massgov.pfml.api.services.applications_submit.submit_application import submit_applications
 from massgov.pfml.api.services.document_upload import upload_document_to_fineos
 from massgov.pfml.api.services.fineos_actions import (
-    complete_intake,
-    create_other_leaves_and_other_incomes_eforms,
     download_document,
     get_documents,
     mark_documents_as_received,
     register_employee,
     send_tax_withholding_preference,
-    send_to_fineos,
     submit_payment_preference,
 )
 from massgov.pfml.api.util.paginate.paginator import PaginationAPIContext, page_for_api_context
@@ -56,7 +51,6 @@ from massgov.pfml.api.validation.exceptions import (
     ValidationException,
 )
 from massgov.pfml.db.models.applications import Application, DocumentType, LeaveReason
-from massgov.pfml.db.models.employees import User
 from massgov.pfml.fineos.exception import (
     FINEOSClientError,
     FINEOSEntityNotFound,
