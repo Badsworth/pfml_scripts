@@ -93,6 +93,23 @@ def _build_contact_details(
     return contact_details
 
 
+# Questions
+# Is it accurate that only one customer needs to be created per ssn/fein pair?
+# Is it accurate that contact details only need to be updated once per ssn/fein pair?
+# Is this fineos API sequence accurate?  Paren indicate calls can occur concurrently
+# register_api_user ->
+# update_customer_details ->
+# (get_customer_occupations_customer_api -> get_customer_occupation -> (update_week_based_work_pattern, update_occupation), update_customer_contact_details) ->
+# start_absence ->
+# update_reflexive_questions ->
+# complete_intake
+
+# TODO:
+# Refactor to fetch employers and employees earlier
+# Refactor fetching fineos_web_ids to avoid register_employee
+# Refactor to make cleaner handling applications that have claims already
+
+
 def submit_applications(
     db_session: db.Session, applications: list[Application], user: User
 ) -> None:
@@ -150,12 +167,6 @@ def submit_applications(
         assert build_customer.idNumber
         fineos_employer = all_fineos_employers[ssn_fein_pair.employer_fein]
         fineos_client.update_customer_details(fineos_web_id, build_customer)
-        occupation = get_customer_occupation(fineos_client, fineos_web_id, build_customer.idNumber)
-        if occupation is None:
-            logger.error(
-                "Did not find customer occupation.", extra={"fineos_web_id": fineos_web_id}
-            )
-            raise ValueError("customer occupation is None")
         occupation = get_customer_occupation(fineos_client, fineos_web_id, build_customer.idNumber)
         if occupation is None:
             logger.error(
