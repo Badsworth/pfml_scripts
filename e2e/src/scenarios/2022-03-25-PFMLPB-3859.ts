@@ -244,7 +244,7 @@ export const PERF_APRIL_A: ScenarioSpecification = {
     },
     metadata: {
       postSubmit: "APPROVE",
-      amount: 4 + error_tolerance_claim_amount,
+      amount: 8 + error_tolerance_claim_amount,
     },
   },
 };
