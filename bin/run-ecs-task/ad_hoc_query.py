@@ -21,6 +21,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger("ad_hoc_query")
 
+# Get FIRST.LAST name to use in FINEOS request from local system username 
+firstname_lastname = lambda: ".".join(pwd.getpwuid(os.getuid()).pw_gecos.rstrip(",").upper().split())
+
 
 def print_function(*args):
     """Prints the calling function and its arguments to the console"""
@@ -229,7 +232,7 @@ def run_query(environment: dict) -> bool:
         "./run-task.sh",
         f"{mass_env}",
         "fineos-bucket-tool",
-        ".".join(pwd.getpwuid(os.getuid()).pw_gecos.upper().split()),
+        firstname_lastname(),
         "fineos-bucket-tool",
         "--copy",
         f"s3://massgov-pfml-{mass_env}-agency-transfer/payments/config.json",
@@ -252,7 +255,7 @@ def list_fineos_s3_contents(environment: dict) -> dict:
         "./run-task.sh",
         f"{mass_env}",
         "fineos-bucket-tool",
-        ".".join(pwd.getpwuid(os.getuid()).pw_gecos.upper().split()),
+        firstname_lastname(),
         "fineos-bucket-tool",
         "--list",
         f"s3://fin-{fineos_bucket}-data-export/{fineos_env}/dataExtracts/AdHocExtract/",
@@ -392,7 +395,7 @@ def copy_target_file_from_fineos(target_file_prefix: str, environment: dict) -> 
         "./run-task.sh",
         f"{mass_env}",
         "fineos-bucket-tool",
-        ".".join(pwd.getpwuid(os.getuid()).pw_gecos.upper().split()),
+        firstname_lastname(),
         "fineos-bucket-tool",
         "--to",
         f"s3://massgov-pfml-{mass_env}-agency-transfer/payments/{file_name}",
