@@ -22,11 +22,7 @@ exports[`EmployeeInformation renders the component 1`] = `
       >
         Employee name
       </h3>
-      Jane
-       
-      
-       
-      Doe
+      Jane Doe
     </div>
   </div>
   <div
