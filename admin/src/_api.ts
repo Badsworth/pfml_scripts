@@ -315,14 +315,19 @@ export interface ErrorResponse {
   warnings?: ValidationErrorDetail[];
   errors: ValidationErrorDetail[];
 }
-export interface FlagResponse {
+export interface Flag {
   start?: string | null;
   end?: string | null;
   name?: string;
-  options?: object;
+  options?: object | null;
   enabled?: boolean;
 }
-export type FlagsResponse = FlagResponse[];
+export interface GETFlagsResponse {
+  data?: Flag[];
+}
+export interface GETFlagsByNameResponse {
+  data?: Flag;
+}
 export type Fein = string;
 export interface UserCreateRequest {
   email_address?: string | null;
@@ -334,6 +339,11 @@ export interface UserCreateRequest {
     employer_fein?: Fein | null;
   } | null;
 }
+export interface MaskedPhone {
+  int_code?: string;
+  phone_number?: string;
+  phone_type?: "Cell" | "Fax" | "Phone";
+}
 export interface RoleResponse {
   role_id?: number;
   role_description?: string;
@@ -341,7 +351,7 @@ export interface RoleResponse {
 export interface UserLeaveAdminResponse {
   employer_id?: string;
   employer_fein?: string;
-  employer_dba?: string;
+  employer_dba?: string | null;
   has_fineos_registration?: boolean;
   verified?: boolean;
 }
@@ -349,17 +359,40 @@ export interface UserResponse {
   user_id?: string;
   auth_id?: string;
   email_address?: string;
+  application_names?: {
+    first_name?: string | null;
+    middle_name?: string | null;
+    last_name?: string | null;
+  }[];
+  mfa_delivery_preference?: ("SMS" | "Opt Out") | null;
+  mfa_phone_number?: MaskedPhone | null;
   consented_to_data_sharing?: boolean;
   roles?: RoleResponse[];
   user_leave_administrators?: UserLeaveAdminResponse[];
 }
+export interface RoleUserDeleteRequest {
+  role: {
+    role_description: string;
+  };
+  user_id: string;
+}
 export interface EmployerAddFeinRequestBody {
   employer_fein?: Fein | null;
+}
+export interface Phone {
+  int_code?: string | null;
+  phone_number?: string | null;
+  e164?: string | null;
+  phone_type?: ("Cell" | "Fax" | "Phone") | null;
 }
 export interface UserUpdateRequest {
   consented_to_data_sharing?: boolean;
   mfa_delivery_preference?: ("SMS" | "Opt Out") | null;
+  mfa_phone_number?: Phone;
 }
+export type SsnItin = string;
+export type MassId = string;
+export type MaskedDate = string;
 export interface EmployeeResponse {
   employee_id: string;
   first_name?: string;
@@ -367,38 +400,51 @@ export interface EmployeeResponse {
   other_name?: string | null;
   email_address?: string | null;
   last_name?: string;
-  phone_number?: string | null;
-  tax_identifier_last4: string;
+  phone_numbers?: (Phone | null)[];
+  tax_identifier_last4?: string | null;
+  tax_identifier?: SsnItin | null;
+  fineos_customer_number?: string | null;
+  mass_id_number?: MassId | null;
+  date_of_birth?: MaskedDate | null;
+  created_at?: any;
 }
 export interface GETEmployeesByEmployeeIdResponse extends SuccessfulResponse {
   data?: EmployeeResponse;
 }
 export type EmployeeErrorResponse = object;
-export interface EmployeeUpdateRequest {
-  first_name?: string;
-  middle_name?: string;
-  last_name?: string;
-  email_address?: string;
+export type NonMaskedSsnItin = string;
+export interface EmployeeSearchRequestTermsMetadata {
+  first_name?: string | null;
+  last_name?: string | null;
+  email_address?: string | null;
+  phone_number?: string | null;
+  tax_identifier?: NonMaskedSsnItin | null;
+  fineos_customer_number?: string | null;
 }
-export interface PATCHEmployeesByEmployeeIdResponse extends SuccessfulResponse {
-  data?: EmployeeResponse;
+export interface SearchRequestOrderMetadata {
+  by?: "created_at" | null;
+  direction?: ("ascending" | "descending") | null;
+}
+export interface SearchRequestPagingMetadata {
+  offset?: number | null;
+  size?: number | null;
 }
 export interface EmployeeSearchRequest {
-  first_name: string;
-  middle_name?: string;
-  last_name: string;
-  tax_identifier_last4: string;
+  terms: EmployeeSearchRequestTermsMetadata;
+  order?: SearchRequestOrderMetadata | null;
+  paging?: SearchRequestPagingMetadata | null;
 }
+export type EmployeesResponse = EmployeeResponse[];
 export interface POSTEmployeesSearchResponse extends SuccessfulResponse {
-  data?: EmployeeResponse;
+  data?: EmployeesResponse;
 }
-export interface EmployerAddFeinResponse {
+export interface EmployerResponse {
   employer_id?: string;
   employer_fein?: string;
-  employer_dba?: string;
+  employer_dba?: string | null;
 }
 export interface POSTEmployersAddResponse extends SuccessfulResponse {
-  data?: EmployerAddFeinResponse;
+  data?: EmployerResponse;
 }
 export interface POSTEmployersAddResponse402 extends ErrorResponse {}
 export interface POSTEmployersAddResponse409 extends ErrorResponse {}
@@ -410,29 +456,64 @@ export interface GETEmployersWithholdingByEmployerIdResponse
   extends SuccessfulResponse {
   data?: WithholdingResponse;
 }
-export interface EmployerResponse {
-  employer_dba?: string;
-  employer_fein?: string;
+export interface EmployeeBasicResponse {
+  employee_id: string;
+  fineos_customer_number?: string | null;
+  first_name?: string;
+  middle_name?: string | null;
+  last_name?: string;
+  other_name?: string | null;
 }
-export interface AbsencePeriodStatusResponse {
-  fineos_leave_period_id?: string;
+export interface AbsencePeriodResponse {
   absence_period_start_date?: string;
   absence_period_end_date?: string;
   reason?:
     | "Care for a Family Member"
     | "Pregnancy/Maternity"
     | "Child Bonding"
-    | "Serious Health Condition - Employ";
-  reason_qualifier_one?: "Newborn" | "Adoption" | "Foster Care";
+    | "Serious Health Condition - Employee";
+  reason_qualifier_one?:
+    | "Not Work Related"
+    | "Work Related"
+    | "Blood"
+    | "Blood Stem Cell"
+    | "Bone Marrow"
+    | "Organ"
+    | "Other"
+    | "Postnatal Disability"
+    | "Prenatal Care"
+    | "Prenatal Disability"
+    | "Adoption"
+    | "Foster Care"
+    | "Newborn"
+    | "Pregnancy Related"
+    | "Right to Leave"
+    | "Serious Health Condition"
+    | "Sickness - Non-Serious Health Condition"
+    | "Childcare"
+    | "Counseling"
+    | "Financial & Legal Arrangements"
+    | "Military Events & Related Activities"
+    | "Other Additional Activities"
+    | "Post Deployment Activities - Including Bereavement"
+    | "Rest & Recuperation"
+    | "Short Notice Deployment"
+    | "Closure of School/Childcare"
+    | "Quarantine/Isolation - Not Sick"
+    | "Birth Disability"
+    | "Childcare and School Activities";
   reason_qualifier_two?: string;
   period_type?: "Continuous" | "Intermittent" | "Reduced Schedule";
-  request_decision?: "Pending" | "Approved" | "Denied" | "Withdrawn";
-  evidence_status?:
+  request_decision?:
     | "Pending"
-    | "Waived"
-    | "Satisfied"
-    | "Not Satisfied"
-    | "Not Required";
+    | "In Review"
+    | "Approved"
+    | "Denied"
+    | "Cancelled"
+    | "Withdrawn"
+    | "Projected"
+    | "Voided";
+  fineos_leave_request_id?: number | null;
 }
 export interface EvidenceStatusDetail {
   document_name?: string;
@@ -440,16 +521,16 @@ export interface EvidenceStatusDetail {
 }
 export interface DetailedClaimResponse {
   employer?: EmployerResponse;
-  employee?: EmployeeResponse;
+  employee?: EmployeeBasicResponse;
   application_id?: string;
   fineos_absence_id?: any;
   fineos_notification_id?: any;
   created_at?: any;
-  absence_periods?: AbsencePeriodStatusResponse[];
+  absence_periods?: AbsencePeriodResponse[];
   outstanding_evidence?: {
     employee_evidence?: EvidenceStatusDetail[];
     employer_evidence?: EvidenceStatusDetail[];
-  };
+  } | null;
   has_paid_payments?: boolean;
 }
 export interface GETClaimsByFineosAbsenceIdResponse extends SuccessfulResponse {
@@ -463,32 +544,16 @@ export interface ManagedRequirementResponse {
   type?: string | null;
   created_at?: any;
 }
-export interface AbsencePeriodResponse {
-  class_id?: number;
-  index_id?: number;
-  absence_period_start_date?: string;
-  absence_period_end_date?: string;
-  reason?:
-    | "Care for a Family Member"
-    | "Pregnancy/Maternity"
-    | "Child Bonding"
-    | "Serious Health Condition - Employ";
-  reason_qualifier_one?: "Newborn" | "Adoption" | "Foster Care";
-  reason_qualifier_two?: string;
-  type?: "Continuous" | "Intermittent" | "Reduced Schedule";
-  request_decision?: "Pending" | "Approved" | "Denied" | "Withdrawn";
-  fineos_leave_request_id?: number;
-  is_id_proofed?: boolean;
-}
 export interface ClaimResponse {
-  employer?: EmployerResponse;
-  employee?: EmployeeResponse;
+  employer?: EmployerResponse | null;
+  employee?: EmployeeBasicResponse | null;
   fineos_absence_id?: any;
   fineos_notification_id?: any;
   absence_period_start_date?: any;
   absence_period_end_date?: any;
   claim_status?: any;
   claim_type_description?: any;
+  organization_unit_id?: string;
   created_at?: any;
   managed_requirements?: ManagedRequirementResponse[];
   absence_periods?: AbsencePeriodResponse[];
@@ -498,16 +563,71 @@ export type ClaimsResponse = ClaimResponse[];
 export interface GETClaimsResponse extends SuccessfulResponse {
   data?: ClaimsResponse;
 }
+export interface ClaimSearchRequestTermsMetadata {
+  employer_id?: string[];
+  employee_id?: string[];
+  claim_status?: string;
+  search?: string;
+  allow_hrd?: boolean;
+  is_reviewable?: "yes" | "no";
+  request_decision?:
+    | "approved"
+    | "denied"
+    | "withdrawn"
+    | "pending"
+    | "cancelled";
+}
+export interface ClaimSearchRequest {
+  terms: ClaimSearchRequestTermsMetadata;
+  order?: SearchRequestOrderMetadata | null;
+  paging?: SearchRequestPagingMetadata | null;
+}
+export interface POSTClaimsSearchResponse extends SuccessfulResponse {
+  data?: ClaimsResponse;
+}
+export type Date = string;
+export interface ChangeRequest {
+  change_request_type?:
+    | "Modification"
+    | "Withdrawal"
+    | "Medical To Bonding Transition";
+  start_date?: Date | null;
+  end_date?: Date | null;
+}
+export interface ChangeRequestResponse {
+  fineos_absence_id?: string;
+  change_request_type?:
+    | "Modification"
+    | "Withdrawal"
+    | "Medical To Bonding Transition";
+  start_date?: Date | null;
+  end_date?: Date | null;
+  submitted_time?: string | null;
+}
+export interface POSTChangeRequestResponse extends SuccessfulResponse {
+  data?: ChangeRequestResponse;
+}
+export type ChangeRequestsResponse = ChangeRequestResponse[];
+export interface GETChangeRequestResponse extends SuccessfulResponse {
+  data?: {
+    absence_case_id?: string;
+    change_requests?: ChangeRequestsResponse;
+  };
+}
 export interface PaymentResponse {
   payment_id?: string | null;
   period_start_date?: any;
   period_end_date?: any;
   amount?: number | null;
-  sent_to_bank_date?: any | null;
+  sent_to_bank_date?: string | null;
   payment_method?: ("Elec Funds Transfer" | "Check" | "Debit") | null;
-  expected_send_date_start?: any | null;
-  expected_send_date_end?: any | null;
+  expected_send_date_start?: string | null;
+  expected_send_date_end?: string | null;
+  cancellation_date?: string | null;
   status?: "Sent to bank" | "Pending" | "Cancelled" | "Delayed";
+  writeback_transaction_status?: string | null;
+  transaction_date?: string | null;
+  transaction_date_could_change?: boolean;
 }
 export interface PaymentsResponse {
   absence_case_id?: any;
@@ -517,7 +637,7 @@ export interface GETPaymentsResponse extends SuccessfulResponse {
   data?: PaymentsResponse;
 }
 export interface ClaimDocumentResponse {
-  created_at: any | null;
+  created_at: string | null;
   document_type:
     | "State managed Paid Leave Confirmation"
     | "Approval Notice"
@@ -530,7 +650,13 @@ export interface ClaimDocumentResponse {
     | "Care for a family member form"
     | "Military exigency form"
     | "Pending Application Withdrawn"
-    | "Appeal Acknowledgment";
+    | "Appeal Acknowledgment"
+    | "Maximum Weekly Benefit Change Notice"
+    | "Benefit Amount Change Notice"
+    | "Leave Allotment Change Notice"
+    | "Approved Time Cancelled"
+    | "Change Request Approved"
+    | "Change Request Denied";
   content_type: string | null;
   fineos_document_id: string;
   name: string | null;
@@ -538,16 +664,14 @@ export interface ClaimDocumentResponse {
 }
 export interface GETEmployersClaimsByFineosAbsenceIdDocumentsResponse
   extends SuccessfulResponse {
-  data?: ClaimDocumentResponse;
+  data?: ClaimDocumentResponse[];
 }
-export type Date = string;
 export interface ConcurrentLeave {
   concurrent_leave_id?: string | null;
   is_for_current_employer?: boolean | null;
   leave_end_date?: Date | null;
   leave_start_date?: Date | null;
 }
-export type MaskedDate = string;
 export interface EmployerBenefit {
   employer_benefit_id?: string | null;
   benefit_start_date?: Date | null;
@@ -586,9 +710,9 @@ export interface EmployerReducedScheduleLeavePeriods {
 }
 export interface EmployerLeaveDetails {
   reason?: string | null;
-  continuous_leave_periods?: EmployerContinuousLeavePeriods;
-  intermittent_leave_periods?: EmployerIntermittentLeavePeriods;
-  reduced_schedule_leave_periods?: EmployerReducedScheduleLeavePeriods;
+  continuous_leave_periods?: EmployerContinuousLeavePeriods[] | null;
+  intermittent_leave_periods?: EmployerIntermittentLeavePeriods[] | null;
+  reduced_schedule_leave_periods?: EmployerReducedScheduleLeavePeriods[] | null;
 }
 export interface PreviousLeave {
   previous_leave_id?: string | null;
@@ -618,17 +742,20 @@ export interface Address {
   zip?: string | null;
 }
 export type MaskedSsnItin = string;
+export interface ComputedStartDates {
+  other_reason?: string | null;
+  same_reason?: string | null;
+}
 export interface ClaimReviewResponse {
   concurrent_leave?: ConcurrentLeave | null;
   date_of_birth?: MaskedDate;
   employer_benefits: EmployerBenefit[];
-  employer_dba: string;
+  employer_dba: string | null;
   employer_id: string;
   employer_fein: Fein;
   fineos_absence_id: string;
   first_name?: string;
-  hours_worked_per_week?: string;
-  is_reviewable: boolean;
+  hours_worked_per_week?: number;
   last_name?: string;
   leave_details: EmployerLeaveDetails;
   status: string;
@@ -637,8 +764,9 @@ export interface ClaimReviewResponse {
   previous_leaves: PreviousLeave[];
   residential_address: Address;
   tax_identifier?: MaskedSsnItin;
-  follow_up_date?: Date;
   absence_periods: AbsencePeriodResponse[];
+  managed_requirements?: ManagedRequirementResponse[];
+  computed_start_dates?: ComputedStartDates;
 }
 export interface GETEmployersClaimsByFineosAbsenceIdReviewResponse
   extends SuccessfulResponse {
@@ -664,6 +792,14 @@ export interface UpdateClaimReviewResponse {
 export interface PATCHEmployersClaimsByFineosAbsenceIdReviewResponse
   extends SuccessfulResponse {
   data?: UpdateClaimReviewResponse;
+}
+export interface ApplicationImportRequestBody {
+  absence_case_id?: string | null;
+  tax_identifier?: SsnItin | null;
+}
+export interface OrganizationUnit {
+  organization_unit_id: string;
+  name: string;
 }
 export interface ReducedScheduleLeavePeriods {
   leave_period_id?: string | null;
@@ -730,11 +866,22 @@ export interface ApplicationLeaveDetails {
         | "Care for a Family Member"
       )
     | null;
-  reason_qualifier?: ("Newborn" | "Adoption" | "Foster Care") | null;
+  reason_qualifier?:
+    | (
+        | "Newborn"
+        | "Serious Health Condition"
+        | "Work Related Accident/Injury"
+        | "Adoption"
+        | "Foster Care"
+        | "Not Work Related"
+        | "Sickness"
+        | "Postnatal Disability"
+      )
+    | null;
   reduced_schedule_leave_periods?: ReducedScheduleLeavePeriods[] | null;
   continuous_leave_periods?: ContinuousLeavePeriods[] | null;
   intermittent_leave_periods?: IntermittentLeavePeriods[] | null;
-  caring_leave_metadata?: CaringLeaveMetadata;
+  caring_leave_metadata?: CaringLeaveMetadata | null;
   pregnant_or_recent_birth?: boolean | null;
   child_birth_date?: DateOrMaskedDate | null;
   child_placement_date?: DateOrMaskedDate | null;
@@ -767,8 +914,6 @@ export interface WorkPatternDay {
 }
 export interface WorkPattern {
   work_pattern_type?: ("Fixed" | "Rotating" | "Variable") | null;
-  work_week_starts?: DayOfWeek | null;
-  pattern_start_date?: Date | null;
   work_pattern_days?: WorkPatternDay[] | null;
 }
 export interface OtherIncome {
@@ -791,15 +936,11 @@ export interface OtherIncome {
       )
     | null;
 }
-export interface MaskedPhone {
-  int_code?: string;
-  phone_number?: string;
-  phone_type?: "Cell" | "Fax" | "Phone";
-}
 export interface ApplicationResponse {
   application_nickname?: string | null;
+  organization_unit_id?: string | null;
   application_id?: string;
-  fineos_absence_id?: string;
+  fineos_absence_id?: string | null;
   tax_identifier?: MaskedSsnItin | null;
   employer_id?: string | null;
   employer_fein?: string | null;
@@ -822,6 +963,10 @@ export interface ApplicationResponse {
   occupation?:
     | ("Sales Clerk" | "Administrative" | "Engineer" | "Health Care")
     | null;
+  employee_organization_units?: OrganizationUnit[];
+  employer_organization_units?: OrganizationUnit[];
+  organization_unit?: OrganizationUnit | null;
+  organization_unit_selection?: ("not_listed" | "not_selected") | null;
   gender?:
     | (
         | "Woman"
@@ -837,6 +982,7 @@ export interface ApplicationResponse {
   work_pattern?: WorkPattern | null;
   employer_benefits?: EmployerBenefit[] | null;
   other_incomes?: OtherIncome[] | null;
+  imported_from_fineos_at?: string | null;
   updated_at?: string;
   updated_time?: string;
   status?: "Started" | "Submitted" | "Completed";
@@ -848,6 +994,15 @@ export interface ApplicationResponse {
   previous_leaves_same_reason?: PreviousLeave[];
   concurrent_leave?: ConcurrentLeave | null;
   is_withholding_tax?: boolean | null;
+  computed_start_dates?: ComputedStartDates;
+  split_from_application_id?: string | null;
+  split_into_application_id?: string | null;
+}
+export interface POSTApplicationImportsResponse extends SuccessfulResponse {
+  data?: ApplicationResponse;
+}
+export interface POSTApplicationImportsResponse503 extends ErrorResponse {
+  data?: ApplicationResponse;
 }
 export interface POSTApplicationsResponse extends SuccessfulResponse {
   data?: ApplicationResponse;
@@ -856,14 +1011,9 @@ export type ApplicationSearchResults = ApplicationResponse[];
 export interface GETApplicationsResponse extends SuccessfulResponse {
   data?: ApplicationSearchResults;
 }
-export type SsnItin = string;
-export type MassId = string;
-export interface Phone {
-  int_code?: string | null;
-  phone_number?: string | null;
-  phone_type?: ("Cell" | "Fax" | "Phone") | null;
-}
 export interface ApplicationRequestBody {
+  organization_unit_selection?: ("not_listed" | "not_selected") | null;
+  organization_unit_id?: string | null;
   application_nickname?: string | null;
   tax_identifier?: SsnItin | null;
   employer_fein?: Fein | null;
@@ -911,6 +1061,12 @@ export interface PATCHApplicationsByApplicationIdResponse
   extends SuccessfulResponse {
   data?: ApplicationResponse;
 }
+export interface POSTApplicationsImportResponse extends SuccessfulResponse {
+  data?: ApplicationResponse;
+}
+export interface POSTApplicationsImportResponse503 extends ErrorResponse {
+  data?: ApplicationResponse;
+}
 export interface POSTApplicationsByApplicationIdSubmitApplicationResponse
   extends SuccessfulResponse {
   data?: ApplicationResponse;
@@ -932,6 +1088,7 @@ export interface DocumentResponse {
   application_id: string;
   created_at: any;
   document_type:
+    | "Approval Notice"
     | "Passport"
     | "Driver's License Mass"
     | "Driver's License Other State"
@@ -943,7 +1100,13 @@ export interface DocumentResponse {
     | "Care for a family member form"
     | "Military exigency form"
     | "Pending Application Withdrawn"
-    | "Appeal Acknowledgment";
+    | "Appeal Acknowledgment"
+    | "Maximum Weekly Benefit Change Notice"
+    | "Benefit Amount Change Notice"
+    | "Leave Allotment Change Notice"
+    | "Approved Time Cancelled"
+    | "Change Request Approved"
+    | "Change Request Denied";
   content_type: string;
   fineos_document_id: string;
   name: string;
@@ -970,6 +1133,12 @@ export interface DocumentUploadRequest {
     | "Military exigency form"
     | "Pending Application Withdrawn"
     | "Appeal Acknowledgment"
+    | "Maximum Weekly Benefit Change Notice"
+    | "Benefit Amount Change Notice"
+    | "Leave Allotment Change Notice"
+    | "Approved Time Cancelled"
+    | "Change Request Approved"
+    | "Change Request Denied"
     | "Certification Form";
   name?: string;
   description?: string;
@@ -988,7 +1157,7 @@ export interface POSTApplicationsByApplicationIdSubmitPaymentPreferenceResponse
   data?: ApplicationResponse;
 }
 export interface TaxWithholdingPreferenceRequestBody {
-  is_withholding_tax?: boolean;
+  is_withholding_tax?: boolean | null;
 }
 export interface POSTApplicationsByApplicationIdSubmitTaxWithholdingPreferenceResponse
   extends SuccessfulResponse {
@@ -1066,6 +1235,31 @@ export interface VerificationRequest {
   withholding_amount: number;
   withholding_quarter: string;
 }
+export interface BenefitYearsSearchTermsMetadata {
+  employee_id?: string;
+  current?: boolean;
+}
+export interface BenefitYearsSearchRequest {
+  terms?: BenefitYearsSearchTermsMetadata | null;
+  order?: SearchRequestOrderMetadata | null;
+  paging?: SearchRequestPagingMetadata | null;
+}
+export interface BenefitYearResponse {
+  employee_id?: string;
+  benefit_year_start_date?: Date;
+  benefit_year_end_date?: Date;
+  current_benefit_year?: boolean;
+}
+export interface POSTBenefitYearsSearchResponse extends SuccessfulResponse {
+  data?: BenefitYearResponse[];
+}
+export type HolidaysSearchResponse = {
+  name?: string;
+  date?: Date;
+}[];
+export interface POSTHolidaysSearchResponse extends SuccessfulResponse {
+  data?: HolidaysSearchResponse;
+}
 export interface AuthURIResponse {
   auth_uri?: string;
   claims_challenge?: string | null;
@@ -1100,6 +1294,17 @@ export interface AdminUserResponse {
 export interface AdminLogoutResponse {
   logout_uri?: string;
 }
+export interface GETAdminUsersResponse {
+  data?: UserResponse[];
+}
+export interface FlagWithLog extends Flag {
+  first_name?: string;
+  last_name?: string;
+  updated_at?: string;
+}
+export interface GETAdminFlagLogsByNameResponse {
+  data?: FlagWithLog[];
+}
 /**
  * Get the API status
  */
@@ -1115,8 +1320,23 @@ export async function getStatus(
  */
 export async function getFlags(
   options?: RequestOptions,
-): Promise<ApiResponse<FlagsResponse>> {
+): Promise<ApiResponse<GETFlagsResponse>> {
   return await http.fetchJson("/flags", {
+    ...options,
+  });
+}
+/**
+ * Get a feature flag
+ */
+export async function getFlagsByName(
+  {
+    name,
+  }: {
+    name: string;
+  },
+  options?: RequestOptions,
+): Promise<ApiResponse<GETFlagsByNameResponse>> {
+  return await http.fetchJson(`/flags/${name}`, {
     ...options,
   });
 }
@@ -1133,6 +1353,22 @@ export async function postUsers(
       ...options,
       method: "POST",
       body: userCreateRequest,
+    }),
+  );
+}
+/**
+ * Remove a role from a user
+ */
+export async function deleteRoles(
+  roleUserDeleteRequest: RoleUserDeleteRequest,
+  options?: RequestOptions,
+): Promise<ApiResponse<SuccessfulResponse>> {
+  return await http.fetchJson(
+    "/roles",
+    http.json({
+      ...options,
+      method: "DELETE",
+      body: roleUserDeleteRequest,
     }),
   );
 }
@@ -1178,8 +1414,10 @@ export async function getUsersByUser_id(
 export async function patchUsersByUser_id(
   {
     user_id,
+    xFfSyncCognitoPreferences,
   }: {
     user_id: string;
+    xFfSyncCognitoPreferences?: string;
   },
   userUpdateRequest: UserUpdateRequest,
   options?: RequestOptions,
@@ -1190,6 +1428,10 @@ export async function patchUsersByUser_id(
       ...options,
       method: "PATCH",
       body: userUpdateRequest,
+      headers: {
+        ...options?.headers,
+        "X-FF-Sync-Cognito-Preferences": xFfSyncCognitoPreferences,
+      },
     }),
   );
 }
@@ -1220,28 +1462,7 @@ export async function getEmployeesByEmployee_id(
   });
 }
 /**
- * Update an Employee record, for mutable properties
- */
-export async function patchEmployeesByEmployee_id(
-  {
-    employee_id,
-  }: {
-    employee_id: string;
-  },
-  employeeUpdateRequest: EmployeeUpdateRequest,
-  options?: RequestOptions,
-): Promise<ApiResponse<PATCHEmployeesByEmployeeIdResponse>> {
-  return await http.fetchJson(
-    `/employees/${employee_id}`,
-    http.json({
-      ...options,
-      method: "PATCH",
-      body: employeeUpdateRequest,
-    }),
-  );
-}
-/**
- * Lookup an Employee by SSN/ITIN and name
+ * Lookup Employees
  */
 export async function postEmployeesSearch(
   employeeSearchRequest: EmployeeSearchRequest,
@@ -1312,16 +1533,33 @@ export async function getClaims(
     order_by,
     order_direction,
     employer_id,
+    employee_id,
     claim_status,
     search,
+    allow_hrd,
+    is_reviewable,
+    request_decision,
   }: {
     page_size?: number;
     page_offset?: number;
-    order_by?: "fineos_absence_status" | "created_at" | "employee";
+    order_by?:
+      | "fineos_absence_status"
+      | "created_at"
+      | "employee"
+      | "latest_follow_up_date";
     order_direction?: "ascending" | "descending";
-    employer_id?: string;
+    employer_id?: string[];
+    employee_id?: string[];
     claim_status?: string;
     search?: string;
+    allow_hrd?: boolean;
+    is_reviewable?: "yes" | "no";
+    request_decision?:
+      | "approved"
+      | "denied"
+      | "withdrawn"
+      | "pending"
+      | "cancelled";
   } = {},
   options?: RequestOptions,
 ): Promise<ApiResponse<GETClaimsResponse>> {
@@ -1333,8 +1571,75 @@ export async function getClaims(
         order_by,
         order_direction,
         employer_id,
+        employee_id,
         claim_status,
         search,
+        allow_hrd,
+        is_reviewable,
+        request_decision,
+      }),
+    )}`,
+    {
+      ...options,
+    },
+  );
+}
+/**
+ * Retrieve claims
+ */
+export async function postClaimsSearch(
+  claimSearchRequest: ClaimSearchRequest,
+  options?: RequestOptions,
+): Promise<ApiResponse<POSTClaimsSearchResponse>> {
+  return await http.fetchJson(
+    "/claims/search",
+    http.json({
+      ...options,
+      method: "POST",
+      body: claimSearchRequest,
+    }),
+  );
+}
+/**
+ * Submit a change request to FINEOS
+ */
+export async function postChangeRequest(
+  {
+    fineos_absence_id,
+  }: {
+    fineos_absence_id: string;
+  },
+  changeRequest: ChangeRequest,
+  options?: RequestOptions,
+): Promise<ApiResponse<POSTChangeRequestResponse>> {
+  return await http.fetchJson(
+    `/change-request${QS.query(
+      QS.form({
+        fineos_absence_id,
+      }),
+    )}`,
+    http.json({
+      ...options,
+      method: "POST",
+      body: changeRequest,
+    }),
+  );
+}
+/**
+ * Get list of change requests for a claim
+ */
+export async function getChangeRequest(
+  {
+    fineos_absence_id,
+  }: {
+    fineos_absence_id?: string;
+  } = {},
+  options?: RequestOptions,
+): Promise<ApiResponse<GETChangeRequestResponse>> {
+  return await http.fetchJson(
+    `/change-request${QS.query(
+      QS.form({
+        fineos_absence_id,
       }),
     )}`,
     {
@@ -1439,6 +1744,23 @@ export async function patchEmployersClaimsByFineos_absence_idReview(
   );
 }
 /**
+ * Creates a new application in the PFML database from a FINEOS application that was created through the contact center.
+ *
+ */
+export async function postApplicationImports(
+  applicationImportRequestBody: ApplicationImportRequestBody,
+  options?: RequestOptions,
+): Promise<ApiResponse<POSTApplicationImportsResponse>> {
+  return await http.fetchJson(
+    "/application-imports",
+    http.json({
+      ...options,
+      method: "POST",
+      body: applicationImportRequestBody,
+    }),
+  );
+}
+/**
  * Create an Application
  */
 export async function postApplications(
@@ -1492,6 +1814,23 @@ export async function patchApplicationsByApplication_id(
       ...options,
       method: "PATCH",
       body: applicationRequestBody,
+    }),
+  );
+}
+/**
+ * Creates a new application in the PFML database from a FINEOS application that was created through the contact center.
+ *
+ */
+export async function postApplicationsImport(
+  applicationImportRequestBody: ApplicationImportRequestBody,
+  options?: RequestOptions,
+): Promise<ApiResponse<POSTApplicationsImportResponse>> {
+  return await http.fetchJson(
+    "/applications/import",
+    http.json({
+      ...options,
+      method: "POST",
+      body: applicationImportRequestBody,
     }),
   );
 }
@@ -1708,6 +2047,44 @@ export async function postEmployersVerifications(
   );
 }
 /**
+ * Returns all benefit years for the employee_id in the request; if no employee_id is present returns all benefit years for the current user.
+ *
+ */
+export async function postBenefitYearsSearch(
+  benefitYearsSearchRequest: BenefitYearsSearchRequest,
+  options?: RequestOptions,
+): Promise<ApiResponse<POSTBenefitYearsSearchResponse>> {
+  return await http.fetchJson(
+    "/benefit-years/search",
+    http.json({
+      ...options,
+      method: "POST",
+      body: benefitYearsSearchRequest,
+    }),
+  );
+}
+/**
+ * Returns any holidays in a date range
+ */
+export async function postHolidaysSearch(
+  body: {
+    terms: {
+      start_date?: Date;
+      end_date?: Date;
+    };
+  },
+  options?: RequestOptions,
+): Promise<ApiResponse<POSTHolidaysSearchResponse>> {
+  return await http.fetchJson(
+    "/holidays/search",
+    http.json({
+      ...options,
+      method: "POST",
+      body,
+    }),
+  );
+}
+/**
  * Returns azure ad authentication url to initiate user auth code flow
  */
 export async function getAdminAuthorize(
@@ -1750,6 +2127,70 @@ export async function getAdminLogout(
   options?: RequestOptions,
 ): Promise<ApiResponse<AdminLogoutResponse>> {
   return await http.fetchJson("/admin/logout", {
+    ...options,
+  });
+}
+/**
+ * Retrieve all user accounts
+ */
+export async function getAdminUsers(
+  {
+    page_size,
+    page_offset,
+    email_address,
+  }: {
+    page_size?: number;
+    page_offset?: number;
+    email_address?: string;
+  } = {},
+  options?: RequestOptions,
+): Promise<ApiResponse<GETAdminUsersResponse>> {
+  return await http.fetchJson(
+    `/admin/users${QS.query(
+      QS.form({
+        page_size,
+        page_offset,
+        email_address,
+      }),
+    )}`,
+    {
+      ...options,
+    },
+  );
+}
+/**
+ * Update a feature flag
+ */
+export async function patchAdminFlagsByName(
+  {
+    name,
+  }: {
+    name: string;
+  },
+  flag: Flag,
+  options?: RequestOptions,
+): Promise<ApiResponse<SuccessfulResponse>> {
+  return await http.fetchJson(
+    `/admin/flags/${name}`,
+    http.json({
+      ...options,
+      method: "PATCH",
+      body: flag,
+    }),
+  );
+}
+/**
+ * Get logs for a feature flag
+ */
+export async function getAdminFlagLogsByName(
+  {
+    name,
+  }: {
+    name: string;
+  },
+  options?: RequestOptions,
+): Promise<ApiResponse<GETAdminFlagLogsByNameResponse>> {
+  return await http.fetchJson(`/admin/flag-logs/${name}`, {
     ...options,
   });
 }

@@ -49,8 +49,8 @@ def dict_to_employee(
 
     employee = Employee(
         employee_id=employee_id,
-        first_name=employee_info.get("employee_first_name", "").replace("_", " ").strip(),
-        last_name=employee_info.get("employee_last_name", "").replace("_", " ").strip(),
+        first_name=(employee_info["employee_first_name"] or "").replace("_", " ").strip(),
+        last_name=(employee_info["employee_last_name"] or "").replace("_", " ").strip(),
         latest_import_log_id=import_log_entry_id,
         tax_identifier_id=tax_identifier_id,
     )

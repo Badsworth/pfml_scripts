@@ -83,7 +83,7 @@
     "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-training-business-intelligence-tool",
     "TWILIO_NUMBERS": "7853699328,8106349678",
     "HAS_CHANNEL_SWITCHING": "false",
-    "HAS_MARCH_RELEASE": "false",
+    "HAS_MARCH_RELEASE": "true",
     "HAS_EMPLOYER_REIMBURSEMENTS": "true"
   },
   "trn2": {
@@ -163,7 +163,7 @@
     "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-performance-business-intelligence-tool",
     "TWILIO_NUMBERS": "8045342047,8106349684",
     "HAS_CHANNEL_SWITCHING": "true",
-    "HAS_MARCH_RELEASE": "false"
+    "HAS_MARCH_RELEASE": "true"
   },
   "uat": {
     "PORTAL_BASEURL": "https://paidleave-uat.mass.gov",
@@ -191,7 +191,7 @@
     "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-uat-business-intelligence-tool",
     "TWILIO_NUMBERS": "7853699139,7754062155",
     "HAS_CHANNEL_SWITCHING": "true",
-    "HAS_MARCH_RELEASE": "false"
+    "HAS_MARCH_RELEASE": "true"
   },
   "cps-preview": {
     "PORTAL_BASEURL": "https://paidleave-cps-preview.eol.mass.gov",
