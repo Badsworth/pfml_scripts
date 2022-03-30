@@ -98,7 +98,7 @@
     "EMPLOYERS_FILE": "./employers/e2e-2022-01-03.json",
     "DOR_IMPORT_URI": "s3://massgov-pfml-trn2-agency-transfer/dor/received/",
     "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-trn2-dor-fineos-etl",
-    "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "false",
+    "FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION": "true",
     "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-trn2-business-intelligence-tool",
     "TWILIO_NUMBERS": "7752564493,8063045739",
     "HAS_ORGUNITS_SETUP": "false",
