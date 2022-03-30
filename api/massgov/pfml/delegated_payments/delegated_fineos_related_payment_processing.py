@@ -186,45 +186,6 @@ class RelatedPaymentsProcessingStep(Step):
             if payment.claim is None:
                 raise Exception("Claim not found for related payment id: %s ", payment.payment_id)
 
-                if transaction_status:
-                    stage_payment_fineos_writeback(
-                        payment=payment,
-                        writeback_transaction_status=transaction_status,
-                        outcome=state_log_util.build_outcome(message),
-                        db_session=self.db_session,
-                        import_log_id=self.get_import_log_id(),
-                    )
-                    logger.info(
-                        "Primary payment errored because related payment has %s",
-                        transaction_status.transaction_status_description,
-                        extra=related_payment_log_details,
-                    )
-                else:
-                    logger.error(
-                        "Writeback details not found for the related payment",
-                        extra=related_payment_log_details,
-                    )
-
-    def _get_standard_payments(self, db_session: db.Session) -> List[Payment]:
-        state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-            associated_class=state_log_util.AssociatedClass.PAYMENT,
-            end_state=State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
-            db_session=db_session,
-        )
-        return [state_log.payment for state_log in state_logs]
-
-    def sync_related_payments_to_primary(self) -> None:
-        # get employer reimbursement and withholding payment records
-        related_payments: List[Payment] = self._get_related_payments()
-
-        if not related_payments:
-            logger.info("No related payment records found.")
-            return
-        for payment in related_payments:
-
-            if payment.claim is None:
-                raise Exception("Claim not found for related payment id: %s ", payment.payment_id)
-
             primary_payment_records: List[Payment] = (
                 self.db_session.query(Payment)
                 .filter(Payment.claim_id == payment.claim_id)
