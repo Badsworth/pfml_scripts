@@ -1007,9 +1007,7 @@ def claim_is_valid_for_application_import(
                 "applications_import failure - exists_different_account",
                 extra=get_application_log_attributes(existing_application),
             )
-            return response_util.error_response(
-                Forbidden, message=message, errors=[validation_error]
-            )
+            raise ValidationException(errors=[validation_error])
 
         if existing_application:
             message = "An application already exists for this claim."
@@ -1020,9 +1018,7 @@ def claim_is_valid_for_application_import(
                 "applications_import failure - exists_same_account",
                 extra=get_application_log_attributes(existing_application),
             )
-            return response_util.error_response(
-                Forbidden, message=message, errors=[validation_error]
-            )
+            raise ValidationException(errors=[validation_error])
     return None
 
 
@@ -2058,7 +2054,10 @@ def get_application_split(
     If a leave period spans a benefit year, the application needs to be broken up into
     separate ones that will each get submitted.
     """
-    if application.split_from_application_id is not None:
+    if (
+        application.split_from_application_id is not None
+        or application.split_into_application_id is not None
+    ):
         return None
 
     latest_end_date = get_latest_end_date(application)
