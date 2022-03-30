@@ -27,10 +27,13 @@ def search_envelope_log_info(
 
     for key, value in request.terms.dict().items():
         log_info.update({f"terms.{key}_provided": (key in USER_PROVIDED_TERMS)})
-        # TODO: for cases where a term might accept multiple types, e.g., a
-        # single string vs a list, though if our pattern is it ulitmately
-        # normalize that to a single type in the Terms model, then this probably
-        # isn't very useful
+        # This is primarily for cases where a term might accept multiple types,
+        # e.g., a single string vs a list.
+        #
+        # This kind of field might more commonly be normalized to a single type
+        # in the Terms model, which would make this less useful, but for the
+        # cases where a term may want to support distinct types all the way
+        # through, this could be useful.
         log_info.update({f"terms.{key}_type": str(type(value))})
 
         if isinstance(value, Sized):
