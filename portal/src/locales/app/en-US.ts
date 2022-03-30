@@ -2025,7 +2025,7 @@ const pages: {
     previousLeaveReason_medical: "Medical leave for an illness or injury",
     previousLeaveReason_pregnancy: "Medical leave related to pregnancy",
     previousLeaveReason_serviceMemberFamily:
-      "Famliy leave to care for a family member who serves in the armed forces",
+      "Family leave to care for a family member who serves in the armed forces",
     previousLeaveType_otherReason: "Leave for a different qualifying reason",
     previousLeaveType_sameReason: "Leave for the same qualifying reason",
     previousLeaveWorkedPerWeekMinutes: "$t(shared.displayTime)",
