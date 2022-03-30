@@ -196,6 +196,6 @@ module "sns_security_group_changes" {
 }
 
 module "security_hub_finding" {
-  source        = "../modules/security_hub_events_alarm"
+  source                                = "../modules/security_hub_events_alarm"
   security_hub_finding_notification_arn = aws_sns_topic.sns_security_hub_finding.arn
 }
