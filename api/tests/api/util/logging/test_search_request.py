@@ -1,5 +1,6 @@
 from enum import Enum
 from re import match
+from typing import Optional
 
 import pytest
 
@@ -27,6 +28,7 @@ class ExampleSearchTerms(PydanticBaseModel):
     a_list: list[str] = []
     an_int: int = 42
     a_bool: bool = False
+    an_optional: Optional[str] = None
 
 
 DEFAULT_ORDER_AND_PAGING_ATTRS = {
@@ -76,6 +78,8 @@ def test_search_request_log_info(mocker):
                 "terms.a_bool_provided": False,
                 "terms.a_bool_type": "<class 'bool'>",
                 "terms.a_bool_value": False,
+                "terms.an_optional_provided": False,
+                "terms.an_optional_type": "<class 'NoneType'>",
             },
             id="terms",
         ),
