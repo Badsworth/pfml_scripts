@@ -44,6 +44,7 @@ def search_envelope_log_info(
 
         if isinstance(value, Enum):
             log_info.update({f"terms.{key}_value": value.value})
+            log_info.update({f"terms.{key}_name": value.name})
 
     return log_info
 

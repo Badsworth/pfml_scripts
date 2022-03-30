@@ -64,6 +64,7 @@ def test_search_request_log_info(mocker):
                 "terms.an_enum_provided": True,
                 "terms.an_enum_type": "<enum 'ExampleEnum'>",
                 "terms.an_enum_value": "foo",
+                "terms.an_enum_name": "FOO",
                 "terms.a_string_provided": False,
                 "terms.a_string_type": "<class 'str'>",
                 "terms.a_string_length": 3,
