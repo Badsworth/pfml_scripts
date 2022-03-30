@@ -113,19 +113,8 @@ def continuous_leave_periods_not_open():
             reasonQualifier2="",
             startDate=date(2021, 1, 1),
             endDate=date(2021, 2, 9),
-<<<<<<< HEAD
-            status="known",
-            lastDayWorked=date(2020, 12, 30),
-            startDateFullDay=True,
-            startDateOffHours=1,
-            startDateOffMinutes=5,
-            endDateOffHours=4,
-            endDateOffMinutes=0,
-            endDateFullDay=True,
-=======
             absenceType="Continuous",
             requestStatus="Approved",
->>>>>>> origin
         )
     ]
 
@@ -330,15 +319,6 @@ def _compare_continuous_leave(
     assert continuous_leave.application_id == application.application_id
     assert continuous_leave.start_date == fineos_continuous_leave.startDate
     assert continuous_leave.end_date == fineos_continuous_leave.endDate
-<<<<<<< HEAD
-    assert continuous_leave.start_date_full_day == fineos_continuous_leave.startDateFullDay
-    assert continuous_leave.start_date_off_hours == fineos_continuous_leave.startDateOffHours
-    assert continuous_leave.start_date_off_minutes == fineos_continuous_leave.startDateOffMinutes
-    assert continuous_leave.end_date_full_day == fineos_continuous_leave.endDateFullDay
-    assert continuous_leave.end_date_off_hours == fineos_continuous_leave.endDateOffHours
-    assert continuous_leave.end_date_off_minutes == fineos_continuous_leave.endDateOffMinutes
-=======
->>>>>>> origin
 
 
 def _compare_intermittent_leave(application, intermittent_leave, fineos_intermittent_leave):

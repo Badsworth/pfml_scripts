@@ -1092,19 +1092,8 @@ def _parse_continuous_leave_period(
 ) -> ContinuousLeavePeriod:
     return ContinuousLeavePeriod(
         application_id=application_id,
-<<<<<<< HEAD
-        start_date=time_off.startDate,
-        end_date=time_off.endDate,
-        start_date_full_day=time_off.startDateFullDay,
-        start_date_off_hours=time_off.startDateOffHours,
-        start_date_off_minutes=time_off.startDateOffMinutes,
-        end_date_full_day=time_off.endDateFullDay,
-        end_date_off_hours=time_off.endDateOffHours,
-        end_date_off_minutes=time_off.endDateOffMinutes,
-=======
         start_date=absence_period.startDate,
         end_date=absence_period.endDate,
->>>>>>> origin
     )
 
 

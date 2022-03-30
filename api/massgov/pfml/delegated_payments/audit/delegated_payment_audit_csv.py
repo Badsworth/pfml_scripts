@@ -23,9 +23,6 @@ class PaymentAuditCSV(AbstractRecord):
     state: Optional[str]
     zip: Optional[str]
     is_address_verified: Optional[str]
-<<<<<<< HEAD
-    employer_name: Optional[str]
-=======
     employer_id: Optional[str]
     employer_payee_name: Optional[str]
     employer_address_line_1: Optional[str]
@@ -34,7 +31,6 @@ class PaymentAuditCSV(AbstractRecord):
     employer_state: Optional[str]
     employer_zip: Optional[str]
     employer_is_address_verified: Optional[str]
->>>>>>> origin
     payment_preference: Optional[str]
     scheduled_payment_date: Optional[str]
     payment_period_start_date: Optional[str]
@@ -106,9 +102,6 @@ PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
     state="State",
     zip="Zip",
     is_address_verified="Address Verified",
-<<<<<<< HEAD
-    employer_name="Employer Name",
-=======
     employer_id="Employer ID",
     employer_payee_name="Employer Payee Name",
     employer_address_line_1="Employer Address Line 1",
@@ -117,7 +110,6 @@ PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
     employer_state="Employer State",
     employer_zip="Employer Zip",
     employer_is_address_verified="Employer Address Verified",
->>>>>>> origin
     payment_preference="Payment Preference",
     scheduled_payment_date="Scheduled Payment Date",
     payment_period_start_date="Payment Period Start",

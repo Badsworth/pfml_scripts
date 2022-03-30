@@ -468,10 +468,6 @@ def generate_scenario_data(
         employer_reimbursement_amount="",
         federal_withholding_i_value="",
         state_withholding_i_value="",
-<<<<<<< HEAD
-        employer_reimbursement_amount="",
-=======
->>>>>>> origin
         employer_reimbursement_i_value="",
     )
 

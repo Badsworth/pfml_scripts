@@ -1032,15 +1032,9 @@ def test_documents_get_not_submitted_application(
     assert len(response["data"]) == 0
 
 
-<<<<<<< HEAD
-@mock.patch("massgov.pfml.api.services.document_upload.upload_document")
-def test_document_upload_return_error_rule(
-    mock_upload, client, consented_user, consented_user_token, test_db_session
-=======
 @mock.patch("massgov.pfml.api.services.document_upload.mark_single_document_as_received")
 def test_document_upload_requirement_already_satisfied_error(
     mock_mark_received, client, consented_user, consented_user_token, test_db_session
->>>>>>> origin
 ):
     error = FINEOSUnprocessableEntity(
         "upload_document",
@@ -1070,11 +1064,7 @@ def test_document_upload_requirement_already_satisfied_error(
 
 
 @mock.patch("massgov.pfml.api.services.document_upload.upload_document")
-<<<<<<< HEAD
-def test_document_upload_doesnt_return_error_rule(
-=======
 def test_document_upload_withdrawn_error(
->>>>>>> origin
     mock_upload, client, consented_user, consented_user_token, test_db_session
 ):
     error = FINEOSForbidden("upload_document", 200, 403)

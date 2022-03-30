@@ -61,10 +61,6 @@ class PaymentAuditData:
     employer_reimbursement_amount: str
     federal_withholding_i_value: str
     state_withholding_i_value: str
-<<<<<<< HEAD
-    employer_reimbursement_amount: str
-=======
->>>>>>> origin
     employer_reimbursement_i_value: str
 
 
@@ -186,9 +182,6 @@ def build_audit_report_row(
         state=address.geo_state.geo_state_description if address and address.geo_state else None,
         zip=address.zip_code if address else None,
         is_address_verified=is_address_verified,
-<<<<<<< HEAD
-        employer_name=None,
-=======
         employer_id=str(employer.fineos_employer_id) if employer else None,
         employer_payee_name=employer_reimbursement.payee_name if employer_reimbursement else None,
         employer_address_line_1=employer_address.address_line_one if employer_address else None,
@@ -199,7 +192,6 @@ def build_audit_report_row(
         else None,
         employer_zip=employer_address.zip_code if employer_address else None,
         employer_is_address_verified=employer_is_address_verified,
->>>>>>> origin
         payment_preference=get_payment_preference(payment),
         scheduled_payment_date=payment.payment_date.isoformat() if payment.payment_date else None,
         payment_period_start_date=payment_period_start_date,

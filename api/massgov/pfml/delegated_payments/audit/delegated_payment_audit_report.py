@@ -458,16 +458,7 @@ class PaymentAuditReportStep(Step):
                 previously_paid_payments_string=self.format_previously_paid_payments(
                     previously_paid_payments
                 ),
-<<<<<<< HEAD
-                gross_payment_amount=str(
-                    net_payment_amount
-                    + federal_withholding_amount
-                    + state_withholding_amount
-                    + employer_reimbursement_amount
-                ),
-=======
                 gross_payment_amount=str(gross_payment_amount if gross_payment_amount > 0 else ""),
->>>>>>> origin
                 net_payment_amount=str(net_payment_amount if net_payment_amount > 0 else ""),
                 federal_withholding_amount=str(
                     federal_withholding_amount if federal_withholding_amount > 0 else ""

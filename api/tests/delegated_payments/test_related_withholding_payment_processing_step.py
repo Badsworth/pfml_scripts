@@ -501,8 +501,6 @@ def test_sync_primary_to_related_payments(
         payment_date=datetime.date(2021, 3, 25),
     ).get_or_create_payment_with_state(State.PAYMENT_FAILED_ADDRESS_VALIDATION)
 
-<<<<<<< HEAD
-=======
     DelegatedPaymentFactory(
         test_db_session,
         claim=claim,
@@ -514,7 +512,6 @@ def test_sync_primary_to_related_payments(
         payment_date=datetime.date(2021, 3, 25),
     ).get_or_create_payment_with_state(State.EMPLOYER_REIMBURSEMENT_READY_FOR_PROCESSING)
 
->>>>>>> origin
     test_db_session.commit()
 
     # Get the counts before running
@@ -527,24 +524,17 @@ def test_sync_primary_to_related_payments(
     )
 
     assert state_log_counts[State.PAYMENT_FAILED_ADDRESS_VALIDATION.state_description] == 1
-<<<<<<< HEAD
-=======
 
     assert (
         state_log_counts[State.EMPLOYER_REIMBURSEMENT_READY_FOR_PROCESSING.state_description] == 1
     )
 
->>>>>>> origin
     # Run the step
     related_withholding_payment_step.run()
 
     # Get the counts after running
     state_log_counts = state_log_util.get_state_counts(test_db_session)
-<<<<<<< HEAD
-    assert state_log_counts[State.DELEGATED_PAYMENT_CASCADED_ERROR.state_description] == 1
-=======
 
     assert state_log_counts[State.DELEGATED_PAYMENT_CASCADED_ERROR.state_description] == 2
->>>>>>> origin
 
     assert state_log_counts[State.PAYMENT_FAILED_ADDRESS_VALIDATION.state_description] == 1

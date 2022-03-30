@@ -15,11 +15,8 @@ import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import CREATE, EDIT, READ, ensure
 from massgov.pfml.api.claims import get_claim_from_db
-<<<<<<< HEAD
-=======
 from massgov.pfml.api.exceptions import ClaimWithdrawn
 from massgov.pfml.api.models.applications.common import DocumentResponse
->>>>>>> origin
 from massgov.pfml.api.models.applications.requests import (
     ApplicationImportRequestBody,
     ApplicationRequestBody,
@@ -29,11 +26,7 @@ from massgov.pfml.api.models.applications.requests import (
 )
 from massgov.pfml.api.models.applications.responses import ApplicationResponse
 from massgov.pfml.api.models.common import OrderDirection
-<<<<<<< HEAD
-from massgov.pfml.api.services.applications import get_document_by_id
-=======
 from massgov.pfml.api.services.applications import get_application_split, get_document_by_id
->>>>>>> origin
 from massgov.pfml.api.services.document_upload import upload_document_to_fineos
 from massgov.pfml.api.services.fineos_actions import (
     complete_intake,
@@ -556,16 +549,12 @@ def document_upload(application_id, body, file):
     # Parse the document details from the form body
     document_details: DocumentRequestBody = DocumentRequestBody.parse_obj(body)
 
-<<<<<<< HEAD
-    return upload_document_to_fineos(application, document_details, file)
-=======
     try:
         response = upload_document_to_fineos(application, document_details, file)
     except ClaimWithdrawn as err:
         return err.to_api_response()
 
     return response
->>>>>>> origin
 
 
 def documents_get(application_id):

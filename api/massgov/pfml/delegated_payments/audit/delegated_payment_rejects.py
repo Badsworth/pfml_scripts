@@ -194,9 +194,6 @@ class PaymentRejectsStep(Step):
                     state=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.state),
                     zip=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.zip),
                     is_address_verified=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.is_address_verified),
-<<<<<<< HEAD
-                    employer_name=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.employer_name),
-=======
                     employer_id=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.employer_id),
                     employer_payee_name=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.employer_payee_name),
                     employer_address_line_1=get_row(
@@ -211,7 +208,6 @@ class PaymentRejectsStep(Step):
                     employer_is_address_verified=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.employer_is_address_verified
                     ),
->>>>>>> origin
                     payment_preference=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.payment_preference),
                     scheduled_payment_date=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.scheduled_payment_date
