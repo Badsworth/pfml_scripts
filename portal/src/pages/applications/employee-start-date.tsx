@@ -15,9 +15,7 @@ export const fields = ["claim.additional_user_not_found_info.date_of_hire"];
 /**
  * A form page to collect employee start date.
  */
-export const AdditionalUserNotFoundInfoStartDate = (
-  props: WithBenefitsApplicationProps
-) => {
+export const DateOfHire = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -41,7 +39,9 @@ export const AdditionalUserNotFoundInfoStartDate = (
         {...getFunctionalInputProps(
           "additional_user_not_found_info.date_of_hire"
         )}
-        label={t("pages.noEmployeeEmployerMatchFlow.employeeStartDateLabel")}
+        label={t(
+          "pages.claimsAdditionalUserNotFoundInfo.employeeStartDateLabel"
+        )}
         example={t("components.form.dateInputExample")}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
@@ -51,4 +51,4 @@ export const AdditionalUserNotFoundInfoStartDate = (
   );
 };
 
-export default withBenefitsApplication(AdditionalUserNotFoundInfoStartDate);
+export default withBenefitsApplication(DateOfHire);

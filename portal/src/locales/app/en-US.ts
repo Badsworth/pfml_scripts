@@ -1134,6 +1134,20 @@ const pages: {
     title: "Verify your email address",
     usernameLabel: "$t(shared.usernameLabel)",
   },
+  claimsAdditionalUserNotFoundInfo: {
+    beginAdditionalUserNotFoundInfoButton: "Save and continue",
+    beginAdditionalUserNotFoundInfoDescription:
+      "We need to collect additional information to process your application.",
+    beginAdditionalUserNotFoundInfoTitle:
+      "We still couldn't match you with the employer you entered.",
+    employeeStartDateLabel: "What was your start date at this employer?",
+    noEmployeeEmployerMatchDescription:
+      "This could happen if your Social Security Number or the employer's Employer Identification Number is entered incorrectly. Check and re-enter your Social Security Number and employer's Employer Identification Number. ",
+    noEmployeeEmployerMatchFeinLabel: "Employer Identification Number (EIN)",
+    noEmployeeEmployerMatchSsnLabel: "Social Security Number",
+    noEmployeeEmployerMatchTitle:
+      "We couldn't match you with the employer you entered.",
+  },
   claimsAddress: {
     choiceNo: "No, I would like to add a mailing address",
     choiceYes: "$t(shared.choiceYes)",
@@ -2702,20 +2716,6 @@ const pages: {
       "Create or Log in to your account for Massachusetts Paid Family and Medical Leave",
     title:
       "People who work in Massachusetts can now apply for Paid Family and Medical Leave. Learn more about this <mass-paid-leave-link>new paid leave program</mass-paid-leave-link>.",
-  },
-  noEmployeeEmployerMatchFlow: {
-    additionalUserNotFoundInfoFeinLabel: "Employer Identification Number (EIN)",
-    additionalUserNotFoundInfoSsnLabel: "Social Security Number",
-    beginAdditionalUserNotFoundInfoButton: "Save and continue",
-    beginAdditionalUserNotFoundInfoDescription:
-      "We need to collect additional information to process your application.",
-    beginAdditionalUserNotFoundInfoTitle:
-      "We still couldn't match you with the employer you entered.",
-    employeeStartDateLabel: "What was your start date at this employer?",
-    noEmployeeEmployerMatchDescription:
-      "This could happen if your Social Security Number or the employer's Employer Identification Number is entered incorrectly. Check and re-enter your Social Security Number and employer's Employer Identification Number. ",
-    noEmployeeEmployerMatchTitle:
-      "We couldn't match you with the employer you entered.",
   },
   payments: {
     backButtonLabel: "$t(shared.backToYourApplicationsLink)",

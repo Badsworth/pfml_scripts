@@ -45,17 +45,19 @@ export const AdditionalUserNotFoundInfoSsnFien = (
         <FormLabel
           component="legend"
           hint={t(
-            "pages.noEmployeeEmployerMatchFlow.noEmployeeEmployerMatchDescription"
+            "pages.claimsAdditionalUserNotFoundInfo.noEmployeeEmployerMatchDescription"
           )}
         >
-          {t("pages.noEmployeeEmployerMatchFlow.noEmployeeEmployerMatchTitle")}
+          {t(
+            "pages.claimsAdditionalUserNotFoundInfo.noEmployeeEmployerMatchTitle"
+          )}
         </FormLabel>
         <InputText
           {...getFunctionalInputProps("tax_identifier")}
           mask="ssn"
           pii
           label={t(
-            "pages.noEmployeeEmployerMatchFlow.noEmployeeEmployerMatchSsnLabel"
+            "pages.claimsAdditionalUserNotFoundInfo.noEmployeeEmployerMatchSsnLabel"
           )}
           hint=""
           smallLabel={true}
@@ -64,7 +66,7 @@ export const AdditionalUserNotFoundInfoSsnFien = (
           {...getFunctionalInputProps("employer_fein")}
           inputMode="numeric"
           label={t(
-            "pages.noEmployeeEmployerMatchFlow.noEmployeeEmployerMatchFeinLabel"
+            "pages.claimsAdditionalUserNotFoundInfo.noEmployeeEmployerMatchFeinLabel"
           )}
           mask="fein"
           hint=""
