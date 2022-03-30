@@ -35,6 +35,7 @@ def handle_mfa_enabled(cognito_auth_token: str) -> None:
 def handle_mfa_disabled(
     user: User,
     last_enabled_at: Optional[datetime],
+    # todo (PORTAL-1828): Remove X-FF-Sync-Cognito-Preferences feature flag header
     save_to_cognito: bool,
     cognito_auth_token: str,
 ) -> None:

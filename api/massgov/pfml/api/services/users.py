@@ -25,6 +25,7 @@ def update_user(
     db_session: db.Session,
     user: User,
     update_request: UserUpdateRequest,
+    # todo (PORTAL-1828): Remove X-FF-Sync-Cognito-Preferences feature flag header
     save_mfa_preference_to_cognito: bool,
     cognito_auth_token: str,
 ) -> User:
@@ -81,7 +82,7 @@ def _update_mfa_preference(
         "mfa_preference": value,
         "save_mfa_preference_to_cognito": save_mfa_preference_to_cognito,
     }
-    logger.info("MFA updated for user", extra=log_attributes)
+    logger.info("MFA preference updated for user in DB", extra=log_attributes)
 
     if value == "Opt Out" and existing_mfa_preference is not None:
         handle_mfa_disabled(

@@ -1,8 +1,6 @@
 from datetime import datetime
 from unittest import mock
 
-import pytest
-
 from massgov.pfml.api.models.common import Phone
 from massgov.pfml.api.models.users.requests import UserUpdateRequest
 from massgov.pfml.api.services.users import admin_disable_mfa, update_user
@@ -127,7 +125,7 @@ class TestUpdateUser:
         update_user(test_db_session, user, update_request, False, auth_token)
 
         self.mock_logger.info.assert_any_call(
-            "MFA updated for user",
+            "MFA preference updated for user in DB",
             extra={"mfa_preference": "SMS", "save_mfa_preference_to_cognito": False},
         )
 
