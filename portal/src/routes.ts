@@ -60,6 +60,7 @@ const routes = {
     previousLeavesSameReasonDetails:
       "/applications/previous-leaves-same-reason-details",
     reasonPregnancy: "/applications/reason-pregnancy",
+    recentlyAcquiredOrMerged: "/applications/recently-acquired-or-merged",
     reducedLeaveSchedule: "/applications/reduced-leave-schedule",
     review: "/applications/review",
     scheduleFixed: "/applications/schedule-fixed",

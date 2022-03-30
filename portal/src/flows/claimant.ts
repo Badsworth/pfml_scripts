@@ -686,7 +686,17 @@ const claimantFlow: {
       on: {
         CONTINUE: [
           {
-            target: routes.applications.employeeStartDate,
+            target: routes.applications.recentlyAcquiredOrMerged,
+          },
+        ],
+      },
+    },
+    [routes.applications.recentlyAcquiredOrMerged]: {
+      meta: {},
+      on: {
+        CONTINUE: [
+          {
+            target: routes.applications.taxWithholding,
           },
         ],
       },

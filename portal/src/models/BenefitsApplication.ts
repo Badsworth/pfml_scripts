@@ -80,6 +80,11 @@ class BenefitsApplication extends BaseBenefitsApplication {
     reason_qualifier: ReasonQualifierEnum | null;
   };
 
+  additional_user_not_found_info: {
+    date_of_hire: string | null;
+    recently_acquired_or_merged: boolean | null;
+  };
+
   phone: {
     int_code: string | null;
     phone_number: string | null;
