@@ -12,10 +12,6 @@ from tests.conftest import get_mock_logger
 class TestUpdateUser:
     mock_logger = get_mock_logger()
 
-    @pytest.fixture
-    def auth_token(self):
-        return "user cognito auth token"
-
     def test_set_consented_to_share(self, user, test_db_session, auth_token):
         update_request = UserUpdateRequest(consented_to_data_sharing=True)
         update_user(test_db_session, user, update_request, False, auth_token)

@@ -8,11 +8,6 @@ from tests.conftest import get_mock_logger
 
 
 @pytest.fixture
-def auth_token():
-    return "user cognito auth token"
-
-
-@pytest.fixture
 def last_enabled_at():
     return datetime(2022, 1, 2, 0, 0, 0, tzinfo=timezone.utc)
 
@@ -113,7 +108,7 @@ class TestHandleMfaDisabled:
     @mock.patch("massgov.pfml.mfa.cognito.disable_user_mfa")
     @mock.patch("massgov.pfml.mfa.send_templated_email")
     @mock.patch("massgov.pfml.mfa.logger", mock_logger)
-    def test_does_not_send_email_or_sync_to_cognito_when_aws_integration_is_disabled(
+    def test_does_not_send_email_when_aws_integration_is_disabled(
         self, mock_send_email, mock_disable_user_mfa, user, last_enabled_at, auth_token, monkeypatch
     ):
         monkeypatch.setenv("DISABLE_SENDING_EMAILS", "1")
@@ -121,7 +116,6 @@ class TestHandleMfaDisabled:
         mfa_actions.handle_mfa_disabled(user, last_enabled_at, True, auth_token)
 
         mock_send_email.assert_not_called()
-        mock_disable_user_mfa.assert_not_called()
         self.mock_logger.info.assert_any_call(
             "Skipping updating Cognito or sending an MFA disabled notification email",
             extra={
@@ -134,7 +128,7 @@ class TestHandleMfaDisabled:
 
     @mock.patch("massgov.pfml.mfa.cognito.disable_user_mfa")
     @mock.patch("massgov.pfml.mfa.send_templated_email")
-    def test_sends_email_and_syncs_to_cognito_when_aws_integration_is_enabled(
+    def test_sends_email_when_aws_integration_is_enabled(
         self, mock_send_email, mock_disable_user_mfa, user, auth_token, last_enabled_at, monkeypatch
     ):
         monkeypatch.setenv("DISABLE_SENDING_EMAILS", "0")
@@ -152,7 +146,7 @@ class TestHandleMfaDisabled:
 
     @mock.patch("massgov.pfml.mfa.cognito.disable_user_mfa")
     @mock.patch("massgov.pfml.mfa.send_templated_email")
-    def test_sends_email_and_syncs_to_cognito_when_environment_is_not_local(
+    def test_sends_email_when_environment_is_not_local(
         self, mock_send_email, mock_disable_user_mfa, user, auth_token, last_enabled_at, monkeypatch
     ):
         monkeypatch.setenv("ENVIRONMENT", "prod")

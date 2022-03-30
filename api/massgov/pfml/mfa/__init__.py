@@ -51,16 +51,15 @@ def handle_mfa_disabled(
     logger.info("MFA disabled for user", extra=log_attributes)
 
     try:
-        # todo: rename the disable_sending_emails flag to something more generic
+        if save_to_cognito:
+            cognito.disable_user_mfa(cognito_auth_token)
+
         if app.get_config().environment == "local" and app.get_config().disable_sending_emails:
             logger.info(
                 "Skipping updating Cognito or sending an MFA disabled notification email",
                 extra=log_attributes,
             )
         else:
-            if save_to_cognito:
-                cognito.disable_user_mfa(cognito_auth_token)
-
             _send_mfa_disabled_email(user.email_address, user.mfa_phone_number_last_four())
     except Exception as error:
         logger.error("Error disabling user MFA", exc_info=error)
