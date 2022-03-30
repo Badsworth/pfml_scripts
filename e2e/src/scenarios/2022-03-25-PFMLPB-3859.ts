@@ -1,7 +1,7 @@
 import { ScenarioSpecification } from "../generation/Scenario";
 import { parseISO } from "date-fns";
 
-const error_tolerance_claim_amount =  2;
+const error_tolerance_claim_amount = 2;
 
 export const PORTAL_PREGNANCY_POSTNATAL_DISABLIITY_CONTINUOUS: ScenarioSpecification =
   {
