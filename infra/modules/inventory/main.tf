@@ -30,7 +30,7 @@ resource "aws_dynamodb_table" "inventory" {
     type = "S"
   }
 
-  tags = merge({ "Name" = "${local.prefix}${each.key}" }, module.constants.common_tags)
+  tags = merge({ "Name": "${local.prefix}${each.key}" }, module.constants.common_tags)
 }
 
 resource "aws_lambda_function" "audit" {
@@ -50,7 +50,7 @@ resource "aws_lambda_function" "audit" {
     }
   }
 
-  tags = merge({ "Name" = "massgov_pfml_audit_${each.key}" }, module.constants.common_tags)
+  tags = merge({ "Name": "${local.prefix}${each.key}" }, module.constants.common_tags)
 }
 
 resource "aws_cloudwatch_event_rule" "audit" {
@@ -69,7 +69,7 @@ resource "aws_cloudwatch_event_target" "audit" {
 
 resource "aws_lambda_permission" "audit" {
   for_each      = local.auditors
-  statement_id  = "Invoke${local.prefix}${each.key}"
+  statement_id  = "invoke_${local.prefix}${each.key}"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.audit[each.key].function_name
   principal     = "events.amazonaws.com"
