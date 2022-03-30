@@ -10,6 +10,7 @@ from massgov.pfml.api.services.fineos_actions import (
     build_caring_leave_reflexive_question,
     build_contact_details,
     build_customer_model,
+    create_other_leaves_and_other_incomes_eforms,
     get_customer_occupation,
     register_employee,
     update_occupation_details,
@@ -289,3 +290,5 @@ def submit_applications(
                 fineos_web_id, str(application.claim.fineos_notification_id)
             )
             application.submitted_time = datetime_util.utcnow()
+            # Send previous leaves, employer benefits, and other incomes as eforms to FINEOS
+            create_other_leaves_and_other_incomes_eforms(application, db_session)
