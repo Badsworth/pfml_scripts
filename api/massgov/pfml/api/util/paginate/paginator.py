@@ -1,6 +1,5 @@
 import math
-from dataclasses import asdict, dataclass
-from typing import Any, Dict, List, Union
+from typing import Any, List, Union
 
 import flask
 from sqlalchemy import func
@@ -12,19 +11,6 @@ from massgov.pfml.db.models.base import Base
 
 DEFAULT_PAGE_OFFSET = 1
 DEFAULT_PAGE_SIZE = 25
-
-
-@dataclass
-class PagingMetaData:
-    total_records: int
-    total_pages: int
-    page_offset: int
-    page_size: int
-    order_by: str
-    order_direction: str
-
-    def to_dict(self) -> Dict[str, Union[int, str]]:
-        return asdict(self)
 
 
 class PaginationAPIContext:
@@ -148,17 +134,4 @@ def make_pagination_params(request: Union[flask.Request, SearchEnvelope]) -> Sea
 
     return SearchEnvelope[None](  # type: ignore
         terms=None, order=OrderData(**order_data), paging=PagingData(**page_data)  # type: ignore
-    )
-
-
-def make_paging_meta_data_from_paginator(
-    context: PaginationAPIContext, page: Page
-) -> PagingMetaData:
-    return PagingMetaData(
-        total_records=page.total_records,
-        total_pages=page.total_pages,
-        page_offset=context.page_offset,
-        page_size=context.page_size,
-        order_by=context.order_by,
-        order_direction=context.order_direction,
     )
