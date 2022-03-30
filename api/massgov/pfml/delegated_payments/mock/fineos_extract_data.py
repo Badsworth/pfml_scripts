@@ -637,6 +637,8 @@ def generate_payment_extract_files(
         if scenario_descriptor.invalid_address and (not fix_address):
             mock_address = INVALID_ADDRESS
 
+        # if scenario_descriptor.is_employer_reimbursement_record_with_zero_payment:
+
         # We have one payment record as withholding
         if scenario_descriptor.is_tax_withholding_record_without_primary_payment:
             event_reason = "Automatic Alternate Payment"

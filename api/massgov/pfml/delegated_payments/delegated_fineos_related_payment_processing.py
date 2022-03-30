@@ -183,6 +183,21 @@ class RelatedPaymentsProcessingStep(Step):
             return
         for payment in related_payments:
 
+            primary_transaction_types = (
+                [
+                    PaymentTransactionType.STANDARD.payment_transaction_type_id,
+                    PaymentTransactionType.ZERO_DOLLAR.payment_transaction_type_id,
+                ]
+                if payment.payment_transaction_type_id
+                == PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+                else [
+                    PaymentTransactionType.STANDARD.payment_transaction_type_id,
+                ]
+            )
+
+            logger.info("related payment %s",payment)
+            logger.info("primary_transaction_types %s",primary_transaction_types)
+
             if payment.claim is None:
                 raise Exception("Claim not found for related payment id: %s ", payment.payment_id)
 
@@ -195,16 +210,20 @@ class RelatedPaymentsProcessingStep(Step):
                 #     Payment.payment_transaction_type_id
                 #     == PaymentTransactionType.STANDARD.payment_transaction_type_id
                 # )
-                .filter(
-                    Payment.payment_transaction_type_id.in_(
-                        PaymentTransactionType.STANDARD.payment_transaction_type_id,PaymentTransactionType.ZERO_DOLLAR.payment_transaction_type_id
-                    )
-                )
+                # .filter(
+                #     Payment.payment_transaction_type_id.in_(
+                #         PaymentTransactionType.STANDARD.payment_transaction_type_id,PaymentTransactionType.ZERO_DOLLAR.payment_transaction_type_id
+                #     )
+                # )
+                .filter(Payment.payment_transaction_type_id.in_(primary_transaction_types))
                 .filter(
                     Payment.fineos_extract_import_log_id == payment.fineos_extract_import_log_id
                 )
                 .all()
             )
+
+            logger.info("primary_payment_records %s", primary_payment_records)
+
             transaction_type_id = (
                 payment.payment_transaction_type_id
                 if payment.payment_transaction_type_id is not None

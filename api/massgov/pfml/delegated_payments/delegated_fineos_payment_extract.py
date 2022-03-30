@@ -1,4 +1,5 @@
 import enum
+import decimal
 import uuid
 from datetime import datetime
 from decimal import Decimal
@@ -1404,8 +1405,11 @@ class PaymentExtractStep(Step):
             payment.payment_transaction_type_id
             == PaymentTransactionType.ZERO_DOLLAR.payment_transaction_type_id
         ):
-            if(payment.disb_amount > payment.amount):
+            payment.business_net_amount
+            payment.disb_amount = decimal.Decimal(300.00)
+            if payment.disb_amount is not None and payment.disb_amount > payment.amount:
                 end_state = State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
+                logger.info("PaymentTransactionType.ZERO_DOLLAR end state DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING")
                 message = "Zero dollar payment processed"
             else:
                 end_state = State.DELEGATED_PAYMENT_PROCESSED_ZERO_PAYMENT

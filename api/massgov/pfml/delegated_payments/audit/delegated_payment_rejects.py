@@ -81,6 +81,7 @@ REJECTED_STATES: Dict[int, LkState] = {
     PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id: State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
     PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id: State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
     PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id: State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
+    PaymentTransactionType.ZERO_DOLLAR.payment_transaction_type_id: State.DELEGATED_PAYMENT_PROCESSED_ZERO_PAYMENT,
 }
 
 # End States when a payment is skipped
@@ -89,6 +90,7 @@ SKIPPED_STATES: Dict[int, LkState] = {
     PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id: State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
     PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id: State.STATE_WITHHOLDING_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
     PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id: State.FEDERAL_WITHHOLDING_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
+    PaymentTransactionType.ZERO_DOLLAR.payment_transaction_type_id: State.DELEGATED_PAYMENT_PROCESSED_ZERO_PAYMENT,
 }
 
 # End States when a payment is to be paid
@@ -97,6 +99,7 @@ PAY_STATES: Dict[int, LkState] = {
     PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id: ACCEPTED_STATE,
     PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id: State.STATE_WITHHOLDING_SEND_FUNDS,
     PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id: State.FEDERAL_WITHHOLDING_SEND_FUNDS,
+    PaymentTransactionType.ZERO_DOLLAR.payment_transaction_type_id: State.DELEGATED_PAYMENT_PROCESSED_ZERO_PAYMENT,
 }
 
 # End States for related payments when a payment is rejected
@@ -332,6 +335,7 @@ class PaymentRejectsStep(Step):
 
         if is_rejected_payment:
             self.increment(self.Metrics.REJECTED_PAYMENT_COUNT)
+            #BM set new end state to skip zero dollar DELEGATED_PAYMENT_PROCESSED_ZERO_PAYMENT
             end_state = REJECTED_STATES[payments_util.get_payment_transaction_type_id(payment)]
             logger.info(
                 "Payment rejected in audit report",
@@ -348,6 +352,7 @@ class PaymentRejectsStep(Step):
 
         elif is_skipped_payment:
             self.increment(self.Metrics.SKIPPED_PAYMENT_COUNT)
+            #BM set new end state to skip zero dollar DELEGATED_PAYMENT_PROCESSED_ZERO_PAYMENT
             end_state = SKIPPED_STATES[payments_util.get_payment_transaction_type_id(payment)]
             logger.info(
                 "Payment skipped in audit report",
@@ -362,6 +367,7 @@ class PaymentRejectsStep(Step):
 
         else:
             self.increment(self.Metrics.ACCEPTED_PAYMENT_COUNT)
+            #BM set new end state to skip zero dollar DELEGATED_PAYMENT_PROCESSED_ZERO_PAYMENT
             end_state = PAY_STATES[payments_util.get_payment_transaction_type_id(payment)]
             state_log_util.create_finished_state_log(
                 payment, end_state, ACCEPTED_OUTCOME, self.db_session
