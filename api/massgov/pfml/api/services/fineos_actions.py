@@ -485,16 +485,15 @@ def build_contact_details(
             # with the phone number they entered. Although you can add multiple phone
             # numbers in the Fineos UI, the Fineos API was preventing multiple phones
             # with the same phoneNumberType.
-            if application.phone.fineos_phone_id:
-                contact_details.phoneNumbers = [
-                    massgov.pfml.fineos.models.customer_api.PhoneNumber(
-                        areaCode=area_code,
-                        id=application.phone.fineos_phone_id,
-                        intCode=str(int_code),
-                        telephoneNo=telephone_no,
-                        phoneNumberType=phone_number_type,
-                    )
-                ]
+            contact_details.phoneNumbers = [
+                massgov.pfml.fineos.models.customer_api.PhoneNumber(
+                    areaCode=area_code,
+                    id=application.phone.fineos_phone_id,
+                    intCode=str(int_code),
+                    telephoneNo=telephone_no,
+                    phoneNumberType=phone_number_type,
+                )
+            ]
 
     return contact_details
 
