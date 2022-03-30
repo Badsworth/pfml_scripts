@@ -32,6 +32,7 @@ from massgov.pfml.api.services.applications import (
     get_document_by_id,
     split_application_by_date,
 )
+from massgov.pfml.api.services.applications_submit.submit_application import submit_applications
 from massgov.pfml.api.services.document_upload import upload_document_to_fineos
 from massgov.pfml.api.services.fineos_actions import (
     complete_intake,
@@ -395,60 +396,6 @@ def get_fineos_submit_issues_response(err, existing_application):
         raise err
 
 
-# TODO: move to service layer
-def submit_application_to_fineos(
-    application: Application, db_session: db.Session, current_user: User
-) -> None:
-    log_attributes = get_application_log_attributes(application)
-    # Only send to fineos if fineos_absence_id isn't set on the claim. If it is set,
-    # assume that just complete_intake needs to be reattempted.
-    if not application.claim:
-        try:
-            send_to_fineos(application, db_session, current_user)
-        # TODO (CP-2350): improve handling of FINEOS validation rules
-        except ValidationError as e:
-            logger.warning(
-                "applications_submit failure - application failed FINEOS validation",
-                extra=log_attributes,
-            )
-            raise e
-
-        except Exception as e:
-            logger.warning(
-                "applications_submit failure - failure sending application to claims processing system",
-                extra=log_attributes,
-                exc_info=True,
-            )
-
-            raise e
-
-        logger.info(
-            "applications_submit - application sent to claims processing system",
-            extra=log_attributes,
-        )
-
-    try:
-        complete_intake(application, db_session)
-        application.submitted_time = datetime_util.utcnow()
-        # Update log attributes now that submitted_time is set
-        log_attributes = get_application_log_attributes(application)
-        db_session.add(application)
-        logger.info(
-            "applications_submit - application complete intake success", extra=log_attributes
-        )
-    except Exception as e:
-        logger.warning(
-            "applications_submit failure - application complete intake failure",
-            extra=log_attributes,
-            exc_info=True,
-        )
-
-        raise e
-
-    # Send previous leaves, employer benefits, and other incomes as eforms to FINEOS
-    create_other_leaves_and_other_incomes_eforms(application, db_session)
-
-
 def applications_submit(application_id):
     split_claims_across_by_enabled = (
         connexion.request.headers.get("X-FF-Split-Claims-Across-BY") == "true"
@@ -540,7 +487,7 @@ def applications_submit(application_id):
                 },
             )
             try:
-                submit_application_to_fineos(application_before_split, db_session, current_user)
+                submit_applications(db_session, [application_before_split], current_user)
             except Exception as e:
                 if isinstance(e, FINEOSClientError):
                     return get_fineos_submit_issues_response(e, existing_application)
@@ -566,9 +513,9 @@ def applications_submit(application_id):
                         extra=split_application_log_attributes,
                     )
                 else:
-                    submit_application_to_fineos(
-                        application_after_split,
+                    submit_applications(
                         db_session,
+                        [application_after_split],
                         current_user,
                     )
             except Exception as e:
@@ -577,7 +524,7 @@ def applications_submit(application_id):
                 raise e
         else:
             try:
-                submit_application_to_fineos(existing_application, db_session, current_user)
+                submit_applications(db_session, [existing_application], current_user)
             except Exception as e:
                 if isinstance(e, FINEOSClientError):
                     return get_fineos_submit_issues_response(e, existing_application)

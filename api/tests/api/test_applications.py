@@ -4907,7 +4907,7 @@ def test_application_post_submit_app_already_submitted(client, user, auth_token,
     fineos_user_id = capture[2][1]
     # Capture contains a find_employer call and the complete_intake call
     assert capture == [
-        ("find_employer", None, {"employer_fein": application.employer_fein}),
+        ("read_employer", None, {"employer_fein": application.employer_fein}),
         (
             "register_api_user",
             None,
