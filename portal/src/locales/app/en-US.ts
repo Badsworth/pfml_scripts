@@ -2025,7 +2025,7 @@ const pages: {
     previousLeaveReason_medical: "Medical leave for an illness or injury",
     previousLeaveReason_pregnancy: "Medical leave related to pregnancy",
     previousLeaveReason_serviceMemberFamily:
-      "Famliy leave to care for a family member who serves in the armed forces",
+      "Family leave to care for a family member who serves in the armed forces",
     previousLeaveType_otherReason: "Leave for a different qualifying reason",
     previousLeaveType_sameReason: "Leave for the same qualifying reason",
     previousLeaveWorkedPerWeekMinutes: "$t(shared.displayTime)",
@@ -2491,10 +2491,12 @@ const pages: {
   employersClaimsSuccess: {
     applicationIdLabel: "<strong>Application ID:</strong> {{absenceId}}",
     backToDashboardLabel: "Back to Dashboard",
+    employeeNameLabel: "<strong>Employee name:</strong> {{employeeName}}",
     instructions_processingApplication:
       "We’ll begin processing this application and your employee should hear from us within 14 calendar days. Once we’ve made a decision, you’ll receive an email with a direct link to details about the decision.",
     instructions_reimbursement:
       "If your organization has a paid disability, family, or medical leave policy for employees, you may qualify for <reimbursements-link>reimbursements for payments made during this leave</reimbursements-link>.",
+    reviewedOnLabel: "<strong>Reviewed on:</strong>  {{date}}",
     title: "Thanks for reviewing the application",
   },
   employersDashboard: {

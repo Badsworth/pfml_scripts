@@ -160,7 +160,6 @@ def update_change_request(change_request_id: str) -> flask.Response:
     ).to_api_response()
 
 
-# TODO (PORTAL-1997): add tests for this method
 def upload_document_for_change_request(change_request_id, body, file):
     with app.db_session() as db_session:
         change_request = get_or_404(db_session, change_request_db_model, change_request_id)
