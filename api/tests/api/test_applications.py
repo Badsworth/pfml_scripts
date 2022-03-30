@@ -553,8 +553,7 @@ class TestApplicationsImport:
             json=valid_request_body,
         )
         response_body = response.get_json()
-        assert response.status_code == 403
-        assert response_body["message"] == "An application already exists for this claim."
+        assert response.status_code == 400
         assert response_body["errors"][0]["type"] == "duplicate"
         assert response_body["errors"][0]["field"] == "absence_case_id"
 
@@ -600,11 +599,7 @@ class TestApplicationsImport:
             json=valid_request_body,
         )
         response_body = response.get_json()
-        assert response.status_code == 403
-        assert (
-            response_body["message"]
-            == "An application linked to a different account already exists for this claim."
-        )
+        assert response.status_code == 400
         assert response_body["errors"][0]["type"] == "exists"
         assert response_body["errors"][0]["field"] == "absence_case_id"
 
