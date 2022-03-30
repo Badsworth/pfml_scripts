@@ -2054,7 +2054,10 @@ def get_application_split(
     If a leave period spans a benefit year, the application needs to be broken up into
     separate ones that will each get submitted.
     """
-    if application.split_from_application_id is not None:
+    if (
+        application.split_from_application_id is not None
+        or application.split_into_application_id is not None
+    ):
         return None
 
     latest_end_date = get_latest_end_date(application)
