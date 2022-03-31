@@ -8,7 +8,6 @@ on:
   pull_request:
     paths:
       - infra/**
-      - infra/tooling/**
       - .github/workflows/infra-validate.yml
   # triggered for testing
 env:
@@ -50,6 +49,7 @@ jobs:
         - component: "constants"
         - component: "pfml-aws"
         - component: "monitoring"
+        - component: "tooling"
 
 
     steps:
