@@ -157,6 +157,7 @@ pub-payments-process-1099-documents = "massgov.pfml.delegated_payments.task.proc
 pub-claimant-address-validation = "massgov.pfml.delegated_payments.task.process_claimant_address_validation:main"
 sftp-tool = "massgov.pfml.sftp.utility:main"
 backfill-benefit-years = "massgov.pfml.api.eligibility.task.backfill_benefit_years:main"
+fineos-example = "massgov.pfml.fineos.example:main"
 
 [tool.black]
 line-length = 100

@@ -50,66 +50,24 @@ def main():
     # healthy = cps.health_check("hackathon_91")
     # logger.info("healthy %s", healthy)
 
-    employer_fein = "179892886"
 
-    employer_id = cps.find_employer(employer_fein)
-    logger.info("Employer ID is {}".format(employer_id))
+    user_id = 'pfml_api_2ab897cd-d401-48ab-a95c-a44fa1dc57d7'
+    absence_id = 'NTN-216201-ABS-01'
+    paid_leave_id = 'PL ABS-216212'
 
-    user_id = "pfml_api_{}".format(str(uuid.uuid4()))
-    logger.info("FINEOS Web ID to register is {}".format(user_id))
+    x = cps.get_absence(user_id, absence_id)
+    print(x)
 
-    employee_registration = massgov.pfml.fineos.models.EmployeeRegistration(
-        user_id=user_id,
-        customer_number=None,
-        date_of_birth=datetime.date(1753, 1, 1),
-        email=None,
-        employer_id=employer_id,
-        first_name=None,
-        last_name=None,
-        national_insurance_no="784569632",
-    )
-    cps.register_api_user(employee_registration)
+    print()
+    print()
+    print()
+    print()
 
-    details = cps.read_customer_details(user_id)
-    logger.info("details %s %s", details.firstName, details.lastName)
+    cps.get_payments(user_id, paid_leave_id)
 
-    absence_case = massgov.pfml.fineos.models.customer_api.AbsenceCase(
-        additionalComments="Test " + str(datetime.datetime.now()),
-        intakeSource="Self-Service",
-        notifiedBy="Employee",
-        reason="Child Bonding",
-        reasonQualifier1="Foster Care",
-        reasonQualifier2="",
-        notificationReason="Bonding with a new child (adoption/ foster care/ newborn)",
-        timeOffLeavePeriods=[
-            massgov.pfml.fineos.models.customer_api.TimeOffLeavePeriod(
-                startDate=datetime.date(2020, 8, 2),
-                endDate=datetime.date(2020, 10, 2),
-                lastDayWorked=datetime.date(2020, 7, 30),
-                expectedReturnToWorkDate=datetime.date(2020, 10, 24),
-                startDateFullDay=True,
-                endDateFullDay=True,
-                status="Known",
-            )
-        ],
-    )
-    new_case = cps.start_absence(user_id, absence_case)
-    cps.complete_intake(user_id, str(new_case.notificationCaseId))
-
-    absences = cps.get_absences(user_id)
-    for absence in absences:
-        logger.info("absence %s %s %s", absence.absenceId, absence.reason, absence.startDate)
-
-    payment_preference = massgov.pfml.fineos.models.customer_api.NewPaymentPreference(
-        description="Print Check",
-        paymentMethod="Check",
-        effectiveFrom=datetime.date(2020, 7, 16),
-        isDefault=True,
-        chequeDetails=massgov.pfml.fineos.models.customer_api.ChequeDetails(
-            nameToPrintOnCheck="Michelle Jones2"
-        ),
-    )
-    cps.add_payment_preference(user_id, payment_preference)
-
+    print()
+    print()
+    print()
+    print()
 
 main()

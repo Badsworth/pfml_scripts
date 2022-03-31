@@ -567,6 +567,13 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
         return models.customer_api.AbsenceDetails.parse_obj(json)
 
+    def get_payments(self, user_id: str, claim_id: str) -> None:
+
+        encoded_claim_id = urllib.parse.quote(claim_id)
+        response = self._customer_api("GET", f"customer/claims/{encoded_claim_id}/payments", user_id, "get_payments")
+        json = response.json()
+        print(json)
+
     def get_absence_period_decisions(
         self, user_id: str, absence_id: str
     ) -> models.group_client_api.PeriodDecisions:
