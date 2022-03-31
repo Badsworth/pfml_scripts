@@ -11,7 +11,7 @@ output "common_tags" {
 }
 
 output "prefix" {
-  value = "massgov-pfml"
+  value = "massgov_pfml_"
 }
 
 # The ARN for the lambda function which forwards logs from Cloudwatch to New Relic.
