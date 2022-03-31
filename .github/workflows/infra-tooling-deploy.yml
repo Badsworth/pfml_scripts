@@ -1,7 +1,7 @@
 # This workflow automatically deploys changes to the infra/tooling module whenever the main branch is updated
 #
 
-name: Infrastructure Deploy
+name: Infrastructure Tooling Deploy
 
 on:
   push:
