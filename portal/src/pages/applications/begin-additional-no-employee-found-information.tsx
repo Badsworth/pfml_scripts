@@ -26,12 +26,12 @@ export const AdditionalUserNotFoundInfoBegin = (
       <Title small={true}>{t("pages.claimsEmploymentStatus.title")}</Title>
       <Heading level="2" size="1">
         {t(
-          "pages.claimsAdditionalUserNotFoundInfo.beginAdditionalUserNotFoundInfoTitle"
+          "pages.claimsAdditionalUserNotFoundInfo.beginAdditionalNoEmployeeFoundInfoTitle"
         )}
       </Heading>
       <p className="display-block line-height-sans-5 measure-5 usa-intro">
         {t(
-          "pages.claimsAdditionalUserNotFoundInfo.beginAdditionalUserNotFoundInfoDescription"
+          "pages.claimsAdditionalUserNotFoundInfo.beginAdditionalNoEmployeeFoundInfoDescription"
         )}
       </p>
       <ButtonLink
@@ -44,7 +44,7 @@ export const AdditionalUserNotFoundInfoBegin = (
       >
         <div>
           {t(
-            "pages.claimsAdditionalUserNotFoundInfo.beginAdditionalUserNotFoundInfoButton"
+            "pages.claimsAdditionalUserNotFoundInfo.beginAdditionalNoEmployeeFoundInfoButton"
           )}
         </div>
       </ButtonLink>

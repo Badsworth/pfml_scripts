@@ -43,11 +43,11 @@ export const NoEmployeeFound = (props: WithBenefitsApplicationProps) => {
         <FormLabel
           component="legend"
           hint={t(
-            "pages.claimsAdditionalUserNotFoundInfo.noEmployeeEmployerMatchDescription"
+            "pages.claimsAdditionalUserNotFoundInfo.noEmployeeFoundMatchDescription"
           )}
         >
           {t(
-            "pages.claimsAdditionalUserNotFoundInfo.noEmployeeEmployerMatchTitle"
+            "pages.claimsAdditionalUserNotFoundInfo.noEmployeeFoundMatchTitle"
           )}
         </FormLabel>
         <InputText
@@ -55,7 +55,7 @@ export const NoEmployeeFound = (props: WithBenefitsApplicationProps) => {
           mask="ssn"
           pii
           label={t(
-            "pages.claimsAdditionalUserNotFoundInfo.noEmployeeEmployerMatchSsnLabel"
+            "pages.claimsAdditionalUserNotFoundInfo.noEmployeeFoundMatchSsnLabel"
           )}
           hint=""
           smallLabel={true}
@@ -64,7 +64,7 @@ export const NoEmployeeFound = (props: WithBenefitsApplicationProps) => {
           {...getFunctionalInputProps("employer_fein")}
           inputMode="numeric"
           label={t(
-            "pages.claimsAdditionalUserNotFoundInfo.noEmployeeEmployerMatchFeinLabel"
+            "pages.claimsAdditionalUserNotFoundInfo.noEmployeeFoundMatchFeinLabel"
           )}
           mask="fein"
           hint=""

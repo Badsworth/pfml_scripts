@@ -103,11 +103,16 @@ export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.fixed,
   isVariableWorkPattern: ({ claim }) =>
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.variable,
-  includesUserNotFoundError: ({ claim, warnings }) => {
+  includesNoEmployeeFoundError: ({ claim, warnings }) => {
+    return (
+      (warnings || []).some((warning) => warning.rule === "require_employee") &&
+      get(claim, "status") !== "In Review"
+    );
+  },
+  includesNoEmployerFoundError: ({ claim, warnings }) => {
     return (
       (warnings || []).some(
         (warning) =>
-          warning.rule === "require_employee" ||
           warning.type === "require_contributing_employer" ||
           warning.rule === "require_non_exempt_employer"
       ) && get(claim, "status") !== "In Review"
@@ -638,7 +643,11 @@ const claimantFlow: {
         CONTINUE: [
           {
             target: routes.applications.noEmployeeFound,
-            cond: "includesUserNotFoundError",
+            cond: "includesNoEmployeeFoundError",
+          },
+          {
+            target: routes.applications.noEmployerFound,
+            cond: "includesNoEmployerFoundError",
           },
           {
             target: routes.applications.department,
@@ -661,8 +670,8 @@ const claimantFlow: {
         CONTINUE: [
           {
             target:
-              routes.applications.beginAdditionalEmployeeEmployerInformation,
-            cond: "includesUserNotFoundError",
+              routes.applications.beginAdditionalNoEmployeeFoundInformation,
+            cond: "includesNoEmployeeFoundError",
           },
           {
             target: routes.applications.department,
@@ -678,7 +687,41 @@ const claimantFlow: {
         ],
       },
     },
-    [routes.applications.beginAdditionalEmployeeEmployerInformation]: {
+    [routes.applications.noEmployerFound]: {
+      meta: {},
+      on: {
+        // if claimant successfully fixes the issue, continue through normal flow
+        CONTINUE: [
+          {
+            target:
+              routes.applications.beginAdditionalNoEmployerFoundInformation,
+            cond: "includesNoEmployerFoundError",
+          },
+          {
+            target: routes.applications.department,
+            cond: "hasEmployerWithDepartments",
+          },
+          {
+            target: routes.applications.notifiedEmployer,
+            cond: "isEmployed",
+          },
+          {
+            target: routes.applications.checklist,
+          },
+        ],
+      },
+    },
+    [routes.applications.beginAdditionalNoEmployeeFoundInformation]: {
+      meta: {},
+      on: {
+        CONTINUE: [
+          {
+            target: routes.applications.employeeStartDate,
+          },
+        ],
+      },
+    },
+    [routes.applications.beginAdditionalNoEmployerFoundInformation]: {
       meta: {},
       on: {
         CONTINUE: [
@@ -775,7 +818,7 @@ const claimantFlow: {
           // Why would the review page to go UNF?
           {
             target: routes.applications.noEmployeeFound,
-            cond: "includesUserNotFoundError",
+            cond: "includesNoEmployeeFoundError",
           },
           {
             target: routes.applications.checklist,
