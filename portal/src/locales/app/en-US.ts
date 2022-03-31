@@ -1193,6 +1193,8 @@ const pages: {
     completed_uneditable: "Confirmed",
     documentsLoadError: "$t(shared.documentsLoadError)",
     edit: "Edit",
+    leaveDetailsBenefitYears:
+      "Your leave dates extend into a new benefit year. Your current <benefit-year-guide-link>benefit year</benefit-year-guide-link> is {{startDate}} to {{endDate}}. After you submit Part 1 of your application, we'll automatically split this application into two, one for each benefit year.",
     // TODO (CP-2354) Remove CC guidance for claims with Part 1 submitted without reductions data
     otherLeaveSubmittedDetailsBody:
       "<ul><li>You have already taken leave to care for a family member since July 1, 2021</li><li>You have already taken leave since {{otherLeaveStartDate}} <when-can-i-use-pfml>for any other reason that qualifies for PFML</when-can-i-use-pfml></li><li>You plan to use any accrued paid leave or any other benefits from your employer during your paid leave from PFML (for example: your employer’s parental leave program or paid sick time)</li><li>You expect to get income from any other sources during your leave (for example: disability insurance, retirement benefits, or another job)</li></ul>",
