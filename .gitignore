@@ -53,3 +53,6 @@ venv/
 # See linking instruction here: https://github.com/massgov/mayflower/tree/develop/packages/react#testing-unpublished-mayflower-react-components
 **/.yalc/**
 yalc.lock
+
+# claimant.json file for batch mfa disable script
+claimants.json
