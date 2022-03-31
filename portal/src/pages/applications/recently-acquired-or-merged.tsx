@@ -10,9 +10,7 @@ import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 
-export const fields = [
-  "claim.additional_user_not_found_info.recently_acquired_or_merged",
-];
+export const fields = ["claim.additional_user_not_found_info"];
 
 export const RecentlyAcquiredOrMerged = (
   props: WithBenefitsApplicationProps

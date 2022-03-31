@@ -10,7 +10,7 @@ import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 
-export const fields = ["claim.additional_user_not_found_info.date_of_hire"];
+export const fields = ["claim.additional_user_not_found_info"];
 
 /**
  * A form page to collect employee start date.
