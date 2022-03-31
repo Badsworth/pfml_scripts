@@ -628,8 +628,12 @@ const claimantFlow: {
     },
     [routes.applications.employmentStatus]: {
       meta: {
+        // applicableRules: [
+        //   "require_employee",
+        // ],
         step: ClaimSteps.employerInformation,
-        fields: employmentStatusFields,
+        // Modify if feature flag is enabled?
+        fields: [] || employmentStatusFields, // eslint-disable-line
       },
       on: {
         CONTINUE: [
