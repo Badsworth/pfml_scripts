@@ -1,5 +1,3 @@
-provider "aws" {}
-
 module "constants" {
   source = "../../constants"
 }
