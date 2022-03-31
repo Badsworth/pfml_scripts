@@ -16,9 +16,9 @@ import BenefitsApplication, {
   EmploymentStatus,
   WorkPatternType,
 } from "../models/BenefitsApplication";
-import { Issue, ValidationError } from "../errors";
 
 import { ClaimSteps } from "../models/Step";
+import { Issue } from "../errors";
 import { UploadType } from "../pages/applications/upload/index";
 import { fields as addressFields } from "../pages/applications/address";
 import { fields as concurrentLeavesDetailsFields } from "../pages/applications/concurrent-leaves-details";

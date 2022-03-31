@@ -1147,11 +1147,11 @@ const pages: {
     noEmployeeEmployerMatchSsnLabel: "Social Security Number",
     noEmployeeEmployerMatchTitle:
       "We couldn't match you with the employer you entered.",
+    recentlyAcquiredOrMergedIDontKnowLabel: "I don't know",
     recentlyAcquiredOrMergedLabel:
       "Was your employer recently merged with or acquired by another company?",
-    recentlyAcquiredOrMergedYesLabel: "Yes",
     recentlyAcquiredOrMergedNoLabel: "No",
-    recentlyAcquiredOrMergedIDontKnowLabel: "I don't know",
+    recentlyAcquiredOrMergedYesLabel: "Yes",
   },
   claimsAddress: {
     choiceNo: "No, I would like to add a mailing address",
