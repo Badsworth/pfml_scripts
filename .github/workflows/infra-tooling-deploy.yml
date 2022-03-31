@@ -7,6 +7,7 @@ on:
   push:
     branches:
       - main
+      - jacobitegboje/INFRA-1336-audit-lambda-functions
     paths:
       - infra/tooling/**
   workflow_dispatch:
