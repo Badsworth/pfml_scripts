@@ -4,15 +4,8 @@ module "constants" {
   source = "../../constants"
 }
 
-locals {
-  prefix   = "${module.constants.prefix}audit_"
-  auditors = jsondecode(file("auditors.json"))
-}
-
-data "aws_region" "current" {}
-data "aws_caller_identity" "current" {}
 data "archive_file" "audit" {
-  for_each    = local.auditors
+  for_each    = var.auditors
   type        = "zip"
   source_dir  = "lambda_functions/audit_${each.key}"
   output_path = "lambda_functions/audit_${each.key}/audit_${each.key}.zip"
@@ -20,8 +13,8 @@ data "archive_file" "audit" {
 }
 
 resource "aws_dynamodb_table" "inventory" {
-  for_each     = local.auditors
-  name         = "${local.prefix}${each.key}"
+  for_each     = var.auditors
+  name         = "${var.prefix}${each.key}"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "ResourceName"
 
@@ -30,16 +23,16 @@ resource "aws_dynamodb_table" "inventory" {
     type = "S"
   }
 
-  tags = merge({ "Name" : "${local.prefix}${each.key}" }, module.constants.common_tags)
+  tags = merge({ "Name" : "${var.prefix}${each.key}" }, var.tags)
 }
 
 resource "aws_lambda_function" "audit" {
-  for_each         = local.auditors
+  for_each         = var.auditors
   description      = each.key
   filename         = data.archive_file.audit[each.key].output_path
   source_code_hash = data.archive_file.audit[each.key].output_base64sha256
-  function_name    = "${local.prefix}${each.key}"
-  handler          = "${local.prefix}${each.key}.handler"
+  function_name    = "${var.prefix}${each.key}"
+  handler          = "${var.prefix}${each.key}.handler"
   role             = aws_iam_role.audit[each.key].arn
   runtime          = "python3.9"
 
@@ -50,26 +43,26 @@ resource "aws_lambda_function" "audit" {
     }
   }
 
-  tags = merge({ "Name" : "${local.prefix}${each.key}" }, module.constants.common_tags)
+  tags = merge({ "Name" : "${var.prefix}${each.key}" }, var.tags)
 }
 
 resource "aws_cloudwatch_event_rule" "audit" {
-  for_each            = local.auditors
-  name                = "${local.prefix}${each.key}"
-  description         = "Invoke ${local.prefix}${each.key} Lambda Function daily at 6am UTC"
+  for_each            = var.auditors
+  name                = "${var.prefix}${each.key}"
+  description         = "Invoke ${var.prefix}${each.key} Lambda Function daily at 6am UTC"
   schedule_expression = "cron(0 6 * * * *)"
 }
 
 resource "aws_cloudwatch_event_target" "audit" {
-  for_each  = local.auditors
+  for_each  = var.auditors
   rule      = aws_cloudwatch_event_rule.audit[each.key].name
-  target_id = "${local.prefix}${each.key}"
+  target_id = "${var.prefix}${each.key}"
   arn       = aws_lambda_function.audit[each.key].arn
 }
 
 resource "aws_lambda_permission" "audit" {
-  for_each      = local.auditors
-  statement_id  = "invoke_${local.prefix}${each.key}"
+  for_each      = var.auditors
+  statement_id  = "invoke_${var.prefix}${each.key}"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.audit[each.key].function_name
   principal     = "events.amazonaws.com"
