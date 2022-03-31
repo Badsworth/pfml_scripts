@@ -10,14 +10,14 @@ on:
       - jacobitegboje/INFRA-1336-audit-lambda-functions
     paths:
       - infra/tooling/**
-  workflow_dispatch:
-    inputs:
-      version:
-        required: true
-        default: "main"
-        description: |
-          --------------------------------------
-          ⬇️ Tag or branch to be deployed.
+  # workflow_dispatch:
+  #   inputs:
+  #     version:
+  #       required: true
+  #       default: "main"
+  #       description: |
+  #         --------------------------------------
+  #         ⬇️ Tag or branch to be deployed.
 
 env:
   workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
