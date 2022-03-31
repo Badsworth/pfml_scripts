@@ -4,12 +4,17 @@ variable "prefix" {
   default     = "audit"
 }
 
-variable "auditors" {
-  type        = map(string)
-  description = "The mapping of auditors and actions to use"
+variable "tags" {
+  type        = map(any)
+  description = "Tags to use"
 }
 
-variable "tags" {
-  type        = map(string)
-  description = "Tags to use"
+variable "aws_region" {
+  type        = string
+  description = "The AWS region to use"
+}
+
+variable "aws_account_id" {
+  type        = string
+  description = "The AWS Account to use"
 }
