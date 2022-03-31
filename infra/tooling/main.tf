@@ -1,5 +1,3 @@
-# Test
-
 provider "aws" {}
 
 module "constants" {
