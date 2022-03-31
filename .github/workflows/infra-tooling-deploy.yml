@@ -41,7 +41,7 @@ jobs:
           query: |
             query {
               organization(login:"EOLWD"){
-                team(slug:"pfml-devops"){
+                team(slug:"pfml-infra"){
                   members(membership: ALL, query:"${{ github.actor }}"){
                     nodes {
                       login
