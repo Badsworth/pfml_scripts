@@ -18,3 +18,8 @@ variable "aws_account_id" {
   type        = string
   description = "The AWS Account to use"
 }
+
+variable "schedule" {
+  type        = string
+  description = "Schedule for the auditors to run"
+}

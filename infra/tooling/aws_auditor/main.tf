@@ -52,7 +52,7 @@ resource "aws_cloudwatch_event_rule" "audit" {
   for_each            = local.auditors
   name                = "${var.prefix}${each.key}"
   description         = "Invoke ${var.prefix}${each.key} Lambda Function daily at 6am UTC"
-  schedule_expression = "cron(0 6 * * * *)"
+  schedule_expression = var.schedule
 }
 
 resource "aws_cloudwatch_event_target" "audit" {
