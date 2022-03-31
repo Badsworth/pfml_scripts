@@ -104,7 +104,6 @@ export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
   isVariableWorkPattern: ({ claim }) =>
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.variable,
   includesUserNotFoundError: ({ claim, warnings }) => {
-    console.log(warnings);
     return (
       (warnings || []).some(
         (warning) =>
@@ -638,7 +637,7 @@ const claimantFlow: {
       on: {
         CONTINUE: [
           {
-            target: routes.applications.missingEmployeeEmployerMatch,
+            target: routes.applications.noEmployeeFound,
             cond: "includesUserNotFoundError",
           },
           {
@@ -655,7 +654,7 @@ const claimantFlow: {
         ],
       },
     },
-    [routes.applications.missingEmployeeEmployerMatch]: {
+    [routes.applications.noEmployeeFound]: {
       meta: {},
       on: {
         // if claimant successfully fixes the issue, continue through normal flow
@@ -773,8 +772,9 @@ const claimantFlow: {
             target: routes.applications.success,
             cond: "isCompleted",
           },
+          // Why would the review page to go UNF?
           {
-            target: routes.applications.missingEmployeeEmployerMatch,
+            target: routes.applications.noEmployeeFound,
             cond: "includesUserNotFoundError",
           },
           {
