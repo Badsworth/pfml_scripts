@@ -21,7 +21,6 @@ on:
 
 env:
   workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-  # terraformVersion: 0.14.7
 
 jobs:
   infra-tooling-deploy:
@@ -68,7 +67,6 @@ jobs:
 
       - uses: hashicorp/setup-terraform@v1.2.1
         with:
-          # terraform_version: ${{ env.terraformVersion }}
           terraform_wrapper: false
 
       - name: Terraform Init

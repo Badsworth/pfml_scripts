@@ -51,7 +51,7 @@ resource "aws_lambda_function" "audit" {
 resource "aws_cloudwatch_event_rule" "audit" {
   for_each            = local.auditors
   name                = "${var.prefix}${each.key}"
-  description         = "Invoke ${var.prefix}${each.key}"
+  description         = "Invoke Lambda Function: ${var.prefix}${each.key}"
   schedule_expression = var.schedule
 }
 
