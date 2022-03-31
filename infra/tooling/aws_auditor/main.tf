@@ -5,7 +5,7 @@ module "constants" {
 }
 
 locals {
-  prefix   = "massgov_pfml_audit_"
+  prefix   = "${module.constants.prefix}audit_"
   auditors = jsondecode(file("auditors.json"))
 }
 
