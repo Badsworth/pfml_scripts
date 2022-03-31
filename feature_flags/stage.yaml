@@ -1,5 +1,5 @@
 maintenance:
-    enabled: 1 # 0 = disabled, 1 = enabled
+    enabled: 0 # 0 = disabled, 1 = enabled
     start: "2022-03-30T20:59:00-04:00"
     options:
         page_routes:
