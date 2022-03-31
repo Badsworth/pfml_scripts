@@ -167,6 +167,7 @@ class Constants:
         State.STATE_WITHHOLDING_RELATED_PENDING_AUDIT,
         State.FEDERAL_WITHHOLDING_ORPHANED_PENDING_AUDIT,
         State.STATE_WITHHOLDING_ORPHANED_PENDING_AUDIT,
+        State.EMPLOYER_REIMBURSEMENT_RELATED_PENDING_AUDIT,
     ]
 
     # These overpayment transaction types don't have payment details
