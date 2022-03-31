@@ -80,6 +80,7 @@ from massgov.pfml.util.logging.claims import (
 from massgov.pfml.util.logging.employers import get_employer_log_attributes
 from massgov.pfml.util.logging.managed_requirements import (
     get_managed_requirements_update_log_attributes,
+    log_managed_requirement_issues,
 )
 from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.util.users import has_role_in
@@ -355,7 +356,7 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
                     claim_from_db.fineos_absence_status.absence_status_description
                 )
 
-            sync_customer_api_absence_periods_to_db(
+            db_absence_periods = sync_customer_api_absence_periods_to_db(
                 fineos_absence_periods, claim_from_db, db_session, log_attributes
             )
 
@@ -365,6 +366,20 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
                 fineos_managed_requirements,
                 log_attributes,
             )
+
+            updated_db_requirements = (
+                db_session.query(ManagedRequirement)
+                .filter(ManagedRequirement.claim_id == claim_from_db.claim_id)
+                .all()
+            )
+
+            log_managed_requirement_issues(
+                fineos_managed_requirements,
+                updated_db_requirements,
+                db_absence_periods,
+                log_attributes,
+            )
+
             fineos_claim_review_response.managed_requirements = [
                 ManagedRequirementResponse.from_orm(mr) for mr in managed_requirements
             ]

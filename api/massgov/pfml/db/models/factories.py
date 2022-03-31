@@ -444,6 +444,12 @@ class AbsencePeriodFactory(BaseFactory):
     fineos_absence_period_index_id = factory.Faker("random_int")
 
 
+class PendingAbsencePeriodFactory(AbsencePeriodFactory):
+    leave_request_decision_id = (
+        employee_models.LeaveRequestDecision.PENDING.leave_request_decision_id
+    )
+
+
 class ManagedRequirementFactory(BaseFactory):
     class Meta:
         model = employee_models.ManagedRequirement
@@ -463,6 +469,12 @@ class ManagedRequirementFactory(BaseFactory):
     )
     managed_requirement_type_id = (
         employee_models.ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id
+    )
+
+
+class OpenManagedRequirementFactory(ManagedRequirementFactory):
+    managed_requirement_status_id = (
+        employee_models.ManagedRequirementStatus.OPEN.managed_requirement_status_id
     )
 
 
