@@ -3,7 +3,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import List, Optional
 
-from pydantic import UUID4
+from pydantic import UUID4, validator
 
 import massgov.pfml.db.models.applications as db_application_models
 import massgov.pfml.db.models.employees as db_employee_models
@@ -12,6 +12,11 @@ from massgov.pfml.api.models.common import (
     AmountFrequency,
     LookupEnum,
     PreviousLeaveQualifyingReason,
+)
+from massgov.pfml.api.validation.exceptions import (
+    IssueType,
+    ValidationErrorDetail,
+    ValidationException,
 )
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import (
@@ -220,6 +225,27 @@ class AdditionalUserNotFoundInfo(PydanticBaseModel):
     # current_employer: Optional[bool]
     # # industry_type: Optional[str] # Not collecting.
     # work_state: Optional[str]
+
+    @validator("date_of_hire")
+    def date_of_hire_in_past(cls, date_of_hire):  # noqa: B902
+        """The date of hire must be in the past"""
+        if not date_of_hire:
+            return date_of_hire
+
+        if date_of_hire > date.today():
+            raise ValidationException(
+                errors=[
+                    ValidationErrorDetail(
+                        message="The date of hire must be in the past",
+                        type=IssueType.maximum,
+                        field="date_of_hire",
+                    )
+                ],
+                message="Validation error",
+                data={},
+            )
+
+        return date_of_hire
 
 
 class MaskedAddress(Address):
