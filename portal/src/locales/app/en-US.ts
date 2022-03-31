@@ -2732,24 +2732,50 @@ const pages: {
     infoAlertHeading_bonding: "$t(shared.infoAlertHeading_bonding)",
     infoAlertHeading_pregnancy: "$t(shared.infoAlertHeading_pregnancy)",
     loadingClaimDetailLabel: "$t(shared.loadingClaimDetailLabel)",
+    paymentsIntro_Continuous_ApprovalPreStartDate:
+      "<p>Your first payment will be scheduled on <strong>{{checkbackDate}} </strong>. Payments are scheduled to be paid after each week of your leave on Mondays, or on Tuesday if Monday is a holiday.</p>",
+    paymentsIntro_Continuous_ApprovalPreStartDate_PostMondayPaymentSchedule:
+      "<p>Your first payment will be scheduled on <strong>{{checkbackDate}}</strong>.</p><p>Payments are scheduled to be paid after each week of your leave on Mondays, or on Tuesday if Monday is a holiday.</p>",
     paymentsIntro_Continuous_PostFourteenthClaimDate:
       "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, expect to be paid weekly.</p>",
+    paymentsIntro_Continuous_PostFourteenthClaimDate_PostMondayPaymentSchedule:
+      "<p>Your first payment will be scheduled on <strong>{{checkbackDate}}</strong>. This payment will include multiple weeks of your leave.</p> <p>Payments are scheduled to be paid after each week of your leave on Mondays, or on Tuesday if Monday is a holiday.</p>",
+    paymentsIntro_Continuous_PostFourteenthClaimDate_PreMondayPaymentSchedule:
+      "Your first payment will be scheduled on <strong>{{checkbackDate}}</strong> to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, expect to be paid weekly.</p>",
     paymentsIntro_Continuous_PreFourteenthClaimDate:
       "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.</p>",
+    paymentsIntro_Continuous_PreFourteenthClaimDate_PreMondayPaymentSchedule:
+      "<p>Your first payment will be scheduled on <strong>{{checkbackDate}}</strong> to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.</p>",
     paymentsIntro_Continuous_Retroactive:
       "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. You’ll receive one payment for your entire leave.</p>",
     paymentsIntro_Intermittent:
       "Once you report at least 8 hours, you can expect to receive a payment about one week later. You can receive more than one payment in a week depending on how your hours are reported. You can report your hours by calling <contact-center-report-phone-link>$t(shared.contactCenterReportHoursPhoneNumber)</contact-center-report-phone-link>.",
+    paymentsIntro_Intermittent_PostMondayPaymentSchedule:
+      "Once you report at least 8 hours, you can expect to receive a payment the following Monday, or on Tuesday if Monday is a holiday. You can receive more than one payment in a week depending on how your hours are reported. You can report your hours by calling  <contact-center-report-phone-link>$t(shared.contactCenterReportHoursPhoneNumber)</contact-center-report-phone-link>.",
     paymentsIntro_Intermittent_Unpaid:
       "<p>Your application has an unpaid 7-day waiting period that begins the first day you report taking leave.</p><p>You need to complete your unpaid 7-day waiting period waiting period and report at least 8 hours of leave before you will receive a payment from the Department. You may receive more than one payment per week depending on how your hours are reported.</p><p>Call the Hours Reporting line at <contact-center-report-phone-link>$t(shared.contactCenterReportHoursPhoneNumber)</contact-center-report-phone-link> each week to report the intermittent leave hours you used.</p>",
     paymentsIntro_NonIntermittent_NonRetro:
       "Payments are scheduled to be paid after each week of your leave. Check back weekly to see when your next payment will be scheduled.",
+    paymentsIntro_NonIntermittent_NonRetro_PostMondayPaymentSchedule:
+      "Payments are scheduled to be paid after each week of your leave on Mondays, or on Tuesday if Monday is a holiday.",
     paymentsIntro_NonIntermittent_Retro:
       "Since you were approved after your leave ended, you’ll receive one payment for your entire leave.",
+    paymentsIntro_NonIntermittent_Retro_PreMondayPaymentSchedule:
+      "Since your application was approved after your leave ended, you’ll receive one payment for your entire leave.",
+    paymentsIntro_ReducedSchedule_ApprovalPreStartDate:
+      "<p>Your first payment will be scheduled on <strong>{{checkbackDate}}</strong>.  You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.</p><p>Payments are scheduled to be paid after each week of your leave on Mondays, or on Tuesday if Monday is a holiday.</p>",
+    paymentsIntro_ReducedSchedule_ApprovalPreStartDate_PostMondayPaymentSchedule:
+      "<p>Your first payment will be scheduled on <strong>{{checkbackDate}}</strong>.  You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.</p><p>Payments are scheduled to be paid after each week of your leave on Mondays, or on Tuesday if Monday is a holiday.</p>",
     paymentsIntro_ReducedSchedule_PostFourteenthClaimDate:
       "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.</p>",
+    paymentsIntro_ReducedSchedule_PostFourteenthClaimDate_PostMondayPaymentSchedule:
+      "<p>Your first payment will be scheduled on <strong>{{checkbackDate}}</strong>. This payment will include multiple weeks of your leave. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.</p><p>Payments are scheduled to be paid after each week of your leave on Mondays, or on Tuesday if Monday is a holiday.</p>",
+    paymentsIntro_ReducedSchedule_PostFourteenthClaimDate_PreMondayPaymentSchedule:
+      "<p>Your first payment will be scheduled on <strong>{{checkbackDate}}</strong> to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.</p>",
     paymentsIntro_ReducedSchedule_PreFourteenthClaimDate:
       "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.</p>",
+    paymentsIntro_ReducedSchedule_PreFourteenthClaimDate_PreMondayPaymentSchedule:
+      "<p>Your first payment will be scheduled on <strong>{{checkbackDate}}</strong> to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.</p>",
     paymentsIntro_ReducedSchedule_Retroactive:
       "$t(pages.payments.paymentsIntro_Continuous_Retroactive)",
     paymentsTitle: "Payments",
