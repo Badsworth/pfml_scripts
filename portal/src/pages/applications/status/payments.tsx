@@ -53,7 +53,7 @@ export const Payments = ({
   const { absence_id } = query;
   const {
     errors,
-    claims: { claimDetail, loadClaimDetail },
+    claims: { claimDetail, isLoadingClaimDetail, loadClaimDetail },
     documents: {
       documents: allClaimDocuments,
       loadAll: loadAllClaimDocuments,
@@ -94,10 +94,12 @@ export const Payments = ({
    * If there is no absence_id query parameter,
    * then return the PFML 404 page.
    */
-  if (!absence_id || !claimDetail) return <PageNotFound />;
+  if (!absence_id) return <PageNotFound />;
 
   // Check both because claimDetail could be cached from a different status page.
   if (
+    isLoadingClaimDetail ||
+    !claimDetail ||
     claimDetail.fineos_absence_id !== absence_id ||
     !hasLoadedPayments(absence_id) ||
     !hasLoadedClaimDocuments(application_id || "")
