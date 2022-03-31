@@ -1,17 +1,14 @@
-# This workflow automatically deploys changes to the monitoring module whenever the main branch is updated
+# This workflow automatically deploys changes to the infra/tooling module whenever the main branch is updated
 #
-#
-name: Monitoring Deploy
+
+name: Infrastructure Deploy
 
 on:
   push:
     branches:
       - main
     paths:
-      - infra/monitoring/**
-      - infra/modules/alarms_api/**
-      - infra/modules/alarms_portal/**
-      - infra/modules/newrelic_baseline_error_rate/**
+      - infra/tooling/**
   workflow_dispatch:
     inputs:
       version:
@@ -26,13 +23,38 @@ env:
   terraformVersion: 0.14.7
 
 jobs:
-  monitoring-deploy:
+  infra-tooling-deploy:
     runs-on: ubuntu-latest
     env:
       TF_CLI_ARGS: '-lock-timeout=120s'
 
     steps:
       - uses: actions/checkout@v2
+
+      - name: check users
+        id: get_teams
+        env:
+          GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
+        uses: octokit/graphql-action@v2.x
+        with:
+          query: |
+            query {
+              organization(login:"EOLWD"){
+                team(slug:"pfml-devops"){
+                  members(membership: ALL, query:"${{ github.actor }}"){
+                    nodes {
+                      login
+                    }
+                  }
+                }
+              }
+            }
+
+      - name: fail if not a member
+        if: contains('', fromJSON(steps.get_teams.outputs.data).organization.team.members.nodes[0])
+        run: |
+          echo "Not part of pfml-devops, cancelling workflow"
+          exit 1
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -51,21 +73,21 @@ jobs:
       - name: Terraform Init
         id: terraform_init
         run: terraform init
-        working-directory: infra/monitoring
+        working-directory: infra/tooling
 
       - name: Terraform Plan with new docker image
         id: terraform_plan
         run: terraform plan -out=plan.tfplan
-        working-directory: infra/monitoring
+        working-directory: infra/tooling
 
       - name: Terraform Apply from execution plan
         id: terraform_apply
         run: terraform apply plan.tfplan
-        working-directory: infra/monitoring
+        working-directory: infra/tooling
 
   get-deploy-state:
     name: Finalize deployment state
-    needs: [monitoring-deploy]
+    needs: [infra-tooling-deploy]
     if: always()
     runs-on: ubuntu-latest
     outputs:
@@ -108,7 +130,7 @@ jobs:
           --data '{
             "@type": "MessageCard",
             "themeColor": "FF0000",
-            "title": "Failed to deploy Monitoring",
+            "title": "Failed to deploy Infrastructure Tooling",
             "text": "${{ env.workflow_self_link }}",
             "sections": [{}]
             }'
