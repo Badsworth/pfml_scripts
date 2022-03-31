@@ -31,6 +31,31 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: check users
+        id: get_teams
+        env:
+          GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
+        uses: octokit/graphql-action@v2.x
+        with:
+          query: |
+            query {
+              organization(login:"EOLWD"){
+                team(slug:"pfml-devops"){
+                  members(membership: ALL, query:"${{ github.actor }}"){
+                    nodes {
+                      login
+                    }
+                  }
+                }
+              }
+            }
+
+      - name: fail if not a member
+        if: contains('', fromJSON(steps.get_teams.outputs.data).organization.team.members.nodes[0])
+        run: |
+          echo "Not part of pfml-devops, cancelling workflow"
+          exit 1
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
