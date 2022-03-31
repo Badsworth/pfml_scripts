@@ -188,6 +188,15 @@ def validate_non_standard_payment_state(non_standard_payment: Payment, payment_s
     )
 
 
+def validate_non_standard_employer_reimbursement_payment_state(
+    non_standard_payment: Payment, payment_state: LkState
+):
+    assert len(non_standard_payment.state_logs) == 1
+    assert set([state_log.end_state_id for state_log in non_standard_payment.state_logs]) == set(
+        [payment_state.state_id]
+    )
+
+
 def validate_withholding(
     withholding_payment: Payment,
     withholding_payment_data: FineosPaymentData,
@@ -1519,14 +1528,14 @@ def test_process_extract_additional_payment_types(
         missing_event_payment, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
     )
 
-    # Employer reimbursement should be in DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT
+    # Employer reimbursement should be in DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_RESTARTABLE
     employer_payment = (
         local_test_db_session.query(Payment)
         .filter(Payment.fineos_pei_i_value == employer_reimbursement_data.i_value)
         .one_or_none()
     )
-    validate_non_standard_payment_state(
-        employer_payment, State.DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT
+    validate_non_standard_employer_reimbursement_payment_state(
+        employer_payment, State.DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_RESTARTABLE
     )
 
 
@@ -1636,14 +1645,14 @@ def test_process_extract_additional_payment_types_can_be_missing_other_files(
     )
     assert cancellation_payment.claim_id is None
 
-    # Employer reimbursement should be in DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT
+    # Employer reimbursement should be in DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_RESTARTABLE
     employer_payment = (
         local_test_db_session.query(Payment)
         .filter(Payment.fineos_pei_i_value == employer_reimbursement_data.i_value)
         .one_or_none()
     )
-    validate_non_standard_payment_state(
-        employer_payment, State.DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT
+    validate_non_standard_employer_reimbursement_payment_state(
+        employer_payment, State.DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_RESTARTABLE
     )
     assert employer_payment.claim_id is None
 
@@ -1829,7 +1838,7 @@ def test_process_extract_additional_payment_types_can_be_missing_all_additional_
         missing_event_payment, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
     )
 
-    # Employer reimbursement should be in DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT
+    # Employer reimbursement should be in DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_RESTARTABLE
     employer_payment = (
         local_test_db_session.query(Payment)
         .filter(Payment.fineos_pei_i_value == employer_reimbursement_data.i_value)
@@ -1837,8 +1846,8 @@ def test_process_extract_additional_payment_types_can_be_missing_all_additional_
     )
     assert employer_payment.claim_id is None
     assert employer_payment.employee_id is None  # We don't fetch the employee for employers
-    validate_non_standard_payment_state(
-        employer_payment, State.DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT
+    validate_non_standard_employer_reimbursement_payment_state(
+        employer_payment, State.DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_RESTARTABLE
     )
 
 

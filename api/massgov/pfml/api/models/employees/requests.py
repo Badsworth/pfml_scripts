@@ -35,8 +35,8 @@ class EmployeeSearchTerms(PydanticBaseModel):
             if c.isalnum():
                 alphanumeric_count += 1
 
-        if alphanumeric_count < 3:
-            raise ValueError("must contain at least 3 alphanumeric characters")
+        if alphanumeric_count < 1:
+            raise ValueError("must contain at least 1 alphanumeric character")
         return v
 
     @root_validator(pre=True)

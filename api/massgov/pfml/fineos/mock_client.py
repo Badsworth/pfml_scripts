@@ -387,7 +387,13 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     def start_absence(
         self, user_id: str, absence_case: models.customer_api.AbsenceCase
     ) -> models.customer_api.AbsenceCaseSummary:
+        call_count = (
+            len([capture for capture in get_capture() if capture[0] == "start_absence"])
+            if get_capture()
+            else 0
+        )
         _capture_call("start_absence", user_id, absence_case=absence_case)
+        fineos_case_id_number = 259 + call_count
 
         start_date = None
         end_date = None
@@ -403,8 +409,8 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
             end_date = absence_case.episodicLeavePeriods[0].endDate
 
         absence_case_summary = models.customer_api.AbsenceCaseSummary(
-            absenceId="NTN-259-ABS-01",
-            notificationCaseId="NTN-259",
+            absenceId=f"NTN-{fineos_case_id_number}-ABS-01",
+            notificationCaseId=f"NTN-{fineos_case_id_number}",
             startDate=start_date,
             endDate=end_date,
         )

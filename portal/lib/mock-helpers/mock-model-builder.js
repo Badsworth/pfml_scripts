@@ -395,6 +395,20 @@ export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder
   }
 
   /**
+   * claim with completed managed requirements
+   * @returns {MockEmployerClaimBuilder}
+   */
+  reviewed() {
+    set(this.claimAttrs, "managed_requirements", [
+      {
+        responded_at: "2022-02-02",
+        status: "Complete",
+      },
+    ]);
+    return this;
+  }
+
+  /**
    * @param {string} status
    * @returns {MockEmployerClaimBuilder}
    */
@@ -482,6 +496,7 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
       application_id: "mock_application_id",
       status: BenefitsApplicationStatus.started,
       computed_start_dates: {},
+      leave_details: {},
     };
   }
 

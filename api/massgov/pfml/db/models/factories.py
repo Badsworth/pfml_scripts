@@ -466,6 +466,35 @@ class ManagedRequirementFactory(BaseFactory):
     )
 
 
+class FineosExtractVpeiFactory(BaseFactory):
+    class Meta:
+        model = payment_models.FineosExtractVpei
+
+    c = "7326"
+    i = factory.Sequence(lambda n: "%d" % n)
+    amount_monamt = Generators.Money
+
+
+class FineosExtractVpeiPaymentDetailsFactory(BaseFactory):
+    class Meta:
+        model = payment_models.FineosExtractVpeiPaymentDetails
+
+    c = "7806"
+    i = factory.Sequence(lambda n: "%d" % n)
+    balancingamou_monamt = Generators.Money
+
+
+class FineosExtractVpeiPaymentLineFactory(BaseFactory):
+    class Meta:
+        model = payment_models.FineosExtractVpeiPaymentLine
+
+    c = "7692"
+    i = factory.Sequence(lambda n: "%d" % n)
+
+    amount_monamt = Generators.Money
+    linetype = "Auto Gross Entitlement"
+
+
 class PaymentFactory(BaseFactory):
     class Meta:
         model = employee_models.Payment
@@ -521,17 +550,6 @@ class PaymentDetailsFactory(BaseFactory):
     )
 
     amount = Generators.Money
-
-
-class FineosExtractVpeiPaymentLineFactory(BaseFactory):
-    class Meta:
-        model = payment_models.FineosExtractVpeiPaymentLine
-
-    c = "7692"
-    i = factory.Sequence(lambda n: "%d" % n)
-
-    amount_monamt = Generators.Money
-    linetype = "Auto Gross Entitlement"
 
 
 class PaymentLineFactory(BaseFactory):

@@ -1,3 +1,4 @@
+import enum
 import uuid
 from datetime import date
 
@@ -11,12 +12,17 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 class AuditBatchStep(Step):
+    class Metrics(str, enum.Enum):
+        AUDIT_BATCH_COUNT = "audit_batch_count"
+        CORRECTION_BATCH = "correction_batch"
+
     def run_step(self) -> None:
         self._audit_batch()
 
     def _audit_batch(self) -> None:
         logger.info("1099 Documents - Audit Batch Step")
 
+        self.increment(self.Metrics.AUDIT_BATCH_COUNT)
         # Determine Tax Year
         year = pfml_1099_util.get_tax_year()
 
@@ -25,6 +31,9 @@ class AuditBatchStep(Step):
 
         # Determine Correction Indicator
         correction_indicator = pfml_1099_util.is_correction_batch()
+
+        if correction_indicator:
+            self.increment(self.Metrics.CORRECTION_BATCH)
 
         # Establish the batch for this run.
         new_batch = Pfml1099Batch(

@@ -61,11 +61,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
           >
             Employee name
           </h3>
-          Jane
-           
-          
-           
-          Doe
+          Jane Doe
         </div>
       </div>
       <div

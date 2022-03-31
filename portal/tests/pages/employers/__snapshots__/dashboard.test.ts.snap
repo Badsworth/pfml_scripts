@@ -230,7 +230,7 @@ exports[`Employer dashboard renders a verification message in the table, when al
 
 exports[`Employer dashboard renders the banner if there are any unverified employers 1`] = `
 <div
-  aria-labelledby="alert-heading451"
+  aria-labelledby="alert-heading1157"
   class="usa-alert usa-alert--warning"
   role="region"
   tabindex="-1"
@@ -240,7 +240,7 @@ exports[`Employer dashboard renders the banner if there are any unverified emplo
   >
     <h2
       class="usa-alert__heading font-heading-md text-bold"
-      id="alert-heading451"
+      id="alert-heading1157"
     >
       Verify your account
     </h2>
@@ -533,8 +533,8 @@ exports[`Employer dashboard renders the page with expected content and paginatio
       >
         <label
           class="usa-label text-bold margin-right-1 font-heading-xs measure-5"
-          for="Dropdown14"
-          id="Dropdown14_label"
+          for="Dropdown43"
+          id="Dropdown43_label"
         >
           Sort
         </label>
@@ -543,9 +543,9 @@ exports[`Employer dashboard renders the page with expected content and paginatio
           data-default-value="absence_status,ascending"
         >
           <select
-            aria-labelledby="Dropdown14_label Dropdown14_hint Dropdown14_error"
+            aria-labelledby="Dropdown43_label Dropdown43_hint Dropdown43_error"
             class="usa-select maxw-mobile-lg margin-0"
-            id="Dropdown14"
+            id="Dropdown43"
             name="orderAndDirection"
           >
             <option

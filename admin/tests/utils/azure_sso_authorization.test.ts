@@ -67,11 +67,7 @@ describe("azure_sso_authorization Utility", () => {
         setLoadingStateMock,
       );
 
-      expect(api.http.fetchJson).toHaveBeenCalledWith("/admin/login", {
-        headers: {
-          Authorization: `Bearer ${mockData.sso_access_tokens.access_token}`,
-        },
-      });
+      expect(api.http.fetchJson).toHaveBeenCalledWith("/admin/login", {});
       expect(setUserMock).toHaveBeenCalled();
       expect(setLoadingStateMock).toHaveBeenCalledWith({
         ...loadingState,

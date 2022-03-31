@@ -1,0 +1,91 @@
+config:
+  processor: ./processor.js
+  plugins:
+    influxdb:
+      scope: "{{ $processEnvironment.ARTILLERY_ROOT }}/dist/plugins/"
+      url: "{{ $processEnvironment.INFLUX_URL }}"
+      token: "{{ $processEnvironment.INFLUX_TOKEN }}"
+      organization: "{{ $processEnvironment.INFLUX_ORGANIZATION }}"
+      bucket: "{{ $processEnvironment.INFLUX_BUCKET }}"
+  includeFiles:
+    - .env
+    - ./employees
+    - ./forms
+  environments:
+    full_lst:
+      phases:
+        - duration: 300
+          arrivalRate: 2
+          maxVusers: 5
+          name: warm up
+        - duration: 120
+          arrivalRate: 10
+          maxVusers: 20
+          name: Ramp up
+        - duration: 120
+          arrivalRate: 20
+          maxVusers: 30
+          name: Ramp up
+        - duration: 120
+          arrivalRate: 40
+          maxVusers: 50
+          name: Ramp up
+        - duration: 120
+          arrivalRate: 60
+          maxVusers: 70
+          name: Ramp up threshhold
+        - pause: 120
+          name: Settling
+        - duration: 120
+          arrivalRate: 50
+          maxVusers: 50
+          name: Spike 1 Start
+        - duration: 120
+          arrivalRate: 70
+          maxVusers: 70
+          name: Spike 1
+        - duration: 120
+          arrivalRate: 50
+          maxVusers: 70
+          name: Spike 1 Recover
+        - duration: 120
+          arrivalRate: 100
+          maxVusers: 200
+          name: Spike 2
+        - duration: 120
+          arrivalRate: 50
+          maxVusers: 200
+          name: Spike 2 Recover
+        - duration: 300
+          arrivalRate: 2
+          maxVusers: 5
+          name: cool down
+    noSpikes_lst:
+      phases:
+        - duration: 60
+          arrivalRate: 2
+          maxVusers: 5
+          name: warm up
+        - duration: 120
+          arrivalRate: 50
+          maxVusers: 60
+          name: Spike 1
+        - pause: 120
+          name: Settling
+    basic:
+      phases:
+        - duration: 60
+          arrivalRate: 2
+          maxVusers: 5
+          name: warm up
+    dev:
+      phases:
+        - duration: 1
+          arrivalRate: 1
+          maxVusers: 1
+          name: Test Search
+
+scenarios:
+  - name: SNOW Search
+    flow:
+      - function: searchClaimants

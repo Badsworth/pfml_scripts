@@ -94,19 +94,19 @@ import { config } from "../../actions/common";
             "Employer Reimbursement",
             "Reimbursement Denied"
           );
-          // FINEOS February release made a change to the task name. But the FINEOS
-          // January release has the another name for this task.
-          if (config("HAS_FEB_RELEASE") === "true") {
-            task.assertTaskExists("SOM Autopay After Appeal Reminder");
+          // The task has changed in DT4 from SOM Autopay After Appeal Reminder to Autopay After Appeal Reminder.
+          // Waiting on a response to see if this is the final way that task will display or being updated.
+          if (config("HAS_APRIL_UPGRADE") === "true") {
+            task.assertTaskExists("Autopay After Appeal Reminder");
           } else {
-            task.assertTaskExists("DO NOT USE Autopay After Appeal Reminder");
+            task.assertTaskExists("SOM Autopay After Appeal Reminder");
           }
           cy.get("[id^=MENUBAR\\.CaseSubjectMenu]")
             .findByText("Correspondence")
             .click({ force: true })
             .parents("li")
             .findByText("Employer Reimbursement Denial Notice")
-            .click();
+            .click({ force: true });
           fineos.clickBottomWidgetButton("Next");
           claimPage.documents((document) => {
             document.setDocumentComplete(

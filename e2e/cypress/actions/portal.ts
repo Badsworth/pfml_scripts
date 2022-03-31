@@ -2307,13 +2307,26 @@ export function leaveAdminAssertClaimStatus(leaves: LeaveStatus[]) {
   }
 }
 
-export function assertPaymentCheckBackDate(date: Date) {
-  const dateFormatPrevious = format(date, "MM/dd/yyyy");
-  const dateFormatUpdated = format(date, "MMMM d, yyyy");
+// @todo: Once https://lwd.atlassian.net/browse/PORTAL-2003 is rolled out to all lower environments the only accepted paramenter below should be (date: Date)
+export function assertPaymentCheckBackDate(date?: Date, dates?: Date[]) {
+  let dateString: string;
+  if (date) {
+    dateString = format(date, "MMMM d, yyyy");
+  }
+  // @todo:  Remove this if block below Once https://lwd.atlassian.net/browse/PORTAL-2003 is rolled out to all lower environments
+  // only used as a method to be backwards compatible with the 30k payment test
+  if (dates) {
+    dateString = dates
+      .reduce<string[]>((dates, date) => {
+        dates.push(format(date, "MMMM d, yyyy"));
+        return dates;
+      }, [])
+      .join("|");
+  }
   cy.get("section[data-testid='your-payments-intro']").within(() => {
     cy.contains(
       new RegExp(
-        `Check back on (${dateFormatPrevious}|${dateFormatUpdated}) to see when you can expect your first payment.`
+        `Check back on (${dateString}) to see when you can expect your first payment.`
       )
     );
   });

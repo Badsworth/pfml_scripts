@@ -44,6 +44,7 @@ interface SetupOptions {
   approvalDate?: string;
   includeApprovalNotice?: boolean;
   holidays?: Holiday[];
+  useDefaultClaim?: boolean;
 }
 
 const setupHelper =
@@ -54,12 +55,15 @@ const setupHelper =
     approvalDate = defaultApprovalDate.format("YYYY-MM-DD"),
     includeApprovalNotice = false,
     holidays = defaultHolidays,
+    useDefaultClaim = true,
   }: SetupOptions) =>
   (appLogicHook: AppLogic) => {
-    appLogicHook.claims.claimDetail = new ClaimDetail({
-      ...defaultClaimDetailAttributes,
-      absence_periods,
-    });
+    appLogicHook.claims.claimDetail = useDefaultClaim
+      ? new ClaimDetail({
+          ...defaultClaimDetailAttributes,
+          absence_periods,
+        })
+      : undefined;
     appLogicHook.claims.loadClaimDetail = jest.fn();
     appLogicHook.errors = [];
     appLogicHook.documents.loadAll = jest.fn();
@@ -395,11 +399,24 @@ describe("Payments", () => {
     expect(table).toMatchSnapshot();
   });
 
+  it("shows a spinner if there is no claim detail", () => {
+    renderPage(
+      Payments,
+      {
+        addCustomSetup: setupHelper({
+          useDefaultClaim: false,
+        }),
+      },
+      props
+    );
+    expect(screen.getByRole("progressbar")).toBeInTheDocument();
+  });
+
   it("displays page not found alert if there's no absence case ID", () => {
     renderPage(
       Payments,
       {
-        addCustomSetup: setupHelper({}),
+        addCustomSetup: setupHelper({ useDefaultClaim: false }),
       },
       { query: {} }
     );

@@ -90,11 +90,11 @@ from massgov.pfml.db.models.geo import GeoState
 from massgov.pfml.fineos import AbstractFINEOSClient, exception
 from massgov.pfml.fineos.models.customer_api import AbsencePeriodStatus, PhoneNumber
 from massgov.pfml.fineos.models.customer_api.spec import (
+    AbsenceDay,
     AbsenceDetails,
     AbsencePeriod,
     EForm,
     EFormSummary,
-    ReportedReducedScheduleLeavePeriod,
 )
 from massgov.pfml.fineos.transforms.from_fineos.eforms import (
     TransformConcurrentLeaveFromOtherLeaveEform,
@@ -103,7 +103,7 @@ from massgov.pfml.fineos.transforms.from_fineos.eforms import (
     TransformOtherIncomeNonEmployerEform,
     TransformPreviousLeaveFromOtherLeaveEform,
 )
-from massgov.pfml.util.datetime import utcnow
+from massgov.pfml.util.datetime import is_date_contained, utcnow
 from massgov.pfml.util.logging.applications import (
     get_absence_period_log_attributes,
     get_application_log_attributes,
@@ -1007,9 +1007,7 @@ def claim_is_valid_for_application_import(
                 "applications_import failure - exists_different_account",
                 extra=get_application_log_attributes(existing_application),
             )
-            return response_util.error_response(
-                Forbidden, message=message, errors=[validation_error]
-            )
+            raise ValidationException(errors=[validation_error])
 
         if existing_application:
             message = "An application already exists for this claim."
@@ -1020,9 +1018,7 @@ def claim_is_valid_for_application_import(
                 "applications_import failure - exists_same_account",
                 extra=get_application_log_attributes(existing_application),
             )
-            return response_util.error_response(
-                Forbidden, message=message, errors=[validation_error]
-            )
+            raise ValidationException(errors=[validation_error])
     return None
 
 
@@ -1119,34 +1115,56 @@ def _parse_intermittent_leave_period(
 
 
 def _parse_reduced_leave_period(
-    application_id: UUID, reduced_period: ReportedReducedScheduleLeavePeriod
+    application_id: UUID,
+    absence_period: AbsencePeriod,
+    absenceDays: List[AbsenceDay],
+    is_multiple_leave: bool,
 ) -> ReducedScheduleLeavePeriod:
+    # set default to 0
+    off_minutes: Dict[str, int] = {
+        "Sunday": 0,
+        "Monday": 0,
+        "Tuesday": 0,
+        "Wednesday": 0,
+        "Thursday": 0,
+        "Friday": 0,
+        "Saturday": 0,
+    }
+    start_date = absence_period.startDate
+    end_date = absence_period.endDate
+    week_list = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+
+    for absence_day in absenceDays:
+        if not week_list:
+            break
+        if not absence_day.date or not start_date or not end_date:
+            break
+
+        target_date = absence_day.date
+        if is_date_contained((start_date, end_date), target_date):
+            weekday = target_date.strftime("%A")
+            if absence_day.timeRequested:
+                off_minutes[weekday] = round(float(absence_day.timeRequested) * 60)
+                if weekday in week_list:
+                    week_list.remove(weekday)
+        elif not is_multiple_leave:
+            newrelic_util.log_and_capture_exception(
+                "Parse reduced leave: absence_day.date is outside the date range of the leave",
+                extra={"application_id": application_id},
+            )
+
     return ReducedScheduleLeavePeriod(
         application_id=application_id,
-        start_date=reduced_period.startDate,
-        end_date=reduced_period.endDate,
-        sunday_off_minutes=off_minutes_from_day("sunday", reduced_period),
-        monday_off_minutes=off_minutes_from_day("monday", reduced_period),
-        tuesday_off_minutes=off_minutes_from_day("tuesday", reduced_period),
-        wednesday_off_minutes=off_minutes_from_day("wednesday", reduced_period),
-        thursday_off_minutes=off_minutes_from_day("thursday", reduced_period),
-        friday_off_minutes=off_minutes_from_day("friday", reduced_period),
-        saturday_off_minutes=off_minutes_from_day("saturday", reduced_period),
+        start_date=absence_period.startDate,
+        end_date=absence_period.endDate,
+        sunday_off_minutes=off_minutes["Sunday"],
+        monday_off_minutes=off_minutes["Monday"],
+        tuesday_off_minutes=off_minutes["Tuesday"],
+        wednesday_off_minutes=off_minutes["Wednesday"],
+        thursday_off_minutes=off_minutes["Thursday"],
+        friday_off_minutes=off_minutes["Friday"],
+        saturday_off_minutes=off_minutes["Saturday"],
     )
-
-
-def off_minutes_from_day(
-    day: str, reduced_period: ReportedReducedScheduleLeavePeriod
-) -> Optional[int]:
-    period = reduced_period.dict()
-    minutes = period[f"{day}OffMinutes"]
-    hours = period[f"{day}OffHours"]
-    if minutes is not None and hours is not None:
-        minutes = minutes_from_hours_minutes(hours, minutes)
-    else:
-        if hours is not None:
-            minutes = hours * 60
-    return minutes
 
 
 def _set_continuous_leave_periods(
@@ -1195,10 +1213,20 @@ def _set_intermittent_leave_periods(
 def _set_reduced_leave_periods(application: Application, absence_details: AbsenceDetails) -> None:
     reduced_schedule_leave_periods: List[ReducedScheduleLeavePeriod] = []
 
-    if absence_details.reportedReducedSchedule:
-        for reduced_period in absence_details.reportedReducedSchedule:
-            reduced_leave = _parse_reduced_leave_period(application.application_id, reduced_period)
-            reduced_schedule_leave_periods.append(reduced_leave)
+    if absence_details.absencePeriods:
+        for absence_period in absence_details.absencePeriods:
+            if (
+                absence_period.absenceType
+                == AbsencePeriodType.REDUCED_SCHEDULE.absence_period_type_description
+                and absence_details.absenceDays
+            ):
+                reduced_leave = _parse_reduced_leave_period(
+                    application.application_id,
+                    absence_period,
+                    absence_details.absenceDays,
+                    bool(len(absence_details.absencePeriods)),
+                )
+                reduced_schedule_leave_periods.append(reduced_leave)
 
     application.has_reduced_schedule_leave_periods = len(reduced_schedule_leave_periods) > 0
     application.reduced_schedule_leave_periods = reduced_schedule_leave_periods
@@ -1274,9 +1302,6 @@ def set_application_absence_and_leave_period(
 ) -> None:
     absence_details = fineos.get_absence(fineos_web_id, absence_id)
 
-    _set_continuous_leave_periods(application, absence_details)
-    _set_intermittent_leave_periods(application, absence_details)
-    _set_reduced_leave_periods(application, absence_details)
     absence_period = _get_absence_period_from_absence_details(absence_details, application)
     if absence_period is not None:
         if absence_period.reason is not None:
@@ -1312,6 +1337,11 @@ def set_application_absence_and_leave_period(
             application.leave_reason_id == DBLeaveReason.PREGNANCY_MATERNITY.leave_reason_id
         )
         _set_has_future_child_date(application, absence_period)
+
+    # TODO (PORTAL-2009) Use same absence period(s) as the one selected above
+    _set_continuous_leave_periods(application, absence_details)
+    _set_intermittent_leave_periods(application, absence_details)
+    _set_reduced_leave_periods(application, absence_details)
     application.submitted_time = absence_details.creationDate
 
 
@@ -2024,7 +2054,10 @@ def get_application_split(
     If a leave period spans a benefit year, the application needs to be broken up into
     separate ones that will each get submitted.
     """
-    if application.split_from_application_id is not None:
+    if (
+        application.split_from_application_id is not None
+        or application.split_into_application_id is not None
+    ):
         return None
 
     latest_end_date = get_latest_end_date(application)

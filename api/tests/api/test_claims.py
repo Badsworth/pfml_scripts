@@ -439,6 +439,33 @@ class TestGetClaimReview:
         assert response_data["residential_address"]["zip"] == "30303"
         assert response_data["uses_second_eform_version"] is True
 
+    def test_claim_employee_relationship_added_if_missing(
+        self, client, employer_user, employer_auth_token, test_db_session, test_verification
+    ):
+        employer = EmployerFactory.create(employer_fein="999999999", employer_dba="Acme Co")
+        tax_identifier = TaxIdentifierFactory.create(tax_identifier="123121234")
+        employee = EmployeeFactory.create()
+        employee.tax_identifier = tax_identifier
+        claim = ClaimFactory.create(employer_id=employer.employer_id)
+        claim.employee_id = None
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+        test_db_session.commit()
+        assert claim.employee_id is None
+        response = client.get(
+            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+        post_call_claim = test_db_session.query(Claim).one_or_none()
+        assert post_call_claim.employee_id is not None
+        assert post_call_claim.employee_id == employee.employee_id
+        assert response.status_code == 200
+
     @freeze_time("2020-12-07")
     def test_second_eform_version_defaults_to_true(
         self, client, employer_user, employer_auth_token, test_db_session, test_verification

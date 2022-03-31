@@ -53,7 +53,7 @@ export const Payments = ({
   const { absence_id } = query;
   const {
     errors,
-    claims: { claimDetail, loadClaimDetail },
+    claims: { claimDetail, isLoadingClaimDetail, loadClaimDetail },
     documents: {
       documents: allClaimDocuments,
       loadAll: loadAllClaimDocuments,
@@ -94,10 +94,12 @@ export const Payments = ({
    * If there is no absence_id query parameter,
    * then return the PFML 404 page.
    */
-  if (!absence_id || !claimDetail) return <PageNotFound />;
+  if (!absence_id) return <PageNotFound />;
 
   // Check both because claimDetail could be cached from a different status page.
   if (
+    isLoadingClaimDetail ||
+    !claimDetail ||
     claimDetail.fineos_absence_id !== absence_id ||
     !hasLoadedPayments(absence_id) ||
     !hasLoadedClaimDocuments(application_id || "")
@@ -673,10 +675,18 @@ export function paymentStatusViewHelper(
     let result;
     // claim is approved after second week of leave start date (includes retroactive)
     if (isRetroactive || !isApprovedBeforeFourteenthDayOfClaim) {
-      result = dayjs(_approvalDate).addBusinessDays(5);
+      // Wait 5 business days (1week) b/c of waiting week.
+      // Wait 1 business day b/c we send payments to the bank the day after FINEOS sends them to us.
+      result = dayjs(_approvalDate).addBusinessDays(5).addBusinessDays(1);
     } else {
       // claim is approved before the second week of leave start date (includes before leave starts)
-      result = dayjs(_initialClaimStartDate).add(14, "day").addBusinessDays(3);
+      // Wait 14 non-business days (2weeks).
+      // Wait 3 business days
+      // Wait 1 business day b/c we send payments to the bank the day after FINEOS sends them to us.
+      result = dayjs(_initialClaimStartDate)
+        .add(14, "day")
+        .addBusinessDays(3)
+        .addBusinessDays(1);
     }
 
     return formatDate(result.format()).full();

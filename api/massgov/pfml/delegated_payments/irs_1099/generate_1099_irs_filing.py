@@ -1,4 +1,5 @@
 import decimal
+import enum
 import os
 import re
 import uuid
@@ -71,6 +72,8 @@ class Constants:
 
 
 class Generate1099IRSfilingStep(Step):
+    class Metrics(str, enum.Enum):
+        IRS_FILE_1099_COUNT = "irs_file_1099_count"
 
     total_b_record = 0
     total_a_record = 1
@@ -82,7 +85,9 @@ class Generate1099IRSfilingStep(Step):
     def _generate_1099_irs_filing(self) -> None:
         logger.info("1099 Documents - Generate 1099.org file to be transmitted to IRS")
         pfml_1099 = pfml_1099_util.get_1099_records_to_file(self.db_session)
+
         if len(pfml_1099) > 0:
+
             if pfml_1099_util.is_test_file() == "T":
                 pfml_1099 = pfml_1099[:11]
             self.total_b_record = len(pfml_1099)
@@ -255,7 +260,7 @@ class Generate1099IRSfilingStep(Step):
         b_seq = self.seq_number + 1
         logger.info("B sequence starts at %s", b_seq)
         for records in tax_data:
-
+            self.increment(self.Metrics.IRS_FILE_1099_COUNT)
             b_dict = dict(
                 B_REC_TYPE=Constants.B_REC_TYPE,
                 TAX_YEAR=pfml_1099_util.get_tax_year(),

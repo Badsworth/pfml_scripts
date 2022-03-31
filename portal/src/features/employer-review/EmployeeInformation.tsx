@@ -17,12 +17,10 @@ interface EmployeeInformationProps {
 const EmployeeInformation = (props: EmployeeInformationProps) => {
   const { t } = useTranslation();
   const {
-    first_name,
-    last_name,
-    middle_name,
     date_of_birth,
     employer_dba,
     employer_fein,
+    fullName,
     tax_identifier,
     residential_address: { city, line_1, line_2, state, zip },
   } = props.claim;
@@ -36,7 +34,7 @@ const EmployeeInformation = (props: EmployeeInformationProps) => {
         level="3"
         label={t("components.employersEmployeeInformation.employeeNameLabel")}
       >
-        {first_name} {middle_name} {last_name}
+        {fullName}
       </ReviewRow>
       {!!employer_dba && (
         <ReviewRow

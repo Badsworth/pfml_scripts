@@ -311,7 +311,7 @@ export class ClaimPage {
       .click({ force: true })
       .parents("li")
       .findByText(action)
-      .click();
+      .click({ force: true });
     document.uploadDocumentAlt(action);
     return this;
   }
