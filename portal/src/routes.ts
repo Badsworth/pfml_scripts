@@ -34,6 +34,7 @@ const routes = {
     employerBenefits: "/applications/employer-benefits",
     employerBenefitsDetails: "/applications/employer-benefits-details",
     employerBenefitsIntro: "/applications/employer-benefits-intro",
+    employerName: "/applications/employer-name",
     employmentStatus: "/applications/employment-status",
     familyMemberDateOfBirth: "/applications/family-member-date-of-birth",
     familyMemberName: "/applications/family-member-name",

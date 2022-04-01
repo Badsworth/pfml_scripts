@@ -57,6 +57,9 @@ const errors = {
         maximum: "The date of hire must be in the past",
         required: "The date of hire is required.",
       },
+      employer_name: {
+        required: "The employer name is required.",
+      },
     },
     claim: {
       exists:

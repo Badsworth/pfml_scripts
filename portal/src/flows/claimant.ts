@@ -29,6 +29,7 @@ import { fields as dateOfHireFields } from "../pages/applications/date-of-hire";
 import { fields as departmentFields } from "../pages/applications/department";
 import { fields as employerBenefitsDetailsFields } from "../pages/applications/employer-benefits-details";
 import { fields as employerBenefitsFields } from "../pages/applications/employer-benefits";
+import { fields as employerNameFields } from "../pages/applications/employer-name";
 import { fields as employmentStatusFields } from "../pages/applications/employment-status";
 import { fields as familyMemberDateOfBirthFields } from "../pages/applications/family-member-date-of-birth";
 import { fields as familyMemberNameFields } from "../pages/applications/family-member-name";
@@ -724,6 +725,18 @@ const claimantFlow: {
     },
     [routes.applications.beginAdditionalNoEmployeeFoundInformation]: {
       meta: {},
+      on: {
+        CONTINUE: [
+          {
+            target: routes.applications.employerName,
+          },
+        ],
+      },
+    },
+    [routes.applications.employerName]: {
+      meta: {
+        fields: employerNameFields,
+      },
       on: {
         CONTINUE: [
           {

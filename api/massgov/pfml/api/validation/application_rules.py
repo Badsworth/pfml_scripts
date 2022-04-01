@@ -910,6 +910,7 @@ def get_payments_issues(application: Application) -> List[ValidationErrorDetail]
 ALWAYS_REQUIRED_FIELDS_DB_NAME_TO_API_NAME_MAP = {
     "date_of_birth": "date_of_birth",
     "additional_user_not_found_info.date_of_hire": "additional_user_not_found_info.date_of_hire",
+    "additional_user_not_found_info.employer_name": "additional_user_not_found_info.employer_name",
     "employer_notified": "leave_details.employer_notified",
     "employment_status_id": "employment_status",
     "first_name": "first_name",
