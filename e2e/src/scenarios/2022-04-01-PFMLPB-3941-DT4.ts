@@ -9,8 +9,11 @@ export const DT4_APRIL_A: ScenarioSpecification = {
     label: "DT4_APRIL_A",
     work_pattern_spec: "standard",
     intermittent_leave_spec: {
-      duration: 3,
-      duration_basis: "Days",
+      duration: 4,
+      duration_basis: "Hours",
+      frequency: 1,
+      frequency_interval: 1,
+      frequency_interval_basis: "Weeks",
     },
     reason: "Serious Health Condition - Employee",
     leave_dates: [parseISO("2022-03-13"), parseISO("2022-05-01")],
