@@ -1,4 +1,3 @@
-// testing 123
 provider "aws" {}
 
 module "constants" {
