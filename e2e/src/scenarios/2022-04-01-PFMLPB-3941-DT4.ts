@@ -14,7 +14,7 @@ export const DT4_APRIL_A: ScenarioSpecification = {
     },
     reason: "Serious Health Condition - Employee",
     leave_dates: [parseISO("2022-03-13"), parseISO("2022-05-01")],
-    is_withholding_tax: false,
+    is_withholding_tax: true,
     docs: {
       MASSID: {},
       HCP: {},
