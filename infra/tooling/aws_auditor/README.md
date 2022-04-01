@@ -22,7 +22,10 @@ to Audit Lambda Functions in the account
 ```
 {
     "lambda": {
-        "actions": ["lambda:ListFunctions"]
+        "actions": [
+            "lambda:ListFunctions",
+            "lambda:GetFunction",
+        ]
     }
 }
 ```
