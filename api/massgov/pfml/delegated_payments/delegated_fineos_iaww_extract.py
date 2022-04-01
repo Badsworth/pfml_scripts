@@ -133,23 +133,32 @@ class IAWWExtractStep(Step):
                             .one()
                         )
 
-                        benefit_year = (
-                            _get_persisted_benefit_year_for_date(
-                                self.db_session, claim.employee_id, claim.absence_period_start_date
+                        try:
+                            benefit_year = (
+                                _get_persisted_benefit_year_for_date(
+                                    self.db_session,
+                                    claim.employee_id,
+                                    claim.absence_period_start_date,
+                                )
+                                if claim.employee_id and claim.absence_period_start_date
+                                else None
                             )
-                            if claim.employee_id and claim.absence_period_start_date
-                            else None
-                        )
-                        if benefit_year:
-                            for contribution in benefit_year.contributions:
-                                if contribution.employer_id == claim.employer_id:
-                                    contribution.average_weekly_wage = (
-                                        absence_period.fineos_average_weekly_wage
-                                    )
+                            if benefit_year:
+                                for contribution in benefit_year.contributions:
+                                    if contribution.employer_id == claim.employer_id:
+                                        contribution.average_weekly_wage = (
+                                            absence_period.fineos_average_weekly_wage
+                                        )
 
-                                    logger.debug(
-                                        f"Benefit year {benefit_year.benefit_year_id} updated from AWW={curr_aww} to AWW={aww_value} for employer {claim.employer_id}"
-                                    )
+                                        logger.debug(
+                                            f"Benefit year {benefit_year.benefit_year_id} updated from AWW={curr_aww} to AWW={aww_value} for employer {claim.employer_id}"
+                                        )
+                        except Exception as error:
+                            # We want to continue processing the rest of the file, even if something goes wrong with getting or updating the beneift year
+                            logger.info(
+                                "Unable to update the associated benefit year",
+                                extra={"claim_id": claim.claim_id, "error": str(error)},
+                            )
 
             else:
                 self.increment(self.Metrics.NOT_MATCHING_LEAVE_PLAN_REQUESTED_ABSENCE_RECORD_COUNT)
