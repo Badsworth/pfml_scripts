@@ -10,12 +10,14 @@ import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 
-export const fields = ["claim.additional_user_not_found_info.date_of_hire"];
+export const fields = [
+  "claim.additional_user_not_found_info.date_of_separation",
+];
 
 /**
  * A form page to collect employee start date.
  */
-export const DateOfHire = (props: WithBenefitsApplicationProps) => {
+export const DateOfSeparation = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -39,9 +41,11 @@ export const DateOfHire = (props: WithBenefitsApplicationProps) => {
     >
       <InputDate
         {...getFunctionalInputProps(
-          "additional_user_not_found_info.date_of_hire"
+          "additional_user_not_found_info.date_of_separation"
         )}
-        label={t("pages.claimsAdditionalUserNotFoundInfo.dateOfHireLabel")}
+        label={t(
+          "pages.claimsAdditionalUserNotFoundInfo.dateOfSeparationLabel"
+        )}
         example={t("components.form.dateInputExample")}
         dayLabel={t("components.form.dateInputDayLabel")}
         monthLabel={t("components.form.dateInputMonthLabel")}
@@ -51,4 +55,4 @@ export const DateOfHire = (props: WithBenefitsApplicationProps) => {
   );
 };
 
-export default withBenefitsApplication(DateOfHire);
+export default withBenefitsApplication(DateOfSeparation);

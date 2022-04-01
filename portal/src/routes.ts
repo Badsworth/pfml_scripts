@@ -30,6 +30,7 @@ const routes = {
     dateOfBirth: "/applications/date-of-birth",
     dateOfChild: "/applications/date-of-child",
     dateOfHire: "/applications/date-of-hire",
+    dateOfSeparation: "/applications/date-of-separation",
     department: "/applications/department",
     employerBenefits: "/applications/employer-benefits",
     employerBenefitsDetails: "/applications/employer-benefits-details",

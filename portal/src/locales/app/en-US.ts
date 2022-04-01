@@ -54,8 +54,13 @@ const errors = {
   applications: {
     additional_user_not_found_info: {
       date_of_hire: {
-        maximum: "The date of hire must be in the past",
+        maximum: "The date of hire must be in the past.",
         required: "The date of hire is required.",
+      },
+      date_of_separation: {
+        maximum: "The date of separation must be in the past.",
+        minimum: "The date of separation must be after the date of hire.",
+        required: "The date of separation is required.",
       },
       employer_name: {
         required: "The employer name is required.",
@@ -1154,7 +1159,8 @@ const pages: {
       "We need to collect additional information to process your application.",
     beginAdditionalNoEmployerFoundInfoTitle:
       "We still couldn't find the employer you entered.",
-    employeeStartDateLabel: "What was your start date at this employer?",
+    dateOfHireLabel: "What was your start date at this employer?",
+    dateOfSeparationLabel: "When was your last day at this employer?",
     employerNameLabel: "Employer Name",
     employerNameTitle: "What is your employer name?",
     noEmployeeFoundMatchDescription:

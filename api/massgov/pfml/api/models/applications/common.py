@@ -227,7 +227,41 @@ class AdditionalUserNotFoundInfo(PydanticBaseModel):
     # # industry_type: Optional[str] # Not collecting.
     # work_state: Optional[str]
 
-    # TODO make more general?
+    @validator("date_of_separation")
+    def date_of_separation_validation(cls, date_of_separation, values):  # noqa: B902
+        """The date of separation must be in the past"""
+        if not date_of_separation:
+            return date_of_separation
+
+        errors = []
+        if date_of_separation > date.today():
+            errors.append(
+                ValidationErrorDetail(
+                    message="The date of separation must be in the past",
+                    type=IssueType.maximum,
+                    field="additional_user_not_found_info.date_of_separation",
+                )
+            )
+
+        date_of_hire = values.get("date_of_hire")
+        if date_of_hire is None or (date_of_hire >= date_of_separation):
+            errors.append(
+                ValidationErrorDetail(
+                    message="The date of separation must after the date of hire",
+                    type=IssueType.minimum,
+                    field="additional_user_not_found_info.date_of_separation",
+                )
+            )
+
+        if errors:
+            raise ValidationException(
+                errors=errors,
+                message="Validation error",
+                data={},
+            )
+
+        return date_of_separation
+
     @validator("date_of_hire")
     def date_of_hire_in_past(cls, date_of_hire):  # noqa: B902
         """The date of hire must be in the past"""
