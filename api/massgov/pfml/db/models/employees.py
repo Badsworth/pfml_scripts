@@ -979,6 +979,9 @@ class Claim(Base, TimestampMixin):
 
 class BenefitYear(Base, TimestampMixin):
     __tablename__ = "benefit_year"
+    __table_args__ = (
+        UniqueConstraint("employee_id", "start_date", name="uix_employee_id_start_date"),
+    )
 
     benefit_year_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
 
