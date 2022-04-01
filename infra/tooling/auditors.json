@@ -1,5 +1,8 @@
 {
     "lambda": {
-        "actions": ["lambda:ListFunctions"]
+        "actions": [
+            "lambda:ListFunctions",
+            "lambda:GetFunction"
+        ]
     }
 }
