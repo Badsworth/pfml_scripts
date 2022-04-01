@@ -1152,6 +1152,8 @@ const pages: {
     beginAdditionalNoEmployerFoundInfoTitle:
       "We still couldn't find the employer you entered.",
     employeeStartDateLabel: "What was your start date at this employer?",
+    employerNameLabel: "Employer Name",
+    employerNameTitle: "What is your employer name?",
     noEmployeeFoundMatchDescription:
       "This could happen if your Social Security Number or the employer's Employer Identification Number is entered incorrectly. Check and re-enter your Social Security Number and employer's Employer Identification Number. ",
     noEmployeeFoundMatchFeinLabel: "Employer Identification Number (EIN)",
