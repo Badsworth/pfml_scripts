@@ -393,6 +393,8 @@ paths:
         - oauth2: []
           agent-id: []
       summary: Retrieve claims
+      description: |
+        Deprecated. For new integrations use `POST /claims/search`.
       operationId: massgov.pfml.api.claims.get_claims
       tags:
         - Claims
@@ -421,7 +423,7 @@ paths:
           description: ID(s) of Employee to query claims for
           required: false
           explode: false
-        - name: "claim_status"
+        - name: claim_status
           in: query
           schema:
             type: string
@@ -431,7 +433,7 @@ paths:
             single claim status or a comma seperated list of claim status (i.e claim_status="Approved,Closed"),
             the valid status are "Approved", "Closed", "Completed", "Declined", "Open requirement" and "Pending - no action".
           required: false
-        - name: "search"
+        - name: search
           in: query
           schema:
             type: string
@@ -441,13 +443,13 @@ paths:
             Absence Case IDs, in addition to the employees' first, middle, and last names.
             When the string is empty, it is ignored.
           required: false
-        - name: "is_reviewable"
+        - name: is_reviewable
           in: query
           schema:
             type: string
             enum: ["yes", "no"]
           description: A string value used to check whether or not to filter claims where a review is requested for a leave admin.
-        - name: "request_decision"
+        - name: request_decision
           in: query
           schema:
             type: string
@@ -478,6 +480,7 @@ paths:
       security:
         - jwt: []
         - oauth2: []
+          agent-id: []
       summary: Retrieve claims
       operationId: massgov.pfml.api.claims.retrieve_claims
       tags:
@@ -1403,8 +1406,6 @@ paths:
     post:
       security:
         - jwt: []
-        - oauth2: []
-          agent-id: []
       tags:
         - Benefit Years
       summary: >
@@ -2327,26 +2328,38 @@ components:
       type: object
       properties:
         terms:
-          $ref: "#/components/schemas/ClaimSearchRequestTermsMetadata"
+          $ref: "#/components/schemas/ClaimSearchRequestTerms"
         order:
-          $ref: "#/components/schemas/SearchRequestOrderMetadata"
-          nullable: true
+          $ref: "#/components/schemas/ClaimSearchRequestOrder"
         paging:
-          $ref: "#/components/schemas/SearchRequestPagingMetadata"
-          nullable: true
+          $ref: "#/components/schemas/SearchRequestPaging"
       required: ["terms"]
+
+    ClaimSearchRequestOrder:
+      allOf:
+        - $ref: "#/components/schemas/SearchRequestOrder"
+        - type: object
+          properties:
+            by:
+              type: string
+              default: "created_at"
+              enum:
+                [
+                  "fineos_absence_status",
+                  "created_at",
+                  "employee",
+                  "latest_follow_up_date",
+                ]
 
     EmployeeSearchRequest:
       type: object
       properties:
         terms:
-          $ref: "#/components/schemas/EmployeeSearchRequestTermsMetadata"
+          $ref: "#/components/schemas/EmployeeSearchRequestTerms"
         order:
-          $ref: "#/components/schemas/SearchRequestOrderMetadata"
-          nullable: true
+          $ref: "#/components/schemas/SearchRequestOrder"
         paging:
-          $ref: "#/components/schemas/SearchRequestPagingMetadata"
-          nullable: true
+          $ref: "#/components/schemas/SearchRequestPaging"
       required: ["terms"]
 
     EmployeeErrorResponse:
@@ -4448,7 +4461,7 @@ components:
             - Other
             - Spouse
 
-    BenefitYearsSearchTermsMetadata:
+    BenefitYearsSearchTerms:
       type: object
       properties:
         employee_id:
@@ -4471,16 +4484,14 @@ components:
       type: object
       properties:
         terms:
-          $ref: "#/components/schemas/BenefitYearsSearchTermsMetadata"
+          $ref: "#/components/schemas/BenefitYearsSearchTerms"
           nullable: true
         order:
-          $ref: "#/components/schemas/SearchRequestOrderMetadata"
-          nullable: true
+          $ref: "#/components/schemas/SearchRequestOrder"
         paging:
-          $ref: "#/components/schemas/SearchRequestPagingMetadata"
-          nullable: true
+          $ref: "#/components/schemas/SearchRequestPaging"
 
-    ClaimSearchRequestTermsMetadata:
+    ClaimSearchRequestTerms:
       type: object
       properties:
         employer_id:
@@ -4488,13 +4499,13 @@ components:
           items:
             type: string
             format: uuid
-          description: ID of Employer to query claims for
+          description: Employer IDs to query claims for
         employee_id:
           type: array
           items:
             type: string
             format: uuid
-          description: ID(s) of Employee to query claims for
+          description: Employee IDs to query claims for
         claim_status:
           type: string
           description: >
@@ -4518,7 +4529,7 @@ components:
           description: > 
             request decision used in filtering, request_decision is a status associated with an absence_period
 
-    EmployeeSearchRequestTermsMetadata:
+    EmployeeSearchRequestTerms:
       type: object
       properties:
         first_name:
@@ -4530,7 +4541,7 @@ components:
             This will be a case-insensitive, fuzzy match against first names on
             record.
           nullable: true
-          minLength: 3
+          minLength: 1
         last_name:
           type: string
           example: "Doe"
@@ -4540,7 +4551,7 @@ components:
             This will be a case-insensitive, fuzzy match against last names on
             record.
           nullable: true
-          minLength: 3
+          minLength: 1
         email_address:
           type: string
           format: email
@@ -4562,13 +4573,12 @@ components:
           example: "111111"
           nullable: true
 
-    SearchRequestOrderMetadata:
+    SearchRequestOrder:
       type: object
       properties:
         by:
           type: string
           default: "created_at"
-          nullable: true
           enum: ["created_at"]
         direction:
           type: string
@@ -4577,22 +4587,19 @@ components:
           enum:
             - ascending
             - descending
-          nullable: true
 
-    SearchRequestPagingMetadata:
+    SearchRequestPaging:
       type: object
       properties:
         offset:
           type: integer
           example: 1
           default: 1
-          nullable: true
         size:
           type: integer
           default: 25
           example: 10
-          nullable: true
-          
+
     ChangeRequest:
       type: object
       properties:

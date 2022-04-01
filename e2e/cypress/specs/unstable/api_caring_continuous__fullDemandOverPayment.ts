@@ -16,19 +16,6 @@ describeIf(
       password: config("PORTAL_PASSWORD"),
     };
 
-    // Record cancellation after test run to avoid using this claim in future test runs
-    after(() => {
-      // Confirm findApplication passed - This will avoid failures while attempting to "unstash" if the spec failed before "stashing" "claimToUse"
-      if (findApplication.state === "passed") {
-        fineos.before();
-        cy.unstash<DetailedClaimResponse>("claimToUse").then((claim) => {
-          fineosPages.ClaimPage.visit(
-            claim.fineos_absence_id
-          ).recordCancellation();
-        });
-      }
-    });
-
     // Look for claims that have payments and are "Complete", meaning leave end date is in the past
     const findApplication = it("Finds a claim from the previous day", () => {
       portal.before();
@@ -164,5 +151,18 @@ describeIf(
         });
       }
     );
+
+    it("Records cancellation after the agent flow", () => {
+      // Confirm findApplication passed -
+      // This will avoid failures while attempting to "unstash" if the spec failed before "stashing" "claimToUse"
+      if (findApplication.state === "passed") {
+        fineos.before();
+        cy.unstash<DetailedClaimResponse>("claimToUse").then((claim) => {
+          fineosPages.ClaimPage.visit(
+            claim.fineos_absence_id
+          ).recordCancellation();
+        });
+      }
+    });
   }
 );

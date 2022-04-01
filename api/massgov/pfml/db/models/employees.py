@@ -312,6 +312,15 @@ class AbsencePeriod(Base, TimestampMixin):
     absence_reason_qualifier_two = relationship(LkAbsenceReasonQualifierTwo)
     leave_request_decision = relationship(LkLeaveRequestDecision)
 
+    @property
+    def has_final_decision(self):
+        return self.leave_request_decision_id not in [
+            LeaveRequestDecision.PENDING.leave_request_decision_id,
+            LeaveRequestDecision.IN_REVIEW.leave_request_decision_id,
+            LeaveRequestDecision.PROJECTED.leave_request_decision_id,
+            None,
+        ]
+
 
 class AuthorizedRepresentative(Base, TimestampMixin):
     __tablename__ = "authorized_representative"
@@ -1479,6 +1488,13 @@ class ManagedRequirement(Base, TimestampMixin):
     claim = relationship("Claim", back_populates="managed_requirements")
     respondent_user = relationship(User)
 
+    @property
+    def is_open(self):
+        return (
+            self.managed_requirement_status_id
+            == ManagedRequirementStatus.OPEN.managed_requirement_status_id
+        )
+
 
 class WagesAndContributions(Base, TimestampMixin):
     __tablename__ = "wages_and_contributions"
@@ -2111,9 +2127,9 @@ class ReferenceFileType(LookupTable):
     DUA_EMPLOYER_FILE = LkReferenceFileType(39, "DUA employer", 1)
     DUA_EMPLOYER_UNIT_FILE = LkReferenceFileType(40, "DUA employer unit", 1)
 
-    MANUAL_PUB_REJECT_FILE = LkReferenceFileType(41, "Manual PUB Reject File", 1)
-
     FINEOS_VBI_TASKREPORT_SOM_EXTRACT = LkReferenceFileType(41, "VBI TaskReport Som extract", 1)
+
+    MANUAL_PUB_REJECT_FILE = LkReferenceFileType(42, "Manual PUB Reject File", 1)
 
 
 class Title(LookupTable):

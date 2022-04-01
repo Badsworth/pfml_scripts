@@ -222,11 +222,7 @@ def get_payments(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
                 # Copy the Payment data in the last batch for the employee
                 last_batch = get_last_1099_batch_for_employee(db_session, request.employee_id)
 
-                if last_batch is None:
-                    logger.info(
-                        "Employee did not appear in a previous batch: %s", request.employee_id
-                    )
-                else:
+                if last_batch is not None:
                     pub_payments = (
                         db_session.query(
                             Pfml1099Payment.payment_id.label("payment_id"),
@@ -396,11 +392,7 @@ def get_mmars_payments(db_session: db.Session, batch: Pfml1099Batch) -> List[Any
                 # Copy the MMARS Payment data in the last batch for the employee
                 last_batch = get_last_1099_batch_for_employee(db_session, request.employee_id)
 
-                if last_batch is None:
-                    logger.info(
-                        "Employee did not appear in a previous batch: %s", request.employee_id
-                    )
-                else:
+                if last_batch is not None:
                     mmars_payments = (
                         db_session.query(
                             Pfml1099MMARSPayment.mmars_payment_id.label("mmars_payment_id"),
@@ -530,11 +522,7 @@ def get_overpayments(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
                 # Copy the overpayment repayment data in the last batch for the employee
                 last_batch = get_last_1099_batch_for_employee(db_session, request.employee_id)
 
-                if last_batch is None:
-                    logger.info(
-                        "Employee did not appear in a previous batch: %s", request.employee_id
-                    )
-                else:
+                if last_batch is not None:
                     overpayment_repayments = (
                         db_session.query(
                             Pfml1099Refund.payment_id.label("payment_id"),
@@ -1087,11 +1075,7 @@ def get_1099s(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
                 # Copy the 1099 data in the last batch for the employee
                 last_batch = get_last_1099_batch_for_employee(db_session, request.employee_id)
 
-                if last_batch is None:
-                    logger.info(
-                        "Employee did not appear in a previous batch: %s", request.employee_id
-                    )
-                else:
+                if last_batch is not None:
                     employee_1099 = (
                         db_session.query(
                             Pfml1099.employee_id.label("employee_id"),
@@ -1737,10 +1721,7 @@ def get_last_1099_batch_for_employee(
     )
 
     if batch is None or len(batch) == 0:
-        logger.info("No previous batch exists for employee: %s", employee_id)
         return None
-
-    logger.info("Found %s batches in %s", len(batch), year)
 
     return batch
 

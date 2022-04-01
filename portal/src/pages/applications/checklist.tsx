@@ -31,6 +31,7 @@ import { Trans } from "react-i18next";
 import claimantConfig from "../../flows/claimant";
 import formatDate from "../../utils/formatDate";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
+import { isFeatureEnabled } from "src/services/featureFlags";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
@@ -133,6 +134,48 @@ export const Checklist = (props: ChecklistProps) => {
   }
 
   /**
+   * Get the content to show for a completed step
+   */
+  const getStepCompletedContent = (step: StepModel) => {
+    if (
+      isFeatureEnabled("splitClaimsAcrossBY") &&
+      step.name === ClaimSteps.leaveDetails &&
+      claim.computed_application_split
+    ) {
+      return (
+        <Alert className="" state="info" slim noIcon autoWidth>
+          <p>
+            <Trans
+              i18nKey="pages.claimsChecklist.leaveDetailsBenefitYears"
+              values={{
+                startDate: formatDate(
+                  claim.computed_application_split.crossed_benefit_year
+                    .benefit_year_start_date
+                ).short(),
+                endDate: formatDate(
+                  claim.computed_application_split.crossed_benefit_year
+                    .benefit_year_end_date
+                ).short(),
+              }}
+              components={{
+                "benefit-year-guide-link": (
+                  <a
+                    href={routes.external.massgov.benefitsGuide_benefitYears}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  />
+                ),
+              }}
+            />
+          </p>
+        </Alert>
+      );
+    }
+
+    return null;
+  };
+
+  /**
    * Get the content to show for a submitted step
    */
   // TODO (CP-2354) Remove this once there are no submitted claims with null Other Leave data
@@ -210,6 +253,7 @@ export const Checklist = (props: ChecklistProps) => {
           stepHref={stepHref}
           editable={!!step.editable}
           submittedContent={getStepSubmittedContent(step)}
+          completedContent={getStepCompletedContent(step)}
         >
           <Trans
             i18nKey="pages.claimsChecklist.stepHTMLDescription"

@@ -23,6 +23,10 @@ const flagsConfig = {
     claimantShowMFA: false,
     claimantSyncCognitoPreferences: false,
 
+    // When this flag is enabled, a claimant can request modifications to their leave
+    // TODO (PORTAL-2064) Remove flag
+    claimantShowModifications: false,
+
     // When this flag is enabled, the military leave options are selectable on
     // the Leave Reason page in the claimant flow (CP-1145)
     // TODO (CP-534): Show all options when portal supports activeDutyFamily, serviceMemberFamily

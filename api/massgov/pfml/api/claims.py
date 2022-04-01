@@ -39,10 +39,8 @@ from massgov.pfml.api.services.claims import (
 )
 from massgov.pfml.api.services.managed_requirements import update_employer_confirmation_requirements
 from massgov.pfml.api.util.claims import user_has_access_to_claim
-from massgov.pfml.api.util.paginate.paginator import (
-    PaginationAPIContext,
-    make_paging_meta_data_from_paginator,
-)
+from massgov.pfml.api.util.logging.search_request import search_request_log_info
+from massgov.pfml.api.util.paginate.paginator import PaginationAPIContext
 from massgov.pfml.api.validation.exceptions import (
     ContainsV1AndV2Eforms,
     IssueType,
@@ -82,6 +80,7 @@ from massgov.pfml.util.logging.claims import (
 from massgov.pfml.util.logging.employers import get_employer_log_attributes
 from massgov.pfml.util.logging.managed_requirements import (
     get_managed_requirements_update_log_attributes,
+    log_managed_requirement_issues,
 )
 from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.util.users import has_role_in
@@ -357,7 +356,7 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
                     claim_from_db.fineos_absence_status.absence_status_description
                 )
 
-            sync_customer_api_absence_periods_to_db(
+            db_absence_periods = sync_customer_api_absence_periods_to_db(
                 fineos_absence_periods, claim_from_db, db_session, log_attributes
             )
 
@@ -367,6 +366,20 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
                 fineos_managed_requirements,
                 log_attributes,
             )
+
+            updated_db_requirements = (
+                db_session.query(ManagedRequirement)
+                .filter(ManagedRequirement.claim_id == claim_from_db.claim_id)
+                .all()
+            )
+
+            log_managed_requirement_issues(
+                fineos_managed_requirements,
+                updated_db_requirements,
+                db_absence_periods,
+                log_attributes,
+            )
+
             fineos_claim_review_response.managed_requirements = [
                 ManagedRequirementResponse.from_orm(mr) for mr in managed_requirements
             ]
@@ -670,16 +683,11 @@ def _process_claims_request(claim_request: ClaimSearchRequest, method_name: str)
             query.add_order_by(pagination_context, is_reviewable)
 
             page = query.get_paginated_results(pagination_context)
-            page_data_log_attributes = make_paging_meta_data_from_paginator(
-                pagination_context, page
-            ).to_dict()
+            request_log_info = search_request_log_info(claim_request, page)
 
     logger.info(
         f"{method_name} success",
-        extra={
-            **page_data_log_attributes,
-            **log_attributes,
-        },
+        extra={**request_log_info, **log_attributes},
     )
 
     response_model: Union[Type[ClaimForPfmlCrmResponse], Type[ClaimResponse]] = (

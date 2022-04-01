@@ -439,6 +439,33 @@ class TestGetClaimReview:
         assert response_data["residential_address"]["zip"] == "30303"
         assert response_data["uses_second_eform_version"] is True
 
+    def test_claim_employee_relationship_added_if_missing(
+        self, client, employer_user, employer_auth_token, test_db_session, test_verification
+    ):
+        employer = EmployerFactory.create(employer_fein="999999999", employer_dba="Acme Co")
+        tax_identifier = TaxIdentifierFactory.create(tax_identifier="123121234")
+        employee = EmployeeFactory.create()
+        employee.tax_identifier = tax_identifier
+        claim = ClaimFactory.create(employer_id=employer.employer_id)
+        claim.employee_id = None
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+        test_db_session.commit()
+        assert claim.employee_id is None
+        response = client.get(
+            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+        post_call_claim = test_db_session.query(Claim).one_or_none()
+        assert post_call_claim.employee_id is not None
+        assert post_call_claim.employee_id == employee.employee_id
+        assert response.status_code == 200
+
     @freeze_time("2020-12-07")
     def test_second_eform_version_defaults_to_true(
         self, client, employer_user, employer_auth_token, test_db_session, test_verification
@@ -648,8 +675,43 @@ class TestGetClaimReview:
         ]
 
     @pytest.fixture
+    def open_managed_requirements(self):
+        return [
+            {
+                "managedReqId": 123,
+                "category": "Employer Confirmation",
+                "type": "Employer Confirmation of Leave Data",
+                "followUpDate": date(2021, 2, 1),
+                "documentReceived": True,
+                "creator": "Fake Creator",
+                "status": "Open",
+                "subjectPartyName": "Fake Name",
+                "sourceOfInfoPartyName": "Fake Sourcee",
+                "creationDate": date(2020, 1, 1),
+                "dateSuppressed": date(2020, 3, 1),
+            },
+            {
+                "managedReqId": 124,
+                "category": "Employer Confirmation",
+                "type": "Employer Confirmation of Leave Data",
+                "followUpDate": date(2021, 2, 1),
+                "documentReceived": True,
+                "creator": "Fake Creator",
+                "status": "Open",
+                "subjectPartyName": "Fake Name",
+                "sourceOfInfoPartyName": "Fake Sourcee",
+                "creationDate": date(2020, 1, 1),
+                "dateSuppressed": date(2020, 3, 1),
+            },
+        ]
+
+    @pytest.fixture
     def fineos_managed_requirements(self, managed_requirements):
         return [ManagedRequirementDetails.parse_obj(mr) for mr in managed_requirements]
+
+    @pytest.fixture
+    def fineos_open_managed_requirements(self, open_managed_requirements):
+        return [ManagedRequirementDetails.parse_obj(mr) for mr in open_managed_requirements]
 
     def _retrieve_managed_requirements_by_fineos_absence_id(
         self, db_session, fineos_absence_id
@@ -667,6 +729,7 @@ class TestGetClaimReview:
         mock_get_req,
         fineos_managed_requirements,
         client,
+        caplog,
         employer_user,
         employer_auth_token,
         test_db_session,
@@ -711,6 +774,119 @@ class TestGetClaimReview:
                 mr.category
                 == db_mr.managed_requirement_category.managed_requirement_category_description
             )
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
+    def test_employer_get_claim_review_create_managed_requirements_log_db_managed_requirements_not_in_fineos(
+        self,
+        mock_get_req,
+        fineos_managed_requirements,
+        client,
+        caplog,
+        employer_user,
+        employer_auth_token,
+        test_db_session,
+        test_verification,
+    ):
+        mock_get_req.return_value = fineos_managed_requirements[1:]
+        employer = EmployerFactory.create()
+        claim = ClaimFactory.create(employer_id=employer.employer_id)
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        db_mr = create_managed_requirement_from_fineos(
+            test_db_session, claim.claim_id, fineos_managed_requirements[0]
+        )
+
+        test_db_session.add(link)
+        test_db_session.commit()
+
+        response = client.get(
+            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        assert response.status_code == 200
+        requirements = self._retrieve_managed_requirements_by_fineos_absence_id(
+            test_db_session, claim.fineos_absence_id
+        )
+        assert len(requirements) == len(fineos_managed_requirements)
+        for db_mr in requirements:
+            searched_mr = [
+                m
+                for m in fineos_managed_requirements
+                if str(m.managedReqId) == db_mr.fineos_managed_requirement_id
+            ]
+            assert len(searched_mr) == 1
+            mr = searched_mr[0]
+            assert mr.followUpDate == db_mr.follow_up_date
+            assert mr.type == db_mr.managed_requirement_type.managed_requirement_type_description
+            assert (
+                mr.status == db_mr.managed_requirement_status.managed_requirement_status_description
+            )
+            assert (
+                mr.category
+                == db_mr.managed_requirement_category.managed_requirement_category_description
+            )
+        assert (
+            "Claim has managed requirements not present in the data received from fineos."
+            in caplog.text
+        )
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
+    def test_employer_get_claim_review_create_managed_requirements_and_log_multiple_open_managed_requirements(
+        self,
+        mock_get_req,
+        fineos_open_managed_requirements,
+        client,
+        caplog,
+        employer_user,
+        employer_auth_token,
+        test_db_session,
+        test_verification,
+    ):
+        mock_get_req.return_value = fineos_open_managed_requirements
+        employer = EmployerFactory.create()
+        claim = ClaimFactory.create(employer_id=employer.employer_id)
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+        test_db_session.commit()
+
+        response = client.get(
+            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        assert response.status_code == 200
+        requirements = self._retrieve_managed_requirements_by_fineos_absence_id(
+            test_db_session, claim.fineos_absence_id
+        )
+        assert len(requirements) == len(fineos_open_managed_requirements)
+        for db_mr in requirements:
+            searched_mr = [
+                m
+                for m in fineos_open_managed_requirements
+                if str(m.managedReqId) == db_mr.fineos_managed_requirement_id
+            ]
+            assert len(searched_mr) == 1
+            mr = searched_mr[0]
+            assert mr.followUpDate == db_mr.follow_up_date
+            assert mr.type == db_mr.managed_requirement_type.managed_requirement_type_description
+            assert (
+                mr.status == db_mr.managed_requirement_status.managed_requirement_status_description
+            )
+            assert (
+                mr.category
+                == db_mr.managed_requirement_category.managed_requirement_category_description
+            )
+        assert "Multiple open managed requirements were found." in caplog.text
 
     @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
     def test_employer_get_claim_review_update_managed_requirements(

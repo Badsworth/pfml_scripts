@@ -444,6 +444,12 @@ class AbsencePeriodFactory(BaseFactory):
     fineos_absence_period_index_id = factory.Faker("random_int")
 
 
+class PendingAbsencePeriodFactory(AbsencePeriodFactory):
+    leave_request_decision_id = (
+        employee_models.LeaveRequestDecision.PENDING.leave_request_decision_id
+    )
+
+
 class ManagedRequirementFactory(BaseFactory):
     class Meta:
         model = employee_models.ManagedRequirement
@@ -464,6 +470,41 @@ class ManagedRequirementFactory(BaseFactory):
     managed_requirement_type_id = (
         employee_models.ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id
     )
+
+
+class OpenManagedRequirementFactory(ManagedRequirementFactory):
+    managed_requirement_status_id = (
+        employee_models.ManagedRequirementStatus.OPEN.managed_requirement_status_id
+    )
+
+
+class FineosExtractVpeiFactory(BaseFactory):
+    class Meta:
+        model = payment_models.FineosExtractVpei
+
+    c = "7326"
+    i = factory.Sequence(lambda n: "%d" % n)
+    amount_monamt = Generators.Money
+
+
+class FineosExtractVpeiPaymentDetailsFactory(BaseFactory):
+    class Meta:
+        model = payment_models.FineosExtractVpeiPaymentDetails
+
+    c = "7806"
+    i = factory.Sequence(lambda n: "%d" % n)
+    balancingamou_monamt = Generators.Money
+
+
+class FineosExtractVpeiPaymentLineFactory(BaseFactory):
+    class Meta:
+        model = payment_models.FineosExtractVpeiPaymentLine
+
+    c = "7692"
+    i = factory.Sequence(lambda n: "%d" % n)
+
+    amount_monamt = Generators.Money
+    linetype = "Auto Gross Entitlement"
 
 
 class PaymentFactory(BaseFactory):
@@ -521,17 +562,6 @@ class PaymentDetailsFactory(BaseFactory):
     )
 
     amount = Generators.Money
-
-
-class FineosExtractVpeiPaymentLineFactory(BaseFactory):
-    class Meta:
-        model = payment_models.FineosExtractVpeiPaymentLine
-
-    c = "7692"
-    i = factory.Sequence(lambda n: "%d" % n)
-
-    amount_monamt = Generators.Money
-    linetype = "Auto Gross Entitlement"
 
 
 class PaymentLineFactory(BaseFactory):

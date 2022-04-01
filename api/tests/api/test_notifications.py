@@ -589,6 +589,16 @@ class TestNotificationManagedRequirement:
     def fineos_managed_requirement(self, claim):
         return ManagedRequirementDetails.parse_obj(self.managed_requirement())
 
+    @pytest.fixture()
+    def multiple_open_fineos_managed_requirement(self, claim):
+        requirement_1 = self.managed_requirement().copy()
+        requirement_2 = self.managed_requirement().copy()
+        requirement_2["managedReqId"] = requirement_1["managedReqId"] + 1
+        return [
+            ManagedRequirementDetails.parse_obj(requirement_1),
+            ManagedRequirementDetails.parse_obj(requirement_2),
+        ]
+
     def _api_call_create(self, client, token):
         return client.post(
             "/v1/notifications",
@@ -641,6 +651,29 @@ class TestNotificationManagedRequirement:
         self._assert_managed_requirement_data(
             claim, managed_requirement, fineos_managed_requirement
         )
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
+    def test_notification_managed_requirement_log_multiple_open_managed_requirements(
+        self,
+        mock_get_req,
+        caplog,
+        client,
+        test_db_session,
+        fineos_user_token,
+        multiple_open_fineos_managed_requirement,
+        claim,
+    ):
+        mock_get_req.return_value = multiple_open_fineos_managed_requirement
+
+        response = self._api_call_create(client, fineos_user_token)
+
+        assert response.status_code == 201
+        for requirement in multiple_open_fineos_managed_requirement:
+            managed_requirement = get_managed_requirement_by_fineos_managed_requirement_id(
+                requirement.managedReqId, test_db_session
+            )
+            self._assert_managed_requirement_data(claim, managed_requirement, requirement)
+        assert "Multiple open managed requirements were found." in caplog.text
 
     @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
     def test_notification_managed_requirement_update_success(

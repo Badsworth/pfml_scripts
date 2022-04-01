@@ -7,7 +7,7 @@ import logging  # noqa: B1
 import os
 import re
 from dataclasses import asdict
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Tuple, Type
 from unittest import mock
 
 import pytest
@@ -45,11 +45,25 @@ from massgov.pfml.db.models.payments import (
     Pfml1099Request,
 )
 from massgov.pfml.db.models.state import Flow, LkFlow, LkState, State
+from massgov.pfml.delegated_payments.address_validation import AddressValidationStep
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
 )
+from massgov.pfml.delegated_payments.audit.delegated_payment_audit_report import (
+    PaymentAuditReportStep,
+)
+from massgov.pfml.delegated_payments.audit.delegated_payment_rejects import PaymentRejectsStep
+from massgov.pfml.delegated_payments.delegated_fineos_1099_extract import Data1099ExtractStep
 from massgov.pfml.delegated_payments.delegated_fineos_claimant_extract import ClaimantExtractStep
 from massgov.pfml.delegated_payments.delegated_fineos_payment_extract import PaymentExtractStep
+from massgov.pfml.delegated_payments.delegated_fineos_pei_writeback import FineosPeiWritebackStep
+from massgov.pfml.delegated_payments.delegated_fineos_related_payment_post_processing import (
+    RelatedPaymentsPostProcessingStep,
+)
+from massgov.pfml.delegated_payments.delegated_fineos_related_payment_processing import (
+    RelatedPaymentsProcessingStep,
+)
+from massgov.pfml.delegated_payments.fineos_extract_step import FineosExtractStep
 from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
     generate_claimant_data_files,
     generate_payment_extract_files,
@@ -75,11 +89,18 @@ from massgov.pfml.delegated_payments.mock.scenarios import (
     ScenarioDescriptor,
     ScenarioName,
 )
+from massgov.pfml.delegated_payments.payment_methods_split_step import PaymentMethodsSplitStep
+from massgov.pfml.delegated_payments.pickup_response_files_step import PickupResponseFilesStep
+from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_step import (
+    PaymentPostProcessingStep,
+)
 from massgov.pfml.delegated_payments.pub.process_check_return_step import ProcessCheckReturnFileStep
 from massgov.pfml.delegated_payments.pub.process_manual_pub_rejection_step import (
     ProcessManualPubRejectionStep,
 )
 from massgov.pfml.delegated_payments.pub.process_nacha_return_step import ProcessNachaReturnFileStep
+from massgov.pfml.delegated_payments.pub.transaction_file_creator import TransactionFileCreatorStep
+from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_report_step import ReportStep
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports import (
     CREATE_PUB_FILES_REPORTS,
     PROCESS_FINEOS_EXTRACT_REPORTS,
@@ -88,6 +109,7 @@ from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports imp
     ReportName,
     get_report_by_name,
 )
+from massgov.pfml.delegated_payments.state_cleanup_step import StateCleanupStep
 from massgov.pfml.delegated_payments.step import Step
 from massgov.pfml.delegated_payments.task.process_fineos_extracts import (
     Configuration as FineosTaskConfiguration,
@@ -113,7 +135,65 @@ from massgov.pfml.delegated_payments.task.process_pub_responses import (
 from massgov.pfml.delegated_payments.task.process_pub_responses import (
     _process_pub_responses as run_process_pub_responses_ecs_task,
 )
+from massgov.pfml.delegated_payments.weekly_max.max_weekly_benefit_amount_validation_step import (
+    MaxWeeklyBenefitAmountValidationStep,
+)
 from massgov.pfml.util.datetime import get_now_us_eastern
+
+# == Constants ==
+
+# These are the pairs of step+import types we expect
+EXPECTED_STEPS_PROCESS_FINEOS_EXTRACTS = [
+    (StateCleanupStep, ""),
+    (FineosExtractStep, ReferenceFileType.FINEOS_CLAIMANT_EXTRACT.reference_file_type_description),
+    (FineosExtractStep, ReferenceFileType.FINEOS_PAYMENT_EXTRACT.reference_file_type_description),
+    (
+        FineosExtractStep,
+        ReferenceFileType.FINEOS_VBI_TASKREPORT_SOM_EXTRACT.reference_file_type_description,
+    ),
+    (ClaimantExtractStep, ""),
+    (PaymentExtractStep, ""),
+    (FineosExtractStep, ReferenceFileType.FINEOS_1099_DATA_EXTRACT.reference_file_type_description),
+    (Data1099ExtractStep, ""),
+    (AddressValidationStep, ""),
+    (MaxWeeklyBenefitAmountValidationStep, ""),
+    (PaymentPostProcessingStep, ""),
+    (RelatedPaymentsProcessingStep, ""),
+    (PaymentAuditReportStep, ""),
+    (FineosPeiWritebackStep, ""),
+    (ReportStep, ""),
+]
+
+EXPECTED_STEPS_PROCESS_PUB_PAYMENTS = [
+    (PickupResponseFilesStep, ""),
+    (PaymentRejectsStep, ""),
+    (PaymentMethodsSplitStep, ""),
+    (TransactionFileCreatorStep, ""),
+    (RelatedPaymentsPostProcessingStep, ""),
+    (FineosPeiWritebackStep, ""),
+    (ReportStep, ""),
+]
+
+EXPECTED_STEPS_PROCESS_PUB_RESPONSES = [
+    (PickupResponseFilesStep, ""),
+    (ProcessNachaReturnFileStep, ""),
+    (ProcessCheckReturnFileStep, ""),
+    (ProcessCheckReturnFileStep, ""),
+    (ProcessManualPubRejectionStep, ""),
+    (FineosPeiWritebackStep, ""),
+    (ReportStep, ""),
+]
+
+# The check file step won't run multiple times
+EXPECTED_STEPS_PROCESS_PUB_RESPONSES_NO_FILES = [
+    (PickupResponseFilesStep, ""),
+    (ProcessNachaReturnFileStep, ""),
+    (ProcessCheckReturnFileStep, ""),
+    (ProcessManualPubRejectionStep, ""),
+    (FineosPeiWritebackStep, ""),
+    (ReportStep, ""),
+]
+
 
 # == Data Structures ==
 
@@ -249,8 +329,6 @@ def test_e2e_pub_payments(
 ):
     test_db_session = local_test_db_session
     test_db_other_session = local_test_db_other_session
-
-    # TODO Validate error and warning logs - PUB-171
 
     # ========================================================================
     # Configuration / Setup
@@ -463,7 +541,7 @@ def test_e2e_pub_payments(
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
             scenario_names=[ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT],
-            end_state=State.DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT,
+            end_state=State.DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_RESTARTABLE,
             db_session=test_db_session,
         )
 
@@ -702,6 +780,9 @@ def test_e2e_pub_payments(
         # No payment created for this scenario
         stage_1_writeback_scenarios.remove(ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED)
 
+        # Removed writeback for employer remibursement payments
+        stage_1_writeback_scenarios.remove(ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT)
+
         assert_writeback_for_stage(test_dataset, stage_1_writeback_scenarios, test_db_session)
 
         # Now add records to the list for tax withholding scenarios so the counts
@@ -738,594 +819,6 @@ def test_e2e_pub_payments(
             s3_config.pfml_error_reports_archive_path,
             PROCESS_FINEOS_EXTRACT_REPORTS,
             test_db_session,
-        )
-
-        # == Validate metrics
-        assert_metrics(test_db_other_session, "StateCleanupStep", {"audit_state_cleanup_count": 0})
-
-        ach_payments = list(
-            filter(
-                lambda sd: sd.scenario_descriptor.payment_method.payment_method_id
-                == PaymentMethod.ACH.payment_method_id,
-                test_dataset.scenario_dataset,
-            )
-        )
-        assert_metrics(
-            test_db_other_session,
-            "ClaimantExtractStep",
-            {
-                "claim_not_found_count": len([ScenarioName.CLAIM_NOT_ID_PROOFED]),
-                "claim_processed_count": len(SCENARIO_DESCRIPTORS),
-                "eft_found_count": len(ach_payments)
-                - len(
-                    [
-                        ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
-                        ScenarioName.PUB_ACH_PRENOTE_RETURN,
-                        ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
-                        ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
-                        ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
-                        ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
-                        ScenarioName.TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED,
-                    ]
-                ),
-                "eft_rejected_count": 0,
-                "employee_feed_record_count": len(SCENARIO_DESCRIPTORS),
-                "employee_not_found_in_feed_count": 0,
-                "tax_identifier_missing_in_db_count": len(
-                    [ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT]
-                ),
-                "employee_not_found_in_database_count": 0,
-                "employee_processed_multiple_times": 0,
-                "errored_claim_count": len(
-                    [ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT]
-                ),
-                "errored_claimant_count": 0,
-                "evidence_not_id_proofed_count": len([ScenarioName.CLAIM_NOT_ID_PROOFED]),
-                "new_eft_count": len(
-                    [
-                        ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
-                        ScenarioName.PUB_ACH_PRENOTE_RETURN,
-                        ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
-                        ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
-                        ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
-                        ScenarioName.TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED,
-                    ]
-                ),
-                "processed_employee_count": len(SCENARIO_DESCRIPTORS),
-                "processed_requested_absence_count": len(SCENARIO_DESCRIPTORS),
-                "valid_claim_count": len(SCENARIO_DESCRIPTORS)
-                - len([ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT]),
-                "vbi_requested_absence_som_record_count": len(SCENARIO_DESCRIPTORS),
-            },
-        )
-        # Number of absence records created for withholding scenarios
-        withholding_requested_absence_records_count = 10
-        assert_metrics(
-            test_db_other_session,
-            "PaymentExtractStep",
-            {
-                "active_payment_error_count": 0,
-                "already_active_payment_count": 0,
-                "approved_prenote_count": len(
-                    [
-                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
-                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
-                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP,
-                        ScenarioName.AUDIT_REJECTED,
-                        ScenarioName.AUDIT_SKIPPED,
-                        ScenarioName.AUDIT_REJECTED_WITH_NOTE,
-                        ScenarioName.AUDIT_SKIPPED_WITH_NOTE,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN,
-                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
-                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
-                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
-                        ScenarioName.PUB_ACH_MANUAL_REJECT,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
-                        ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE,
-                        ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
-                        ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
-                        ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
-                        ScenarioName.HAPPY_PATH_MAX_LEAVE_DURATION_EXCEEDED,
-                        ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH,
-                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
-                        ScenarioName.IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION,
-                        ScenarioName.OPEN_OTHER_INCOME_TASK,
-                    ]
-                ),
-                "cancellation_count": len(
-                    [
-                        ScenarioName.CANCELLATION_PAYMENT,
-                        ScenarioName.TAX_WITHHOLDING_CANCELLATION_PAYMENT,
-                        ScenarioName.TAX_WITHHOLDING_CANCELLATION_PAYMENT,
-                        ScenarioName.TAX_WITHHOLDING_CANCELLATION_PAYMENT,
-                    ]
-                ),
-                "claim_details_record_count": len(SCENARIO_DESCRIPTORS)
-                + len(split_payment_scenarios)
-                - len(
-                    [
-                        ScenarioName.OVERPAYMENT_MISSING_NON_VPEI_RECORDS,
-                        ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED,
-                    ]
-                ),
-                "claim_not_found_count": 0,
-                "claimant_mismatch_count": len(
-                    [ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT]
-                ),
-                "eft_found_count": len(
-                    [
-                        ScenarioName.AUDIT_REJECTED,
-                        ScenarioName.AUDIT_SKIPPED,
-                        ScenarioName.AUDIT_REJECTED_WITH_NOTE,
-                        ScenarioName.AUDIT_SKIPPED_WITH_NOTE,
-                        ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
-                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
-                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
-                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN,
-                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
-                        ScenarioName.PUB_ACH_MANUAL_REJECT,
-                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
-                        ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
-                        ScenarioName.PUB_ACH_PRENOTE_RETURN,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
-                        ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
-                        ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
-                        ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE,
-                        ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
-                        ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
-                        ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
-                        ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
-                        ScenarioName.HAPPY_PATH_MAX_LEAVE_DURATION_EXCEEDED,
-                        ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH,
-                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
-                        ScenarioName.TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED,
-                        ScenarioName.IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION,
-                        ScenarioName.OPEN_OTHER_INCOME_TASK,
-                    ]
-                ),
-                "employee_in_payment_extract_missing_in_db_count": 0,
-                "employer_reimbursement_count": len([ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT]),
-                "errored_payment_count": len(
-                    [
-                        ScenarioName.CLAIM_NOT_ID_PROOFED,
-                        ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
-                        ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
-                        ScenarioName.PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB,
-                        ScenarioName.REJECTED_LEAVE_REQUEST_DECISION,
-                        ScenarioName.UNKNOWN_LEAVE_REQUEST_DECISION,
-                        ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
-                        ScenarioName.PUB_ACH_PRENOTE_RETURN,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
-                        ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
-                        ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
-                        ScenarioName.TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED,
-                        ScenarioName.IN_REVIEW_LEAVE_REQUEST_DECISION,
-                        ScenarioName.OPEN_OTHER_INCOME_TASK,
-                    ]
-                ),
-                "new_eft_count": 0,
-                "not_approved_prenote_count": len(
-                    [
-                        ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
-                        ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
-                        ScenarioName.PUB_ACH_PRENOTE_RETURN,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
-                        ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
-                        ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
-                        ScenarioName.TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED,
-                    ]
-                ),
-                "in_review_leave_request_count": len(
-                    [ScenarioName.IN_REVIEW_LEAVE_REQUEST_DECISION]
-                ),
-                "not_approved_leave_request_count": len(
-                    [
-                        ScenarioName.REJECTED_LEAVE_REQUEST_DECISION,
-                        ScenarioName.UNKNOWN_LEAVE_REQUEST_DECISION,
-                    ]
-                ),
-                "overpayment_count": len(stage_1_overpayment_scenarios),
-                "payment_details_record_count": len(SCENARIO_DESCRIPTORS)
-                + len(split_payment_scenarios)
-                - len([ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED]),
-                "pei_record_count": len(SCENARIO_DESCRIPTORS)
-                + len(split_payment_scenarios)
-                - len([ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED]),
-                "prenote_past_waiting_period_approved_count": 0,
-                "processed_payment_count": len(SCENARIO_DESCRIPTORS)
-                + len(split_payment_scenarios)
-                - len([ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED]),
-                "requested_absence_record_count": len(SCENARIO_DESCRIPTORS)
-                - len(
-                    [
-                        ScenarioName.OVERPAYMENT_MISSING_NON_VPEI_RECORDS,
-                        ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED,
-                    ]
-                )
-                + withholding_requested_absence_records_count,
-                "standard_valid_payment_count": len(
-                    [
-                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
-                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
-                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
-                        ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.AUDIT_REJECTED,
-                        ScenarioName.AUDIT_SKIPPED,
-                        ScenarioName.AUDIT_REJECTED_WITH_NOTE,
-                        ScenarioName.AUDIT_SKIPPED_WITH_NOTE,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN,
-                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
-                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
-                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
-                        ScenarioName.PUB_ACH_MANUAL_REJECT,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
-                        ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
-                        ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE,
-                        ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
-                        ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
-                        ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
-                        ScenarioName.HAPPY_PATH_MAX_LEAVE_DURATION_EXCEEDED,
-                        ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH,
-                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
-                        ScenarioName.TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
-                        ScenarioName.IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION,
-                        ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED,
-                    ]
-                ),
-                "tax_identifier_missing_in_db_count": len(
-                    [ScenarioName.PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB]
-                ),
-                "zero_dollar_payment_count": len([ScenarioName.ZERO_DOLLAR_PAYMENT]),
-            },
-        )
-
-        assert_metrics(
-            test_db_other_session,
-            "AddressValidationStep",
-            {
-                "experian_search_exception_count": 0,
-                "invalid_experian_format": 0,
-                "invalid_experian_response": 0,
-                "no_experian_match_count": len(
-                    [
-                        ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                    ]
-                ),
-                "previously_validated_match_count": 0,
-                "valid_experian_format": len(
-                    [
-                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
-                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
-                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
-                        ScenarioName.AUDIT_REJECTED,
-                        ScenarioName.AUDIT_SKIPPED,
-                        ScenarioName.AUDIT_REJECTED_WITH_NOTE,
-                        ScenarioName.AUDIT_SKIPPED_WITH_NOTE,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN,
-                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
-                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
-                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
-                        ScenarioName.PUB_ACH_MANUAL_REJECT,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
-                        ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE,
-                        ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
-                        ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
-                        ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
-                        ScenarioName.HAPPY_PATH_MAX_LEAVE_DURATION_EXCEEDED,
-                        ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH,
-                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
-                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
-                        ScenarioName.IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION,
-                        ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED,
-                    ]
-                ),
-                "validated_address_count": len(
-                    [
-                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
-                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
-                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
-                        ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.AUDIT_REJECTED,
-                        ScenarioName.AUDIT_SKIPPED,
-                        ScenarioName.AUDIT_REJECTED_WITH_NOTE,
-                        ScenarioName.AUDIT_SKIPPED_WITH_NOTE,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN,
-                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
-                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
-                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
-                        ScenarioName.PUB_ACH_MANUAL_REJECT,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
-                        ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE,
-                        ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
-                        ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
-                        ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
-                        ScenarioName.HAPPY_PATH_MAX_LEAVE_DURATION_EXCEEDED,
-                        ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH,
-                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
-                        ScenarioName.TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
-                        ScenarioName.IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION,
-                        ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED,
-                    ]
-                ),
-                "verified_experian_match": len(
-                    [
-                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
-                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
-                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
-                        ScenarioName.AUDIT_REJECTED,
-                        ScenarioName.AUDIT_SKIPPED,
-                        ScenarioName.AUDIT_REJECTED_WITH_NOTE,
-                        ScenarioName.AUDIT_SKIPPED_WITH_NOTE,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN,
-                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
-                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
-                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
-                        ScenarioName.PUB_ACH_MANUAL_REJECT,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
-                        ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE,
-                        ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
-                        ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
-                        ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
-                        ScenarioName.HAPPY_PATH_MAX_LEAVE_DURATION_EXCEEDED,
-                        ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH,
-                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
-                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
-                        ScenarioName.IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION,
-                        ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED,
-                    ]
-                ),
-            },
-        )
-
-        assert_metrics(
-            test_db_other_session,
-            "RelatedPaymentsProcessingStep",
-            {
-                "federal_withholding_record_count": len(
-                    [
-                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
-                        ScenarioName.TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
-                        ScenarioName.TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED,
-                    ]
-                ),
-                "state_withholding_record_count": len(
-                    [
-                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
-                        ScenarioName.TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
-                        ScenarioName.TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED,
-                        ScenarioName.TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT,
-                    ]
-                ),
-            },
-        )
-
-        assert_metrics(
-            test_db_other_session,
-            "PaymentAuditReportStep",
-            {
-                "payment_count": len(
-                    [
-                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
-                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
-                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN,
-                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
-                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
-                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
-                        ScenarioName.PUB_ACH_MANUAL_REJECT,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
-                        ScenarioName.AUDIT_REJECTED,
-                        ScenarioName.AUDIT_SKIPPED,
-                        ScenarioName.AUDIT_REJECTED_WITH_NOTE,
-                        ScenarioName.AUDIT_SKIPPED_WITH_NOTE,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
-                        ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE,
-                        ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
-                        ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
-                        ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
-                        ScenarioName.HAPPY_PATH_MAX_LEAVE_DURATION_EXCEEDED,
-                        ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH,
-                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
-                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
-                        ScenarioName.TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT,
-                        ScenarioName.IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION,
-                        ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED,
-                    ]
-                ),
-                "payment_sampled_for_audit_count": len(
-                    [
-                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
-                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
-                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN,
-                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
-                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
-                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
-                        ScenarioName.PUB_ACH_MANUAL_REJECT,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
-                        ScenarioName.AUDIT_REJECTED,
-                        ScenarioName.AUDIT_SKIPPED,
-                        ScenarioName.AUDIT_REJECTED_WITH_NOTE,
-                        ScenarioName.AUDIT_SKIPPED_WITH_NOTE,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
-                        ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE,
-                        ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
-                        ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
-                        ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
-                        ScenarioName.HAPPY_PATH_MAX_LEAVE_DURATION_EXCEEDED,
-                        ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH,
-                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
-                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
-                        ScenarioName.TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT,
-                        ScenarioName.IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION,
-                        ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED,
-                    ]
-                ),
-                "sampled_payment_count": len(
-                    [
-                        ScenarioName.HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
-                        ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,
-                        ScenarioName.HAPPY_PATH_FAMILY_ACH_PRENOTED,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN,
-                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
-                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
-                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
-                        ScenarioName.PUB_ACH_MANUAL_REJECT,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
-                        ScenarioName.AUDIT_REJECTED,
-                        ScenarioName.AUDIT_SKIPPED,
-                        ScenarioName.AUDIT_REJECTED_WITH_NOTE,
-                        ScenarioName.AUDIT_SKIPPED_WITH_NOTE,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
-                        ScenarioName.HAPPY_PATH_CLAIM_MISSING_EMPLOYEE,
-                        ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
-                        ScenarioName.HAPPY_PATH_DUA_ADDITIONAL_INCOME,
-                        ScenarioName.HAPPY_PATH_DIA_ADDITIONAL_INCOME,
-                        ScenarioName.HAPPY_PATH_MAX_LEAVE_DURATION_EXCEEDED,
-                        ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH,
-                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
-                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
-                        ScenarioName.TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT,
-                        ScenarioName.IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION,
-                        ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED,
-                    ]
-                ),
-            },
-        )
-
-        assert_metrics(
-            test_db_other_session,
-            "FineosPeiWritebackStep",
-            {
-                "errored_writeback_record_during_file_creation_count": 0,
-                "errored_writeback_record_during_file_transfer_count": 0,
-                "successful_writeback_record_count": len(stage_1_writeback_scenarios),
-                "writeback_record_count": len(stage_1_writeback_scenarios),
-                "generic_flow_writeback_items_count": len(stage_1_writeback_scenarios),
-                "address_validation_error_writeback_transaction_status_count": len(
-                    [
-                        ScenarioName.CHECK_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                        ScenarioName.TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-                    ]
-                ),
-                "payment_system_error_writeback_transaction_status_count": len(
-                    [
-                        ScenarioName.CLAIM_NOT_ID_PROOFED,
-                        ScenarioName.PAYMENT_EXTRACT_EMPLOYEE_MISSING_IN_DB,
-                        ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
-                    ]
-                ),
-                "eft_pending_bank_validation_writeback_transaction_status_count": len(
-                    [
-                        ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
-                        ScenarioName.EFT_ACCOUNT_NOT_PRENOTED,
-                        ScenarioName.PUB_ACH_PRENOTE_RETURN,
-                        ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
-                        ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
-                        ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
-                        ScenarioName.TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED,
-                        ScenarioName.TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED,
-                        ScenarioName.TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED,
-                    ]
-                ),
-                "payment_validation_error_writeback_transaction_status_count": len(
-                    [
-                        ScenarioName.REJECTED_LEAVE_REQUEST_DECISION,
-                        ScenarioName.UNKNOWN_LEAVE_REQUEST_DECISION,
-                    ]
-                ),
-                "processed_writeback_transaction_status_count": len(stage_1_non_standard_payments),
-                "payment_audit_in_progress_writeback_transaction_status_count": len(
-                    stage_1_happy_path_scenarios
-                )
-                + len(stage_1_scenarios_that_will_later_fail)
-                + len(
-                    [
-                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
-                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
-                        ScenarioName.TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT,
-                    ]
-                ),
-            },
-        )
-
-        assert_metrics(
-            test_db_other_session,
-            "ReportStep",
-            {
-                "processed_report_count": len(PROCESS_FINEOS_EXTRACT_REPORTS),
-                "report_error_count": 0,
-                "report_generated_count": len(PROCESS_FINEOS_EXTRACT_REPORTS),
-            },
         )
 
     # ===============================================================================
@@ -1619,13 +1112,6 @@ def test_e2e_pub_payments(
         stage_2_writeback_scenarios.extend(stage_2_ach_scenarios)
         stage_2_writeback_scenarios.extend(stage_2_check_scenarios)
 
-        stage_2_split_writeback_scenarios = [
-            ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
-            ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
-            ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
-            ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
-        ]
-
         assert_writeback_for_stage(test_dataset, stage_2_writeback_scenarios, test_db_session)
 
         # == Reports
@@ -1635,108 +1121,6 @@ def test_e2e_pub_payments(
             CREATE_PUB_FILES_REPORTS,
             test_db_session,
         )
-
-        # == Metrics
-        assert_metrics(
-            test_db_other_session,
-            "PickupResponseFilesStep",
-            {
-                "Payment-Audit-Report_file_moved_count": 1,
-                "EOLWD-DFML-POSITIVE-PAY_file_moved_count": 0,
-                "EOLWD-DFML-NACHA_file_moved_count": 0,
-            },
-        )
-
-        assert_metrics(
-            test_db_other_session,
-            "PaymentRejectsStep",
-            {
-                "accepted_payment_count": len(stage_2_ach_scenarios) + len(stage_2_check_scenarios),
-                "parsed_rows_count": len(stage_2_writeback_scenarios),
-                "payment_state_log_missing_count": 0,
-                "payment_state_log_not_in_audit_response_pending_count": 0,
-                "rejected_payment_count": len(
-                    [
-                        ScenarioName.AUDIT_REJECTED,
-                        ScenarioName.AUDIT_REJECTED_WITH_NOTE,
-                        ScenarioName.HAPPY_PATH_PAYMENT_DATE_MISMATCH,
-                    ]
-                ),
-                "skipped_payment_count": len(
-                    [ScenarioName.AUDIT_SKIPPED, ScenarioName.AUDIT_SKIPPED_WITH_NOTE]
-                ),
-                "state_logs_count": len(stage_2_writeback_scenarios),
-            },
-        )
-
-        assert_metrics(
-            test_db_other_session,
-            "PaymentMethodsSplitStep",
-            {
-                "ach_payment_count": len(stage_2_ach_scenarios_excluding_split_payments),
-                "check_payment_count": len(stage_2_check_scenarios),
-                "payment_count": len(stage_2_ach_scenarios_excluding_split_payments)
-                + len(stage_2_check_scenarios),
-            },
-        )
-
-        assert_metrics(
-            test_db_other_session,
-            "TransactionFileCreatorStep",
-            {
-                "ach_payment_count": len(stage_2_ach_scenarios_excluding_split_payments),
-                "ach_prenote_count": len(stage_2_prenote_scenarios),
-                "check_payment_count": len(stage_2_check_scenarios),
-                "failed_to_add_transaction_count": 0,
-                "successful_add_to_transaction_count": len(stage_2_prenote_scenarios)
-                + len(stage_2_ach_scenarios_excluding_split_payments)
-                + len(stage_2_check_scenarios),
-                "transaction_files_sent_count": 3,  # EzCheck, NACHA, and positive pay files.
-            },
-        )
-
-        assert_metrics(
-            test_db_other_session,
-            "FineosPeiWritebackStep",
-            {
-                "errored_writeback_record_during_file_creation_count": 0,
-                "errored_writeback_record_during_file_transfer_count": 0,
-                "successful_writeback_record_count": len(stage_2_writeback_scenarios)
-                + len(stage_2_split_writeback_scenarios),
-                "writeback_record_count": len(stage_2_writeback_scenarios)
-                + len(stage_2_split_writeback_scenarios),
-                "generic_flow_writeback_items_count": len(stage_2_writeback_scenarios)
-                + len(stage_2_split_writeback_scenarios),
-                "payment_audit_error_writeback_transaction_status_count": len(
-                    [ScenarioName.AUDIT_REJECTED]
-                ),
-                "pending_payment_audit_writeback_transaction_status_count": len(
-                    [ScenarioName.AUDIT_SKIPPED]
-                ),
-                "leave_plan_in_review_writeback_transaction_status_count": len(
-                    [ScenarioName.AUDIT_SKIPPED_WITH_NOTE]
-                ),
-                "paid_writeback_transaction_status_count": len(stage_2_ach_scenarios)
-                + len(stage_2_check_scenarios)
-                + len(stage_2_split_writeback_scenarios),
-                "dua_additional_income_writeback_transaction_status_count": len(
-                    [ScenarioName.AUDIT_REJECTED_WITH_NOTE]
-                ),
-            },
-        )
-
-        # ReportStep
-        assert_metrics(
-            test_db_other_session,
-            "ReportStep",
-            {
-                "processed_report_count": len(CREATE_PUB_FILES_REPORTS),
-                "report_error_count": 0,
-                "report_generated_count": len(CREATE_PUB_FILES_REPORTS),
-            },
-        )
-
-        # TODO file transaction metrics when available
 
     # ===============================================================================
     # [Day 3 - 9:00 AM] PUB sends ACH and Check response files
@@ -2023,211 +1407,6 @@ def test_e2e_pub_payments(
             s3_config.pfml_error_reports_archive_path,
             PROCESS_PUB_RESPONSES_REPORTS,
             test_db_session,
-        )
-
-        # == Metrics
-
-        assert_metrics(
-            test_db_other_session,
-            "PickupResponseFilesStep",
-            {
-                "Payment-Audit-Report_file_moved_count": 0,
-                "EOLWD-DFML-POSITIVE-PAY_file_moved_count": len(positive_pay_filenames),
-                "EOLWD-DFML-NACHA_file_moved_count": len(nacha_filenames),
-            },
-        )
-
-        assert_metrics(
-            test_db_other_session,
-            "ProcessNachaReturnFileStep",
-            {
-                "ach_return_count": len(
-                    [
-                        ScenarioName.PUB_ACH_FAMILY_RETURN,
-                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
-                        ScenarioName.PUB_ACH_PRENOTE_RETURN,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
-                        ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
-                        ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
-                    ]
-                ),
-                "change_notification_count": len(
-                    [
-                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
-                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
-                        ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
-                    ]
-                ),
-                "eft_prenote_already_rejected_count": 0,
-                "eft_prenote_count": len(
-                    [
-                        ScenarioName.PUB_ACH_PRENOTE_RETURN,
-                        ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION,
-                        ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND,
-                    ]
-                ),
-                "eft_prenote_id_not_found_count": len(
-                    [ScenarioName.PUB_ACH_PRENOTE_PAYMENT_ID_NOT_FOUND]
-                ),
-                "eft_prenote_change_notification_count": len(
-                    [ScenarioName.PUB_ACH_PRENOTE_NOTIFICATION]
-                ),
-                "eft_prenote_rejected_count": len([ScenarioName.PUB_ACH_PRENOTE_RETURN]),
-                "eft_prenote_unexpected_state_count": 0,
-                "payment_already_complete_count": 0,
-                "payment_complete_with_change_count": len(
-                    [
-                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
-                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
-                    ]
-                ),
-                "payment_count": len(
-                    [
-                        ScenarioName.PUB_ACH_FAMILY_RETURN,
-                        ScenarioName.PUB_ACH_MEDICAL_RETURN,
-                        ScenarioName.PUB_ACH_MEDICAL_NOTIFICATION,
-                        ScenarioName.PUB_ACH_FAMILY_NOTIFICATION,
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND,
-                    ]
-                ),
-                "payment_id_not_found_count": len(
-                    [ScenarioName.PUB_ACH_FAMILY_RETURN_PAYMENT_ID_NOT_FOUND]
-                ),
-                "payment_already_rejected_count": 0,  # TODO add scenario or check this on later days
-                "payment_notification_unexpected_state_count": 0,
-                "payment_rejected_count": len(
-                    [ScenarioName.PUB_ACH_MEDICAL_RETURN, ScenarioName.PUB_ACH_FAMILY_RETURN]
-                ),
-                "payment_unexpected_state_count": 0,
-                "unknown_id_format_count": len(
-                    [
-                        ScenarioName.PUB_ACH_FAMILY_RETURN_INVALID_PAYMENT_ID_FORMAT,
-                        ScenarioName.PUB_ACH_PRENOTE_INVALID_PAYMENT_ID_FORMAT,
-                    ]
-                ),
-                "warning_count": 0,
-            },
-        )
-
-        # Outstanding check response
-        assert_metrics(
-            test_db_other_session,
-            "ProcessCheckReturnFileStep",
-            {
-                "check_number_not_found_count": 0,
-                "check_payment_count": len(
-                    [
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
-                    ]
-                ),
-                "payment_complete_by_paid_check": 0,
-                "payment_failed_by_check": len(
-                    [
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_VOID,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STALE,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_STOP,
-                    ]
-                ),
-                "payment_still_outstanding": len(
-                    [
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_OUTSTANDING,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_FUTURE,
-                    ]
-                ),
-                "payment_unexpected_state_count": 0,
-                "warning_count": 0,
-            },
-            log_report_index=1,  # second when sorted in start time desc order
-            description="Outstanding check responses",
-        )
-
-        # Positive pay check response
-        assert_metrics(
-            test_db_other_session,
-            "ProcessCheckReturnFileStep",
-            {
-                "check_number_not_found_count": len(
-                    [ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND]
-                ),
-                "check_payment_count": len(
-                    [
-                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
-                        ScenarioName.PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND,
-                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
-                        ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED,
-                    ]
-                ),
-                "payment_complete_by_paid_check": len(
-                    [
-                        ScenarioName.HAPPY_PATH_FAMILY_CHECK_PRENOTED,
-                        ScenarioName.HAPPY_PATH_CHECK_FAMILY_RETURN_PAID,
-                        ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
-                        ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED,
-                    ]
-                ),
-                "payment_failed_by_check": 0,
-                "payment_still_outstanding": 0,
-                "payment_unexpected_state_count": 0,
-                "warning_count": 0,
-            },
-            log_report_index=0,  # first when sorted by import log id desc order
-            description="Positive pay check responses",
-        )
-
-        assert_metrics(
-            test_db_other_session,
-            "ProcessManualPubRejectionStep",
-            {
-                "warning_count": 0,
-                "record_count": len(stage_3_manual_pub_reject_scenarios),
-                "payment_record_count": len(stage_3_manual_pub_reject_scenarios),
-                "payment_rejected_successfully_count": len(stage_3_manual_pub_reject_scenarios),
-            },
-        )
-
-        assert_metrics(
-            test_db_other_session,
-            "FineosPeiWritebackStep",
-            {
-                "errored_writeback_record_during_file_creation_count": 0,
-                "errored_writeback_record_during_file_transfer_count": 0,
-                "successful_writeback_record_count": len(stage_3_all_writeback_scenarios),
-                "writeback_record_count": len(stage_3_all_writeback_scenarios),
-                "bank_processing_error_writeback_transaction_status_count": len(
-                    stage_3_errored_writeback_scenarios_ach
-                ),
-                "pub_check_stale_writeback_transaction_status_count": len(
-                    stage_3_errored_writeback_scenarios_check_stale
-                ),
-                "pub_check_undeliverable_writeback_transaction_status_count": len(
-                    stage_3_errored_writeback_scenarios_check_stop
-                ),
-                "pub_check_voided_writeback_transaction_status_count": len(
-                    stage_3_errored_writeback_scenarios_check_void
-                ),
-                "posted_writeback_transaction_status_count": len(
-                    stage_3_successful_writeback_scenarios
-                ),
-                "invalid_routing_number_writeback_transaction_status_count": len(
-                    [ScenarioName.PUB_ACH_MANUAL_REJECT]
-                ),
-            },
-        )
-
-        assert_metrics(
-            test_db_other_session,
-            "ReportStep",
-            {
-                "processed_report_count": len([PROCESS_PUB_RESPONSES_REPORTS]),
-                "report_error_count": 0,
-                "report_generated_count": len([PROCESS_PUB_RESPONSES_REPORTS]),
-            },
         )
 
     # ===============================================================================
@@ -2690,7 +1869,12 @@ def test_e2e_pub_payments_report_queue(
         task_config = FineosTaskConfiguration(["--steps", "ALL"])
         task_config.make_reports = False
         process_fineos_extracts(
-            test_dataset, mock_experian_client, test_db_session, test_db_other_session, task_config
+            test_dataset,
+            mock_experian_client,
+            test_db_session,
+            test_db_other_session,
+            task_config,
+            expected_steps_override=EXPECTED_STEPS_PROCESS_FINEOS_EXTRACTS[:-1],
         )
 
     # Claimant extract step has not cleared since report not ran
@@ -2740,7 +1924,13 @@ def test_e2e_pub_payments_report_queue(
         # == Run task with args excluding report
         task_config = ProcessPubPaymentsTaskConfiguration(["--steps", "ALL"])
         task_config.make_reports = False
-        process_pub_payments(test_db_session, test_db_other_session, task_config)
+
+        process_pub_payments(
+            test_db_session,
+            test_db_other_session,
+            task_config,
+            expected_steps_override=EXPECTED_STEPS_PROCESS_PUB_PAYMENTS[:-1],
+        )
 
     # Payment extract step carried over since report not ran
     assert_report_queue_items_count(
@@ -2763,7 +1953,12 @@ def test_e2e_pub_payments_report_queue(
         # == Run task with args excluding report
         task_config = ProcessPubResponsesTaskConfiguration(["--steps", "ALL"])
         task_config.make_reports = False
-        process_pub_responses(test_db_session, test_db_other_session, task_config)
+        process_pub_responses(
+            test_db_session,
+            test_db_other_session,
+            task_config,
+            expected_steps_override=EXPECTED_STEPS_PROCESS_PUB_RESPONSES[:-1],
+        )
 
     # Process files in path steps carried over since report not ran
     assert_report_queue_items_count(
@@ -2832,7 +2027,13 @@ def test_e2e_pub_payments_report_queue(
         generate_pub_returns(test_dataset)
 
     with freeze_time("2021-05-07 11:00:00", tz_offset=5):
-        process_pub_responses(test_db_session, test_db_other_session)
+        # Because we don't generate check files, we don't run the check
+        # step twice, so remove that from the list:
+        process_pub_responses(
+            test_db_session,
+            test_db_other_session,
+            expected_steps_override=EXPECTED_STEPS_PROCESS_PUB_RESPONSES_NO_FILES,
+        )
 
     # All queue items should be processed
     assert_report_queue_items_count(test_db_other_session, {})
@@ -3056,6 +2257,7 @@ def process_fineos_extracts(
     db_session: db.Session,
     log_entry_db_session: db.Session,
     config: Optional[FineosTaskConfiguration] = None,
+    expected_steps_override: List[Tuple[str, str]] = None,
 ):
     config = config if config else FineosTaskConfiguration(["--steps", "ALL"])
     with mock.patch(
@@ -3068,6 +2270,8 @@ def process_fineos_extracts(
             config=config,
         )
 
+    expected_steps = expected_steps_override or EXPECTED_STEPS_PROCESS_FINEOS_EXTRACTS
+    assert_steps_run_in_order(log_entry_db_session, expected_steps)
     assert_success_file("pub-payments-process-fineos")
     test_dataset.populate_scenario_data_payments(db_session)
     test_dataset.populate_scenario_dataset_claims(db_session)
@@ -3077,6 +2281,7 @@ def process_pub_payments(
     db_session: db.Session,
     log_entry_db_session: db.Session,
     config: Optional[ProcessPubPaymentsTaskConfiguration] = None,
+    expected_steps_override: List[Tuple[str, str]] = None,
 ):
     config = config if config else ProcessPubPaymentsTaskConfiguration(["--steps", "ALL"])
     run_process_pub_payments_ecs_task(
@@ -3084,6 +2289,9 @@ def process_pub_payments(
         log_entry_db_session=log_entry_db_session,
         config=config,
     )
+
+    expected_steps = expected_steps_override or EXPECTED_STEPS_PROCESS_PUB_PAYMENTS
+    assert_steps_run_in_order(log_entry_db_session, expected_steps)
     assert_success_file("pub-payments-create-pub-files")
 
 
@@ -3091,6 +2299,7 @@ def process_pub_responses(
     db_session: db.Session,
     log_entry_db_session: db.Session,
     config: Optional[ProcessPubResponsesTaskConfiguration] = None,
+    expected_steps_override: List[Tuple[Type[Step], str]] = None,
 ):
     config = config if config else ProcessPubResponsesTaskConfiguration(["--steps", "ALL"])
     run_process_pub_responses_ecs_task(
@@ -3098,6 +2307,9 @@ def process_pub_responses(
         log_entry_db_session=log_entry_db_session,
         config=config,
     )
+
+    expected_steps = expected_steps_override or EXPECTED_STEPS_PROCESS_PUB_RESPONSES
+    assert_steps_run_in_order(log_entry_db_session, expected_steps)
     assert_success_file("pub-payments-process-pub-returns")
 
 
@@ -3370,6 +2582,51 @@ def assert_metrics(
     assert (
         len(assertion_errors) == 0
     ), f"Unexpected metric value(s) in log report '{log_report_name}', description: {description}\n{errors}"
+
+
+def assert_steps_run_in_order(
+    log_report_db_session: db.Session, step_type_pairs: List[Tuple[Step, str]]
+):
+    # Grab every import log during the current time freeze
+    reports = (
+        log_report_db_session.query(ImportLog)
+        .filter(ImportLog.created_at >= get_now_us_eastern())
+        .order_by(ImportLog.import_log_id.asc())
+        .all()
+    )
+
+    assert len(reports) == len(
+        step_type_pairs
+    ), f"Expected {len(step_type_pairs)} steps to have run and generated import logs, and only found {len(reports)}"
+
+    assertion_errors = []
+    for report, step_type_pair in zip(reports, step_type_pairs):
+        report_log = f"{report.import_log_id}, {report.source}, {report.import_type}"
+
+        if step_type_pair[0].__name__ != report.source or step_type_pair[1] != report.import_type:
+            assertion_errors.append(
+                f"Expected pair source+type of {step_type_pair} and found {report_log}"
+            )
+
+        if report.status != "success":
+            assertion_errors.append(f"Import log {report_log} was not successful")
+
+        if not report.report:
+            assertion_errors.append(f"No metrics found for import log {report_log}")
+        else:
+            # Convert it to a dictionary and verify at least some metrics were created
+            # although we won't worry about specifics here.
+            data = json.loads(report.report)
+            if len(data) == 0:
+                assertion_errors.append(f"No metrics generated for import log {report_log}")
+
+            for metric in step_type_pair[0].Metrics:
+                if metric not in data:
+                    assertion_errors.append(f"Metric {metric} was missing in {report_log}")
+
+    assert (
+        len(assertion_errors) == 0
+    ), f"Unxpected issues encountered with import log metrics: {assertion_errors}"
 
 
 def assert_writeback_for_stage(
