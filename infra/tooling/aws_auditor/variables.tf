@@ -9,7 +9,7 @@ variable "tags" {
   description = "Tags to use"
 }
 
-variable "aws_region" {
+variable "region" {
   type        = string
   description = "The AWS region to use"
 }
