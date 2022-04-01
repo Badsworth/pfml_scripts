@@ -10,7 +10,7 @@ import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 
-export const fields = ["claim.additional_user_not_found_info"];
+export const fields = ["claim.additional_user_not_found_info.date_of_hire"];
 
 /**
  * A form page to collect employee start date.
@@ -19,7 +19,9 @@ export const DateOfHire = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
-  const { formState, updateFields } = useFormState(pick(props, fields).claim);
+  const { formState, updateFields } = useFormState(
+    pick(props, ["claim.additional_user_not_found_info"]).claim
+  );
 
   const handleSave = () =>
     appLogic.benefitsApplications.update(claim.application_id, formState);

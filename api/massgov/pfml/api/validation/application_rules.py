@@ -909,9 +909,10 @@ def get_payments_issues(application: Application) -> List[ValidationErrorDetail]
 # Because the DB schema and the API schema differ
 ALWAYS_REQUIRED_FIELDS_DB_NAME_TO_API_NAME_MAP = {
     "date_of_birth": "date_of_birth",
-    "first_name": "first_name",
-    "employment_status_id": "employment_status",
+    "additional_user_not_found_info.date_of_hire": "additional_user_not_found_info.date_of_hire",
     "employer_notified": "leave_details.employer_notified",
+    "employment_status_id": "employment_status",
+    "first_name": "first_name",
     "has_continuous_leave_periods": "has_continuous_leave_periods",
     "has_intermittent_leave_periods": "has_intermittent_leave_periods",
     "has_mailing_address": "has_mailing_address",

@@ -2651,11 +2651,14 @@ components:
       properties:
         date_of_hire:
           $ref: '#/components/schemas/Date'
+          nullable: true
         employer_name:
           type: string
           maxLength: 256
+          nullable: true
         is_withholding_tax:
           type: boolean
+          nullable: true
         recently_acquired_or_merged:
           type: boolean
           nullable: true

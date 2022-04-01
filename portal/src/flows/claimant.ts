@@ -25,6 +25,7 @@ import { fields as concurrentLeavesDetailsFields } from "../pages/applications/c
 import { fields as concurrentLeavesFields } from "../pages/applications/concurrent-leaves";
 import { fields as dateOfBirthFields } from "../pages/applications/date-of-birth";
 import { fields as dateOfChildFields } from "../pages/applications/date-of-child";
+import { fields as dateOfHireFields } from "../pages/applications/employee-start-date";
 import { fields as departmentFields } from "../pages/applications/department";
 import { fields as employerBenefitsDetailsFields } from "../pages/applications/employer-benefits-details";
 import { fields as employerBenefitsFields } from "../pages/applications/employer-benefits";
@@ -704,7 +705,7 @@ const claimantFlow: {
           },
           {
             target:
-              routes.applications.beginAdditionalNoEmployerFoundInformation,
+              routes.applications.beginAdditionalNoEmployeeFoundInformation,
             cond: "includesNoEmployeeFoundError",
           },
           {
@@ -742,7 +743,9 @@ const claimantFlow: {
       },
     },
     [routes.applications.employeeStartDate]: {
-      meta: {},
+      meta: {
+        fields: dateOfHireFields,
+      },
       on: {
         CONTINUE: [
           {

@@ -55,6 +55,7 @@ const errors = {
     additional_user_not_found_info: {
       date_of_hire: {
         maximum: "The date of hire must be in the past",
+        required: "The date of hire is required.",
       },
     },
     claim: {
