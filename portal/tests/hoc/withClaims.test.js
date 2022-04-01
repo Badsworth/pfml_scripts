@@ -88,7 +88,6 @@ describe("withClaims", () => {
     let spy;
     const apiParams = {
       page_offset: "2",
-      claim_status: "Approved,Pending",
       employer_id: "mock-employer-id",
       is_reviewable: "yes",
       order_by: "employee",
@@ -108,7 +107,6 @@ describe("withClaims", () => {
 
     expect(spy).toHaveBeenLastCalledWith({
       page_offset: "2",
-      claim_status: "Approved,Pending",
       employer_id: "mock-employer-id",
       is_reviewable: "yes",
       order_by: "employee",

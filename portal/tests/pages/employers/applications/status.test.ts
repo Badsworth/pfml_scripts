@@ -184,9 +184,6 @@ describe("Status", () => {
   });
 
   it("renders employee information section when new format is enabled", () => {
-    process.env.featureFlags = JSON.stringify({
-      employerShowMultiLeaveDashboard: true,
-    });
     setup();
     expect(
       screen.getByRole("heading", { name: "Employee information" })
@@ -200,9 +197,6 @@ describe("Status", () => {
   });
 
   it("renders updated Leave Details section when new format is enabled", () => {
-    process.env.featureFlags = JSON.stringify({
-      employerShowMultiLeaveDashboard: true,
-    });
     const documents = [
       {
         content_type: "application/pdf",
@@ -239,10 +233,6 @@ describe("Status", () => {
   });
 
   it("renders updated lead content when the feature flag is enabled", () => {
-    process.env.featureFlags = JSON.stringify({
-      employerShowMultiLeaveDashboard: true,
-    });
-
     setup();
     expect(
       screen.getByText(
