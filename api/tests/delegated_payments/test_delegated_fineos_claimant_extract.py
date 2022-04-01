@@ -448,6 +448,7 @@ def make_claimant_data_from_fineos_data(
     fineos_data, additional_requested_absence_data=None, metrics_obj=None
 ):
     reference_file = ReferenceFileFactory.build()
+
     requested_absence_som = payments_util.create_staging_table_instance(
         fineos_data.get_requested_absence_som_record(),
         FineosExtractVbiRequestedAbsenceSom,
@@ -966,6 +967,40 @@ def test_update_employee_info_happy_path(claimant_extract_step, test_db_session,
     assert len(claimant_data.validation_container.validation_issues) == 0
     assert employee is not None
     assert employee.date_of_birth == datetime.date(1967, 4, 27)
+    assert employee.mass_id_number == claimant_data.mass_id_number
+    assert employee.out_of_state_id_number == claimant_data.out_of_state_id_number
+
+
+def test_employee_mass_id_out_of_state_id_not_provided(
+    claimant_extract_step, test_db_session, formatted_claim
+):
+    fineos_payment_data = FineosPaymentData(mass_id_number=None, out_of_state_id_number=None)
+    claimant_data = make_claimant_data_from_fineos_data(fineos_payment_data)
+    tax_identifier = TaxIdentifierFactory(tax_identifier=fineos_payment_data.tin)
+    EmployeeFactory(tax_identifier=tax_identifier)
+
+    employee = claimant_extract_step.update_employee_info(claimant_data, formatted_claim)
+    assert len(claimant_data.validation_container.validation_issues) == 0
+    assert employee is not None
+    assert employee.mass_id_number is None
+    assert employee.out_of_state_id_number is None
+
+
+def test_employee_mass_id_invalid_value(claimant_extract_step, test_db_session, formatted_claim):
+
+    invalid_mass_ids = ["abc123456", "abcdefghi", "12345678", ""]
+
+    for invalid_mass_id in invalid_mass_ids:
+        fineos_payment_data = FineosPaymentData(
+            mass_id_number=invalid_mass_id, out_of_state_id_number=None
+        )
+        make_claimant_data_from_fineos_data(fineos_payment_data)
+        tax_identifier = TaxIdentifierFactory(tax_identifier=fineos_payment_data.tin)
+        employee = EmployeeFactory(tax_identifier=tax_identifier)
+
+        assert employee is not None
+        assert employee.mass_id_number is None
+        assert employee.out_of_state_id_number is None
 
 
 def test_update_employee_info_not_in_db(claimant_extract_step, formatted_claim):
