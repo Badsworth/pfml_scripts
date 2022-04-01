@@ -77,7 +77,7 @@ describe("Applications", () => {
     expect(screen.getByText(byText)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "benefit year" })).toHaveAttribute(
       "href",
-      "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-overview-and-benefits#getting-paid-and-taxes-on-benefits-"
+      "https://www.mass.gov/info-details/types-of-paid-family-and-medical-leave#important-terms-to-know-"
     );
 
     expect(
