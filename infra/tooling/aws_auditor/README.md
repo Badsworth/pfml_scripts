@@ -14,7 +14,8 @@ This will create the following
 
 Add `<resource_name>` as a key in the `infra/tooling/auditors.json` file with the actions required for the Auditor Lambda Function as an array of strings.
 
-For example - This grants the massgov_pfml_audit_lambda function permissions
+### Example
+This grants the massgov_pfml_audit_lambda function permissions
 to Audit Lambda Functions in the account
 
 ```
