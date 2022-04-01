@@ -43,6 +43,10 @@ const flagsConfig = {
     // TODO (PORTAL-1560) Remove flag
     employerShowMultiLeaveDashboard: true,
 
+    // When enabled, collect leave admin phone, first name, and last name
+    // TODO (PORTAL-2089) Remove flag
+    employerCollectNameAndPhone: false,
+
     // When this flag true, you can BYPASS maintenance pages that are currently present.
     // See docs/portal/maintenance-pages.md for more details.
     noMaintenance: false,
