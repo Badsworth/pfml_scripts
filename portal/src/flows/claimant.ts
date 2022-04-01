@@ -670,6 +670,11 @@ const claimantFlow: {
         CONTINUE: [
           {
             target:
+              routes.applications.beginAdditionalNoEmployerFoundInformation,
+            cond: "includesNoEmployerFoundError",
+          },
+          {
+            target:
               routes.applications.beginAdditionalNoEmployeeFoundInformation,
             cond: "includesNoEmployeeFoundError",
           },
@@ -696,6 +701,11 @@ const claimantFlow: {
             target:
               routes.applications.beginAdditionalNoEmployerFoundInformation,
             cond: "includesNoEmployerFoundError",
+          },
+          {
+            target:
+              routes.applications.beginAdditionalNoEmployerFoundInformation,
+            cond: "includesNoEmployeeFoundError",
           },
           {
             target: routes.applications.department,

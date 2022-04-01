@@ -52,6 +52,11 @@ const errors = {
     },
   },
   applications: {
+    additional_user_not_found_info: {
+      date_of_hire: {
+        maximum: "The date of hire must be in the past",
+      },
+    },
     claim: {
       exists:
         "You have already submitted this portion of your application. If you need to edit your information, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",

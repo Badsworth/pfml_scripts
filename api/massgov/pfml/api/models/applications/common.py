@@ -238,7 +238,7 @@ class AdditionalUserNotFoundInfo(PydanticBaseModel):
                     ValidationErrorDetail(
                         message="The date of hire must be in the past",
                         type=IssueType.maximum,
-                        field="date_of_hire",
+                        field="additional_user_not_found_info.date_of_hire",
                     )
                 ],
                 message="Validation error",
