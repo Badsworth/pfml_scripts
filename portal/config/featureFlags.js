@@ -39,10 +39,6 @@ const flagsConfig = {
     // TODO (PORTAL-1934) Remove flag
     claimantUseFineosNewPaymentSchedule: false,
 
-    // Show multiple leave request UI updates to leave admins (dashboard++)
-    // TODO (PORTAL-1560) Remove flag
-    employerShowMultiLeaveDashboard: true,
-
     // When enabled, collect leave admin phone, first name, and last name
     // TODO (PORTAL-2089) Remove flag
     employerCollectNameAndPhone: false,
