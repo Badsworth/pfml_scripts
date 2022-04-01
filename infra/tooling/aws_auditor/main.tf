@@ -40,7 +40,7 @@ resource "aws_lambda_function" "audit" {
 
   environment {
     variables = {
-      "REGION"           = var.aws_region,
+      "REGION"               = var.aws_region,
       "INVENTORY_TABLE_NAME" = aws_dynamodb_table.inventory[each.key].name,
     }
   }
