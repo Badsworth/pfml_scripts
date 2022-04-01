@@ -2652,6 +2652,9 @@ components:
         date_of_hire:
           $ref: '#/components/schemas/Date'
           nullable: true
+        date_of_separation:
+          $ref: '#/components/schemas/Date'
+          nullable: true
         employer_name:
           type: string
           maxLength: 256

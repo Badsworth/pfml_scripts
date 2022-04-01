@@ -222,12 +222,13 @@ class Phone(Base, TimestampMixin):
 class AdditionalUserNotFoundInfo(Base, TimestampMixin):
     __tablename__ = "additional_user_not_found_info"
     additional_user_not_found_info_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    application = relationship("Application")
     application_id = Column(
         PostgreSQLUUID, ForeignKey("application.application_id"), index=True, nullable=False
     )
     date_of_hire = Column(Date)
+    date_of_separation = Column(Date)
     employer_name = Column(Text)
-    application = relationship("Application")
     is_withholding_tax = Column(Boolean)
     recently_acquired_or_merged = Column(Boolean)
 
