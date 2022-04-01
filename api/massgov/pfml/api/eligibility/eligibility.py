@@ -4,19 +4,17 @@
 
 from datetime import date
 from decimal import Decimal
-from typing import Optional, Tuple, TypedDict
+from typing import Optional, TypedDict
 
 from pydantic.types import UUID4
+from sqlalchemy.exc import IntegrityError
 
 import massgov.pfml.api.eligibility.benefit_year as benefit_year
 import massgov.pfml.api.eligibility.eligibility_util as eligibility_util
 import massgov.pfml.api.eligibility.wage as wage
 import massgov.pfml.util.logging
 from massgov.pfml import db
-from massgov.pfml.api.eligibility.benefit_year import (
-    CreateBenefitYearContribution,
-    set_base_period_for_benefit_year,
-)
+from massgov.pfml.api.eligibility.benefit_year import CreateBenefitYearContribution
 from massgov.pfml.api.eligibility.benefit_year_dates import get_benefit_year_dates
 from massgov.pfml.api.eligibility.eligibility_date import eligibility_date
 from massgov.pfml.api.models.applications.common import EligibilityEmploymentStatus
@@ -38,11 +36,6 @@ class EligibilityLogExtra(TypedDict):
     employee_id: UUID4
     employer_id: UUID4
     benefit_year_id: Optional[UUID4]
-    was_benefit_year_used: bool
-    was_base_period_empty: bool
-    base_period_calculated: Optional[Tuple[Optional[date], Optional[date]]]
-    was_iaww_calculated: bool
-    iaww_base_period_used: Optional[Tuple[Optional[date], Optional[date]]]
     quarterly_wages: str
 
 
@@ -142,18 +135,8 @@ def retrieve_financial_eligibility(
         "employee_id": employee_id,
         "employer_id": employer_id,
         "benefit_year_id": None,
-        "was_benefit_year_used": False,
-        "was_base_period_empty": False,
-        "base_period_calculated": None,
-        "was_iaww_calculated": False,
-        "iaww_base_period_used": None,
         "quarterly_wages": "",
     }
-
-    # Determine if the new given leave date falls within an existing benefit year
-    found_benefit_year = benefit_year.get_benefit_year_by_employee_id(
-        db_session, employee_id, leave_start_date
-    )
 
     benefit_year_dates = get_benefit_year_dates(leave_start_date)
     effective_date = eligibility_date(benefit_year_dates.start_date, application_submitted_date)
@@ -161,50 +144,16 @@ def retrieve_financial_eligibility(
         db_session, benefit_year_dates.start_date
     )
 
+    # Determine if the new given leave date falls within an existing benefit year
+    found_benefit_year = benefit_year.get_benefit_year_by_employee_id(
+        db_session, employee_id, leave_start_date
+    )
+
     if found_benefit_year:
         meta["benefit_year_id"] = found_benefit_year.benefit_year_id
-
-        # Determine base period for benefit year
-        base_period = (
-            found_benefit_year.base_period_start_date,
-            found_benefit_year.base_period_end_date,
+        employer_average_weekly_wage = benefit_year.get_employer_aww(
+            db_session, found_benefit_year, employer_id
         )
-        # -- Calculate retroactive base period if not currently set
-        if base_period[0] is None or base_period[1] is None:
-            meta["was_base_period_empty"] = True
-            updated_benefit_year = set_base_period_for_benefit_year(db_session, found_benefit_year)
-            if updated_benefit_year is not None:
-                base_period = (
-                    updated_benefit_year.base_period_start_date,
-                    updated_benefit_year.base_period_end_date,
-                )
-                meta["base_period_calculated"] = base_period
-
-        # Retrieve or calculate IAWW for benefit year
-        employer_average_weekly_wage = benefit_year.find_employer_benefit_year_IAWW_contribution(
-            found_benefit_year, employer_id
-        )
-        # -- Calculate IAWW using the same base period for the benefit year
-        if not employer_average_weekly_wage and base_period[0] is not None:
-            base_period_start_date = base_period[0]
-            wage_calculator = wage.get_wage_calculator(
-                employee_id, base_period_start_date, db_session
-            )
-            wage_data = wage_calculator.compute_employee_dor_wage_data()
-            employer_average_weekly_wage = wage_calculator.get_employer_average_weekly_wage(
-                employer_id, default=Decimal("0"), should_round=True
-            )
-            benefit_year.create_employer_contribution_for_benefit_year(
-                db_session,
-                found_benefit_year.benefit_year_id,
-                employee_id,
-                employee_id,
-                employer_average_weekly_wage,
-            )
-            meta["was_iaww_calculated"] = True
-            meta["iaww_base_period_used"] = base_period
-            meta["quarterly_wages"] = str(dict(wage_calculator.employer_quarter_wage))
-
         eligibilty_response = EligibilityResponse(
             financially_eligible=True,
             description="Financially eligible",
@@ -242,15 +191,54 @@ def retrieve_financial_eligibility(
         # Store the results to a new Benefit Year
         base_period = wage_calculator.get_base_period_quarters_as_dates()
         employer_contributions = CreateBenefitYearContribution.from_wage_quarters(wage_calculator)
-        new_benefit_year = benefit_year.create_benefit_year_by_employee_id(
-            db_session,
-            employee_id=employee_id,
-            leave_start_date=leave_start_date,
-            total_wages=eligibilty_response.total_wages,
-            employer_contributions=employer_contributions,
-            base_period_dates=base_period,
-        )
-        meta["benefit_year_id"] = new_benefit_year.benefit_year_id if new_benefit_year else None
+        try:
+            benefit_year.create_benefit_year_by_employee_id(
+                db_session,
+                employee_id=employee_id,
+                leave_start_date=leave_start_date,
+                total_wages=eligibilty_response.total_wages,
+                employer_contributions=employer_contributions,
+                base_period_dates=base_period,
+            )
+
+        # This will only happen in a race condition where another call to financial eligibility creates a new
+        # benefit year after we already checked for an existing benefit year within this call
+        except IntegrityError as e:
+            logger.info(
+                "Could not store the financial eligibility results to a benefit year, one already exists.",
+                extra={"integrity-error-details": str(e)},
+            )
+
+            found_benefit_year = benefit_year.get_benefit_year_by_employee_id(
+                db_session, employee_id, leave_start_date
+            )
+
+            if found_benefit_year:
+                meta["benefit_year_id"] = found_benefit_year.benefit_year_id
+                employer_average_weekly_wage = benefit_year.get_employer_aww(
+                    db_session, found_benefit_year, employer_id
+                )
+                eligibilty_response = EligibilityResponse(
+                    financially_eligible=True,
+                    description="Financially eligible",
+                    total_wages=found_benefit_year.total_wages,
+                    state_average_weekly_wage=benefits_metrics.average_weekly_wage,
+                    unemployment_minimum=unemployment_metric.unemployment_minimum_earnings,
+                    employer_average_weekly_wage=employer_average_weekly_wage,
+                )
+                logger.info(
+                    "Financial eligibility was loaded from a Benefit Year.",
+                    extra={**eligibilty_response.dict(), **meta},
+                )
+                return eligibilty_response
+
+            # This should never actually happen, but including some logging as a fail-safe
+            else:
+                logger.error(
+                    "No existing benefit year was found after receiving an integrity error because one already exists",
+                    extra={"employee_id": employee_id, "leave_start_date": leave_start_date},
+                )
+                raise
 
     logger.info(
         "Financial eligibility was computed without a Benefit Year.",

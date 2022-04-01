@@ -3,11 +3,13 @@ from decimal import Decimal
 from typing import List, Optional, Tuple
 
 from pydantic.types import UUID4
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.query import Query
 from werkzeug.exceptions import NotFound
 
 import massgov.pfml.util.logging
 from massgov.pfml import db
+from massgov.pfml.api.eligibility import wage
 from massgov.pfml.api.eligibility.benefit_year_dates import get_benefit_year_dates
 from massgov.pfml.api.eligibility.wage import WageCalculator, get_retroactive_base_period
 from massgov.pfml.db.models.absences import AbsenceStatus
@@ -328,7 +330,8 @@ def create_benefit_year_by_employee_id(
         )
         db_session.commit()
         return benefit_year
-
+    except IntegrityError:
+        raise
     except Exception as error:
         logger.error(
             "An error occurred while creating Benefit Year.",
@@ -437,3 +440,63 @@ def create_employer_contribution_for_benefit_year(
         )
         db_session.rollback()
     return None
+
+
+def get_employer_aww(
+    db_session: db.Session,
+    benefit_year: BenefitYear,
+    employer_id: UUID4,
+) -> Optional[Decimal]:
+    # Determine base period for benefit year
+    base_period = (
+        benefit_year.base_period_start_date,
+        benefit_year.base_period_end_date,
+    )
+    # -- Calculate retroactive base period if not currently set
+    if base_period[0] is None or base_period[1] is None:
+        logger.info(
+            "Base period for benefit year was empty.",
+            extra={"benefit_year_id": benefit_year.benefit_year_id},
+        )
+        updated_benefit_year = set_base_period_for_benefit_year(db_session, benefit_year)
+        if updated_benefit_year is not None:
+            base_period = (
+                updated_benefit_year.base_period_start_date,
+                updated_benefit_year.base_period_end_date,
+            )
+            logger.info(
+                "Calculated the base period for the benefit year.",
+                extra={"benefit_year_id": benefit_year.benefit_year_id, "base_period": base_period},
+            )
+
+    # Retrieve or calculate IAWW for benefit year
+    employer_average_weekly_wage = find_employer_benefit_year_IAWW_contribution(
+        benefit_year, employer_id
+    )
+    # -- Calculate IAWW using the same base period for the benefit year
+    if not employer_average_weekly_wage and base_period[0] is not None:
+        base_period_start_date = base_period[0]
+        wage_calculator = wage.get_wage_calculator(
+            benefit_year.employee_id, base_period_start_date, db_session
+        )
+        employer_average_weekly_wage = wage_calculator.get_employer_average_weekly_wage(
+            employer_id, default=Decimal("0"), should_round=True
+        )
+        create_employer_contribution_for_benefit_year(
+            db_session,
+            benefit_year.benefit_year_id,
+            benefit_year.employee_id,
+            employer_id,
+            employer_average_weekly_wage,
+        )
+        logger.info(
+            "Calculated employer average weekly wage for the beneift year.",
+            extra={
+                "benefit_year_id": benefit_year.benefit_year_id,
+                "base_period": base_period,
+                "employer_id": employer_id,
+                "quarterly_wages": str(dict(wage_calculator.employer_quarter_wage)),
+            },
+        )
+
+    return employer_average_weekly_wage
