@@ -9,8 +9,8 @@ locals {
 data "archive_file" "audit" {
   for_each    = local.auditors
   type        = "zip"
-  source_dir  = "lambda_functions/audit_${each.key}"
-  output_path = "lambda_functions/audit_${each.key}/audit_${each.key}.zip"
+  source_dir  = "${var.lambda_directory}/audit_${each.key}"
+  output_path = "${var.lambda_directory}/audit_${each.key}/audit_${each.key}.zip"
   excludes    = ["audit_${each.key}.zip"]
 }
 

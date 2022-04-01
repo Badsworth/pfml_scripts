@@ -23,3 +23,8 @@ variable "schedule" {
   type        = string
   description = "Schedule for the auditors to run"
 }
+
+variable "lambda_directory" {
+  type        = string
+  description = "Directory where Lambda Code is located"
+}
