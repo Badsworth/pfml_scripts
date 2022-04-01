@@ -34,7 +34,7 @@ resource "aws_lambda_function" "audit" {
   filename         = data.archive_file.audit[each.key].output_path
   source_code_hash = data.archive_file.audit[each.key].output_base64sha256
   function_name    = "${var.prefix}${each.key}"
-  handler          = "${var.prefix}${each.key}.handler"
+  handler          = "audit_${each.key}.handler"
   role             = aws_iam_role.audit[each.key].arn
   runtime          = "python3.9"
 
