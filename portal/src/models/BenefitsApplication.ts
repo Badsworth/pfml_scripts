@@ -6,6 +6,7 @@ import LeaveReason, { LeaveReasonType } from "./LeaveReason";
 import { compact, get, merge, sum, sumBy, zip } from "lodash";
 
 import Address from "./Address";
+import ApplicationSplit from "./ApplicationSplit";
 import BaseBenefitsApplication from "./BaseBenefitsApplication";
 import ConcurrentLeave from "./ConcurrentLeave";
 import EmployerBenefit from "./EmployerBenefit";
@@ -28,6 +29,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
   first_name: string | null = null;
   middle_name: string | null = null;
   last_name: string | null = null;
+  computed_application_split: ApplicationSplit | null = null;
   computed_earliest_submission_date: string | null = null;
   concurrent_leave: ConcurrentLeave | null = null;
   employer_benefits: EmployerBenefit[] = [];

@@ -312,6 +312,15 @@ class AbsencePeriod(Base, TimestampMixin):
     absence_reason_qualifier_two = relationship(LkAbsenceReasonQualifierTwo)
     leave_request_decision = relationship(LkLeaveRequestDecision)
 
+    @property
+    def has_final_decision(self):
+        return self.leave_request_decision_id not in [
+            LeaveRequestDecision.PENDING.leave_request_decision_id,
+            LeaveRequestDecision.IN_REVIEW.leave_request_decision_id,
+            LeaveRequestDecision.PROJECTED.leave_request_decision_id,
+            None,
+        ]
+
 
 class AuthorizedRepresentative(Base, TimestampMixin):
     __tablename__ = "authorized_representative"
@@ -1478,6 +1487,13 @@ class ManagedRequirement(Base, TimestampMixin):
 
     claim = relationship("Claim", back_populates="managed_requirements")
     respondent_user = relationship(User)
+
+    @property
+    def is_open(self):
+        return (
+            self.managed_requirement_status_id
+            == ManagedRequirementStatus.OPEN.managed_requirement_status_id
+        )
 
 
 class WagesAndContributions(Base, TimestampMixin):

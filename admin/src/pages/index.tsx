@@ -1,13 +1,13 @@
 import "react-datetime/css/react-datetime.css";
-
 import ActionMenu from "../components/ActionMenu";
-//import {
-//  ApiResponse,
-//  Flag,
-//  FlagsResponse,
-//  getFlagsByNameLogs,
-//  getFlagsByName,
-//} from "../api";
+import {
+  ApiResponse,
+  Flag,
+  FlagWithLog,
+  GETAdminFlagLogsByNameResponse,
+  getAdminFlagLogsByName,
+  patchAdminFlagsByName,
+} from "../api";
 import Alert from "../components/Alert";
 import ConfirmationDialog from "../components/ConfirmationDialog";
 import { Helmet } from "react-helmet-async";
@@ -23,71 +23,42 @@ export const Timezone = "America/New_York";
 export const TimezoneAbbr = moment().tz(Timezone).zoneAbbr();
 
 export default function Maintenance() {
-  const router = useRouter();
+  const [maintenanceHistory, setMaintenanceHistory] = React.useState<
+    FlagWithLog[]
+  >([]);
+  const [maintenance, setMaintenance] = React.useState<Flag | null>(null);
 
-  // Remove when Flag is in ../../api.
-  interface Flag {
-    start?: string | null;
-    end?: string | null;
-    name?: string;
-    options?: object;
-    enabled?: boolean;
-    updated_at?: string;
-  }
-  type FlagsResponse = Flag[];
+  const router = useRouter();
 
   const [showConfirmationDialog, setShowConfirmationDialog] =
     React.useState(false);
-  const [maintenanceHistory, setMaintenanceHistory] =
-    React.useState<FlagsResponse>([
-      {
-        enabled: true,
-        end: "2022-01-23 18:00:00-04",
-        name: "maintenance",
-        options: {
-          name: "With start and end",
-        },
-        start: "2022-01-23 17:00:00-04",
-      },
-    ]);
-  const [maintenance, setMaintenance] = React.useState<Flag | null>({
-    enabled: true,
-    end: "2022-01-23 18:00:00-04",
-    name: "maintenance",
-    options: {
-      name: "Current maintenance status",
-    },
-    start: "2022-01-23 17:00:00-04",
-  });
 
   React.useEffect(() => {
-    /*
-    getFlagsByName({ name: "maintenance" }).then(
-      (response: ApiResponse<Flag>) => {
-        setMaintenance(response.data);
+    getAdminFlagLogsByName({ name: "maintenance" }).then(
+      (response: ApiResponse<GETAdminFlagLogsByNameResponse>) => {
+        // The stubbed API endpoint returns an object unfortunately. It will
+        // be an array once the endpoint is updated.
+        const logs = Array.isArray(response.data) ? response.data : [];
+        setMaintenance(logs.shift() || null);
+        setMaintenanceHistory(logs);
       },
     );
-    getFlagsByNameLogs({ name: "maintenance" }).then(
-      (response: ApiResponse<FlagsResponse>) => {
-        setMaintenanceHistory(response.data);
-      },
-    );
-    */
-  }, []);
+  }, [showConfirmationDialog]);
+
+  type options = {
+    name?: string;
+  };
 
   const confirmationDialogCancelCallback = () => {
     setShowConfirmationDialog(false);
   };
 
-  const confirmationDialogContinueCallback = () => {
-    setMaintenance({ ...maintenance, ...{ enabled: false } });
+  const confirmationDialogContinueCallback = async () => {
     // disable at API.
-    //patchFlagsByName({ name: "maintenance" }, flag).then().finally();
-    setShowConfirmationDialog(false);
-  };
-
-  type options = {
-    name?: string;
+    if (maintenance) {
+      await patchAdminFlagsByName({ name: "maintenance" }, { enabled: false });
+      setShowConfirmationDialog(false);
+    }
   };
 
   // Functions to format table.
@@ -116,7 +87,13 @@ export default function Maintenance() {
     </>
   );
 
-  const getCreatedAt = (m: Flag) =>
+  const getCreatedBy = (m: FlagWithLog) => (
+    <>
+      {m.first_name} {m.last_name}
+    </>
+  );
+
+  const getCreatedAt = (m: FlagWithLog) =>
     moment.tz(m.updated_at, Timezone).format("YYYY-MM-DD HH:mm:ss z");
 
   const getLinkOptions = (
@@ -139,8 +116,6 @@ export default function Maintenance() {
       : "";
     return linkValues;
   };
-
-  const getCreatedBy = (m: Flag) => <>{"Admin"}</>;
 
   const getOptions = (m: Flag) => {
     return (

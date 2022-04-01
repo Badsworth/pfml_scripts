@@ -8,11 +8,10 @@ from uuid import UUID
 import phonenumbers
 from phonenumbers.phonenumberutil import region_code_for_number
 from sqlalchemy.orm.exc import NoResultFound
-from werkzeug.exceptions import BadRequest, Conflict, Forbidden
+from werkzeug.exceptions import BadRequest, Forbidden
 
 import massgov.pfml.api.models.applications.common as apps_common_io
 import massgov.pfml.api.models.common as common_io
-import massgov.pfml.api.util.response as response_util
 import massgov.pfml.db as db
 import massgov.pfml.db.lookups as db_lookups
 import massgov.pfml.util.logging
@@ -33,7 +32,6 @@ from massgov.pfml.api.models.common import (
 )
 from massgov.pfml.api.services.administrator_fineos_actions import EformTypes
 from massgov.pfml.api.services.fineos_actions import get_documents
-from massgov.pfml.api.util.response import Response
 from massgov.pfml.api.validation.exceptions import (
     IssueRule,
     IssueType,
@@ -1018,12 +1016,23 @@ def get_document_by_id(
 
 def claim_is_valid_for_application_import(
     db_session: db.Session, user: User, claim: Optional[Claim]
-) -> Optional[Response]:
+) -> None:
     if claim is not None and (claim.employee_tax_identifier is None or claim.employer_fein is None):
-        message = "Claim data incomplete for application import."
-        validation_error = ValidationErrorDetail(message=message, type=IssueType.conflicting)
-        error = response_util.error_response(Conflict, message=message, errors=[validation_error])
-        return error
+        logger.info(
+            "applications_import failure - Claim missing tax id or FEIN",
+            extra={
+                "absence_case_id": claim.fineos_absence_id,
+            },
+        )
+        raise ValidationException(
+            errors=[
+                ValidationErrorDetail(
+                    message="Claim data incomplete for application import.",
+                    type=IssueType.conflicting,
+                )
+            ]
+        )
+
     if claim:
         existing_application = (
             db_session.query(Application)
@@ -1031,30 +1040,28 @@ def claim_is_valid_for_application_import(
             .one_or_none()
         )
         if existing_application and existing_application.user_id != user.user_id:
-            message = "An application linked to a different account already exists for this claim."
             validation_error = ValidationErrorDetail(
-                message=message, type=IssueType.exists, field="absence_case_id"
+                message="An application linked to a different account already exists for this claim.",
+                type=IssueType.exists,
+                field="absence_case_id",
             )
             logger.info(
                 "applications_import failure - exists_different_account",
                 extra=get_application_log_attributes(existing_application),
             )
-            return response_util.error_response(
-                Forbidden, message=message, errors=[validation_error]
-            )
+            raise ValidationException(errors=[validation_error])
 
         if existing_application:
-            message = "An application already exists for this claim."
             validation_error = ValidationErrorDetail(
-                message=message, type=IssueType.duplicate, field="absence_case_id"
+                message="An application already exists for this claim.",
+                type=IssueType.duplicate,
+                field="absence_case_id",
             )
             logger.info(
                 "applications_import failure - exists_same_account",
                 extra=get_application_log_attributes(existing_application),
             )
-            return response_util.error_response(
-                Forbidden, message=message, errors=[validation_error]
-            )
+            raise ValidationException(errors=[validation_error])
     return None
 
 
@@ -2090,7 +2097,10 @@ def get_application_split(
     If a leave period spans a benefit year, the application needs to be broken up into
     separate ones that will each get submitted.
     """
-    if application.split_from_application_id is not None:
+    if (
+        application.split_from_application_id is not None
+        or application.split_into_application_id is not None
+    ):
         return None
 
     latest_end_date = get_latest_end_date(application)

@@ -1,3 +1,4 @@
+import { MockEmployerClaimBuilder } from "lib/mock-helpers/mock-model-builder";
 import React from "react";
 import { Success } from "src/pages/employers/applications/success";
 import User from "src/models/User";
@@ -9,10 +10,8 @@ export default {
 };
 
 export const Default = () => {
-  const query = {
-    absence_id: "NTN-111-ABS-01",
-  };
+  const claim = new MockEmployerClaimBuilder().completed().reviewed().create();
   const appLogic = useMockableAppLogic();
 
-  return <Success query={query} appLogic={appLogic} user={new User({})} />;
+  return <Success appLogic={appLogic} claim={claim} user={new User({})} />;
 };

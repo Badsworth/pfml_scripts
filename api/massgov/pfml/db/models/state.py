@@ -599,9 +599,6 @@ class State(LookupTable):
     LEGACY_MMARS_PAYMENT_PAID = LkState(
         210, "Legacy MMARS Payment Paid", Flow.LEGACY_MMARS_PAYMENTS.flow_id
     )
-    EMPLOYER_REIMBURSEMENT_RELATED_PENDING_AUDIT = LkState(
-        212, "Employer Reimbursement Related Pending Audit", Flow.DELEGATED_PAYMENT.flow_id
-    )
 
     EMPLOYER_REIMBURSEMENT_READY_FOR_PROCESSING = LkState(
         211, "Employer Reimbursement Ready For Processing", Flow.DELEGATED_PAYMENT.flow_id
