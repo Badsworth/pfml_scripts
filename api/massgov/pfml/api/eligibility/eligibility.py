@@ -7,7 +7,6 @@ from decimal import Decimal
 from typing import Optional, TypedDict
 
 from pydantic.types import UUID4
-from sqlalchemy.exc import IntegrityError
 
 import massgov.pfml.api.eligibility.benefit_year as benefit_year
 import massgov.pfml.api.eligibility.eligibility_util as eligibility_util
@@ -191,23 +190,19 @@ def retrieve_financial_eligibility(
         # Store the results to a new Benefit Year
         base_period = wage_calculator.get_base_period_quarters_as_dates()
         employer_contributions = CreateBenefitYearContribution.from_wage_quarters(wage_calculator)
-        try:
-            benefit_year.create_benefit_year_by_employee_id(
-                db_session,
-                employee_id=employee_id,
-                leave_start_date=leave_start_date,
-                total_wages=eligibilty_response.total_wages,
-                employer_contributions=employer_contributions,
-                base_period_dates=base_period,
-            )
+        new_benefit_year = benefit_year.create_benefit_year_by_employee_id(
+            db_session,
+            employee_id=employee_id,
+            leave_start_date=leave_start_date,
+            total_wages=eligibilty_response.total_wages,
+            employer_contributions=employer_contributions,
+            base_period_dates=base_period,
+        )
 
-        # This will only happen in a race condition where another call to financial eligibility creates a new
+        # This should only happen in a race condition where another call to financial eligibility creates a new
         # benefit year after we already checked for an existing benefit year within this call
-        except IntegrityError as e:
-            logger.info(
-                "Could not store the financial eligibility results to a benefit year, one already exists.",
-                extra={"integrity-error-details": str(e)},
-            )
+        if not new_benefit_year:
+            logger.info("Could not store the financial eligibility results to a benefit year.")
 
             found_benefit_year = benefit_year.get_benefit_year_by_employee_id(
                 db_session, employee_id, leave_start_date
@@ -235,7 +230,7 @@ def retrieve_financial_eligibility(
             # This should never actually happen, but including some logging as a fail-safe
             else:
                 logger.error(
-                    "No existing benefit year was found after receiving an integrity error because one already exists",
+                    "No existing benefit year was found after failing to create a new one",
                     extra={"employee_id": employee_id, "leave_start_date": leave_start_date},
                 )
                 raise

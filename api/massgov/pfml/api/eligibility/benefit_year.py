@@ -3,7 +3,6 @@ from decimal import Decimal
 from typing import List, Optional, Tuple
 
 from pydantic.types import UUID4
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.query import Query
 from werkzeug.exceptions import NotFound
 
@@ -330,8 +329,7 @@ def create_benefit_year_by_employee_id(
         )
         db_session.commit()
         return benefit_year
-    except IntegrityError:
-        raise
+
     except Exception as error:
         logger.error(
             "An error occurred while creating Benefit Year.",
