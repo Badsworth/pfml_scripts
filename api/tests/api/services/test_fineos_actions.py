@@ -1560,13 +1560,21 @@ class TestSubmitChangeRequest:
     @pytest.fixture
     def change_request(self, claim):
         return ChangeRequest(
-            claim_id=claim.claim_id, change_request_type_instance=ChangeRequestType.WITHDRAWAL
+            claim_id=claim.claim_id,
+            claim=claim,
+            change_request_type_instance=ChangeRequestType.WITHDRAWAL,
         )
 
     @mock.patch("massgov.pfml.api.services.fineos_actions.convert_change_request_to_fineos_model")
     @mock.patch("massgov.pfml.fineos.create_client")
     def test_success(
-        self, mock_create_fineos, mock_convert, change_request, claim, test_db_session,
+        self,
+        mock_create_fineos,
+        mock_convert,
+        mock_register,
+        change_request,
+        claim,
+        test_db_session,
     ):
         mock_fineos = MagicMock()
         mock_create_fineos.return_value = mock_fineos
@@ -1574,10 +1582,11 @@ class TestSubmitChangeRequest:
 
         fineos_actions.submit_change_request(change_request, claim, test_db_session)
 
-        mock_convert.assert_called_with(change_request, claim)
+        # mock_convert.assert_called_with(change_request, claim)
         mock_fineos.create_or_update_leave_period_change_request.assert_called_with(
             "web_id", claim.fineos_absence_id, mock.ANY
         )
+        assert False
 
 
 class TestConvertChangeRequestToFineosModel:

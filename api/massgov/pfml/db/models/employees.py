@@ -37,6 +37,7 @@ from sqlalchemy.sql.expression import func
 from sqlalchemy.types import JSON
 
 import massgov.pfml.util.logging
+from massgov.pfml.fineos.models.customer_api import LeavePeriodChangeRequest
 from massgov.pfml.util.datetime import utcnow
 
 from ..lookup import LookupTable
@@ -50,6 +51,7 @@ from .absences import (
 from .base import Base, TimestampMixin, utc_timestamp_gen, uuid_gen
 from .common import PostgreSQLUUID
 from .dua import DuaEmployeeDemographics
+from .fineos_converter import FineosModelConverter
 from .geo import LkCountry, LkGeoState
 from .industry_codes import LkIndustryCode
 from .state import LkState, State
@@ -763,7 +765,8 @@ class LkChangeRequestType(Base):
         return self.change_request_type_description
 
 
-class ChangeRequest(Base, TimestampMixin):
+# , FineosModelConverter
+class ChangeRequest(Base, TimestampMixin, FineosModelConverter):
     __tablename__ = "change_request"
     change_request_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     change_request_type_id = Column(
@@ -780,6 +783,15 @@ class ChangeRequest(Base, TimestampMixin):
     @typed_hybrid_property
     def type(self) -> str:
         return self.change_request_type_instance.description
+
+    # TODO: lots of code to convert to a FINEOS-specific view of our data
+    def to_fineos_model(self) -> LeavePeriodChangeRequest:
+        # Is the db model the best place for this? This code has nothing to do with the
+        # db storage layer, and is very FINEOS-specific.
+        #
+        # Maybe we can separate this into a mixin module that is pulled in separately,
+        # like the TimestampMixin above...
+        return None
 
 
 class Claim(Base, TimestampMixin):

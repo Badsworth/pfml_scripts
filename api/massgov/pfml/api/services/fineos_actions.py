@@ -39,6 +39,7 @@ from massgov.pfml.db.models.applications import (
     RelationshipQualifier,
     RelationshipToCaregiver,
 )
+from massgov.pfml.db.models.change_request_extended import ChangeRequest as ChangeRequestExtended
 from massgov.pfml.db.models.employees import (
     Address,
     ChangeRequest,
@@ -1546,7 +1547,18 @@ def submit_change_request(
     if absence_id is None:
         raise Exception("Can't get absence periods from FINEOS - No absence_id for claim")
 
-    fineos_change_request = convert_change_request_to_fineos_model(change_request, claim)
+    # TODO: create a from_db_model method
+    change_request_extended = ChangeRequestExtended(
+        claim_id=change_request.claim_id,
+        claim=change_request.claim,
+        change_request_type_instance=change_request.change_request_type_instance,
+        start_date=change_request.start_date,
+        end_date=change_request.end_date
+    )
+
+    # TODO: this is the goal!
+    fineos_change_request = change_request_extended.to_fineos_model()
+
     fineos.create_or_update_leave_period_change_request(
         fineos_web_id, absence_id, fineos_change_request
     )
@@ -1554,7 +1566,13 @@ def submit_change_request(
     return change_request
 
 
-# Throws a pydantic.error_wrappers.ValidationError if startDate or endDate are None
+# lots of code to convert to a FINEOS-specific view of our data
+#
+# This conversion isn't specific to the `fineos_actions` module - we may need to
+# do this conversion anywhere that we interact with FINEOS.
+#
+# Would be nice if this could be part of the ChangeRequest class, so that any
+# change_request object could convert itself by calling change_request.to_fineos_model()
 def convert_change_request_to_fineos_model(
     change_request: ChangeRequest, claim: Claim
 ) -> LeavePeriodChangeRequest:

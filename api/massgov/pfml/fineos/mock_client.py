@@ -21,7 +21,6 @@ import massgov.pfml.util.logging.wrapper
 from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
 from massgov.pfml.util.converters.json_to_obj import set_empty_dates_to_none
 
-from ..db.models.applications import PhoneType
 from . import client, exception, fineos_client, models
 from .mock.eform import MOCK_CUSTOMER_EFORMS, MOCK_EFORMS
 from .mock.field import fake_customer_no
@@ -365,11 +364,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         return models.customer_api.ContactDetails(
             phoneNumbers=[
                 models.customer_api.PhoneNumber(
-                    id=1,
-                    intCode=1,
-                    areaCode=321,
-                    telephoneNo=4567890,
-                    phoneNumberType=PhoneType.PHONE.phone_type_description,
+                    id=1, intCode=1, areaCode=321, telephoneNo=4567890, phoneNumberType="foo",
                 )
             ]
         )
