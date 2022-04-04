@@ -52,27 +52,34 @@ class Function:
 
     def get_subnet_ids(self):
         subnet_ids = self.get_vpc_config('SubnetIds')
-        return {
-            f'SubnetId{number}': subnet_ids[number]
-            for number in range(len(subnet_ids))
-        }
+        try:
+            return {
+                f'SubnetId{number}': subnet_ids[number]
+                for number in range(len(subnet_ids))
+            }
+        except (AttributeError, TypeError):
+            return {}
 
     def get_security_group_ids(self):
         security_group_ids = self.get_vpc_config('SecurityGroupIds')
-        return {
-            f'SecurityGroupId{number}': security_group_ids[number]
-            for number in range(len(security_group_ids))
-        }
+        try:
+            return {
+                f'SecurityGroupId{number}': security_group_ids[number]
+                for number in range(len(security_group_ids))
+            }
+        except (AttributeError, TypeError):
+            return {}
 
     def encryption(self):
         return self.configuration.get('KMSKeyArn', 'aws:lambda')
 
     def get_tags(self):
-        tags =  self.details.get('Tags')
-        result = {}
-        for key, value in tags.items():
-            result.update({key: value})
-        return result
+        try:
+            return {
+                key: value for key, value in self.details.get('Tags').items()
+            }
+        except (AttributeError, TypeError):
+            return {}
 
     def get_code_location(self):
         return self.details['Code']['Location']
@@ -110,17 +117,19 @@ def list_functions():
 
 def handler(event, context):
     for lambda_function in list_functions():
+        lambda_function_name = lambda_function['FunctionName']
+        print('Auditing Lambda Function: {lambda_function_name}')
         TABLE.put_item(
             Item=Function(
                 configuration=lambda_function,
-                details=lambda_client.get_function(lambda_function)
+                details=LAMBDA.get_function(
+                    FunctionName=lambda_function_name
+                ),
             ).to_dict()
         )
 
-session = boto3.session.Session(region_name=region())
-lambda_client = session.client('lambda')
-
-PAGINATED_LIST_OF_FUNCTIONS = lambda_client.get_paginator('list_functions')
+LAMBDA = boto3.session.Session(region_name=region()).client('lambda')
+PAGINATED_LIST_OF_FUNCTIONS = LAMBDA.get_paginator('list_functions')
 TABLE = boto3.resource(
     'dynamodb',
     endpoint_url=f'https://dynamodb.{region()}.amazonaws.com'
