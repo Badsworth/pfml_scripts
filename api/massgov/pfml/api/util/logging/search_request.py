@@ -20,14 +20,17 @@ def search_envelope_log_info(
 ) -> Dict[str, LogTypes]:
     log_info: Dict[str, LogTypes] = {}
 
+    # TODO: do we want to maintain the legacy `_` separated versions?
+
     # TODO: better name than "request_top_level"?
     log_info |= request_field_log_attrs(request, "request_top_level")
 
     for field_name, field_model in request:
-        log_info |= request_field_log_attrs(field_model, field_name)
+        if isinstance(field_model, BaseModel):
+            log_info |= request_field_log_attrs(field_model, field_name)
 
-    # legacy fields and log size value (as ints aren't currently automatically
-    # included in logs)
+    # legacy fields and log size value (as ints aren't automatically included in
+    # logs)
     log_info |= {
         "order.by": request.order.by,
         "order.direction": request.order.direction.value,
@@ -38,17 +41,37 @@ def search_envelope_log_info(
     return log_info
 
 
-# TODO: move to general API request logging util location?
-def request_field_log_attrs(model: BaseModel, key: str) -> Dict[str, LogTypes]:
+# TODO: move to general API request logging util location? Or make it a general pydantic util?
+def request_field_log_attrs(
+    model: BaseModel, key: str, property_separator: str = ":"
+) -> Dict[str, LogTypes]:
+    """Construct log-safe info about a request field.
+
+    Currently generates some info for the top level model itself and its direct
+    fields, but does not recurse to provide info on the field's sub-fields.
+
+    Includes the actual values for fields that are:
+    - booleans
+    - enums
+
+    Otherwise just includes metadata about the field content, including:
+    - if it was provided by in the request body
+    - the length of the value (if the value type has a concept of "length")
+    """
     provided_fields = model.__fields_set__
 
     log_info: Dict[str, LogTypes] = {
-        f"{key}_fields_provided": ",".join(provided_fields),
-        f"{key}_fields_provided_length": len(provided_fields),
+        f"{key}_fields{property_separator}provided": ",".join(provided_fields),
+        f"{key}_fields{property_separator}provided{property_separator}length": len(provided_fields),
     }
 
+    def _add_property(sub_field_key: str, property_key: str, property_value: LogTypes) -> None:
+        log_info.update(
+            {f"{key}.{sub_field_key}{property_separator}{property_key}": property_value}
+        )
+
     for sub_field_key, value in model:
-        log_info.update({f"{key}.{sub_field_key}_provided": (sub_field_key in provided_fields)})
+        _add_property(sub_field_key, "provided", sub_field_key in provided_fields)
 
         # This is primarily for cases where a field might accept multiple types,
         # e.g., a single string vs a list.
@@ -57,17 +80,17 @@ def request_field_log_attrs(model: BaseModel, key: str) -> Dict[str, LogTypes]:
         # in the model, which would make this less useful, but for the cases
         # where a field may want to support distinct types all the way through,
         # this could be useful.
-        log_info.update({f"{key}.{sub_field_key}_type": str(type(value))})
+        _add_property(sub_field_key, "type", str(type(value)))
 
         if isinstance(value, Sized):
-            log_info.update({f"{key}.{sub_field_key}_length": len(value)})
+            _add_property(sub_field_key, "length", len(value))
 
         if isinstance(value, bool):
-            log_info.update({f"{key}.{sub_field_key}_value": value})
+            _add_property(sub_field_key, "value", value)
 
         if isinstance(value, Enum):
-            log_info.update({f"{key}.{sub_field_key}_value": value.value})
-            log_info.update({f"{key}.{sub_field_key}_name": value.name})
+            _add_property(sub_field_key, "value", value.value)
+            _add_property(sub_field_key, "name", value.name)
 
     return log_info
 
