@@ -36,10 +36,14 @@ DEFAULT_ORDER_AND_PAGING_ATTRS = {
     "order_fields_provided_length": 0,
     "order.by": "created_at",
     "order.direction": "descending",
+    "order.by_provided": False,
+    "order.direction_provided": False,
     "paging_fields_provided": "",
     "paging_fields_provided_length": 0,
     "paging.offset": 1,
     "paging.size": 25,
+    "paging.offset_provided": False,
+    "paging.size_provided": False,
 }
 
 
@@ -68,6 +72,9 @@ def test_search_request_log_info(mocker):
             {
                 "request_top_level_fields_provided": "terms",
                 "request_top_level_fields_provided_length": 1,
+                "request_top_level.terms_provided": True,
+                "request_top_level.order_provided": False,
+                "request_top_level.paging_provided": False,
                 "terms_fields_provided": "",
                 "terms_fields_provided_length": 0,
             },
@@ -78,11 +85,15 @@ def test_search_request_log_info(mocker):
             {
                 "request_top_level_fields_provided": "order,terms",
                 "request_top_level_fields_provided_length": 2,
+                "request_top_level.terms_provided": True,
+                "request_top_level.order_provided": True,
+                "request_top_level.paging_provided": False,
                 "terms_fields_provided": "",
                 "terms_fields_provided_length": 0,
                 "order_fields_provided": "by",
                 "order_fields_provided_length": 1,
                 "order.by": "foo",
+                "order.by_provided": True,
             },
             id="order_provided",
         ),
@@ -91,6 +102,9 @@ def test_search_request_log_info(mocker):
             {
                 "request_top_level_fields_provided": "terms",
                 "request_top_level_fields_provided_length": 1,
+                "request_top_level.terms_provided": True,
+                "request_top_level.order_provided": False,
+                "request_top_level.paging_provided": False,
                 "terms_fields_provided": "an_enum",
                 "terms_fields_provided_length": 1,
                 "terms.an_enum_provided": True,
