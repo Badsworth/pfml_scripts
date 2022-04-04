@@ -1,8 +1,8 @@
 """Add additional user not found info
 
-Revision ID: 1ddd9e0ee8f7
-Revises: 60419262fc32
-Create Date: 2022-04-01 19:29:00.520463
+Revision ID: f20bb79b69f9
+Revises: e294fb147db0
+Create Date: 2022-04-04 14:21:42.693925
 
 """
 import sqlalchemy as sa
@@ -10,8 +10,8 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "1ddd9e0ee8f7"
-down_revision = "60419262fc32"
+revision = "f20bb79b69f9"
+down_revision = "e294fb147db0"
 branch_labels = None
 depends_on = None
 
