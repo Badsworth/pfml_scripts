@@ -715,9 +715,7 @@ const claimantFlow: {
       },
     },
     [routes.applications.dateOfSeparation]: {
-      meta: {
-        fields: dateOfSeparationFields,
-      },
+      meta: {},
       on: {
         CONTINUE: [
           {

@@ -12,6 +12,7 @@ import { useTranslation } from "../../locales/i18n";
 import Fieldset from "src/components/core/Fieldset";
 import ConditionalContent from "src/components/ConditionalContent";
 import FormLabel from "src/components/core/FormLabel";
+import InputChoiceGroup from "src/components/core/InputChoiceGroup";
 
 export const fields = [
   "claim.additional_user_not_found_info.date_of_separation",
@@ -24,15 +25,26 @@ export const DateOfSeparation = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
-  const { formState, updateFields } = useFormState(
-    pick(props, fields).claim?.additional_user_not_found_info
-  );
+  const defaultFormState = pick(props, fields).claim
+    ?.additional_user_not_found_info;
+
+  const tmp_still_work_for_employer = defaultFormState
+    ? defaultFormState?.date_of_separation === null
+    : null;
+  console.log(defaultFormState);
+  console.log(defaultFormState?.date_of_separation);
+  console.log(tmp_still_work_for_employer);
+
+  const { formState, getField, updateFields, clearField } = useFormState({
+    ...defaultFormState,
+    still_work_for_employer: defaultFormState?.date_of_separation === null,
+  });
 
   const handleSave = () =>
     appLogic.benefitsApplications.update(claim.application_id, {
       additional_user_not_found_info: {
         ...claim?.additional_user_not_found_info,
-        ...formState,
+        date_of_separation: formState.date_of_separation,
       },
     });
 
@@ -42,10 +54,10 @@ export const DateOfSeparation = (props: WithBenefitsApplicationProps) => {
     updateFields,
   });
 
-  const date_of_separation =
-    get(formState, "additional_user_not_found_info.date_of_separation") ?? null;
+  const date_of_separation = get(formState, "date_of_separation") ?? null;
 
-  console.log(formState);
+  const still_work_for_employer =
+    get(formState, "still_work_for_employer") ?? null;
 
   return (
     <QuestionPage
@@ -53,21 +65,47 @@ export const DateOfSeparation = (props: WithBenefitsApplicationProps) => {
       onSave={handleSave}
     >
       <Fieldset>
-        <ConditionalContent visible={true}>
-          <FormLabel component="legend">
-            {t("pages.claimsOrganizationUnit.sectionLabel")}
-          </FormLabel>
-        </ConditionalContent>
-        <InputDate
-          {...getFunctionalInputProps("date_of_separation")}
+        <InputChoiceGroup
+          {...getFunctionalInputProps("still_work_for_employer")}
+          choices={[
+            {
+              checked: still_work_for_employer === true,
+              label: t(
+                "pages.claimsAdditionalUserNotFoundInfo.recentlyAcquiredOrMergedYesLabel"
+              ),
+              value: "true",
+            },
+            {
+              checked: still_work_for_employer === false,
+              label: t(
+                "pages.claimsAdditionalUserNotFoundInfo.recentlyAcquiredOrMergedNoLabel"
+              ),
+              value: "false",
+            },
+          ]}
+          type="radio"
           label={t(
-            "pages.claimsAdditionalUserNotFoundInfo.dateOfSeparationLabel"
+            "pages.claimsAdditionalUserNotFoundInfo.recentlyAcquiredOrMergedLabel"
           )}
-          example={t("components.form.dateInputExample")}
-          dayLabel={t("components.form.dateInputDayLabel")}
-          monthLabel={t("components.form.dateInputMonthLabel")}
-          yearLabel={t("components.form.dateInputYearLabel")}
         />
+        <ConditionalContent
+          visible={!still_work_for_employer}
+          getField={getField}
+          clearField={clearField}
+          updateFields={updateFields}
+          fieldNamesClearedWhenHidden={["date_of_separation"]}
+        >
+          <InputDate
+            {...getFunctionalInputProps("date_of_separation")}
+            label={t(
+              "pages.claimsAdditionalUserNotFoundInfo.dateOfSeparationLabel"
+            )}
+            example={t("components.form.dateInputExample")}
+            dayLabel={t("components.form.dateInputDayLabel")}
+            monthLabel={t("components.form.dateInputMonthLabel")}
+            yearLabel={t("components.form.dateInputYearLabel")}
+          />
+        </ConditionalContent>
       </Fieldset>
     </QuestionPage>
   );
