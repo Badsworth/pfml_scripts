@@ -130,7 +130,7 @@ const routes = {
       benefitsGuide_aboutBondingLeave:
         "https://www.mass.gov/family-leave-bonding",
       benefitsGuide_benefitYears:
-        "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-overview-and-benefits#getting-paid-and-taxes-on-benefits-",
+        "https://www.mass.gov/info-details/types-of-paid-family-and-medical-leave#important-terms-to-know-",
       benefitsGuide_benefitsAmountDetails:
         "https://www.mass.gov/how-much-will-i-get-paid",
       benefitsGuide_seriousHealthCondition:

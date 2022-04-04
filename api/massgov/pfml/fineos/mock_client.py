@@ -279,6 +279,44 @@ def mock_customer_contact_details():
     }
 
 
+def mock_managed_requirements():
+    return [
+        {
+            "managedReqId": 123,
+            "category": "Employer Confirmation",
+            "type": "Employer Confirmation of Leave Data",
+            "followUpDate": datetime.date(2021, 2, 1),
+            "documentReceived": True,
+            "creator": "Fake Creator",
+            "status": "Open",
+            "subjectPartyName": "Fake Name",
+            "sourceOfInfoPartyName": "Fake Sourcee",
+            "creationDate": datetime.date(2020, 1, 1),
+            "dateSuppressed": datetime.date(2020, 3, 1),
+        },
+        {
+            "managedReqId": 124,
+            "category": "Employer Confirmation",
+            "type": "Employer Confirmation of Leave Data",
+            "followUpDate": datetime.date(2021, 2, 1),
+            "documentReceived": True,
+            "creator": "Fake Creator",
+            "status": "Complete",
+            "subjectPartyName": "Fake Name",
+            "sourceOfInfoPartyName": "Fake Sourcee",
+            "creationDate": datetime.date(2020, 1, 1),
+            "dateSuppressed": datetime.date(2020, 3, 1),
+        },
+    ]
+
+
+def mock_managed_requirements_parsed():
+    return [
+        models.group_client_api.ManagedRequirementDetails.parse_obj(r)
+        for r in mock_managed_requirements()
+    ]
+
+
 class MockFINEOSClient(client.AbstractFINEOSClient):
     """Mock FINEOS API client that returns fake responses."""
 
@@ -387,7 +425,13 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     def start_absence(
         self, user_id: str, absence_case: models.customer_api.AbsenceCase
     ) -> models.customer_api.AbsenceCaseSummary:
+        call_count = (
+            len([capture for capture in get_capture() if capture[0] == "start_absence"])
+            if get_capture()
+            else 0
+        )
         _capture_call("start_absence", user_id, absence_case=absence_case)
+        fineos_case_id_number = 259 + call_count
 
         start_date = None
         end_date = None
@@ -403,8 +447,8 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
             end_date = absence_case.episodicLeavePeriods[0].endDate
 
         absence_case_summary = models.customer_api.AbsenceCaseSummary(
-            absenceId="NTN-259-ABS-01",
-            notificationCaseId="NTN-259",
+            absenceId=f"NTN-{fineos_case_id_number}-ABS-01",
+            notificationCaseId=f"NTN-{fineos_case_id_number}",
             startDate=start_date,
             endDate=end_date,
         )
@@ -694,39 +738,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     def get_managed_requirements(
         self, user_id: str, absence_id: str
     ) -> List[models.group_client_api.ManagedRequirementDetails]:
-
-        return [
-            models.group_client_api.ManagedRequirementDetails.parse_obj(
-                {
-                    "managedReqId": 123,
-                    "category": "Employer Confirmation",
-                    "type": "Employer Confirmation of Leave Data",
-                    "followUpDate": datetime.date(2021, 2, 1),
-                    "documentReceived": True,
-                    "creator": "Fake Creator",
-                    "status": "Open",
-                    "subjectPartyName": "Fake Name",
-                    "sourceOfInfoPartyName": "Fake Sourcee",
-                    "creationDate": datetime.date(2020, 1, 1),
-                    "dateSuppressed": datetime.date(2020, 3, 1),
-                }
-            ),
-            models.group_client_api.ManagedRequirementDetails.parse_obj(
-                {
-                    "managedReqId": 124,
-                    "category": "Employer Confirmation",
-                    "type": "Employer Confirmation of Leave Data",
-                    "followUpDate": datetime.date(2021, 2, 1),
-                    "documentReceived": True,
-                    "creator": "Fake Creator",
-                    "status": "Complete",
-                    "subjectPartyName": "Fake Name",
-                    "sourceOfInfoPartyName": "Fake Sourcee",
-                    "creationDate": datetime.date(2020, 1, 1),
-                    "dateSuppressed": datetime.date(2020, 3, 1),
-                }
-            ),
-        ]
+        return mock_managed_requirements_parsed()
 
     def group_client_get_documents(
         self, user_id: str, absence_id: str

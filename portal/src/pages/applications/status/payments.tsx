@@ -3,7 +3,7 @@ import {
   DocumentType,
   findDocumentsByTypes,
 } from "../../../models/Document";
-import {
+import PaymentDetail, {
   PROCESSING_DAYS_PER_DELAY,
   Payment,
   WritebackTransactionStatus,
@@ -36,10 +36,12 @@ import isBlank from "../../../utils/isBlank";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
+import weekday from "dayjs/plugin/weekday";
 
 // TODO(PORTAL-1482): remove test cases for checkback dates
 // remove dayjs and dayjsBusinessTime imports
 dayjs.extend(dayjsBusinessTime);
+dayjs.extend(weekday);
 
 export const Payments = ({
   appLogic,
@@ -53,7 +55,7 @@ export const Payments = ({
   const { absence_id } = query;
   const {
     errors,
-    claims: { claimDetail, loadClaimDetail },
+    claims: { claimDetail, isLoadingClaimDetail, loadClaimDetail },
     documents: {
       documents: allClaimDocuments,
       loadAll: loadAllClaimDocuments,
@@ -94,10 +96,12 @@ export const Payments = ({
    * If there is no absence_id query parameter,
    * then return the PFML 404 page.
    */
-  if (!absence_id || !claimDetail) return <PageNotFound />;
+  if (!absence_id) return <PageNotFound />;
 
   // Check both because claimDetail could be cached from a different status page.
   if (
+    isLoadingClaimDetail ||
+    !claimDetail ||
     claimDetail.fineos_absence_id !== absence_id ||
     !hasLoadedPayments(absence_id) ||
     !hasLoadedClaimDocuments(application_id || "")
@@ -257,6 +261,74 @@ export const Payments = ({
     );
   };
 
+  const PaymentRows = (payment: PaymentDetail, tableColumns: string[]) => {
+    const {
+      payment_id,
+      period_start_date,
+      period_end_date,
+      amount,
+      sent_to_bank_date,
+      payment_method,
+      expected_send_date_start,
+      expected_send_date_end,
+      status,
+      writeback_transaction_status,
+      transaction_date,
+      transaction_date_could_change,
+    } = payment;
+    const payPeriod = formatDateRange(period_start_date, period_end_date);
+    // will display amount if payment has been sent, otherwise display status
+    const paymentAmountOrStatusText = getPaymentAmountOrStatusText(
+      status,
+      amount,
+      writeback_transaction_status,
+      transaction_date,
+      transaction_date_could_change
+    );
+    const paymentStatusContext = getPaymentStatusContext(
+      status,
+      payment_method,
+      writeback_transaction_status,
+      transaction_date,
+      transaction_date_could_change
+    );
+    // expected send date calculations for delays, if expected_send_dates not provided
+    const expectedSendDates = calculateProcessingDates(
+      expected_send_date_start,
+      expected_send_date_end,
+      transaction_date,
+      writeback_transaction_status,
+      transaction_date_could_change
+    );
+    return (
+      <tr key={payment_id}>
+        <td data-label={tableColumns[0]} className="tablet:width-card-lg">
+          {payPeriod}
+        </td>
+        <td data-label={tableColumns[1]}>{paymentAmountOrStatusText}</td>
+        <td data-label={tableColumns[2]}>
+          <Trans
+            i18nKey="pages.payments.tablePaymentStatus"
+            tOptions={{
+              context: paymentStatusContext,
+              paymentMethod: getPaymentMethodText(
+                payment_method,
+                transaction_date_could_change
+              ),
+              payPeriod: expectedSendDates,
+              sentDate: dayjs(sent_to_bank_date).format("MMMM D, YYYY"),
+            }}
+            components={{
+              "contact-center-phone-link": (
+                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+              ),
+              "delays-accordion-link": <a href={"#delays_accordion"} />,
+            }}
+          />
+        </td>
+      </tr>
+    );
+  };
   return (
     <React.Fragment>
       {isFeatureEnabled("showHolidayAlert") &&
@@ -353,86 +425,7 @@ export const Payments = ({
               <tbody>
                 {payments
                   .reverse()
-                  .map(
-                    ({
-                      payment_id,
-                      period_start_date,
-                      period_end_date,
-                      amount,
-                      sent_to_bank_date,
-                      payment_method,
-                      expected_send_date_start,
-                      expected_send_date_end,
-                      status,
-                      writeback_transaction_status,
-                      transaction_date,
-                      transaction_date_could_change,
-                    }) => {
-                      return (
-                        <tr key={payment_id}>
-                          <td
-                            data-label={tableColumns[0]}
-                            className="tablet:width-card-lg"
-                          >
-                            {formatDateRange(
-                              period_start_date,
-                              period_end_date
-                            )}
-                          </td>
-                          <td data-label={tableColumns[1]}>
-                            {getPaymentAmountOrStatusText(
-                              status,
-                              amount,
-                              writeback_transaction_status,
-                              transaction_date,
-                              transaction_date_could_change
-                            )}
-                          </td>
-                          <td data-label={tableColumns[2]}>
-                            <Trans
-                              i18nKey="pages.payments.tablePaymentStatus"
-                              tOptions={{
-                                context: getPaymentStatusContext(
-                                  status,
-                                  payment_method,
-                                  writeback_transaction_status,
-                                  transaction_date,
-                                  transaction_date_could_change
-                                ),
-                                paymentMethod: getPaymentMethodText(
-                                  payment_method,
-                                  transaction_date_could_change
-                                ),
-                                payPeriod: calculateProcessingDates(
-                                  expected_send_date_start,
-                                  expected_send_date_end,
-                                  transaction_date,
-                                  writeback_transaction_status,
-                                  transaction_date_could_change
-                                ),
-                                sentDate:
-                                  dayjs(sent_to_bank_date).format(
-                                    "MMMM D, YYYY"
-                                  ),
-                              }}
-                              components={{
-                                "contact-center-phone-link": (
-                                  <a
-                                    href={`tel:${t(
-                                      "shared.contactCenterPhoneNumber"
-                                    )}`}
-                                  />
-                                ),
-                                "delays-accordion-link": (
-                                  <a href={"#delays_accordion"} />
-                                ),
-                              }}
-                            />
-                          </td>
-                        </tr>
-                      );
-                    }
-                  )}
+                  .map((payment) => PaymentRows(payment, tableColumns))}
                 {hasWaitingWeek && (
                   <tr>
                     <td data-label={t("pages.payments.tableWaitingWeekHeader")}>
@@ -648,6 +641,16 @@ export function paymentStatusViewHelper(
   const isApprovedAndHasApprovalDocument =
     hasApprovedStatus && hasApprovalNotice;
 
+  // POST FINEOS changes in schedule
+  // case where claim is approved before claim has started
+  // TODO (PORTAL-1935): revise date on deploy
+  const FINEOSDeployDate = "2022-01-31";
+  const shouldUseMondayPaymentSchedule =
+    isFeatureEnabled("claimantUseFineosNewPaymentSchedule") &&
+    _approvalDate >
+      dayjs(FINEOSDeployDate).nextBusinessDay().format("YYYY-MM-DD");
+  const isApprovedBeforeLeaveStartDate = _approvalDate < _initialClaimStartDate;
+
   // if payment is retroactive
   // and/or if the claim was approved within the first 14 days of the leave period
   // 1. changes intro text
@@ -659,7 +662,6 @@ export function paymentStatusViewHelper(
   // case where claim is approved before 14th day but after claim has started
   const isApprovedBeforeFourteenthDayOfClaim =
     _approvalDate < _fourteenthDayOfClaim;
-
   // for claims that have no payments and aren't intermittent
   // the date the user should come back to check their payment status
   // that shows in the intro text
@@ -671,8 +673,14 @@ export function paymentStatusViewHelper(
     }
 
     let result;
-    // claim is approved after second week of leave start date (includes retroactive)
-    if (isRetroactive || !isApprovedBeforeFourteenthDayOfClaim) {
+    if (shouldUseMondayPaymentSchedule) {
+      if (isApprovedBeforeLeaveStartDate) {
+        result = dayjs(_initialClaimStartDate).addBusinessDays(5).weekday(1);
+      } else {
+        result = dayjs(_approvalDate).addBusinessDays(5).weekday(1);
+      }
+      // claim is approved after second week of leave start date (includes retroactive)
+    } else if (isRetroactive || !isApprovedBeforeFourteenthDayOfClaim) {
       // Wait 5 business days (1week) b/c of waiting week.
       // Wait 1 business day b/c we send payments to the bank the day after FINEOS sends them to us.
       result = dayjs(_approvalDate).addBusinessDays(5).addBusinessDays(1);
@@ -686,7 +694,6 @@ export function paymentStatusViewHelper(
         .addBusinessDays(3)
         .addBusinessDays(1);
     }
-
     return formatDate(result.format()).full();
   })();
 
@@ -712,6 +719,8 @@ export function paymentStatusViewHelper(
     isApprovedBeforeFourteenthDayOfClaim,
     checkbackDate,
     hasCheckbackDate,
+    shouldUseMondayPaymentSchedule,
+    isApprovedBeforeLeaveStartDate,
   };
 }
 
@@ -742,25 +751,61 @@ function getPaymentIntroContext(helper: PaymentStatusViewHelper) {
     isContinuous,
     isRetroactive,
     isApprovedBeforeFourteenthDayOfClaim,
+    shouldUseMondayPaymentSchedule,
   } = helper;
 
+  const contentUpdateWithRelease = isFeatureEnabled(
+    "claimantUseFineosNewPaymentSchedule"
+  );
   if (hasCheckbackDate) {
     /* Keys for text that include checkbackDate */
-    const contextSuffix = isApprovedBeforeFourteenthDayOfClaim
-      ? "PreFourteenthClaimDate"
-      : isRetroactive
-      ? "Retroactive"
-      : "PostFourteenthClaimDate";
+    let approvalDateContext;
+    if (shouldUseMondayPaymentSchedule) {
+      // if claim is approved more than two weeks after the leave start date
+      // payment period will have started after the first week of payments
+      // processing for the second week will begin and claim will have multiple payments
+      const isMultipleWeekPayment = !isApprovedBeforeFourteenthDayOfClaim;
+      approvalDateContext = isMultipleWeekPayment
+        ? "PostFourteenthClaimDate"
+        : "ApprovalPreStartDate";
+    } else {
+      approvalDateContext = isApprovedBeforeFourteenthDayOfClaim
+        ? "PreFourteenthClaimDate"
+        : isRetroactive
+        ? "Retroactive"
+        : "PostFourteenthClaimDate";
+    }
+
+    // TODO(PORTAL-1870): remove PreMondayPaymentSchedule check when changes are content approved,
+    // updated content for FINEOS release
+    const FINEOSScheduleTime = shouldUseMondayPaymentSchedule
+      ? "_PostMondayPaymentSchedule"
+      : contentUpdateWithRelease
+      ? `_PreMondayPaymentSchedule`
+      : "";
+
     return isContinuous
-      ? `Continuous_${contextSuffix}`
-      : `ReducedSchedule_${contextSuffix}`;
+      ? `Continuous_${approvalDateContext}${FINEOSScheduleTime}`
+      : `ReducedSchedule_${approvalDateContext}${FINEOSScheduleTime}`;
   }
 
-  return isIntermittent
+  // after first payment
+  let afterInitialPayment = isIntermittent
     ? isUnpaid
       ? "Intermittent_Unpaid"
       : "Intermittent"
     : isRetroactive
     ? "NonIntermittent_Retro"
     : "NonIntermittent_NonRetro";
+  // TODO(PORTAL-1870): remove _PreMondayPaymentSchedule when changes are content approved
+  if (
+    contentUpdateWithRelease &&
+    !isIntermittent &&
+    !shouldUseMondayPaymentSchedule
+  ) {
+    afterInitialPayment += "_PreMondayPaymentSchedule";
+  } else if (isIntermittent && !isUnpaid && shouldUseMondayPaymentSchedule) {
+    afterInitialPayment = "_PostMondayPaymentSchedule";
+  }
+  return afterInitialPayment;
 }

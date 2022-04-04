@@ -2406,7 +2406,10 @@ export function numToPaymentFormat(num: number): string {
  * Read more on preventing overpayments here: https://lwd.atlassian.net/browse/CPS-3115
  * @returns Date
  */
-export function calculatePaymentDatePreventingOP(approvalDate?: Date) {
+export function calculatePaymentDatePreventingOP(
+  approvalDate?: Date,
+  considerEST = true
+) {
   const PFML_HOLIDAYS = [
     "2022-02-21",
     "2022-04-18",
@@ -2436,14 +2439,21 @@ export function calculatePaymentDatePreventingOP(approvalDate?: Date) {
     })
   );
   const isBeforeEndBusinessDay = estTimeHour < 17;
-  const afterNormalBusinessDays = addBusinessDays(
-    approvalDate ?? new Date(),
-    isBeforeEndBusinessDay ? 5 : 6
-  );
+
+  // Determines if EST time should be used to determine if an extra day should be applied to the Date returned by calculatePaymentDatePreventingOP
+  const considerBusinessDay = () => {
+    if (considerEST) {
+      return addBusinessDays(
+        approvalDate ?? new Date(),
+        isBeforeEndBusinessDay ? 5 : 6
+      );
+    } else return addBusinessDays(approvalDate ?? new Date(), 5);
+  };
+
   const hasHoliday = (holiday: Date) => {
     return (
       isAfter(holiday, subDays(new Date(), 1)) &&
-      isBefore(holiday, addDays(afterNormalBusinessDays, 1))
+      isBefore(holiday, addDays(considerBusinessDay(), 1))
     );
   };
   // account for holidays - which further delays the payment processing date
@@ -2451,7 +2461,7 @@ export function calculatePaymentDatePreventingOP(approvalDate?: Date) {
   for (let i = 0; i < PFML_HOLIDAYS.length; i++) {
     if (hasHoliday(parseISO(PFML_HOLIDAYS[i]))) totalHolidays += 1;
   }
-  return addBusinessDays(afterNormalBusinessDays, totalHolidays);
+  return addBusinessDays(considerBusinessDay(), totalHolidays);
 }
 
 class BenefitsExtensionPage {

@@ -49,7 +49,7 @@ const DownloadableDocument = (props: DownloadableDocumentProps) => {
     "display-flex flex-align-center": icon,
   });
 
-  const documentName = getDocumentName(document, t);
+  const documentName = displayDocumentName || getDocumentName(document, t);
 
   const handleClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();

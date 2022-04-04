@@ -270,6 +270,106 @@ jobs:
           path: e2e/cypress/screenshots
           if-no-files-found: "ignore"
 
+  # Re-run "failed" specs
+  failed:
+    name: Re-run failed specs
+    runs-on: ubuntu-latest
+    env:
+      COMMIT_INFO_MESSAGE: |
+        ${{ inputs.title_override || format('Manual Run: {0}', inputs.target_environment) }}-Auto Retriggered
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        containers: [1, 2, 3, 4]
+    defaults:
+      run:
+        working-directory: ./
+    needs: [health, cypress]
+    if: always() && inputs.run_stable && needs.cypress.result == 'failure' && inputs.cypress_tags != 'PR'
+    steps:
+      - uses: actions/checkout@v2
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Pull the newrelic API key from parameter store for reporting
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/service/pfml-api/common/newrelic-license-key"
+          env_variable_name: "E2E_NEWRELIC_INGEST_KEY"
+
+      - name: Setup & Configure New Relic CLI
+        uses: ./.github/actions/setup-nr-cli
+
+      - name: Query NR to get list of failed specs
+        run: sh ./bin/ci/get-list-failed-specs.sh ${{ env.E2E_ENVIRONMENT }} ${{ env.TEST_RUN_ID }}
+        id: get-failed
+
+      - name: Print string of failed specs for auto trigger
+        run: |
+          echo "Previous run had failure[s] w/the following runId: ${{ env.TEST_RUN_ID }}"
+          echo "List of failed specs: ${{ steps.get-failed.outputs.failed_specs }}"
+          echo "Count of failed specs: ${{ steps.get-failed.outputs.failed_specs_count }}"
+
+      # Run Cypress tests (Targeted w/failed Specs).
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with: { node-version: "14.x" }
+        if: steps.get-failed.outputs.failed_specs_count < 10
+      - name: "Install Node Modules"
+        uses: bahmutov/npm-install@v1
+        with:
+          working-directory: e2e
+        if: steps.get-failed.outputs.failed_specs_count < 10
+      - name: Cypress Tests (Auto Re-run - failed specs)
+        id: run-failed
+        uses: cypress-io/github-action@v2
+        timeout-minutes: 15
+        with:
+          spec: ${{ steps.get-failed.outputs.failed_specs }}
+          record: true
+          parallel: true
+          install: false
+          working-directory: e2e
+          ci-build-id: ${{ env.TEST_RUN_ID }}-failed-specs
+          group: Targeted
+          tag: "${{ inputs.cypress_tags }},Env-${{ inputs.target_environment }}"
+          config: reporter=cypress/reporters/new-relic.js
+          # With this action, we need to force triggering Cypress via CLI rather than API to fix a node version
+          # mixup. See https://github.com/cypress-io/github-action/issues/489
+          command-prefix: "--"
+          browser: "chrome"
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY_TARGETED }}
+          CYPRESS_PROJECT_ID: "98snsi"
+        if: steps.get-failed.outputs.failed_specs_count < 10
+
+      - name: Get list of failed specs from auto re-trigger
+        if: failure()
+        run: sh ./bin/ci/get-list-failed-specs.sh ${{ env.E2E_ENVIRONMENT }} ${{ env.TEST_RUN_ID }}-failed-specs
+        id: get-failed-auto
+
+      - name: Print String of persistent failed specs
+        if: always() && steps.get-failed-auto.outcome == 'success'
+        run: |
+          echo "Failed auto run had failure[s] w/the following runId: ${{ env.TEST_RUN_ID }}-failed-specs"
+          echo "List of persistent failed specs: ${{ steps.get-failed-auto.outputs.failed_specs }}"
+          echo "Final Count of persistent failures: ${{ steps.get-failed-auto.outputs.failed_specs_count }}"
+
+      - name: "Archive screenshots"
+        uses: actions/upload-artifact@v2
+        if: always() && steps.get-failed-auto.outcome == 'success'
+        with:
+          name: cypress-screenshots ${{ matrix.containers }}
+          path: e2e/cypress/screenshots
+          if-no-files-found: "ignore"
+
   # Run Integration Tests.
   integration:
     name: Integration
