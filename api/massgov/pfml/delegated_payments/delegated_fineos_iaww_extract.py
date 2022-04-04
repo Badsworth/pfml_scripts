@@ -155,7 +155,7 @@ class IAWWExtractStep(Step):
                                         )
                         except Exception as error:
                             # We want to continue processing the rest of the file, even if something goes wrong with getting or updating the beneift year
-                            logger.info(
+                            logger.warning(
                                 "Unable to update the associated benefit year",
                                 extra={"claim_id": claim.claim_id, "error": str(error)},
                             )

@@ -981,9 +981,6 @@ class Claim(Base, TimestampMixin):
 
 class BenefitYear(Base, TimestampMixin):
     __tablename__ = "benefit_year"
-    __table_args__ = (
-        UniqueConstraint("employee_id", "start_date", name="uix_employee_id_start_date"),
-    )
 
     benefit_year_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
 
@@ -1004,6 +1001,8 @@ class BenefitYear(Base, TimestampMixin):
     base_period_end_date = Column(Date)
 
     total_wages = Column(Numeric(asdecimal=True))
+
+    Index("uix_employee_id_start_date", employee_id, start_date, unique=True)
 
     @typed_hybrid_property
     def current_benefit_year(self) -> bool:
