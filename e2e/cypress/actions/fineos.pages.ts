@@ -95,8 +95,8 @@ export class ClaimPage {
     return new ClaimPage();
   }
 
-  addHistoricalAbsenceCase(): HistoricalAbsence {
-    return HistoricalAbsence.create();
+  addHistoricalAbsenceCase(upgrade?: boolean): HistoricalAbsence {
+    return HistoricalAbsence.create(upgrade);
   }
 
   recordActualLeave<T>(cb: (page: RecordActualTime) => T): T {
@@ -3691,14 +3691,14 @@ export type FixedTimeOffPeriodDescription = {
 
 class HistoricalAbsence {
   /**To be called from Absence Hub */
-  static create(): HistoricalAbsence {
+  static create(upgrade?: boolean): HistoricalAbsence {
     const historicalPeriodDescription: AbsenceReasonDescription = {
       reason: "Serious Health Condition - Employee",
       relates_to: "Employee",
       qualifier_1: "Not Work Related",
       qualifier_2: "Sickness",
     };
-    cy.contains("Options").click();
+    cy.contains("Options").click({ force: true });
     cy.contains("Add Historical Absence").click({ force: true });
     HistoricalAbsence.fillAbsenceDescription(historicalPeriodDescription);
     cy.contains("div", "timeOffHistoricalAbsencePeriodsListviewWidget")
@@ -3728,10 +3728,12 @@ class HistoricalAbsence {
       'a[id="com.fineos.frontoffice.casemanager.casekeyinformation.CaseKeyInfoBar_un8_KeyInfoBarLink_0"]'
     ).click();
     onTab("Cases");
-    cy.get(".ListRowSelected > td").should(($td) => {
-      expect($td.eq(4)).to.contain("Absence Historical Case");
+    const selector = upgrade
+      ? ".ant-table-row-selected > td"
+      : ".ListRowSelected > td";
+    cy.get(selector).should(($td) => {
+      expect($td.eq(upgrade ? 2 : 4)).to.contain("Absence Historical Case");
     });
-    cy.get('input[title="Open"]').click();
     waitForAjaxComplete();
     return new HistoricalAbsence();
   }

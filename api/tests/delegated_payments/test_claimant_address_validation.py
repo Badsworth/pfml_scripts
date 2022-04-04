@@ -31,12 +31,11 @@ from massgov.pfml.experian.experian_util import address_to_experian_search_text
 
 @pytest.fixture
 def claimant_address_step(
-    local_initialize_factories_session,
-    local_test_db_session: db.Session,
-    local_test_db_other_session,
+    initialize_factories_session,
+    test_db_session: db.Session,
 ):
     return ClaimantAddressValidationStep(
-        db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
+        db_session=test_db_session, log_entry_db_session=test_db_session
     )
 
 
@@ -69,9 +68,9 @@ def experian_factory_with_experian_address(address_factory):
     return ExperianAddressPairFactory.build(experian_address=address_factory)
 
 
-def test_employee_exists_for_customer_number(local_test_db_session, employee_extract_factory):
+def test_employee_exists_for_customer_number(test_db_session, employee_extract_factory):
 
-    employee = local_test_db_session.query(Employee).filter(
+    employee = test_db_session.query(Employee).filter(
         Employee.fineos_customer_number == employee_extract_factory.customer_number
     )
     assert employee is not None
@@ -164,8 +163,8 @@ def test_create_address_report(claimant_address_step):
     assert str(out_path) == full_path
 
 
-def test_is_address_new_or_updated(local_test_db_session, employee_extract_factory):
-    employee = local_test_db_session.query(Employee).filter(
+def test_is_address_new_or_updated(test_db_session, employee_extract_factory):
+    employee = test_db_session.query(Employee).filter(
         Employee.fineos_customer_number == employee_extract_factory.customer_number
     )
     assert employee is not None
@@ -183,18 +182,16 @@ def test_is_address_new_or_updated(local_test_db_session, employee_extract_facto
         )
     )
     payment = PaymentFactory.build(claim=claim, experian_address_pair=address_pair)
-    # local_test_db_session.commit()
+    # test_db_session.commit()
     assert payment.payment_id
-    # local_test_db_session.expire_all()
+    # test_db_session.expire_all()
 
     pay_id = (
-        local_test_db_session.query(Payment)
-        .join(Claim)
-        .filter(Claim.employee_id == employee.employee_id)
+        test_db_session.query(Payment).join(Claim).filter(Claim.employee_id == employee.employee_id)
     )
     assert pay_id is not None
     experian_address_pairs = (
-        local_test_db_session.query(ExperianAddressPair)
+        test_db_session.query(ExperianAddressPair)
         .join(Payment, Payment.experian_address_pair_id == ExperianAddressPair.fineos_address_id)
         .all()
     )

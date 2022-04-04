@@ -106,7 +106,7 @@ module "tasks" {
   enable_1099_testfile_generation = "0"
   irs_1099_correction_ind         = "0"
 
-  enable_employer_reimbursement_payments = "0"
+  enable_employer_reimbursement_payments = "1"
 
   enable_pub_payments_copy_audit_report_schedule = true
 }

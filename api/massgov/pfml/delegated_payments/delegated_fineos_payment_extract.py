@@ -1318,7 +1318,11 @@ class PaymentExtractStep(Step):
 
         # If it is not an adhoc payment and it has certain kinds of open
         # tasks, we reject it and add it to the error report
-        if not payment.is_adhoc_payment and payment_data.absence_case_number is not None:
+        if (
+            not payment.is_adhoc_payment
+            and payment_data.is_payment_intended_for_pub
+            and payment_data.absence_case_number is not None
+        ):
             open_other_income_tasks = payments_util.get_open_tasks(
                 self.db_session, payment_data.absence_case_number, OTHER_INCOME_TASKTYPENAMES
             )
