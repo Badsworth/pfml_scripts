@@ -9,8 +9,11 @@ import React from "react";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
+import Claim from "src/models/Claim";
 
-export const fields = ["claim.additional_user_not_found_info"];
+export const fields = [
+  "claim.additional_user_not_found_info.recently_acquired_or_merged",
+];
 
 export const RecentlyAcquiredOrMerged = (
   props: WithBenefitsApplicationProps
@@ -18,28 +21,23 @@ export const RecentlyAcquiredOrMerged = (
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
-  const { formState, updateFields } = useFormState(pick(props, fields).claim);
+  const { formState, updateFields } = useFormState(
+    pick(props, fields).claim?.additional_user_not_found_info
+  );
 
   const handleSave = async () => {
     const requestData = cloneDeep(formState);
 
-    if (
-      get(
-        formState,
-        "additional_user_not_found_info.recently_acquired_or_merged"
-      ) === ""
-    ) {
-      set(
-        requestData,
-        "additional_user_not_found_info.recently_acquired_or_merged",
-        null
-      );
+    if (get(formState, "recently_acquired_or_merged") === "") {
+      set(requestData, "recently_acquired_or_merged", null);
     }
 
-    await appLogic.benefitsApplications.update(
-      claim.application_id,
-      requestData
-    );
+    await appLogic.benefitsApplications.update(claim.application_id, {
+      additional_user_not_found_info: {
+        ...claim?.additional_user_not_found_info,
+        ...requestData,
+      },
+    });
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -49,10 +47,7 @@ export const RecentlyAcquiredOrMerged = (
   });
 
   const recently_acquired_or_merged =
-    get(
-      formState,
-      "additional_user_not_found_info.recently_acquired_or_merged"
-    ) ?? null;
+    get(formState, "recently_acquired_or_merged") ?? null;
 
   return (
     <QuestionPage
@@ -61,9 +56,7 @@ export const RecentlyAcquiredOrMerged = (
       onSave={handleSave}
     >
       <InputChoiceGroup
-        {...getFunctionalInputProps(
-          "additional_user_not_found_info.recently_acquired_or_merged"
-        )}
+        {...getFunctionalInputProps("recently_acquired_or_merged")}
         choices={[
           {
             checked: recently_acquired_or_merged === true,

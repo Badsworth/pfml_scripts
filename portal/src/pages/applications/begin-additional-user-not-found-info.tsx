@@ -14,7 +14,7 @@ export const fields = [];
 /**
  * A form page to begin collecting additional information for an employee/employer match.
  */
-export const AdditionalUserNotFoundInfoBegin = (
+export const BeginAdditionalUserNotFoundInfo = (
   props: WithBenefitsApplicationProps
 ) => {
   const { appLogic, claim } = props;
@@ -60,4 +60,4 @@ export const AdditionalUserNotFoundInfoBegin = (
   );
 };
 
-export default withBenefitsApplication(AdditionalUserNotFoundInfoBegin);
+export default withBenefitsApplication(BeginAdditionalUserNotFoundInfo);

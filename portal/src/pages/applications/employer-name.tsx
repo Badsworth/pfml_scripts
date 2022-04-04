@@ -18,11 +18,16 @@ export const EmployerName = (props: WithBenefitsApplicationProps) => {
   const { t } = useTranslation();
 
   const { formState, updateFields } = useFormState(
-    pick(props, ["claim.additional_user_not_found_info"]).claim
+    pick(props, fields).claim?.additional_user_not_found_info
   );
 
   const handleSave = () =>
-    appLogic.benefitsApplications.update(claim.application_id, formState);
+    appLogic.benefitsApplications.update(claim.application_id, {
+      additional_user_not_found_info: {
+        ...claim?.additional_user_not_found_info,
+        ...formState,
+      },
+    });
 
   const getFunctionalInputProps = useFunctionalInputProps({
     errors: appLogic.errors,
@@ -40,9 +45,7 @@ export const EmployerName = (props: WithBenefitsApplicationProps) => {
           {t("pages.claimsAdditionalUserNotFoundInfo.employerNameTitle")}
         </FormLabel>
         <InputText
-          {...getFunctionalInputProps(
-            "additional_user_not_found_info.employer_name"
-          )}
+          {...getFunctionalInputProps("employer_name")}
           label={t("pages.claimsAdditionalUserNotFoundInfo.employerNameLabel")}
           hint=""
           smallLabel={true}
