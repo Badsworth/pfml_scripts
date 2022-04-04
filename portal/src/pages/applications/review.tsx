@@ -38,6 +38,7 @@ import withClaimDocuments, {
 import Address from "../../models/Address";
 import Alert from "../../components/core/Alert";
 import BackButton from "../../components/BackButton";
+import BenefitYearsSpanAlert from "src/components/BenefitYearsSpanAlert";
 import Heading from "../../components/core/Heading";
 import HeadingPrefix from "../../components/core/HeadingPrefix";
 import Lead from "../../components/core/Lead";
@@ -417,6 +418,12 @@ export const Review = (
       >
         {t("pages.claimsReview.stepHeading", { context: "leaveDetails" })}
       </ReviewHeading>
+
+      <ReviewRow level={reviewRowLevel} label={""} noBorder>
+        <BenefitYearsSpanAlert
+          computed_application_split={claim.computed_application_split}
+        />
+      </ReviewRow>
 
       <ReviewRow
         level={reviewRowLevel}
