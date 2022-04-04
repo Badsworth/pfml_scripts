@@ -17,10 +17,8 @@ const routes = {
   },
   applications: {
     address: "/applications/address",
-    beginAdditionalNoEmployeeFoundInformation:
-      "/applications/begin-additional-no-employee-found-information",
-    beginAdditionalNoEmployerFoundInformation:
-      "/applications/begin-additional-no-employer-found-information",
+    beginAdditionalUserNotFoundInfo:
+      "/applications/begin-additional-user-not-found-info",
     bondingLeaveAttestation: "/applications/bonding-leave-attestation",
     caringLeaveAttestation: "/applications/caring-leave-attestation",
     checklist: "/applications/checklist",
@@ -50,8 +48,7 @@ const routes = {
     leavePeriodReducedSchedule: "/applications/leave-period-reduced-schedule",
     leaveReason: "/applications/leave-reason",
     name: "/applications/name",
-    noEmployeeFound: "/applications/no-employee-found",
-    noEmployerFound: "/applications/no-employer-found",
+    noMatchFound: "/applications/no-match-found",
     notifiedEmployer: "/applications/notified-employer",
     otherIncomes: "/applications/other-incomes",
     otherIncomesDetails: "/applications/other-incomes-details",

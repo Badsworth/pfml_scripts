@@ -106,18 +106,13 @@ export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.fixed,
   isVariableWorkPattern: ({ claim }) =>
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.variable,
-  includesNoEmployeeFoundError: ({ claim, warnings }) => {
-    return (
-      (warnings || []).some((warning) => warning.rule === "require_employee") &&
-      get(claim, "status") !== "In Review"
-    );
-  },
-  includesNoEmployerFoundError: ({ claim, warnings }) => {
+  includesUserNotFoundError: ({ claim, warnings }) => {
     return (
       (warnings || []).some(
         (warning) =>
           warning.type === "require_contributing_employer" ||
-          warning.rule === "require_non_exempt_employer"
+          warning.rule === "require_non_exempt_employer" ||
+          warning.rule === "require_employee"
       ) && get(claim, "status") !== "In Review"
     );
   },
@@ -645,12 +640,8 @@ const claimantFlow: {
       on: {
         CONTINUE: [
           {
-            target: routes.applications.noEmployeeFound,
-            cond: "includesNoEmployeeFoundError",
-          },
-          {
-            target: routes.applications.noEmployerFound,
-            cond: "includesNoEmployerFoundError",
+            target: routes.applications.noMatchFound,
+            cond: "includesUserNotFoundError",
           },
           {
             target: routes.applications.department,
@@ -666,20 +657,14 @@ const claimantFlow: {
         ],
       },
     },
-    [routes.applications.noEmployeeFound]: {
+    [routes.applications.noMatchFound]: {
       meta: {},
       on: {
         // if claimant successfully fixes the issue, continue through normal flow
         CONTINUE: [
           {
-            target:
-              routes.applications.beginAdditionalNoEmployerFoundInformation,
-            cond: "includesNoEmployerFoundError",
-          },
-          {
-            target:
-              routes.applications.beginAdditionalNoEmployeeFoundInformation,
-            cond: "includesNoEmployeeFoundError",
+            target: routes.applications.beginAdditionalUserNotFoundInfo,
+            cond: "includesUserNotFoundError",
           },
           {
             target: routes.applications.department,
@@ -695,46 +680,7 @@ const claimantFlow: {
         ],
       },
     },
-    [routes.applications.noEmployerFound]: {
-      meta: {},
-      on: {
-        // if claimant successfully fixes the issue, continue through normal flow
-        CONTINUE: [
-          {
-            target:
-              routes.applications.beginAdditionalNoEmployerFoundInformation,
-            cond: "includesNoEmployerFoundError",
-          },
-          {
-            target:
-              routes.applications.beginAdditionalNoEmployeeFoundInformation,
-            cond: "includesNoEmployeeFoundError",
-          },
-          {
-            target: routes.applications.department,
-            cond: "hasEmployerWithDepartments",
-          },
-          {
-            target: routes.applications.notifiedEmployer,
-            cond: "isEmployed",
-          },
-          {
-            target: routes.applications.checklist,
-          },
-        ],
-      },
-    },
-    [routes.applications.beginAdditionalNoEmployeeFoundInformation]: {
-      meta: {},
-      on: {
-        CONTINUE: [
-          {
-            target: routes.applications.employerName,
-          },
-        ],
-      },
-    },
-    [routes.applications.beginAdditionalNoEmployerFoundInformation]: {
+    [routes.applications.beginAdditionalUserNotFoundInfo]: {
       meta: {},
       on: {
         CONTINUE: [
@@ -854,11 +800,13 @@ const claimantFlow: {
             target: routes.applications.success,
             cond: "isCompleted",
           },
-          // Why would the review page to go UNF?
-          {
-            target: routes.applications.noEmployeeFound,
-            cond: "includesNoEmployeeFoundError",
-          },
+          // If a user filled out the application correctly, then modified
+          // the SSN to something that doesn't match, then reviews and confirms.
+          // Check the error message in this situation.
+          // {
+          //   target: routes.applications.noMatchFound,
+          //   cond: "includesNoEmployeeFoundError",
+          // },
           {
             target: routes.applications.checklist,
           },

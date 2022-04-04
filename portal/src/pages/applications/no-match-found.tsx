@@ -16,9 +16,13 @@ export const fields = ["claim.tax_identifier", "claim.employer_fein"];
 /**
  * A form page to recapture the worker's SSN end FEIN.
  */
-export const NoEmployeeFound = (props: WithBenefitsApplicationProps) => {
+export const NoMatchFound = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
+  const includesNoEmployeeFoundError =
+    appLogic.benefitsApplications.warningsLists[claim.application_id].some(
+      (warning) => warning.rule === "require_employee"
+    );
 
   const { formState, updateFields } = useFormState({
     tax_identifier: "",
@@ -43,11 +47,14 @@ export const NoEmployeeFound = (props: WithBenefitsApplicationProps) => {
         <FormLabel
           component="legend"
           hint={t(
-            "pages.claimsAdditionalUserNotFoundInfo.noEmployeeFoundMatchDescription"
+            "pages.claimsAdditionalUserNotFoundInfo.noMatchFoundDescription"
           )}
         >
           {t(
-            "pages.claimsAdditionalUserNotFoundInfo.noEmployeeFoundMatchTitle"
+            "pages.claimsAdditionalUserNotFoundInfo." +
+              (includesNoEmployeeFoundError
+                ? "noEmployeeFoundTitle"
+                : "noEmployerFoundTitle")
           )}
         </FormLabel>
         <InputText
@@ -55,7 +62,7 @@ export const NoEmployeeFound = (props: WithBenefitsApplicationProps) => {
           mask="ssn"
           pii
           label={t(
-            "pages.claimsAdditionalUserNotFoundInfo.noEmployeeFoundMatchSsnLabel"
+            "pages.claimsAdditionalUserNotFoundInfo.noMatchFoundSsnLabel"
           )}
           hint=""
           smallLabel={true}
@@ -64,7 +71,7 @@ export const NoEmployeeFound = (props: WithBenefitsApplicationProps) => {
           {...getFunctionalInputProps("employer_fein")}
           inputMode="numeric"
           label={t(
-            "pages.claimsAdditionalUserNotFoundInfo.noEmployeeFoundMatchFeinLabel"
+            "pages.claimsAdditionalUserNotFoundInfo.noMatchFoundFeinLabel"
           )}
           mask="fein"
           hint=""
@@ -75,4 +82,4 @@ export const NoEmployeeFound = (props: WithBenefitsApplicationProps) => {
   );
 };
 
-export default withBenefitsApplication(NoEmployeeFound);
+export default withBenefitsApplication(NoMatchFound);

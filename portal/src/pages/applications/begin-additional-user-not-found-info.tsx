@@ -18,6 +18,11 @@ export const AdditionalUserNotFoundInfoBegin = (
   props: WithBenefitsApplicationProps
 ) => {
   const { appLogic, claim } = props;
+  const includesNoEmployeeFoundError =
+    appLogic.benefitsApplications.warningsLists[claim.application_id].some(
+      (warning) => warning.rule === "require_employee"
+    );
+
   const { t } = useTranslation();
 
   return (
@@ -26,12 +31,15 @@ export const AdditionalUserNotFoundInfoBegin = (
       <Title small={true}>{t("pages.claimsEmploymentStatus.title")}</Title>
       <Heading level="2" size="1">
         {t(
-          "pages.claimsAdditionalUserNotFoundInfo.beginAdditionalNoEmployeeFoundInfoTitle"
+          "pages.claimsAdditionalUserNotFoundInfo." +
+            (includesNoEmployeeFoundError
+              ? "stillNoEmployeeFoundTitle"
+              : "stillNoEmployerFoundTitle")
         )}
       </Heading>
       <p className="display-block line-height-sans-5 measure-5 usa-intro">
         {t(
-          "pages.claimsAdditionalUserNotFoundInfo.beginAdditionalNoEmployeeFoundInfoDescription"
+          "pages.claimsAdditionalUserNotFoundInfo.beginAdditionalUserNotFoundInfoDescription"
         )}
       </p>
       <ButtonLink
@@ -44,7 +52,7 @@ export const AdditionalUserNotFoundInfoBegin = (
       >
         <div>
           {t(
-            "pages.claimsAdditionalUserNotFoundInfo.beginAdditionalNoEmployeeFoundInfoButton"
+            "pages.claimsAdditionalUserNotFoundInfo.beginAdditionalUserNotFoundInfoButton"
           )}
         </div>
       </ButtonLink>

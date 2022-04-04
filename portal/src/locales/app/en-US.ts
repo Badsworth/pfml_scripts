@@ -1150,36 +1150,29 @@ const pages: {
     usernameLabel: "$t(shared.usernameLabel)",
   },
   claimsAdditionalUserNotFoundInfo: {
-    beginAdditionalNoEmployeeFoundInfoButton: "Save and continue",
-    beginAdditionalNoEmployeeFoundInfoDescription:
+    beginAdditionalUserNotFoundInfoButton: "I understand",
+    beginAdditionalUserNotFoundInfoDescription:
       "We need to collect additional information to process your application.",
-    beginAdditionalNoEmployeeFoundInfoTitle:
-      "We still couldn't match you with the employer you entered.",
-    beginAdditionalNoEmployerFoundInfoButton: "Save and continue",
-    beginAdditionalNoEmployerFoundInfoDescription:
-      "We need to collect additional information to process your application.",
-    beginAdditionalNoEmployerFoundInfoTitle:
-      "We still couldn't find the employer you entered.",
     dateOfHireLabel: "What was your start date at this employer?",
     dateOfSeparationLabel: "When was your last day at this employer?",
     employerNameLabel: "Employer Name",
     employerNameTitle: "What is your employer name?",
-    noEmployeeFoundMatchDescription:
+    noEmployeeFoundTitle:
+      "We couldn’t match you with the employer you entered.",
+    noEmployerFoundTitle: "We couldn't find the employer you entered.",
+    noMatchFoundDescription:
       "This could happen if your Social Security Number or the employer's Employer Identification Number is entered incorrectly. Check and re-enter your Social Security Number and employer's Employer Identification Number. ",
-    noEmployeeFoundMatchFeinLabel: "Employer Identification Number (EIN)",
-    noEmployeeFoundMatchSsnLabel: "Social Security Number",
-    noEmployeeFoundMatchTitle:
-      "We couldn't match you with the employer you entered.",
-    noEmployerFoundMatchDescription:
-      "This could happen if your Social Security Number or the employer's Employer Identification Number is entered incorrectly. Check and re-enter your Social Security Number and employer's Employer Identification Number. ",
-    noEmployerFoundMatchFeinLabel: "Employer Identification Number (EIN)",
-    noEmployerFoundMatchSsnLabel: "Social Security Number",
-    noEmployerFoundMatchTitle: "We couldn't find the employer you entered.",
+    noMatchFoundFeinLabel: "Employer Identification Number (EIN)",
+    noMatchFoundSsnLabel: "Social Security Number",
     recentlyAcquiredOrMergedIDontKnowLabel: "I don't know",
     recentlyAcquiredOrMergedLabel:
       "Was your employer recently merged with or acquired by another company?",
     recentlyAcquiredOrMergedNoLabel: "No",
     recentlyAcquiredOrMergedYesLabel: "Yes",
+    stillNoEmployeeFoundTitle:
+      "We still couldn’t match you with the employer you entered.",
+    stillNoEmployerFoundTitle:
+      "We still couldn't find the employer you entered.",
   },
   claimsAddress: {
     choiceNo: "No, I would like to add a mailing address",
