@@ -84,7 +84,7 @@ module "tasks" {
   enable_pub_automation_create_pub_files           = true
   enable_pub_automation_process_returns            = false
   enable_fineos_import_iaww                        = true
-  enable_standalone_fineos_import_employee_updates = false
+  enable_standalone_fineos_import_employee_updates = true
 
   rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-test/rmv_client_certificate-zWimpc"
@@ -93,8 +93,8 @@ module "tasks" {
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com"]
 
   # Hourly at :05 minutes past each hour
-  dor_fineos_etl_schedule_expression_standard         = "cron(5 * * * ? *)"
-  dor_fineos_etl_schedule_expression_daylight_savings = "cron(5 * * * ? *)"
+  dor_fineos_etl_schedule_expression_standard         = "cron(25 * * * ? *)"
+  dor_fineos_etl_schedule_expression_daylight_savings = "cron(25 * * * ? *)"
 
   pdf_api_host                    = "http://localhost:5000"
   enable_generate_1099_pdf        = "1"
