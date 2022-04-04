@@ -17,6 +17,7 @@ from massgov.pfml.db.models.employees import (
     Employee,
     EmployeeAddress,
     EmployeePubEftPair,
+    Employer,
     ExperianAddressPair,
     LatestStateLog,
     LkPaymentRelevantParty,
@@ -53,6 +54,9 @@ from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
 )
 from massgov.pfml.util.converters.str_to_numeric import str_to_int
 from massgov.pfml.util.datetime import datetime_str_to_date, get_now_us_eastern
+
+# from typing_extensions import _SpecialForm
+
 
 logger = logging.get_logger(__name__)
 
@@ -91,6 +95,8 @@ PAYMENT_OUT_TRANSACTION_TYPE = "PaymentOut"
 AUTO_ALT_EVENT_REASON = "Automatic Alternate Payment"
 
 TAX_IDENTIFICATION_NUMBER = "Tax Identification Number"
+SOCIAL_SECURITY_NUMBER = "Social Security Number"
+TAX_ID = "Tax Id"
 
 # TASKTYPENAME of VBI Task Report Som for other income-related tasks
 OTHER_INCOME_TASKTYPENAMES = [
@@ -225,7 +231,15 @@ class PaymentData:
 
         self.payment_relevant_party = self.get_relevant_party()
 
+        logger.info("BM in paymentData self.payment_relevant_party %s", self.payment_relevant_party)
+
+        self.payment_identifier_type = ""
+
         self.payment_transaction_type = self.get_payment_transaction_type()
+
+        logger.info(
+            "BM in paymentData self.payment_transaction_type %s", self.payment_transaction_type
+        )
 
         # Overpayment recoveries (of several different types) do not
         # have payment detail records as they don't have pay periods
@@ -474,6 +488,91 @@ class PaymentData:
                 return overpayment_transaction_type
         return None
 
+    # def get_payment_identifier_type(self) -> Optional[str]:
+    #     """
+    #     Returns SSN or TIN based on the payee_identifier and the tin value.
+    #     This will first check the payee_identifier and then validate the tin based on the payee_identifier.
+    #     If SSN, then validate tax_identifier and return 'SSN'
+    #     If TIN, then validate employer and return 'TIN'
+    #     If TaxID, then first check if its a valid SSN, and if not, then check if it is a valid TIN
+    #         If the SSN is valid, then return 'SSN'
+    #         If the TIN is valid, then return 'TIN'
+    #     """
+    #     if self.payee_identifier == SOCIAL_SECURITY_NUMBER:
+    #         tax_identifier = (
+    #             self.db_session.query(TaxIdentifier)
+    #             .filter_by(tax_identifier=self.tin)
+    #             .one_or_none()
+    #         )
+    #         # if not tax_identifier:
+    #         #     self.validation_container.add_validation_issue(
+    #         #         payments_util.ValidationReason.MISSING_IN_DB,
+    #         #         self.tin,
+    #         #         "tax_identifier",
+    #         #     )
+    #         # return tax_identifier.tax_identifier
+    #         return "SSN" if tax_identifier else None
+    #     if self.payee_identifier == TAX_IDENTIFICATION_NUMBER:
+    #         # employee = (
+    #         #     self.db_session.query(Employee)
+    #         #     .filter_by(tax_identifier=tax_identifier)
+    #         #     .one_or_none()
+    #         # )
+    #         # if not employee:
+    #         #     self.validation_container.add_validation_issue(
+    #         #         payments_util.ValidationReason.MISSING_IN_DB,
+    #         #         self.tin,
+    #         #         "employee",
+    #         #     )
+
+    #         employer = (
+    #             self.db_session.query(Claim.employer)
+    #             .filter_by(employer_fein=tax_identifier)
+    #             .one_or_none()
+    #         )
+    #         # if not employer:
+    #         #     self.validation_container.add_validation_issue(
+    #         #         payments_util.ValidationReason.MISSING_IN_DB,
+    #         #         self.tin,
+    #         #         "employer",
+    #         #     )
+    #         return "TIN" if employer else None
+    #     if self.payee_identifier == TAX_ID:
+
+    #         response = None
+
+    #         tax_identifier = (
+    #             self.db_session.query(TaxIdentifier)
+    #             .filter_by(tax_identifier=self.tin)
+    #             .one_or_none()
+    #         )
+    #         # if not tax_identifier:
+    #         #     self.validation_container.add_validation_issue(
+    #         #         payments_util.ValidationReason.MISSING_IN_DB,
+    #         #         self.tin,
+    #         #         "tax_identifier",
+    #         #     )
+    #         employer = (
+    #             self.db_session.query(Claim.employer)
+    #             .filter_by(employer_fein=tax_identifier)
+    #             .one_or_none()
+    #         )
+    #         # if not employer:
+    #         #     self.validation_container.add_validation_issue(
+    #         #         payments_util.ValidationReason.MISSING_IN_DB,
+    #         #         self.tin,
+    #         #         "employer",
+    #         #     )
+
+    #         if tax_identifier:
+    #             response = "SSN"
+    #         elif employer:
+    #             response = "TIN"
+
+    #         return response
+
+    #     return None
+
     def get_relevant_party(self) -> LkPaymentRelevantParty:
         """
         Determine the relevant party for the payment. Payment transaction type
@@ -486,7 +585,7 @@ class PaymentData:
 
         if self.tin == FEDERAL_TAX_WITHHOLDING_TIN:
             return PaymentRelevantParty.FEDERAL_TAX
-
+            # and self.payment_identifier_type == TAX_IDENTIFICATION_NUMBER
         if (
             self.event_reason == AUTO_ALT_EVENT_REASON
             and self.event_type == PAYMENT_OUT_TRANSACTION_TYPE
@@ -883,6 +982,7 @@ class PaymentExtractStep(Step):
         # Get the TIN, employee and claim associated with the payment to be made
         employee, claim = None, None
         try:
+            payment_identifier_type = self.get_payment_identifier_type(payment_data)
             claim = (
                 self.db_session.query(Claim)
                 .filter_by(fineos_absence_id=payment_data.absence_case_number)
@@ -892,47 +992,22 @@ class PaymentExtractStep(Step):
             # Otherwise, we know we aren't going to find an employee, so don't look
             if payment_data.is_employee_required:
                 if (
-                    payment_data.is_employer_reimbursement
-                    or (
-                        payment_data.payment_transaction_type.payment_transaction_type_id
-                        == PaymentTransactionType.CANCELLATION.payment_transaction_type_id
-                        and payment_data.payment_relevant_party.payment_relevant_party_id
-                        == PaymentRelevantParty.REIMBURSED_EMPLOYER.payment_relevant_party_id
-                    )
-                ) and payment_data.is_employer_reimbursement_enabled:
-                    employee = claim.employee if claim is not None else None
-                    if not employee:
-                        self.increment(self.Metrics.EMPLOYEE_MISSING_IN_DB_COUNT)
-                        payment_data.validation_container.add_validation_issue(
-                            payments_util.ValidationReason.MISSING_IN_DB,
-                            payment_data.tin,
-                            "employee",
-                        )
-                else:
-                    tax_identifier = (
-                        self.db_session.query(TaxIdentifier)
-                        .filter_by(tax_identifier=payment_data.tin)
-                        .one_or_none()
-                    )
-                    if not tax_identifier:
-                        self.increment(self.Metrics.TAX_IDENTIFIER_MISSING_IN_DB_COUNT)
-                        payment_data.validation_container.add_validation_issue(
-                            payments_util.ValidationReason.MISSING_IN_DB,
-                            payment_data.tin,
-                            "tax_identifier",
-                        )
+                    payment_data.payment_relevant_party.payment_relevant_party_id
+                    == PaymentRelevantParty.REIMBURSED_EMPLOYER.payment_relevant_party_id
+                ):
+                    if payment_identifier_type == SOCIAL_SECURITY_NUMBER:
+                        employee = claim.employee if claim is not None else None
                     else:
-                        employee = (
-                            self.db_session.query(Employee)
-                            .filter_by(tax_identifier=tax_identifier)
-                            .one_or_none()
-                        )
-                        if not employee:
-                            self.increment(self.Metrics.EMPLOYEE_MISSING_IN_DB_COUNT)
-                            payment_data.validation_container.add_validation_issue(
-                                payments_util.ValidationReason.MISSING_IN_DB,
-                                payment_data.tin,
-                                "employee",
+                        if payment_identifier_type == TAX_IDENTIFICATION_NUMBER:
+                            tax_identifier = (
+                                self.db_session.query(TaxIdentifier)
+                                .filter_by(tax_identifier=payment_data.tin)
+                                .one_or_none()
+                            )
+                            employee = (
+                                self.db_session.query(Employee)
+                                .filter_by(tax_identifier=tax_identifier)
+                                .one_or_none()
                             )
 
         except SQLAlchemyError as e:
@@ -1740,7 +1815,20 @@ class PaymentExtractStep(Step):
                 extra=payment_data.get_traceable_details(),
             )
 
+            # update transaction type in payment_data
+            self.payment_identifier_type = self.get_payment_identifier_type(payment_data)
+            self.payment_relevant_party = self.get_relevant_party(payment_data)
             payment = self.process_payment_data_record(payment_data, reference_file)
+
+            logger.info(
+                "BM in paymentData self.payment_relevant_party %s", self.payment_relevant_party.payment_relevant_party_description
+            )
+
+            self.payment_transaction_type = self.get_payment_transaction_type(payment_data)
+
+            logger.info(
+                "BM in paymentData self.payment_transaction_type %s", self.payment_transaction_type.payment_transaction_type_description
+            )
 
             # Create and finish the state log. If there were any issues, this'll set the
             # record to an error state which'll send out a report to address it, otherwise
@@ -1755,6 +1843,163 @@ class PaymentExtractStep(Step):
                 "An error occurred while processing payment for CI: %s, %s", c_value, i_value
             )
             raise
+
+        return None
+
+    def get_payment_transaction_type(self, payment_data: PaymentData) -> LkPaymentTransactionType:
+        """
+        Determine the payment transaction type of the data we have processed.
+        This document details the order of precedence in how we handle payments that
+        could potentially fall into multiple payment types.
+        https://lwd.atlassian.net/wiki/spaces/API/pages/1336901700/Types+of+Payments
+        """
+        # Cancellations
+        if payment_data.event_type == CANCELLATION_PAYMENT_TRANSACTION_TYPE:
+            return PaymentTransactionType.CANCELLATION
+
+        # Zero dollar payments overrule all other payment types
+        if payment_data.payment_amount == Decimal("0"):
+            return PaymentTransactionType.ZERO_DOLLAR
+
+        # Note that Overpayments can be positive or negative amounts
+        overpayment_transaction_type = self.get_transaction_type_if_overpayment(payment_data)
+        if overpayment_transaction_type:
+            return overpayment_transaction_type
+
+        party_to_type = {
+            PaymentRelevantParty.STATE_TAX.payment_relevant_party_id: PaymentTransactionType.STATE_TAX_WITHHOLDING,
+            PaymentRelevantParty.FEDERAL_TAX.payment_relevant_party_id: PaymentTransactionType.FEDERAL_TAX_WITHHOLDING,
+            PaymentRelevantParty.REIMBURSED_EMPLOYER.payment_relevant_party_id: PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+            PaymentRelevantParty.CLAIMANT.payment_relevant_party_id: PaymentTransactionType.STANDARD,
+        }
+        if (
+            payment_data.event_type == PAYMENT_OUT_TRANSACTION_TYPE
+            and payment_data.payment_amount
+            and payment_data.payment_amount > Decimal("0")
+            and payment_data.payment_relevant_party.payment_relevant_party_id in party_to_type
+        ):
+            return party_to_type[self.payment_relevant_party.payment_relevant_party_id]
+
+        payment_data.validation_container.add_validation_issue(
+            payments_util.ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE,
+            f"Unknown payment scenario encountered. Payment Amount: {payment_data.payment_amount}, Event Type: {payment_data.event_type}, Event Reason: {payment_data.event_reason}",
+        )
+        return PaymentTransactionType.UNKNOWN
+
+    def get_transaction_type_if_overpayment(
+        self, payment_data: PaymentData
+    ) -> Optional[LkPaymentTransactionType]:
+        for overpayment_transaction_type in OVERPAYMENT_PAYMENT_TRANSACTION_TYPES:
+            if (
+                payment_data.event_type
+                == overpayment_transaction_type.payment_transaction_type_description
+            ):
+                return overpayment_transaction_type
+        return None
+
+    def get_relevant_party(self, payment_data: PaymentData) -> LkPaymentRelevantParty:
+        """
+        Determine the relevant party for the payment. Payment transaction type
+        on its own doesn't determine this; for example, a zero dollar payment
+        might be issued to a claimant or as part of federal tax withholding.
+        """
+
+        if payment_data.tin == STATE_TAX_WITHHOLDING_TIN:
+            return PaymentRelevantParty.STATE_TAX
+
+        if payment_data.tin == FEDERAL_TAX_WITHHOLDING_TIN:
+            return PaymentRelevantParty.FEDERAL_TAX
+        if (
+            payment_data.event_reason == AUTO_ALT_EVENT_REASON
+            and payment_data.event_type == PAYMENT_OUT_TRANSACTION_TYPE
+            and payment_data.payment_identifier_type == TAX_IDENTIFICATION_NUMBER
+        ):
+            return PaymentRelevantParty.REIMBURSED_EMPLOYER
+
+        # All other scenarios should be claimants
+        return PaymentRelevantParty.CLAIMANT
+
+    def get_payment_identifier_type(self, payment_data: PaymentData) -> Optional[str]:
+        """
+        Returns SSN or TIN based on the payee_identifier and the tin value.
+        This will first check the payee_identifier and then validate the tin based on the payee_identifier.
+        If SSN, then validate tax_identifier and return 'SSN'
+        If TIN, then validate employer and return 'TIN'
+        If TaxID, then first check if its a valid SSN, and if not, then check if it is a valid TIN
+            If the SSN is valid, then return 'SSN'
+            If the TIN is valid, then return 'TIN'
+        """
+        if payment_data.payee_identifier == SOCIAL_SECURITY_NUMBER:
+            tax_identifier = (
+                self.db_session.query(TaxIdentifier)
+                .filter_by(tax_identifier=payment_data.tin)
+                .one_or_none()
+            )
+            # if not tax_identifier:
+            #     payment_data.validation_container.add_validation_issue(
+            #         payments_util.ValidationReason.MISSING_IN_DB,
+            #         payment_data.tin,
+            #         "tax_identifier",
+            #     )
+            return SOCIAL_SECURITY_NUMBER if tax_identifier else None
+        if payment_data.payee_identifier == TAX_IDENTIFICATION_NUMBER:
+            # employee = (
+            #     self.db_session.query(Employee)
+            #     .filter_by(tax_identifier=tax_identifier)
+            #     .one_or_none()
+            # )
+            # if not employee:
+            #     self.validation_container.add_validation_issue(
+            #         payments_util.ValidationReason.MISSING_IN_DB,
+            #         self.tin,
+            #         "employee",
+            #     )
+
+            employer = (
+                self.db_session.query(Employer)
+                .filter_by(employer_fein=payment_data.tin)
+                .one_or_none()
+            )
+            # if not employer:
+            #     self.validation_container.add_validation_issue(
+            #         payments_util.ValidationReason.MISSING_IN_DB,
+            #         self.tin,
+            #         "employer",
+            #     )
+            return TAX_IDENTIFICATION_NUMBER if employer else None
+        if payment_data.payee_identifier == TAX_ID:
+
+            response = None
+
+            tax_identifier = (
+                self.db_session.query(TaxIdentifier)
+                .filter_by(tax_identifier=payment_data.tin)
+                .one_or_none()
+            )
+            # if not tax_identifier:
+            #     self.validation_container.add_validation_issue(
+            #         payments_util.ValidationReason.MISSING_IN_DB,
+            #         self.tin,
+            #         "tax_identifier",
+            #     )
+            employer = (
+                self.db_session.query(Claim.employer)
+                .filter_by(employer_fein=payment_data.tin)
+                .one_or_none()
+            )
+            # if not employer:
+            #     self.validation_container.add_validation_issue(
+            #         payments_util.ValidationReason.MISSING_IN_DB,
+            #         self.tin,
+            #         "employer",
+            #     )
+
+            if tax_identifier:
+                response = SOCIAL_SECURITY_NUMBER
+            elif employer:
+                response = TAX_IDENTIFICATION_NUMBER
+
+            return response
 
         return None
 
