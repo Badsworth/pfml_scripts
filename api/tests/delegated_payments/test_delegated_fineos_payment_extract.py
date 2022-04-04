@@ -3020,7 +3020,7 @@ def test_get_active_payment_state(payment_extract_step, test_db_session):
 def test_payment_data_validation_error_with_open_other_income_tasks(
     payment_extract_step, test_db_session
 ):
-    fineos_data = FineosPaymentData(include_vpei=False, include_payment_lines=False)
+    fineos_data = FineosPaymentData(include_payment_lines=False)
     _, payment_data = make_payment_data_from_fineos_data(fineos_data)
 
     # mock the corresponding vbi task report som extract
@@ -3125,6 +3125,31 @@ def test_payments_with_open_other_income_tasks_added_to_error_report(
             )
         else:
             assert state_log.end_state_id == State.PAYMENT_READY_FOR_ADDRESS_VALIDATION.state_id
+
+
+def test_payments_with_open_other_income_tasks_not_standard(payment_extract_step, test_db_session):
+    cancellation_with_open_task = FineosPaymentData(
+        include_vbi_tasks=True,
+        task_status="928000",
+        task_tasktypename="Employee reported accrued paid leave (PTO)",
+        event_type="PaymentOut Cancellation",
+        payment_amount="-123.45",
+    )
+
+    add_db_records_from_fineos_data(test_db_session, cancellation_with_open_task)
+    stage_data([cancellation_with_open_task], test_db_session)
+
+    payment_extract_step.run()
+
+    payments = test_db_session.query(Payment).all()
+    assert len(payments) == 1
+    cancellation_payment = payments[0]
+
+    # Payments that aren't going to PUB don't get validated
+    # for having open income issues
+    validate_non_standard_payment_state(
+        cancellation_payment, State.DELEGATED_PAYMENT_PROCESSED_CANCELLATION
+    )
 
 
 def test_fineos_writeback_of_payments_with_open_other_income_tasks(
