@@ -213,13 +213,11 @@ def retrieve_financial_eligibility(
                 employer_average_weekly_wage = benefit_year.get_employer_aww(
                     db_session, found_benefit_year, employer_id
                 )
-                eligibility_response = EligibilityResponse(
-                    financially_eligible=True,
-                    description="Financially eligible",
-                    total_wages=found_benefit_year.total_wages,
-                    state_average_weekly_wage=benefits_metrics.average_weekly_wage,
-                    unemployment_minimum=unemployment_metric.unemployment_minimum_earnings,
-                    employer_average_weekly_wage=employer_average_weekly_wage,
+
+                # Update the total wages and employer aww based on the found benefit year
+                eligibility_response.total_wages = found_benefit_year.total_wages
+                eligibility_response.employer_average_weekly_wage = benefit_year.get_employer_aww(
+                    db_session, found_benefit_year, employer_id
                 )
                 logger.info(
                     "Financial eligibility was loaded from a Benefit Year.",
