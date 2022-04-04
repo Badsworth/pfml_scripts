@@ -20,11 +20,14 @@ def search_envelope_log_info(
 ) -> Dict[str, LogTypes]:
     log_info: Dict[str, LogTypes] = {}
 
-    log_info |= provided_fields_log_attrs(request, "request_top_level")
+    # TODO: better name than "request_top_level"?
+    log_info |= request_field_log_attrs(request, "request_top_level")
 
     for field_name, field_model in request:
-        log_info |= provided_fields_log_attrs(field_model, field_name)
+        log_info |= request_field_log_attrs(field_model, field_name)
 
+    # legacy fields and log size value (as ints aren't currently automatically
+    # included in logs)
     log_info |= {
         "order.by": request.order.by,
         "order.direction": request.order.direction.value,
@@ -32,30 +35,11 @@ def search_envelope_log_info(
         "paging.size": request.paging.size,
     }
 
-    for key, value in request.terms.dict().items():
-        # This is primarily for cases where a term might accept multiple types,
-        # e.g., a single string vs a list.
-        #
-        # This kind of field might more commonly be normalized to a single type
-        # in the Terms model, which would make this less useful, but for the
-        # cases where a term may want to support distinct types all the way
-        # through, this could be useful.
-        log_info.update({f"terms.{key}_type": str(type(value))})
-
-        if isinstance(value, Sized):
-            log_info.update({f"terms.{key}_length": len(value)})
-
-        if isinstance(value, bool):
-            log_info.update({f"terms.{key}_value": value})
-
-        if isinstance(value, Enum):
-            log_info.update({f"terms.{key}_value": value.value})
-            log_info.update({f"terms.{key}_name": value.name})
-
     return log_info
 
 
-def provided_fields_log_attrs(model: BaseModel, key: str) -> Dict[str, LogTypes]:
+# TODO: move to general API request logging util location?
+def request_field_log_attrs(model: BaseModel, key: str) -> Dict[str, LogTypes]:
     provided_fields = model.__fields_set__
 
     log_info: Dict[str, LogTypes] = {
@@ -63,8 +47,27 @@ def provided_fields_log_attrs(model: BaseModel, key: str) -> Dict[str, LogTypes]
         f"{key}_fields_provided_length": len(provided_fields),
     }
 
-    for sub_field_key in model.dict():
+    for sub_field_key, value in model:
         log_info.update({f"{key}.{sub_field_key}_provided": (sub_field_key in provided_fields)})
+
+        # This is primarily for cases where a field might accept multiple types,
+        # e.g., a single string vs a list.
+        #
+        # This kind of field might more commonly be normalized to a single type
+        # in the model, which would make this less useful, but for the cases
+        # where a field may want to support distinct types all the way through,
+        # this could be useful.
+        log_info.update({f"{key}.{sub_field_key}_type": str(type(value))})
+
+        if isinstance(value, Sized):
+            log_info.update({f"{key}.{sub_field_key}_length": len(value)})
+
+        if isinstance(value, bool):
+            log_info.update({f"{key}.{sub_field_key}_value": value})
+
+        if isinstance(value, Enum):
+            log_info.update({f"{key}.{sub_field_key}_value": value.value})
+            log_info.update({f"{key}.{sub_field_key}_name": value.name})
 
     return log_info
 
