@@ -56,11 +56,11 @@ jobs:
         working-directory: ./bin/ci
         run: poetry run scripted-releases -a ${{ github.event.inputs.application }} ${{ github.event.inputs.scripted-release-task }} ${{ github.event.inputs.arguments }}
 
-  create-release-notes:
+  create-release-with-release-notes:
     runs-on: ubuntu-latest
-    # prevent test application from creating release notes
-    if: "!contains(github.event.inputs.application, 'foobar')"
     needs: run-scripted-releases
+    # Previous job must finish successfully and do not allow foobar application to create release
+    if: needs.run-scripted-releases.outcome == 'success' && contains(github.event.inputs.application, 'api') || contains(github.event.inputs.application, 'portal')
 
     steps:
       - name: Checkout PFML repo
@@ -68,17 +68,24 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Fetch all tags and create variable capturing the tag created in previous job
       - name: Fetch tags
         id: version
         working-directory: ./${{ github.event.inputs.application }}
         run: |
-          tag=$(git for-each-ref --sort=-committerdate refs/tags --count=1 --format='%(refname:short)')
+          tag=$(git tag -l "${{ github.event.inputs.application }}*" --sort=committerdate | tail -1)
           echo "::set-output name=tag::$tag"
 
+      # Create release and notes in GitHub
       - name: publish to GitHub
         working-directory: ./${{ github.event.inputs.application }}
         env:
-        # using the devops token because it should have a higher scope which should allow posting release notes for upper envs
+        # Use DevOps token so job will have enough permissions to create final release
           GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
+        # If there's "-rc" in the tag, then label the release as a pre-release 
         run: |
-          gh release create ${{ steps.version.outputs.tag }} --notes "$(make release-notes)"
+          if [[ "${{ steps.version.outputs.tag }}" == *"-rc"* ]]
+          then
+            gh release create ${{ steps.version.outputs.tag }} --notes "$(make release-notes)" --title "${{ steps.version.outputs.tag }}" --prerelease
+          else
+            gh release create ${{ steps.version.outputs.tag }} --notes "$(make release-notes)" --title "${{ steps.version.outputs.tag }}"
