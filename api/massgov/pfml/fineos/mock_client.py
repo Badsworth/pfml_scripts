@@ -279,6 +279,44 @@ def mock_customer_contact_details():
     }
 
 
+def mock_managed_requirements():
+    return [
+        {
+            "managedReqId": 123,
+            "category": "Employer Confirmation",
+            "type": "Employer Confirmation of Leave Data",
+            "followUpDate": datetime.date(2021, 2, 1),
+            "documentReceived": True,
+            "creator": "Fake Creator",
+            "status": "Open",
+            "subjectPartyName": "Fake Name",
+            "sourceOfInfoPartyName": "Fake Sourcee",
+            "creationDate": datetime.date(2020, 1, 1),
+            "dateSuppressed": datetime.date(2020, 3, 1),
+        },
+        {
+            "managedReqId": 124,
+            "category": "Employer Confirmation",
+            "type": "Employer Confirmation of Leave Data",
+            "followUpDate": datetime.date(2021, 2, 1),
+            "documentReceived": True,
+            "creator": "Fake Creator",
+            "status": "Complete",
+            "subjectPartyName": "Fake Name",
+            "sourceOfInfoPartyName": "Fake Sourcee",
+            "creationDate": datetime.date(2020, 1, 1),
+            "dateSuppressed": datetime.date(2020, 3, 1),
+        },
+    ]
+
+
+def mock_managed_requirements_parsed():
+    return [
+        models.group_client_api.ManagedRequirementDetails.parse_obj(r)
+        for r in mock_managed_requirements()
+    ]
+
+
 class MockFINEOSClient(client.AbstractFINEOSClient):
     """Mock FINEOS API client that returns fake responses."""
 
@@ -710,39 +748,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     def get_managed_requirements(
         self, user_id: str, absence_id: str
     ) -> List[models.group_client_api.ManagedRequirementDetails]:
-
-        return [
-            models.group_client_api.ManagedRequirementDetails.parse_obj(
-                {
-                    "managedReqId": 123,
-                    "category": "Employer Confirmation",
-                    "type": "Employer Confirmation of Leave Data",
-                    "followUpDate": datetime.date(2021, 2, 1),
-                    "documentReceived": True,
-                    "creator": "Fake Creator",
-                    "status": "Open",
-                    "subjectPartyName": "Fake Name",
-                    "sourceOfInfoPartyName": "Fake Sourcee",
-                    "creationDate": datetime.date(2020, 1, 1),
-                    "dateSuppressed": datetime.date(2020, 3, 1),
-                }
-            ),
-            models.group_client_api.ManagedRequirementDetails.parse_obj(
-                {
-                    "managedReqId": 124,
-                    "category": "Employer Confirmation",
-                    "type": "Employer Confirmation of Leave Data",
-                    "followUpDate": datetime.date(2021, 2, 1),
-                    "documentReceived": True,
-                    "creator": "Fake Creator",
-                    "status": "Complete",
-                    "subjectPartyName": "Fake Name",
-                    "sourceOfInfoPartyName": "Fake Sourcee",
-                    "creationDate": datetime.date(2020, 1, 1),
-                    "dateSuppressed": datetime.date(2020, 3, 1),
-                }
-            ),
-        ]
+        return mock_managed_requirements_parsed()
 
     def group_client_get_documents(
         self, user_id: str, absence_id: str

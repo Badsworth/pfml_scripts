@@ -22,13 +22,11 @@ from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_step
 
 @pytest.fixture
 def payment_post_processing_step(
-    local_initialize_factories_session,
-    local_test_db_session,
-    local_test_db_other_session,
-    monkeypatch,
+    initialize_factories_session,
+    test_db_session,
 ):
     return PaymentPostProcessingStep(
-        db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
+        db_session=test_db_session, log_entry_db_session=test_db_session
     )
 
 
@@ -37,12 +35,12 @@ def dua_dia_reductions_processor(payment_post_processing_step):
     return DuaDiaReductionsProcessor(payment_post_processing_step)
 
 
-def test_processor_dua(dua_dia_reductions_processor, local_test_db_session):
+def test_processor_dua(dua_dia_reductions_processor, test_db_session):
     fineos_customer_number_1 = "1"
     fineos_customer_number_2 = "2"
 
     payment = DelegatedPaymentFactory(
-        local_test_db_session,
+        test_db_session,
         fineos_customer_number=fineos_customer_number_1,
         period_start_date=date(2021, 9, 20),
         period_end_date=date(2021, 9, 26),
@@ -88,7 +86,7 @@ def test_processor_dua(dua_dia_reductions_processor, local_test_db_session):
     dua_dia_reductions_processor.process(payment)
 
     audit_report = (
-        local_test_db_session.query(PaymentAuditReportDetails)
+        test_db_session.query(PaymentAuditReportDetails)
         .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
         .one_or_none()
     )
@@ -102,12 +100,12 @@ def test_processor_dua(dua_dia_reductions_processor, local_test_db_session):
     )
 
 
-def test_processor_dia(dua_dia_reductions_processor, local_test_db_session):
+def test_processor_dia(dua_dia_reductions_processor, test_db_session):
     fineos_customer_number_1 = "1"
     fineos_customer_number_2 = "2"
 
     payment = DelegatedPaymentFactory(
-        local_test_db_session,
+        test_db_session,
         fineos_customer_number=fineos_customer_number_1,
         period_start_date=date(2021, 9, 20),
         period_end_date=date(2021, 9, 26),
@@ -142,7 +140,7 @@ def test_processor_dia(dua_dia_reductions_processor, local_test_db_session):
     dua_dia_reductions_processor.process(payment)
 
     audit_report = (
-        local_test_db_session.query(PaymentAuditReportDetails)
+        test_db_session.query(PaymentAuditReportDetails)
         .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
         .one_or_none()
     )
@@ -156,12 +154,12 @@ def test_processor_dia(dua_dia_reductions_processor, local_test_db_session):
     )
 
 
-def test_processor_mixed(dua_dia_reductions_processor, local_test_db_session):
+def test_processor_mixed(dua_dia_reductions_processor, test_db_session):
     fineos_customer_number_1 = "1"
     fineos_customer_number_2 = "2"
 
     payment = DelegatedPaymentFactory(
-        local_test_db_session,
+        test_db_session,
         fineos_customer_number=fineos_customer_number_1,
         period_start_date=date(2021, 9, 20),
         period_end_date=date(2021, 9, 26),
@@ -225,7 +223,7 @@ def test_processor_mixed(dua_dia_reductions_processor, local_test_db_session):
     dua_dia_reductions_processor.process(payment)
 
     dua_audit_report = (
-        local_test_db_session.query(PaymentAuditReportDetails)
+        test_db_session.query(PaymentAuditReportDetails)
         .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
         .filter(
             PaymentAuditReportDetails.audit_report_type_id
@@ -244,7 +242,7 @@ def test_processor_mixed(dua_dia_reductions_processor, local_test_db_session):
     )
 
     dia_audit_report = (
-        local_test_db_session.query(PaymentAuditReportDetails)
+        test_db_session.query(PaymentAuditReportDetails)
         .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
         .filter(
             PaymentAuditReportDetails.audit_report_type_id
@@ -263,7 +261,7 @@ def test_processor_mixed(dua_dia_reductions_processor, local_test_db_session):
     )
 
 
-def test_multiple_payments(dua_dia_reductions_processor, local_test_db_session):
+def test_multiple_payments(dua_dia_reductions_processor, test_db_session):
     fineos_customer_number_1 = "1"
     fineos_customer_number_2 = "2"
 
@@ -274,7 +272,7 @@ def test_multiple_payments(dua_dia_reductions_processor, local_test_db_session):
     )
 
     DelegatedPaymentFactory(
-        local_test_db_session,
+        test_db_session,
         fineos_customer_number=fineos_customer_number_1,
         period_start_date=date(2021, 9, 20),
         period_end_date=date(2021, 9, 26),
@@ -311,7 +309,7 @@ def test_multiple_payments(dua_dia_reductions_processor, local_test_db_session):
     dua_dia_reductions_processor.process(payment_3)
 
     assert (
-        local_test_db_session.query(PaymentAuditReportDetails)
+        test_db_session.query(PaymentAuditReportDetails)
         .filter(PaymentAuditReportDetails.payment_id == payment_1.payment_id)
         .filter(
             PaymentAuditReportDetails.audit_report_type_id
@@ -320,7 +318,7 @@ def test_multiple_payments(dua_dia_reductions_processor, local_test_db_session):
         .one_or_none()
     )
     assert (
-        local_test_db_session.query(PaymentAuditReportDetails)
+        test_db_session.query(PaymentAuditReportDetails)
         .filter(PaymentAuditReportDetails.payment_id == payment_1.payment_id)
         .filter(
             PaymentAuditReportDetails.audit_report_type_id
@@ -329,7 +327,7 @@ def test_multiple_payments(dua_dia_reductions_processor, local_test_db_session):
         .one_or_none()
     )
     assert (
-        local_test_db_session.query(PaymentAuditReportDetails)
+        test_db_session.query(PaymentAuditReportDetails)
         .filter(PaymentAuditReportDetails.payment_id == payment_2.payment_id)
         .filter(
             PaymentAuditReportDetails.audit_report_type_id
@@ -338,7 +336,7 @@ def test_multiple_payments(dua_dia_reductions_processor, local_test_db_session):
         .one_or_none()
     )
     assert (
-        local_test_db_session.query(PaymentAuditReportDetails)
+        test_db_session.query(PaymentAuditReportDetails)
         .filter(PaymentAuditReportDetails.payment_id == payment_2.payment_id)
         .filter(
             PaymentAuditReportDetails.audit_report_type_id
@@ -347,7 +345,7 @@ def test_multiple_payments(dua_dia_reductions_processor, local_test_db_session):
         .one_or_none()
     )
     assert (
-        local_test_db_session.query(PaymentAuditReportDetails)
+        test_db_session.query(PaymentAuditReportDetails)
         .filter(PaymentAuditReportDetails.payment_id == payment_3.payment_id)
         .filter(
             PaymentAuditReportDetails.audit_report_type_id
@@ -356,7 +354,7 @@ def test_multiple_payments(dua_dia_reductions_processor, local_test_db_session):
         .one_or_none()
     )
     assert (
-        local_test_db_session.query(PaymentAuditReportDetails)
+        test_db_session.query(PaymentAuditReportDetails)
         .filter(PaymentAuditReportDetails.payment_id == payment_3.payment_id)
         .filter(
             PaymentAuditReportDetails.audit_report_type_id

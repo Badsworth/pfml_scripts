@@ -893,8 +893,13 @@ class PaymentExtractStep(Step):
             if payment_data.is_employee_required:
                 if (
                     payment_data.is_employer_reimbursement
-                    and payment_data.is_employer_reimbursement_enabled
-                ):
+                    or (
+                        payment_data.payment_transaction_type.payment_transaction_type_id
+                        == PaymentTransactionType.CANCELLATION.payment_transaction_type_id
+                        and payment_data.payment_relevant_party.payment_relevant_party_id
+                        == PaymentRelevantParty.REIMBURSED_EMPLOYER.payment_relevant_party_id
+                    )
+                ) and payment_data.is_employer_reimbursement_enabled:
                     employee = claim.employee if claim is not None else None
                     if not employee:
                         self.increment(self.Metrics.EMPLOYEE_MISSING_IN_DB_COUNT)

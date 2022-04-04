@@ -662,8 +662,8 @@ class TestApplicationsImport:
             },
         )
 
-        assert response.status_code == 409
-        assert response.get_json()["message"] == "Claim data incomplete for application import."
+        assert response.status_code == 400
+        assert response.get_json()["errors"][0]["type"] == "conflicting"
         assert test_db_session.query(Application).one_or_none() is None
 
     def test_applications_import_claim_without_employer(
@@ -682,8 +682,8 @@ class TestApplicationsImport:
                 "tax_identifier": format_tax_identifier(claim.employee_tax_identifier),
             },
         )
-        assert response.status_code == 409
-        assert response.get_json()["message"] == "Claim data incomplete for application import."
+        assert response.status_code == 400
+        assert response.get_json()["errors"][0]["type"] == "conflicting"
         assert test_db_session.query(Application).one_or_none() is None
 
     def test_applications_import_unauthenticated_post(self, client, test_db_session):

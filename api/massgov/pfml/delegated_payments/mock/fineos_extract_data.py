@@ -217,6 +217,12 @@ class FineosPaymentData(MockData):
         self.organization_unit_name = self.get_value("organization_unit_name", "")
         self.document_type_1099 = self.get_value("document_type_1099", "1099 Request")
         self.packed_data_1099 = self.get_value("packed_data_1099", xml_1099_packed_data)
+        self.mass_id_number = self.get_value(
+            "mass_id_number", f"S{random_unique_int(min=100_000_000, max=999_999_999)}"
+        )
+        self.out_of_state_id_number = self.get_value(
+            "out_of_state_id_number", f"A{random_unique_int(min=100_000_000, max=999_999_999)}"
+        )
 
         # Payment method values (used for payment and employee files)
         self.address_1 = self.get_value(
@@ -371,6 +377,8 @@ class FineosPaymentData(MockData):
             employee_feed_record["LASTNAME"] = self.fineos_employee_last_name
             employee_feed_record["EFFECTIVEFROM"] = self.fineos_address_effective_from
             employee_feed_record["EFFECTIVETO"] = self.fineos_address_effective_to
+            employee_feed_record["EXTMASSID"] = self.mass_id_number
+            employee_feed_record["EXTOUTOFSTATEID"] = self.out_of_state_id_number
 
         return employee_feed_record
 

@@ -496,6 +496,7 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
       application_id: "mock_application_id",
       status: BenefitsApplicationStatus.started,
       computed_start_dates: {},
+      leave_details: {},
     };
   }
 
