@@ -736,7 +736,7 @@ paths:
   /employers/claims/{fineos_absence_id}/documents/{fineos_document_id}:
     get:
       summary: Retrieve a FINEOS documents for a specified absence ID and document ID
-      operationId: massgov.pfml.api.claims.employer_document_download
+      operationId: massgov.pfml.api.employer_claim.employer_document_download
       tags:
         - Claims
       parameters:
@@ -772,7 +772,7 @@ paths:
   /employers/claims/{fineos_absence_id}/documents:
     get:
       summary: Retrieve a list of FINEOS documents for a specified absence ID
-      operationId: massgov.pfml.api.claims.employer_get_claim_documents
+      operationId: massgov.pfml.api.employer_claim.employer_get_claim_documents
       tags:
         - Claims
       parameters:
@@ -806,7 +806,7 @@ paths:
   /employers/claims/{fineos_absence_id}/review:
     get:
       summary: Retrieve FINEOS claim review data for a specified absence ID
-      operationId: massgov.pfml.api.claims.employer_get_claim_review
+      operationId: massgov.pfml.api.employer_claim.employer_get_claim_review
       tags:
         - Claims
       parameters:
@@ -840,7 +840,7 @@ paths:
       tags:
         - Claims
       summary: Save review claim from leave admin
-      operationId: massgov.pfml.api.claims.employer_update_claim_review
+      operationId: massgov.pfml.api.employer_claim.employer_update_claim_review
       parameters:
         - name: fineos_absence_id
           in: path

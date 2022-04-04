@@ -1,0 +1,10 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Claim Modification Index renders page content 1`] = `
+<h1
+  class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+  tabindex="-1"
+>
+  Page not found
+</h1>
+`;

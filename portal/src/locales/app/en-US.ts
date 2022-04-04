@@ -828,6 +828,7 @@ const shared: {
   claimsEmploymentInfoTitle: "Employment information",
   claimsLeaveDetailsTitle: "Leave details",
   claimsLeaveDurationTitle: "Leave duration",
+  claimsModifyTitle: "Change your application",
   claimsOtherLeaveTitle: "Other leave, benefits, and income",
   claimsPreviousLeaveDetails: {
     addButton: "Add another previous leave",
@@ -1645,6 +1646,31 @@ const pages: {
     serviceMemberFamilyLeaveLabel:
       "I need to care for a family member who serves in the armed forces.",
     title: "$t(shared.claimsLeaveDetailsTitle)",
+  },
+  claimsModifyCancel: {
+    sectionLabel: "Are you sure you want to cancel your leave?",
+    title: "$t(shared.claimsModifyTitle)",
+  },
+  claimsModifyChecklist: {
+    backButtonLabel: "$t(shared.backToYourApplicationsLink)",
+    title: "Welcome back to your in-progress change request",
+  },
+  claimsModifyGetReady: {
+    backButtonLabel: "$t(shared.backToYourApplicationsLink)",
+    button: "Continue",
+    title: "Request a change to your application",
+  },
+  claimsModifyReview: {
+    sectionLabel: "Review and submit your requested change",
+    title: "$t(shared.claimsModifyTitle)",
+  },
+  claimsModifySuccess: {
+    backButtonLabel: "$t(shared.backToYourApplicationsLink)",
+    title: "You've submitted your change request",
+  },
+  claimsModifyType: {
+    sectionLabel: "How do you want to change your application?",
+    title: "$t(shared.claimsModifyTitle)",
   },
   claimsName: {
     firstNameLabel: "First name",
