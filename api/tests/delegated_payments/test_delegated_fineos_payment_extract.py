@@ -179,15 +179,6 @@ def validate_non_standard_payment_state(non_standard_payment: Payment, payment_s
     )
 
 
-def validate_non_standard_employer_reimbursement_payment_state(
-    non_standard_payment: Payment, payment_state: LkState
-):
-    assert len(non_standard_payment.state_logs) == 1
-    assert set([state_log.end_state_id for state_log in non_standard_payment.state_logs]) == set(
-        [payment_state.state_id]
-    )
-
-
 def validate_withholding(
     withholding_payment: Payment,
     withholding_payment_data: FineosPaymentData,
@@ -1493,14 +1484,15 @@ def test_process_extract_additional_payment_types(test_db_session, payment_extra
         missing_event_payment, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
     )
 
-    # Employer reimbursement should be in DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_RESTARTABLE
+    # Employer reimbursement should be in DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT for  the payment_method validation error.
     employer_payment = (
         test_db_session.query(Payment)
         .filter(Payment.fineos_pei_i_value == employer_reimbursement_data.i_value)
         .one_or_none()
     )
-    validate_non_standard_employer_reimbursement_payment_state(
-        employer_payment, State.DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_RESTARTABLE
+
+    validate_non_standard_payment_state(
+        employer_payment, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
     )
 
 
@@ -1608,14 +1600,14 @@ def test_process_extract_additional_payment_types_can_be_missing_other_files(
     )
     assert cancellation_payment.claim_id is None
 
-    # Employer reimbursement should be in DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_RESTARTABLE
+    # Employer reimbursement should be in DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
     employer_payment = (
         test_db_session.query(Payment)
         .filter(Payment.fineos_pei_i_value == employer_reimbursement_data.i_value)
         .one_or_none()
     )
-    validate_non_standard_employer_reimbursement_payment_state(
-        employer_payment, State.DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_RESTARTABLE
+    validate_non_standard_payment_state(
+        employer_payment, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
     )
     assert employer_payment.claim_id is None
 
@@ -1689,6 +1681,7 @@ def test_process_extract_additional_payment_types_can_be_missing_all_additional_
         event_reason=extractor.AUTO_ALT_EVENT_REASON,
         event_type=extractor.PAYMENT_OUT_TRANSACTION_TYPE,
         payee_identifier=extractor.TAX_IDENTIFICATION_NUMBER,
+        payment_method="Check",
     )
     add_db_records_from_fineos_data(
         test_db_session, employer_reimbursement_data, add_claim=False, add_eft=False
@@ -1801,7 +1794,7 @@ def test_process_extract_additional_payment_types_can_be_missing_all_additional_
         missing_event_payment, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
     )
 
-    # Employer reimbursement should be in DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_RESTARTABLE
+    # Employer reimbursement should be in DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE
     employer_payment = (
         test_db_session.query(Payment)
         .filter(Payment.fineos_pei_i_value == employer_reimbursement_data.i_value)
@@ -1809,8 +1802,8 @@ def test_process_extract_additional_payment_types_can_be_missing_all_additional_
     )
     assert employer_payment.claim_id is None
     assert employer_payment.employee_id is None  # We don't fetch the employee for employers
-    validate_non_standard_employer_reimbursement_payment_state(
-        employer_payment, State.DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_RESTARTABLE
+    validate_non_standard_payment_state(
+        employer_payment, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE
     )
 
 
@@ -2607,6 +2600,7 @@ def test_get_payment_transaction_type(initialize_factories_session, set_exporter
         event_reason=extractor.AUTO_ALT_EVENT_REASON,
         event_type=extractor.PAYMENT_OUT_TRANSACTION_TYPE,
         payee_identifier=extractor.TAX_IDENTIFICATION_NUMBER,
+        payment_method="Check",
     )
     _, payment_data = make_payment_data_from_fineos_data(employer_reimbursement_data)
     assert not payment_data.validation_container.has_validation_issues()
@@ -2679,6 +2673,7 @@ def test_get_payment_relevant_party(initialize_factories_session, set_exporter_e
         event_reason=extractor.AUTO_ALT_EVENT_REASON,
         event_type=extractor.PAYMENT_OUT_TRANSACTION_TYPE,
         payee_identifier=extractor.TAX_IDENTIFICATION_NUMBER,
+        payment_method="Check",
     )
     _, payment_data = make_payment_data_from_fineos_data(employer_reimbursement_data)
     assert not payment_data.validation_container.has_validation_issues()

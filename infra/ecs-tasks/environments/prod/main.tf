@@ -112,5 +112,5 @@ module "tasks" {
   enable_1099_testfile_generation = "0"
   irs_1099_correction_ind         = "0"
 
-  enable_employer_reimbursement_payments = "0"
+  enable_employer_reimbursement_payments = "1"
 }
