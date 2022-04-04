@@ -25,13 +25,10 @@ from massgov.pfml.db.models.employees import Claim, Employee, Employer, ManagedR
 from massgov.pfml.db.queries.absence_periods import sync_customer_api_absence_periods_to_db
 from massgov.pfml.db.queries.managed_requirements import (
     commit_managed_requirements,
-    create_or_update_managed_requirement_from_fineos,
+    sync_managed_requirements_to_db,
 )
 from massgov.pfml.fineos.models.group_client_api.overrides import ManagedRequirementDetails
-from massgov.pfml.util.logging.managed_requirements import (
-    get_fineos_managed_requirement_log_attributes,
-    log_managed_requirement_issues,
-)
+from massgov.pfml.util.logging.managed_requirements import log_managed_requirement_issues
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -289,14 +286,8 @@ def handle_managed_requirements(
         logger.info("No managed requirements returned by Fineos", extra=log_attributes)
         return []
 
-    for fineos_requirement in fineos_requirements:
-        log_attr = {
-            **log_attributes.copy(),
-            **get_fineos_managed_requirement_log_attributes(fineos_requirement),
-        }
-        create_or_update_managed_requirement_from_fineos(
-            db_session, claim_id, fineos_requirement, log_attr
-        )
-
-    commit_managed_requirements(db_session)
+    (_, log_attrs) = sync_managed_requirements_to_db(
+        fineos_requirements, claim_id, db_session, log_attributes
+    )
+    commit_managed_requirements(db_session, log_attrs)
     return fineos_requirements
