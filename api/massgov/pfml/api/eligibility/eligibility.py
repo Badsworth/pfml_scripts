@@ -126,8 +126,8 @@ def retrieve_financial_eligibility(
 ) -> EligibilityResponse:
     """Checks to see if a Benefit Year exists for the given employee's leave start date,
     If one exists, use persisted values for the employee's total wages and employer IAWW
-    to serve financial eligibilty request.
-    Otherwise, Compute financial eligibilty to serve the request and store on a new
+    to serve financial eligibility request.
+    Otherwise, Compute financial eligibility to serve the request and store on a new
     Benefit Year values for the employee's total wages and employer IAWW.
     """
     meta: EligibilityLogExtra = {
@@ -153,7 +153,7 @@ def retrieve_financial_eligibility(
         employer_average_weekly_wage = benefit_year.get_employer_aww(
             db_session, found_benefit_year, employer_id
         )
-        eligibilty_response = EligibilityResponse(
+        eligibility_response = EligibilityResponse(
             financially_eligible=True,
             description="Financially eligible",
             total_wages=found_benefit_year.total_wages,
@@ -163,11 +163,11 @@ def retrieve_financial_eligibility(
         )
         logger.info(
             "Financial eligibility was loaded from a Benefit Year.",
-            extra={**eligibilty_response.dict(), **meta},
+            extra={**eligibility_response.dict(), **meta},
         )
-        return eligibilty_response
+        return eligibility_response
 
-    # Benefit year was not found, calculate financial eligibilty from new data.
+    # Benefit year was not found, calculate financial eligibility from new data.
     wage_calculator = wage.get_wage_calculator(employee_id, effective_date, db_session)
     wage_data = wage_calculator.compute_employee_dor_wage_data()
     employer_average_weekly_wage = wage_calculator.get_employer_average_weekly_wage(
@@ -177,7 +177,7 @@ def retrieve_financial_eligibility(
     # Convert to dict from default dict to remove defaultdict type from string
     meta["quarterly_wages"] = str(dict(wage_calculator.employer_quarter_wage))
 
-    eligibilty_response = _compute_financial_eligibility(
+    eligibility_response = _compute_financial_eligibility(
         employment_status=employment_status,
         state_average_weekly_wage=benefits_metrics.average_weekly_wage,
         maximum_weekly_benefit_amount=benefits_metrics.maximum_weekly_benefit_amount,
@@ -186,7 +186,7 @@ def retrieve_financial_eligibility(
         employer_average_weekly_wage=employer_average_weekly_wage,
     )
 
-    if eligibilty_response.financially_eligible:
+    if eligibility_response.financially_eligible:
         # Store the results to a new Benefit Year
         base_period = wage_calculator.get_base_period_quarters_as_dates()
         employer_contributions = CreateBenefitYearContribution.from_wage_quarters(wage_calculator)
@@ -194,7 +194,7 @@ def retrieve_financial_eligibility(
             db_session,
             employee_id=employee_id,
             leave_start_date=leave_start_date,
-            total_wages=eligibilty_response.total_wages,
+            total_wages=eligibility_response.total_wages,
             employer_contributions=employer_contributions,
             base_period_dates=base_period,
         )
@@ -213,7 +213,7 @@ def retrieve_financial_eligibility(
                 employer_average_weekly_wage = benefit_year.get_employer_aww(
                     db_session, found_benefit_year, employer_id
                 )
-                eligibilty_response = EligibilityResponse(
+                eligibility_response = EligibilityResponse(
                     financially_eligible=True,
                     description="Financially eligible",
                     total_wages=found_benefit_year.total_wages,
@@ -223,9 +223,9 @@ def retrieve_financial_eligibility(
                 )
                 logger.info(
                     "Financial eligibility was loaded from a Benefit Year.",
-                    extra={**eligibilty_response.dict(), **meta},
+                    extra={**eligibility_response.dict(), **meta},
                 )
-                return eligibilty_response
+                return eligibility_response
 
             # This should never actually happen, but including some logging as a fail-safe
             else:
@@ -237,6 +237,6 @@ def retrieve_financial_eligibility(
 
     logger.info(
         "Financial eligibility was computed without a Benefit Year.",
-        extra={**eligibilty_response.dict(), **meta},
+        extra={**eligibility_response.dict(), **meta},
     )
-    return eligibilty_response
+    return eligibility_response
