@@ -4,7 +4,7 @@ from typing import Optional
 
 import pytest
 
-from massgov.pfml.api.models.common import SearchEnvelope
+from massgov.pfml.api.models.common import OrderData, SearchEnvelope
 from massgov.pfml.api.util.logging.search_request import (
     pagination_log_info_from_request,
     search_envelope_log_info,
@@ -32,8 +32,12 @@ class ExampleSearchTerms(PydanticBaseModel):
 
 
 DEFAULT_ORDER_AND_PAGING_ATTRS = {
+    "order_fields_provided": "",
+    "order_fields_provided_length": 0,
     "order.by": "created_at",
     "order.direction": "descending",
+    "paging_fields_provided": "",
+    "paging_fields_provided_length": 0,
     "paging.offset": 1,
     "paging.size": 25,
 }
@@ -59,10 +63,36 @@ def test_search_request_log_info(mocker):
 @pytest.mark.parametrize(
     "search_request,expected",
     [
-        pytest.param(SearchEnvelope(terms=EmptyTerms()), {}, id="no_provided_terms"),
+        pytest.param(
+            SearchEnvelope(terms=EmptyTerms()),
+            {
+                "request_top_level_fields_provided": "terms",
+                "request_top_level_fields_provided_length": 1,
+                "terms_fields_provided": "",
+                "terms_fields_provided_length": 0,
+            },
+            id="no_provided_terms",
+        ),
+        pytest.param(
+            SearchEnvelope(terms=EmptyTerms(), order=OrderData(by="foo")),
+            {
+                "request_top_level_fields_provided": "terms,order",
+                "request_top_level_fields_provided_length": 2,
+                "terms_fields_provided": "",
+                "terms_fields_provided_length": 0,
+                "order_fields_provided": "by",
+                "order_fields_provided_length": 1,
+                "order.by": "foo",
+            },
+            id="order_provided",
+        ),
         pytest.param(
             SearchEnvelope(terms=ExampleSearchTerms(an_enum=ExampleEnum.FOO)),
             {
+                "request_top_level_fields_provided": "terms",
+                "request_top_level_fields_provided_length": 1,
+                "terms_fields_provided": "an_enum",
+                "terms_fields_provided_length": 1,
                 "terms.an_enum_provided": True,
                 "terms.an_enum_type": "<enum 'ExampleEnum'>",
                 "terms.an_enum_value": "foo",
