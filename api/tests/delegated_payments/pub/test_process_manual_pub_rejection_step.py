@@ -483,3 +483,43 @@ def test_process_manual_pub_reject_step_full(
     assert errors[4].pub_eft_id is None
     assert errors[4].message == "PUB EFT individual ID not found in DB"
     assert errors[4].pub_error_type_id == PubErrorType.MANUAL_PUB_REJECT_ERROR.pub_error_type_id
+
+
+@freeze_time("2022-02-15 12:00:00", tz_offset=0)
+def test_process_manual_pub_reject_step_full_with_odd_encoding(
+    local_initialize_factories_session,
+    local_test_db_session,
+    local_test_db_other_session,
+    mock_s3_bucket_resource,
+    monkeypatch,
+):
+    # The file we are parsing has a <U+FEFF> character at the start
+    s3_base_path = f"s3://{mock_s3_bucket_resource.name}/pub/reject-files/"
+    file_name = "odd_encoding_manual_reject_file.csv"
+    monkeypatch.setenv("PFML_MANUAL_PUB_REJECT_ARCHIVE_PATH", s3_base_path)
+
+    test_files = pathlib.Path(__file__).parent / "test_files"
+    mock_s3_bucket_resource.upload_file(
+        str(test_files / file_name), "pub/reject-files/received/" + file_name
+    )
+
+    payment = DelegatedPaymentFactory(
+        local_test_db_session, pub_individual_id=1
+    ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT)
+
+    process_manual_pub_rejection_step = ProcessManualPubRejectionStep(
+        local_test_db_session, local_test_db_other_session
+    )
+    process_manual_pub_rejection_step.run()
+
+    # Validate the payment state was updated
+    assert_payment_state(
+        payment,
+        Flow.DELEGATED_PAYMENT,
+        State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
+        local_test_db_session,
+    )
+
+    assert_fineos_writeback_status(
+        payment, FineosWritebackTransactionStatus.PUB_PAYMENT_RETURNED, local_test_db_session
+    )
