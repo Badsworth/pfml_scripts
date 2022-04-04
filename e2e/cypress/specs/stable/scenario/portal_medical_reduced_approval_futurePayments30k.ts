@@ -129,9 +129,12 @@ describe("Submit medical application via the web portal: Adjudication Approval &
         ]);
         portal.viewPaymentStatus();
         const twoWeeksAfterStart = addWeeks(start, 2);
-        portal.assertPaymentCheckBackDate(
-          addBusinessDays(twoWeeksAfterStart, 3)
-        );
+        // @todo: Once https://lwd.atlassian.net/browse/PORTAL-2003 is rolled out to all lower environments the LOC below should be used:
+        // portal.assertPaymentCheckBackDate(addBusinessDays(twoWeeksAfterStart, 4))
+        portal.assertPaymentCheckBackDate(undefined, [
+          addBusinessDays(twoWeeksAfterStart, 3),
+          addBusinessDays(twoWeeksAfterStart, 4),
+        ]);
       });
     });
   });

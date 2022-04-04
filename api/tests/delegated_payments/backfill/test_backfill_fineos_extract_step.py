@@ -161,7 +161,6 @@ def test_run_happy_path(
     set_exporter_env_vars,
     initialize_factories_session,
     test_db_session,
-    test_db_other_session,
 ):
     reference_file_type = ReferenceFileType.FINEOS_PAYMENT_EXTRACT
     extract = payments_util.FineosExtractConstants.PAYMENT_LINE
@@ -184,9 +183,7 @@ def test_run_happy_path(
         payments_util.FineosExtractConstants.PAYMENT_DETAILS.table
     ).all()
 
-    step = BackfillFineosExtractStep(
-        test_db_session, test_db_other_session, reference_file_type, extract
-    )
+    step = BackfillFineosExtractStep(test_db_session, test_db_session, reference_file_type, extract)
     step.run()
 
     validate_rows_match_table_data(test_db_session, rows, extract, reference_files)
@@ -214,7 +211,6 @@ def test_run_prior_reference_files_processed(
     set_exporter_env_vars,
     initialize_factories_session,
     test_db_session,
-    test_db_other_session,
 ):
     reference_file_type = ReferenceFileType.FINEOS_PAYMENT_EXTRACT
     extract = payments_util.FineosExtractConstants.PAYMENT_LINE
@@ -225,9 +221,7 @@ def test_run_prior_reference_files_processed(
     # Generate a few days to backfill
     rows, reference_files = generate_test_data(test_db_session, reference_file_type, extract)
 
-    step = BackfillFineosExtractStep(
-        test_db_session, test_db_other_session, reference_file_type, extract
-    )
+    step = BackfillFineosExtractStep(test_db_session, test_db_session, reference_file_type, extract)
     step.run()
 
     validate_rows_match_table_data(test_db_session, rows, extract, reference_files)
@@ -246,7 +240,6 @@ def test_run_with_skipped_reference_files(
     set_exporter_env_vars,
     initialize_factories_session,
     test_db_session,
-    test_db_other_session,
 ):
     reference_file_type = ReferenceFileType.FINEOS_PAYMENT_EXTRACT
     extract = payments_util.FineosExtractConstants.PAYMENT_LINE
@@ -261,9 +254,7 @@ def test_run_with_skipped_reference_files(
     # Generate data to backfill
     rows, reference_files = generate_test_data(test_db_session, reference_file_type, extract)
 
-    step = BackfillFineosExtractStep(
-        test_db_session, test_db_other_session, reference_file_type, extract
-    )
+    step = BackfillFineosExtractStep(test_db_session, test_db_session, reference_file_type, extract)
     step.run()
 
     validate_rows_match_table_data(test_db_session, rows, extract, reference_files)
@@ -286,7 +277,6 @@ def test_run_with_missing_fineos_files(
     set_exporter_env_vars,
     initialize_factories_session,
     test_db_session,
-    test_db_other_session,
 ):
     reference_file_type = ReferenceFileType.FINEOS_PAYMENT_EXTRACT
     extract = payments_util.FineosExtractConstants.PAYMENT_LINE
@@ -297,9 +287,7 @@ def test_run_with_missing_fineos_files(
         test_db_session, reference_file_type, extract, create_fineos_file=False
     )
 
-    step = BackfillFineosExtractStep(
-        test_db_session, test_db_other_session, reference_file_type, extract
-    )
+    step = BackfillFineosExtractStep(test_db_session, test_db_session, reference_file_type, extract)
     step.run()
 
     # No rows should have been populated

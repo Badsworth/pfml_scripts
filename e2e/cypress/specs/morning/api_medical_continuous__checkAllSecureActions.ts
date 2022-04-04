@@ -30,7 +30,7 @@ describe("Create a new caring leave claim in FINEOS and check multiple secure ac
       cy.unstash<Submission>("submission").then((submission) => {
         fineosPages.ClaimPage.visit(
           submission.fineos_absence_id
-        ).addHistoricalAbsenceCase();
+        ).addHistoricalAbsenceCase(config("HAS_APRIL_UPGRADE") === "true");
       });
     }
   );

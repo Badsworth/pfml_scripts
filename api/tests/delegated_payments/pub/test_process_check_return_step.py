@@ -47,51 +47,49 @@ def check_payment_factory(
 
 
 @pytest.fixture
-def step(local_initialize_factories_session, local_test_db_session, local_test_db_other_session):
-    step = process_check_return_step.ProcessCheckReturnFileStep(
-        local_test_db_session, local_test_db_other_session
-    )
-    step.log_entry = massgov.pfml.util.batch.log.LogEntry(local_test_db_other_session, "")
+def step(initialize_factories_session, test_db_session):
+    step = process_check_return_step.ProcessCheckReturnFileStep(test_db_session, test_db_session)
+    step.log_entry = massgov.pfml.util.batch.log.LogEntry(test_db_session, "")
     step.reference_file = factories.ReferenceFileFactory.create(file_location="test")
     return step
 
 
 @pytest.fixture
-def payment(local_test_db_session, local_initialize_factories_session):
-    return payment_by_check_sent_to_pub_factory(1, local_test_db_session)
+def payment(test_db_session, initialize_factories_session):
+    return payment_by_check_sent_to_pub_factory(1, test_db_session)
 
 
 @pytest.fixture
-def payment_complete(local_test_db_session, local_initialize_factories_session):
+def payment_complete(test_db_session, initialize_factories_session):
     return payment_by_check_sent_to_pub_factory(
-        1, local_test_db_session, State.DELEGATED_PAYMENT_COMPLETE
+        1, test_db_session, State.DELEGATED_PAYMENT_COMPLETE
     )
 
 
 @pytest.fixture
-def payment_error_with_bank(local_test_db_session, local_initialize_factories_session):
+def payment_error_with_bank(test_db_session, initialize_factories_session):
     return payment_by_check_sent_to_pub_factory(
-        1, local_test_db_session, State.DELEGATED_PAYMENT_ERROR_FROM_BANK
+        1, test_db_session, State.DELEGATED_PAYMENT_ERROR_FROM_BANK
     )
 
 
 @pytest.fixture
-def payment_in_bad_state(local_test_db_session, local_initialize_factories_session):
+def payment_in_bad_state(test_db_session, initialize_factories_session):
     return payment_by_check_sent_to_pub_factory(
-        1, local_test_db_session, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_AUDIT_REPORT
+        1, test_db_session, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_AUDIT_REPORT
     )
 
 
 @pytest.fixture
-def payment_without_state(local_test_db_session, local_initialize_factories_session):
-    return payment_by_check_sent_to_pub_factory(1, local_test_db_session, None)
+def payment_without_state(test_db_session, initialize_factories_session):
+    return payment_by_check_sent_to_pub_factory(1, test_db_session, None)
 
 
 @pytest.fixture
-def payment_state(payment, local_test_db_session):
+def payment_state(payment, test_db_session):
     def get_state():
         return massgov.pfml.api.util.state_log_util.get_latest_state_log_in_flow(
-            payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+            payment, Flow.DELEGATED_PAYMENT, test_db_session
         )
 
     return get_state
@@ -127,7 +125,7 @@ def assert_writeback_state_and_details(
     )
 
 
-def test_process_single_check_payment_paid(step, payment, payment_state, local_test_db_session):
+def test_process_single_check_payment_paid(step, payment, payment_state, test_db_session):
     step.process_single_check_payment(check_payment_factory(PaidStatus.PAID))
 
     assert payment.check.payment_check_status_id == PaymentCheckStatus.PAID.payment_check_status_id
@@ -141,7 +139,7 @@ def test_process_single_check_payment_paid(step, payment, payment_state, local_t
     assert step.log_entry.metrics["payment_complete_by_paid_check"] == 1
 
     assert_writeback_state_and_details(
-        local_test_db_session, payment, True, FineosWritebackTransactionStatus.POSTED
+        test_db_session, payment, True, FineosWritebackTransactionStatus.POSTED
     )
 
 
@@ -156,7 +154,7 @@ def test_process_single_check_payment_previously_paid(step, payment_complete):
 
 @pytest.mark.parametrize("check_status", (PaidStatus.OUTSTANDING, PaidStatus.FUTURE))
 def test_process_single_check_payment_outstanding(
-    step, payment, payment_state, local_test_db_session, check_status
+    step, payment, payment_state, test_db_session, check_status
 ):
     step.process_single_check_payment(check_payment_factory(check_status))
 
@@ -165,7 +163,7 @@ def test_process_single_check_payment_outstanding(
     assert (
         payment_state().end_state_id == State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT.state_id
     )
-    assert_writeback_state_and_details(local_test_db_session, payment, False)
+    assert_writeback_state_and_details(test_db_session, payment, False)
 
     assert step.log_entry.metrics["payment_still_outstanding"] == 1
 
@@ -184,8 +182,7 @@ def test_process_single_check_payment_failed(
     check_status,
     expected_payment_check_status,
     expected_writeback_status,
-    local_test_db_session,
-    local_test_db_other_session,
+    test_db_session,
     step,
 ):
     step.process_single_check_payment(check_payment_factory(check_status))
@@ -201,11 +198,9 @@ def test_process_single_check_payment_failed(
         "check_status": check_status.name,
         "message": "Payment failed by check status " + check_status.name,
     }
-    assert_writeback_state_and_details(
-        local_test_db_session, payment, True, expected_writeback_status
-    )
+    assert_writeback_state_and_details(test_db_session, payment, True, expected_writeback_status)
 
-    pub_error = local_test_db_session.query(PubError).one_or_none()
+    pub_error = test_db_session.query(PubError).one_or_none()
     assert pub_error.pub_error_type_id == PubErrorType.CHECK_PAYMENT_FAILED.pub_error_type_id
     assert pub_error.message == "payment failed by check: " + check_status.name
     assert pub_error.line_number == 20
@@ -215,7 +210,7 @@ def test_process_single_check_payment_failed(
 
 
 def test_process_single_check_payment_previously_failed(
-    step, payment_error_with_bank, local_test_db_session
+    step, payment_error_with_bank, test_db_session
 ):
     step.process_single_check_payment(check_payment_factory(PaidStatus.STOP))
 
@@ -223,16 +218,16 @@ def test_process_single_check_payment_previously_failed(
     assert len(payment_error_with_bank.state_logs) == 1
     assert step.log_entry.metrics["payment_already_failed_by_check"] == 1
 
-    pub_errors = local_test_db_session.query(PubError).all()
+    pub_errors = test_db_session.query(PubError).all()
     assert len(pub_errors) == 0
 
 
-def test_process_single_check_payment_not_found(step, payment, local_test_db_session):
+def test_process_single_check_payment_not_found(step, payment, test_db_session):
     step.process_single_check_payment(check_payment_factory(PaidStatus.PAID, "999"))
 
     assert step.log_entry.metrics["check_number_not_found_count"] == 1
 
-    pub_error = local_test_db_session.query(PubError).one_or_none()
+    pub_error = test_db_session.query(PubError).one_or_none()
     assert pub_error.pub_error_type_id == PubErrorType.CHECK_PAYMENT_ERROR.pub_error_type_id
     assert pub_error.message == "check number not in payment table"
     assert pub_error.line_number == 20
@@ -241,14 +236,12 @@ def test_process_single_check_payment_not_found(step, payment, local_test_db_ses
     assert pub_error.payment_id is None
 
 
-def test_process_single_check_payment_in_wrong_state(
-    step, payment_in_bad_state, local_test_db_session
-):
+def test_process_single_check_payment_in_wrong_state(step, payment_in_bad_state, test_db_session):
     step.process_single_check_payment(check_payment_factory(PaidStatus.PAID))
 
     assert step.log_entry.metrics["payment_unexpected_state_count"] == 1
 
-    pub_error = local_test_db_session.query(PubError).one_or_none()
+    pub_error = test_db_session.query(PubError).one_or_none()
     assert pub_error.pub_error_type_id == PubErrorType.CHECK_PAYMENT_ERROR.pub_error_type_id
     assert pub_error.message == "unexpected state for payment: Add to Payment Audit Report (129)"
     assert pub_error.line_number == 20
@@ -257,14 +250,12 @@ def test_process_single_check_payment_in_wrong_state(
     assert pub_error.payment_id == payment_in_bad_state.payment_id
 
 
-def test_process_single_check_payment_without_state(
-    step, payment_without_state, local_test_db_session
-):
+def test_process_single_check_payment_without_state(step, payment_without_state, test_db_session):
     step.process_single_check_payment(check_payment_factory(PaidStatus.PAID))
 
     assert step.log_entry.metrics["payment_unexpected_state_count"] == 1
 
-    pub_error = local_test_db_session.query(PubError).one_or_none()
+    pub_error = test_db_session.query(PubError).one_or_none()
     assert pub_error.pub_error_type_id == PubErrorType.CHECK_PAYMENT_ERROR.pub_error_type_id
     assert pub_error.message == "unexpected state for payment: NONE (None)"
     assert pub_error.line_number == 20
@@ -293,9 +284,8 @@ def test_increment_metric_by_paid_status(step):
 
 @freezegun.freeze_time("2021-04-12 08:00:00", tz_offset=0)
 def test_process_check_return_step_full(
-    local_test_db_session,
-    local_test_db_other_session,
-    local_initialize_factories_session,
+    test_db_session,
+    initialize_factories_session,
     mock_s3_bucket_resource,
 ):
     # Note: see check_outstanding_small.csv and check_paid_small.csv to understand this test.
@@ -307,14 +297,12 @@ def test_process_check_return_step_full(
 
     # Add payments 1 to 9 to the database. These correspond to check numbers 501 to 509 in return
     # files.
-    payments = [
-        payment_by_check_sent_to_pub_factory(i, local_test_db_session) for i in range(1, 10)
-    ]
+    payments = [payment_by_check_sent_to_pub_factory(i, test_db_session) for i in range(1, 10)]
 
     # Run step.
     process_return_file_step = process_check_return_step.ProcessCheckReturnFileStep(
-        local_test_db_session,
-        local_test_db_other_session,
+        test_db_session,
+        test_db_session,
         "s3://%s/" % mock_s3_bucket_resource.name,
     )
     assert process_return_file_step.have_more_files_to_process() is True
@@ -324,9 +312,7 @@ def test_process_check_return_step_full(
     assert process_return_file_step.have_more_files_to_process() is False
 
     # Test updates to reference_file table.
-    reference_files = (
-        local_test_db_session.query(ReferenceFile).order_by(ReferenceFile.created_at).all()
-    )
+    reference_files = test_db_session.query(ReferenceFile).order_by(ReferenceFile.created_at).all()
     assert len(reference_files) == 2
     for reference_file in reference_files:
         assert (
@@ -397,14 +383,14 @@ def test_process_check_return_step_full(
         ),
     }
     for payment in payments:
-        local_test_db_session.refresh(payment)
+        test_db_session.refresh(payment)
         payment_state_log = massgov.pfml.api.util.state_log_util.get_latest_state_log_in_flow(
-            payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+            payment, Flow.DELEGATED_PAYMENT, test_db_session
         )
         state_id = payment_state_log.end_state.state_id
 
         writeback_state_log = massgov.pfml.api.util.state_log_util.get_latest_state_log_in_flow(
-            payment, Flow.DELEGATED_PEI_WRITEBACK, local_test_db_session
+            payment, Flow.DELEGATED_PEI_WRITEBACK, test_db_session
         )
         writeback_state_id = writeback_state_log.end_state.state_id if writeback_state_log else None
         if payment.check.check_number in expected_states:
@@ -430,7 +416,7 @@ def test_process_check_return_step_full(
 
             if expected_writeback_state:
                 writeback_details = (
-                    local_test_db_session.query(FineosWritebackDetails)
+                    test_db_session.query(FineosWritebackDetails)
                     .filter(FineosWritebackDetails.payment_id == payment.payment_id)
                     .one_or_none()
                 )
@@ -444,7 +430,7 @@ def test_process_check_return_step_full(
             assert state_id == State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT.state_id
             assert payment.reference_files == []
 
-    errors = local_test_db_session.query(PubError).all()
+    errors = test_db_session.query(PubError).all()
     assert len(errors) == 6
     assert errors[0].reference_file == reference_files[0]
     assert errors[0].line_number == 4

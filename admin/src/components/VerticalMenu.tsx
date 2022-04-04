@@ -1,15 +1,15 @@
+import { LinkProps } from "next/link";
 import { isValidElement, useState } from "react";
 
 import { DotsVerticalIcon } from "@heroicons/react/solid";
 import Link from "next/link";
-import { UrlObject } from "url";
 
 export type Option = {
   enabled: boolean;
   text: string;
   type: "button" | "link";
   onClick?: Function;
-  href?: string | UrlObject;
+  href?: LinkProps["href"];
 };
 
 export type Props = {

@@ -1701,7 +1701,10 @@ def test_computed_start_dates_for_caring_leave_with_prior_year_after_launch():
     assert computed_start_dates.other_reason.strftime("%A") == "Sunday"
 
 
-def test_get_claim_plan(mock_fineos_period_decisions, test_db_session):
+@mock.patch(
+    "massgov.pfml.api.services.administrator_fineos_actions.maybe_update_employee_relationship"
+)
+def test_get_claim_plan(mock_maybe_update, mock_fineos_period_decisions, test_db_session):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.build()
@@ -1715,7 +1718,12 @@ def test_get_claim_plan(mock_fineos_period_decisions, test_db_session):
     assert leave_details.status == "Known"
 
 
-def test_get_claim_no_plan(mock_fineos_period_decisions_no_plan, test_db_session):
+@mock.patch(
+    "massgov.pfml.api.services.administrator_fineos_actions.maybe_update_employee_relationship"
+)
+def test_get_claim_no_plan(
+    mock_maybe_update, mock_fineos_period_decisions_no_plan, test_db_session
+):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.build()
@@ -1729,8 +1737,11 @@ def test_get_claim_no_plan(mock_fineos_period_decisions_no_plan, test_db_session
     assert leave_details.status == "Known"
 
 
+@mock.patch(
+    "massgov.pfml.api.services.administrator_fineos_actions.maybe_update_employee_relationship"
+)
 def test_get_claim_eform_type_contains_neither_version(
-    mock_fineos_period_decisions, test_db_session
+    mock_maybe_update, mock_fineos_period_decisions, test_db_session
 ):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
@@ -1745,7 +1756,12 @@ def test_get_claim_eform_type_contains_neither_version(
     assert leave_details.uses_second_eform_version is True
 
 
-def test_get_claim_other_income_eform_type_contains_both_versions(test_db_session):
+@mock.patch(
+    "massgov.pfml.api.services.administrator_fineos_actions.maybe_update_employee_relationship"
+)
+def test_get_claim_other_income_eform_type_contains_both_versions(
+    mock_maybe_update, test_db_session
+):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     client = massgov.pfml.fineos.mock_client.MockFINEOSClient(
@@ -1758,7 +1774,12 @@ def test_get_claim_other_income_eform_type_contains_both_versions(test_db_sessio
         )
 
 
-def test_get_claim_other_leaves_v2_eform(mock_fineos_other_leaves_v2_eform, test_db_session):
+@mock.patch(
+    "massgov.pfml.api.services.administrator_fineos_actions.maybe_update_employee_relationship"
+)
+def test_get_claim_other_leaves_v2_eform(
+    mock_maybe_update, mock_fineos_other_leaves_v2_eform, test_db_session
+):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.build()
@@ -1843,7 +1864,11 @@ def test_get_claim_other_leaves_v2_eform(mock_fineos_other_leaves_v2_eform, test
     )
 
 
+@mock.patch(
+    "massgov.pfml.api.services.administrator_fineos_actions.maybe_update_employee_relationship"
+)
 def test_get_claim_other_leaves_v2_accrued_leave_different_employer_eform(
+    mock_maybe_update,
     mock_fineos_other_leaves_v2_accrued_leave_different_employer_eform,
     test_db_session,
 ):
@@ -1873,7 +1898,12 @@ def test_get_claim_other_leaves_v2_accrued_leave_different_employer_eform(
     assert leave_details.concurrent_leave is None
 
 
-def test_get_claim_other_income(mock_fineos_other_income_v1_eform, test_db_session):
+@mock.patch(
+    "massgov.pfml.api.services.administrator_fineos_actions.maybe_update_employee_relationship"
+)
+def test_get_claim_other_income(
+    mock_maybe_update, mock_fineos_other_income_v1_eform, test_db_session
+):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.build()
@@ -1911,9 +1941,13 @@ def test_get_claim_other_income(mock_fineos_other_income_v1_eform, test_db_sessi
     assert leave_details.uses_second_eform_version is False
 
 
+@mock.patch(
+    "massgov.pfml.api.services.administrator_fineos_actions.maybe_update_employee_relationship"
+)
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
 def test_get_claim_with_open_managed_requirement(
     mock_get_req,
+    mock_maybe_update,
     mock_fineos_period_decisions,
     initialize_factories_session,
     mock_managed_requirements,
@@ -1941,9 +1975,13 @@ def test_get_claim_with_open_managed_requirement(
     assert len(managed_requirements) == len(mock_managed_requirements)
 
 
+@mock.patch(
+    "massgov.pfml.api.services.administrator_fineos_actions.maybe_update_employee_relationship"
+)
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
 def test_get_claim_with_closed_managed_requirement(
     mock_get_req,
+    mock_maybe_update,
     mock_fineos_period_decisions,
     initialize_factories_session,
     mock_managed_requirements,
@@ -1969,9 +2007,13 @@ def test_get_claim_with_closed_managed_requirement(
     assert len(managed_requirements) == len(mock_managed_requirements)
 
 
+@mock.patch(
+    "massgov.pfml.api.services.administrator_fineos_actions.maybe_update_employee_relationship"
+)
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
 def test_get_claim_with_open_expired_managed_requirement(
     mock_get_req,
+    mock_maybe_update,
     mock_fineos_period_decisions,
     initialize_factories_session,
     mock_managed_requirements,

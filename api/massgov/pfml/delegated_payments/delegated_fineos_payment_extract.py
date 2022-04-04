@@ -893,8 +893,13 @@ class PaymentExtractStep(Step):
             if payment_data.is_employee_required:
                 if (
                     payment_data.is_employer_reimbursement
-                    and payment_data.is_employer_reimbursement_enabled
-                ):
+                    or (
+                        payment_data.payment_transaction_type.payment_transaction_type_id
+                        == PaymentTransactionType.CANCELLATION.payment_transaction_type_id
+                        and payment_data.payment_relevant_party.payment_relevant_party_id
+                        == PaymentRelevantParty.REIMBURSED_EMPLOYER.payment_relevant_party_id
+                    )
+                ) and payment_data.is_employer_reimbursement_enabled:
                     employee = claim.employee if claim is not None else None
                     if not employee:
                         self.increment(self.Metrics.EMPLOYEE_MISSING_IN_DB_COUNT)
@@ -1313,7 +1318,11 @@ class PaymentExtractStep(Step):
 
         # If it is not an adhoc payment and it has certain kinds of open
         # tasks, we reject it and add it to the error report
-        if not payment.is_adhoc_payment and payment_data.absence_case_number is not None:
+        if (
+            not payment.is_adhoc_payment
+            and payment_data.is_payment_intended_for_pub
+            and payment_data.absence_case_number is not None
+        ):
             open_other_income_tasks = payments_util.get_open_tasks(
                 self.db_session, payment_data.absence_case_number, OTHER_INCOME_TASKTYPENAMES
             )
