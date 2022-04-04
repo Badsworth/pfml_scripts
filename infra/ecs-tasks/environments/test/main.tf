@@ -93,8 +93,10 @@ module "tasks" {
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com"]
 
   # Hourly at :05 minutes past each hour
-  dor_fineos_etl_schedule_expression_standard         = "cron(0/10 * * * ? *)"
-  dor_fineos_etl_schedule_expression_daylight_savings = "cron(0/10 * * * ? *)"
+  dor_fineos_etl_schedule_expression_standard         = "cron(5 * * * ? *)"
+  dor_fineos_etl_schedule_expression_daylight_savings = "cron(5 * * * ? *)"
+
+  standalone_fineos_import_employee_updates_schedule_expression_daylight_savings = "cron(0/10 * * * ? *)"
 
   pdf_api_host                    = "http://localhost:5000"
   enable_generate_1099_pdf        = "1"
