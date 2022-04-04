@@ -51,18 +51,9 @@ from massgov.pfml.util import datetime
 
 
 @pytest.fixture
-def claimant_extract_step(initialize_factories_session, test_db_session, test_db_other_session):
+def claimant_extract_step(initialize_factories_session, test_db_session):
     return claimant_extract.ClaimantExtractStep(
-        db_session=test_db_session, log_entry_db_session=test_db_other_session
-    )
-
-
-@pytest.fixture
-def local_claimant_extract_step(
-    local_initialize_factories_session, local_test_db_session, local_test_db_other_session
-):
-    return claimant_extract.ClaimantExtractStep(
-        db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
+        db_session=test_db_session, log_entry_db_session=test_db_session
     )
 
 
@@ -165,23 +156,23 @@ def stage_data(
     db_session.commit()
 
 
-def test_run_step_happy_path(local_claimant_extract_step, local_test_db_session):
+def test_run_step_happy_path(claimant_extract_step, test_db_session):
     organization_unit_name = "Appeals Court"
     claimant_data = FineosPaymentData(organization_unit_name=organization_unit_name)
     employee, _ = add_db_records_from_fineos_data(
-        local_test_db_session,
+        test_db_session,
         claimant_data,
         add_eft=False,
         fineos_employee_first_name="Original-FINEOS-First",
         fineos_employee_last_name="Original-FINEOS-Last",
     )
 
-    stage_data([claimant_data], local_test_db_session)
+    stage_data([claimant_data], test_db_session)
 
-    local_claimant_extract_step.run()
+    claimant_extract_step.run()
 
     claim = (
-        local_test_db_session.query(Claim)
+        test_db_session.query(Claim)
         .filter(Claim.fineos_absence_id == claimant_data.absence_case_number)
         .first()
     )
@@ -202,7 +193,7 @@ def test_run_step_happy_path(local_claimant_extract_step, local_test_db_session)
     assert claim.employer.fineos_employer_id == int(claimant_data.employer_customer_num)
 
     updated_employee = (
-        local_test_db_session.query(Employee)
+        test_db_session.query(Employee)
         .filter(Employee.fineos_customer_number == claimant_data.customer_number)
         .one_or_none()
     )
@@ -234,39 +225,39 @@ def test_run_step_happy_path(local_claimant_extract_step, local_test_db_session)
     eft_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
         end_state=State.DELEGATED_EFT_SEND_PRENOTE,
-        db_session=local_test_db_session,
+        db_session=test_db_session,
     )
     assert len(eft_state_logs) == 1
-    assert eft_state_logs[0].import_log_id == local_claimant_extract_step.get_import_log_id()
+    assert eft_state_logs[0].import_log_id == claimant_extract_step.get_import_log_id()
 
     assert len(claim.state_logs) == 0
 
     # Confirm metrics added to import log
     import_log = (
-        local_test_db_session.query(ImportLog)
-        .filter(ImportLog.import_log_id == local_claimant_extract_step.get_import_log_id())
+        test_db_session.query(ImportLog)
+        .filter(ImportLog.import_log_id == claimant_extract_step.get_import_log_id())
         .first()
     )
     import_log_report = json.loads(import_log.report)
     assert import_log_report["valid_claim_count"] == 1
 
 
-def test_run_step_multiple_times(local_claimant_extract_step, local_test_db_session):
+def test_run_step_multiple_times(claimant_extract_step, test_db_session):
     # Test what happens if we run multiple times on the same data
     # After the first run, the step should no-op as the reference file
     # has already been processed.
 
     claimant_data = FineosPaymentData()
-    add_db_records_from_fineos_data(local_test_db_session, claimant_data)
+    add_db_records_from_fineos_data(test_db_session, claimant_data)
 
-    stage_data([claimant_data], local_test_db_session)
+    stage_data([claimant_data], test_db_session)
 
     # First run
-    local_claimant_extract_step.run()
+    claimant_extract_step.run()
 
     # Make sure the processed ID is set.
     reference_files = (
-        local_test_db_session.query(ReferenceFile)
+        test_db_session.query(ReferenceFile)
         .filter(
             ReferenceFile.reference_file_type_id
             == ReferenceFileType.FINEOS_CLAIMANT_EXTRACT.reference_file_type_id
@@ -274,45 +265,42 @@ def test_run_step_multiple_times(local_claimant_extract_step, local_test_db_sess
         .all()
     )
     assert len(reference_files) == 1
-    assert (
-        reference_files[0].processed_import_log_id
-        == local_claimant_extract_step.get_import_log_id()
-    )
+    assert reference_files[0].processed_import_log_id == claimant_extract_step.get_import_log_id()
 
     claim_after_first_run = (
-        local_test_db_session.query(Claim)
+        test_db_session.query(Claim)
         .filter(Claim.fineos_absence_id == claimant_data.absence_case_number)
         .one_or_none()
     )
 
     # Run again a few times
-    local_claimant_extract_step.run()
-    local_claimant_extract_step.run()
-    local_claimant_extract_step.run()
+    claimant_extract_step.run()
+    claimant_extract_step.run()
+    claimant_extract_step.run()
 
     # Verify the claim hasn't been updated again
     claim_after_many_runs = (
-        local_test_db_session.query(Claim)
+        test_db_session.query(Claim)
         .filter(Claim.fineos_absence_id == claimant_data.absence_case_number)
         .one_or_none()
     )
     assert claim_after_first_run.updated_at == claim_after_many_runs.updated_at
 
 
-def test_run_step_existing_approved_eft_info(local_claimant_extract_step, local_test_db_session):
+def test_run_step_existing_approved_eft_info(claimant_extract_step, test_db_session):
     # Very similar to the happy path test, but EFT info has already been
     # previously approved and we do not need to start the prenoting process
 
     claimant_data = FineosPaymentData()
     add_db_records_from_fineos_data(
-        local_test_db_session, claimant_data, prenote_state=PrenoteState.APPROVED
+        test_db_session, claimant_data, prenote_state=PrenoteState.APPROVED
     )
-    stage_data([claimant_data], local_test_db_session)
+    stage_data([claimant_data], test_db_session)
 
-    local_claimant_extract_step.run()
+    claimant_extract_step.run()
 
     updated_employee = (
-        local_test_db_session.query(Employee)
+        test_db_session.query(Employee)
         .filter(Employee.fineos_customer_number == claimant_data.customer_number)
         .one_or_none()
     )
@@ -326,24 +314,24 @@ def test_run_step_existing_approved_eft_info(local_claimant_extract_step, local_
 
     # We should not have added it to the EFT state flow
     # and there shouldn't have been any errors
-    state_logs = local_test_db_session.query(StateLog).all()
+    state_logs = test_db_session.query(StateLog).all()
     assert len(state_logs) == 0
 
 
-def test_run_step_existing_rejected_eft_info(local_claimant_extract_step, local_test_db_session):
+def test_run_step_existing_rejected_eft_info(claimant_extract_step, test_db_session):
     # Very similar to the happy path test, but EFT info has already been
     # previously rejected and thus it goes into an error state instead
 
     claimant_data = FineosPaymentData()
     add_db_records_from_fineos_data(
-        local_test_db_session, claimant_data, prenote_state=PrenoteState.REJECTED
+        test_db_session, claimant_data, prenote_state=PrenoteState.REJECTED
     )
-    stage_data([claimant_data], local_test_db_session)
+    stage_data([claimant_data], test_db_session)
 
-    local_claimant_extract_step.run()
+    claimant_extract_step.run()
 
     updated_employee = (
-        local_test_db_session.query(Employee)
+        test_db_session.query(Employee)
         .filter(Employee.fineos_customer_number == claimant_data.customer_number)
         .one_or_none()
     )
@@ -359,7 +347,7 @@ def test_run_step_existing_rejected_eft_info(local_claimant_extract_step, local_
     eft_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
         associated_class=state_log_util.AssociatedClass.EMPLOYEE,
         end_state=State.DELEGATED_EFT_SEND_PRENOTE,
-        db_session=local_test_db_session,
+        db_session=test_db_session,
     )
     assert len(eft_state_logs) == 0
 
@@ -367,10 +355,10 @@ def test_run_step_existing_rejected_eft_info(local_claimant_extract_step, local_
     claim_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
         associated_class=state_log_util.AssociatedClass.CLAIM,
         end_state=State.DELEGATED_CLAIM_ADD_TO_CLAIM_EXTRACT_ERROR_REPORT,
-        db_session=local_test_db_session,
+        db_session=test_db_session,
     )
     assert len(claim_state_logs) == 1
-    assert claim_state_logs[0].import_log_id == local_claimant_extract_step.get_import_log_id()
+    assert claim_state_logs[0].import_log_id == claimant_extract_step.get_import_log_id()
     assert claim_state_logs[0].claim.employee_id == updated_employee.employee_id
     claim = claim_state_logs[0].claim
     assert len(claim.state_logs) == 1
@@ -382,14 +370,14 @@ def test_run_step_existing_rejected_eft_info(local_claimant_extract_step, local_
     ]
 
 
-def test_run_step_no_employee(local_claimant_extract_step, local_test_db_session):
+def test_run_step_no_employee(claimant_extract_step, test_db_session):
     claimant_data = FineosPaymentData()
-    stage_data([claimant_data], local_test_db_session)
+    stage_data([claimant_data], test_db_session)
 
-    local_claimant_extract_step.run()
+    claimant_extract_step.run()
 
     claim: Optional[Claim] = (
-        local_test_db_session.query(Claim)
+        test_db_session.query(Claim)
         .filter(Claim.fineos_absence_id == claimant_data.absence_case_number)
         .one_or_none()
     )
