@@ -472,8 +472,8 @@ def get_employer_aww(
         benefit_year, employer_id
     )
     # -- Calculate IAWW using the same base period for the benefit year
-    if not employer_average_weekly_wage and base_period[0] is not None:
-        base_period_start_date = base_period[0]
+    base_period_start_date = base_period[0]
+    if not employer_average_weekly_wage and base_period_start_date is not None:
         wage_calculator = wage.get_wage_calculator(
             benefit_year.employee_id, base_period_start_date, db_session
         )
