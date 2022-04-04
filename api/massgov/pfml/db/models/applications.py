@@ -229,6 +229,7 @@ class AdditionalUserNotFoundInfo(Base, TimestampMixin):
     date_of_hire = Column(Date)
     date_of_separation = Column(Date)
     employer_name = Column(Text)
+    # TODO probably should be removed. It's on the application already.
     is_withholding_tax = Column(Boolean)
     recently_acquired_or_merged = Column(Boolean)
 
