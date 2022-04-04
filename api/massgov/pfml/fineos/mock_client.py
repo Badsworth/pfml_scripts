@@ -904,6 +904,12 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         absence_id: str,
         change_request: models.customer_api.LeavePeriodChangeRequest,
     ) -> models.customer_api.LeavePeriodChangeRequest:
+        _capture_call(
+            "create_or_update_leave_period_change_request",
+            fineos_web_id,
+            absence_id=absence_id,
+            additional_information=change_request,
+        )
         return LeavePeriodChangeRequest(
             reason=ChangeRequestReason(fullId=0, name="Employee Requested Removal"),
             changeRequestPeriods=[

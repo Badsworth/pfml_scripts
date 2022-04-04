@@ -19,6 +19,9 @@ from massgov.pfml.api.services.change_requests import (
     upload_document,
 )
 from massgov.pfml.api.services.claims import get_claim_from_db
+from massgov.pfml.api.services.fineos_actions import (
+    submit_change_request as fineos_submit_change_request,
+)
 from massgov.pfml.db.models.employees import ChangeRequest as change_request_db_model
 from massgov.pfml.util.datetime import utcnow
 from massgov.pfml.util.sqlalchemy import get_or_404
@@ -98,16 +101,16 @@ def submit_change_request(change_request_id: str) -> flask.Response:
     with app.db_session() as db_session:
         change_request = get_or_404(db_session, change_request_db_model, UUID(change_request_id))
 
-    if issues := claim_rules.get_change_request_issues(change_request, change_request.claim):
-        return response_util.error_response(
-            status_code=BadRequest,
-            message="Invalid change request",
-            errors=issues,
-            data={},
-        ).to_api_response()
+        if issues := claim_rules.get_change_request_issues(change_request, change_request.claim):
+            return response_util.error_response(
+                status_code=BadRequest,
+                message="Invalid change request",
+                errors=issues,
+                data={},
+            ).to_api_response()
 
-    # TODO: Post change request to FINEOS - https://lwd.atlassian.net/browse/PORTAL-1710
-    change_request.submitted_time = utcnow()
+        fineos_submit_change_request(change_request, change_request.claim, db_session)
+        change_request.submitted_time = utcnow()
 
     response_data = ChangeRequestResponse.from_orm(change_request)
 

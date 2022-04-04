@@ -790,7 +790,17 @@ class TestCreateOrUpdateLeavePeriodChangeRequest:
             additionalNotes="Withdrawal",
         )
 
-    def test_success(self, fineos_client, change_request):
+    @pytest.fixture
+    def change_request_response(self):
+        return {}
+
+    def test_success(self, httpserver, fineos_client, change_request, change_request_response):
+        httpserver.expect_request(
+            "customer/absence/absences/absence_id/leave-period-change-request", method="POST"
+        ).respond_with_data(
+            json.dumps(change_request_response), status=200, content_type="application/json"
+        )
+
         response = fineos_client.create_or_update_leave_period_change_request(
             "web_id", "absence_id", change_request
         )

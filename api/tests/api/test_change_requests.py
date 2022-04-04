@@ -132,8 +132,9 @@ class TestSubmitChangeRequest:
     @mock.patch(
         "massgov.pfml.api.change_requests.claim_rules.get_change_request_issues", return_value=[]
     )
+    @mock.patch("massgov.pfml.api.change_requests.fineos_submit_change_request")
     def test_successful_call(
-        self, mock_get_issues, mock_get_or_404, auth_token, change_request, client
+        self, mock_submit, mock_get_issues, mock_get_or_404, auth_token, change_request, client
     ):
         mock_get_or_404.return_value = change_request
         response = client.post(
@@ -142,11 +143,13 @@ class TestSubmitChangeRequest:
         )
         assert change_request.submitted_time is not None
         assert response.status_code == 200
+        mock_submit.assert_called_once()
 
     @mock.patch("massgov.pfml.api.change_requests.get_or_404")
     @mock.patch("massgov.pfml.api.change_requests.claim_rules.get_change_request_issues")
+    @mock.patch("massgov.pfml.api.change_requests.fineos_submit_change_request")
     def test_validation_issues(
-        self, mock_get_issues, mock_get_or_404, auth_token, change_request, client
+        self, mock_submit, mock_get_issues, mock_get_or_404, auth_token, change_request, client
     ):
         mock_get_or_404.return_value = change_request
         mock_get_issues.return_value = [
@@ -162,6 +165,7 @@ class TestSubmitChangeRequest:
         )
         assert response.status_code == 400
         assert response.get_json()["message"] == "Invalid change request"
+        mock_submit.assert_not_called()
 
     def test_missing_claim(self, auth_token, claim, client):
         response = client.post(
