@@ -1,7 +1,7 @@
-/* eslint-disable no-alert */
-import LeaveSpansBenefitYearsMessage from "src/components/LeaveSpansBenefitYearsMessage";
+import LeaveSpansBenefitYearsInterstitial from "src/features/benefits-application/LeaveSpansBenefitYearsInterstitial";
 import React from "react";
 import applicationSplitBuilder from "lib/mock-helpers/createMockApplicationSplit";
+import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 // We move the current benefit year ahead of today by X number of days to
 // adjust which of the split applications is submittable today.
@@ -12,8 +12,8 @@ const applicationSplits = [
 ];
 
 export default {
-  title: "Components/LeaveSpansBenefitYearsMessage",
-  component: LeaveSpansBenefitYearsMessage,
+  title: "Pages/Applications/LeaveSpansBenefitYears/Interstitial",
+  component: LeaveSpansBenefitYearsInterstitial,
   argTypes: {
     ApplicationSplit: {
       control: {
@@ -30,16 +30,13 @@ export default {
 };
 
 export const Default = (args) => {
-  const applicationSplit = applicationSplits.find(
+  const claim = applicationSplits.find(
     (applicationSplit) => applicationSplit.label === args.ApplicationSplit
   );
 
+  const appLogic = useMockableAppLogic();
+
   return (
-    <LeaveSpansBenefitYearsMessage
-      computed_application_split={applicationSplit.computed_application_split}
-      computed_earliest_submission_date={
-        applicationSplit.computed_earliest_submission_date
-      }
-    />
+    <LeaveSpansBenefitYearsInterstitial appLogic={appLogic} claim={claim} />
   );
 };
