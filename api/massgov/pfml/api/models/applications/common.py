@@ -210,6 +210,7 @@ class Address(PydanticBaseModel):
 
 
 class AdditionalUserNotFoundInfo(PydanticBaseModel):
+    currently_employed: Optional[bool]
     date_of_hire: Optional[date]
     date_of_separation: Optional[date]
     employer_name: Optional[str]

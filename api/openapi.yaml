@@ -2662,6 +2662,9 @@ components:
     AdditionalUserNotFoundInfo:
       type: object
       properties:
+        currently_employed:
+          type: boolean
+          nullable: true
         date_of_hire:
           $ref: '#/components/schemas/Date'
           nullable: true

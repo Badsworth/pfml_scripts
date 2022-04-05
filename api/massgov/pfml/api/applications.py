@@ -844,6 +844,7 @@ def send_tax_selection_to_fineos(existing_application, tax_preference_body):
 
 
 def submit_tax_withholding_preference(application_id: UUID) -> Response:
+    # Don't send to Fineos depending on a new arg.
     body = connexion.request.json
     tax_preference_body = TaxWithholdingPreferenceRequestBody.parse_obj(body)
 

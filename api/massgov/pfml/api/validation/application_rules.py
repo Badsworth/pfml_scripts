@@ -639,6 +639,17 @@ def get_conditional_issues(application: Application) -> List[ValidationErrorDeta
     # can safely enforce these validation rules across all in-progress claims
     require_other_leaves_fields = not application.submitted_time
 
+    if application.additional_user_not_found_info.currently_employed:
+        if not application.additional_user_not_found_info.date_of_separation:
+            issues.append(
+                ValidationErrorDetail(
+                    type=IssueType.required,
+                    rule=IssueRule.conditional,
+                    message="additional_user_not_found_info.date_of_separation is required if additional_user_not_found_info.currently_employed is set",
+                    field="additional_user_not_found_info.date_of_separation",
+                )
+            )
+
     # Fields involved in Part 1 of the progressive application
     if application.has_state_id and not application.mass_id:
         issues.append(
@@ -909,6 +920,7 @@ def get_payments_issues(application: Application) -> List[ValidationErrorDetail]
 # Because the DB schema and the API schema differ
 ALWAYS_REQUIRED_FIELDS_DB_NAME_TO_API_NAME_MAP = {
     "date_of_birth": "date_of_birth",
+    "additional_user_not_found_info.currently_employed": "additional_user_not_found_info.currently_employed",
     "additional_user_not_found_info.date_of_hire": "additional_user_not_found_info.date_of_hire",
     "additional_user_not_found_info.date_of_separation": "additional_user_not_found_info.date_of_separation",
     "additional_user_not_found_info.employer_name": "additional_user_not_found_info.employer_name",

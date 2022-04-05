@@ -226,6 +226,7 @@ class AdditionalUserNotFoundInfo(Base, TimestampMixin):
     application_id = Column(
         PostgreSQLUUID, ForeignKey("application.application_id"), index=True, nullable=False
     )
+    currently_employed = Column(Boolean)
     date_of_hire = Column(Date)
     date_of_separation = Column(Date)
     employer_name = Column(Text)

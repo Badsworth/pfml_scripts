@@ -802,6 +802,7 @@ def set_additional_user_not_found_info(
 
     additional_user_not_found_info = AdditionalUserNotFoundInfo(
         application_id=application.application_id,
+        currently_employed=api_additional_user_not_found_info.currently_employed,
         date_of_hire=api_additional_user_not_found_info.date_of_hire,
         date_of_separation=api_additional_user_not_found_info.date_of_separation,
         employer_name=api_additional_user_not_found_info.employer_name,
