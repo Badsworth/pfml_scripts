@@ -34,7 +34,7 @@ class TestPaginator:
 
         for entity in [Claim, Application, UserLeaveAdministrator]:
             query_set = test_db_session.query(entity)
-            pages = Paginator(query_set=query_set, page_size=10, page_offset=1)
+            pages = Paginator(entity=entity, query_set=query_set, page_size=10, page_offset=1)
 
             expected_page_attributes = [
                 {
@@ -123,5 +123,7 @@ class TestPaginator:
             if clause is not None:
                 query_set = query_set.filter(clause)
 
-            paginator = Paginator(query_set=query_set, page_size=5, page_offset=1)
+            paginator = Paginator(
+                entity=Application, query_set=query_set, page_size=5, page_offset=1
+            )
             assert paginator.total_records == filter_condition["total_count"]

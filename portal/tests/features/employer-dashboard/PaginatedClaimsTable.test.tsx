@@ -94,7 +94,7 @@ describe("PaginatedClaimsTable", () => {
   it("renders a Review call to action when a managed requirement is open", () => {
     setup([
       createMockClaim({
-        absence_periods: [createAbsencePeriod()],
+        absence_periods: [createAbsencePeriod({ request_decision: "Pending" })],
         managed_requirements: [
           createMockManagedRequirement({
             status: "Open",
@@ -142,5 +142,33 @@ describe("PaginatedClaimsTable", () => {
     const cells = screen.getAllByRole("cell");
 
     expect(cells[cells.length - 1]).toHaveTextContent("--");
+  });
+
+  it("doesn't render review button if all absence periods are of terminated status", () => {
+    setup([
+      createMockClaim({
+        absence_periods: [
+          createAbsencePeriod({ request_decision: "Withdrawn" }),
+          createAbsencePeriod({ request_decision: "Approved" }),
+          createAbsencePeriod({ request_decision: "Denied" }),
+        ],
+        managed_requirements: [
+          createMockManagedRequirement({
+            status: "Open",
+            follow_up_date: MOCK_CURRENT_ISO_DATE,
+          }),
+          createMockManagedRequirement({
+            status: "Complete",
+            follow_up_date: "2020-01-01",
+          }),
+        ],
+      }),
+    ]);
+
+    const cells = screen.getAllByRole("cell");
+
+    const reviewDueDateCell = cells[cells.length - 1];
+    expect(reviewDueDateCell).not.toHaveTextContent(/Review application/);
+    expect(reviewDueDateCell).toHaveTextContent("5/1/2021");
   });
 });

@@ -5,7 +5,6 @@ from typing import Any, Callable, List, Optional, Set, Type, Union, no_type_chec
 from uuid import UUID
 
 from sqlalchemy import Column, and_, asc, desc, func, or_
-from sqlalchemy.orm import contains_eager
 from sqlalchemy.sql.elements import UnaryExpression
 from sqlalchemy.sql.selectable import Alias
 
@@ -177,11 +176,23 @@ class GetClaimsQuery:
     def add_is_reviewable_filter(self, is_reviewable: str) -> None:
         """
         Filters claims by checking if they are reviewable or not.
+
+        A claim is reviewable if it has an associated open requirement (soonest_open_requirement_date isn't None)
+        AND the claim has at least one reviewable (non-final) absence period request decision
         """
         if is_reviewable == "yes":
-            self.query = self.query.filter(Claim.soonest_open_requirement_date.isnot(None))
+            self.query = self.query.filter(
+                Claim.soonest_open_requirement_date.isnot(None),
+                Claim.absence_periods.any(~AbsencePeriod.has_final_decision),
+            )
+
         if is_reviewable == "no":
-            self.query = self.query.filter(Claim.soonest_open_requirement_date.is_(None))
+            self.query = self.query.filter(
+                or_(
+                    Claim.soonest_open_requirement_date.is_(None),
+                    ~Claim.absence_periods.any(~AbsencePeriod.has_final_decision),
+                )
+            )
 
     def add_request_decision_filter(self, request_decisions: Set[int]) -> None:
         filter = Claim.absence_periods.any(  # type: ignore
@@ -263,11 +274,12 @@ class GetClaimsQuery:
         ]
         # use outer join to return claims without managed_requirements (one to many)
         self.join(ManagedRequirement, isouter=True, join_filter=and_(*filters))
-        self.query = self.query.options(contains_eager("managed_requirements"))
 
     def add_order_by(self, context: PaginationAPIContext, is_reviewable: Optional[str]) -> None:
         is_asc = context.order_direction == OrderDirection.asc.value
         sort_fn = asc_null_first if is_asc else desc_null_last
+
+        self.query = self.query.distinct()
 
         if context.order_key is Claim.employee:
             self.add_order_by_employee(sort_fn)

@@ -54,3 +54,14 @@ export class AbsencePeriod {
     });
   }
 }
+
+/**
+ * Statuses (request_decision) values that represent a terminal status for an absence period (aka it is done!)
+ */
+export const finalDecisions: AbsencePeriodRequestDecisionEnum[] = [
+  AbsencePeriodRequestDecision.withdrawn,
+  AbsencePeriodRequestDecision.approved,
+  AbsencePeriodRequestDecision.denied,
+  AbsencePeriodRequestDecision.cancelled,
+  AbsencePeriodRequestDecision.voided,
+];

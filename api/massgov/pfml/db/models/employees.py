@@ -312,7 +312,7 @@ class AbsencePeriod(Base, TimestampMixin):
     absence_reason_qualifier_two = relationship(LkAbsenceReasonQualifierTwo)
     leave_request_decision = relationship(LkLeaveRequestDecision)
 
-    @property
+    @typed_hybrid_property
     def has_final_decision(self):
         return self.leave_request_decision_id not in [
             LeaveRequestDecision.PENDING.leave_request_decision_id,
@@ -320,6 +320,17 @@ class AbsencePeriod(Base, TimestampMixin):
             LeaveRequestDecision.PROJECTED.leave_request_decision_id,
             None,
         ]
+
+    @has_final_decision.expression
+    def has_final_decision(cls):  # noqa: B902
+        return ~cls.leave_request_decision_id.in_(  # type: ignore[union-attr]
+            [
+                LeaveRequestDecision.PENDING.leave_request_decision_id,
+                LeaveRequestDecision.IN_REVIEW.leave_request_decision_id,
+                LeaveRequestDecision.PROJECTED.leave_request_decision_id,
+                None,
+            ]
+        )
 
 
 class AuthorizedRepresentative(Base, TimestampMixin):
@@ -892,7 +903,7 @@ class Claim(Base, TimestampMixin):
         return (
             select([func.min(aliasManagedRequirement.follow_up_date)])
             .where(filters)
-            .label("follow_up_date")
+            .label("soonest_open_requirement_date")
         )
 
     @typed_hybrid_property
@@ -942,7 +953,7 @@ class Claim(Base, TimestampMixin):
         return (
             select([func.max(aliasManagedRequirement.follow_up_date)])
             .where(filters)
-            .label("follow_up_date")
+            .label("latest_follow_up_date")
         )
 
     @typed_hybrid_property
