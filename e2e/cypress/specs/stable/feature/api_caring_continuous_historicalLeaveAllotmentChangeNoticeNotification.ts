@@ -26,7 +26,7 @@ describeIf(
             });
             fineosPages.ClaimPage.visit(
               response.fineos_absence_id
-            ).addHistoricalAbsenceCase();
+            ).addHistoricalAbsenceCase(config("HAS_APRIL_UPGRADE") === "true");
             const claimPage = fineosPages.ClaimPage.visit(
               response.fineos_absence_id
             ).adjudicate((adjudication) => {

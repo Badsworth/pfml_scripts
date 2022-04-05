@@ -656,6 +656,8 @@ class Employee(Base, TimestampMixin):
     ctr_address_pair_id = Column(
         PostgreSQLUUID, ForeignKey("link_ctr_address_pair.fineos_address_id"), index=True
     )
+    mass_id_number = Column(Text)
+    out_of_state_id_number = Column(Text)
 
     fineos_employee_first_name = Column(Text, index=True)
     fineos_employee_middle_name = Column(Text, index=True)
@@ -705,7 +707,7 @@ class Employee(Base, TimestampMixin):
     )
 
     @property
-    def mass_id_number(self) -> Optional[str]:
+    def latest_mass_id_number_from_id_proofed_applications(self) -> Optional[str]:
         # This is imported here to prevent circular import error
         from massgov.pfml.db.models.applications import Application
 
@@ -890,7 +892,7 @@ class Claim(Base, TimestampMixin):
         return (
             select([func.min(aliasManagedRequirement.follow_up_date)])
             .where(filters)
-            .label("follow_up_date")
+            .label("soonest_open_requirement_date")
         )
 
     @typed_hybrid_property
@@ -940,7 +942,7 @@ class Claim(Base, TimestampMixin):
         return (
             select([func.max(aliasManagedRequirement.follow_up_date)])
             .where(filters)
-            .label("follow_up_date")
+            .label("latest_follow_up_date")
         )
 
     @typed_hybrid_property

@@ -56,6 +56,7 @@ from massgov.pfml.util.collections.dict import filter_dict, make_keys_lowercase
 from massgov.pfml.util.compare import compare_attributes
 from massgov.pfml.util.converters.str_to_numeric import str_to_int
 from massgov.pfml.util.datetime import date_to_isoformat, get_now_us_eastern
+from massgov.pfml.util.pydantic.types import MassIdStr
 from massgov.pfml.util.routing_number_validation import validate_routing_number
 
 logger = logging.get_logger(__package__)
@@ -261,6 +262,8 @@ class FineosExtractConstants:
             "FIRSTNAMES",
             "INITIALS",
             "LASTNAME",
+            "EXTMASSID",
+            "EXTOUTOFSTATEID",
         ],
     )
     VBI_1099DATA_SOM = FineosExtract(
@@ -715,6 +718,14 @@ def amount_validator(amount_str: str) -> Optional[ValidationReason]:
     try:
         Decimal(amount_str)
     except (InvalidOperation, TypeError):  # Amount is not numeric
+        return ValidationReason.INVALID_VALUE
+    return None
+
+
+def mass_id_validator(value: str) -> Optional[ValidationReason]:
+    try:
+        MassIdStr.validate_type(value)
+    except (TypeError, ValueError):
         return ValidationReason.INVALID_VALUE
     return None
 

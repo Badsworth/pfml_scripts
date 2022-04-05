@@ -894,4 +894,65 @@ describe("Payments", () => {
       ).not.toBeInTheDocument();
     });
   });
+
+  describe("Post FINEOS deploy checkback date updates", () => {
+    beforeEach(() => {
+      process.env.featureFlags = JSON.stringify({
+        claimantShowPaymentsPhaseThree: false,
+        claimantUseFineosNewPaymentSchedule: true,
+      });
+    });
+    const postDeployStartDate = "2022-05-17";
+    const approvalDate = {
+      "approved mid week after claim start date": dayjs(postDeployStartDate)
+        .add(1, "day")
+        .weekday(2)
+        .format("YYYY-MM-DD"),
+      "approved before claim start date": dayjs(postDeployStartDate)
+        .add(-7, "day")
+        .format("YYYY-MM-DD"),
+      "approved on claim start date":
+        dayjs(postDeployStartDate).format("YYYY-MM-DD"),
+    };
+    const approvalDateScenarios = Object.keys(approvalDate) as Array<
+      keyof typeof approvalDate
+    >;
+
+    it.each(approvalDateScenarios)(
+      "returns monday checkback date %s ",
+      (state) => {
+        renderPage(
+          Payments,
+          {
+            addCustomSetup: setupHelper({
+              absence_periods: [
+                defaultAbsencePeriod,
+                createAbsencePeriod({
+                  period_type: "Reduced Schedule",
+                  absence_period_start_date: dayjs(postDeployStartDate)
+                    .add(2, "weeks")
+                    .format("YYYY-MM-DD"),
+                  absence_period_end_date: dayjs(postDeployStartDate)
+                    .add(2, "weeks")
+                    .add(4, "months")
+                    .format("YYYY-MM-DD"),
+                  reason: "Child Bonding",
+                }),
+              ],
+              approvalDate: approvalDate[state],
+              includeApprovalNotice: true,
+            }),
+          },
+          props
+        );
+
+        const date = screen.getByText("will be scheduled on", { exact: false });
+        const dayOfWeekCheckbackDate = dayjs(
+          date.textContent?.match(/(?<=on )[^.]+/)?.[0]
+        );
+        expect(dayOfWeekCheckbackDate.day()).toBe(1);
+        expect(screen.getByTestId("your-payments-intro")).toMatchSnapshot();
+      }
+    );
+  });
 });

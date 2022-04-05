@@ -5,7 +5,6 @@ from typing import Any, Callable, List, Optional, Set, Type, Union, no_type_chec
 from uuid import UUID
 
 from sqlalchemy import Column, and_, asc, desc, func, or_
-from sqlalchemy.orm import contains_eager
 from sqlalchemy.sql.elements import UnaryExpression
 from sqlalchemy.sql.selectable import Alias
 
@@ -263,11 +262,12 @@ class GetClaimsQuery:
         ]
         # use outer join to return claims without managed_requirements (one to many)
         self.join(ManagedRequirement, isouter=True, join_filter=and_(*filters))
-        self.query = self.query.options(contains_eager("managed_requirements"))
 
     def add_order_by(self, context: PaginationAPIContext, is_reviewable: Optional[str]) -> None:
         is_asc = context.order_direction == OrderDirection.asc.value
         sort_fn = asc_null_first if is_asc else desc_null_last
+
+        self.query = self.query.distinct()
 
         if context.order_key is Claim.employee:
             self.add_order_by_employee(sort_fn)
