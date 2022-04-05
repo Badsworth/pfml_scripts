@@ -229,4 +229,4 @@ class ChangeRequestResponse(PydanticBaseModel):
             start_date=change_request.start_date,
             end_date=change_request.end_date,
             submitted_time=change_request.submitted_time,
-        )          
+        )

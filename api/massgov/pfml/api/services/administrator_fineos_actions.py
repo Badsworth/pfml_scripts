@@ -1,7 +1,6 @@
 import mimetypes
 import uuid
 from datetime import date
-from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional, Tuple
 

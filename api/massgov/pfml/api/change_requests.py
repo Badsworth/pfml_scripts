@@ -9,7 +9,7 @@ import massgov.pfml.api.util.response as response_util
 import massgov.pfml.api.validation.claim_rules as claim_rules
 import massgov.pfml.util.logging
 from massgov.pfml.api.models.applications.requests import DocumentRequestBody
-from massgov.pfml.api.models.claims.common import ChangeRequest, ChangeRequestType
+from massgov.pfml.api.models.claims.common import ChangeRequest
 from massgov.pfml.api.models.claims.requests import ChangeRequestUpdate
 from massgov.pfml.api.models.claims.responses import ChangeRequestResponse
 from massgov.pfml.api.services.change_requests import (

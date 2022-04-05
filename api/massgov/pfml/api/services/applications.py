@@ -19,7 +19,6 @@ import massgov.pfml.util.newrelic.events as newrelic_util
 import massgov.pfml.util.pydantic.mask as mask
 from massgov.pfml.api.models.applications.common import Address as ApiAddress
 from massgov.pfml.api.models.applications.common import (
-    BankAccountType,
     DocumentResponse,
     LeaveReason,
 )
@@ -108,7 +107,7 @@ from massgov.pfml.util.logging.applications import (
     get_absence_period_log_attributes,
     get_application_log_attributes,
 )
-from massgov.pfml.util.pydantic.types import FinancialRoutingNumber, Regexes
+from massgov.pfml.util.pydantic.types import Regexes
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
