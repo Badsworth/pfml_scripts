@@ -814,6 +814,7 @@ const shared: {
   claimsEmploymentInfoTitle: "Employment information",
   claimsLeaveDetailsTitle: "Leave details",
   claimsLeaveDurationTitle: "Leave duration",
+  claimsModifyTitle: "Change your application",
   claimsOtherLeaveTitle: "Other leave, benefits, and income",
   claimsPreviousLeaveDetails: {
     addButton: "Add another previous leave",
@@ -1193,6 +1194,8 @@ const pages: {
     completed_uneditable: "Confirmed",
     documentsLoadError: "$t(shared.documentsLoadError)",
     edit: "Edit",
+    leaveDetailsBenefitYears:
+      "Your leave dates extend into a new benefit year. Your current <benefit-year-guide-link>benefit year</benefit-year-guide-link> is {{startDate}} to {{endDate}}. After you submit Part 1 of your application, we'll automatically split this application into two, one for each benefit year.",
     // TODO (CP-2354) Remove CC guidance for claims with Part 1 submitted without reductions data
     otherLeaveSubmittedDetailsBody:
       "<ul><li>You have already taken leave to care for a family member since July 1, 2021</li><li>You have already taken leave since {{otherLeaveStartDate}} <when-can-i-use-pfml>for any other reason that qualifies for PFML</when-can-i-use-pfml></li><li>You plan to use any accrued paid leave or any other benefits from your employer during your paid leave from PFML (for example: your employer’s parental leave program or paid sick time)</li><li>You expect to get income from any other sources during your leave (for example: disability insurance, retirement benefits, or another job)</li></ul>",
@@ -1597,6 +1600,31 @@ const pages: {
     serviceMemberFamilyLeaveLabel:
       "I need to care for a family member who serves in the armed forces.",
     title: "$t(shared.claimsLeaveDetailsTitle)",
+  },
+  claimsModifyCancel: {
+    sectionLabel: "Are you sure you want to cancel your leave?",
+    title: "$t(shared.claimsModifyTitle)",
+  },
+  claimsModifyChecklist: {
+    backButtonLabel: "$t(shared.backToYourApplicationsLink)",
+    title: "Welcome back to your in-progress change request",
+  },
+  claimsModifyGetReady: {
+    backButtonLabel: "$t(shared.backToYourApplicationsLink)",
+    button: "Continue",
+    title: "Request a change to your application",
+  },
+  claimsModifyReview: {
+    sectionLabel: "Review and submit your requested change",
+    title: "$t(shared.claimsModifyTitle)",
+  },
+  claimsModifySuccess: {
+    backButtonLabel: "$t(shared.backToYourApplicationsLink)",
+    title: "You've submitted your change request",
+  },
+  claimsModifyType: {
+    sectionLabel: "How do you want to change your application?",
+    title: "$t(shared.claimsModifyTitle)",
   },
   claimsName: {
     firstNameLabel: "First name",
@@ -2730,24 +2758,50 @@ const pages: {
     infoAlertHeading_bonding: "$t(shared.infoAlertHeading_bonding)",
     infoAlertHeading_pregnancy: "$t(shared.infoAlertHeading_pregnancy)",
     loadingClaimDetailLabel: "$t(shared.loadingClaimDetailLabel)",
+    paymentsIntro_Continuous_ApprovalPreStartDate:
+      "<p>Your first payment will be scheduled on <strong>{{checkbackDate}} </strong>. Payments are scheduled to be paid after each week of your leave on Mondays, or on Tuesday if Monday is a holiday.</p>",
+    paymentsIntro_Continuous_ApprovalPreStartDate_PostMondayPaymentSchedule:
+      "<p>Your first payment will be scheduled on <strong>{{checkbackDate}}</strong>.</p><p>Payments are scheduled to be paid after each week of your leave on Mondays, or on Tuesday if Monday is a holiday.</p>",
     paymentsIntro_Continuous_PostFourteenthClaimDate:
       "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, expect to be paid weekly.</p>",
+    paymentsIntro_Continuous_PostFourteenthClaimDate_PostMondayPaymentSchedule:
+      "<p>Your first payment will be scheduled on <strong>{{checkbackDate}}</strong>. This payment will include multiple weeks of your leave.</p> <p>Payments are scheduled to be paid after each week of your leave on Mondays, or on Tuesday if Monday is a holiday.</p>",
+    paymentsIntro_Continuous_PostFourteenthClaimDate_PreMondayPaymentSchedule:
+      "Your first payment will be scheduled on <strong>{{checkbackDate}}</strong> to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, expect to be paid weekly.</p>",
     paymentsIntro_Continuous_PreFourteenthClaimDate:
       "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.</p>",
+    paymentsIntro_Continuous_PreFourteenthClaimDate_PreMondayPaymentSchedule:
+      "<p>Your first payment will be scheduled on <strong>{{checkbackDate}}</strong> to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.</p>",
     paymentsIntro_Continuous_Retroactive:
       "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. You’ll receive one payment for your entire leave.</p>",
     paymentsIntro_Intermittent:
       "Once you report at least 8 hours, you can expect to receive a payment about one week later. You can receive more than one payment in a week depending on how your hours are reported. You can report your hours by calling <contact-center-report-phone-link>$t(shared.contactCenterReportHoursPhoneNumber)</contact-center-report-phone-link>.",
+    paymentsIntro_Intermittent_PostMondayPaymentSchedule:
+      "Once you report at least 8 hours, you can expect to receive a payment the following Monday, or on Tuesday if Monday is a holiday. You can receive more than one payment in a week depending on how your hours are reported. You can report your hours by calling  <contact-center-report-phone-link>$t(shared.contactCenterReportHoursPhoneNumber)</contact-center-report-phone-link>.",
     paymentsIntro_Intermittent_Unpaid:
       "<p>Your application has an unpaid 7-day waiting period that begins the first day you report taking leave.</p><p>You need to complete your unpaid 7-day waiting period waiting period and report at least 8 hours of leave before you will receive a payment from the Department. You may receive more than one payment per week depending on how your hours are reported.</p><p>Call the Hours Reporting line at <contact-center-report-phone-link>$t(shared.contactCenterReportHoursPhoneNumber)</contact-center-report-phone-link> each week to report the intermittent leave hours you used.</p>",
     paymentsIntro_NonIntermittent_NonRetro:
       "Payments are scheduled to be paid after each week of your leave. Check back weekly to see when your next payment will be scheduled.",
+    paymentsIntro_NonIntermittent_NonRetro_PostMondayPaymentSchedule:
+      "Payments are scheduled to be paid after each week of your leave on Mondays, or on Tuesday if Monday is a holiday.",
     paymentsIntro_NonIntermittent_Retro:
       "Since you were approved after your leave ended, you’ll receive one payment for your entire leave.",
+    paymentsIntro_NonIntermittent_Retro_PreMondayPaymentSchedule:
+      "Since your application was approved after your leave ended, you’ll receive one payment for your entire leave.",
+    paymentsIntro_ReducedSchedule_ApprovalPreStartDate:
+      "<p>Your first payment will be scheduled on <strong>{{checkbackDate}}</strong>.  You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.</p><p>Payments are scheduled to be paid after each week of your leave on Mondays, or on Tuesday if Monday is a holiday.</p>",
+    paymentsIntro_ReducedSchedule_ApprovalPreStartDate_PostMondayPaymentSchedule:
+      "<p>Your first payment will be scheduled on <strong>{{checkbackDate}}</strong>.  You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.</p><p>Payments are scheduled to be paid after each week of your leave on Mondays, or on Tuesday if Monday is a holiday.</p>",
     paymentsIntro_ReducedSchedule_PostFourteenthClaimDate:
       "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.</p>",
+    paymentsIntro_ReducedSchedule_PostFourteenthClaimDate_PostMondayPaymentSchedule:
+      "<p>Your first payment will be scheduled on <strong>{{checkbackDate}}</strong>. This payment will include multiple weeks of your leave. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.</p><p>Payments are scheduled to be paid after each week of your leave on Mondays, or on Tuesday if Monday is a holiday.</p>",
+    paymentsIntro_ReducedSchedule_PostFourteenthClaimDate_PreMondayPaymentSchedule:
+      "<p>Your first payment will be scheduled on <strong>{{checkbackDate}}</strong> to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.</p>",
     paymentsIntro_ReducedSchedule_PreFourteenthClaimDate:
       "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.</p>",
+    paymentsIntro_ReducedSchedule_PreFourteenthClaimDate_PreMondayPaymentSchedule:
+      "<p>Your first payment will be scheduled on <strong>{{checkbackDate}}</strong> to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.</p>",
     paymentsIntro_ReducedSchedule_Retroactive:
       "$t(pages.payments.paymentsIntro_Continuous_Retroactive)",
     paymentsTitle: "Payments",
@@ -3258,6 +3312,8 @@ const components: {
   leaveDatesAlert: {
     heading: "Your leave dates for paid leave from PFML",
     leaveDatesHeading: "Your 7-day waiting period dates",
+    splitApplicationDates:
+      "<ul><li><strong>Current benefit year:</strong> {{currDateRange}}</li><li><strong>New benefit year:</strong> {{newDateRange}}</li></ul>",
   },
   maintenanceAlertBar: {
     message_withEndTime:

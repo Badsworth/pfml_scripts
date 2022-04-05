@@ -38,9 +38,8 @@ class ExampleErrorStep(Step):
     ],
 )
 def test_check_if_processed_within_x_days(
-    local_initialize_factories_session,
-    local_test_db_session,
-    local_test_db_other_session,
+    initialize_factories_session,
+    test_db_session,
     business_days,
     date_ran,
     found_log,
@@ -48,14 +47,14 @@ def test_check_if_processed_within_x_days(
     metric_to_increment = "metric_a"
 
     with freeze_time(date_ran):
-        step = ExampleStep(local_test_db_session, local_test_db_other_session)
+        step = ExampleStep(test_db_session, test_db_session)
         step.metric_to_increment = "metric_a"
         step.run()
 
     # Now is always the 28th
     with freeze_time("2021-12-28"):
         was_processed_within_x_days = ExampleStep.check_if_processed_within_x_days(
-            local_test_db_session, metric_to_increment, business_days
+            test_db_session, metric_to_increment, business_days
         )
         assert found_log == was_processed_within_x_days
 
@@ -63,45 +62,40 @@ def test_check_if_processed_within_x_days(
 def test_add_to_report_queue__run_failed(
     initialize_factories_session,
     test_db_session: db.Session,
-    test_db_other_session: db.Session,
 ):
     # Should not add import log report queue item when run_step fails
 
     example_step = ExampleErrorStep(
-        test_db_session, test_db_other_session, should_add_to_report_queue=True
+        test_db_session, test_db_session, should_add_to_report_queue=True
     )
 
     with pytest.raises(Exception):
         example_step.run()
 
-    assert test_db_other_session.query(ImportLogReportQueue).count() == 0
+    assert test_db_session.query(ImportLogReportQueue).count() == 0
 
 
 def test_add_to_report_queue__flag_not_set(
     initialize_factories_session,
     test_db_session: db.Session,
-    test_db_other_session: db.Session,
 ):
-    example_step = ExampleStep(test_db_session, test_db_other_session)
+    example_step = ExampleStep(test_db_session, test_db_session)
 
     example_step.run()
 
-    assert test_db_other_session.query(ImportLogReportQueue).count() == 0
+    assert test_db_session.query(ImportLogReportQueue).count() == 0
 
 
 def test_add_to_report_queue__flag_set(
     initialize_factories_session,
     test_db_session: db.Session,
-    test_db_other_session: db.Session,
 ):
 
-    example_step = ExampleStep(
-        test_db_session, test_db_other_session, should_add_to_report_queue=True
-    )
+    example_step = ExampleStep(test_db_session, test_db_session, should_add_to_report_queue=True)
 
     example_step.run()
 
-    report_queue_items = test_db_other_session.query(ImportLogReportQueue).all()
+    report_queue_items = test_db_session.query(ImportLogReportQueue).all()
 
     assert len(report_queue_items) == 1
     assert report_queue_items[0].import_log_id == example_step.get_import_log_id()

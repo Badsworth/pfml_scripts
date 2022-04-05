@@ -1,10 +1,13 @@
+import { Trans, useTranslation } from "react-i18next";
 import Alert from "./core/Alert";
+import ApplicationSplit from "src/models/ApplicationSplit";
 import React from "react";
 import dayjs from "dayjs";
 import formatDateRange from "../utils/formatDateRange";
-import { useTranslation } from "react-i18next";
+import { isFeatureEnabled } from "src/services/featureFlags";
 
 interface LeaveDatesAlertProps {
+  applicationSplit?: ApplicationSplit | null;
   endDate: string | null;
   headingLevel?: "2" | "3";
   startDate: string | null;
@@ -36,7 +39,32 @@ function LeaveDatesAlert(props: LeaveDatesAlertProps) {
         noIcon
         state="info"
       >
-        {formatDateRange(props.startDate, props.endDate)}
+        {isFeatureEnabled("splitClaimsAcrossBY") && props.applicationSplit ? (
+          <Trans
+            i18nKey="components.leaveDatesAlert.splitApplicationDates"
+            components={{
+              b: <b />,
+              ul: <ul className="usa-list" />,
+              li: <li />,
+            }}
+            values={{
+              currDateRange: formatDateRange(
+                props.applicationSplit.application_dates_in_benefit_year
+                  .start_date,
+                props.applicationSplit.application_dates_in_benefit_year
+                  .end_date
+              ),
+              newDateRange: formatDateRange(
+                props.applicationSplit.application_dates_outside_benefit_year
+                  .start_date,
+                props.applicationSplit.application_dates_outside_benefit_year
+                  .end_date
+              ),
+            }}
+          />
+        ) : (
+          formatDateRange(props.startDate, props.endDate)
+        )}
       </Alert>
       {props.showWaitingDayPeriod && (
         <Alert
@@ -48,12 +76,47 @@ function LeaveDatesAlert(props: LeaveDatesAlertProps) {
           noIcon
           state="info"
         >
-          {formatDateRange(
-            props.startDate,
-            // Start date is day 1, so it's subtracted from waiting period days
-            `${dayjs(props.startDate)
-              .add(waitingPeriodDays - 1, "day")
-              .format("YYYY-MM-DD")}`
+          {isFeatureEnabled("splitClaimsAcrossBY") && props.applicationSplit ? (
+            <Trans
+              i18nKey="components.leaveDatesAlert.splitApplicationDates"
+              components={{
+                b: <b />,
+                ul: <ul className="usa-list" />,
+                li: <li />,
+              }}
+              values={{
+                currDateRange: formatDateRange(
+                  props.applicationSplit.application_dates_in_benefit_year
+                    .start_date,
+                  // Start date is day 1, so it's subtracted from waiting period days
+                  `${dayjs(
+                    props.applicationSplit.application_dates_in_benefit_year
+                      .start_date
+                  )
+                    .add(waitingPeriodDays - 1, "day")
+                    .format("YYYY-MM-DD")}`
+                ),
+                newDateRange: formatDateRange(
+                  props.applicationSplit.application_dates_outside_benefit_year
+                    .start_date,
+                  // Start date is day 1, so it's subtracted from waiting period days
+                  `${dayjs(
+                    props.applicationSplit
+                      .application_dates_outside_benefit_year.start_date
+                  )
+                    .add(waitingPeriodDays - 1, "day")
+                    .format("YYYY-MM-DD")}`
+                ),
+              }}
+            />
+          ) : (
+            formatDateRange(
+              props.startDate,
+              // Start date is day 1, so it's subtracted from waiting period days
+              `${dayjs(props.startDate)
+                .add(waitingPeriodDays - 1, "day")
+                .format("YYYY-MM-DD")}`
+            )
           )}
         </Alert>
       )}

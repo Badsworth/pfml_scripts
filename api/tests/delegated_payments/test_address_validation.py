@@ -128,38 +128,36 @@ def _assert_payment_state_log_outcome(
         )
 
 
-def test_run_step_state_transitions_soap(
-    local_initialize_factories_session, local_test_db_session, local_test_db_other_session
-):
+def test_run_step_state_transitions_soap(initialize_factories_session, test_db_session):
     mock_caller = MockVerificationZeepCaller()
 
     check_payments_with_validated_addresses = _setup_soap_payments(
-        mock_caller, local_test_db_session, fake.random_int(min=2, max=4)
+        mock_caller, test_db_session, fake.random_int(min=2, max=4)
     )
     check_payments_with_verified_addresses = _setup_soap_payments(
-        mock_caller, local_test_db_session, fake.random_int(min=2, max=4), sm.VerifyLevel.VERIFIED
+        mock_caller, test_db_session, fake.random_int(min=2, max=4), sm.VerifyLevel.VERIFIED
     )
     check_payments_with_interaction_required_addresses = _setup_soap_payments(
         mock_caller,
-        local_test_db_session,
+        test_db_session,
         fake.random_int(min=2, max=4),
         sm.VerifyLevel.INTERACTION_REQUIRED,
     )
     check_payments_with_no_matching_addresses = _setup_soap_payments(
         mock_caller,
-        local_test_db_session,
+        test_db_session,
         fake.random_int(min=2, max=4),
         sm.VerifyLevel.STREET_PARTIAL,
     )
     no_match_eft_payments = _setup_soap_payments(
         mock_caller,
-        local_test_db_session,
+        test_db_session,
         fake.random_int(min=2, max=4),
         sm.VerifyLevel.NONE,
         PaymentMethod.ACH,
     )
     # Commit the various experian_address_pair.experian_address = None changes to the database.
-    local_test_db_session.commit()
+    test_db_session.commit()
 
     client = soap_api.Client(mock_caller)
 
@@ -168,7 +166,7 @@ def test_run_step_state_transitions_soap(
         return_value=client,
     ):
         AddressValidationStep(
-            db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
+            db_session=test_db_session, log_entry_db_session=test_db_session
         ).run()
 
     for payment in check_payments_with_validated_addresses:
@@ -184,7 +182,7 @@ def test_run_step_state_transitions_soap(
     # Expect payments with already valid addresses to transition into the
     # DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING state.
     _assert_payment_state(
-        local_test_db_other_session,
+        test_db_session,
         State.PAYMENT_READY_FOR_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION,
         check_payments_with_validated_addresses,
     )
@@ -192,7 +190,7 @@ def test_run_step_state_transitions_soap(
     # Expect payments with verified matching addresses according to Experian to transition into the
     # DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING state.
     _assert_payment_state(
-        local_test_db_other_session,
+        test_db_session,
         State.PAYMENT_READY_FOR_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION,
         check_payments_with_verified_addresses,
     )
@@ -200,59 +198,57 @@ def test_run_step_state_transitions_soap(
     # Payments without a verified response according to Experian transition into the
     # PAYMENT_FAILED_ADDRESS_VALIDATION state and DELEGATED_ADD_TO_FINEOS_WRITEBACK state.
     _assert_payment_state(
-        local_test_db_other_session,
+        test_db_session,
         State.PAYMENT_FAILED_ADDRESS_VALIDATION,
         check_payments_with_interaction_required_addresses,
     )
     _assert_payment_state(
-        local_test_db_other_session,
+        test_db_session,
         State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
         check_payments_with_interaction_required_addresses,
     )
     _assert_fineos_writeback_details(
-        local_test_db_other_session, check_payments_with_interaction_required_addresses
+        test_db_session, check_payments_with_interaction_required_addresses
     )
 
     _assert_payment_state(
-        local_test_db_other_session,
+        test_db_session,
         State.PAYMENT_FAILED_ADDRESS_VALIDATION,
         check_payments_with_no_matching_addresses,
     )
     _assert_payment_state(
-        local_test_db_other_session,
+        test_db_session,
         State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
         check_payments_with_no_matching_addresses,
     )
-    _assert_fineos_writeback_details(
-        local_test_db_other_session, check_payments_with_no_matching_addresses
-    )
+    _assert_fineos_writeback_details(test_db_session, check_payments_with_no_matching_addresses)
 
     # EFT payments with validation issues will still transition to
     # DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
     _assert_payment_state(
-        local_test_db_other_session,
+        test_db_session,
         State.PAYMENT_READY_FOR_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION,
         no_match_eft_payments,
     )
 
 
 def test_run_step_state_transitions_malformed_address(
-    local_initialize_factories_session, local_test_db_session, local_test_db_other_session
+    initialize_factories_session, test_db_session
 ):
     # Testing that if the address is missing pieces, it'll still move to the appropriate
     # state and that Experian will not be called at all.
     mock_caller = MockVerificationZeepCaller()
 
-    check_payment = _random_valid_payment_with_state_log(local_test_db_session, PaymentMethod.CHECK)
+    check_payment = _random_valid_payment_with_state_log(test_db_session, PaymentMethod.CHECK)
     check_payment.experian_address_pair.experian_address = None
     check_payment.experian_address_pair.fineos_address.address_line_one = ""
 
-    eft_payment = _random_valid_payment_with_state_log(local_test_db_session, PaymentMethod.ACH)
+    eft_payment = _random_valid_payment_with_state_log(test_db_session, PaymentMethod.ACH)
     eft_payment.experian_address_pair.experian_address = None
     eft_payment.experian_address_pair.fineos_address.address_line_one = None
 
     # Commit the various experian_address_pair.experian_address = None changes to the database.
-    local_test_db_session.commit()
+    test_db_session.commit()
 
     client = soap_api.Client(mock_caller)
 
@@ -261,20 +257,18 @@ def test_run_step_state_transitions_malformed_address(
         return_value=client,
     ):
         AddressValidationStep(
-            db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
+            db_session=test_db_session, log_entry_db_session=test_db_session
         ).run()
 
     # mock_caller.DoSearch was never called
     assert mock_caller.call_count == 0
 
     # Check payment would have gone to the error state
-    _assert_payment_state(
-        local_test_db_other_session, State.PAYMENT_FAILED_ADDRESS_VALIDATION, [check_payment]
-    )
+    _assert_payment_state(test_db_session, State.PAYMENT_FAILED_ADDRESS_VALIDATION, [check_payment])
 
     # EFT payment would have gone to the success state despite the issue
     _assert_payment_state(
-        local_test_db_other_session,
+        test_db_session,
         State.PAYMENT_READY_FOR_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION,
         [eft_payment],
     )
@@ -283,6 +277,13 @@ def test_run_step_state_transitions_malformed_address(
 def test_run_step_no_database_changes_on_exception_soap(
     local_initialize_factories_session, local_test_db_session, local_test_db_other_session
 ):
+    # *********************************************
+    #
+    # LOCAL sessions required due to rollback test
+    # - Requires two separate sessions and only
+    #   the local sessions let you reference values
+    #   created in another import log
+    # *********************************************
     mock_caller = MockVerificationZeepCaller()
 
     _setup_soap_payments(mock_caller, local_test_db_session, fake.random_int(min=2, max=4))
@@ -326,30 +327,28 @@ def test_run_step_no_database_changes_on_exception_soap(
         State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id,
     ]
     assert (
-        local_test_db_other_session.query(sqlalchemy.func.count(StateLog.state_log_id))
+        local_test_db_session.query(sqlalchemy.func.count(StateLog.state_log_id))
         .filter(StateLog.end_state_id.in_(post_address_validation_states))
         .scalar()
         == 0
     )
 
 
-def test_run_step_experian_soap_exception(
-    local_initialize_factories_session, local_test_db_session, local_test_db_other_session
-):
+def test_run_step_experian_soap_exception(initialize_factories_session, test_db_session):
     mock_caller = MockVerificationZeepCaller()
 
     valid_check_payments = _setup_soap_payments(
-        mock_caller, local_test_db_session, fake.random_int(min=2, max=4), sm.VerifyLevel.VERIFIED
+        mock_caller, test_db_session, fake.random_int(min=2, max=4), sm.VerifyLevel.VERIFIED
     )
     no_match_eft_payments = _setup_soap_payments(
         mock_caller,
-        local_test_db_session,
+        test_db_session,
         fake.random_int(min=2, max=4),
         sm.VerifyLevel.NONE,
         PaymentMethod.ACH,
     )
 
-    local_test_db_session.commit()
+    test_db_session.commit()
 
     client = soap_api.Client(mock_caller)
 
@@ -361,65 +360,63 @@ def test_run_step_experian_soap_exception(
         return_value=client,
     ):
         AddressValidationStep(
-            db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
+            db_session=test_db_session, log_entry_db_session=test_db_session
         ).run()
 
     # Despite having valid addresses, these payments failed because Experian threw an exception
     _assert_payment_state_log_outcome(
-        local_test_db_other_session,
+        test_db_session,
         valid_check_payments,
         State.PAYMENT_FAILED_ADDRESS_VALIDATION,
         Constants.UNKNOWN,
     )
     _assert_payment_state_log_outcome(
-        local_test_db_other_session,
+        test_db_session,
         valid_check_payments,
         State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
         Constants.UNKNOWN,
     )
-    _assert_fineos_writeback_details(local_test_db_other_session, valid_check_payments)
+    _assert_fineos_writeback_details(test_db_session, valid_check_payments)
 
     # EFT payments will always pass even if Experian throws an exception
     _assert_payment_state_log_outcome(
-        local_test_db_other_session,
+        test_db_session,
         no_match_eft_payments,
         State.PAYMENT_READY_FOR_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION,
         Constants.UNKNOWN,
     )
 
 
-def test_run_step_state_log_outcome_field_soap(
-    local_initialize_factories_session, local_test_db_session, local_test_db_other_session
-):
+def test_run_step_state_log_outcome_field_soap(initialize_factories_session, test_db_session):
     mock_caller = MockVerificationZeepCaller()
 
     check_payments_with_validated_addresses = _setup_soap_payments(
-        mock_caller, local_test_db_session, fake.random_int(min=2, max=4)
+        mock_caller, test_db_session, fake.random_int(min=2, max=4)
     )
     check_payments_with_verified_addresses = _setup_soap_payments(
-        mock_caller, local_test_db_session, fake.random_int(min=2, max=4), sm.VerifyLevel.VERIFIED
+        mock_caller, test_db_session, fake.random_int(min=2, max=4), sm.VerifyLevel.VERIFIED
     )
     check_payments_with_interaction_required_addresses = _setup_soap_payments(
         mock_caller,
-        local_test_db_session,
+        test_db_session,
         fake.random_int(min=2, max=4),
         sm.VerifyLevel.INTERACTION_REQUIRED,
     )
     check_payments_with_no_matching_addresses = _setup_soap_payments(
         mock_caller,
-        local_test_db_session,
+        test_db_session,
         fake.random_int(min=2, max=4),
         sm.VerifyLevel.STREET_PARTIAL,
     )
     no_match_eft_payments = _setup_soap_payments(
         mock_caller,
-        local_test_db_session,
+        test_db_session,
         fake.random_int(min=2, max=4),
         sm.VerifyLevel.NONE,
         PaymentMethod.ACH,
     )
     # Commit the various experian_address_pair.experian_address = None changes to the database.
-    local_test_db_session.commit()
+    test_db_session.commit()
 
     client = soap_api.Client(mock_caller)
     with mock.patch(
@@ -427,13 +424,13 @@ def test_run_step_state_log_outcome_field_soap(
         return_value=client,
     ):
         AddressValidationStep(
-            db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
+            db_session=test_db_session, log_entry_db_session=test_db_session
         ).run()
 
     # Expect payments with already valid addresses to not have any an experian_result element
     # of the state_log.outcome field.
     _assert_payment_state_log_outcome(
-        local_test_db_other_session,
+        test_db_session,
         check_payments_with_validated_addresses,
         State.PAYMENT_READY_FOR_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION,
         Constants.PREVIOUSLY_VERIFIED,
@@ -442,7 +439,7 @@ def test_run_step_state_log_outcome_field_soap(
     # Expect payments with addresses that return a verified match to have a
     # state_log.outcome.experian_result element with the correct confidence level.
     _assert_payment_state_log_outcome(
-        local_test_db_other_session,
+        test_db_session,
         check_payments_with_verified_addresses,
         State.PAYMENT_READY_FOR_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION,
         sm.VerifyLevel.VERIFIED.value,
@@ -451,7 +448,7 @@ def test_run_step_state_log_outcome_field_soap(
 
     # Expect payments with interaction required to have a potential result
     _assert_payment_state_log_outcome(
-        local_test_db_other_session,
+        test_db_session,
         check_payments_with_interaction_required_addresses,
         State.PAYMENT_FAILED_ADDRESS_VALIDATION,
         sm.VerifyLevel.INTERACTION_REQUIRED.value,
@@ -460,7 +457,7 @@ def test_run_step_state_log_outcome_field_soap(
 
     # Payments without a matching address won't have any suggestions
     _assert_payment_state_log_outcome(
-        local_test_db_other_session,
+        test_db_session,
         check_payments_with_no_matching_addresses,
         State.PAYMENT_FAILED_ADDRESS_VALIDATION,
         sm.VerifyLevel.STREET_PARTIAL.value,
@@ -468,7 +465,7 @@ def test_run_step_state_log_outcome_field_soap(
 
     # EFT payments always pass
     _assert_payment_state_log_outcome(
-        local_test_db_other_session,
+        test_db_session,
         no_match_eft_payments,
         State.PAYMENT_READY_FOR_MAX_WEEKLY_BENEFIT_AMOUNT_VALIDATION,
         sm.VerifyLevel.NONE.value,

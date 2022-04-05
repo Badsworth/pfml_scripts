@@ -166,9 +166,7 @@ def application_imports():
     assert application_import_request.absence_case_id is not None
 
     with app.db_session() as db_session:
-        error = applications_service.claim_is_valid_for_application_import(db_session, user, claim)
-        if error is not None:
-            return error.to_api_response()
+        applications_service.claim_is_valid_for_application_import(db_session, user, claim)
 
         db_session.add(application)
         fineos = massgov.pfml.fineos.create_client()
