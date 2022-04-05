@@ -1021,6 +1021,24 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
   }
 
   /**
+   * @param {string} [id]
+   * @returns {MockBenefitsApplicationBuilder}
+   */
+  splitIntoApplicationId(id) {
+    set(this.claimAttrs, "split_into_application_id", id);
+    return this;
+  }
+
+  /**
+   * @param {string} [id]
+   * @returns {MockBenefitsApplicationBuilder}
+   */
+  splitFromApplicationId(id) {
+    set(this.claimAttrs, "split_from_application_id", id);
+    return this;
+  }
+
+  /**
    * @returns {BenefitsApplication}
    */
   create() {

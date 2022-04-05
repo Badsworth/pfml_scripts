@@ -1013,18 +1013,30 @@ const pages: {
   },
   applications: {
     addApplication: "$t(shared.addApplication)",
+    applicationOneSuccess:
+      "You successfully submitted Part 1. Submit Parts 2 and 3 so that we can review your application.",
+    applicationTwoSubmitLater:
+      "You will be able to submit Part 1 of your new benefit year application on <strong>{{submitDate}}</strong>. This is 60 days before the start of your leave in the new benefit year. Applications cannot be submitted earlier than 60 days before the start of leave.",
+    bothApplicationsWereSubmitted:
+      "You successfully submitted Part 1. Your application was split into two, one for each benefit year. Submit Parts 2 and 3 so that we can review your applications.",
     can_submit_application_across_benefit_year:
       "If you submit an application with leave dates that are in both your current and a new benefit year, we'll review the request as two separate applications. $t(pages.applications.claimsApprovalProcess)",
     claimsApprovalProcess:
       "Learn more about the <approval-process-link>application review and approval process</approval-process-link>.",
     createApplicationHeading: "Create a new application",
+    currentBenefitYearLeave:
+      "<strong>Current benefit year:</strong> leave dates from {{startDate}} to {{endDate}}",
     getReadyLink: "Start a new application",
+    nextBenefitYearLeave:
+      "<strong>New benefit year:</strong> leave dates from {{startDate}} to {{endDate}}",
     startByPhoneDescription: "$t(shared.startByPhoneDescription)",
     startByPhoneLabel: "$t(shared.startByPhoneLabel)",
     title: "Your applications",
     uploadSuccessHeading: "You successfully submitted your documents",
     uploadSuccessMessage:
       "Our Contact Center staff will review your documents for {{absence_id}}.",
+    yourApplicationWasSplit:
+      "Your application was split into two, one for each benefit year.",
     your_benefit_year:
       "Your current <benefit-year-guide-link>benefit year</benefit-year-guide-link> is {{startDate}} to {{endDate}}. Most Massachusetts employees are eligible for up to 26 weeks of combined family and medical leave per benefit year.",
   },

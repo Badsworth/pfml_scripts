@@ -2,7 +2,7 @@
 
 exports[`Applications displays success alert when user sets up SMS MFA 1`] = `
 <div
-  aria-labelledby="alert-heading4"
+  aria-labelledby="alert-heading7"
   class="usa-alert usa-alert--success margin-bottom-3"
   role="region"
   tabindex="-1"
@@ -12,7 +12,7 @@ exports[`Applications displays success alert when user sets up SMS MFA 1`] = `
   >
     <h2
       class="usa-alert__heading font-heading-md text-bold"
-      id="alert-heading4"
+      id="alert-heading7"
     >
       Phone number confirmed
     </h2>
