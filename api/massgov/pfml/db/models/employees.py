@@ -892,7 +892,7 @@ class Claim(Base, TimestampMixin):
         return (
             select([func.min(aliasManagedRequirement.follow_up_date)])
             .where(filters)
-            .label("follow_up_date")
+            .label("soonest_open_requirement_date")
         )
 
     @typed_hybrid_property
@@ -942,7 +942,7 @@ class Claim(Base, TimestampMixin):
         return (
             select([func.max(aliasManagedRequirement.follow_up_date)])
             .where(filters)
-            .label("follow_up_date")
+            .label("latest_follow_up_date")
         )
 
     @typed_hybrid_property
