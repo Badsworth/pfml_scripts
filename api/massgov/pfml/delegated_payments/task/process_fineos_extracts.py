@@ -18,6 +18,7 @@ from massgov.pfml.delegated_payments.delegated_fineos_related_payment_processing
 )
 from massgov.pfml.delegated_payments.fineos_extract_step import (
     CLAIMANT_EXTRACT_CONFIG,
+    OVERPAYMENT_EXTRACT_CONFIG,
     PAYMENT_EXTRACT_CONFIG,
     REQUEST_1099_EXTRACT_CONFIG,
     VBI_TASKREPORT_SOM_EXTRACT_CONFIG,
@@ -43,6 +44,7 @@ ALL = "ALL"
 RUN_AUDIT_CLEANUP = "audit-cleanup"
 CONSUME_FINEOS_CLAIMANT = "consume-fineos-claimant"
 CONSUME_FINEOS_PAYMENT = "consume-fineos-payment"
+CONSUME_FINEOS_OVERPAYMENT = "consume-fineos-overpayment"
 VBI_TASKREPORT_EXTRACT = "vbi-taskreport-extract"
 CLAIMANT_EXTRACT = "claimant-extract"
 PAYMENT_EXTRACT = "payment-extract"
@@ -81,6 +83,7 @@ class Configuration:
     do_audit_cleanup: bool
     consume_fineos_claimant: bool
     consume_fineos_payment: bool
+    consume_fineos_overpayment: bool
     do_vbi_taskreport_extract: bool
     do_claimant_extract: bool
     do_payment_extract: bool
@@ -113,6 +116,7 @@ class Configuration:
             self.do_audit_cleanup = True
             self.consume_fineos_claimant = True
             self.consume_fineos_payment = True
+            self.consume_fineos_overpayment = True
             self.do_vbi_taskreport_extract = True
             self.do_claimant_extract = True
             self.do_payment_extract = True
@@ -130,6 +134,7 @@ class Configuration:
             self.do_audit_cleanup = RUN_AUDIT_CLEANUP in steps
             self.consume_fineos_claimant = CONSUME_FINEOS_CLAIMANT in steps
             self.consume_fineos_payment = CONSUME_FINEOS_PAYMENT in steps
+            self.consume_fineos_overpayment = CONSUME_FINEOS_OVERPAYMENT in steps
             self.do_vbi_taskreport_extract = VBI_TASKREPORT_EXTRACT in steps
             self.do_claimant_extract = CLAIMANT_EXTRACT in steps
             self.do_payment_extract = PAYMENT_EXTRACT in steps
@@ -181,6 +186,13 @@ def _process_fineos_extracts(
             db_session=db_session,
             log_entry_db_session=log_entry_db_session,
             extract_config=PAYMENT_EXTRACT_CONFIG,
+        ).run()
+
+    if config.consume_fineos_overpayment:
+        FineosExtractStep(
+            db_session=db_session,
+            log_entry_db_session=log_entry_db_session,
+            extract_config=OVERPAYMENT_EXTRACT_CONFIG,
         ).run()
 
     if config.do_vbi_taskreport_extract:

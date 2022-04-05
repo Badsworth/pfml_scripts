@@ -2115,6 +2115,8 @@ class ReferenceFileType(LookupTable):
 
     MANUAL_PUB_REJECT_FILE = LkReferenceFileType(42, "Manual PUB Reject File", 1)
 
+    FINEOS_OVERPAYMENT_EXTRACT = LkReferenceFileType(43, "Overpayment extract", 6)
+
 
 class Title(LookupTable):
     model = LkTitle

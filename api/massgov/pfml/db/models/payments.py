@@ -1623,6 +1623,184 @@ class OverpaymentRepayment(Base, TimestampMixin):
     )
 
 
+class FineosExtractVbiOverpaymentsActualRecoverySom(Base, TimestampMixin):
+    __tablename__ = "fineos_extract_vbi_overpayments_actual_recovery_som"
+
+    vbi_overpayments_actual_recovery_som_id = Column(
+        PostgreSQLUUID, primary_key=True, default=uuid_gen
+    )
+
+    claimcasenumber = Column(Text)
+    bencasenumber = Column(Text)
+    opcasenumner = Column(Text)
+    status = Column(Text)
+    statusreason = Column(Text)
+    dateadded = Column(Text)
+    dateofrecovery = Column(Text)
+    amountofrecovery = Column(Text)
+    checkname = Column(Text, nullable=True)
+    checknumber = Column(Text, nullable=True)
+    recoverymethod = Column(Text)
+    overpaymentc = Column(Text)
+    overpaymenti = Column(Text)
+    overpaymentcasec = Column(Text)
+    overpaymentcasei = Column(Text)
+    c_occase_thecase = Column(Text)
+    i_occase_thecase = Column(Text)
+
+    reference_file_id = Column(
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
+    )
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+    reference_file = relationship(ReferenceFile)
+
+
+class FineosExtractVbiOverpaymentsAdjustmentsSom(Base, TimestampMixin):
+    __tablename__ = "fineos_extract_vbi_overpayments_adjustments_som"
+
+    vbi_overpayments_adjustments_som_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
+    claimcasenumber = Column(Text)
+    bencasenumber = Column(Text)
+    opcasenumner = Column(Text)
+    adjustmentname = Column(Text)
+    adjustmentamount = Column(Text)
+    agreementdate = Column(Text)
+    description = Column(Text, nullable=True)
+    receiptpaymentstatus = Column(Text)
+    tocalculate = Column(Text)
+    overpaymentcasec = Column(Text)
+    overpaymentcasei = Column(Text)
+
+    reference_file_id = Column(
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
+    )
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+    reference_file = relationship(ReferenceFile)
+
+
+class FineosExtractVbiOverpaymentsRecoveryPlanSom(Base, TimestampMixin):
+    __tablename__ = "fineos_extract_vbi_overpayments_recovery_plan_som"
+
+    vbi_overpayments_recovery_plan_som_id = Column(
+        PostgreSQLUUID, primary_key=True, default=uuid_gen
+    )
+
+    claimcasenumber = Column(Text)
+    bencasenumber = Column(Text)
+    opcasenumner = Column(Text)
+    agreementdate = Column(Text)
+    type = Column(Text)
+    amounttosubmit = Column(Text)
+    paymentfreque = Column(Text)
+    amtperfreq = Column(Text, nullable=True)
+    submitbydate = Column(Text, nullable=True)
+    startdate = Column(Text, nullable=True)
+    stopdate = Column(Text, nullable=True)
+    enddate = Column(Text, nullable=True)
+    overpaymentc = Column(Text)
+    overpaymenti = Column(Text)
+    overpaymentcasec = Column(Text)
+    overpaymentcasei = Column(Text)
+    c_occase_thecase = Column(Text)
+    i_occase_thecase = Column(Text)
+    osuser_i = Column(Text)
+    osuser = Column(Text)
+
+    reference_file_id = Column(
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
+    )
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+    reference_file = relationship(ReferenceFile)
+
+
+class FineosExtractVbiOverpaymentAssociatedDuesSom(Base, TimestampMixin):
+    __tablename__ = "fineos_extract_vbi_overpayment_associated_dues_som"
+
+    vbi_overpayments_associated_dues_som_id = Column(
+        PostgreSQLUUID, primary_key=True, default=uuid_gen
+    )
+
+    claimcasenumber = Column(Text)
+    bencasenumber = Column(Text)
+    opcasenumner = Column(Text)
+    period_startdate = Column(Text)
+    period_enddate = Column(Text)
+    name = Column(Text)
+    amount_monamt = Column(Text)
+    tocalculate = Column(Text)
+
+    reference_file_id = Column(
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
+    )
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+    reference_file = relationship(ReferenceFile)
+
+
+class FineosExtractVbiOverpaymentSom(Base, TimestampMixin):
+    __tablename__ = "fineos_extract_vbi_overpayment_som"
+
+    vbi_overpayment_som_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
+    overpaymentcase_classid = Column(Text)
+    overpaymentcase_indexid = Column(Text)
+    notification_number = Column(Text)
+    absence_casenumber = Column(Text)
+    absence_paidleave_casenumber = Column(Text)
+    absence_paidleave_benefit = Column(Text)
+    overpayment_casenumber = Column(Text)
+    customerno = Column(Text)
+    creationdate = Column(Text)
+    net_benefit_overpayment_amount = Column(Text)
+    overpayment_adjustment_amount = Column(Text)
+    agreed_recovery_amount = Column(Text)
+    recovered_to_date_amount = Column(Text)
+    outstanding_amount = Column(Text)
+
+    reference_file_id = Column(
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
+    )
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+    reference_file = relationship(ReferenceFile)
+
+
+class FineosExtractVbiOverpaymentCase(Base, TimestampMixin):
+    __tablename__ = "fineos_extract_vbi_overpayment_case"
+
+    vbi_overpayment_case_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
+    classid = Column(Text)
+    indexid = Column(Text)
+    lastupdatedate = Column(Text)
+    c_pymnteif_paymenteventi = Column(Text, nullable=True)
+    i_pymnteif_paymenteventi = Column(Text, nullable=True)
+    casenumber = Column(Text)
+
+    reference_file_id = Column(
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
+    )
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+    reference_file = relationship(ReferenceFile)
+
+
 #### Writeback Status Mapping Configuration
 # This config helps us map the following:
 # AuditReportType -> Reject Notes -> Writeback transaction status

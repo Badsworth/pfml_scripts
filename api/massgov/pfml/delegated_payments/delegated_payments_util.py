@@ -40,6 +40,12 @@ from massgov.pfml.db.models.payments import (
     FineosExtractReplacedPayments,
     FineosExtractVbi1099DataSom,
     FineosExtractVbiLeavePlanRequestedAbsence,
+    FineosExtractVbiOverpaymentAssociatedDuesSom,
+    FineosExtractVbiOverpaymentCase,
+    FineosExtractVbiOverpaymentsActualRecoverySom,
+    FineosExtractVbiOverpaymentsAdjustmentsSom,
+    FineosExtractVbiOverpaymentSom,
+    FineosExtractVbiOverpaymentsRecoveryPlanSom,
     FineosExtractVbiRequestedAbsence,
     FineosExtractVbiRequestedAbsenceSom,
     FineosExtractVbiTaskReportSom,
@@ -75,6 +81,12 @@ ExtractTable = Union[
     Type[FineosExtractVPaidLeaveInstruction],
     Type[FineosExtractVbi1099DataSom],
     Type[FineosExtractVbiTaskReportSom],
+    Type[FineosExtractVbiOverpaymentsActualRecoverySom],
+    Type[FineosExtractVbiOverpaymentsAdjustmentsSom],
+    Type[FineosExtractVbiOverpaymentsRecoveryPlanSom],
+    Type[FineosExtractVbiOverpaymentAssociatedDuesSom],
+    Type[FineosExtractVbiOverpaymentSom],
+    Type[FineosExtractVbiOverpaymentCase],
 ]
 
 
@@ -507,6 +519,124 @@ class FineosExtractConstants:
         },
     )
 
+    VBI_OVERPAYMENTSACTUALRECOVERY_SOM = FineosExtract(
+        file_name="VBI_OVERPAYMENTSACTUALRECOVERY_SOM.csv",
+        table=FineosExtractVbiOverpaymentsActualRecoverySom,
+        field_names=[
+            "CLAIMCASENUMBER",
+            "BENCASENUMBER",
+            "OPCASENUMNER",
+            "STATUS",
+            "STATUSREASON",
+            "DATEADDED",
+            "DATEOFRECOVERY",
+            "AMOUNTOFRECOVERY",
+            "CHECKNAME",
+            "CHECKNUMBER",
+            "RECOVERYMETHOD",
+            "OVERPAYMENTC",
+            "OVERPAYMENTI",
+            "OVERPAYMENTCASEC",
+            "OVERPAYMENTCASEI",
+            "C_OCCASE_THECASE",
+            "I_OCCASE_THECASE",
+        ],
+    )
+
+    VBI_OVERPAYMENTSADJUSTMENTS_SOM = FineosExtract(
+        file_name="VBI_OVERPAYMENTSADJUSTMENTS_SOM.csv",
+        table=FineosExtractVbiOverpaymentsAdjustmentsSom,
+        field_names=[
+            "CLAIMCASENUMBER",
+            "BENCASENUMBER",
+            "OPCASENUMNER",
+            "ADJUSTMENTNAME",
+            "ADJUSTMENTAMOUNT",
+            "AGREEMENTDATE",
+            "DESCRIPTION",
+            "RECEIPTPAYMENTSTATUS",
+            "TOCALCULATE",
+            "OVERPAYMENTCASEC",
+            "OVERPAYMENTCASEI",
+        ],
+    )
+
+    VBI_OVERPAYMENTSRECOVERYPLAN_SOM = FineosExtract(
+        file_name="VBI_OVERPAYMENTSRECOVERYPLAN_SOM.csv",
+        table=FineosExtractVbiOverpaymentsRecoveryPlanSom,
+        field_names=[
+            "CLAIMCASENUMBER",
+            "BENCASENUMBER",
+            "OPCASENUMNER",
+            "AGREEMENTDATE",
+            "TYPE",
+            "AMOUNTTOSUBMIT",
+            "PAYMENTFREQUE",
+            "AMTPERFREQ",
+            "SUBMITBYDATE",
+            "STARTDATE",
+            "STOPDATE",
+            "ENDDATE",
+            "OVERPAYMENTC",
+            "OVERPAYMENTI",
+            "OVERPAYMENTCASEC",
+            "OVERPAYMENTCASEI",
+            "C_OCCASE_THECASE",
+            "I_OCCASE_THECASE",
+            "OSUSER_I",
+            "OSUSER",
+        ],
+    )
+
+    VBI_OVERPAYMENT_ASSOCIATEDDUES_SOM = FineosExtract(
+        file_name="VBI_OVERPAYMENT_ASSOCIATEDDUES_SOM.csv",
+        table=FineosExtractVbiOverpaymentAssociatedDuesSom,
+        field_names=[
+            "CLAIMCASENUMBER",
+            "BENCASENUMBER",
+            "OPCASENUMNER",
+            "PERIOD_STARTDATE",
+            "PERIOD_ENDDATE",
+            "NAME",
+            "AMOUNT_MONAMT",
+            "TO_CALCULATE",
+        ],
+    )
+
+    VBI_OVERPAYMENT_SOM = FineosExtract(
+        file_name="VBI_OVERPAYMENT_SOM.csv",
+        table=FineosExtractVbiOverpaymentSom,
+        field_names=[
+            "OVERPAYMENTCASE_CLASSID",
+            "OVERPAYMENTCASE_INDEXID",
+            "NOTIFICATION_NUMBER",
+            "ABSENCE_CASENUMBER",
+            "ABSENCE_PAIDLEAVE_CASENUMBER",
+            "ABSENCE_PAIDLEAVE_BENEFIT",
+            "OVERPAYMENT_CASENUMBER",
+            "CUSTOMERNO",
+            "CREATIONDATE",
+            "NET_BENEFIT_OVERPAYMENT_AMOUNT",
+            "OVERPAYMENT_ADJUSTMENT_AMOUNT",
+            "AGREED_RECOVERY_AMOUNT",
+            "RECOVERED_TO_DATE_AMOUNT",
+            "OUTSTANDING_AMOUNT",
+        ],
+    )
+
+    VBI_OVERPAYMENTCASE = FineosExtract(
+        file_name="VBI_OVERPAYMENTCASE.csv",
+        table=FineosExtractVbiOverpaymentCase,
+        field_names=[
+            "CLASSID",
+            "INDEXID",
+            "LASTUPDATEDATE",
+            "C_PYMNTEIF_PAYMENTEVENTI",
+            "I_PYMNTEIF_PAYMENTEVENTI",
+            "CASENUMBER",
+        ],
+    )
+
 
 CLAIMANT_EXTRACT_FILES = [
     FineosExtractConstants.VBI_REQUESTED_ABSENCE_SOM,
@@ -548,6 +678,15 @@ REQUEST_1099_EXTRACT_FILES_NAMES = [
 VBI_TASKREPORT_SOM_EXTRACT_FILES = [FineosExtractConstants.VBI_TASKREPORT_SOM]
 VBI_TASKREPORT_SOM_EXTRACT_FILE_NAMES = [
     extract_file.file_name for extract_file in VBI_TASKREPORT_SOM_EXTRACT_FILES
+]
+
+OVERPAYMENTS_EXTRACT_FILES = [
+    FineosExtractConstants.VBI_OVERPAYMENTSACTUALRECOVERY_SOM,
+    FineosExtractConstants.VBI_OVERPAYMENT_ASSOCIATEDDUES_SOM,
+    FineosExtractConstants.VBI_OVERPAYMENT_SOM,
+    FineosExtractConstants.VBI_OVERPAYMENTCASE,
+    FineosExtractConstants.VBI_OVERPAYMENTSADJUSTMENTS_SOM,
+    FineosExtractConstants.VBI_OVERPAYMENTSRECOVERYPLAN_SOM,
 ]
 
 
@@ -858,7 +997,11 @@ def get_fineos_max_history_date(export_type: LkReferenceFileType) -> datetime:
         == ReferenceFileType.FINEOS_VBI_TASKREPORT_SOM_EXTRACT.reference_file_type_id
     ):
         datestring = date_config.fineos_vbi_taskreport_som_extract_max_history_date
-
+    elif (
+        export_type.reference_file_type_id
+        == ReferenceFileType.FINEOS_OVERPAYMENT_EXTRACT.reference_file_type_id
+    ):
+        datestring = date_config.fineos_payment_extract_max_history_date
     else:
         raise ValueError(f"Incorrect export_type {export_type} provided")
 

@@ -62,6 +62,12 @@ VBI_TASKREPORT_SOM_EXTRACT_CONFIG = ExtractConfig(
     "fineos_data_export_path",
 )
 
+OVERPAYMENT_EXTRACT_CONFIG = ExtractConfig(
+    payments_util.OVERPAYMENTS_EXTRACT_FILES,
+    ReferenceFileType.FINEOS_OVERPAYMENT_EXTRACT,
+    "fineos_data_export_path",
+)
+
 
 class ExtractData:
     s3_locations: List[str]
@@ -242,7 +248,6 @@ class FineosExtractStep(Step):
 
     def _move_files_from_fineos_to_received(self) -> Dict[str, List[str]]:
         expected_file_names = [extract.file_name for extract in self.extract_config.extracts]
-
         payments_util.copy_fineos_data_to_archival_bucket(
             self.db_session,
             expected_file_names,
