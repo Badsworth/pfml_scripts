@@ -30,6 +30,14 @@ export const TaxWithholding = (props: WithBenefitsApplicationProps) => {
   const handleSave = async () => {
     const data = {
       is_withholding_tax: withholdTax,
+      skip_fineos: appLogic.benefitsApplications.warningsLists[
+        claim.application_id
+      ].some(
+        (warning) =>
+          warning.type === "require_contributing_employer" ||
+          warning.rule === "require_non_exempt_employer" ||
+          warning.rule === "require_employee"
+      ),
     };
     await appLogic.benefitsApplications.submitTaxWithholdingPreference(
       claim.application_id,
