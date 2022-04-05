@@ -1,11 +1,10 @@
 provider "aws" {}
 
 terraform {
-
   backend "s3" {
-    bucket         = "${BUCKET_NAME}"
-    key            = "terraform/infra_tooling.tfstate"
-    region         = "${AWS_REGION}"
+    bucket         = "massgov-pfml-aws-account-mgmt"
+    key            = "terraform/infra-tooling.tfstate"
+    region         = "us-east-1"
     dynamodb_table = "terraform_locks"
     encrypt        = "true"
   }
