@@ -27,13 +27,18 @@ describe("Report of intermittent leave hours notification", () => {
   const approval =
     it("Given a fully approved claim and leave hours correctly recorded by CSR rep", () => {
       cy.dependsOnPreviousPass([submit]);
+      fineos.before();
       cy.unstash<DehydratedClaim>("claim").then((claim) => {
         cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
-          fineos.before();
-          const claimPage = fineosPages.ClaimPage.visit(fineos_absence_id);
-          // This check safeguards us against failure cases where we try to approve an already approved claim.
-          fineos.getClaimStatus().then((status) => {
-            if (status === "Approved") return;
+          cy.tryCount().then((tryCount) => {
+            const claimPage = fineosPages.ClaimPage.visit(fineos_absence_id);
+            // This check safeguards us against failure cases where we try to approve an already approved claim.
+            if (tryCount > 0) {
+              fineos.assertClaimStatus("Approved");
+              claimPage.triggerNotice("Designation Notice");
+              waitForAjaxComplete();
+              return;
+            }
             claimPage.shouldHaveStatus("Eligibility", "Met");
             claimPage.adjudicate((adjudication) => {
               adjudication

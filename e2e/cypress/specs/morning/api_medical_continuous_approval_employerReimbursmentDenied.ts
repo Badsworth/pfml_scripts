@@ -31,50 +31,55 @@ import { config } from "../../actions/common";
       it("CSR starts the Employer Reimbursement Process and adds documents and approves claim", () => {
         cy.dependsOnPreviousPass([submit]);
         fineos.before();
-        cy.unstash<DehydratedClaim>("claim").then((claim) => {
-          cy.unstash<Submission>("submission").then((sumbmission) => {
-            const claimPage = fineosPages.ClaimPage.visit(
-              sumbmission.fineos_absence_id
-            );
-
-            claimPage.addActivity("Employer Reimbursement Process");
-            claimPage.tasks((task) => {
-              task.assertTaskExists("Employer Reimbursement");
-            });
-            claimPage.leaveDetails((leaveDetails) => {
-              leaveDetails
-                .editLeave()
-                .paidBenefits((paidBenefits) => {
-                  paidBenefits.assertAutoPayStatus(false);
-                })
-                .exitWithoutSaving();
-            });
-
-            claimPage.addCorrespondenceDocument(
-              "Employer Reimbursement Formstack"
-            );
-            claimPage.addCorrespondenceDocument(
-              "Employer Reimbursement Policy"
-            );
-
-            // Approve Claim.
-            fineos.onTab("Absence Hub");
-            claimPage.adjudicate((adjudication) => {
-              adjudication.evidence((evidence) => {
-                // Receive and approve all documents for the claim.
-                claim.documents.forEach((document) => {
-                  evidence.receive(document.document_type);
-                });
-              });
-              adjudication.certificationPeriods((certificationPeriods) =>
-                certificationPeriods.prefill()
+        cy.tryCount().then((tryCount) => {
+          cy.unstash<DehydratedClaim>("claim").then((claim) => {
+            cy.unstash<Submission>("submission").then((sumbmission) => {
+              const claimPage = fineosPages.ClaimPage.visit(
+                sumbmission.fineos_absence_id
               );
-              adjudication.acceptLeavePlan();
+              if (tryCount > 0) {
+                fineos.assertClaimStatus("Approved");
+                return;
+              }
+              claimPage.addActivity("Employer Reimbursement Process");
+              claimPage.tasks((task) => {
+                task.assertTaskExists("Employer Reimbursement");
+              });
+              claimPage.leaveDetails((leaveDetails) => {
+                leaveDetails
+                  .editLeave()
+                  .paidBenefits((paidBenefits) => {
+                    paidBenefits.assertAutoPayStatus(false);
+                  })
+                  .exitWithoutSaving();
+              });
+
+              claimPage.addCorrespondenceDocument(
+                "Employer Reimbursement Formstack"
+              );
+              claimPage.addCorrespondenceDocument(
+                "Employer Reimbursement Policy"
+              );
+
+              // Approve Claim.
+              fineos.onTab("Absence Hub");
+              claimPage.adjudicate((adjudication) => {
+                adjudication.evidence((evidence) => {
+                  // Receive and approve all documents for the claim.
+                  claim.documents.forEach((document) => {
+                    evidence.receive(document.document_type);
+                  });
+                });
+                adjudication.certificationPeriods((certificationPeriods) =>
+                  certificationPeriods.prefill()
+                );
+                adjudication.acceptLeavePlan();
+              });
+              claimPage.approve(
+                "Approved",
+                config("HAS_APRIL_UPGRADE") === "true"
+              );
             });
-            claimPage.approve(
-              "Approved",
-              config("HAS_APRIL_UPGRADE") === "true"
-            );
           });
         });
       });
