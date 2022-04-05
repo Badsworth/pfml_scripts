@@ -24,7 +24,7 @@ describe("Filters", () => {
 
     // Collapsed by default
     expect(
-      screen.queryByRole("group", { name: /status/i })
+      screen.queryByRole("button", { name: "Hide filters" })
     ).not.toBeInTheDocument();
 
     // Show the filters
@@ -32,14 +32,11 @@ describe("Filters", () => {
 
     expect(toggleButton).toHaveAccessibleName("Hide filters");
     expect(
-      screen.queryByRole("group", { name: /status/i })
+      screen.getByRole("button", { name: "Hide filters" })
     ).toBeInTheDocument();
   });
 
   it("displays number of active filters in Show Filters button and filters menu", () => {
-    process.env.featureFlags = JSON.stringify({
-      employerShowMultiLeaveDashboard: true,
-    });
     const verifiedEmployers = [
       createMockUserLeaveAdministrator({
         employer_dba: "Acme Co",
@@ -127,10 +124,6 @@ describe("Filters", () => {
   });
 
   it("renders leave details and is_reviewable filters", () => {
-    process.env.featureFlags = JSON.stringify({
-      employerShowMultiLeaveDashboard: true,
-    });
-
     setup();
     userEvent.click(screen.getByRole("button", { name: /show filters/i }));
 
