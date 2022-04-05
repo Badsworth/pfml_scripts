@@ -14,6 +14,7 @@ import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 
 export const fields = [
+  "claim.additional_user_not_found_info.currently_employed",
   "claim.additional_user_not_found_info.date_of_separation",
 ];
 
@@ -24,20 +25,15 @@ export const DateOfSeparation = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
-  const defaultFormState = pick(props, fields).claim
-    ?.additional_user_not_found_info;
-
-  const { formState, getField, updateFields, clearField } = useFormState({
-    ...defaultFormState,
-    still_work_for_employer: defaultFormState
-      ? defaultFormState?.date_of_separation === null
-      : true,
-  });
+  const { clearField, formState, getField, updateFields } = useFormState(
+    pick(props, fields).claim?.additional_user_not_found_info
+  );
 
   const handleSave = () =>
     appLogic.benefitsApplications.update(claim.application_id, {
       additional_user_not_found_info: {
         ...claim?.additional_user_not_found_info,
+        currently_employed: formState.currently_employed,
         date_of_separation: formState.date_of_separation,
       },
     });
@@ -48,8 +44,7 @@ export const DateOfSeparation = (props: WithBenefitsApplicationProps) => {
     updateFields,
   });
 
-  const still_work_for_employer =
-    get(formState, "still_work_for_employer") ?? null;
+  const currently_employed = get(formState, "currently_employed");
 
   return (
     <QuestionPage
@@ -58,17 +53,17 @@ export const DateOfSeparation = (props: WithBenefitsApplicationProps) => {
     >
       <Fieldset>
         <InputChoiceGroup
-          {...getFunctionalInputProps("still_work_for_employer")}
+          {...getFunctionalInputProps("currently_employed")}
           choices={[
             {
-              checked: still_work_for_employer === true,
+              checked: currently_employed === true,
               label: t(
                 "pages.claimsAdditionalUserNotFoundInfo.recentlyAcquiredOrMergedYesLabel"
               ),
               value: "true",
             },
             {
-              checked: still_work_for_employer === false,
+              checked: currently_employed === false,
               label: t(
                 "pages.claimsAdditionalUserNotFoundInfo.recentlyAcquiredOrMergedNoLabel"
               ),
@@ -81,11 +76,11 @@ export const DateOfSeparation = (props: WithBenefitsApplicationProps) => {
           )}
         />
         <ConditionalContent
-          visible={!still_work_for_employer}
-          getField={getField}
           clearField={clearField}
-          updateFields={updateFields}
           fieldNamesClearedWhenHidden={["date_of_separation"]}
+          getField={getField}
+          updateFields={updateFields}
+          visible={currently_employed === false}
         >
           <InputDate
             {...getFunctionalInputProps("date_of_separation")}

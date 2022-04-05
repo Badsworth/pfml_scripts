@@ -83,6 +83,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
   };
 
   additional_user_not_found_info: {
+    currently_employed: boolean | null;
     employer_name: string | null;
     date_of_hire: string | null;
     date_of_separation: string | null;
