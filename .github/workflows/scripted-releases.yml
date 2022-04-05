@@ -89,3 +89,4 @@ jobs:
             gh release create ${{ steps.version.outputs.tag }} --notes "$(make release-notes)" --title "${{ steps.version.outputs.tag }}" --prerelease
           else
             gh release create ${{ steps.version.outputs.tag }} --notes "$(make release-notes)" --title "${{ steps.version.outputs.tag }}"
+          fi
