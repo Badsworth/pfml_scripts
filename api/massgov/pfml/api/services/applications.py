@@ -18,10 +18,7 @@ import massgov.pfml.util.logging
 import massgov.pfml.util.newrelic.events as newrelic_util
 import massgov.pfml.util.pydantic.mask as mask
 from massgov.pfml.api.models.applications.common import Address as ApiAddress
-from massgov.pfml.api.models.applications.common import (
-    DocumentResponse,
-    LeaveReason,
-)
+from massgov.pfml.api.models.applications.common import DocumentResponse, LeaveReason
 from massgov.pfml.api.models.applications.common import PaymentMethod as CommonPaymentMethod
 from massgov.pfml.api.models.applications.common import PaymentPreference
 from massgov.pfml.api.models.applications.requests import ApplicationRequestBody
