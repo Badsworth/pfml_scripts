@@ -41,7 +41,7 @@ export const LeaveSpansBenefitYearsMessage = (
     props.computed_application_split?.crossed_benefit_year
       .benefit_year_end_date;
 
-  const today = "2023-01-12"; // dayjs().format("YYYY-MM-DD");
+  const today = dayjs().format("YYYY-MM-DD");
   const firstCanBeSubmitted = firstLeaveEarliestSubmissionDate <= today;
   const secondCanBeSubmitted = secondLeaveEarliestSubmissionDate <= today;
 
