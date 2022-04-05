@@ -191,7 +191,7 @@ resource "newrelic_nrql_alert_condition" "api_network_error_rate" {
       FROM Transaction
       WHERE appName='PFML-API-${upper(var.environment_name)}'
         AND name NOT LIKE '%push_db'
-        AND transactionType = 'web'
+        AND transactionType = 'Web'
     NRQL
     evaluation_offset = 1 # offset by one window
   }
@@ -208,6 +208,139 @@ resource "newrelic_nrql_alert_condition" "api_network_error_rate" {
   critical {
     threshold_duration    = 600 # ten minutes (2 windows)
     threshold             = 20  # units: percentage
+    operator              = "above"
+    threshold_occurrences = "all"
+  }
+}
+
+resource "newrelic_nrql_alert_condition" "api_network_error_rate_machine_user_pfml_crm" {
+  # WARN: error rate above 10% in any five-minute period
+  # CRIT: error rate above 20% in two five-minute periods
+  #
+  name               = "API error rate too high for PFML CRM/ServiceNOW machine users"
+  policy_id          = newrelic_alert_policy.api_alerts.id
+  type               = "static"
+  value_function     = "single_value"
+  enabled            = true
+  aggregation_window = 300 # 5-minute window
+
+  nrql {
+    query             = <<-NRQL
+      SELECT filter(
+          count(*),
+          WHERE response.status NOT LIKE '2%'
+          AND current_user.has_role_PFML_CRM is TRUE
+        ) * 100 * clamp_max(floor(uniqueCount(mass_pfml_agent_id) / 10), 1) / uniqueCount(traceId)
+      FROM Transaction, TransactionError
+      WHERE appName='PFML-API-${upper(var.environment_name)}'
+        AND (name IS NULL or name NOT LIKE '%push_db')
+        AND (transactionName LIKE 'WebTransaction%' or transactionType = 'Web')
+    NRQL
+    evaluation_offset = 1 # offset by one window
+  }
+
+  violation_time_limit_seconds = 86400 # 24 hours
+
+  warning {
+    threshold_duration    = 300 # five minutes
+    threshold             = 10  # units: percentage
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
+  }
+
+  critical {
+    threshold_duration    = 600 # ten minutes (2 windows)
+    threshold             = 20  # units: percentage
+    operator              = "above"
+    threshold_occurrences = "all"
+  }
+}
+
+resource "newrelic_nrql_alert_condition" "api_network_error_rate_machine_user_fineos" {
+  # WARN: error rate above 10% in any five-minute period
+  # CRIT: error rate above 20% in two five-minute periods
+  #
+  # /v1/rmv-check is handled separately in `api_rmv_check_error_rate` since it is known to have high frequency
+  name               = "API error rate too high for FINEOS machine users"
+  policy_id          = newrelic_alert_policy.api_alerts.id
+  type               = "static"
+  value_function     = "single_value"
+  enabled            = true
+  aggregation_window = 300 # 5-minute window
+
+  nrql {
+    query             = <<-NRQL
+      SELECT filter(
+          count(*),
+          WHERE response.status NOT LIKE '2%'
+          AND transactionType = 'Web'
+          AND current_user.has_role_Fineos is TRUE
+          AND NOT (request.uri = '/v1/rmv-check' AND numeric(response.status) = 400)
+        ) * 100 / uniqueCount(traceId)
+      FROM Transaction
+      WHERE appName='PFML-API-${upper(var.environment_name)}'
+        AND (name IS NULL or name NOT LIKE '%push_db')
+        AND (transactionName LIKE 'WebTransaction%' or transactionType = 'Web')
+    NRQL
+    evaluation_offset = 1 # offset by one window
+  }
+
+  violation_time_limit_seconds = 86400 # 24 hours
+
+  warning {
+    threshold_duration    = 300 # five minutes
+    threshold             = 10  # units: percentage
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
+  }
+
+  critical {
+    threshold_duration    = 600 # ten minutes (2 windows)
+    threshold             = 20  # units: percentage
+    operator              = "above"
+    threshold_occurrences = "all"
+  }
+}
+
+resource "newrelic_nrql_alert_condition" "api_rmv_check_error_rate" {
+  # WARN: error rate above 10% in any five-minute period
+  # CRIT: error rate above 20% in two five-minute periods
+  #
+  name               = "API high rate of 400 network errors on the /rmv-check endpoint"
+  policy_id          = newrelic_alert_policy.api_alerts.id
+  type               = "static"
+  value_function     = "single_value"
+  enabled            = false
+  aggregation_window = 300 # 5-minute window
+
+  nrql {
+    query             = <<-NRQL
+      SELECT filter(
+          count(*),
+          WHERE numeric(response.status) = 400
+          AND request.uri = '/v1/rmv-check'
+          AND current_user.has_role_Fineos is TRUE
+        ) * 100 / uniqueCount(traceId)
+      FROM Transaction
+      WHERE appName='PFML-API-${upper(var.environment_name)}'
+        AND (name IS NULL or name NOT LIKE '%push_db')
+        AND (transactionName LIKE 'WebTransaction%' or transactionType = 'Web')
+    NRQL
+    evaluation_offset = 1 # offset by one window
+  }
+
+  violation_time_limit_seconds = 86400 # 24 hours
+
+  warning {
+    threshold_duration    = 300 # five minutes
+    threshold             = 20  # units: percentage
+    operator              = "above"
+    threshold_occurrences = "at_least_once"
+  }
+
+  critical {
+    threshold_duration    = 600 # ten minutes (2 windows)
+    threshold             = 30  # units: percentage
     operator              = "above"
     threshold_occurrences = "all"
   }

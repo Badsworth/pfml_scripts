@@ -1,19 +1,20 @@
-import withUser, { WithUserProps } from "../../../hoc/withUser";
+import withEmployerClaim, {
+  WithEmployerClaimProps,
+} from "../../../hoc/withEmployerClaim";
 import BackButton from "../../../components/BackButton";
 import React from "react";
 import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import UserFeedback from "../../../components/UserFeedback";
+import formatDate from "../../../utils/formatDate";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
 
-export const Success = (
-  props: WithUserProps & { query: { absence_id?: string } }
-) => {
+export const Success = (props: WithEmployerClaimProps) => {
   const { t } = useTranslation();
   const {
     appLogic,
-    query: { absence_id },
+    claim: { fullName, fineos_absence_id, lastReviewedAt },
   } = props;
 
   return (
@@ -23,10 +24,24 @@ export const Success = (
         href={appLogic.portalFlow.getNextPageRoute("BACK")}
       />
       <Title>{t("pages.employersClaimsSuccess.title")}</Title>
-      <Trans
-        i18nKey="pages.employersClaimsSuccess.applicationIdLabel"
-        values={{ absenceId: absence_id }}
-      />
+      <p>
+        <Trans
+          i18nKey="pages.employersClaimsSuccess.employeeNameLabel"
+          values={{ employeeName: fullName }}
+        />
+      </p>
+      <p>
+        <Trans
+          i18nKey="pages.employersClaimsSuccess.applicationIdLabel"
+          values={{ absenceId: fineos_absence_id }}
+        />
+      </p>
+      <p>
+        <Trans
+          i18nKey="pages.employersClaimsSuccess.reviewedOnLabel"
+          values={{ date: formatDate(lastReviewedAt).short() }}
+        />
+      </p>
       <p>
         {t("pages.employersClaimsSuccess.instructions_processingApplication")}
       </p>
@@ -49,4 +64,4 @@ export const Success = (
   );
 };
 
-export default withUser(Success);
+export default withEmployerClaim(Success);

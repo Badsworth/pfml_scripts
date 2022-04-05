@@ -36,9 +36,9 @@ from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
     FineosPaymentData,
     create_fineos_claimant_extract_files,
     create_fineos_payment_extract_files,
+    create_vbi_taskreport_som_extract_files,
     generate_iaww_extract_files,
     generate_payment_reconciliation_extract_files,
-    generate_vbi_taskreport_som_extract_files,
     get_vbi_taskreport_som_extract_filtered_records,
     get_vbi_taskreport_som_extract_records,
 )
@@ -94,8 +94,8 @@ def upload_fineos_claimant_data(
         )
 
 
-def validate_records(records, table, index_key, local_test_db_session):
-    data = local_test_db_session.query(table).all()
+def validate_records(records, table, index_key, test_db_session):
+    data = test_db_session.query(table).all()
 
     # Verify everything was loaded
     assert len(data) == len(records)
@@ -129,8 +129,7 @@ def test_run_happy_path(
     mock_s3_bucket,
     mock_fineos_s3_bucket,
     set_exporter_env_vars,
-    local_test_db_session,
-    local_test_db_other_session,
+    test_db_session,
     monkeypatch,
 ):
     # Show that we can run these steps back-to-back without any issue
@@ -153,14 +152,14 @@ def test_run_happy_path(
     # and that it effectively no-ops on subsequent runs
     for _ in range(3):
         fineos_extract_step = FineosExtractStep(
-            db_session=local_test_db_session,
-            log_entry_db_session=local_test_db_other_session,
+            db_session=test_db_session,
+            log_entry_db_session=test_db_session,
             extract_config=CLAIMANT_EXTRACT_CONFIG,
         )
         fineos_extract_step.run()
         fineos_extract_step = FineosExtractStep(
-            db_session=local_test_db_session,
-            log_entry_db_session=local_test_db_other_session,
+            db_session=test_db_session,
+            log_entry_db_session=test_db_session,
             extract_config=PAYMENT_EXTRACT_CONFIG,
         )
         fineos_extract_step.run()
@@ -188,7 +187,7 @@ def test_run_happy_path(
         )
 
         claimant_reference_file = (
-            local_test_db_session.query(ReferenceFile)
+            test_db_session.query(ReferenceFile)
             .filter(
                 ReferenceFile.file_location == expected_path_prefix + f"{date_str}-claimant-extract"
             )
@@ -201,7 +200,7 @@ def test_run_happy_path(
         )
 
         payment_reference_file = (
-            local_test_db_session.query(ReferenceFile)
+            test_db_session.query(ReferenceFile)
             .filter(
                 ReferenceFile.file_location == expected_path_prefix + f"{date_str}-payment-extract"
             )
@@ -214,9 +213,7 @@ def test_run_happy_path(
         )
 
         employee_feed_records = [record.get_employee_feed_record() for record in claimant_data]
-        validate_records(
-            employee_feed_records, FineosExtractEmployeeFeed, "I", local_test_db_session
-        )
+        validate_records(employee_feed_records, FineosExtractEmployeeFeed, "I", test_db_session)
 
         requested_absence_som_records = [
             record.get_requested_absence_som_record() for record in claimant_data
@@ -225,7 +222,7 @@ def test_run_happy_path(
             requested_absence_som_records,
             FineosExtractVbiRequestedAbsenceSom,
             "ABSENCE_CASENUMBER",
-            local_test_db_session,
+            test_db_session,
         )
 
         requested_absence_records = [
@@ -235,18 +232,18 @@ def test_run_happy_path(
             requested_absence_records,
             FineosExtractVbiRequestedAbsence,
             "LEAVEREQUEST_ID",
-            local_test_db_session,
+            test_db_session,
         )
 
         vpei_records = [record.get_vpei_record() for record in payment_data]
-        validate_records(vpei_records, FineosExtractVpei, "I", local_test_db_session)
+        validate_records(vpei_records, FineosExtractVpei, "I", test_db_session)
 
         claim_details_records = [record.get_claim_details_record() for record in payment_data]
         validate_records(
             claim_details_records,
             FineosExtractVpeiClaimDetails,
             "LEAVEREQUESTI",
-            local_test_db_session,
+            test_db_session,
         )
 
         payment_details_records = [record.get_payment_details_record() for record in payment_data]
@@ -254,7 +251,7 @@ def test_run_happy_path(
             payment_details_records,
             FineosExtractVpeiPaymentDetails,
             "PEINDEXID",
-            local_test_db_session,
+            test_db_session,
         )
 
         payment_line_records = [record.get_payment_line_record() for record in payment_data]
@@ -262,7 +259,7 @@ def test_run_happy_path(
             payment_line_records,
             FineosExtractVpeiPaymentLine,
             "I",
-            local_test_db_session,
+            test_db_session,
         )
 
         ### and verify the skipped files as well
@@ -292,7 +289,7 @@ def test_run_happy_path(
 
         # And the skipped reference files
         claimant_reference_file = (
-            local_test_db_session.query(ReferenceFile)
+            test_db_session.query(ReferenceFile)
             .filter(
                 ReferenceFile.file_location
                 == expected_path_prefix + f"{skipped_date_str}-claimant-extract"
@@ -306,7 +303,7 @@ def test_run_happy_path(
         )
 
         payment_reference_file = (
-            local_test_db_session.query(ReferenceFile)
+            test_db_session.query(ReferenceFile)
             .filter(
                 ReferenceFile.file_location
                 == expected_path_prefix + f"{skipped_date_str}-payment-extract"
@@ -324,8 +321,7 @@ def test_payment_reconciliation_extracts(
     mock_s3_bucket,
     mock_fineos_s3_bucket,
     set_exporter_env_vars,
-    local_test_db_session,
-    local_test_db_other_session,
+    test_db_session,
     monkeypatch,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_RECONCILIATION_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
@@ -336,8 +332,8 @@ def test_payment_reconciliation_extracts(
 
     # Run the extract
     fineos_extract_step = FineosExtractStep(
-        db_session=local_test_db_session,
-        log_entry_db_session=local_test_db_other_session,
+        db_session=test_db_session,
+        log_entry_db_session=test_db_session,
         extract_config=PAYMENT_RECONCILIATION_EXTRACT_CONFIG,
     )
     fineos_extract_step.run()
@@ -362,7 +358,7 @@ def test_payment_reconciliation_extracts(
     )
 
     payment_reference_file = (
-        local_test_db_session.query(ReferenceFile)
+        test_db_session.query(ReferenceFile)
         .filter(
             ReferenceFile.file_location
             == expected_path_prefix + f"{date_str}-payment-reconciliation-extract"
@@ -379,19 +375,19 @@ def test_payment_reconciliation_extracts(
         extract_records[payments_util.FineosExtractConstants.PAYMENT_FULL_SNAPSHOT.file_name],
         FineosExtractPaymentFullSnapshot,
         "I",
-        local_test_db_session,
+        test_db_session,
     )
     validate_records(
         extract_records[payments_util.FineosExtractConstants.CANCELLED_PAYMENTS_EXTRACT.file_name],
         FineosExtractCancelledPayments,
         "I",
-        local_test_db_session,
+        test_db_session,
     )
     validate_records(
         extract_records[payments_util.FineosExtractConstants.REPLACED_PAYMENTS_EXTRACT.file_name],
         FineosExtractReplacedPayments,
         "I",
-        local_test_db_session,
+        test_db_session,
     )
 
 
@@ -399,8 +395,7 @@ def test_iaww_extracts(
     mock_s3_bucket,
     mock_fineos_s3_bucket,
     set_exporter_env_vars,
-    local_test_db_session,
-    local_test_db_other_session,
+    test_db_session,
     monkeypatch,
 ):
     monkeypatch.setenv("FINEOS_IAWW_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
@@ -419,8 +414,8 @@ def test_iaww_extracts(
 
     # Run the extract
     fineos_extract_step = FineosExtractStep(
-        db_session=local_test_db_session,
-        log_entry_db_session=local_test_db_other_session,
+        db_session=test_db_session,
+        log_entry_db_session=test_db_session,
         extract_config=IAWW_EXTRACT_CONFIG,
     )
     fineos_extract_step.run()
@@ -441,7 +436,7 @@ def test_iaww_extracts(
     )
 
     iaww_reference_file = (
-        local_test_db_session.query(ReferenceFile)
+        test_db_session.query(ReferenceFile)
         .filter(ReferenceFile.file_location == expected_path_prefix + f"{date_str}-iaww-extract")
         .one_or_none()
     )
@@ -457,13 +452,13 @@ def test_iaww_extracts(
         ],
         FineosExtractVbiLeavePlanRequestedAbsence,
         "SELECTEDPLAN_INDEXID",
-        local_test_db_session,
+        test_db_session,
     )
     validate_records(
         extract_records[payments_util.FineosExtractConstants.PAID_LEAVE_INSTRUCTION.file_name],
         FineosExtractVPaidLeaveInstruction,
         "I",
-        local_test_db_session,
+        test_db_session,
     )
 
 
@@ -471,8 +466,7 @@ def test_vbi_taskreport_som_extracts(
     mock_s3_bucket,
     mock_fineos_s3_bucket,
     set_exporter_env_vars,
-    local_test_db_session,
-    local_test_db_other_session,
+    test_db_session,
     monkeypatch,
 ):
     monkeypatch.setenv("FINEOS_VBI_TASKREPORT_SOM_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
@@ -481,14 +475,14 @@ def test_vbi_taskreport_som_extracts(
 
     # Create VBI Task Report Som extract files
     folder_path = os.path.join(f"s3://{mock_fineos_s3_bucket}", "DT2/dataexports/")
-    generate_vbi_taskreport_som_extract_files(
-        folder_path, datetime.strptime(date_str, "%Y-%m-%d-%H-%M-%S"), records=records
+    create_vbi_taskreport_som_extract_files(
+        records, folder_path, datetime.strptime(date_str, "%Y-%m-%d-%H-%M-%S")
     )
 
     # Run the extract
     fineos_extract_step = FineosExtractStep(
-        db_session=local_test_db_session,
-        log_entry_db_session=local_test_db_other_session,
+        db_session=test_db_session,
+        log_entry_db_session=test_db_session,
         extract_config=VBI_TASKREPORT_SOM_EXTRACT_CONFIG,
     )
     fineos_extract_step.run()
@@ -505,7 +499,7 @@ def test_vbi_taskreport_som_extracts(
     )
 
     reference_file = (
-        local_test_db_session.query(ReferenceFile)
+        test_db_session.query(ReferenceFile)
         .filter(
             ReferenceFile.file_location
             == expected_path_prefix + f"{date_str}-vbi-taskreport-som-extract"
@@ -519,9 +513,7 @@ def test_vbi_taskreport_som_extracts(
     )
 
     filtered_records = get_vbi_taskreport_som_extract_filtered_records(records)
-    validate_records(
-        filtered_records, FineosExtractVbiTaskReportSom, "TASKID", local_test_db_session
-    )
+    validate_records(filtered_records, FineosExtractVbiTaskReportSom, "TASKID", test_db_session)
 
 
 def test_run_with_error_during_processing(
@@ -532,6 +524,13 @@ def test_run_with_error_during_processing(
     local_test_db_other_session,
     monkeypatch,
 ):
+    # *********************************************
+    #
+    # LOCAL sessions required due to rollback test
+    # - Requires two separate sessions and only
+    #   the local sessions let you reference values
+    #   created in another import log
+    # *********************************************
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
 
@@ -644,8 +643,7 @@ def test_run_with_missing_files_skipped_run(
     mock_s3_bucket,
     mock_fineos_s3_bucket,
     set_exporter_env_vars,
-    local_test_db_session,
-    local_test_db_other_session,
+    test_db_session,
     monkeypatch,
 ):
     # Validate that if we're missing files that are going to be skipped
@@ -668,8 +666,8 @@ def test_run_with_missing_files_skipped_run(
     )
 
     fineos_extract_step = FineosExtractStep(
-        db_session=local_test_db_session,
-        log_entry_db_session=local_test_db_other_session,
+        db_session=test_db_session,
+        log_entry_db_session=test_db_session,
         extract_config=CLAIMANT_EXTRACT_CONFIG,
     )
 
@@ -686,7 +684,7 @@ def test_run_with_missing_files_skipped_run(
 
     # Verify the unskipped file was still loaded properly
     employee_feed_records = [record.get_employee_feed_record() for record in claimant_data]
-    validate_records(employee_feed_records, FineosExtractEmployeeFeed, "I", local_test_db_session)
+    validate_records(employee_feed_records, FineosExtractEmployeeFeed, "I", test_db_session)
 
     requested_absence_som_records = [
         record.get_requested_absence_som_record() for record in claimant_data
@@ -695,7 +693,7 @@ def test_run_with_missing_files_skipped_run(
         requested_absence_som_records,
         FineosExtractVbiRequestedAbsenceSom,
         "ABSENCE_CASENUMBER",
-        local_test_db_session,
+        test_db_session,
     )
 
     requested_absence_records = [record.get_requested_absence_record() for record in claimant_data]
@@ -703,7 +701,7 @@ def test_run_with_missing_files_skipped_run(
         requested_absence_records,
         FineosExtractVbiRequestedAbsence,
         "LEAVEREQUEST_ID",
-        local_test_db_session,
+        test_db_session,
     )
 
 
@@ -740,6 +738,14 @@ def test_run_with_malformed_claimant_data(
         )
         fineos_extract_step.run()
 
+    # Verify nothing created
+    validate_records(
+        [],
+        claimant_extract_file.table,
+        None,
+        local_test_db_session,
+    )
+
 
 @pytest.mark.parametrize(
     "payment_extract_file",
@@ -774,6 +780,14 @@ def test_run_with_malformed_payment_data(
         )
         fineos_extract_step.run()
 
+    # Verify nothing created
+    validate_records(
+        [],
+        payment_extract_file.table,
+        None,
+        local_test_db_session,
+    )
+
 
 # Test that if there are extra columns in the extract file,
 # we log those only once if they're in the header row
@@ -781,8 +795,7 @@ def test_log_unconfigured_on_first_record(
     mock_s3_bucket,
     mock_fineos_s3_bucket,
     set_exporter_env_vars,
-    local_test_db_session,
-    local_test_db_other_session,
+    test_db_session,
     monkeypatch,
     caplog,
 ):
@@ -810,8 +823,8 @@ def test_log_unconfigured_on_first_record(
     )
 
     fineos_extract_step = FineosExtractStep(
-        db_session=local_test_db_session,
-        log_entry_db_session=local_test_db_other_session,
+        db_session=test_db_session,
+        log_entry_db_session=test_db_session,
         extract_config=PAYMENT_EXTRACT_CONFIG,
     )
 

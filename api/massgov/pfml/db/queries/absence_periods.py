@@ -24,6 +24,7 @@ from massgov.pfml.db.models.employees import AbsencePeriod, Claim, LeaveRequestD
 from massgov.pfml.fineos.models.customer_api import AbsencePeriod as FineosAbsencePeriod
 from massgov.pfml.fineos.models.group_client_api import Period
 from massgov.pfml.fineos.models.group_client_api.spec import LeaveRequest
+from massgov.pfml.util.logging.absence_periods import get_absence_period_log_attributes
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -102,7 +103,7 @@ def create_absence_period_from_fineos_id_and_claim_id(
 
 
 def parse_fineos_period_leave_request(
-    db_absence_period: AbsencePeriod, leave_request: LeaveRequest, log_attributes: Dict
+    db_absence_period: AbsencePeriod, leave_request: LeaveRequest
 ) -> AbsencePeriod:
     if leave_request.qualifier1:
         db_absence_period.absence_reason_qualifier_one_id = AbsenceReasonQualifierOne.get_id(
@@ -124,7 +125,7 @@ def upsert_absence_period_from_fineos_period(
     claim_id: UUID,
     fineos_period: Union[Period, FineosAbsencePeriod],
     log_attributes: Dict,
-) -> None:
+) -> Optional[AbsencePeriod]:
     """
     Update or Insert Fineos Period from the Group Client API
     or Fineos Absence Period from the Customer Client API
@@ -133,12 +134,12 @@ def upsert_absence_period_from_fineos_period(
 
     if fineos_period.leaveRequest is None:
         logger.error("Failed to extract leave request from fineos period.", extra=log_attributes)
-        return
+        return None
     if fineos_period.periodReference:
         class_id, index_id = split_fineos_absence_period_id(fineos_period.periodReference)
     else:
         logger.error("Failed to extract class and index id.", extra=log_attributes)
-        return
+        return None
 
     db_absence_period = get_absence_period_by_claim_id_and_fineos_ids(
         db_session, claim_id, class_id, index_id
@@ -151,10 +152,18 @@ def upsert_absence_period_from_fineos_period(
     db_absence_period.absence_period_end_date = fineos_period.endDate
     db_absence_period.absence_period_type_id = AbsencePeriodType.get_id(fineos_period.type)
     db_absence_period = parse_fineos_period_leave_request(
-        db_absence_period, fineos_period.leaveRequest, log_attributes
+        db_absence_period, fineos_period.leaveRequest
+    )
+
+    logger.info(
+        "Updating Absence Period Table",
+        extra={
+            **log_attributes,
+            **get_absence_period_log_attributes(db_absence_period),
+        },
     )
     db_session.add(db_absence_period)
-    return
+    return db_absence_period
 
 
 def convert_customer_api_period_to_group_client_period(
@@ -208,16 +217,19 @@ def sync_customer_api_absence_periods_to_db(
     claim: Claim,
     db_session: Session,
     log_attributes: Dict,
-) -> None:
+) -> List[AbsencePeriod]:
+    db_absence_periods: List[AbsencePeriod] = []
     # add/update absence period table
     try:
         for absence_period in absence_periods:
-            upsert_absence_period_from_fineos_period(
+            db_absence_period = upsert_absence_period_from_fineos_period(
                 db_session, claim.claim_id, absence_period, log_attributes
             )
+            if db_absence_period is not None:
+                db_absence_periods.append(db_absence_period)
     except Exception as error:
         logger.exception("Failed while populating AbsencePeriod Table", extra={**log_attributes})
         raise error
     # only commit if there were no errors
     db_session.commit()
-    return
+    return db_absence_periods

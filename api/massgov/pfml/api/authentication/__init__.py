@@ -211,6 +211,13 @@ def decode_jwt(token):
     return decoded_token
 
 
+def validate_agent_id(mass_pfml_agent_id: Any, required_scopes: Any) -> str:
+    if mass_pfml_agent_id is None or mass_pfml_agent_id.strip() == "":
+        raise Unauthorized("Invalid required header: Mass-PFML-Agent-ID")
+
+    return mass_pfml_agent_id
+
+
 def build_auth_code_flow() -> Optional[dict[str, Optional[Union[str, list]]]]:
     """
     The first step in the authentication code flow

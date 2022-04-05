@@ -58,11 +58,16 @@ from massgov.pfml.db.models.factories import (
     ConcurrentLeaveFactory,
     ContinuousLeavePeriodFactory,
     DocumentFactory,
+    DuaEmployeeDemographicsFactory,
+    DuaReportingUnitFactory,
     EmployeeFactory,
+    EmployeeOccupationFactory,
+    EmployeeWithFineosNumberFactory,
     EmployerBenefitFactory,
     EmployerFactory,
     IntermittentLeavePeriodFactory,
     LeaveReasonFactory,
+    OrganizationUnitFactory,
     OtherIncomeFactory,
     PreviousLeaveOtherReasonFactory,
     PreviousLeaveSameReasonFactory,
@@ -82,12 +87,12 @@ from massgov.pfml.fineos.exception import (
 )
 from massgov.pfml.fineos.factory import FINEOSClientConfig
 from massgov.pfml.fineos.models.customer_api.spec import (
+    AbsenceDay,
     AbsenceDetails,
     AbsencePeriod,
     EpisodicLeavePeriodDetail,
     NotificationCaseSummary,
     ReadCustomerOccupation,
-    ReportedReducedScheduleLeavePeriod,
     TimeOffLeavePeriod,
 )
 from massgov.pfml.util.strings import format_fein, format_tax_identifier
@@ -385,6 +390,42 @@ def test_applications_get_computed_application_split_no_split(
     assert application_split is None
 
 
+def test_applications_get_organization_units(
+    client, user, auth_token, test_db_session, initialize_factories_session
+):
+    employee = EmployeeWithFineosNumberFactory.create()
+    employer = EmployerFactory.create()
+    org_unit = OrganizationUnitFactory(employer=employer)
+
+    EmployeeOccupationFactory.create(
+        employee=employee, employer=employer, organization_unit=org_unit
+    )
+
+    reporting_unit_with_org_unit = DuaReportingUnitFactory.create(
+        organization_unit=org_unit, employer=employer
+    )
+
+    DuaEmployeeDemographicsFactory.create(
+        fineos_customer_number=employee.fineos_customer_number,
+        employer_fein=employer.employer_fein,
+        employer_reporting_unit_number=reporting_unit_with_org_unit.dua_id,
+    )
+
+    application = ApplicationFactory.create(
+        tax_identifier=employee.tax_identifier, user=user, employer_fein=employer.employer_fein
+    )
+
+    response = client.get(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 200
+    response_body = response.get_json().get("data")
+    assert len(response_body["employee_organization_units"]) > 0
+    assert len(response_body["employer_organization_units"]) > 0
+
+
 def test_applications_get_all_for_user(client, user, auth_token):
     applications = sorted(
         [ApplicationFactory.create(user=user), ApplicationFactory.create(user=user)],
@@ -512,8 +553,7 @@ class TestApplicationsImport:
             json=valid_request_body,
         )
         response_body = response.get_json()
-        assert response.status_code == 403
-        assert response_body["message"] == "An application already exists for this claim."
+        assert response.status_code == 400
         assert response_body["errors"][0]["type"] == "duplicate"
         assert response_body["errors"][0]["field"] == "absence_case_id"
 
@@ -559,11 +599,7 @@ class TestApplicationsImport:
             json=valid_request_body,
         )
         response_body = response.get_json()
-        assert response.status_code == 403
-        assert (
-            response_body["message"]
-            == "An application linked to a different account already exists for this claim."
-        )
+        assert response.status_code == 400
         assert response_body["errors"][0]["type"] == "exists"
         assert response_body["errors"][0]["field"] == "absence_case_id"
 
@@ -626,8 +662,8 @@ class TestApplicationsImport:
             },
         )
 
-        assert response.status_code == 409
-        assert response.get_json()["message"] == "Claim data incomplete for application import."
+        assert response.status_code == 400
+        assert response.get_json()["errors"][0]["type"] == "conflicting"
         assert test_db_session.query(Application).one_or_none() is None
 
     def test_applications_import_claim_without_employer(
@@ -646,8 +682,8 @@ class TestApplicationsImport:
                 "tax_identifier": format_tax_identifier(claim.employee_tax_identifier),
             },
         )
-        assert response.status_code == 409
-        assert response.get_json()["message"] == "Claim data incomplete for application import."
+        assert response.status_code == 400
+        assert response.get_json()["errors"][0]["type"] == "conflicting"
         assert test_db_session.query(Application).one_or_none() is None
 
     def test_applications_import_unauthenticated_post(self, client, test_db_session):
@@ -891,20 +927,19 @@ class TestApplicationsImport:
                     absenceType="Continuous",
                     requestStatus="Pending",
                 ),
-            ],
-            reportedReducedSchedule=[
-                ReportedReducedScheduleLeavePeriod(
+                AbsencePeriod(
+                    id="PL-14449-0000002239",
+                    reason="Pregnancy/Maternity",
+                    reasonQualifier1="Foster Care",
+                    reasonQualifier2="",
                     startDate=date(2021, 1, 29),
                     endDate=date(2021, 3, 29),
-                    sundayOffMinutes=10,
-                    mondayOffMinutes=15,
-                    tuesdayOffMinutes=20,
-                    wednesdayOffMinutes=40,
-                    thursdayOffMinutes=45,
-                    fridayOffMinutes=25,
-                    saturdayOffMinutes=12,
-                )
+                    absenceType="Reduced Schedule",
+                    requestStatus="Pending",
+                ),
             ],
+            absenceDays=[AbsenceDay(date=datetime(2021, 2, 1), timeRequested="4.25")],
+            reportedReducedSchedule=[],
         )
 
     @pytest.fixture
@@ -4029,6 +4064,640 @@ def test_application_post_submit_app(client, user, auth_token, test_db_session):
     assert response_body.get("data").get("status") == ApplicationStatus.Submitted.value
     test_db_session.refresh(application)
     assert application.submitted_time
+
+
+@freeze_time("2022-02-01")
+def test_application_post_submit_app_split_across_by_both_sumbittable(
+    client, user, auth_token, test_db_session
+):
+    massgov.pfml.fineos.mock_client.start_capture()
+
+    by_start_date = date(2021, 2, 7)
+    by_end_date = by_start_date + timedelta(weeks=52)  # 2022-02-06
+    leave_start_date = by_end_date - timedelta(days=4)  # 2022-02-02
+    leave_end_date = by_end_date + timedelta(days=4)  # 2022-02-10
+
+    factory.random.reseed_random(1)
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
+    )
+    BenefitYearFactory.create(start_date=by_start_date, end_date=by_end_date, employee=employee)
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
+
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(start_date=leave_start_date, end_date=leave_end_date)
+    ]
+    application.date_of_birth = date(1997, 6, 6)
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.hours_worked_per_week = 70
+    application.has_continuous_leave_periods = True
+    application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
+    application.first_name = "First"
+    application.middle_name = "Middle"
+    application.last_name = "Last"
+    application.mass_id = "S12345678"
+    application.gender_id = Gender.WOMAN.gender_id
+
+    assert not application.submitted_time
+
+    test_db_session.commit()
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}", "X-FF-Split-Claims-Across-BY": "true"},
+    )
+    response_body = response.get_json()
+
+    assert response.status_code == 201
+    assert not response_body.get("errors")
+    assert not response_body.get("warnings")
+    # Simplified check to confirm Application was included in response:
+    assert response_body.get("data").get("application_id") == str(application.application_id)
+    assert response_body.get("data").get("fineos_absence_id") == "NTN-259-ABS-01"
+    assert response_body.get("data").get("status") == ApplicationStatus.Submitted.value
+    assert response_body.get("data").get("split_into_application_id") is not None
+    test_db_session.refresh(application)
+    assert application.submitted_time
+
+    split_application_id = response_body.get("data").get("split_into_application_id")
+    response = client.get(
+        "/v1/applications/{}".format(split_application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    assert response.status_code == 200
+    response_body = response.get_json()
+    assert response_body.get("data").get("application_id") == split_application_id
+    assert response_body.get("data").get("fineos_absence_id") == "NTN-260-ABS-01"
+    assert response_body.get("data").get("status") == ApplicationStatus.Submitted.value
+    assert response_body.get("data").get("split_from_application_id") == str(
+        application.application_id
+    )
+
+    capture = massgov.pfml.fineos.mock_client.get_capture()
+    # This is generated randomly and changes each time.
+    fineos_user_id = capture[2][1]
+    assert capture == [
+        ("read_employer", None, {"employer_fein": application.employer_fein}),
+        (
+            "register_api_user",
+            None,
+            {
+                "employee_registration": massgov.pfml.fineos.models.EmployeeRegistration(
+                    user_id=fineos_user_id,
+                    employer_id=str(
+                        massgov.pfml.fineos.mock.field.fake_customer_no(application.employer_fein)
+                    ),
+                    date_of_birth=date(1753, 1, 1),
+                    national_insurance_no=application.tax_identifier.tax_identifier,
+                )
+            },
+        ),
+        (
+            "update_customer_details",
+            fineos_user_id,
+            {
+                "customer": massgov.pfml.fineos.models.customer_api.Customer(
+                    firstName="First",
+                    lastName="Last",
+                    secondName="Middle",
+                    dateOfBirth=date(1997, 6, 6),
+                    idNumber=application.tax_identifier.tax_identifier,
+                    customerAddress=massgov.pfml.fineos.models.customer_api.CustomerAddress(
+                        address=massgov.pfml.fineos.models.customer_api.Address(
+                            addressLine1=application.residential_address.address_line_one,
+                            addressLine2=application.residential_address.address_line_two,
+                            addressLine4=application.residential_address.city,
+                            addressLine6=application.residential_address.geo_state.geo_state_description,
+                            postCode=application.residential_address.zip_code,
+                            country="USA",
+                        )
+                    ),
+                    gender="Female",
+                    classExtensionInformation=[
+                        massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
+                            name="MassachusettsID", stringValue=application.mass_id
+                        ),
+                        massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
+                            name="Confirmed", booleanValue=True
+                        ),
+                        massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
+                            name="ConsenttoShareData", booleanValue=False
+                        ),
+                    ],
+                )
+            },
+        ),
+        (
+            "get_customer_occupations_customer_api",
+            fineos_user_id,
+            {"customer_id": application.tax_identifier.tax_identifier},
+        ),
+        (
+            "add_week_based_work_pattern",
+            fineos_user_id,
+            {
+                "week_based_work_pattern": massgov.pfml.fineos.models.customer_api.WeekBasedWorkPattern(
+                    workPatternType="Fixed",
+                    workWeekStarts="Sunday",
+                    patternStartDate=None,
+                    patternStatus=None,
+                    workPatternDays=[
+                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                            dayOfWeek="Sunday", weekNumber=1, hours=8, minutes=15
+                        ),
+                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                            dayOfWeek="Monday", weekNumber=1, hours=8, minutes=15
+                        ),
+                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                            dayOfWeek="Tuesday", weekNumber=1, hours=8, minutes=15
+                        ),
+                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                            dayOfWeek="Wednesday", weekNumber=1, hours=8, minutes=15
+                        ),
+                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                            dayOfWeek="Thursday", weekNumber=1, hours=8, minutes=15
+                        ),
+                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                            dayOfWeek="Friday", weekNumber=1, hours=8, minutes=15
+                        ),
+                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                            dayOfWeek="Saturday", weekNumber=1, hours=8, minutes=15
+                        ),
+                    ],
+                )
+            },
+        ),
+        (
+            "update_occupation",
+            None,
+            {
+                "employment_status": "Terminated",
+                "fineos_org_unit_id": None,
+                "hours_worked_per_week": 70,
+                "occupation_id": 12345,
+                "worksite_id": None,
+            },
+        ),
+        (
+            "start_absence",
+            fineos_user_id,
+            {
+                "absence_case": massgov.pfml.fineos.models.customer_api.AbsenceCase(
+                    additionalComments="PFML API " + str(application.application_id),
+                    intakeSource="Self-Service",
+                    notifiedBy="Employee",
+                    reason="Serious Health Condition - Employee",
+                    reasonQualifier1="Not Work Related",
+                    reasonQualifier2="Sickness",
+                    notificationReason="Accident or treatment required for an injury",
+                    primaryRelationship=None,
+                    primaryRelQualifier1=None,
+                    primaryRelQualifier2=None,
+                    timeOffLeavePeriods=[
+                        massgov.pfml.fineos.models.customer_api.TimeOffLeavePeriod(
+                            startDate=date(2022, 2, 2),
+                            endDate=date(2022, 2, 6),
+                            startDateFullDay=True,
+                            endDateFullDay=True,
+                            status="known",
+                        )
+                    ],
+                    employerNotified=False,
+                    employerNotificationDate=None,
+                    employerNotificationMethod=None,
+                )
+            },
+        ),
+        (
+            "update_customer_contact_details",
+            fineos_user_id,
+            {
+                "contact_details": massgov.pfml.fineos.models.customer_api.ContactDetails(
+                    phoneNumbers=[
+                        massgov.pfml.fineos.models.customer_api.PhoneNumber(
+                            id=1,
+                            preferred=None,
+                            phoneNumberType="Cell",
+                            intCode="1",
+                            areaCode="240",
+                            telephoneNo="4879945",
+                            classExtensionInformation=None,
+                        )
+                    ],
+                    emailAddresses=[
+                        massgov.pfml.fineos.models.customer_api.EmailAddressV20(
+                            emailAddress=application.user.email_address
+                        )
+                    ],
+                )
+            },
+        ),
+        ("complete_intake", fineos_user_id, {"notification_case_id": "NTN-259"}),
+        ("read_employer", None, {"employer_fein": application.employer_fein}),
+        (
+            "update_customer_details",
+            fineos_user_id,
+            {
+                "customer": massgov.pfml.fineos.models.customer_api.Customer(
+                    firstName="First",
+                    lastName="Last",
+                    secondName="Middle",
+                    dateOfBirth=date(1997, 6, 6),
+                    idNumber=application.tax_identifier.tax_identifier,
+                    customerAddress=massgov.pfml.fineos.models.customer_api.CustomerAddress(
+                        address=massgov.pfml.fineos.models.customer_api.Address(
+                            addressLine1=application.residential_address.address_line_one,
+                            addressLine2=application.residential_address.address_line_two,
+                            addressLine4=application.residential_address.city,
+                            addressLine6=application.residential_address.geo_state.geo_state_description,
+                            postCode=application.residential_address.zip_code,
+                            country="USA",
+                        )
+                    ),
+                    gender="Female",
+                    classExtensionInformation=[
+                        massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
+                            name="MassachusettsID", stringValue=application.mass_id
+                        ),
+                        massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
+                            name="Confirmed", booleanValue=True
+                        ),
+                        massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
+                            name="ConsenttoShareData", booleanValue=False
+                        ),
+                    ],
+                )
+            },
+        ),
+        (
+            "get_customer_occupations_customer_api",
+            fineos_user_id,
+            {"customer_id": application.tax_identifier.tax_identifier},
+        ),
+        (
+            "add_week_based_work_pattern",
+            fineos_user_id,
+            {
+                "week_based_work_pattern": massgov.pfml.fineos.models.customer_api.WeekBasedWorkPattern(
+                    workPatternType="Fixed",
+                    workWeekStarts="Sunday",
+                    patternStartDate=None,
+                    patternStatus=None,
+                    workPatternDays=[
+                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                            dayOfWeek="Sunday", weekNumber=1, hours=8, minutes=15
+                        ),
+                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                            dayOfWeek="Monday", weekNumber=1, hours=8, minutes=15
+                        ),
+                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                            dayOfWeek="Tuesday", weekNumber=1, hours=8, minutes=15
+                        ),
+                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                            dayOfWeek="Wednesday", weekNumber=1, hours=8, minutes=15
+                        ),
+                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                            dayOfWeek="Thursday", weekNumber=1, hours=8, minutes=15
+                        ),
+                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                            dayOfWeek="Friday", weekNumber=1, hours=8, minutes=15
+                        ),
+                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                            dayOfWeek="Saturday", weekNumber=1, hours=8, minutes=15
+                        ),
+                    ],
+                )
+            },
+        ),
+        (
+            "update_occupation",
+            None,
+            {
+                "employment_status": "Terminated",
+                "fineos_org_unit_id": None,
+                "hours_worked_per_week": 70,
+                "occupation_id": 12345,
+                "worksite_id": None,
+            },
+        ),
+        (
+            "start_absence",
+            fineos_user_id,
+            {
+                "absence_case": massgov.pfml.fineos.models.customer_api.AbsenceCase(
+                    additionalComments="PFML API " + split_application_id,
+                    intakeSource="Self-Service",
+                    notifiedBy="Employee",
+                    reason="Serious Health Condition - Employee",
+                    reasonQualifier1="Not Work Related",
+                    reasonQualifier2="Sickness",
+                    notificationReason="Accident or treatment required for an injury",
+                    primaryRelationship=None,
+                    primaryRelQualifier1=None,
+                    primaryRelQualifier2=None,
+                    timeOffLeavePeriods=[
+                        massgov.pfml.fineos.models.customer_api.TimeOffLeavePeriod(
+                            startDate=date(2022, 2, 7),
+                            endDate=date(2022, 2, 10),
+                            startDateFullDay=True,
+                            endDateFullDay=True,
+                            status="known",
+                        )
+                    ],
+                    employerNotified=False,
+                    employerNotificationDate=None,
+                    employerNotificationMethod=None,
+                )
+            },
+        ),
+        (
+            "update_customer_contact_details",
+            fineos_user_id,
+            {
+                "contact_details": massgov.pfml.fineos.models.customer_api.ContactDetails(
+                    phoneNumbers=[
+                        massgov.pfml.fineos.models.customer_api.PhoneNumber(
+                            id=1,
+                            preferred=None,
+                            phoneNumberType="Cell",
+                            intCode="1",
+                            areaCode="240",
+                            telephoneNo="4879945",
+                            classExtensionInformation=None,
+                        )
+                    ],
+                    emailAddresses=[
+                        massgov.pfml.fineos.models.customer_api.EmailAddressV20(
+                            emailAddress=application.user.email_address
+                        )
+                    ],
+                )
+            },
+        ),
+        ("complete_intake", fineos_user_id, {"notification_case_id": "NTN-260"}),
+    ]
+    # This is the submit call.  The full fineos API calls are asserted against in a different test
+    # This asserts that the app was not split (and the split app submitted)
+    submit_calls = [
+        capture
+        for capture in massgov.pfml.fineos.mock_client.get_capture()
+        if capture[0] == "start_absence"
+    ]
+    assert len(submit_calls) == 2
+
+
+@freeze_time("2022-02-01")
+def test_application_post_submit_app_does_not_split_without_ff(
+    client, user, auth_token, test_db_session
+):
+    massgov.pfml.fineos.mock_client.start_capture()
+    by_start_date = date(2021, 2, 7)
+    by_end_date = by_start_date + timedelta(weeks=52)  # 2022-02-06
+    leave_start_date = by_end_date - timedelta(days=4)  # 2022-02-02
+    leave_end_date = by_end_date + timedelta(days=4)  # 2022-02-10
+
+    factory.random.reseed_random(1)
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
+    )
+    BenefitYearFactory.create(start_date=by_start_date, end_date=by_end_date, employee=employee)
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
+
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(start_date=leave_start_date, end_date=leave_end_date)
+    ]
+    application.date_of_birth = date(1997, 6, 6)
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.hours_worked_per_week = 70
+    application.has_continuous_leave_periods = True
+    application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
+
+    assert not application.submitted_time
+
+    test_db_session.commit()
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    response_body = response.get_json()
+
+    assert response.status_code == 201
+    assert not response_body.get("errors")
+    assert not response_body.get("warnings")
+    # Simplified check to confirm Application was included in response:
+    assert response_body.get("data").get("application_id") == str(application.application_id)
+    assert response_body.get("data").get("fineos_absence_id") == "NTN-259-ABS-01"
+    assert response_body.get("data").get("status") == ApplicationStatus.Submitted.value
+    assert response_body.get("data").get("split_into_application_id") is None
+    # This is the submit call.  The full fineos API calls are asserted against in a different test
+    # This asserts that the app was not split (and the split app submitted)
+    submit_calls = [
+        capture
+        for capture in massgov.pfml.fineos.mock_client.get_capture()
+        if capture[0] == "start_absence"
+    ]
+    assert len(submit_calls) == 1
+
+
+@freeze_time("2021-07-20")
+def test_application_post_submit_app_split_across_by_second_app_not_submittable(
+    client, user, auth_token, test_db_session
+):
+    massgov.pfml.fineos.mock_client.start_capture()
+    by_start_date = date(2020, 9, 20)  # 2020-09-20
+    by_end_date = by_start_date + timedelta(weeks=52)  # 2021-9-19
+    leave_start_date = by_end_date - timedelta(days=20)  # 2021-8-30
+    leave_end_date = leave_start_date + timedelta(days=61)  # 2022-12-20
+
+    factory.random.reseed_random(1)
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
+    )
+    BenefitYearFactory.create(start_date=by_start_date, end_date=by_end_date, employee=employee)
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
+
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(start_date=leave_start_date, end_date=leave_end_date)
+    ]
+    application.date_of_birth = date(1997, 6, 6)
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.hours_worked_per_week = 70
+    application.has_continuous_leave_periods = True
+    application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
+
+    assert not application.submitted_time
+
+    test_db_session.commit()
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}", "X-FF-Split-Claims-Across-BY": "true"},
+    )
+    response_body = response.get_json()
+
+    assert response.status_code == 201
+    assert not response_body.get("errors")
+    assert not response_body.get("warnings")
+    # Simplified check to confirm Application was included in response:
+    assert response_body.get("data").get("application_id") == str(application.application_id)
+    assert response_body.get("data").get("fineos_absence_id") == "NTN-259-ABS-01"
+    assert response_body.get("data").get("status") == ApplicationStatus.Submitted.value
+    assert response_body.get("data").get("split_into_application_id") is not None
+    test_db_session.refresh(application)
+    assert application.submitted_time
+
+    split_application_id = response_body.get("data").get("split_into_application_id")
+    response = client.get(
+        "/v1/applications/{}".format(split_application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    assert response.status_code == 200
+    response_body = response.get_json()
+    assert response_body.get("data").get("application_id") == split_application_id
+    assert response_body.get("data").get("fineos_absence_id") is None
+    assert response_body.get("data").get("status") == ApplicationStatus.Started.value
+    assert response_body.get("data").get("split_from_application_id") == str(
+        application.application_id
+    )
+    # This is the submit call.  The full fineos API calls are asserted against in a different test
+    # This asserts that the app was not split (and the split app submitted)
+    submit_calls = [
+        capture
+        for capture in massgov.pfml.fineos.mock_client.get_capture()
+        if capture[0] == "start_absence"
+    ]
+    assert len(submit_calls) == 1
+
+
+@freeze_time("2022-02-01")
+def test_application_post_submit_app_does_not_split_when_already_by_is_not_crossed(
+    client, user, auth_token, test_db_session
+):
+    massgov.pfml.fineos.mock_client.start_capture()
+    by_start_date = date(2021, 2, 7)
+    by_end_date = by_start_date + timedelta(weeks=52)  # 2022-02-06
+    leave_start_date = by_end_date - timedelta(days=8)  # 2022-02-02
+    leave_end_date = by_end_date - timedelta(days=4)  # 2022-02-10
+
+    factory.random.reseed_random(1)
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user,
+        employer_fein=employer.employer_fein,
+        tax_identifier=employee.tax_identifier,
+    )
+    BenefitYearFactory.create(start_date=by_start_date, end_date=by_end_date, employee=employee)
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
+
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(start_date=leave_start_date, end_date=leave_end_date)
+    ]
+    application.date_of_birth = date(1997, 6, 6)
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.hours_worked_per_week = 70
+    application.has_continuous_leave_periods = True
+    application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
+
+    assert not application.submitted_time
+
+    test_db_session.commit()
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}", "X-FF-Split-Claims-Across-BY": "true"},
+    )
+    response_body = response.get_json()
+
+    assert response.status_code == 201
+    assert not response_body.get("errors")
+    assert not response_body.get("warnings")
+    # Simplified check to confirm Application was included in response:
+    assert response_body.get("data").get("application_id") == str(application.application_id)
+    assert response_body.get("data").get("fineos_absence_id") == "NTN-259-ABS-01"
+    assert response_body.get("data").get("status") == ApplicationStatus.Submitted.value
+    assert response_body.get("data").get("split_into_application_id") is None
+    # This is the submit call.  The full fineos API calls are asserted against in a different test
+    # This asserts that the app was not split (and the split app submitted)
+    submit_calls = [
+        capture
+        for capture in massgov.pfml.fineos.mock_client.get_capture()
+        if capture[0] == "start_absence"
+    ]
+    assert len(submit_calls) == 1
+
+
+@freeze_time("2022-02-01")
+def test_application_post_submit_app_does_not_split_when_already_split(
+    client, user, auth_token, test_db_session
+):
+    massgov.pfml.fineos.mock_client.start_capture()
+    by_start_date = date(2021, 2, 7)
+    by_end_date = by_start_date + timedelta(weeks=52)  # 2022-02-06
+    leave_start_date = by_end_date - timedelta(days=4)  # 2022-02-02
+    leave_end_date = by_end_date + timedelta(days=4)  # 2022-02-10
+
+    factory.random.reseed_random(1)
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user,
+        employer_fein=employer.employer_fein,
+        tax_identifier=employee.tax_identifier,
+    )
+    split_application = ApplicationFactory.create(
+        user=user,
+        employer_fein=employer.employer_fein,
+        tax_identifier=employee.tax_identifier,
+        split_from_application_id=application.application_id,
+    )
+    BenefitYearFactory.create(start_date=by_start_date, end_date=by_end_date, employee=employee)
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
+
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(start_date=leave_start_date, end_date=leave_end_date)
+    ]
+    application.date_of_birth = date(1997, 6, 6)
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.hours_worked_per_week = 70
+    application.has_continuous_leave_periods = True
+    application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
+
+    assert not application.submitted_time
+
+    test_db_session.commit()
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}", "X-FF-Split-Claims-Across-BY": "true"},
+    )
+    response_body = response.get_json()
+
+    assert response.status_code == 201
+    assert not response_body.get("errors")
+    assert not response_body.get("warnings")
+    # Simplified check to confirm Application was included in response:
+    assert response_body.get("data").get("application_id") == str(application.application_id)
+    assert response_body.get("data").get("fineos_absence_id") == "NTN-259-ABS-01"
+    assert response_body.get("data").get("status") == ApplicationStatus.Submitted.value
+    assert response_body.get("data").get("split_into_application_id") == str(
+        split_application.application_id
+    )
+    # This is the submit call.  The full fineos API calls are asserted against in a different test
+    # This asserts that the app was not split (and the split app submitted)
+    submit_calls = [
+        capture
+        for capture in massgov.pfml.fineos.mock_client.get_capture()
+        if capture[0] == "start_absence"
+    ]
+    assert len(submit_calls) == 1
 
 
 def create_mock_client(err: FINEOSClientError):

@@ -17,6 +17,7 @@ import {
   denyClaim,
   closeDocuments,
   closeDocumentsErOpen,
+  addERReimbursment,
 } from "../submission/PostSubmit";
 import { Fineos } from "../submission/fineos.pages";
 import { tap, filter } from "streaming-iterables";
@@ -102,6 +103,9 @@ export const postSubmit: PostSubmitCallback = async (claim, response) => {
             break;
           case "APPROVEDOCSEROPEN":
             await closeDocumentsErOpen(page, claim, fineos_absence_id);
+            break;
+          case "ADDERREIMBURSEMENT":
+            await addERReimbursment(page, claim, fineos_absence_id);
             break;
           default:
             throw new Error(

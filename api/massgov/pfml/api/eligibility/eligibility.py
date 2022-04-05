@@ -198,7 +198,7 @@ def retrieve_financial_eligibility(
                 db_session,
                 found_benefit_year.benefit_year_id,
                 employee_id,
-                employee_id,
+                employer_id,
                 employer_average_weekly_wage,
             )
             meta["was_iaww_calculated"] = True

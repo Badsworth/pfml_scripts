@@ -10,11 +10,9 @@ from massgov.pfml.delegated_payments.mock.delegated_payments_factory import Dele
 
 
 @pytest.fixture
-def related_withholding_payment_step(
-    initialize_factories_session, test_db_session, test_db_other_session
-):
+def related_withholding_payment_step(initialize_factories_session, test_db_session):
     return withholding_payments_process.RelatedPaymentsProcessingStep(
-        db_session=test_db_session, log_entry_db_session=test_db_other_session
+        db_session=test_db_session, log_entry_db_session=test_db_session
     )
 
 

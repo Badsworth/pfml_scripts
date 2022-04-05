@@ -1,4 +1,5 @@
 import decimal
+import enum
 import os
 import re
 import uuid
@@ -71,6 +72,8 @@ class Constants:
 
 
 class Generate1099IRSfilingStep(Step):
+    class Metrics(str, enum.Enum):
+        IRS_FILE_1099_COUNT = "irs_file_1099_count"
 
     total_b_record = 0
     total_a_record = 1
@@ -82,7 +85,9 @@ class Generate1099IRSfilingStep(Step):
     def _generate_1099_irs_filing(self) -> None:
         logger.info("1099 Documents - Generate 1099.org file to be transmitted to IRS")
         pfml_1099 = pfml_1099_util.get_1099_records_to_file(self.db_session)
+
         if len(pfml_1099) > 0:
+
             if pfml_1099_util.is_test_file() == "T":
                 pfml_1099 = pfml_1099[:11]
             self.total_b_record = len(pfml_1099)
@@ -255,7 +260,7 @@ class Generate1099IRSfilingStep(Step):
         b_seq = self.seq_number + 1
         logger.info("B sequence starts at %s", b_seq)
         for records in tax_data:
-
+            self.increment(self.Metrics.IRS_FILE_1099_COUNT)
             b_dict = dict(
                 B_REC_TYPE=Constants.B_REC_TYPE,
                 TAX_YEAR=pfml_1099_util.get_tax_year(),
@@ -288,10 +293,12 @@ class Generate1099IRSfilingStep(Step):
                 FE_IND=Constants.BLANK_SPACE,
                 PAYEE_NM1=self._get_full_name(records.first_name, records.last_name, "PAYEE_NM1"),
                 PAYEE_NM2=self._get_full_name(records.first_name, records.last_name, "PAYEE_NM2"),
-                PAYEE_ADDRESS=records.address_line_1.upper(),
+                PAYEE_ADDRESS=self._get_address_lines(
+                    records.address_line_1, records.address_line_2
+                ),
                 B40_1=Constants.BLANK_SPACE,
-                PAYEE_CTY=records.city.upper(),
-                PAYEE_ST=records.state.upper(),
+                PAYEE_CTY=self._get_city(records.city),
+                PAYEE_ST=self._get_state(records.state),
                 PAYEE_ZC=self._get_zip(records.zip),
                 B1=Constants.BLANK_SPACE,
                 SEQ_NO=b_seq,
@@ -377,10 +384,14 @@ class Generate1099IRSfilingStep(Step):
         else:
             # TODO find which correction type to send and how to determine
             # G (1 correction) or C(2 correction)
-            return "G"
+            # return Blank until corrections file is sent
+            return Constants.BLANK_SPACE
 
     def _get_full_name(self, fname: str, lname: str, field_name: str) -> str:
-        full_name_str = lname + Constants.BLANK_SPACE + fname
+
+        first_name = self._replace_title(fname)
+        last_name = self._replace_title(lname)
+        full_name_str = last_name + " " + first_name
         full_name = self._remove_special_chars(full_name_str)
         name_length = len(full_name)
         if name_length <= 40:
@@ -398,14 +409,17 @@ class Generate1099IRSfilingStep(Step):
 
     def _get_name_ctl(self, last_name: str) -> str:
         last_name_four = ""
-        lname = self._remove_special_chars(last_name)
+        lname = self._remove_special_chars_name_control(last_name)
         if lname.find("-") != -1:
             last_name = lname.split("-")[0]
         elif lname.find(" ") != -1:
             last_name_list = lname.split(" ")
             name_length = len(last_name_list)
             if name_length == 2:
-                last_name = last_name_list[1]
+                if not self._if_title_name_control(last_name_list[1]):
+                    last_name = last_name_list[1]
+                else:
+                    last_name = last_name_list[0]
             else:
                 last_name = last_name_list[0].rstrip() + last_name_list[1]
         else:
@@ -445,6 +459,39 @@ class Generate1099IRSfilingStep(Step):
             self._format_amount_fields(fed_tax),
         )
 
+    def _if_title_name_control(self, name_str: str) -> bool:
+
+        titles = ["JR.", "JR", "II", "III", "SR", "SR.", "DR", "DR.", "MRS.", "MRS", "MR", "MR."]
+        ret_value = False
+
+        name_str = name_str.rstrip().upper()
+        for title in titles:
+            if title == name_str:
+                ret_value = True
+                break
+        return ret_value
+
+    def _replace_title(self, name_str: str) -> str:
+        titles = ["DR.", "MR.", "MRS.", "DR ", "MR ", "MRS "]
+        name_str = name_str.upper()
+        for title in titles:
+            if title in name_str:
+                start_index = name_str.index(title)
+                end_index = start_index + len(title)
+                name_str = name_str.replace(name_str[start_index:end_index], "")
+                name_str = name_str.rstrip()
+                break
+        return name_str
+
+    def _get_city(self, city: str) -> str:
+
+        city = city[:40].upper()
+        return city
+
+    def _get_state(self, st: str) -> str:
+        state = st[:2].upper()
+        return state
+
     def _get_zip(self, zip_code: str) -> str:
         zip_code_five = ""
         zip_code_four = ""
@@ -459,7 +506,22 @@ class Generate1099IRSfilingStep(Step):
 
     def _remove_special_chars(self, name_string: str) -> str:
 
-        final_string = re.sub("[^A-Za-z0-9-& ]+", "", name_string)
+        final_string = re.sub("[^A-Za-z0-9- &]+", "", name_string)
         if final_string != name_string:
             logger.info("Removed special characters from name.")
         return final_string
+
+    def _remove_special_chars_name_control(self, name_string: str) -> str:
+
+        final_string = re.sub("[^A-Za-z0-9- ]+", "", name_string)
+        if final_string != name_string:
+            logger.info("Removed special characters from name control.")
+        return final_string
+
+    def _get_address_lines(self, line1: str, line2: str) -> str:
+
+        address_line_str = line1 + " " + line2
+        address_lines = self._remove_special_chars(address_line_str)
+        address_line_forty = address_lines[:40].upper()
+
+        return address_line_forty

@@ -180,6 +180,9 @@ class ClaimantData:
     account_type: Optional[str] = None
     should_do_eft_operations: bool = False
 
+    mass_id_number: Optional[str] = None
+    out_of_state_id_number: Optional[str] = None
+
     absence_period_data: List[AbsencePeriodContainer]
 
     def __init__(
@@ -492,6 +495,18 @@ class ClaimantData:
 
             self.employee_last_name = payments_util.validate_db_input(
                 "LASTNAME", employee_feed_record, self.validation_container, True
+            )
+
+            self.mass_id_number = payments_util.validate_db_input(
+                "EXTMASSID",
+                employee_feed_record,
+                self.validation_container,
+                False,
+                custom_validator_func=payments_util.mass_id_validator,
+            )
+
+            self.out_of_state_id_number = payments_util.validate_db_input(
+                "EXTOUTOFSTATEID", employee_feed_record, self.validation_container, False
             )
 
             self._process_payment_preferences(employee_feed_record)
@@ -1108,6 +1123,12 @@ class ClaimantExtractStep(Step):
 
         if claimant_data.employee_last_name is not None:
             employee_pfml_entry.fineos_employee_last_name = claimant_data.employee_last_name
+
+        if claimant_data.mass_id_number:
+            employee_pfml_entry.mass_id_number = claimant_data.mass_id_number
+
+        if claimant_data.out_of_state_id_number:
+            employee_pfml_entry.out_of_state_id_number = claimant_data.out_of_state_id_number
 
         self.update_eft_info(claimant_data, employee_pfml_entry)
 

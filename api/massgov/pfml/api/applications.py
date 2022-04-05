@@ -13,6 +13,7 @@ import massgov.pfml.api.util.response as response_util
 import massgov.pfml.api.validation.application_rules as application_rules
 import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
+from massgov.pfml import db
 from massgov.pfml.api.authorization.flask import CREATE, EDIT, READ, ensure
 from massgov.pfml.api.claims import get_claim_from_db
 from massgov.pfml.api.exceptions import ClaimWithdrawn
@@ -26,7 +27,11 @@ from massgov.pfml.api.models.applications.requests import (
 )
 from massgov.pfml.api.models.applications.responses import ApplicationResponse
 from massgov.pfml.api.models.common import OrderDirection
-from massgov.pfml.api.services.applications import get_application_split, get_document_by_id
+from massgov.pfml.api.services.applications import (
+    get_application_split,
+    get_document_by_id,
+    split_application_by_date,
+)
 from massgov.pfml.api.services.document_upload import upload_document_to_fineos
 from massgov.pfml.api.services.fineos_actions import (
     complete_intake,
@@ -50,6 +55,7 @@ from massgov.pfml.api.validation.exceptions import (
     ValidationException,
 )
 from massgov.pfml.db.models.applications import Application, DocumentType, LeaveReason
+from massgov.pfml.db.models.employees import User
 from massgov.pfml.fineos.exception import (
     FINEOSClientError,
     FINEOSEntityNotFound,
@@ -161,9 +167,7 @@ def application_imports():
     assert application_import_request.absence_case_id is not None
 
     with app.db_session() as db_session:
-        error = applications_service.claim_is_valid_for_application_import(db_session, user, claim)
-        if error is not None:
-            return error.to_api_response()
+        applications_service.claim_is_valid_for_application_import(db_session, user, claim)
 
         db_session.add(application)
         fineos = massgov.pfml.fineos.create_client()
@@ -389,6 +393,60 @@ def get_fineos_submit_issues_response(err, existing_application):
         raise err
 
 
+# TODO: move to service layer
+def submit_application_to_fineos(
+    application: Application, db_session: db.Session, current_user: User
+) -> None:
+    log_attributes = get_application_log_attributes(application)
+    # Only send to fineos if fineos_absence_id isn't set on the claim. If it is set,
+    # assume that just complete_intake needs to be reattempted.
+    if not application.claim:
+        try:
+            send_to_fineos(application, db_session, current_user)
+        # TODO (CP-2350): improve handling of FINEOS validation rules
+        except ValidationError as e:
+            logger.warning(
+                "applications_submit failure - application failed FINEOS validation",
+                extra=log_attributes,
+            )
+            raise e
+
+        except Exception as e:
+            logger.warning(
+                "applications_submit failure - failure sending application to claims processing system",
+                extra=log_attributes,
+                exc_info=True,
+            )
+
+            raise e
+
+        logger.info(
+            "applications_submit - application sent to claims processing system",
+            extra=log_attributes,
+        )
+
+    try:
+        complete_intake(application, db_session)
+        application.submitted_time = datetime_util.utcnow()
+        # Update log attributes now that submitted_time is set
+        log_attributes = get_application_log_attributes(application)
+        db_session.add(application)
+        logger.info(
+            "applications_submit - application complete intake success", extra=log_attributes
+        )
+    except Exception as e:
+        logger.warning(
+            "applications_submit failure - application complete intake failure",
+            extra=log_attributes,
+            exc_info=True,
+        )
+
+        raise e
+
+    # Send previous leaves, employer benefits, and other incomes as eforms to FINEOS
+    create_other_leaves_and_other_incomes_eforms(application, db_session)
+
+
 def applications_submit(application_id):
     split_claims_across_by_enabled = (
         connexion.request.headers.get("X-FF-Split-Claims-Across-BY") == "true"
@@ -458,68 +516,73 @@ def applications_submit(application_id):
                 data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
             ).to_api_response()
 
-        # Only send to fineos if fineos_absence_id isn't set on the claim. If it is set,
-        # assume that just complete_intake needs to be reattempted.
-        if not existing_application.claim:
-            if split_claims_across_by_enabled:
-                application_split = get_application_split(existing_application, db_session)
-                logger.info(
-                    f"application would have been split: {application_split != None}",
-                    extra=log_attributes,
-                )
+        application_split = get_application_split(existing_application, db_session)
+        logger.info(
+            f"application would have been split: {application_split != None}",
+            extra={
+                **log_attributes,
+                **{"split_claims_across_by_enabled": split_claims_across_by_enabled},
+            },
+        )
+
+        if application_split is not None and split_claims_across_by_enabled:
+            application_before_split, application_after_split = split_application_by_date(
+                db_session, existing_application, application_split.crossed_benefit_year.end_date
+            )
+            logger.info(
+                "successfully split application",
+                extra={
+                    **log_attributes,
+                    **application_split.__dict__,
+                    **{"split_claims_across_by_enabled": split_claims_across_by_enabled},
+                },
+            )
             try:
-                send_to_fineos(existing_application, db_session, current_user)
-            # TODO (CP-2350): improve handling of FINEOS validation rules
-            except ValidationError as e:
-                logger.warning(
-                    "applications_submit failure - application failed FINEOS validation",
-                    extra=log_attributes,
-                )
-                raise e
-
+                submit_application_to_fineos(application_before_split, db_session, current_user)
             except Exception as e:
-                logger.warning(
-                    "applications_submit failure - failure sending application to claims processing system",
-                    extra=log_attributes,
-                    exc_info=True,
-                )
-
                 if isinstance(e, FINEOSClientError):
                     return get_fineos_submit_issues_response(e, existing_application)
-
+                raise e
+            try:
+                split_application_log_attributes = get_application_log_attributes(
+                    application_after_split
+                )
+                split_application_issues = application_rules.get_application_submit_issues(
+                    application_after_split
+                )
+                if split_application_issues:
+                    logger.info(
+                        "split_application was not submitted - split application failed validation",
+                        extra={
+                            **split_application_log_attributes,
+                            **application_split.__dict__,
+                            **{"split_claims_across_by_enabled": split_claims_across_by_enabled},
+                        },
+                    )
+                    logger.info(
+                        "split_application was not submitted - split application failed validation",
+                        extra=split_application_log_attributes,
+                    )
+                else:
+                    submit_application_to_fineos(
+                        application_after_split,
+                        db_session,
+                        current_user,
+                    )
+            except Exception as e:
+                if isinstance(e, FINEOSClientError):
+                    return get_fineos_submit_issues_response(e, existing_application)
+                raise e
+        else:
+            try:
+                submit_application_to_fineos(existing_application, db_session, current_user)
+            except Exception as e:
+                if isinstance(e, FINEOSClientError):
+                    return get_fineos_submit_issues_response(e, existing_application)
                 raise e
 
-            logger.info(
-                "applications_submit - application sent to claims processing system",
-                extra=log_attributes,
-            )
-
-        try:
-            complete_intake(existing_application, db_session)
-            existing_application.submitted_time = datetime_util.utcnow()
-            # Update log attributes now that submitted_time is set
-            log_attributes = get_application_log_attributes(existing_application)
-            db_session.add(existing_application)
-            logger.info(
-                "applications_submit - application complete intake success", extra=log_attributes
-            )
-        except Exception as e:
-            logger.warning(
-                "applications_submit failure - application complete intake failure",
-                extra=log_attributes,
-                exc_info=True,
-            )
-
-            if not isinstance(e, FINEOSClientError):
-                raise e
-
-            return get_fineos_submit_issues_response(e, existing_application)
-
-        # Send previous leaves, employer benefits, and other incomes as eforms to FINEOS
-        create_other_leaves_and_other_incomes_eforms(existing_application, db_session)
-
-        logger.info("applications_submit success", extra=log_attributes)
-
+    logger.info("applications_submit success", extra=log_attributes)
+    db_session.refresh(existing_application)
     return response_util.success_response(
         message="Application {} submitted without errors".format(
             existing_application.application_id

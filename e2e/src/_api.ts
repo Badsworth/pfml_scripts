@@ -398,8 +398,13 @@ export interface EmployeeResponse {
   other_name?: string | null;
   email_address?: string | null;
   last_name?: string;
-  phone_number?: string | null;
-  tax_identifier_last4: string;
+  phone_numbers?: (Phone | null)[];
+  tax_identifier_last4?: string | null;
+  tax_identifier?: SsnItin | null;
+  fineos_customer_number?: string | null;
+  mass_id_number?: MassId | null;
+  date_of_birth?: MaskedDate | null;
+  created_at?: any;
 }
 export interface GETEmployeesByEmployeeIdResponse extends SuccessfulResponse {
   data?: EmployeeResponse;
@@ -414,14 +419,32 @@ export interface EmployeeUpdateRequest {
 export interface PATCHEmployeesByEmployeeIdResponse extends SuccessfulResponse {
   data?: EmployeeResponse;
 }
-export interface EmployeeSearchRequest {
-  first_name: string;
-  middle_name?: string;
-  last_name: string;
-  tax_identifier_last4: string;
+
+export type NonMaskedSsnItin = string;
+export interface EmployeeSearchRequestTermsMetadata {
+  first_name?: string | null;
+  last_name?: string | null;
+  email_address?: string | null;
+  phone_number?: string | null;
+  tax_identifier?: NonMaskedSsnItin | null;
+  fineos_customer_number?: string | null;
 }
+export interface SearchRequestOrderMetadata {
+  by?: "created_at" | null;
+  direction?: ("ascending" | "descending") | null;
+}
+export interface SearchRequestPagingMetadata {
+  offset?: number | null;
+  size?: number | null;
+}
+export interface EmployeeSearchRequest {
+  terms: EmployeeSearchRequestTermsMetadata;
+  order?: SearchRequestOrderMetadata | null;
+  paging?: SearchRequestPagingMetadata | null;
+}
+export type EmployeesResponse = EmployeeResponse[];
 export interface POSTEmployeesSearchResponse extends SuccessfulResponse {
-  data?: EmployeeResponse;
+  data?: EmployeesResponse;
 }
 export interface EmployerResponse {
   employer_id?: string;
@@ -492,8 +515,8 @@ export interface ManagedRequirementResponse {
   created_at?: any;
 }
 export interface ClaimResponse {
-  employer?: EmployerResponse;
-  employee?: EmployeeBasicResponse;
+  employer?: EmployerResponse | null;
+  employee?: EmployeeBasicResponse | null;
   fineos_absence_id?: any;
   fineos_notification_id?: any;
   absence_period_start_date?: any;
@@ -509,6 +532,24 @@ export interface ClaimResponse {
 export type ClaimsResponse = ClaimResponse[];
 export interface GETClaimsResponse extends SuccessfulResponse {
   data?: ClaimsResponse;
+}
+export interface ClaimRequest {
+  page_size?: number;
+  page_offset?: number;
+  order_by?: "fineos_absence_status" | "created_at" | "employee";
+  order_direction?: "ascending" | "descending";
+  employer_id?: string[];
+  employee_id?: string[];
+  claim_status?: string;
+  search?: string;
+  allow_hrd?: boolean;
+  is_reviewable?: "yes" | "no";
+}
+export interface POSTClaimsSearchResponse extends SuccessfulResponse {
+  data?: ClaimsResponse;
+}
+export interface ClaimsSearchRequest {
+  terms: ClaimRequest;
 }
 export interface PaymentResponse {
   payment_id?: string | null;
@@ -1408,6 +1449,23 @@ export async function getClaims(
     }
   );
 }
+/**
+ * Retrieve claims
+ */
+export async function postClaimsSearch(
+  claimRequest: ClaimsSearchRequest,
+  options?: RequestOptions
+): Promise<ApiResponse<POSTClaimsSearchResponse>> {
+  return await http.fetchJson(
+    "/claims/search",
+    http.json({
+      ...options,
+      method: "POST",
+      body: claimRequest,
+    })
+  );
+}
+
 /**
  * Retrieve payments with status for a specified absence ID
  */

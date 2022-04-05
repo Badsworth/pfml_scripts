@@ -13,7 +13,7 @@ resource "newrelic_nrql_alert_condition" "sns_spending_limit" {
   nrql {
     #
     query = <<-NRQL
-      SELECT count(*) FROM Log WHERE aws.logGroup = '${local.sns_failure_log_group_name}' WHERE delivery.providerResponse = 'This delivery would exceed max price'
+      SELECT count(*) FROM Log WHERE aws.logGroup = '${local.sns_log_group_name}' WHERE delivery.providerResponse = 'This delivery would exceed max price'
     NRQL
   }
 
@@ -78,7 +78,7 @@ resource "newrelic_nrql_alert_condition" "sns_sms_phone_carrier_unavailable" {
   nrql {
     #
     query = <<-NRQL
-      SELECT count(*) FROM Log WHERE aws.logGroup = '${local.sns_failure_log_group_name}' WHERE delivery.providerResponse = 'Phone carrier is currently unreachable/unavailable'
+      SELECT count(*) FROM Log WHERE aws.logGroup = '${local.sns_log_group_name}' WHERE delivery.providerResponse = 'Phone carrier is currently unreachable/unavailable'
     NRQL
   }
 
@@ -92,7 +92,7 @@ resource "newrelic_nrql_alert_condition" "sns_sms_phone_carrier_unavailable" {
   }
 
   critical {
-    threshold_duration    = var.carrier_unavailable_period["critical"]
+    threshold_duration    = var.carrier_unavailable_period["warning"] # terraform will not allow to set threshold higher than 3600 seconds
     threshold             = local.phone_carrier_unavailable_threshold # threshold in aws_cloudwatch_metric_alarm
     operator              = local.newrelic_comparison_operator        # comparison_operator in aws_cloudwatch_metric_alarm
     threshold_occurrences = local.threshold_occurrences
@@ -114,7 +114,7 @@ resource "newrelic_nrql_alert_condition" "sns_sms_blocked_as_spam" {
   nrql {
 
     query = <<-NRQL
-      SELECT count(*) FROM Log WHERE aws.logGroup = '${local.sns_failure_log_group_name}' WHERE delivery.providerResponse = 'Blocked as spam by phone carrier'
+      SELECT count(*) FROM Log WHERE aws.logGroup = '${local.sns_log_group_name}' WHERE delivery.providerResponse = 'Blocked as spam by phone carrier'
     NRQL
   }
 
@@ -142,7 +142,7 @@ resource "newrelic_nrql_alert_condition" "sns_sms_rate_exceeded" {
 
   nrql {
     query = <<-NRQL
-      SELECT count(*) FROM Log WHERE aws.logGroup = '${local.sns_failure_log_group_name}' WHERE delivery.providerResponse = 'Rate exceeded'
+      SELECT count(*) FROM Log WHERE aws.logGroup = '${local.sns_log_group_name}' WHERE delivery.providerResponse = 'Rate exceeded'
     NRQL
   }
 
@@ -170,7 +170,7 @@ resource "newrelic_nrql_alert_condition" "sns_mfa_delivery_time_exceeded" {
 
   nrql {
     query = <<-NRQL
-      SELECT count(*) FROM Log WHERE (aws.logGroup = '${local.sns_failure_log_group_name}' or aws.logGroup = '${local.sns_log_group_name}') WHERE (delivery.dwellTimeMsUntilDeviceAck >= ${local.mfa_user_response_time}) OR (delivery.dwellTimeMs >= ${local.mfa_sns_delivery_time})
+      SELECT count(*) FROM Log WHERE aws.logGroup = '${local.sns_log_group_name}' WHERE (delivery.dwellTimeMsUntilDeviceAck >= ${local.mfa_user_response_time}) OR (delivery.dwellTimeMs >= ${local.mfa_sns_delivery_time})
     NRQL
   }
 

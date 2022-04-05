@@ -11,6 +11,10 @@ from freezegun import freeze_time
 
 from massgov.pfml import db
 from massgov.pfml.api.eligibility import eligibility, wage
+from massgov.pfml.api.eligibility.benefit_year import (
+    find_employer_benefit_year_IAWW_contribution,
+    get_benefit_year_by_employee_id,
+)
 from massgov.pfml.api.eligibility.benefit_year_dates import get_benefit_year_dates
 from massgov.pfml.api.eligibility.eligibility_date import eligibility_date
 from massgov.pfml.api.eligibility.mock.scenario_data_generator import (
@@ -1117,3 +1121,61 @@ def test_benefit_year_eligibility_mulitple_employers(test_db_session, initialize
         unemployment_minimum=Decimal("5400.00"),
         employer_average_weekly_wage=Decimal("307.69"),
     )
+
+
+def test_benefit_year_calculates_employer_iaww(test_db_session, initialize_factories_session):
+    # In this scenario the second claim within the benefit year is for a different employer,
+    # that we didn't have IAWW for when we created the beneift year.
+    # IAWW for the employer should be calculated and stored on the benefit year
+
+    # set up initial scenario
+
+    scenario = EligibilityScenarioDescriptor(
+        last_x_quarters_wages=["6000", "6000", "6000", "6000", "6000", "6000"],
+    )
+
+    # create the benefit year based on a finanical eligibility check for Employer A
+    scenario_data = generate_eligibility_scenario_data_in_db(scenario, test_db_session)
+    employee = scenario_data.employee
+    other_employer = EmployerFactory.create()
+
+    run_eligibility_for_scenario(scenario_data, test_db_session)
+    benefit_year = get_benefit_year_by_employee_id(
+        test_db_session, employee.employee_id, scenario_data.leave_start_date
+    )
+    employer_2_iaww = find_employer_benefit_year_IAWW_contribution(
+        benefit_year, other_employer.employer_id
+    )
+
+    assert employer_2_iaww is None
+
+    starting_quarter = Quarter.from_date(scenario_data.leave_start_date)
+
+    # add wage data for second employer
+    for quarter in Quarter.series_backwards(starting_quarter, 8):
+        WagesAndContributionsFactory.create(
+            employee=employee,
+            employer=other_employer,
+            filing_period=quarter.start_date(),
+            employee_qtr_wages="4000",
+        )
+
+    test_db_session.commit()
+
+    # run financial eligibility for a new claim from Employer B
+    eligibility.retrieve_financial_eligibility(
+        test_db_session,
+        employee.employee_id,
+        other_employer.employer_id,
+        date(2021, 12, 1),
+        date(2021, 12, 1),
+        EligibilityEmploymentStatus.employed,
+    )
+
+    test_db_session.refresh(benefit_year)
+
+    employer_2_iaww = find_employer_benefit_year_IAWW_contribution(
+        benefit_year, other_employer.employer_id
+    )
+
+    assert employer_2_iaww is not None

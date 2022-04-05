@@ -33,6 +33,7 @@ from massgov.pfml.db.models.applications import (
     EmploymentStatus,
     LeaveReason,
     LeaveReasonQualifier,
+    OtherIncomeType,
 )
 from massgov.pfml.db.models.employees import BankAccountType, Gender, PaymentMethod
 from massgov.pfml.db.models.factories import (
@@ -51,12 +52,11 @@ from massgov.pfml.fineos.mock.eform import (
 )
 from massgov.pfml.fineos.models.customer_api import EForm, EFormAttribute, ModelEnum
 from massgov.pfml.fineos.models.customer_api.spec import (
+    AbsenceDay,
     AbsenceDetails,
     AbsencePeriod,
     EFormSummary,
     EpisodicLeavePeriodDetail,
-    ReportedReducedScheduleLeavePeriod,
-    TimeOffLeavePeriod,
     WeekBasedWorkPattern,
     WorkPatternDay,
 )
@@ -240,20 +240,15 @@ def intermittent_leave_periods_invalid_leave_reason_qualifier():
 @pytest.fixture
 def reduced_leave_periods():
     return [
-        ReportedReducedScheduleLeavePeriod(
+        AbsencePeriod(
+            id="PL-14449-0000002239",
+            reason="Pregnancy/Maternity",
+            reasonQualifier1="Foster Care",
+            reasonQualifier2="",
             startDate=date(2021, 1, 29),
             endDate=date(2021, 3, 29),
-            sundayOffMinutes=0,  # day with only minutes
-            mondayOffHours=7,
-            mondayOffMinutes=15,
-            tuesdayOffHours=8,  # day with only hours
-            wednesdayOffHours=7,
-            wednesdayOffMinutes=40,
-            thursdayOffHours=6,
-            thursdayOffMinutes=45,
-            fridayOffHours=6,
-            fridayOffMinutes=25,
-            # saturday = day with no hours or minutes
+            absenceType="Reduced Schedule",
+            requestStatus="Pending",
         )
     ]
 
@@ -264,55 +259,62 @@ def absence_details(continuous_leave_periods, intermittent_leave_periods, reduce
         creationDate=datetime(2020, 10, 10),
         notificationDate=date(2020, 10, 20),
         reportedTimeOff=[],
-        absencePeriods=continuous_leave_periods + intermittent_leave_periods,
-        reportedReducedSchedule=reduced_leave_periods,
+        absencePeriods=continuous_leave_periods
+        + intermittent_leave_periods
+        + reduced_leave_periods,
+        absenceDays=[
+            # friday, not in the reduced schedule leave range
+            AbsenceDay(date=datetime(2021, 1, 15), timeRequested="3.25"),
+            # monday
+            AbsenceDay(date=datetime(2021, 2, 1), timeRequested="4.25"),
+            # tuesday
+            AbsenceDay(date=datetime(2021, 2, 2), timeRequested="3.00"),
+        ],
+        reportedReducedSchedule=[],
     )
 
 
 @pytest.fixture
 def absence_details_without_open_absence_period(
-    continuous_leave_periods_not_open, intermittent_leave_periods_not_open, reduced_leave_periods
+    continuous_leave_periods_not_open, intermittent_leave_periods_not_open
 ):
     return AbsenceDetails(
         creationDate=datetime(2020, 10, 10),
         notificationDate=date(2020, 10, 20),
         reportedTimeOff=[],
         absencePeriods=continuous_leave_periods_not_open + intermittent_leave_periods_not_open,
-        reportedReducedSchedule=reduced_leave_periods,
+        reportedReducedSchedule=[],
     )
 
 
 @pytest.fixture
-def absence_details_invalid_leave_reason(
-    intermittent_leave_periods_invalid_leave_reason, reduced_leave_periods
-):
+def absence_details_invalid_leave_reason(intermittent_leave_periods_invalid_leave_reason):
     return AbsenceDetails(
         creationDate=datetime(2020, 10, 10),
         notificationDate=date(2020, 10, 20),
         reportedTimeOff=[],
         absencePeriods=intermittent_leave_periods_invalid_leave_reason,
-        reportedReducedSchedule=reduced_leave_periods,
+        reportedReducedSchedule=[],
     )
 
 
 @pytest.fixture
 def absence_details_invalid_leave_reason_qualifier(
     intermittent_leave_periods_invalid_leave_reason_qualifier,
-    reduced_leave_periods,
 ):
     return AbsenceDetails(
         creationDate=datetime(2020, 10, 10),
         notificationDate=date(2020, 10, 20),
         reportedTimeOff=[],
         absencePeriods=intermittent_leave_periods_invalid_leave_reason_qualifier,
-        reportedReducedSchedule=reduced_leave_periods,
+        reportedReducedSchedule=[],
     )
 
 
 def _compare_continuous_leave(
     application,
     continuous_leave: ContinuousLeavePeriod,
-    fineos_continuous_leave: TimeOffLeavePeriod,
+    fineos_continuous_leave: AbsencePeriod,
 ):
     assert continuous_leave.application_id == application.application_id
     assert continuous_leave.start_date == fineos_continuous_leave.startDate
@@ -336,25 +338,13 @@ def _compare_reduced_leave(application, reduced_leave, fineos_reduced_leave):
     assert reduced_leave.application_id == application.application_id
     assert reduced_leave.start_date == fineos_reduced_leave.startDate
     assert reduced_leave.end_date == fineos_reduced_leave.endDate
-    assert (
-        reduced_leave.sunday_off_minutes == fineos_reduced_leave.sundayOffMinutes
-    )  # sunday has only minutes
-    assert reduced_leave.monday_off_minutes == fineos_reduced_leave.mondayOffMinutes + (
-        fineos_reduced_leave.mondayOffHours * 60
-    )
-    assert (
-        reduced_leave.tuesday_off_minutes == fineos_reduced_leave.tuesdayOffHours * 60
-    )  # tuesday has only hours
-    assert reduced_leave.wednesday_off_minutes == fineos_reduced_leave.wednesdayOffMinutes + (
-        fineos_reduced_leave.wednesdayOffHours * 60
-    )
-    assert reduced_leave.thursday_off_minutes == fineos_reduced_leave.thursdayOffMinutes + (
-        fineos_reduced_leave.thursdayOffHours * 60
-    )
-    assert reduced_leave.friday_off_minutes == fineos_reduced_leave.fridayOffMinutes + (
-        fineos_reduced_leave.fridayOffHours * 60
-    )
-    assert reduced_leave.saturday_off_minutes is None
+    assert reduced_leave.monday_off_minutes == 255
+    assert reduced_leave.tuesday_off_minutes == 180
+    assert reduced_leave.wednesday_off_minutes == 0
+    assert reduced_leave.thursday_off_minutes == 0
+    assert reduced_leave.friday_off_minutes == 0
+    assert reduced_leave.saturday_off_minutes == 0
+    assert reduced_leave.sunday_off_minutes == 0
 
 
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")
@@ -381,7 +371,7 @@ def test_set_application_absence_and_leave_period(
     assert len(application.reduced_schedule_leave_periods) == 1
     assert application.has_reduced_schedule_leave_periods
     reduced_leave = application.reduced_schedule_leave_periods[0]
-    fineos_reduced_leave = absence_details.reportedReducedSchedule[0]
+    fineos_reduced_leave = absence_details.absencePeriods[2]
     _compare_reduced_leave(application, reduced_leave, fineos_reduced_leave)
 
     assert application.leave_reason_id == LeaveReason.get_id(
@@ -431,12 +421,6 @@ def test_set_application_absence_and_leave_period_without_open_absence_period(
     intermittent_leave = application.intermittent_leave_periods[0]
     fineos_intermittent_leave = absence_details_without_open_absence_period.absencePeriods[1]
     _compare_intermittent_leave(application, intermittent_leave, fineos_intermittent_leave)
-
-    assert len(application.reduced_schedule_leave_periods) == 1
-    assert application.has_reduced_schedule_leave_periods
-    reduced_leave = application.reduced_schedule_leave_periods[0]
-    fineos_reduced_leave = absence_details_without_open_absence_period.reportedReducedSchedule[0]
-    _compare_reduced_leave(application, reduced_leave, fineos_reduced_leave)
 
     assert application.leave_reason_id == LeaveReason.get_id(
         absence_details_without_open_absence_period.absencePeriods[2].reason
@@ -1326,6 +1310,71 @@ def test_set_other_incomes_with_multiple_different_income_types(
     assert application.other_incomes[1].income_type_id == 4  # (lk_other_income_type)
 
     assert len(application.other_incomes) == 2
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.customer_get_eform")
+def test_set_other_incomes_from_fineos_without_frequency_or_type(
+    mock_customer_get_eform,
+    fineos_client,
+    fineos_web_id,
+    application,
+    test_db_session,
+    absence_case_id,
+):
+    eform_summaries = [
+        EFormSummary(eformId=1, eformType=EformTypes.OTHER_INCOME_V2),
+    ]
+
+    mock_customer_get_eform.return_value = EForm(
+        eformId=211714,
+        eformType="Other Income - current version",
+        eformAttributes=[
+            # Minimum info needed to create Previous Leaves, both other and same reason:
+            EFormAttribute(
+                name="V2OtherIncomeNonEmployerBenefitStartDate",
+                dateValue="2021-05-04",
+            ),
+            EFormAttribute(
+                name="V2OtherIncomeNonEmployerBenefitEndDate",
+                dateValue="2021-05-05",
+            ),
+            EFormAttribute(
+                name="V2OtherIncomeNonEmployerBenefitFrequency",
+                enumValue=ModelEnum(domainName="FrequencyEforms", instanceValue="Not Provided"),
+            ),
+            EFormAttribute(
+                name="V2OtherIncomeNonEmployerBenefitWRT",
+                enumValue=ModelEnum(
+                    domainName="WageReplacementType2",
+                    instanceValue="Please Select",
+                ),
+            ),
+            EFormAttribute(
+                name="V2ReceiveWageReplacement",
+                enumValue=ModelEnum(domainName="YesNoI'veApplied", instanceValue="Yes"),
+            ),
+            EFormAttribute(name="V2OtherIncomeNonEmployerBenefitAmount1", decimalValue=100.0),
+        ],
+    )
+    set_other_incomes_from_fineos(
+        fineos_client,
+        fineos_web_id,
+        application,
+        test_db_session,
+        absence_case_id,
+        eform_summaries=eform_summaries,
+    )
+
+    assert application.has_other_incomes is True
+    assert application.other_incomes[0].income_amount_dollars == 100
+    assert (
+        application.other_incomes[0].income_amount_frequency_id
+        == AmountFrequency.UNKNOWN.amount_frequency_id
+    )
+    assert (
+        application.other_incomes[0].income_type_id == OtherIncomeType.UNKNOWN.other_income_type_id
+    )
+    assert len(application.other_incomes) == 1
 
 
 class TestSplitApplicationByDate:

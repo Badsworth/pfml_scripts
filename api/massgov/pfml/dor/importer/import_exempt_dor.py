@@ -76,7 +76,7 @@ class Configuration:
     file_path: str
 
     def __init__(self, input_args: List[str]):
-        parser = argparse.ArgumentParser(description="Process DOR Pending Filing Response file")
+        parser = argparse.ArgumentParser(description="Process DOR Exempt Employers file")
 
         parser.add_argument("--responsefile", help="Path to DORDUADFML file to process.")
 
@@ -84,7 +84,7 @@ class Configuration:
         self.file_path = args.responsefile
 
         if args.responsefile is None:
-            raise Exception("Response file and exemption files are required.")
+            raise Exception("Response file is required.")
 
 
 @background_task("dor-import-exempt")
@@ -215,7 +215,7 @@ def process_exempt_employer_import(
     report.parsed_employers_exception_line_nums = []
 
     report_log_entry = massgov.pfml.util.batch.log.create_log_entry(
-        db_session, "DOR", "Pending Filing Response", report
+        db_session, "DOR_EXEMPT", "Exempt Employers", report
     )
 
     db_session.refresh(report_log_entry)
