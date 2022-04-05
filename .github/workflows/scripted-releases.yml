@@ -59,7 +59,7 @@ jobs:
   create-release-with-release-notes:
     runs-on: ubuntu-latest
     needs: run-scripted-releases
-    # Previous job must finish successfully and do not allow foobar application to create release
+    # Previous job must finish successfully and only allow api & portal to create release
     if: needs.run-scripted-releases.outcome == 'success' && contains(github.event.inputs.application, 'api') || contains(github.event.inputs.application, 'portal')
 
     steps:
@@ -72,9 +72,17 @@ jobs:
       - name: Fetch tags
         id: version
         working-directory: ./${{ github.event.inputs.application }}
+        # The production-ready tag created from "finalize-release" will come before the "rc" tags due to lexicographic ordering. To correct this, the appended "-rc#" is removed
+        # Resulting in an accurate, latest tag return
         run: |
-          tag=$(git tag -l "${{ github.event.inputs.application }}*" --sort=committerdate | tail -1)
-          echo "::set-output name=tag::$tag"
+          if [[ ${{ github.event.inputs.scripted-release-task }} == "finalize-release" ]]
+          then
+            tag=$(git for-each-ref pattern="${{ github.event.inputs.application }}" --sort=-committerdate refs/tags --count=1 --format='%(refname:short)' | sed -r 's/-[^-]+$//g')
+            echo "::set-output name=tag::$tag"
+          else
+            tag=$(git for-each-ref pattern="${{ github.event.inputs.application }}" --sort=-committerdate refs/tags --count=1 --format='%(refname:short)')
+            echo "::set-output name=tag::$tag"
+          fi
 
       # Create release and notes in GitHub
       - name: publish to GitHub
@@ -83,12 +91,13 @@ jobs:
         # Use DevOps token so job will have enough permissions to create final release
           GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
         # If there's "-rc" in the tag, then label the release as a pre-release 
+        # If the tag is production ready, title the release accordingly i.e: api/v1.2.3 -> API v1.2.3
         run: |
           if [[ "${{ steps.version.outputs.tag }}" == *"-rc"* ]]
           then
             gh release create ${{ steps.version.outputs.tag }} --notes "$(make release-notes)" --title "${{ steps.version.outputs.tag }}" --prerelease
           else
             NAME="${{ steps.version.outputs.tag }}"
-            echo $NAME | sed 's/\// /g' | sed -r 's/([a-z]+)\s/\U&/g'
+            NAME=$(echo $NAME | sed 's/\// /g' | sed -r 's/([a-z]+)\s/\U&/g')
             gh release create ${{ steps.version.outputs.tag }} --notes "$(make release-notes)" --title $NAME
           fi
