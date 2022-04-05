@@ -88,5 +88,7 @@ jobs:
           then
             gh release create ${{ steps.version.outputs.tag }} --notes "$(make release-notes)" --title "${{ steps.version.outputs.tag }}" --prerelease
           else
-            gh release create ${{ steps.version.outputs.tag }} --notes "$(make release-notes)" --title "${{ steps.version.outputs.tag }}"
+            NAME="${{ steps.version.outputs.tag }}"
+            echo $NAME | sed 's/\// /g' | sed -r 's/([a-z]+)\s/\U&/g'
+            gh release create ${{ steps.version.outputs.tag }} --notes "$(make release-notes)" --title $NAME
           fi
