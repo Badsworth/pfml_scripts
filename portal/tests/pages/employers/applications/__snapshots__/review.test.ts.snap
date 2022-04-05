@@ -268,6 +268,32 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
                 data-label="Date range"
                 scope="row"
               >
+                2/1/2022 to 7/1/2022
+              </th>
+              <td
+                class="tablet:width-card-lg"
+                data-label="Leave frequency"
+              >
+                Continuous leave
+              </td>
+              <td
+                data-label="Status"
+              >
+                <span
+                  class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-base-darkest bg-warning-lighter"
+                >
+                  Pending
+                </span>
+              </td>
+            </tr>
+            <tr
+              data-testid="1-2"
+            >
+              <th
+                class="tablet:width-card-lg"
+                data-label="Date range"
+                scope="row"
+              >
                 1/1/2022 to 4/1/2022
               </th>
               <td

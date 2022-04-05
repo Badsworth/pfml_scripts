@@ -3,6 +3,7 @@ import { compact, get } from "lodash";
 import { AbsencePeriod } from "./AbsencePeriod";
 import { ManagedRequirement } from "./ManagedRequirement";
 import { ValuesOf } from "../../types/common";
+import { isReviewable } from "src/utils/isReviewable";
 
 /**
  * A record from the API's Claims table. Could be utilized by Leave Admin and Claimants.
@@ -16,11 +17,19 @@ class Claim {
   fineos_absence_id: string;
   managed_requirements: ManagedRequirement[];
 
-  constructor(attrs: Claim) {
+  constructor(attrs: Omit<Claim, "isReviewable">) {
     Object.assign(this, attrs);
     if (attrs.employee) {
       this.employee = new ClaimEmployee(attrs.employee);
     }
+  }
+
+  /**
+   * Note we use a utility method to share logic across EmployerClaim and Claim
+   * until such time where we combine these methods (PORTAL-477 pending)
+   */
+  get isReviewable() {
+    return isReviewable(this.absence_periods, this.managed_requirements);
   }
 }
 

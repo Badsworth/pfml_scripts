@@ -972,6 +972,30 @@ class TestGetClaimsEndpoint:
                 managed_requirement_status_id=ManagedRequirementStatus.OPEN.managed_requirement_status_id,
                 follow_up_date=datetime_util.utcnow() + timedelta(days=30),
             )
+            AbsencePeriodFactory.create(
+                claim=claim_one,
+                absence_period_start_date=date.today() + timedelta(days=5),
+                absence_period_end_date=date.today() + timedelta(days=20),
+                leave_request_decision_id=LeaveRequestDecision.PENDING.leave_request_decision_id,
+            )
+            AbsencePeriodFactory.create(
+                claim=claim_two,
+                absence_period_start_date=date.today() + timedelta(days=5),
+                absence_period_end_date=date.today() + timedelta(days=20),
+                leave_request_decision_id=LeaveRequestDecision.PENDING.leave_request_decision_id,
+            )
+            AbsencePeriodFactory.create(
+                claim=claim_three,
+                absence_period_start_date=date.today() + timedelta(days=5),
+                absence_period_end_date=date.today() + timedelta(days=20),
+                leave_request_decision_id=LeaveRequestDecision.PENDING.leave_request_decision_id,
+            )
+            AbsencePeriodFactory.create(
+                claim=claim_four,
+                absence_period_start_date=date.today() + timedelta(days=5),
+                absence_period_end_date=date.today() + timedelta(days=20),
+                leave_request_decision_id=LeaveRequestDecision.PENDING.leave_request_decision_id,
+            )
             test_db_session.commit()
 
         @pytest.fixture()
@@ -1185,6 +1209,12 @@ class TestGetClaimsEndpoint:
             test_db_session.add(link)
             claim = ClaimFactory.create(
                 employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1
+            )
+            AbsencePeriodFactory.create(
+                claim=claim,
+                absence_period_start_date=date.today() + timedelta(days=5),
+                absence_period_end_date=date.today() + timedelta(days=20),
+                leave_request_decision_id=LeaveRequestDecision.PENDING.leave_request_decision_id,
             )
             # follow_up_date of today + 20 should put this between the two other is_reviewable="yes" claims
             ManagedRequirementFactory.create(
@@ -2026,6 +2056,30 @@ class TestGetClaimsEndpoint:
                 fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
                 claim_type_id=1,
             )
+            AbsencePeriodFactory.create(
+                claim=claim_review_by,
+                absence_period_start_date=date.today() + timedelta(days=5),
+                absence_period_end_date=date.today() + timedelta(days=20),
+                leave_request_decision_id=LeaveRequestDecision.PENDING.leave_request_decision_id,
+            )
+            for _ in range(2):
+                ManagedRequirementFactory.create(
+                    claim=claim_review_by,
+                    managed_requirement_type_id=ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
+                    managed_requirement_status_id=ManagedRequirementStatus.OPEN.managed_requirement_status_id,
+                    follow_up_date=date.today() + timedelta(days=10),
+                )
+            return claim_review_by
+
+        @pytest.fixture
+        def review_by_claim_missing_absence_period(self, employer, employee):
+            # Approved claim with open managed requirements i.e review by
+            claim_review_by = ClaimFactory.create(
+                employer=employer,
+                employee=employee,
+                fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
+                claim_type_id=1,
+            )
             for _ in range(2):
                 ManagedRequirementFactory.create(
                     claim=claim_review_by,
@@ -2126,6 +2180,7 @@ class TestGetClaimsEndpoint:
             review_by_claim,
             no_action_claim,
             expired_requirements_claim,
+            review_by_claim_missing_absence_period,
         ):
             link = UserLeaveAdministrator(
                 user_id=employer_user.user_id,
@@ -2209,6 +2264,7 @@ class TestGetClaimsEndpoint:
             pending_claims,
             expired_requirements_claim,
             no_action_claim,
+            review_by_claim_missing_absence_period,
         ):
             resp = self._perform_api_call(
                 "/v1/claims?is_reviewable=no", client, employer_auth_token
@@ -2221,6 +2277,7 @@ class TestGetClaimsEndpoint:
                     *pending_claims,
                     expired_requirements_claim,
                     no_action_claim,
+                    review_by_claim_missing_absence_period,
                 ],
             )
 
@@ -2240,29 +2297,9 @@ class TestGetClaimsEndpoint:
                     *pending_claims,
                     expired_requirements_claim,
                     no_action_claim,
+                    review_by_claim_missing_absence_period,
                 ],
             )
-
-        def test_get_claims_with_status_filter_is_reviewable_invalid_parameter(
-            self, client, employer_auth_token
-        ):
-            resp = self._perform_api_call(
-                "/v1/claims?is_reviewable=invalid", client, employer_auth_token
-            )
-            response_body = resp.get_json()
-            assert resp.status_code == 400
-            assert "'invalid' is not one of" in response_body["detail"]
-
-            # POST /claims/search
-            terms = {"is_reviewable": "invalid"}
-            post_body = {"terms": terms}
-            response = client.post(
-                "/v1/claims/search",
-                headers={"Authorization": f"Bearer {employer_auth_token}"},
-                json=post_body,
-            )
-            response_body = response.get_json()
-            assert resp.status_code == 400
 
         def test_get_claims_with_status_filter_multiple_statuses(
             self,
@@ -3417,6 +3454,12 @@ class TestGetClaimsEndpoint:
                     claim=claim,
                     managed_requirement_status_id=ManagedRequirementStatus.OPEN.managed_requirement_status_id,
                 )
+                AbsencePeriodFactory.create(
+                    claim=claim,
+                    absence_period_start_date=date.today() + timedelta(days=5),
+                    absence_period_end_date=date.today() + timedelta(days=20),
+                    leave_request_decision_id=LeaveRequestDecision.PENDING.leave_request_decision_id,
+                )
 
             self.claims_count = 20
             test_db_session.commit()
@@ -3566,7 +3609,7 @@ class TestGetClaimsEndpoint:
             # employee claims are Open, other employee are not Open
             # varied absence periods for employee claims
             # always withdrawn for other employee claims
-            for i in range(5):
+            for _ in range(5):
                 employee_claim = ClaimFactory.create(
                     employer=employer, employee=employee, claim_type_id=1
                 )
@@ -3592,7 +3635,7 @@ class TestGetClaimsEndpoint:
                     claim=employee_claim,
                     absence_period_start_date=date.today() + timedelta(days=5),
                     absence_period_end_date=date.today() + timedelta(days=20),
-                    leave_request_decision_id=i + 1,
+                    leave_request_decision_id=LeaveRequestDecision.PENDING.leave_request_decision_id,
                 )
                 AbsencePeriodFactory.create(
                     claim=other_employee_claim,
@@ -3614,10 +3657,9 @@ class TestGetClaimsEndpoint:
         @pytest.mark.parametrize(
             "is_reviewable, request_decision, expected_output_len",
             [
-                ["yes", "approved", 1],
                 ["no", "approved", 0],
                 ["no", "pending", 0],
-                ["yes", "pending", 2],
+                ["yes", "pending", 5],
             ],
         )
         def test_get_claims_is_reviewable_and_request_decision_filter(

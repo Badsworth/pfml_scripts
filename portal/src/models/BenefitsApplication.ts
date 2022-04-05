@@ -57,6 +57,8 @@ class BenefitsApplication extends BaseBenefitsApplication {
   previous_leaves_other_reason: PreviousLeave[] = [];
   previous_leaves_same_reason: PreviousLeave[] = [];
   residential_address: Address = new Address({});
+  split_from_application_id: string | null;
+  split_into_application_id: string | null;
   tax_identifier: string | null = null;
   work_pattern: Partial<WorkPattern> | null = null;
 

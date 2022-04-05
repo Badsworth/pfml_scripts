@@ -9,6 +9,7 @@ import PaymentPreference from "../models/PaymentPreference";
 import { PortalFlow } from "./usePortalFlow";
 import TaxWithholdingPreference from "../models/TaxWithholdingPreference";
 import getRelevantIssues from "../utils/getRelevantIssues";
+import { isFeatureEnabled } from "src/services/featureFlags";
 import routes from "../routes";
 import useCollectionState from "./useCollectionState";
 import { useState } from "react";
@@ -223,17 +224,29 @@ const useBenefitsApplicationsLogic = ({
    * Submit the claim in the API and set application errors if any
    */
   const submit = async (application_id: string) => {
+    const splitClaimsAcrossByEnabled = Boolean(
+      isFeatureEnabled("splitClaimsAcrossBY")
+    );
     errorsLogic.clearErrors();
 
     try {
       const { claim } = await applicationsApi.submitClaim(application_id);
 
       setBenefitsApplication(claim);
+      if (splitClaimsAcrossByEnabled && claim.split_into_application_id) {
+        // Force a refetch so the second of the split applications gets displayed
+        invalidateApplicationsCache();
+      }
 
       const context = { claim };
+      const applicationWasSplitParams =
+        splitClaimsAcrossByEnabled && claim.split_into_application_id
+          ? { applicationWasSplitInto: claim.split_into_application_id }
+          : {};
       const params = {
         claim_id: claim.application_id,
         "part-one-submitted": "true",
+        ...applicationWasSplitParams,
       };
       portalFlow.goToNextPage(context, params);
     } catch (error) {

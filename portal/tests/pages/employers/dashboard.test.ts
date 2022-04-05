@@ -179,6 +179,15 @@ describe("Employer dashboard", () => {
     });
     const claims = [
       getClaim({
+        absence_periods: [
+          createAbsencePeriod({
+            request_decision: "Pending",
+            absence_period_start_date: "2020-01-01",
+            absence_period_end_date: "2020-02-01",
+            reason: "Serious Health Condition - Employee",
+            period_type: "Continuous",
+          }),
+        ],
         managed_requirements: [
           createMockManagedRequirement({
             follow_up_date: MOCK_CURRENT_ISO_DATE,
@@ -198,7 +207,6 @@ describe("Employer dashboard", () => {
     };
 
     await setup({ claims, userAttrs });
-
     expect(screen.getByRole("table")).toMatchSnapshot();
   });
 

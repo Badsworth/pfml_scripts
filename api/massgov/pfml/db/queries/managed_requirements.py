@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional, Tuple
 from uuid import UUID
 
 from sqlalchemy import exc
@@ -104,22 +104,66 @@ def create_or_update_managed_requirement_from_fineos(
     claim_id: UUID,
     fineos_requirement: ManagedRequirementDetails,
     log_attributes: dict,
-) -> Optional[ManagedRequirement]:
+) -> Tuple[Optional[ManagedRequirement], bool]:
+    """
+    Returns a boolean to indicate if the requirement is created or updated
+    """
     db_requirement = get_managed_requirement_by_fineos_managed_requirement_id(
         fineos_requirement.managedReqId, db_session
     )
     if db_requirement is None:
-        return create_managed_requirement_from_fineos(db_session, claim_id, fineos_requirement)
+        return (
+            create_managed_requirement_from_fineos(db_session, claim_id, fineos_requirement),
+            True,
+        )
     else:
-        return update_managed_requirement_from_fineos(
-            db_session, fineos_requirement, db_requirement, log_attributes
+        return (
+            update_managed_requirement_from_fineos(
+                db_session, fineos_requirement, db_requirement, log_attributes
+            ),
+            False,
         )
 
 
-def commit_managed_requirements(db_session: Session) -> None:
+def sync_managed_requirements_to_db(
+    fineos_requirements: List[ManagedRequirementDetails],
+    claim_id: UUID,
+    db_session: Session,
+    log_attributes: dict,
+) -> Tuple[List[ManagedRequirement], dict]:
+    num_created_requirements = 0
+    num_updated_requirements = 0
+    managed_requirements_from_db = []
+    for fineos_requirement in fineos_requirements:
+        log_attr = {
+            **log_attributes.copy(),
+            **get_fineos_managed_requirement_log_attributes(fineos_requirement),
+        }
+        (managed_requirement, is_created) = create_or_update_managed_requirement_from_fineos(
+            db_session, claim_id, fineos_requirement, log_attr
+        )
+
+        if managed_requirement is not None:
+            managed_requirements_from_db.append(managed_requirement)
+            if is_created:
+                num_created_requirements += 1
+            else:
+                num_updated_requirements += 1
+    log_attributes.update(
+        {
+            "num_created_requirements": num_created_requirements,
+            "num_updated_requirements": num_updated_requirements,
+        }
+    )
+    return (managed_requirements_from_db, log_attributes)
+
+
+def commit_managed_requirements(db_session: Session, log_attributes: Optional[dict]) -> None:
 
     try:
         db_session.commit()
+        if log_attributes:
+            logger.info("Successfully synced Managed requirements", extra=log_attributes)
     except exc.SQLAlchemyError as ex:
         db_session.rollback()
         logger.warning("Unable to commit Managed Requirement records to database", exc_info=ex)

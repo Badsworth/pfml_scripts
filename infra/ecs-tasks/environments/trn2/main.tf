@@ -91,5 +91,5 @@ module "tasks" {
   upload_max_files_to_fineos      = "10"
   enable_1099_testfile_generation = "0"
 
-  enable_employer_reimbursement_payments = "0"
+  enable_employer_reimbursement_payments = "1"
 }
