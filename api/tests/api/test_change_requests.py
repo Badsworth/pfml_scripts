@@ -132,22 +132,34 @@ class TestSubmitChangeRequest:
     @mock.patch(
         "massgov.pfml.api.change_requests.claim_rules.get_change_request_issues", return_value=[]
     )
-    @mock.patch("massgov.pfml.api.change_requests.fineos_submit_change_request")
+    @mock.patch("massgov.pfml.api.change_requests.submit_change_request_to_fineos")
+    @mock.patch("massgov.pfml.api.change_requests.app.db_session")
     def test_successful_call(
-        self, mock_submit, mock_get_issues, mock_get_or_404, auth_token, change_request, client
+        self,
+        mock_db,
+        mock_submit,
+        mock_get_issues,
+        mock_get_or_404,
+        auth_token,
+        change_request,
+        client,
     ):
+        db_mock = mock.MagicMock()
+        mock_db.return_value = db_mock
         mock_get_or_404.return_value = change_request
+        mock_submit.return_value = change_request
         response = client.post(
             "/v1/change-request/5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32/submit",
             headers={"Authorization": f"Bearer {auth_token}"},
         )
-        assert change_request.submitted_time is not None
         assert response.status_code == 200
-        mock_submit.assert_called_once()
+        mock_submit.assert_called_once_with(
+            change_request, change_request.claim, db_mock.__enter__.return_value
+        )
 
     @mock.patch("massgov.pfml.api.change_requests.get_or_404")
     @mock.patch("massgov.pfml.api.change_requests.claim_rules.get_change_request_issues")
-    @mock.patch("massgov.pfml.api.change_requests.fineos_submit_change_request")
+    @mock.patch("massgov.pfml.api.change_requests.submit_change_request_to_fineos")
     def test_validation_issues(
         self, mock_submit, mock_get_issues, mock_get_or_404, auth_token, change_request, client
     ):
