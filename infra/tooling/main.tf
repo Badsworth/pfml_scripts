@@ -1,4 +1,3 @@
-//  testing 12
 provider "aws" {}
 
 terraform {

@@ -161,9 +161,9 @@ exports[`Employer dashboard renders a table of claims, with links to status page
             class="desktop:grid-col-auto"
           >
             <span
-              class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-success-dark bg-success-lighter minw-15 margin-top-2px margin-bottom-05"
+              class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-base-darkest bg-warning-lighter minw-15 margin-top-2px margin-bottom-05"
             >
-              Approved
+              Pending
             </span>
           </div>
           <div
