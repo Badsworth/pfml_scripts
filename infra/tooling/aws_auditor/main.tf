@@ -21,7 +21,7 @@ resource "aws_dynamodb_table" "inventory" {
   hash_key     = "ResourceName"
 
   attribute {
-    name = "Name"
+    name = "ResourceName"
     type = "S"
   }
 
