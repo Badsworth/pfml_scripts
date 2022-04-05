@@ -1,6 +1,7 @@
 import dataclasses
 import re
 from datetime import date, datetime, timedelta
+from typing import Dict, List, Optional, Tuple
 
 import faker
 import pytest
@@ -17,7 +18,6 @@ from massgov.pfml.db.models.employees import (
     PaymentReferenceFile,
     ReferenceFile,
     ReferenceFileType,
-    StateLog,
 )
 from massgov.pfml.db.models.payments import (
     ACTIVE_WRITEBACK_RECORD_STATUS,
@@ -41,139 +41,130 @@ def fineos_pei_writeback_step(initialize_factories_session, test_db_session):
     )
 
 
-def _generate_payment_and_state(
-    test_db_session: db.Session, state: LkState, payment_method: LkPaymentMethod = PaymentMethod.ACH
-) -> Payment:
-    check_number = None
-    if payment_method == PaymentMethod.CHECK:
-        check_number = check_number_provider["check_number"]
-        check_number_provider["check_number"] += 1
-        # payment.check = PaymentCheck(check_number=check_number)
+@dataclasses.dataclass
+class WritebackTestConfig:
 
-    payment = DelegatedPaymentFactory(
-        test_db_session,
-        fineos_pei_c_value="1000",
-        fineos_pei_i_value=str(fake.unique.random_int(min=1000, max=9999)),
-        fineos_extraction_date=date.today() - timedelta(days=fake.random_int()),
-        payment_method=payment_method,
-        check_number=check_number,
-    ).get_or_create_payment_with_state(state)
-
-    return payment
+    end_state: LkState
+    transaction_status: Optional[LkFineosWritebackTransactionStatus]
+    payment_method: LkPaymentMethod = PaymentMethod.ACH
+    has_check_posted_date: bool = False
+    add_writeback_state: bool = True
 
 
-def _generate_payment_and_state_with_writeback_details(
-    db_session: db.Session,
-    payment_state: LkState,
-    transaction_status: LkFineosWritebackTransactionStatus,
-    payment_method: LkPaymentMethod = PaymentMethod.ACH,
-) -> Payment:
-    payment = _generate_payment_and_state(db_session, payment_state, payment_method)
-    DelegatedPaymentFactory(db_session, payment=payment).get_or_create_payment_with_writeback(
-        transaction_status
+class Scenarios:
+    ZERO_DOLLAR = WritebackTestConfig(
+        end_state=State.DELEGATED_PAYMENT_PROCESSED_ZERO_PAYMENT,
+        transaction_status=FineosWritebackTransactionStatus.PROCESSED,
     )
 
-    return payment
-
-
-def _generate_zero_dollar_payment(test_db_session: db.Session) -> Payment:
-    return _generate_payment_and_state_with_writeback_details(
-        test_db_session,
-        State.DELEGATED_PAYMENT_PROCESSED_ZERO_PAYMENT,
-        FineosWritebackTransactionStatus.PROCESSED,
+    OVERPAYMENT = WritebackTestConfig(
+        end_state=State.DELEGATED_PAYMENT_PROCESSED_OVERPAYMENT,
+        transaction_status=FineosWritebackTransactionStatus.PROCESSED,
     )
 
-
-def _generate_overpayment(test_db_session: db.Session) -> Payment:
-    return _generate_payment_and_state_with_writeback_details(
-        test_db_session,
-        State.DELEGATED_PAYMENT_PROCESSED_OVERPAYMENT,
-        FineosWritebackTransactionStatus.PROCESSED,
+    PENDING_AUDIT = WritebackTestConfig(
+        # This transaction status is "" (or Pending Active)
+        end_state=State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
+        transaction_status=FineosWritebackTransactionStatus.PENDING_PAYMENT_AUDIT,
     )
 
-
-def _generate_accepted_payment(
-    test_db_session: db.Session, payment_method: LkPaymentMethod
-) -> Payment:
-    state = State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT
-    if payment_method == PaymentMethod.CHECK:
-        state = State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT
-
-    return _generate_payment_and_state_with_writeback_details(
-        test_db_session, state, FineosWritebackTransactionStatus.PAID, payment_method
+    ACCEPTED_CHECK = WritebackTestConfig(
+        end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
+        transaction_status=FineosWritebackTransactionStatus.PAID,
+        payment_method=PaymentMethod.CHECK,
     )
 
-
-def _generate_completed_check_payment(test_db_session: db.Session) -> Payment:
-    state = State.DELEGATED_PAYMENT_COMPLETE
-
-    payment = _generate_payment_and_state_with_writeback_details(
-        test_db_session, state, FineosWritebackTransactionStatus.POSTED, PaymentMethod.CHECK
+    ACCEPTED_EFT = WritebackTestConfig(
+        end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
+        transaction_status=FineosWritebackTransactionStatus.PAID,
     )
 
-    payment.check.check_posted_date = payment.fineos_extraction_date + timedelta(days=10)
+    COMPLETED_CHECK = WritebackTestConfig(
+        end_state=State.DELEGATED_PAYMENT_COMPLETE,
+        transaction_status=FineosWritebackTransactionStatus.POSTED,
+        payment_method=PaymentMethod.CHECK,
+        has_check_posted_date=True,
+    )
 
-    return payment
+    CHANGE_NOTIFICATION_EFT = WritebackTestConfig(
+        end_state=State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION,
+        transaction_status=FineosWritebackTransactionStatus.POSTED,
+    )
 
+    CANCELLATION = WritebackTestConfig(
+        end_state=State.DELEGATED_PAYMENT_PROCESSED_CANCELLATION,
+        transaction_status=FineosWritebackTransactionStatus.PROCESSED,
+    )
 
-def _generate_completed_eft_payment_with_change_notification(
-    test_db_session: db.Session,
-) -> Payment:
-    state = State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION
+    ERRORED = WritebackTestConfig(
+        end_state=State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
+        transaction_status=FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR,
+    )
 
-    return _generate_payment_and_state_with_writeback_details(
-        test_db_session, state, FineosWritebackTransactionStatus.POSTED, PaymentMethod.ACH
+    PAYMENT_WITHOUT_WRITEBACK_STATE = WritebackTestConfig(
+        end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
+        transaction_status=None,
+        add_writeback_state=False,
     )
 
 
-def _generate_cancelled_payment(test_db_session: db.Session) -> Payment:
-    return _generate_payment_and_state_with_writeback_details(
-        test_db_session,
-        State.DELEGATED_PAYMENT_PROCESSED_CANCELLATION,
-        FineosWritebackTransactionStatus.PROCESSED,
+def _generate_payments(
+    db_session: db.Session, config: WritebackTestConfig, count: Optional[int] = None
+) -> List[Tuple[Payment, WritebackTestConfig]]:
+
+    if count is None:
+        count = fake.random_int(min=2, max=5)
+
+    payment_scenario_tuples = []
+
+    for _ in range(count):
+        check_number = None
+        if config.payment_method.payment_method_id == PaymentMethod.CHECK.payment_method_id:
+            check_number = check_number_provider["check_number"]
+            check_number_provider["check_number"] += 1
+
+        factory = DelegatedPaymentFactory(
+            db_session,
+            fineos_pei_i_value=str(fake.unique.random_int(min=1000, max=9999)),
+            payment_method=config.payment_method,
+            fineos_extraction_date=date.today() - timedelta(days=fake.random_int()),
+            check_number=check_number,
+        )
+
+        payment = factory.get_or_create_payment_with_state(config.end_state)
+        if config.add_writeback_state:
+            factory.get_or_create_payment_with_writeback(config.transaction_status)
+
+        if config.has_check_posted_date:
+            payment.check.check_posted_date = payment.fineos_extraction_date + timedelta(days=10)
+
+        payment_scenario_tuples.append((payment, config))
+
+    return payment_scenario_tuples
+
+
+def validate_writeback_sent_states(
+    db_session: db.Session, payment: Payment, config: WritebackTestConfig
+):
+    # Verify the payment's delegated payment state is unchanged
+    payment_state_log = state_log_util.get_latest_state_log_in_flow(
+        payment, Flow.DELEGATED_PAYMENT, db_session
     )
+    assert payment_state_log.end_state_id == config.end_state.state_id
 
-
-def _generate_errored_payment(test_db_session: db.Session) -> Payment:
-    return _generate_payment_and_state_with_writeback_details(
-        test_db_session,
-        State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
-        FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR,
-    )
-
-
-def validate_writeback_sent_state(db_session: db.Session, payment: Payment):
+    # Verify the payment's writeback state has been updated to the sent state
     writeback_state_log = state_log_util.get_latest_state_log_in_flow(
         payment, Flow.DELEGATED_PEI_WRITEBACK, db_session
     )
     assert writeback_state_log.end_state_id == State.DELEGATED_FINEOS_WRITEBACK_SENT.state_id
 
 
-@pytest.mark.parametrize(
-    "zero_dollar_payment_count, overpayment_count, accepted_payment_count, cancelled_payment_count, errored_payment_count",
-    (
-        # Some payments in each state.
-        (
-            fake.random_int(min=1, max=4),
-            fake.random_int(min=2, max=8),
-            fake.random_int(min=2, max=6),
-            fake.random_int(min=4, max=7),
-            fake.random_int(min=1, max=3),
-        ),
-    ),
-    ids=["state_payments"],
-)
 @freeze_time("2021-01-01 12:00:00")
 def test_process_payments_for_writeback(
     fineos_pei_writeback_step,
     test_db_session,
     mock_s3_bucket,
     monkeypatch,
-    zero_dollar_payment_count,
-    overpayment_count,
-    accepted_payment_count,
-    cancelled_payment_count,
-    errored_payment_count,
 ):
     s3_bucket_uri = "s3://" + mock_s3_bucket
 
@@ -185,57 +176,23 @@ def test_process_payments_for_writeback(
 
     # Create some small amount of Payments that are in a state other than the one we pick up
     # for the writeback.
-    for _i in range(fake.random_int(min=2, max=7)):
-        _generate_payment_and_state(
-            test_db_session, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT
-        )
+    _generate_payments(test_db_session, Scenarios.PAYMENT_WITHOUT_WRITEBACK_STATE)
 
-    zero_dollar_payments = []
-    for _i in range(zero_dollar_payment_count):
-        zero_dollar_payments.append(_generate_zero_dollar_payment(test_db_session))
-
-    overpayments = []
-    for _i in range(overpayment_count):
-        overpayments.append(_generate_overpayment(test_db_session))
-
-    accepted_check_payments = []
-    for _i in range(accepted_payment_count):
-        accepted_check_payments.append(
-            _generate_accepted_payment(test_db_session, PaymentMethod.CHECK)
-        )
-
-    accepted_eft_payments = []
-    for _i in range(accepted_payment_count):
-        accepted_eft_payments.append(_generate_accepted_payment(test_db_session, PaymentMethod.ACH))
-
-    cancelled_payments = []
-    for _i in range(cancelled_payment_count):
-        cancelled_payments.append(_generate_cancelled_payment(test_db_session))
-
-    completed_check_payments = []
-    for _i in range(accepted_payment_count):
-        completed_check_payments.append(_generate_completed_check_payment(test_db_session))
-
-    completed_eft_payments_with_change_notification = []
-    for _i in range(accepted_payment_count):
-        completed_eft_payments_with_change_notification.append(
-            _generate_completed_eft_payment_with_change_notification(test_db_session)
-        )
-
-    errored_payments = []
-    for _i in range(errored_payment_count):
-        errored_payments.append(_generate_errored_payment(test_db_session))
-
-    all_payments = (
-        zero_dollar_payments
-        + overpayments
-        + accepted_check_payments
-        + accepted_eft_payments
-        + cancelled_payments
-        + completed_check_payments
-        + completed_eft_payments_with_change_notification
-        + errored_payments
-    )
+    # Generate the payments, these return
+    # as a list of tuples of (payment, scenario)
+    all_payments = []
+    for scenario in [
+        Scenarios.ZERO_DOLLAR,
+        Scenarios.OVERPAYMENT,
+        Scenarios.PENDING_AUDIT,
+        Scenarios.ACCEPTED_CHECK,
+        Scenarios.ACCEPTED_EFT,
+        Scenarios.CANCELLATION,
+        Scenarios.COMPLETED_CHECK,
+        Scenarios.CHANGE_NOTIFICATION_EFT,
+        Scenarios.ERRORED,
+    ]:
+        all_payments += _generate_payments(test_db_session, scenario)
 
     fineos_pei_writeback_step.process_payments_for_writeback()
 
@@ -253,16 +210,13 @@ def test_process_payments_for_writeback(
 
     ref_file = reference_files[0]
     assert ref_file.file_location.endswith(writeback.WRITEBACK_FILE_SUFFIX)
-    assert (
-        ref_file
-        == test_db_session.query(StateLog)
-        .filter(StateLog.end_state_id == State.PEI_WRITEBACK_SENT.state_id)
-        .one_or_none()
-        .reference_file
-    )
 
-    # Expect there to be a single PaymentReferenceFile linking the payment and the reference file.
-    for payment in all_payments:
+    i_to_payment_scenarios: Dict[str, Tuple[Payment, WritebackTestConfig]] = {}
+    # Iterate over the scenarios and verify the DB was changed correctly
+    for payment_tup in all_payments:
+        payment, scenario = payment_tup
+
+        # Expect there to be a single PaymentReferenceFile linking the payment and the reference file.
         payment_reference_files = (
             test_db_session.query(PaymentReferenceFile)
             .filter(PaymentReferenceFile.reference_file_id == ref_file.reference_file_id)
@@ -271,74 +225,11 @@ def test_process_payments_for_writeback(
         )
         assert len(payment_reference_files) == 1
 
-    # Each payment transitioned to the correct state.
-    for payment in zero_dollar_payments:
-        state_log = state_log_util.get_latest_state_log_in_flow(
-            payment, Flow.DELEGATED_PAYMENT, test_db_session
-        )
-        assert state_log.end_state_id == State.DELEGATED_PAYMENT_PROCESSED_ZERO_PAYMENT.state_id
-        validate_writeback_sent_state(test_db_session, payment)
+        # Each payment transitioned to the correct state.
+        validate_writeback_sent_states(test_db_session, payment, scenario)
 
-    for payment in overpayments:
-        state_log = state_log_util.get_latest_state_log_in_flow(
-            payment, Flow.DELEGATED_PAYMENT, test_db_session
-        )
-        assert state_log.end_state_id == State.DELEGATED_PAYMENT_PROCESSED_OVERPAYMENT.state_id
-        validate_writeback_sent_state(test_db_session, payment)
-
-    for payment in cancelled_payments:
-        state_log = state_log_util.get_latest_state_log_in_flow(
-            payment, Flow.DELEGATED_PAYMENT, test_db_session
-        )
-        assert state_log.end_state_id == State.DELEGATED_PAYMENT_PROCESSED_CANCELLATION.state_id
-        validate_writeback_sent_state(test_db_session, payment)
-
-    accepted_check_payments_i_values = []
-    for payment in accepted_check_payments:
-        accepted_check_payments_i_values.append(payment.fineos_pei_i_value)
-        state_log = state_log_util.get_latest_state_log_in_flow(
-            payment, Flow.DELEGATED_PAYMENT, test_db_session
-        )
-        assert state_log.end_state_id == State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT.state_id
-        validate_writeback_sent_state(test_db_session, payment)
-
-    accepted_eft_payments_i_values = []
-    for payment in accepted_eft_payments:
-        accepted_eft_payments_i_values.append(payment.fineos_pei_i_value)
-        state_log = state_log_util.get_latest_state_log_in_flow(
-            payment, Flow.DELEGATED_PAYMENT, test_db_session
-        )
-        assert state_log.end_state_id == State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT.state_id
-        validate_writeback_sent_state(test_db_session, payment)
-
-    completed_check_payment_i_values = []
-    for payment in completed_check_payments:
-        completed_check_payment_i_values.append(payment.fineos_pei_i_value)
-        state_log = state_log_util.get_latest_state_log_in_flow(
-            payment, Flow.DELEGATED_PAYMENT, test_db_session
-        )
-        assert state_log.end_state_id == State.DELEGATED_PAYMENT_COMPLETE.state_id
-        validate_writeback_sent_state(test_db_session, payment)
-
-    completed_eft_payment_i_values = []
-    for payment in completed_eft_payments_with_change_notification:
-        completed_eft_payment_i_values.append(payment.fineos_pei_i_value)
-        state_log = state_log_util.get_latest_state_log_in_flow(
-            payment, Flow.DELEGATED_PAYMENT, test_db_session
-        )
-        assert (
-            state_log.end_state_id
-            == State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION.state_id
-        )
-        validate_writeback_sent_state(test_db_session, payment)
-
-    errored_payments_i_values = []
-    for payment in errored_payments:
-        errored_payments_i_values.append(payment.fineos_pei_i_value)
-        state_log = state_log_util.get_latest_state_log_in_flow(
-            payment, Flow.DELEGATED_PAYMENT, test_db_session
-        )
-        assert state_log.end_state_id == State.DELEGATED_PAYMENT_ERROR_FROM_BANK.state_id
+        # When testing the file below, we need to lookup the payment by the I value
+        i_to_payment_scenarios[payment.fineos_pei_i_value] = payment_tup
 
     # Assert that the contents of the writeback file match our expectations.
     writeback_file_lines = list(file_util.read_file_lines(ref_file.file_location))
@@ -346,8 +237,9 @@ def test_process_payments_for_writeback(
     assert header_row == ",".join(
         [f.name for f in dataclasses.fields(writeback.PeiWritebackRecord)]
     )
+    assert len(writeback_file_lines) == len(all_payments)
 
-    expected_line_pattern = "{},({}),({}|{}),({}),({}),({}|{}|{}|{}),({})".format(
+    expected_line_pattern = "{},({}),({}|{}),({}),({}),({}|{}|{}|{}|{}),({})".format(
         r"\d\d\d\d",  # C value
         r"\d\d\d\d",  # I value
         ACTIVE_WRITEBACK_RECORD_STATUS,
@@ -359,16 +251,16 @@ def test_process_payments_for_writeback(
         FineosWritebackTransactionStatus.PROCESSED.transaction_status_description,
         FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR.transaction_status_description,
         FineosWritebackTransactionStatus.POSTED.transaction_status_description,
+        FineosWritebackTransactionStatus.PENDING_PAYMENT_AUDIT.transaction_status_description,
         r"\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d",  # Transaction date
     )
     prog = re.compile(expected_line_pattern)
-    assert len(all_payments) == len(writeback_file_lines)
     now = get_now_us_eastern().date()
 
     for line in writeback_file_lines:
         # Expect that each line will match our pattern.
         result = prog.match(line)
-        assert result
+        assert result, f"Line did not match expected line pattern: {line}"
 
         # Expect that payment types will set the appropriate transaction status.
         i_value = result.group(1)
@@ -378,54 +270,31 @@ def test_process_payments_for_writeback(
         transaction_status = result.group(5)
         transaction_date = datetime.strptime(result.group(6), "%Y-%m-%d %H:%M:%S")
 
-        if i_value in accepted_check_payments_i_values:
-            assert (
-                transaction_status
-                == FineosWritebackTransactionStatus.PAID.transaction_status_description
-            )
-            assert record_status == FineosWritebackTransactionStatus.PAID.writeback_record_status
-            assert transaction_number != ""
-            assert transaction_date.date() == now
-        elif i_value in accepted_eft_payments_i_values:
-            assert (
-                transaction_status
-                == FineosWritebackTransactionStatus.PAID.transaction_status_description
-            )
-            assert record_status == FineosWritebackTransactionStatus.PAID.writeback_record_status
-            assert transaction_date.date() == now
-        elif i_value in errored_payments_i_values:
-            assert (
-                transaction_status
-                == FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR.transaction_status_description
-            )
-            assert (
-                record_status
-                == FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR.writeback_record_status
-            )
-            assert transaction_date.date() == now
-        elif i_value in completed_check_payment_i_values:
-            assert (
-                transaction_status
-                == FineosWritebackTransactionStatus.POSTED.transaction_status_description
-            )
-            assert record_status == FineosWritebackTransactionStatus.POSTED.writeback_record_status
-            # We set the check posted date to 10 days past the extraction date
-            assert transaction_date == extraction_date + timedelta(days=10)
-        elif i_value in completed_eft_payment_i_values:
-            assert (
-                transaction_status
-                == FineosWritebackTransactionStatus.POSTED.transaction_status_description
-            )
-            assert record_status == FineosWritebackTransactionStatus.POSTED.writeback_record_status
-            assert transaction_date.date() == now
+        payment_tup = i_to_payment_scenarios.get(i_value)
+        assert payment_tup, f"I value {i_value} in writeback not found in generated scenarios"
+        payment, writeback_scenario_config = payment_tup
+
+        assert (
+            transaction_status
+            == writeback_scenario_config.transaction_status.transaction_status_description
+        )
+        assert record_status == writeback_scenario_config.transaction_status.writeback_record_status
+        assert extraction_date.date() == payment.fineos_extraction_date
+
+        # Checks should have a check number with how it was configured
+        if (
+            writeback_scenario_config.payment_method.payment_method_id
+            == PaymentMethod.CHECK.payment_method_id
+        ):
+            assert transaction_number == str(payment.check.check_number)
         else:
-            assert (
-                transaction_status
-                == FineosWritebackTransactionStatus.PROCESSED.transaction_status_description
-            )
-            assert (
-                record_status == FineosWritebackTransactionStatus.PROCESSED.writeback_record_status
-            )
+            assert transaction_number == ""
+
+        # We use the check posted date if the payment has one
+        # otherwise we use "now"
+        if payment.check and payment.check.check_posted_date:
+            assert transaction_date.date() == payment.check.check_posted_date
+        else:
             assert transaction_date.date() == now
 
 
@@ -434,11 +303,7 @@ def test_process_payments_for_writeback_no_payments_ready_for_writeback(
 ):
     # Create some small amount of Payments that are in a state other than the one we pick up
     # for the writeback.
-    for _i in range(fake.random_int(min=2, max=7)):
-        _generate_payment_and_state(
-            test_db_session, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT
-        )
-
+    _generate_payments(test_db_session, Scenarios.PAYMENT_WITHOUT_WRITEBACK_STATE)
     fineos_pei_writeback_step.process_payments_for_writeback()
 
     # Did not create any ReferenceFile objects since we did not create any writeback files.
@@ -454,72 +319,29 @@ def test_process_payments_for_writeback_no_payments_ready_for_writeback(
     assert len(reference_files) == 0
 
 
-@pytest.mark.parametrize(
-    "zero_dollar_payment_count, overpayment_count, accepted_payment_count, cancelled_payment_count, errored_payment_count, add_check_payment_count",
-    (
-        # No payments in any of the states we want to pick up for the writeback.
-        (0, 0, 0, 0, 0, 0),
-        # Some payments in each state.
-        (
-            fake.random_int(min=3, max=5),
-            fake.random_int(min=1, max=8),
-            fake.random_int(min=2, max=6),
-            fake.random_int(min=4, max=7),
-            fake.random_int(min=2, max=6),
-            fake.random_int(min=3, max=5),
-        ),
-    ),
-    ids=["writeback", "payments"],
-)
-def test_get_writeback_items_for_state(
-    fineos_pei_writeback_step,
-    test_db_session,
-    zero_dollar_payment_count,
-    overpayment_count,
-    accepted_payment_count,
-    cancelled_payment_count,
-    errored_payment_count,
-    add_check_payment_count,
-    caplog,
-):
+def test_get_writeback_items_for_state(fineos_pei_writeback_step, test_db_session):
     # Create some small amount of Payments that are in a state other than the one we pick up
     # for the writeback.
-    for _i in range(fake.random_int(min=2, max=7)):
-        _generate_payment_and_state(
-            test_db_session, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT
-        )
+    _generate_payments(test_db_session, Scenarios.PAYMENT_WITHOUT_WRITEBACK_STATE)
 
-    for _i in range(zero_dollar_payment_count):
-        _generate_zero_dollar_payment(test_db_session)
-
-    for _i in range(overpayment_count):
-        _generate_overpayment(test_db_session)
-
-    for _i in range(accepted_payment_count):
-        _generate_accepted_payment(test_db_session, PaymentMethod.ACH)
-
-    for _i in range(accepted_payment_count):
-        _generate_accepted_payment(test_db_session, PaymentMethod.CHECK)
-
-    for _i in range(cancelled_payment_count):
-        _generate_cancelled_payment(test_db_session)
-
-    for _i in range(errored_payment_count):
-        _generate_errored_payment(test_db_session)
-
-    for _i in range(add_check_payment_count):
-        _generate_completed_check_payment(test_db_session)
-
-    for _i in range(add_check_payment_count):
-        _generate_completed_eft_payment_with_change_notification(test_db_session)
-
-    payments_ready_for_writeback_count = (
-        zero_dollar_payment_count
-        + overpayment_count
-        + (accepted_payment_count * 2)
-        + cancelled_payment_count
-        + errored_payment_count
-        + (add_check_payment_count * 2)
-    )
+    # We find no writeback records
     writeback_records = fineos_pei_writeback_step.get_records_to_writeback()
-    assert len(writeback_records) == payments_ready_for_writeback_count
+    assert len(writeback_records) == 0
+
+    # Now add the scenarios and we'll find those
+    all_payments = []
+    for scenario in [
+        Scenarios.ZERO_DOLLAR,
+        Scenarios.OVERPAYMENT,
+        Scenarios.PENDING_AUDIT,
+        Scenarios.ACCEPTED_CHECK,
+        Scenarios.ACCEPTED_EFT,
+        Scenarios.CANCELLATION,
+        Scenarios.COMPLETED_CHECK,
+        Scenarios.CHANGE_NOTIFICATION_EFT,
+        Scenarios.ERRORED,
+    ]:
+        all_payments += _generate_payments(test_db_session, scenario)
+
+    writeback_records = fineos_pei_writeback_step.get_records_to_writeback()
+    assert len(writeback_records) == len(all_payments)
