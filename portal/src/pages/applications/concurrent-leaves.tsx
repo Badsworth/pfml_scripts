@@ -89,6 +89,7 @@ export const ConcurrentLeaves = (props: WithBenefitsApplicationProps) => {
               startDate={claim.leaveStartDate}
               endDate={claim.leaveEndDate}
               showWaitingDayPeriod={!isIntermittent}
+              applicationSplit={claim.computed_application_split}
             />
             <Heading level="3">
               <Icon

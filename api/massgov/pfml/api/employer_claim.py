@@ -3,12 +3,11 @@
 """
 
 import base64
-from typing import Dict, List, Optional, Union
+from typing import Dict, Optional, Union
 from uuid import UUID
 
 import connexion
 import flask
-from sqlalchemy.orm.session import Session
 from werkzeug.exceptions import BadRequest, Forbidden
 
 import massgov.pfml.api.app as app
@@ -37,21 +36,13 @@ from massgov.pfml.api.validation.exceptions import (
     IssueType,
     ValidationErrorDetail,
 )
-from massgov.pfml.db.models.employees import (
-    Claim,
-    Employer,
-    ManagedRequirement,
-    UserLeaveAdministrator,
-)
+from massgov.pfml.db.models.employees import Employer, ManagedRequirement, UserLeaveAdministrator
 from massgov.pfml.db.queries.absence_periods import sync_customer_api_absence_periods_to_db
 from massgov.pfml.db.queries.managed_requirements import (
     commit_managed_requirements,
-    create_or_update_managed_requirement_from_fineos,
+    sync_managed_requirements_to_db,
 )
-from massgov.pfml.fineos.models.group_client_api import (
-    Base64EncodedFileData,
-    ManagedRequirementDetails,
-)
+from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import (
     EmployerClaimReviewEFormBuilder,
     EmployerClaimReviewV1EFormBuilder,
@@ -90,26 +81,6 @@ class VerificationRequired(Forbidden):
             errors=[],
             data={"employer_id": employer_id, "has_verification_data": has_verification_data},
         ).to_api_response()
-
-
-def sync_managed_requirements(
-    db_session: Session,
-    claim: Claim,
-    managed_requirements: List[ManagedRequirementDetails],
-    log_attributes: dict,
-) -> List[ManagedRequirement]:
-    """
-    Note that commit to db is the responsibility of called functions.
-    """
-    managed_requirements_from_db = []
-    for mr in managed_requirements:
-        managed_requirement = create_or_update_managed_requirement_from_fineos(
-            db_session, claim.claim_id, mr, log_attributes
-        )
-        if managed_requirement is not None:
-            managed_requirements_from_db.append(managed_requirement)
-    commit_managed_requirements(db_session)
-    return managed_requirements_from_db
 
 
 def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdministrator:
@@ -351,12 +322,10 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
                 fineos_absence_periods, claim_from_db, db_session, log_attributes
             )
 
-            managed_requirements = sync_managed_requirements(
-                db_session,
-                claim_from_db,
-                fineos_managed_requirements,
-                log_attributes,
+            (managed_requirements, log_attrs) = sync_managed_requirements_to_db(
+                fineos_managed_requirements, claim_from_db.claim_id, db_session, log_attributes
             )
+            commit_managed_requirements(db_session, log_attrs)
 
             updated_db_requirements = (
                 db_session.query(ManagedRequirement)
