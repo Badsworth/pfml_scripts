@@ -355,6 +355,23 @@ export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder
   /**
    * @returns {MockEmployerClaimBuilder}
    */
+  pendingAbsencePeriod() {
+    set(this.claimAttrs, "absence_periods", [
+      ...this.claimAttrs.absence_periods,
+      createAbsencePeriod({
+        request_decision: "Pending",
+        absence_period_end_date: "2022-07-01",
+        absence_period_start_date: "2022-02-01",
+        period_type: "Continuous",
+        reason: LeaveReason.medical,
+      }),
+    ]);
+    return this;
+  }
+
+  /**
+   * @returns {MockEmployerClaimBuilder}
+   */
   completed(isIntermittent = false) {
     this.employed();
     this.address();
@@ -381,10 +398,11 @@ export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder
   }
 
   /**
-   * claim with open managed requirements
+   * claim with open managed requirements and non-final absence period
    * @returns {MockEmployerClaimBuilder}
    */
   reviewable(date) {
+    this.pendingAbsencePeriod();
     set(this.claimAttrs, "managed_requirements", [
       {
         follow_up_date: date || dayjs().add(10, "day").format("YYYY-MM-DD"),

@@ -176,11 +176,23 @@ class GetClaimsQuery:
     def add_is_reviewable_filter(self, is_reviewable: str) -> None:
         """
         Filters claims by checking if they are reviewable or not.
+
+        A claim is reviewable if it has an associated open requirement (soonest_open_requirement_date isn't None)
+        AND the claim has at least one reviewable (non-final) absence period request decision
         """
         if is_reviewable == "yes":
-            self.query = self.query.filter(Claim.soonest_open_requirement_date.isnot(None))
+            self.query = self.query.filter(
+                Claim.soonest_open_requirement_date.isnot(None),
+                Claim.absence_periods.any(~AbsencePeriod.has_final_decision),
+            )
+
         if is_reviewable == "no":
-            self.query = self.query.filter(Claim.soonest_open_requirement_date.is_(None))
+            self.query = self.query.filter(
+                or_(
+                    Claim.soonest_open_requirement_date.is_(None),
+                    ~Claim.absence_periods.any(~AbsencePeriod.has_final_decision),
+                )
+            )
 
     def add_request_decision_filter(self, request_decisions: Set[int]) -> None:
         filter = Claim.absence_periods.any(  # type: ignore
