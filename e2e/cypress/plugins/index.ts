@@ -50,7 +50,7 @@ import { chooseRolePreset } from "../../src/util/fineosRoleSwitching";
 import { FineosSecurityGroups } from "../../src/submission/fineos.pages";
 import { Fineos } from "../../src/submission/fineos.pages";
 import { beforeRunCollectMetadata } from "../reporters/new-relic-collect-metadata";
-import { getClaimsByFineos_absence_id } from "_api";
+import { getClaimsByFineos_absence_id } from "../../src/_api";
 import EmployeePool from "../../src/generation/Employee";
 
 export default function (

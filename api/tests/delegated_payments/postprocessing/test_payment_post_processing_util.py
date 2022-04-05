@@ -10,73 +10,69 @@ from . import _create_payment_container
 
 
 def test_get_all_paid_payments_associated_with_employee(
-    local_test_db_session, local_initialize_factories_session
+    test_db_session, initialize_factories_session
 ):
     # This test shows what does and doesn't get fetched by the method
 
     employee = EmployeeFactory.create()
     # New payment being processed
-    payment_container = _create_payment_container(
-        employee, Decimal("225.00"), local_test_db_session
-    )
+    payment_container = _create_payment_container(employee, Decimal("225.00"), test_db_session)
 
     # A previously sent-to-pub payment (will be found)
     payment_sent_to_pub_container = _create_payment_container(
-        employee, Decimal("800.00"), local_test_db_session, has_processed_state=True
+        employee, Decimal("800.00"), test_db_session, has_processed_state=True
     )
 
     # A paid employer reimbursement (will be found)
     paid_employer_reimbursement_container = _create_payment_container(
         employee,
         Decimal("800.00"),
-        local_test_db_session,
+        test_db_session,
         has_processed_state=True,
         payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
     )
 
     # A payment we have received payment confirmation from PUB (will be found)
     payment_success_with_pub_container = _create_payment_container(
-        employee, Decimal("800.00"), local_test_db_session, has_processed_state=True
+        employee, Decimal("800.00"), test_db_session, has_processed_state=True
     )
     state_log_util.create_finished_state_log(
         payment_success_with_pub_container.payment,
         State.DELEGATED_PAYMENT_COMPLETE,
         state_log_util.build_outcome("MESSAGE"),
-        local_test_db_session,
+        test_db_session,
     )
 
     # A payment we have received a change notifications/successful payment with PUB (will be found)
     payment_change_notification_with_pub_container = _create_payment_container(
-        employee, Decimal("800.00"), local_test_db_session, has_processed_state=True
+        employee, Decimal("800.00"), test_db_session, has_processed_state=True
     )
     state_log_util.create_finished_state_log(
         payment_change_notification_with_pub_container.payment,
         State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION,
         state_log_util.build_outcome("MESSAGE"),
-        local_test_db_session,
+        test_db_session,
     )
 
     # Another payment in the same state (won't be found)
-    _create_payment_container(employee, Decimal("100.00"), local_test_db_session)
+    _create_payment_container(employee, Decimal("100.00"), test_db_session)
 
     # An employer reimbursement in the same state (won't be found)
     _create_payment_container(
         employee,
         Decimal("100.00"),
-        local_test_db_session,
+        test_db_session,
         payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
     )
 
     # A previously errored payment (won't be found)
-    _create_payment_container(
-        employee, Decimal("100.00"), local_test_db_session, has_errored_state=True
-    )
+    _create_payment_container(employee, Decimal("100.00"), test_db_session, has_errored_state=True)
 
     # A previously errored employer reimbursement payment (won't be found)
     _create_payment_container(
         employee,
         Decimal("100.00"),
-        local_test_db_session,
+        test_db_session,
         has_errored_state=True,
         payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
     )
@@ -85,7 +81,7 @@ def test_get_all_paid_payments_associated_with_employee(
     _create_payment_container(
         employee,
         Decimal("100.00"),
-        local_test_db_session,
+        test_db_session,
         has_processed_state=True,
         is_adhoc_payment=True,
     )
@@ -94,7 +90,7 @@ def test_get_all_paid_payments_associated_with_employee(
     _create_payment_container(
         employee,
         Decimal("100.00"),
-        local_test_db_session,
+        test_db_session,
         has_processed_state=True,
         is_adhoc_payment=True,
         payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
@@ -104,7 +100,7 @@ def test_get_all_paid_payments_associated_with_employee(
     _create_payment_container(
         employee,
         Decimal("100.00"),
-        local_test_db_session,
+        test_db_session,
         has_processed_state=True,
         payment_transaction_type=PaymentTransactionType.OVERPAYMENT,
     )
@@ -113,7 +109,7 @@ def test_get_all_paid_payments_associated_with_employee(
     _create_payment_container(
         employee,
         Decimal("100.00"),
-        local_test_db_session,
+        test_db_session,
         has_processed_state=True,
         later_failed=True,
     )
@@ -121,11 +117,11 @@ def test_get_all_paid_payments_associated_with_employee(
     # A payment from another employee (won't be found)
     employee2 = EmployeeFactory.create()
     _create_payment_container(
-        employee2, Decimal("800.00"), local_test_db_session, has_processed_state=True
+        employee2, Decimal("800.00"), test_db_session, has_processed_state=True
     )
 
     active_payments = payment_post_processing_util.get_all_paid_payments_associated_with_employee(
-        employee.employee_id, [payment_container.payment.payment_id], local_test_db_session
+        employee.employee_id, [payment_container.payment.payment_id], test_db_session
     )
     assert len(active_payments) == 4
     assert set([active_payment.payment.payment_id for active_payment in active_payments]) == set(
@@ -138,7 +134,7 @@ def test_get_all_paid_payments_associated_with_employee(
     )
 
 
-def test_max_weekly_audit_builder(local_test_db_session, local_initialize_factories_session):
+def test_max_weekly_audit_builder(test_db_session, initialize_factories_session):
     start_date = date(2021, 8, 1)
     end_date = date(2021, 8, 7)
     employee = EmployeeFactory.create()
@@ -151,7 +147,7 @@ def test_max_weekly_audit_builder(local_test_db_session, local_initialize_factor
 
     # The payment that failed validation which is unpayable
     errored_payment_container = _create_payment_container(
-        employee, Decimal("225.00"), local_test_db_session, start_date=start_date, periods=1
+        employee, Decimal("225.00"), test_db_session, start_date=start_date, periods=1
     )
     errored_payment = errored_payment_container.payment
     errored_payment_container.pay_periods_over_cap = [
@@ -170,7 +166,7 @@ def test_max_weekly_audit_builder(local_test_db_session, local_initialize_factor
     prior_payment_container = _create_payment_container(
         employee,
         Decimal("500.00"),
-        local_test_db_session,
+        test_db_session,
         start_date=start_date,
         periods=1,
         has_processed_state=True,
@@ -186,7 +182,7 @@ def test_max_weekly_audit_builder(local_test_db_session, local_initialize_factor
     additional_current_payment_container = _create_payment_container(
         employee,
         Decimal("250.00"),
-        local_test_db_session,
+        test_db_session,
         start_date=start_date,
         periods=1,
         has_processed_state=True,
@@ -245,7 +241,7 @@ def test_max_weekly_audit_builder(local_test_db_session, local_initialize_factor
 
 
 def test_max_weekly_audit_builder_multiple_pay_periods(
-    local_test_db_session, local_initialize_factories_session
+    test_db_session, initialize_factories_session
 ):
     # Create 2 sequential pay period groups
     start_date1 = date(2021, 8, 1)
@@ -270,7 +266,7 @@ def test_max_weekly_audit_builder_multiple_pay_periods(
     # Week 1 will have no overlap and not require a reduction
     # Week 2 will overlap with a payment that fills the week
     errored_payment_container = _create_payment_container(
-        employee, Decimal("500.00"), local_test_db_session, start_date=start_date1, periods=2
+        employee, Decimal("500.00"), test_db_session, start_date=start_date1, periods=2
     )
     errored_payment = errored_payment_container.payment
     errored_payment_container.pay_periods_over_cap = [
@@ -295,7 +291,7 @@ def test_max_weekly_audit_builder_multiple_pay_periods(
     prior_payment_container = _create_payment_container(
         employee,
         Decimal("850.00"),
-        local_test_db_session,
+        test_db_session,
         start_date=start_date2,
         periods=1,
         has_processed_state=True,
@@ -356,16 +352,12 @@ def test_max_weekly_audit_builder_multiple_pay_periods(
     )
 
 
-def test_max_weekly_audit_builder_no_info(
-    local_test_db_session, local_initialize_factories_session
-):
+def test_max_weekly_audit_builder_no_info(test_db_session, initialize_factories_session):
     # Verify that in the unlikely scenario that we somehow
     # end up in the message builder without any pay period
     # info, the builder won't fail
     employee = EmployeeFactory.create()
-    payment_container = _create_payment_container(
-        employee, Decimal("225.00"), local_test_db_session
-    )
+    payment_container = _create_payment_container(employee, Decimal("225.00"), test_db_session)
     builder = payment_post_processing_util.MaximumWeeklyBenefitsAuditMessageBuilder(
         payment_container
     )

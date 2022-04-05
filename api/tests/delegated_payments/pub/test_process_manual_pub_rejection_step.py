@@ -29,32 +29,32 @@ from tests.delegated_payments.pub import (
 
 
 @pytest.fixture
-def process_manual_pub_rejection_step(
-    local_initialize_factories_session, local_test_db_session, local_test_db_other_session
-):
-    step = ProcessManualPubRejectionStep(local_test_db_session, local_test_db_other_session)
+def process_manual_pub_rejection_step(initialize_factories_session, test_db_session):
+    step = ProcessManualPubRejectionStep(
+        db_session=test_db_session, log_entry_db_session=test_db_session
+    )
     # Set these so they're non-null when running specific methods
-    step.log_entry = LogEntry(local_test_db_other_session, "")
+    step.log_entry = LogEntry(test_db_session, "")
     step.reference_file = ReferenceFileFactory.create(file_location="test")
     return step
 
 
 def test_process_manual_pub_reject_records_eft_currently_approved(
-    process_manual_pub_rejection_step, local_test_db_session
+    process_manual_pub_rejection_step, test_db_session
 ):
     pub_eft = DelegatedPaymentFactory(
-        local_test_db_session, pub_individual_id=123, prenote_state=PrenoteState.APPROVED
+        test_db_session, pub_individual_id=123, prenote_state=PrenoteState.APPROVED
     ).get_or_create_pub_eft()
 
     reject_record = ManualPubReject(1, "E123,reject notes", "E123", "reject notes")
     process_manual_pub_rejection_step.process_manual_pub_reject_records([reject_record])
 
     assert_pub_eft_prenote_state(
-        local_test_db_session, pub_eft.pub_eft_id, PrenoteState.REJECTED, "reject notes"
+        test_db_session, pub_eft.pub_eft_id, PrenoteState.REJECTED, "reject notes"
     )
 
     assert_pub_error(
-        local_test_db_session,
+        test_db_session,
         PubErrorType.MANUAL_PUB_REJECT_EFT_PROCESSED,
         f'EFT manually rejected with notes "{reject_record.notes}"',
     )
@@ -68,21 +68,21 @@ def test_process_manual_pub_reject_records_eft_currently_approved(
 
 
 def test_process_manual_pub_reject_records_eft_pending_with_pub(
-    process_manual_pub_rejection_step, local_test_db_session
+    process_manual_pub_rejection_step, test_db_session
 ):
     pub_eft = DelegatedPaymentFactory(
-        local_test_db_session, pub_individual_id=123, prenote_state=PrenoteState.PENDING_WITH_PUB
+        test_db_session, pub_individual_id=123, prenote_state=PrenoteState.PENDING_WITH_PUB
     ).get_or_create_pub_eft()
 
     reject_record = ManualPubReject(1, "E123,reject notes", "E123", "reject notes")
     process_manual_pub_rejection_step.process_manual_pub_reject_records([reject_record])
 
     assert_pub_eft_prenote_state(
-        local_test_db_session, pub_eft.pub_eft_id, PrenoteState.REJECTED, "reject notes"
+        test_db_session, pub_eft.pub_eft_id, PrenoteState.REJECTED, "reject notes"
     )
 
     assert_pub_error(
-        local_test_db_session,
+        test_db_session,
         PubErrorType.MANUAL_PUB_REJECT_EFT_PROCESSED,
         f'EFT manually rejected with notes "{reject_record.notes}"',
     )
@@ -95,20 +95,20 @@ def test_process_manual_pub_reject_records_eft_pending_with_pub(
 
 
 def test_process_manual_pub_reject_records_eft_already_rejected(
-    process_manual_pub_rejection_step, local_test_db_session
+    process_manual_pub_rejection_step, test_db_session
 ):
     pub_eft = DelegatedPaymentFactory(
-        local_test_db_session, pub_individual_id=123, prenote_state=PrenoteState.REJECTED
+        test_db_session, pub_individual_id=123, prenote_state=PrenoteState.REJECTED
     ).get_or_create_pub_eft()
 
     reject_record = ManualPubReject(1, "E123,reject notes", "E123", "reject notes")
     process_manual_pub_rejection_step.process_manual_pub_reject_records([reject_record])
 
     # Note this was already rejected, and not re-updated
-    assert_pub_eft_prenote_state(local_test_db_session, pub_eft.pub_eft_id, PrenoteState.REJECTED)
+    assert_pub_eft_prenote_state(test_db_session, pub_eft.pub_eft_id, PrenoteState.REJECTED)
 
     # No pub error
-    assert len(local_test_db_session.query(PubError).all()) == 0
+    assert len(test_db_session.query(PubError).all()) == 0
 
     metrics = process_manual_pub_rejection_step.log_entry.metrics
     assert (
@@ -117,22 +117,20 @@ def test_process_manual_pub_reject_records_eft_already_rejected(
 
 
 def test_process_manual_pub_reject_records_eft_pending_pre_pub(
-    process_manual_pub_rejection_step, local_test_db_session
+    process_manual_pub_rejection_step, test_db_session
 ):
     pub_eft = DelegatedPaymentFactory(
-        local_test_db_session, pub_individual_id=123, prenote_state=PrenoteState.PENDING_PRE_PUB
+        test_db_session, pub_individual_id=123, prenote_state=PrenoteState.PENDING_PRE_PUB
     ).get_or_create_pub_eft()
 
     reject_record = ManualPubReject(1, "E123,reject notes", "E123", "reject notes")
     process_manual_pub_rejection_step.process_manual_pub_reject_records([reject_record])
 
     # State not changed.
-    assert_pub_eft_prenote_state(
-        local_test_db_session, pub_eft.pub_eft_id, PrenoteState.PENDING_PRE_PUB
-    )
+    assert_pub_eft_prenote_state(test_db_session, pub_eft.pub_eft_id, PrenoteState.PENDING_PRE_PUB)
 
     assert_pub_error(
-        local_test_db_session,
+        test_db_session,
         PubErrorType.MANUAL_PUB_REJECT_ERROR,
         "Unexpected existing prenote state - EFT has not been sent to PUB yet",
     )
@@ -144,13 +142,13 @@ def test_process_manual_pub_reject_records_eft_pending_pre_pub(
 
 
 def test_process_manual_pub_reject_records_eft_not_found(
-    process_manual_pub_rejection_step, local_test_db_session
+    process_manual_pub_rejection_step, test_db_session
 ):
     reject_record = ManualPubReject(1, "E123,reject notes", "E123", "reject notes")
     process_manual_pub_rejection_step.process_manual_pub_reject_records([reject_record])
 
     assert_pub_error(
-        local_test_db_session,
+        test_db_session,
         PubErrorType.MANUAL_PUB_REJECT_ERROR,
         "PUB EFT individual ID not found in DB",
     )
@@ -160,10 +158,10 @@ def test_process_manual_pub_reject_records_eft_not_found(
 
 
 def test_process_manual_pub_reject_records_payment_eft_sent_state(
-    process_manual_pub_rejection_step, local_test_db_session
+    process_manual_pub_rejection_step, test_db_session
 ):
     payment = DelegatedPaymentFactory(
-        local_test_db_session, pub_individual_id=123
+        test_db_session, pub_individual_id=123
     ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT)
 
     reject_notes = (
@@ -173,18 +171,18 @@ def test_process_manual_pub_reject_records_payment_eft_sent_state(
     process_manual_pub_rejection_step.process_manual_pub_reject_records([reject_record])
 
     assert_fineos_writeback_status(
-        payment, FineosWritebackTransactionStatus.INVALID_ROUTING_NUMBER, local_test_db_session
+        payment, FineosWritebackTransactionStatus.INVALID_ROUTING_NUMBER, test_db_session
     )
 
     assert_payment_state(
         payment,
         Flow.DELEGATED_PAYMENT,
         State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
-        local_test_db_session,
+        test_db_session,
     )
 
     assert_pub_error(
-        local_test_db_session,
+        test_db_session,
         PubErrorType.MANUAL_PUB_REJECT_PAYMENT_PROCESSED,
         f'Payment manually rejected with notes "{reject_record.notes}"',
     )
@@ -196,10 +194,10 @@ def test_process_manual_pub_reject_records_payment_eft_sent_state(
 
 
 def test_process_manual_pub_reject_records_payment_change_notification_state(
-    process_manual_pub_rejection_step, local_test_db_session
+    process_manual_pub_rejection_step, test_db_session
 ):
     payment = DelegatedPaymentFactory(
-        local_test_db_session, pub_individual_id=123
+        test_db_session, pub_individual_id=123
     ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION)
 
     reject_notes = (
@@ -209,18 +207,18 @@ def test_process_manual_pub_reject_records_payment_change_notification_state(
     process_manual_pub_rejection_step.process_manual_pub_reject_records([reject_record])
 
     assert_fineos_writeback_status(
-        payment, FineosWritebackTransactionStatus.INVALID_ROUTING_NUMBER, local_test_db_session
+        payment, FineosWritebackTransactionStatus.INVALID_ROUTING_NUMBER, test_db_session
     )
 
     assert_payment_state(
         payment,
         Flow.DELEGATED_PAYMENT,
         State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
-        local_test_db_session,
+        test_db_session,
     )
 
     assert_pub_error(
-        local_test_db_session,
+        test_db_session,
         PubErrorType.MANUAL_PUB_REJECT_PAYMENT_PROCESSED,
         f'Payment manually rejected with notes "{reject_record.notes}"',
     )
@@ -238,41 +236,41 @@ def test_process_manual_pub_reject_records_payment_change_notification_state(
 
 
 def test_process_manual_pub_reject_records_payment_already_errored_state(
-    process_manual_pub_rejection_step, local_test_db_session
+    process_manual_pub_rejection_step, test_db_session
 ):
     payment = DelegatedPaymentFactory(
-        local_test_db_session, pub_individual_id=123
+        test_db_session, pub_individual_id=123
     ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_ERROR_FROM_BANK)
 
     reject_record = ManualPubReject(1, "P123,reject notes", "P123", "reject notes")
     process_manual_pub_rejection_step.process_manual_pub_reject_records([reject_record])
 
     # No writeback
-    assert len(local_test_db_session.query(FineosWritebackDetails).all()) == 0
+    assert len(test_db_session.query(FineosWritebackDetails).all()) == 0
 
     # No state change
     assert_payment_state(
         payment,
         Flow.DELEGATED_PAYMENT,
         State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
-        local_test_db_session,
+        test_db_session,
     )
 
     # No pub error
-    assert len(local_test_db_session.query(PubError).all()) == 0
+    assert len(test_db_session.query(PubError).all()) == 0
 
     metrics = process_manual_pub_rejection_step.log_entry.metrics
     assert metrics[process_manual_pub_rejection_step.Metrics.PAYMENT_ALREADY_ERRORED_COUNT] == 1
 
 
 def test_process_manual_pub_reject_records_payment_not_found(
-    process_manual_pub_rejection_step, local_test_db_session
+    process_manual_pub_rejection_step, test_db_session
 ):
     reject_record = ManualPubReject(1, "P123,reject notes", "P123", "reject notes")
     process_manual_pub_rejection_step.process_manual_pub_reject_records([reject_record])
 
     assert_pub_error(
-        local_test_db_session,
+        test_db_session,
         PubErrorType.MANUAL_PUB_REJECT_ERROR,
         "Payment individual ID not found in DB",
     )
@@ -282,25 +280,25 @@ def test_process_manual_pub_reject_records_payment_not_found(
 
 
 def test_process_manual_pub_reject_records_payment_not_in_expected_state(
-    process_manual_pub_rejection_step, local_test_db_session
+    process_manual_pub_rejection_step, test_db_session
 ):
     # Payment state isn't an expected one
     payment = DelegatedPaymentFactory(
-        local_test_db_session, pub_individual_id=123
+        test_db_session, pub_individual_id=123
     ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
     reject_record = ManualPubReject(1, "P123,reject notes", "P123", "reject notes")
     process_manual_pub_rejection_step.process_manual_pub_reject_records([reject_record])
 
     # No writeback
-    assert len(local_test_db_session.query(FineosWritebackDetails).all()) == 0
+    assert len(test_db_session.query(FineosWritebackDetails).all()) == 0
 
     # No state change
     assert_payment_state(
-        payment, Flow.DELEGATED_PAYMENT, State.DELEGATED_PAYMENT_COMPLETE, local_test_db_session
+        payment, Flow.DELEGATED_PAYMENT, State.DELEGATED_PAYMENT_COMPLETE, test_db_session
     )
 
     assert_pub_error(
-        local_test_db_session,
+        test_db_session,
         PubErrorType.MANUAL_PUB_REJECT_ERROR,
         "Unexpected state for payment in manual invalidation file",
     )
@@ -310,21 +308,21 @@ def test_process_manual_pub_reject_records_payment_not_in_expected_state(
 
 
 def test_process_manual_pub_reject_records_missing_reject_notes(
-    process_manual_pub_rejection_step, local_test_db_session
+    process_manual_pub_rejection_step, test_db_session
 ):
     DelegatedPaymentFactory(
-        local_test_db_session, pub_individual_id=123
+        test_db_session, pub_individual_id=123
     ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION)
 
     reject_record = ManualPubReject(1, "P123,", "P123", "")
     process_manual_pub_rejection_step.process_manual_pub_reject_records([reject_record])
 
     # No writeback
-    writeback_details = local_test_db_session.query(FineosWritebackDetails).all()
+    writeback_details = test_db_session.query(FineosWritebackDetails).all()
     assert len(writeback_details) == 0
 
     assert_pub_error(
-        local_test_db_session,
+        test_db_session,
         PubErrorType.MANUAL_PUB_REJECT_ERROR,
         "Empty reject note for payment",
     )
@@ -334,21 +332,21 @@ def test_process_manual_pub_reject_records_missing_reject_notes(
 
 
 def test_process_manual_pub_reject_records_missing_reject_notes_mapping(
-    process_manual_pub_rejection_step, local_test_db_session
+    process_manual_pub_rejection_step, test_db_session
 ):
     DelegatedPaymentFactory(
-        local_test_db_session, pub_individual_id=123
+        test_db_session, pub_individual_id=123
     ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION)
 
     reject_record = ManualPubReject(1, "P123,reject notes", "P123", "reject notes")
     process_manual_pub_rejection_step.process_manual_pub_reject_records([reject_record])
 
     # No writeback
-    writeback_details = local_test_db_session.query(FineosWritebackDetails).all()
+    writeback_details = test_db_session.query(FineosWritebackDetails).all()
     assert len(writeback_details) == 0
 
     assert_pub_error(
-        local_test_db_session,
+        test_db_session,
         PubErrorType.MANUAL_PUB_REJECT_ERROR,
         "Missing reject note writeback status mapping for payment in manual invalidation file",
     )
@@ -358,14 +356,14 @@ def test_process_manual_pub_reject_records_missing_reject_notes_mapping(
 
 
 def test_process_manual_pub_reject_records_invalid_id(
-    process_manual_pub_rejection_step, local_test_db_session
+    process_manual_pub_rejection_step, test_db_session
 ):
     # EFT records start with an E, payments with a P. B is unknown
     reject_record = ManualPubReject(1, "B123,reject notes", "B123", "reject notes")
     process_manual_pub_rejection_step.process_manual_pub_reject_records([reject_record])
 
     assert_pub_error(
-        local_test_db_session,
+        test_db_session,
         PubErrorType.MANUAL_PUB_REJECT_ERROR,
         "Could not determine what type of record to reject for manual PUB reject record",
     )
@@ -376,9 +374,8 @@ def test_process_manual_pub_reject_records_invalid_id(
 
 @freeze_time("2022-02-15 12:00:00", tz_offset=0)
 def test_process_manual_pub_reject_step_full(
-    local_initialize_factories_session,
-    local_test_db_session,
-    local_test_db_other_session,
+    initialize_factories_session,
+    test_db_session,
     mock_s3_bucket_resource,
     monkeypatch,
 ):
@@ -393,15 +390,15 @@ def test_process_manual_pub_reject_step_full(
 
     # Create a payment and EFT record that will be in the file in valid states
     payment = DelegatedPaymentFactory(
-        local_test_db_session, pub_individual_id=1
+        test_db_session, pub_individual_id=1
     ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT)
 
     pub_eft = DelegatedPaymentFactory(
-        local_test_db_session, pub_individual_id=2, prenote_state=PrenoteState.PENDING_WITH_PUB
+        test_db_session, pub_individual_id=2, prenote_state=PrenoteState.PENDING_WITH_PUB
     ).get_or_create_pub_eft()
 
     process_manual_pub_rejection_step = ProcessManualPubRejectionStep(
-        local_test_db_session, local_test_db_other_session
+        test_db_session, test_db_session
     )
 
     assert process_manual_pub_rejection_step.have_more_files_to_process() is True
@@ -409,9 +406,7 @@ def test_process_manual_pub_reject_step_full(
     assert process_manual_pub_rejection_step.have_more_files_to_process() is False
 
     # Make sure the reference file was created properly
-    reference_files = (
-        local_test_db_session.query(ReferenceFile).order_by(ReferenceFile.created_at).all()
-    )
+    reference_files = test_db_session.query(ReferenceFile).order_by(ReferenceFile.created_at).all()
     assert len(reference_files) == 1
     assert reference_files[0].file_location == os.path.join(
         s3_base_path, "processed/2022-02-15", file_name
@@ -423,19 +418,19 @@ def test_process_manual_pub_reject_step_full(
         payment,
         Flow.DELEGATED_PAYMENT,
         State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
-        local_test_db_session,
+        test_db_session,
     )
 
     assert_fineos_writeback_status(
-        payment, FineosWritebackTransactionStatus.INVALID_ROUTING_NUMBER, local_test_db_session
+        payment, FineosWritebackTransactionStatus.INVALID_ROUTING_NUMBER, test_db_session
     )
 
     # Validate the PUB EFT state
     assert_pub_eft_prenote_state(
-        local_test_db_session, pub_eft.pub_eft_id, PrenoteState.REJECTED, "invalid routing number"
+        test_db_session, pub_eft.pub_eft_id, PrenoteState.REJECTED, "invalid routing number"
     )
 
-    errors = local_test_db_session.query(PubError).all()
+    errors = test_db_session.query(PubError).all()
     assert len(errors) == 5
     for error in errors:
         assert error.reference_file_id == reference_file_id
@@ -483,3 +478,42 @@ def test_process_manual_pub_reject_step_full(
     assert errors[4].pub_eft_id is None
     assert errors[4].message == "PUB EFT individual ID not found in DB"
     assert errors[4].pub_error_type_id == PubErrorType.MANUAL_PUB_REJECT_ERROR.pub_error_type_id
+
+
+@freeze_time("2022-02-15 12:00:00", tz_offset=0)
+def test_process_manual_pub_reject_step_full_with_odd_encoding(
+    initialize_factories_session,
+    test_db_session,
+    mock_s3_bucket_resource,
+    monkeypatch,
+):
+    # The file we are parsing has a <U+FEFF> character at the start
+    s3_base_path = f"s3://{mock_s3_bucket_resource.name}/pub/reject-files/"
+    file_name = "odd_encoding_manual_reject_file.csv"
+    monkeypatch.setenv("PFML_MANUAL_PUB_REJECT_ARCHIVE_PATH", s3_base_path)
+
+    test_files = pathlib.Path(__file__).parent / "test_files"
+    mock_s3_bucket_resource.upload_file(
+        str(test_files / file_name), "pub/reject-files/received/" + file_name
+    )
+
+    payment = DelegatedPaymentFactory(
+        test_db_session, pub_individual_id=1
+    ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT)
+
+    process_manual_pub_rejection_step = ProcessManualPubRejectionStep(
+        test_db_session, test_db_session
+    )
+    process_manual_pub_rejection_step.run()
+
+    # Validate the payment state was updated
+    assert_payment_state(
+        payment,
+        Flow.DELEGATED_PAYMENT,
+        State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
+        test_db_session,
+    )
+
+    assert_fineos_writeback_status(
+        payment, FineosWritebackTransactionStatus.PUB_PAYMENT_RETURNED, test_db_session
+    )

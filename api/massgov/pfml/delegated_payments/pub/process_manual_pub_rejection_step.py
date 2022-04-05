@@ -116,7 +116,10 @@ class ProcessManualPubRejectionStep(ProcessFilesInPathStep):
 
         self.db_session.add(self.reference_file)
 
-        self.process_stream(file_util.open_stream(path))
+        # Encoding is utf-8-sig to handle files
+        # we've received with <U+FEFF> at the start (BOM files)
+        # https://docs.python.org/3/library/codecs.html#module-encodings.utf_8_sig
+        self.process_stream(file_util.open_stream(path, encoding="utf-8-sig"))
 
         delegated_payments_util.move_reference_file(
             self.db_session, self.reference_file, self.received_path, self.processed_path
