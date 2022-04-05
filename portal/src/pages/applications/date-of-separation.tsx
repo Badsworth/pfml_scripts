@@ -1,18 +1,17 @@
+import { get, pick } from "lodash";
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
 
+import ConditionalContent from "src/components/ConditionalContent";
+import Fieldset from "src/components/core/Fieldset";
+import InputChoiceGroup from "src/components/core/InputChoiceGroup";
 import InputDate from "../../components/core/InputDate";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import { get, pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import Fieldset from "src/components/core/Fieldset";
-import ConditionalContent from "src/components/ConditionalContent";
-import FormLabel from "src/components/core/FormLabel";
-import InputChoiceGroup from "src/components/core/InputChoiceGroup";
 
 export const fields = [
   "claim.additional_user_not_found_info.date_of_separation",
@@ -28,16 +27,11 @@ export const DateOfSeparation = (props: WithBenefitsApplicationProps) => {
   const defaultFormState = pick(props, fields).claim
     ?.additional_user_not_found_info;
 
-  const tmp_still_work_for_employer = defaultFormState
-    ? defaultFormState?.date_of_separation === null
-    : null;
-  console.log(defaultFormState);
-  console.log(defaultFormState?.date_of_separation);
-  console.log(tmp_still_work_for_employer);
-
   const { formState, getField, updateFields, clearField } = useFormState({
     ...defaultFormState,
-    still_work_for_employer: defaultFormState?.date_of_separation === null,
+    still_work_for_employer: defaultFormState
+      ? defaultFormState?.date_of_separation === null
+      : true,
   });
 
   const handleSave = () =>
@@ -53,8 +47,6 @@ export const DateOfSeparation = (props: WithBenefitsApplicationProps) => {
     formState,
     updateFields,
   });
-
-  const date_of_separation = get(formState, "date_of_separation") ?? null;
 
   const still_work_for_employer =
     get(formState, "still_work_for_employer") ?? null;
@@ -85,7 +77,7 @@ export const DateOfSeparation = (props: WithBenefitsApplicationProps) => {
           ]}
           type="radio"
           label={t(
-            "pages.claimsAdditionalUserNotFoundInfo.recentlyAcquiredOrMergedLabel"
+            "pages.claimsAdditionalUserNotFoundInfo.currentlyWorkAtEmployerLabel"
           )}
         />
         <ConditionalContent

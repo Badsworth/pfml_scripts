@@ -1153,6 +1153,7 @@ const pages: {
     beginAdditionalUserNotFoundInfoButton: "I understand",
     beginAdditionalUserNotFoundInfoDescription:
       "We need to collect additional information to process your application.",
+    currentlyWorkAtEmployerLabel: "Do you currently work at this employer?",
     dateOfHireLabel: "What was your start date at this employer?",
     dateOfSeparationLabel: "When was your last day at this employer?",
     employerNameLabel: "Employer Name",

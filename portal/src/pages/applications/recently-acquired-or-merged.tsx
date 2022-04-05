@@ -9,7 +9,6 @@ import React from "react";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import Claim from "src/models/Claim";
 
 export const fields = [
   "claim.additional_user_not_found_info.recently_acquired_or_merged",

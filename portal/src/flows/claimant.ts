@@ -26,7 +26,6 @@ import { fields as concurrentLeavesFields } from "../pages/applications/concurre
 import { fields as dateOfBirthFields } from "../pages/applications/date-of-birth";
 import { fields as dateOfChildFields } from "../pages/applications/date-of-child";
 import { fields as dateOfHireFields } from "../pages/applications/date-of-hire";
-import { fields as dateOfSeparationFields } from "../pages/applications/date-of-separation";
 import { fields as departmentFields } from "../pages/applications/department";
 import { fields as employerBenefitsDetailsFields } from "../pages/applications/employer-benefits-details";
 import { fields as employerBenefitsFields } from "../pages/applications/employer-benefits";
