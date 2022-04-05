@@ -814,6 +814,33 @@ const shared: {
   claimsEmploymentInfoTitle: "Employment information",
   claimsLeaveDetailsTitle: "Leave details",
   claimsLeaveDurationTitle: "Leave duration",
+  claimsLeaveSpansBenefitYears: {
+    bothCanBeSubmittedBenefitsCalculatedSeparately:
+      "The Department will calculate your weekly benefit amount for each application separately. You may receive different payment amounts for each application. Learn more about <how-benefit-amounts-are-calculated-link>how PFML weekly benefit amounts are calculated</how-benefit-amounts-are-calculated-link>.",
+    bothCanBeSubmittedDeterminationMayBeDifferent:
+      "The Department's determination for one application may be different from its determination for the other.",
+    bothCanBeSubmittedReviewedSeparately:
+      "We’ll review each application separately. This means that:",
+    bothCanBeSubmittedSevenDayWaitingPeriod:
+      "You'll have two 7-day waiting periods, one at the start of each period of your leave. Learn more about the <seven-day-waiting-period-link>7-day waiting period</seven-day-waiting-period-link>.",
+    bothCannotBeSubmittedCurrent:
+      "You will be able to submit Part 1 of your current benefit year application on {{submittableDate}}. This is 60 days before the start of your leave in the current benefit year.",
+    bothCannotBeSubmittedNew:
+      "You will be able to submit Part 1 of your new benefit year application on {{submittableDate}}. This is 60 days before the start of your leave in the new benefit year.",
+    bothCannotBeSubmittedReminder:
+      "Applications cannot be submitted earlier than 60 days before the start of leave.",
+    currentBenefitYearLeaveDates:
+      "<strong>Current benefit year</strong>: leave dates from {{startDate}} to {{endDate}}",
+    introduction:
+      "<p>Your current <benefit-year-guide-link>benefit year</benefit-year-guide-link> is {{startDate}} to {{endDate}}. After you submit Part 1 of your application, we'll automatically split this application into two, one for each benefit year. You can upload the same supporting documentation for both applications.",
+    newBenefitYearLeaveDates:
+      "<strong>New benefit year</strong>: leave dates from {{startDate}} to {{endDate}}",
+    secondCannotBeSubmittedCurrent:
+      "You will be able to submit your current benefit year application right away.",
+    secondCannotBeSubmittedNew:
+      "You will be able to submit your new benefit year application on {{submittableDate}}. This is 60 days before the start of your leave in the new benefit year. Applications cannot be submitted earlier than 60 days before the start of leave.",
+    title: "Your leave dates extend into a new benefit year.",
+  },
   claimsOtherLeaveTitle: "Other leave, benefits, and income",
   claimsPreviousLeaveDetails: {
     addButton: "Add another previous leave",
@@ -1598,6 +1625,10 @@ const pages: {
     sectionLabel: "Why do you need to take leave?",
     serviceMemberFamilyLeaveLabel:
       "I need to care for a family member who serves in the armed forces.",
+    title: "$t(shared.claimsLeaveDetailsTitle)",
+  },
+  claimsLeaveSpansBenefitYears: {
+    continueLabel: "I understand",
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
   claimsName: {
