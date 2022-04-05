@@ -82,6 +82,7 @@ def test_employer_is_not_fully_exempt(test_db_session, initialize_factories_sess
     assert issue == ValidationErrorDetail(
         field="employer_fein",
         type=IssueType.require_non_exempt_employer,
+        message="Confirm that you have the correct EIN, and that the Employer is contributing to Paid Family and Medical Leave.",
     )
 
 
