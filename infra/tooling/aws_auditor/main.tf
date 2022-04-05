@@ -37,6 +37,7 @@ resource "aws_lambda_function" "audit" {
   handler          = "audit_${each.key}.handler"
   role             = aws_iam_role.audit[each.key].arn
   runtime          = "python3.9"
+  timeout          = 15
 
   environment {
     variables = {
