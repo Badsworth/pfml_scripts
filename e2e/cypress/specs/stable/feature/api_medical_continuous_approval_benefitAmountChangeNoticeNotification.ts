@@ -31,25 +31,35 @@ describeIf(
     });
 
     const approval = it("Approves the child bonding claim", () => {
+      cy.dependsOnPreviousPass();
       fineos.before();
       cy.unstash<DehydratedClaim>("claim").then((claim) => {
         cy.unstash<Submission>("submission").then((submission) => {
-          const claimPage = fineosPages.ClaimPage.visit(
-            submission.fineos_absence_id
-          ).adjudicate((adjudication) => {
-            adjudication
-              .evidence((evidence) => {
-                for (const document of claim.documents) {
-                  evidence.receive(document.document_type);
-                }
+          cy.tryCount().then((tryCount) => {
+            const claimPage = fineosPages.ClaimPage.visit(
+              submission.fineos_absence_id
+            );
+            if (tryCount > 0) {
+              fineos.assertClaimStatus("Approved");
+              claimPage.triggerNotice("Designation Notice");
+              return;
+            }
+            claimPage
+              .adjudicate((adjudication) => {
+                adjudication
+                  .evidence((evidence) => {
+                    for (const document of claim.documents) {
+                      evidence.receive(document.document_type);
+                    }
+                  })
+                  .certificationPeriods((certificationPeriods) =>
+                    certificationPeriods.prefill()
+                  )
+                  .acceptLeavePlan();
               })
-              .certificationPeriods((certificationPeriods) =>
-                certificationPeriods.prefill()
-              )
-              .acceptLeavePlan();
+              .approve("Approved", config("HAS_APRIL_UPGRADE") === "true")
+              .triggerNotice("Designation Notice");
           });
-          claimPage.approve("Approved", config("HAS_APRIL_UPGRADE") === "true");
-          claimPage.triggerNotice("Designation Notice");
         });
       });
     });

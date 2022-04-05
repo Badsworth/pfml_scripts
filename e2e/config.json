@@ -83,7 +83,11 @@
     "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-training-business-intelligence-tool",
     "TWILIO_NUMBERS": "7853699328,8106349678",
     "HAS_CHANNEL_SWITCHING": "false",
+<<<<<<< HEAD
     "HAS_MARCH_RELEASE": "true",
+=======
+    "HAS_MARCH_RELEASE": "false",
+>>>>>>> 4fff2ac2a (move tests to stable, update config)
     "HAS_EMPLOYER_REIMBURSEMENTS": "true"
   },
   "trn2": {
