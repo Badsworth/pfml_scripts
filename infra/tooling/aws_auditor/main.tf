@@ -18,7 +18,7 @@ resource "aws_dynamodb_table" "inventory" {
   for_each     = local.auditors
   name         = "${var.prefix}${each.key}"
   billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "Name"
+  hash_key     = "ResourceName"
 
   attribute {
     name = "Name"

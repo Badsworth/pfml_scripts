@@ -86,7 +86,7 @@ class Function:
 
     def to_dict(self):
         result = {
-            'Name': self.name(),
+            'ResourceName': self.name(),
             'DateAudited': str(datetime.datetime.now()),
             'Encrytion': self.encryption(),
             'Role': self.role(),
