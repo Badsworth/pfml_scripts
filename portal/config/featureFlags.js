@@ -33,7 +33,7 @@ const flagsConfig = {
     claimantShowMilitaryLeaveTypes: false,
 
     // When this flag is enabled payment status phase three work will be displayed.
-    claimantShowPaymentsPhaseThree: false,
+    claimantShowPaymentsPhaseThree: true,
 
     // When this flag is enabled logic in code will account for new payment schedule post FINEOS deploy
     // TODO (PORTAL-1934) Remove flag
@@ -64,7 +64,7 @@ const flagsConfig = {
     // TODO (PORTAL-1893) This flag should be enabled when the /holidays endpoint is ready for production.
     // The /holidays endpoint is still under development, but the holiday alert component is done.
     // When this flag is enabled the holiday alert will be displayed on the payments pages.
-    showHolidayAlert: false,
+    showHolidayAlert: true,
 
     // When this flag is true, claims that would span multiple benefit years
     // are split into separate claims
@@ -76,34 +76,52 @@ const flagsConfig = {
   // environment config files.
   "cps-preview": {
     claimantShowMFA: true,
+    claimantShowPaymentsPhaseThree: true,
+    showHolidayAlert: true,
   },
   development: {
     example: true,
     pfmlTerriyay: true,
     claimantShowMFA: true,
+    claimantShowPaymentsPhaseThree: true,
+    showHolidayAlert: true,
   },
   test: {
     claimantShowMFA: true,
+    claimantShowPaymentsPhaseThree: true,
+    showHolidayAlert: true,
   },
   stage: {
     claimantShowMFA: true,
+    claimantShowPaymentsPhaseThree: true,
+    showHolidayAlert: true,
   },
   training: {
     claimantShowMFA: true,
+    claimantShowPaymentsPhaseThree: true,
+    showHolidayAlert: true,
   },
   performance: {
     claimantShowMFA: true,
+    claimantShowPaymentsPhaseThree: true,
+    showHolidayAlert: true,
   },
   uat: {
     claimantShowMFA: true,
+    claimantShowPaymentsPhaseThree: true,
+    showHolidayAlert: true,
   },
   local: {
     pfmlTerriyay: true,
     claimantShowMFA: true,
+    claimantShowPaymentsPhaseThree: true,
+    showHolidayAlert: true,
   },
   prod: {
     pfmlTerriyay: true,
     claimantShowMFA: true,
+    claimantShowPaymentsPhaseThree: true,
+    showHolidayAlert: true,
   },
 };
 
