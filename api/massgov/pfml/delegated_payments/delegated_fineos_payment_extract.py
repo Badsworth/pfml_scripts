@@ -489,7 +489,10 @@ class PaymentData:
 
         if (
             self.event_reason == AUTO_ALT_EVENT_REASON
-            and self.event_type == PAYMENT_OUT_TRANSACTION_TYPE
+            and (
+                self.event_type == PAYMENT_OUT_TRANSACTION_TYPE
+                or self.event_type == CANCELLATION_PAYMENT_TRANSACTION_TYPE
+            )
             and self.payee_identifier == TAX_IDENTIFICATION_NUMBER
         ):
             return PaymentRelevantParty.REIMBURSED_EMPLOYER
