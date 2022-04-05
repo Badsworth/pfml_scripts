@@ -76,14 +76,12 @@ export const Status = (props: WithEmployerClaimProps) => {
           }}
         />
       </Lead>
-      <React.Fragment>
-        <EmployeeInformation claim={claim} />
-        <CertificationsAndAbsencePeriods
-          claim={claim}
-          documents={certificationDocuments}
-          downloadDocument={downloadDocument}
-        />
-      </React.Fragment>
+      <EmployeeInformation claim={claim} />
+      <CertificationsAndAbsencePeriods
+        claim={claim}
+        documents={certificationDocuments}
+        downloadDocument={downloadDocument}
+      />
 
       {legalNotices.length > 0 && (
         <div className="padding-top-2">

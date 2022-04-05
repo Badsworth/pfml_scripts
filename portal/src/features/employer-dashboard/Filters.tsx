@@ -187,12 +187,10 @@ const Filters = (props: FiltersProps) => {
             />
           )}
 
-          <React.Fragment>
-            <ReviewableFilter {...getFunctionalInputProps("is_reviewable")} />
-            <RequestDecisionFilter
-              {...getFunctionalInputProps("request_decision")}
-            />
-          </React.Fragment>
+          <ReviewableFilter {...getFunctionalInputProps("is_reviewable")} />
+          <RequestDecisionFilter
+            {...getFunctionalInputProps("request_decision")}
+          />
 
           <Button type="submit" disabled={isEqual(formState, activeFilters)}>
             {t("pages.employersDashboard.filtersApply")}
