@@ -471,26 +471,4 @@ describe("Employer dashboard", () => {
       page_offset: "1",
     });
   });
-
-  it("renders Respond by status", async () => {
-    const claims = [getClaim()];
-    claims[0].managed_requirements = [
-      {
-        category: "",
-        created_at: "",
-        responded_at: "",
-        type: "",
-        status: "Open",
-        follow_up_date: "2050-01-30",
-      },
-    ];
-
-    const userAttrs = {
-      user_leave_administrators: [verifiedUserLeaveAdministrator],
-    };
-
-    await setup({ claims, userAttrs });
-
-    expect(screen.getByText("Respond by 1/30/2050")).toBeInTheDocument();
-  });
 });
