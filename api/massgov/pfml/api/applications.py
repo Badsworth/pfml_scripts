@@ -852,7 +852,7 @@ def submit_tax_withholding_preference(application_id: UUID) -> Response:
         existing_application = validate_tax_withholding_request(
             db_session, application_id, tax_preference_body
         )
-        if tax_preference_body.skip_fineos == True:
+        if not tax_preference_body.skip_fineos:
             send_tax_selection_to_fineos(existing_application, tax_preference_body)
         save_tax_preference(db_session, existing_application, tax_preference_body)
 

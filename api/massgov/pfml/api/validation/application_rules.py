@@ -639,7 +639,10 @@ def get_conditional_issues(application: Application) -> List[ValidationErrorDeta
     # can safely enforce these validation rules across all in-progress claims
     require_other_leaves_fields = not application.submitted_time
 
-    if application.additional_user_not_found_info.currently_employed:
+    if (
+        application.additional_user_not_found_info is not None
+        and application.additional_user_not_found_info.currently_employed is False
+    ):
         if not application.additional_user_not_found_info.date_of_separation:
             issues.append(
                 ValidationErrorDetail(
@@ -922,7 +925,6 @@ ALWAYS_REQUIRED_FIELDS_DB_NAME_TO_API_NAME_MAP = {
     "date_of_birth": "date_of_birth",
     "additional_user_not_found_info.currently_employed": "additional_user_not_found_info.currently_employed",
     "additional_user_not_found_info.date_of_hire": "additional_user_not_found_info.date_of_hire",
-    "additional_user_not_found_info.date_of_separation": "additional_user_not_found_info.date_of_separation",
     "additional_user_not_found_info.employer_name": "additional_user_not_found_info.employer_name",
     "employer_notified": "leave_details.employer_notified",
     "employment_status_id": "employment_status",
