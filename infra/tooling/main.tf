@@ -1,5 +1,16 @@
 provider "aws" {}
 
+terraform {
+
+  backend "s3" {
+    bucket         = "${BUCKET_NAME}"
+    key            = "terraform/infra_tooling.tfstate"
+    region         = "${AWS_REGION}"
+    dynamodb_table = "terraform_locks"
+    encrypt        = "true"
+  }
+}
+
 module "constants" {
   source = "../constants"
 }
