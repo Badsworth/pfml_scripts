@@ -223,9 +223,7 @@ class ChangeRequestResponse(PydanticBaseModel):
         if change_request.claim.fineos_absence_id is not None:
             return cls(
                 fineos_absence_id=change_request.claim.fineos_absence_id,
-                change_request_type=ChangeRequestType(
-                    change_request.change_request_type_instance.change_request_type_description
-                ),
+                change_request_type=change_request.change_request_type_instance.change_request_type_description,  # type: ignore
                 start_date=change_request.start_date,
                 end_date=change_request.end_date,
                 submitted_time=change_request.submitted_time,

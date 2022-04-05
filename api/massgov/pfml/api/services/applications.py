@@ -1464,9 +1464,9 @@ def set_payment_preference_fields(
     if preference.accountDetails is not None:
         payment_preference = PaymentPreference(
             account_number=preference.accountDetails.accountNo,
-            routing_number=FinancialRoutingNumber(preference.accountDetails.routingNumber),
-            bank_account_type=BankAccountType(preference.accountDetails.accountType),
-            payment_method=CommonPaymentMethod(preference.paymentMethod),
+            routing_number=preference.accountDetails.routingNumber,  # type: ignore
+            bank_account_type=preference.accountDetails.accountType,  # type: ignore
+            payment_method=preference.paymentMethod,  # type: ignore
         )
     elif preference.paymentMethod == PaymentMethod.CHECK.payment_method_description:
         payment_preference = PaymentPreference(
