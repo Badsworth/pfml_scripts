@@ -29,9 +29,13 @@ export default {
   },
 };
 
-export const Default = (args) => {
+export const Default = ({
+  ApplicationSplit,
+}: {
+  ApplicationSplit: typeof applicationSplits[number]["label"];
+}) => {
   const applicationSplit = applicationSplits.find(
-    (applicationSplit) => applicationSplit.label === args.ApplicationSplit
+    (applicationSplit) => applicationSplit.label === ApplicationSplit
   );
 
   return (
