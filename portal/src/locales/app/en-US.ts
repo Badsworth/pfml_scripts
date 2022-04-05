@@ -832,7 +832,7 @@ const shared: {
     currentBenefitYearLeaveDates:
       "<strong>Current benefit year</strong>: leave dates from {{startDate}} to {{endDate}}",
     introduction:
-      "<p>Your current <benefit-year-guide-link>benefit year</benefit-year-guide-link> is {{startDate}} to {{endDate}}. After you submit Part 1 of your application, we'll automatically split this application into two, one for each benefit year. You can upload the same supporting documentation for both applications.",
+      "Your current <benefit-year-guide-link>benefit year</benefit-year-guide-link> is {{startDate}} to {{endDate}}. After you submit Part 1 of your application, we'll automatically split this application into two, one for each benefit year. You can upload the same supporting documentation for both applications.",
     newBenefitYearLeaveDates:
       "<strong>New benefit year</strong>: leave dates from {{startDate}} to {{endDate}}",
     secondCannotBeSubmittedCurrent:
@@ -1629,7 +1629,8 @@ const pages: {
   },
   claimsLeaveSpansBenefitYears: {
     continueLabel: "I understand",
-    title: "$t(shared.claimsLeaveDetailsTitle)",
+    loadingLabel: "Redirecting to applications index",
+    title: "$t(shared.claimsLeaveSpansBenefitYears.title)",
   },
   claimsName: {
     firstNameLabel: "First name",
@@ -2943,6 +2944,31 @@ const components: {
     tag: "Beta",
     message:
       "This is a new service. Help us improve it with <user-feedback-link>your feedback</user-feedback-link>.",
+  },
+  claimsLeaveSpansBenefitYears: {
+    bothCanBeSubmittedBenefitsCalculatedSeparately:
+      "$t(shared.claimsLeaveSpansBenefitYears.bothCanBeSubmittedBenefitsCalculatedSeparately)",
+    bothCanBeSubmittedDeterminationMayBeDifferent:
+      "$t(shared.claimsLeaveSpansBenefitYears.bothCanBeSubmittedDeterminationMayBeDifferent)",
+    bothCanBeSubmittedReviewedSeparately:
+      "$t(shared.claimsLeaveSpansBenefitYears.bothCanBeSubmittedReviewedSeparately)",
+    bothCanBeSubmittedSevenDayWaitingPeriod:
+      "$t(shared.claimsLeaveSpansBenefitYears.bothCanBeSubmittedSevenDayWaitingPeriod)",
+    bothCannotBeSubmittedCurrent:
+      "$t(shared.claimsLeaveSpansBenefitYears.bothCannotBeSubmittedCurrent)",
+    bothCannotBeSubmittedNew:
+      "$t(shared.claimsLeaveSpansBenefitYears.bothCannotBeSubmittedNew)",
+    bothCannotBeSubmittedReminder:
+      "$t(shared.claimsLeaveSpansBenefitYears.bothCannotBeSubmittedReminder)",
+    currentBenefitYearLeaveDates:
+      "$t(shared.claimsLeaveSpansBenefitYears.currentBenefitYearLeaveDates)",
+    introduction: "$t(shared.claimsLeaveSpansBenefitYears.introduction)",
+    newBenefitYearLeaveDates:
+      "$t(shared.claimsLeaveSpansBenefitYears.newBenefitYearLeaveDates)",
+    secondCannotBeSubmittedCurrent:
+      "$t(shared.claimsLeaveSpansBenefitYears.secondCannotBeSubmittedCurrent)",
+    secondCannotBeSubmittedNew:
+      "$t(shared.claimsLeaveSpansBenefitYears.secondCannotBeSubmittedNew)",
   },
   confirmSignUp: {
     codeLabel: "$t(shared.verificationCodeLabel)",

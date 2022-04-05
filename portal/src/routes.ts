@@ -43,11 +43,11 @@ const routes = {
     leavePeriodReducedSchedule: "/applications/leave-period-reduced-schedule",
     leaveReason: "/applications/leave-reason",
     leaveSpansBenefitYearsContinuous:
-      "/applications/leave-spans-benefit-years-continuous",
+      "/applications/leave-spans-benefit-years/continuous",
     leaveSpansBenefitYearsIntermittent:
-      "/applications/leave-spans-benefit-years-intermittent",
+      "/applications/leave-spans-benefit-years/intermittent",
     leaveSpansBenefitYearsReduced:
-      "/applications/leave-spans-benefit-years-reduced",
+      "/applications/leave-spans-benefit-years/reduced",
     name: "/applications/name",
     notifiedEmployer: "/applications/notified-employer",
     otherIncomes: "/applications/other-incomes",
