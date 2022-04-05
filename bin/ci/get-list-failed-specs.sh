@@ -32,7 +32,8 @@ TEST_RUN_ID=$2
 QUERY="SELECT uniques(file) AS 'filename' FROM TestResult WHERE runId = '$TEST_RUN_ID' AND status = 'failed' AND environment = '$ENVIRONMENT' SINCE 30 minutes AGO UNTIL NOW"
 
 failed_specs_raw=$(newrelic nrql query --query "$QUERY")
-failed_specs_formatted=$(echo $failed_specs_raw | jq -r -e '.[0].filename | join(",")')
-failed_specs_count=$(echo $failed_specs_raw | jq -r -e '.[0].filename | length')
+# Get list of failed specs from stable group only
+failed_specs_formatted=$(echo $failed_specs_raw | jq -r -e '[.[0].filename[] | select(contains("cypress/specs/stable/"))] | join(",")')
+failed_specs_count=$(echo $failed_specs_raw | jq -r -e '[.[0].filename[] | select(contains("cypress/specs/stable/"))] | length')
 echo "::set-output name=failed_specs::$failed_specs_formatted"
 echo "::set-output name=failed_specs_count::$failed_specs_count"

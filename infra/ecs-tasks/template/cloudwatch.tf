@@ -572,7 +572,7 @@ module "standalone-fineos-import-employee-updates" {
   ecs_task_executor_role     = aws_iam_role.task_executor.arn
   # Reuse the eventbridge_step_function arn since this is normally an individual step. This config runs only the
   # import-employee-updates step offset by 12 hours.
-  ecs_task_role = aws_iam_role.eventbridge_step_functions.arn
+  ecs_task_role = aws_iam_role.fineos_import_employee_updates_task_role.arn
 }
 
 # TODO uncomment when ready

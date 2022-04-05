@@ -2322,6 +2322,7 @@ def setup_common_env_variables(monkeypatch):
     monkeypatch.setenv("DFML_PUB_ROUTING_NUMBER", "234567890")
     monkeypatch.setenv("PUB_PAYMENT_STARTING_CHECK_NUMBER", "100")
     monkeypatch.setenv("USE_AUDIT_REJECT_TRANSACTION_STATUS", "1")
+    monkeypatch.setenv("ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS", "0")
 
 
 # == Assertion Helpers ==

@@ -3312,6 +3312,8 @@ const components: {
   leaveDatesAlert: {
     heading: "Your leave dates for paid leave from PFML",
     leaveDatesHeading: "Your 7-day waiting period dates",
+    splitApplicationDates:
+      "<ul><li><strong>Current benefit year:</strong> {{currDateRange}}</li><li><strong>New benefit year:</strong> {{newDateRange}}</li></ul>",
   },
   maintenanceAlertBar: {
     message_withEndTime:
