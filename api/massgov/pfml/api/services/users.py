@@ -25,7 +25,7 @@ def update_user(
     db_session: db.Session,
     user: User,
     update_request: UserUpdateRequest,
-    # todo (PORTAL-1828): Remove X-FF-Sync-Cognito-Preferences feature flag header
+    # TODO (PORTAL-1828): Remove X-FF-Sync-Cognito-Preferences feature flag header
     save_mfa_preference_to_cognito: bool,
     cognito_auth_token: str,
 ) -> User:

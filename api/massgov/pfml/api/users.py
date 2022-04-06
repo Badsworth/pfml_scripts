@@ -195,11 +195,15 @@ def users_patch(user_id):
         ensure(EDIT, user)
 
     headers = flask.request.headers
+    # Each request will have an authorization header in the format "Bearer <jwt token>". This header
+    # is required and the auth token is verified as part of our openapi configuration. To read more see
+    # massgov.pfml.api.authentication.decode_jwt
     auth_header = headers.get("Authorization")
     assert auth_header
-    # todo (PORTAL-1828): Remove X-FF-Sync-Cognito-Preferences feature flag header
-    save_mfa_preference_to_cognito = headers.get("X-FF-Sync-Cognito-Preferences", None) == "true"
+    # Strip off the "Bearer " prefix so we're left with just the auth token
     cognito_auth_token = auth_header[7:]
+    # TODO (PORTAL-1828): Remove X-FF-Sync-Cognito-Preferences feature flag header
+    save_mfa_preference_to_cognito = headers.get("X-FF-Sync-Cognito-Preferences", None) == "true"
 
     updated_user = update_user(
         db_session, user, body, save_mfa_preference_to_cognito, cognito_auth_token
