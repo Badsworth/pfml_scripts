@@ -777,7 +777,15 @@ const claimantFlow: {
         fields: taxWithholdingFields,
       },
       on: {
-        CONTINUE: routes.applications.checklist,
+        CONTINUE: [
+          {
+            target: routes.applications.paymentMethod,
+            cond: "includesUserNotFoundError",
+          },
+          {
+            target: routes.applications.checklist,
+          },
+        ],
       },
     },
     [routes.applications.bondingLeaveAttestation]: {
