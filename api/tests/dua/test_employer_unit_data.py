@@ -135,3 +135,7 @@ def test_update_employer_moveit_mode(
             test_db_session, log_entry, transfer_config=transfer_config, moveit_config=moveit_config
         )
         assert len(reference_files) == 0
+
+        # Clean up files
+        filepath = os.path.join(paths["archive_directory"], filename)
+        os.remove(filepath)
