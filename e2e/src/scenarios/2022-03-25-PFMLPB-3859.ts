@@ -22,6 +22,7 @@ export const PORTAL_PREGNANCY_POSTNATAL_DISABLIITY_CONTINUOUS: ScenarioSpecifica
         employer_decision: "Approve",
       },
       metadata: {
+        postSubmit: "Approve",
         amount: 4 + error_tolerance_claim_amount,
       },
     },
@@ -145,6 +146,10 @@ export const PORTAL_MEDICAL_SERIOUS_INTERMITTENT_SITFIT: ScenarioSpecification =
       docs: {
         MASSID: {},
         HCP: {},
+      },
+      employerResponse: {
+        hours_worked_per_week: 40,
+        employer_decision: "Approve",
       },
       metadata: {
         amount: 4 + error_tolerance_claim_amount,
