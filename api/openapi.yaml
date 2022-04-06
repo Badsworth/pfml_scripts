@@ -3008,6 +3008,7 @@ components:
           example: "Started"
         phone:
           $ref: "#/components/schemas/MaskedPhone"
+          nullable: true
         has_previous_leaves_other_reason:
           type: boolean
           nullable: true
