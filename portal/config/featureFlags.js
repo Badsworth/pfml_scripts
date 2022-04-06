@@ -52,9 +52,6 @@ const flagsConfig = {
     // https://lwd.atlassian.net/browse/CP-459
     pfmlTerriyay: false,
 
-    // When this flag is true, PDF files up to 10mb are sent to the API.
-    sendLargePdfToApi: true,
-
     // TODO (PORTAL-1893) remove feature flag
     // When this flag is enabled the holiday alert will be displayed on the payments pages.
     showHolidayAlert: true,

@@ -4,7 +4,6 @@ import Compressor from "compressorjs";
 import { ErrorsLogic } from "./useErrorsLogic";
 import TempFile from "../models/TempFile";
 import bytesToMb from "../utils/bytesToMb";
-import { isFeatureEnabled } from "../services/featureFlags";
 import { snakeCase } from "lodash";
 import tracker from "../services/tracker";
 import useCollectionState from "./useCollectionState";
@@ -96,8 +95,7 @@ function filterAllowedFiles(
 
   files.forEach((file) => {
     let disallowedReason = "";
-    const useApiGatewaySizeLimit =
-      file.type === "application/pdf" && isFeatureEnabled("sendLargePdfToApi");
+    const useApiGatewaySizeLimit = file.type === "application/pdf";
 
     const exceedsSizeLimit = useApiGatewaySizeLimit
       ? file.size >= Number(process.env.fileSizeMaxBytesApiGateway)
