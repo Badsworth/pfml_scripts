@@ -87,7 +87,9 @@ def main():
     with db.session_scope(db.init(), close=True) as db_session:
         if config.dia_download_import or config.dia_download_import_and_generate_report:
             logger.info("Running DIA steps to check for and load payments")
-            with LogEntry(db_session, "DIA retrieve_payment_lists_from_agencies") as log_entry:
+            with LogEntry(
+                db_session, __name__, "DIA retrieve_payment_lists_from_agencies"
+            ) as log_entry:
                 dia.download_payment_list_from_moveit(db_session, log_entry)
                 dia_load_results = dia.load_new_dia_payments(db_session, log_entry)
 
@@ -97,13 +99,17 @@ def main():
             and dia_load_results.found_pending_files
         ):
             logger.info("Running DIA steps to generate report")
-            with LogEntry(db_session, "DIA send_wage_replacement_payments_to_dfml") as log_entry:
+            with LogEntry(
+                db_session, __name__, "DIA send_wage_replacement_payments_to_dfml"
+            ) as log_entry:
                 dia_payments_reports_create.create_report_new_dia_payments_to_dfml(
                     db_session, log_entry
                 )
                 dia_payments_reports_send.send_dia_reductions_report(db_session)
 
-            with LogEntry(db_session, "DIA send_consolidated_dia_payments_to_dfml") as log_entry:
+            with LogEntry(
+                db_session, __name__, "DIA send_consolidated_dia_payments_to_dfml"
+            ) as log_entry:
                 dia_consolidated_report_create.create_report_consolidated_dia_payments_to_dfml(
                     db_session
                 )
@@ -111,7 +117,9 @@ def main():
 
         if config.dua_download_import or config.dua_download_import_and_generate_report:
             logger.info("Running DUA steps to check for and load payments")
-            with LogEntry(db_session, "DUA retrieve_payment_lists_from_agencies") as log_entry:
+            with LogEntry(
+                db_session, __name__, "DUA retrieve_payment_lists_from_agencies"
+            ) as log_entry:
                 dua.download_payment_list_from_moveit(db_session, log_entry)
                 dua_load_results = dua.load_new_dua_payments(db_session, log_entry)
 
@@ -121,6 +129,8 @@ def main():
             and dua_load_results.found_pending_files
         ):
             logger.info("Running DUA steps to generate report")
-            with LogEntry(db_session, "DUA send_wage_replacement_payments_to_dfml") as log_entry:
+            with LogEntry(
+                db_session, __name__, "DUA send_wage_replacement_payments_to_dfml"
+            ) as log_entry:
                 dua.create_report_new_dua_payments_to_dfml(db_session, log_entry)
                 dua_reports.send_dua_reductions_report(db_session)

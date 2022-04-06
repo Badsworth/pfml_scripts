@@ -31,7 +31,7 @@ def add_test_employees(initialize_factories_session):
 
 
 def test_update_employee_demographics(test_db_session, add_test_employees):
-    with LogEntry(test_db_session, "test log entry") as log_entry:
+    with LogEntry(test_db_session, __name__, "test log entry") as log_entry:
         for row in get_mock_data():
             backfill_employee_gender(test_db_session, log_entry, row)
 

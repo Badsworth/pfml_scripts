@@ -122,7 +122,7 @@ def handler():
 
     try:
         with massgov.pfml.util.batch.log.log_entry(
-            db_session_raw, "FINEOS Employee Update", ""
+            db_session_raw, "", "FINEOS Employee Update", ""
         ) as log_entry, db.session_scope(db_session_raw) as db_session:
             report = process_fineos_updates(
                 db_session, config.fineos_folder_path, fineos_boto_session

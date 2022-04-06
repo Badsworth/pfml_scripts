@@ -14,7 +14,7 @@ from .helpers import get_mock_reference_file
 
 def test_import_multiple_files_new_data(test_db_session, monkeypatch, mock_s3_bucket):
     monkeypatch.setenv("S3_BUCKET", f"s3://{mock_s3_bucket}")
-    with LogEntry(test_db_session, "test log entry") as log_entry:
+    with LogEntry(test_db_session, __name__, "test log entry") as log_entry:
 
         reference_file = get_mock_reference_file("test_dua_employer_data.csv")
         transfer_config = get_transfer_config()
@@ -56,7 +56,7 @@ def test_import_multiple_files_new_data(test_db_session, monkeypatch, mock_s3_bu
 
 def test_update_employer_file_mode(test_db_session, monkeypatch, mock_s3_bucket):
     monkeypatch.setenv("S3_BUCKET", f"s3://{mock_s3_bucket}")
-    with LogEntry(test_db_session, "test log entry") as log_entry:
+    with LogEntry(test_db_session, __name__, "test log entry") as log_entry:
 
         reference_file = get_mock_reference_file("test_dua_employer_data.csv")
         transfer_config = get_transfer_config()
@@ -86,7 +86,7 @@ def test_update_employer_moveit_mode(
 
     paths = mock_sftp_paths
 
-    with LogEntry(test_db_session, "test log entry") as log_entry:
+    with LogEntry(test_db_session, __name__, "test log entry") as log_entry:
         reference_file = get_mock_reference_file("test_dua_employer_data.csv")
         filename = "DUA_DFML_EMP_202012070000.csv"
         filepath = os.path.join(paths["moveit_pickup_path"], filename)

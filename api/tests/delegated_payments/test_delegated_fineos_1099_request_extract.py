@@ -96,7 +96,7 @@ def make_1099_data_from_fineos_vbi_data(db_session):
     emp = create_employee_record(req_1099_data_1.customer_number, req_1099_data_1.ssn)
     stage_data([req_1099_data_1], db_session)
     vbi_1099 = db_session.query(FineosExtractVbi1099DataSom).first()
-    with LogEntry(db_session, "test log entry") as log_entry:
+    with LogEntry(db_session, __name__, "test log entry") as log_entry:
         return request_1099_extract.Data1099(
             vbi_1099.vbi_1099_data_som_id,
             emp.employee_id,
@@ -112,7 +112,7 @@ def make_invalid_1099_data_from_fineos_vbi_data(db_session):
     emp = create_employee_record(req_1099_data_1.customer_number, req_1099_data_1.ssn)
     stage_data([req_1099_data_1], db_session)
     vbi_1099 = db_session.query(FineosExtractVbi1099DataSom).first()
-    with LogEntry(db_session, "test log entry") as log_entry:
+    with LogEntry(db_session, __name__, "test log entry") as log_entry:
         return request_1099_extract.Data1099(
             vbi_1099.vbi_1099_data_som_id,
             emp.employee_id,

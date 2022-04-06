@@ -160,7 +160,7 @@ def main():
         db.init(), close=True
     ) as log_entry_db_session:
         with LogEntry(
-            log_entry_db_session, "DUA generate-and-send-employee-request-file"
+            log_entry_db_session, __name__, "DUA generate-and-send-employee-request-file"
         ) as log_entry:
             generate_and_upload_dua_employee_update_file(db_session, log_entry)
             copy_dua_files_from_s3_to_moveit(db_session, log_entry)

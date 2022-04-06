@@ -17,9 +17,10 @@ from massgov.pfml.db.models.employees import ImportLog
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
-def create_log_entry(db_session, source, import_type, report=None):
+def create_log_entry(db_session, source_context, source, import_type, report=None):
     """Creating a report log entry in the database"""
     import_log = ImportLog(
+        source_context=source_context,
         source=source,
         import_type=import_type,
         status="in progress",
@@ -55,9 +56,9 @@ METRIC_COMMIT_INTERVAL = 5  # Seconds between writes to import_log.
 class LogEntry:
     """Context manager for writing batch job progress and results to the database."""
 
-    def __init__(self, db_session, source, import_type=""):
+    def __init__(self, db_session, source_context, source, import_type=""):
         self.db_session = db_session
-        self.import_log = create_log_entry(db_session, source, import_type)
+        self.import_log = create_log_entry(db_session, source_context, source, import_type)
         self.metrics = {}
         self.last_commit = 0.0
 
@@ -136,8 +137,8 @@ class LogEntry:
 
 
 @contextlib.contextmanager
-def log_entry(db_session, source, import_type):
-    import_log = create_log_entry(db_session, source, import_type)
+def log_entry(db_session, source_context, source, import_type):
+    import_log = create_log_entry(db_session, source_context, source, import_type)
 
     try:
         yield import_log
@@ -170,6 +171,7 @@ def log_report_to_newrelic(import_log: ImportLog) -> None:
     report_with_metadata.update(
         {
             "job.id": import_log.import_log_id,
+            "job.data_context": import_log.source_context,
             "job.data_source": import_log.source,
             "job.job_type": import_log.import_type,
             "job.start": import_log.start.isoformat() if import_log.start else None,

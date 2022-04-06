@@ -54,7 +54,10 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
 
     def run(self) -> None:
         with LogEntry(
-            self.log_entry_db_session, self.__class__.__name__, self.get_import_type()
+            self.log_entry_db_session,
+            self.__class__.__qualname__,
+            self.__class__.__name__,
+            self.get_import_type(),
         ) as log_entry:
             self.log_entry = log_entry
 

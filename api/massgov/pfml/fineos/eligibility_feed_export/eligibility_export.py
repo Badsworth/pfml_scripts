@@ -50,7 +50,7 @@ def main_with_return():
 
     with db.session_scope(make_db_session(), close=True) as db_session:
         report_log_entry = massgov.pfml.util.batch.log.create_log_entry(
-            db_session, "Eligibility export", config.mode.name.lower()
+            db_session, __name__, "Eligibility export", config.mode.name.lower()
         )
 
     output_transport_params = None

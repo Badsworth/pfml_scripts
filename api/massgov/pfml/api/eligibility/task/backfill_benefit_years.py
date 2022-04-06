@@ -23,7 +23,7 @@ def main():
     with db.session_scope(db.init(), close=True) as db_session, db.session_scope(
         db.init(), close=True
     ) as log_entry_db_session:
-        with log.LogEntry(log_entry_db_session, "BackfillBenefitYears") as log_entry:
+        with log.LogEntry(log_entry_db_session, __name__, "BackfillBenefitYears") as log_entry:
             logger.info("Getting claimants to backfill")
             claimants_to_backfill = get_claimants_to_backfill(db_session)
             logger.info("Starting benefit year backfill")

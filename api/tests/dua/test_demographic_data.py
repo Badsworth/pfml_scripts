@@ -33,7 +33,7 @@ from .helpers import get_mock_reference_file
 
 def test_import_multiple_files_new_data(test_db_session, monkeypatch, mock_s3_bucket):
     monkeypatch.setenv("S3_BUCKET", f"s3://{mock_s3_bucket}")
-    with LogEntry(test_db_session, "test log entry") as log_entry:
+    with LogEntry(test_db_session, __name__, "test log entry") as log_entry:
 
         reference_file = get_mock_reference_file("test_dua_demographic_data.csv")
         transfer_config = get_transfer_config()
@@ -73,7 +73,7 @@ def test_import_multiple_files_new_data(test_db_session, monkeypatch, mock_s3_bu
 def test_update_employee_demographics_file_mode(test_db_session, monkeypatch, mock_s3_bucket):
 
     monkeypatch.setenv("S3_BUCKET", f"s3://{mock_s3_bucket}")
-    with LogEntry(test_db_session, "test log entry") as log_entry:
+    with LogEntry(test_db_session, __name__, "test log entry") as log_entry:
 
         reference_file = get_mock_reference_file("test_dua_demographic_data.csv")
         transfer_config = get_transfer_config()
@@ -95,7 +95,7 @@ def test_set_employee_occupation_from_demographics_data(
     test_db_session, initialize_factories_session
 ):
 
-    with LogEntry(test_db_session, "test log entry") as log_entry:
+    with LogEntry(test_db_session, __name__, "test log entry") as log_entry:
         employer = EmployerFactory()
 
         org_unit = OrganizationUnitFactory(name="Foo", employer=employer)
@@ -244,7 +244,7 @@ def test_set_employee_occupation_from_demographics_data(
 def test_set_employee_demographics_duplicate_employee_fineos_customer_numbers(
     test_db_session, initialize_factories_session
 ):
-    with LogEntry(test_db_session, "test log entry") as log_entry:
+    with LogEntry(test_db_session, __name__, "test log entry") as log_entry:
         employer = EmployerFactory()
         customer_number = "1234567"
         employee_to_update_customer_number = "55555"
@@ -284,7 +284,7 @@ def test_set_employee_demographics_duplicate_employee_fineos_customer_numbers(
 def test_set_employee_occupation_from_demographics_data_multiple_dua_records(
     test_db_session, initialize_factories_session
 ):
-    with LogEntry(test_db_session, "test log entry") as log_entry:
+    with LogEntry(test_db_session, __name__, "test log entry") as log_entry:
         employer = EmployerFactory()
 
         org_unit_one = OrganizationUnitFactory(employer=employer)
@@ -339,7 +339,7 @@ def test_set_employee_occupation_from_demographics_data_multiple_dua_records(
 def test_set_employee_occupation_from_demographics_data_multiple_dua_records_time_filter(
     test_db_session, initialize_factories_session
 ):
-    with LogEntry(test_db_session, "test log entry") as log_entry:
+    with LogEntry(test_db_session, __name__, "test log entry") as log_entry:
         employer = EmployerFactory()
 
         org_unit_one = OrganizationUnitFactory(employer=employer)
@@ -403,7 +403,7 @@ def test_set_employee_occupation_from_demographics_data_multiple_dua_records_tim
 def test_set_employee_occupation_from_demographics_data_multiple_employers(
     test_db_session, initialize_factories_session
 ):
-    with LogEntry(test_db_session, "test log entry") as log_entry:
+    with LogEntry(test_db_session, __name__, "test log entry") as log_entry:
         employer_one = EmployerFactory()
         employer_two = EmployerFactory()
 
@@ -471,7 +471,7 @@ def test_set_employee_occupation_from_demographics_data_missing_ids(
 ):
     # It shouldn't be possible for a DuaEmployeeDemographics row to be missing a
     # `fineos_customer_number`, but just in case.
-    with LogEntry(test_db_session, "test log entry") as log_entry:
+    with LogEntry(test_db_session, __name__, "test log entry") as log_entry:
         employer = EmployerFactory()
 
         org_unit_one = OrganizationUnitFactory(employer=employer)
@@ -527,7 +527,7 @@ def test_set_employee_occupation_from_demographics_data_missing_ids(
 def test_set_employee_occupation_from_demographics_data_short_feins(
     test_db_session, initialize_factories_session
 ):
-    with LogEntry(test_db_session, "test log entry") as log_entry:
+    with LogEntry(test_db_session, __name__, "test log entry") as log_entry:
         employer_one = EmployerFactory(employer_fein="012345678")
 
         org_unit_one = OrganizationUnitFactory(employer=employer_one)
@@ -582,7 +582,7 @@ def test_set_employee_occupation_from_demographics_data_short_feins(
 def test_set_employee_occupation_from_demographics_data_mismatched_employer_caught(
     test_db_session, initialize_factories_session
 ):
-    with LogEntry(test_db_session, "test log entry") as log_entry:
+    with LogEntry(test_db_session, __name__, "test log entry") as log_entry:
         employer_one = EmployerFactory()
 
         employer_two = EmployerFactory()
@@ -635,7 +635,7 @@ def test_update_employee_demographics_moveit_mode(
 
     paths = mock_sftp_paths
 
-    with LogEntry(test_db_session, "test log entry") as log_entry:
+    with LogEntry(test_db_session, __name__, "test log entry") as log_entry:
         reference_file = get_mock_reference_file("test_dua_demographic_data.csv")
         filename = "DUA_DFML_CLM_DEM_202012070000.csv"
         filepath = os.path.join(paths["moveit_pickup_path"], filename)

@@ -59,7 +59,7 @@ def main():
     with db.session_scope(db.init(), close=True) as db_session, db.session_scope(
         db.init(), close=True
     ) as log_entry_db_session:
-        with LogEntry(log_entry_db_session, "DUA import_employer_file") as log_entry:
+        with LogEntry(log_entry_db_session, __name__, "DUA import_employer_file") as log_entry:
 
             if config.import_employer_file:
                 transfer_config = get_transfer_config()
