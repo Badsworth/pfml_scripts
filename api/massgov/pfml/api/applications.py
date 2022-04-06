@@ -311,8 +311,10 @@ def applications_update(application_id):
 
     application_request = ApplicationRequestBody.parse_obj(updated_body)
 
-    previous_tax_identifier = existing_application.tax_identifier.tax_identifier
     previous_fein = existing_application.employer_fein
+    previous_tax_identifier = None
+    if existing_application.tax_identifier:
+        previous_tax_identifier = existing_application.tax_identifier.tax_identifier
 
     with app.db_session() as db_session:
         applications_service.update_from_request(
