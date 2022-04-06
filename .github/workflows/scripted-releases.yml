@@ -38,6 +38,12 @@ jobs:
   run-scripted-releases:
     runs-on: ubuntu-latest
     steps:
+      - name: Input parameters
+        run: |
+          echo "Application: ${{ github.event.inputs.application }}"
+          echo "Scripted Release Task: ${{ github.event.inputs.scripted-release-task }}"
+          echo "Arguments: ${{ github.event.inputs.arguments }}"
+
       - name: Checkout PMFL repo
         uses: actions/checkout@v3
         with:
@@ -52,33 +58,44 @@ jobs:
         working-directory: ./bin/ci
         run: poetry install
       
-      - name: Run scripted releases with Poetry 
+      - name: Run scripted releases with Poetry
+        id: run-scripted-releases 
         working-directory: ./bin/ci
         run: poetry run scripted-releases -a ${{ github.event.inputs.application }} ${{ github.event.inputs.scripted-release-task }} ${{ github.event.inputs.arguments }}
 
-  create-release-notes:
-    runs-on: ubuntu-latest
-    # prevent test application from creating release notes
-    if: "!contains(github.event.inputs.application, 'foobar')"
-    needs: run-scripted-releases
-
-    steps:
-      - name: Checkout PFML repo
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: Fetch tags
+      # Previous step must finish successfully and only allow api & portal to create release
+      # Fetch all tags and create variable capturing the tag created in previous job
+      - name: Fetch tag
         id: version
+        if: steps.run-scripted-releases.outcome == 'success' && contains(github.event.inputs.application, 'api') || contains(github.event.inputs.application, 'portal')
         working-directory: ./${{ github.event.inputs.application }}
+        # The production-ready tag created from "finalize-release" will come before the "rc" tags due to lexicographic ordering. To correct this, the appended "-rc#" is removed
+        # Resulting in an accurate, latest tag return
         run: |
-          tag=$(git for-each-ref --sort=-committerdate refs/tags --count=1 --format='%(refname:short)')
-          echo "::set-output name=tag::$tag"
+          if [[ ${{ github.event.inputs.scripted-release-task }} == "finalize-release" ]]
+          then
+            tag=$(git for-each-ref pattern="${{ github.event.inputs.application }}" --sort=-committerdate refs/tags --count=1 --format='%(refname:short)' | sed -r 's/-[^-]+$//g')
+            echo "::set-output name=tag::$tag"
+          else
+            tag=$(git for-each-ref pattern="${{ github.event.inputs.application }}" --sort=-committerdate refs/tags --count=1 --format='%(refname:short)')
+            echo "::set-output name=tag::$tag"
+          fi
 
-      - name: publish to GitHub
+      # Create release and notes in GitHub
+      - name: Create release and notes
+        if: steps.version.outcome == 'success'
         working-directory: ./${{ github.event.inputs.application }}
         env:
-        # using the devops token because it should have a higher scope which should allow posting release notes for upper envs
+        # Use DevOps token so job will have enough permissions to create final release
           GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
+        # If there's "-rc" in the tag, then label the release as a pre-release 
+        # If the tag is production ready, title the release accordingly i.e: api/v1.2.3 -> API v1.2.3
         run: |
-          gh release create ${{ steps.version.outputs.tag }} --notes "$(make release-notes)"
+          if [[ "${{ steps.version.outputs.tag }}" == *"-rc"* ]]
+          then
+            gh release create ${{ steps.version.outputs.tag }} --notes "$(make release-notes)" --title "${{ steps.version.outputs.tag }}" --prerelease
+          else
+            NAME="${{ steps.version.outputs.tag }}"
+            NAME=$(echo $NAME | sed 's/\// /g' | sed -r 's/([a-z]+)\s/\U&/g')
+            gh release create ${{ steps.version.outputs.tag }} --notes "$(make release-notes)" --title "$NAME"
+          fi
