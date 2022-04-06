@@ -5,6 +5,7 @@ import withBenefitsApplications, {
 import withUser, { WithUserProps } from "../../hoc/withUser";
 import Alert from "../../components/core/Alert";
 import ApplicationCard from "../../components/ApplicationCard";
+import ApplicationWasSplitAlert from "../../features/benefits-applications/ApplicationWasSplitAlert";
 import ButtonLink from "../../components/ButtonLink";
 import Details from "../../components/core/Details";
 import Heading from "../../components/core/Heading";
@@ -27,6 +28,7 @@ interface IndexProps extends WithUserProps {
     page_offset?: string;
     uploadedAbsenceId?: string;
     smsMfaConfirmed?: string;
+    applicationWasSplitInto?: string;
   };
 }
 
@@ -63,6 +65,14 @@ export const Index = (props: IndexProps) => {
         </Alert>
       )}
       {query?.smsMfaConfirmed && <MfaSetupSuccessAlert />}
+      {query?.applicationWasSplitInto && (
+        <ApplicationWasSplitAlert
+          benefitsApplications={
+            appLogic.benefitsApplications.benefitsApplications
+          }
+          applicationWasSplitInto={query.applicationWasSplitInto}
+        />
+      )}
 
       <div className="grid-row grid-gap-6">
         <div className="desktop:grid-col margin-bottom-2">
@@ -87,20 +97,16 @@ export const Index = (props: IndexProps) => {
 
           <br />
 
-          {isFeatureEnabled("channelSwitching") && (
-            <Details label={t("pages.applications.startByPhoneLabel")}>
-              <p>{t("pages.applications.startByPhoneDescription")}</p>
-              <Link
-                href={appLogic.portalFlow.getNextPageRoute(
-                  "IMPORT_APPLICATION"
-                )}
-              >
-                <a className="display-inline-block margin-bottom-5">
-                  {t("pages.applications.addApplication")}
-                </a>
-              </Link>
-            </Details>
-          )}
+          <Details label={t("pages.applications.startByPhoneLabel")}>
+            <p>{t("pages.applications.startByPhoneDescription")}</p>
+            <Link
+              href={appLogic.portalFlow.getNextPageRoute("IMPORT_APPLICATION")}
+            >
+              <a className="display-inline-block margin-bottom-5">
+                {t("pages.applications.addApplication")}
+              </a>
+            </Link>
+          </Details>
         </div>
       </div>
     </React.Fragment>

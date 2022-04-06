@@ -244,6 +244,12 @@ def enable_application_fraud_check(monkeypatch):
 
 
 @pytest.fixture
+def limit_ssn_fein_max_attempts(monkeypatch):
+    new_env = monkeypatch.setenv("LIMIT_SSN_FEIN_MAX_ATTEMPTS", "2")
+    return new_env
+
+
+@pytest.fixture
 def consented_user_claims(consented_user):
     claims = {
         "a": "b",

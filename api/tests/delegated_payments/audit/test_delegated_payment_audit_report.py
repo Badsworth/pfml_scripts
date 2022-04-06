@@ -58,15 +58,16 @@ from massgov.pfml.util.datetime import get_now_us_eastern, get_period_in_weeks
 
 
 @pytest.fixture
-def payment_audit_report_step(initialize_factories_session, test_db_session, test_db_other_session):
-    return PaymentAuditReportStep(
-        db_session=test_db_session, log_entry_db_session=test_db_other_session
-    )
+def payment_audit_report_step(initialize_factories_session, test_db_session):
+    return PaymentAuditReportStep(db_session=test_db_session, log_entry_db_session=test_db_session)
 
 
 @freeze_time("2021-01-15 12:00:00", tz_offset=5)  # payments_util.get_now returns EST time
 def test_generate_audit_report_rollback(
-    initialize_factories_session, test_db_session, test_db_other_session, monkeypatch
+    local_initialize_factories_session,
+    local_test_db_session,
+    local_test_db_other_session,
+    monkeypatch,
 ):
     # This validates our rollback works properly.
     # This will fail after moving one set of state logs
@@ -80,7 +81,7 @@ def test_generate_audit_report_rollback(
     monkeypatch.setattr(PaymentAuditReportStep, "set_sampled_payments_to_sent_state", mock)
 
     payment_audit_report_step = PaymentAuditReportStep(
-        db_session=test_db_session, log_entry_db_session=test_db_other_session
+        db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
     )
 
     # setup folder path configs
@@ -88,16 +89,16 @@ def test_generate_audit_report_rollback(
     monkeypatch.setenv("DFML_REPORT_OUTBOUND_PATH", str(tempfile.mkdtemp()))
 
     # generate the audit report data set
-    generate_audit_report_dataset(DEFAULT_AUDIT_SCENARIO_DATA_SET, test_db_session)
-    test_db_session.commit()  # Commit here so it'll rollback to this
+    generate_audit_report_dataset(DEFAULT_AUDIT_SCENARIO_DATA_SET, local_test_db_session)
+    local_test_db_session.commit()  # Commit here so it'll rollback to this
 
-    state_log_counts_before = state_log_util.get_state_counts(test_db_session)
+    state_log_counts_before = state_log_util.get_state_counts(local_test_db_session)
 
     # generate audit report
     with pytest.raises(Exception, match="Test exception"):
         payment_audit_report_step.run()
 
-    state_log_counts_after = state_log_util.get_state_counts(test_db_session)
+    state_log_counts_after = state_log_util.get_state_counts(local_test_db_session)
     assert state_log_counts_before == state_log_counts_after
 
 
@@ -915,12 +916,8 @@ class TestGetPaymentPreapprovalStatus:
 
 
 def test_is_first_time_payment(
-    initialize_factories_session, test_db_session, test_db_other_session
+    initialize_factories_session, payment_audit_report_step, test_db_session
 ):
-    payment_audit_report_step = PaymentAuditReportStep(
-        db_session=test_db_session, log_entry_db_session=test_db_other_session
-    )
-
     claim = ClaimFactory.create()
     payment = DelegatedPaymentFactory(
         test_db_session, claim=claim
@@ -958,12 +955,8 @@ def test_is_first_time_payment(
 
 
 def test_previously_errored_payment_count(
-    initialize_factories_session, test_db_session, test_db_other_session
+    initialize_factories_session, payment_audit_report_step, test_db_session
 ):
-    payment_audit_report_step = PaymentAuditReportStep(
-        db_session=test_db_session, log_entry_db_session=test_db_other_session
-    )
-
     period_start_date = date(2021, 1, 16)
     period_end_date = date(2021, 1, 28)
 
@@ -1052,12 +1045,8 @@ def test_previously_errored_payment_count(
 
 
 def test_previously_rejected_payment_count(
-    initialize_factories_session, test_db_session, test_db_other_session
+    initialize_factories_session, payment_audit_report_step, test_db_session
 ):
-    payment_audit_report_step = PaymentAuditReportStep(
-        db_session=test_db_session, log_entry_db_session=test_db_other_session
-    )
-
     period_start_date = date(2021, 1, 16)
     period_end_date = date(2021, 1, 28)
 
@@ -1538,16 +1527,12 @@ def test_generate_audit_report(test_db_session, payment_audit_report_step, monke
 
 
 def test_orphaned_withholding_payments(
-    initialize_factories_session, test_db_session, test_db_other_session, monkeypatch
+    initialize_factories_session, payment_audit_report_step, test_db_session, monkeypatch
 ):
 
     payments: List[Payment] = []
 
     # Create a bunch of payments
-    payment_audit_report_step = PaymentAuditReportStep(
-        db_session=test_db_session, log_entry_db_session=test_db_other_session
-    )
-
     claim = ClaimFactory.create()
     payment = DelegatedPaymentFactory(
         test_db_session, claim=claim
@@ -1591,15 +1576,12 @@ def test_orphaned_withholding_payments(
 
 
 def test_related_withholding_payments(
-    initialize_factories_session, test_db_session, test_db_other_session, monkeypatch
+    initialize_factories_session, payment_audit_report_step, test_db_session, monkeypatch
 ):
 
     payments: List[Payment] = []
 
     # Create a bunch of payments
-    payment_audit_report_step = PaymentAuditReportStep(
-        db_session=test_db_session, log_entry_db_session=test_db_other_session
-    )
 
     claim = ClaimFactory.create()
     payment = DelegatedPaymentFactory(

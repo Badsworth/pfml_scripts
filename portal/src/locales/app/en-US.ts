@@ -782,11 +782,6 @@ const shared: {
   // This makes the structure easier to navigate and the process of finding a specific element more consistent
   [contentKey: string]: string | I18nContentGroup;
 } = {
-  absenceCaseStatus_approved: "Approved",
-  absenceCaseStatus_closed: "Closed",
-  absenceCaseStatus_denied: "Denied",
-  absenceCaseStatus_noAction: "No action required",
-  absenceCaseStatus_pending: "Pending",
   achTypeChecking: "Checking",
   achTypeSavings: "Savings",
   addApplication: "Add an existing application",
@@ -1030,18 +1025,30 @@ const pages: {
   },
   applications: {
     addApplication: "$t(shared.addApplication)",
+    applicationOneSuccess:
+      "You successfully submitted Part 1. Submit Parts 2 and 3 so that we can review your application.",
+    applicationTwoSubmitLater:
+      "You will be able to submit Part 1 of your new benefit year application on <strong>{{submitDate}}</strong>. This is 60 days before the start of your leave in the new benefit year. Applications cannot be submitted earlier than 60 days before the start of leave.",
+    bothApplicationsWereSubmitted:
+      "You successfully submitted Part 1. Your application was split into two, one for each benefit year. Submit Parts 2 and 3 so that we can review your applications.",
     can_submit_application_across_benefit_year:
       "If you submit an application with leave dates that are in both your current and a new benefit year, we'll review the request as two separate applications. $t(pages.applications.claimsApprovalProcess)",
     claimsApprovalProcess:
       "Learn more about the <approval-process-link>application review and approval process</approval-process-link>.",
     createApplicationHeading: "Create a new application",
+    currentBenefitYearLeave:
+      "<strong>Current benefit year:</strong> leave dates from {{startDate}} to {{endDate}}",
     getReadyLink: "Start a new application",
+    nextBenefitYearLeave:
+      "<strong>New benefit year:</strong> leave dates from {{startDate}} to {{endDate}}",
     startByPhoneDescription: "$t(shared.startByPhoneDescription)",
     startByPhoneLabel: "$t(shared.startByPhoneLabel)",
     title: "Your applications",
     uploadSuccessHeading: "You successfully submitted your documents",
     uploadSuccessMessage:
       "Our Contact Center staff will review your documents for {{absence_id}}.",
+    yourApplicationWasSplit:
+      "Your application was split into two, one for each benefit year.",
     your_benefit_year:
       "Your current <benefit-year-guide-link>benefit year</benefit-year-guide-link> is {{startDate}} to {{endDate}}. Most Massachusetts employees are eligible for up to 26 weeks of combined family and medical leave per benefit year.",
   },
@@ -2483,37 +2490,6 @@ const pages: {
       "<strong>Employer ID number (EIN):</strong> {{employerFein}}",
     title: "We can't verify this organization",
   },
-  employersClaimsConfirmation: {
-    applicationIdLabel: "<strong>Application ID:</strong> {{absenceId}}",
-    instructions:
-      "<p>Thanks for letting us know that you’re not the right person to review this.</p><ul><li>Please check with your human resources team and your colleagues to see who should respond.</li><li>If the right person at your organization already has an employer account, they received the same email you did and can respond directly.</li><li>Otherwise, please ask them to call us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</li></ul>",
-    instructionsFollowUpDateLabel:
-      "<div><strong>Review by:</strong> {{date}} at 11:59 p.m. Eastern time</div>",
-    instructions_processingApplication:
-      "If we do not hear from anyone at your organization before the deadline, we will process the application solely based on the information the employee provided.",
-    title: "Help us find the right person to review the application",
-  },
-  employersClaimsNewApplication: {
-    agreementBody:
-      "I understand that I need to give true answers to all questions in order to fulfill my responsibilities as a Massachusetts employer, and that my response may be shared with the employee and third parties. I certify under penalty of perjury that my answers will be complete and accurate.",
-    choiceNo: "$t(shared.choiceNo)",
-    choiceYes: "$t(shared.choiceYes)",
-    dobLabel: "Date of birth",
-    employeeNameLabel: "Employee name",
-    employerIdNumberLabel: "Employer ID number (EIN)",
-    instructions:
-      "<p>This takes about 10 minutes. We use the information you provide to determine the leave time and benefit amount your employee will receive.</p><p>Your response may be shared with the employee and third parties for purposes of processing and adjudicating this application.</p><p>We need true answers to every question so that we can manage the program the way the law requires. Please confirm that you will answer as truthfully as you can.</p>",
-    instructionsFollowUpDate: "$t(shared.employerInstructions_followUpDate)",
-    instructionsLabel:
-      "Are you the right person to respond to this application?",
-    organizationNameLabel: "Organization",
-    ssnOrItinLabel:
-      "Social Security Number or Individual Taxpayer Identification Number",
-    submitButton: "Submit",
-    submitButton_secondary: "Agree and submit",
-    title: "New application from {{name}}",
-    truthAttestationHeading: "Start the review process",
-  },
   employersClaimsReview: {
     absenceIdLabel: "Application ID: {{absenceId}}",
     instructionsAmendment:
@@ -2536,27 +2512,8 @@ const pages: {
     title: "Review application from {{name}}",
   },
   employersClaimsStatus: {
-    applicationIdLabel: "Application ID",
     lead: "No action is required of you. You can view this page at any time to download notices, see decisions, or access the leave details for this application. Your employee has the right to appeal decisions under Massachusetts regulations (<dfml-regulations-link>458 CMR 2.14</dfml-regulations-link>).",
-    lead_decision:
-      "A decision has been made for this application. No action is required of you, but you can download a copy of the decision notice for details. Your employee has the right to appeal this decision under Massachusetts regulations (<dfml-regulations-link>458 CMR 2.14</dfml-regulations-link>).",
-    lead_pending:
-      "No action is required of you.<br /><br />When the application progresses you'll receive an email with a direct link for more details.",
-    leaveDetailsLabel: "$t(shared.claimsLeaveDetailsTitle)",
-    leaveDurationLabel: "$t(shared.claimsLeaveDurationTitle)",
-    leaveDurationLabel_continuous: "$t(shared.claimDurationTypeContinuous)",
-    leaveDurationLabel_intermittent: "$t(shared.claimDurationTypeIntermittent)",
-    leaveDurationLabel_reduced: "$t(shared.claimDurationTypeReducedSchedule)",
-    leaveReasonLabel: "Leave type",
-    leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
-    leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
-    leaveReasonValue_care: "$t(shared.leaveReasonCare)",
-    leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
-    leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedical)",
-    leaveReasonValue_serviceMemberFamily:
-      "$t(shared.leaveReasonServiceMemberFamily)",
     noticesLabel: "Notices",
-    statusLabel: "Status",
     title: "Application status for {{name}}",
   },
   employersClaimsSuccess: {
@@ -2599,12 +2556,6 @@ const pages: {
     filterReviewable_all: "Show all",
     filterReviewable_no: "No, review not needed",
     filterReviewable_yes: "Yes, review requested",
-    filterStatusChoice_Approved: "$t(shared.absenceCaseStatus_approved)",
-    filterStatusChoice_Closed: "$t(shared.absenceCaseStatus_closed)",
-    filterStatusChoice_Declined: "$t(shared.absenceCaseStatus_denied)",
-    filterStatusChoice_OpenRequirement: "Review by",
-    filterStatusChoice_PendingNoAction: "$t(shared.absenceCaseStatus_noAction)",
-    filterStatusLabel: "Status",
     filtersApply: "Apply filters",
     filtersReset: "Reset all filters",
     filtersShowWithCount: "Show filters ({{count}})",
@@ -2620,30 +2571,11 @@ const pages: {
     sortChoice_employee_za: "Last name – Z to A",
     sortChoice_newest: "Newest applications",
     sortChoice_oldest: "Oldest applications",
-    sortChoice_status: "Status",
     sortLabel: "Sort",
-    startDateTooltip: "When an employee started a new leave application",
-    statusDescription_approved:
-      "<strong>Approved:</strong> DFML has approved this leave request.",
-    statusDescription_closed:
-      "<strong>Closed:</strong> The leave has passed or no action can be taken.",
-    statusDescription_denied:
-      "<strong>Denied:</strong> DFML has denied this leave request.",
-    statusDescription_noAction:
-      "<strong>No action required:</strong> This leave request is awaiting a decision from DFML.",
-    statusDescription_reviewBy:
-      "<strong>Review by:</strong> Review this application by this date to provide DFML with your input.",
-    statusDescriptionsLabel: "Status descriptions",
-    tableColHeading_created_at: "Application start date",
     tableColHeading_employee_and_case: "Employee (Application ID)",
-    tableColHeading_employee_name: "Employee name",
     tableColHeading_employer: "Organization (FEIN)",
-    tableColHeading_employer_dba: "Organization",
-    tableColHeading_employer_fein: "Employer ID number",
-    tableColHeading_fineos_absence_id: "Application ID",
     tableColHeading_leave_details: "Leave details",
     tableColHeading_review_status: "Review due date",
-    tableColHeading_status: "Status",
     title: "Dashboard",
     verificationBody:
       "Every employer must verify paid leave contributions when creating an account. You need to <your-organizations-link>complete this process</your-organizations-link> to review applications from your team. If you have an EIN that isn't verified you won't see any applications related to that EIN.",
@@ -2944,15 +2876,6 @@ const components: {
   // This makes the structure easier to navigate and the process of finding a specific element more consistent
   [componentKey: string]: I18nContentGroup;
 } = {
-  absenceCaseStatusTag: {
-    status_approved: "$t(shared.absenceCaseStatus_approved)",
-    status_closed: "$t(shared.absenceCaseStatus_closed)",
-    status_completed: "$t(shared.absenceCaseStatus_closed)",
-    status_declined: "$t(shared.absenceCaseStatus_denied)",
-    status_noAction: "$t(shared.absenceCaseStatus_noAction)",
-    status_openRequirements: "Review by {{followupDate}}",
-    status_pending: "$t(shared.absenceCaseStatus_pending)",
-  },
   absencePeriodStatusTag: {
     label_approved: "Approved",
     label_cancelled: "Cancelled",
@@ -3355,6 +3278,8 @@ const components: {
   leaveDatesAlert: {
     heading: "Your leave dates for paid leave from PFML",
     leaveDatesHeading: "Your 7-day waiting period dates",
+    splitApplicationDates:
+      "<ul><li><strong>Current benefit year:</strong> {{currDateRange}}</li><li><strong>New benefit year:</strong> {{newDateRange}}</li></ul>",
   },
   maintenanceAlertBar: {
     message_withEndTime:

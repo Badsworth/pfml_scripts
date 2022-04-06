@@ -38,6 +38,7 @@ import { fields as familyMemberRelationshipFields } from "../pages/applications/
 import { fields as genderFields } from "../pages/applications/gender";
 import { get } from "lodash";
 import { fields as intermittentFrequencyFields } from "../pages/applications/intermittent-frequency";
+import isBlank from "src/utils/isBlank";
 import { fields as leavePeriodContinuousFields } from "../pages/applications/leave-period-continuous";
 import { fields as leavePeriodIntermittentFields } from "../pages/applications/leave-period-intermittent";
 import { fields as leavePeriodReducedScheduleFields } from "../pages/applications/leave-period-reduced-schedule";
@@ -116,6 +117,8 @@ export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
       ) && get(claim, "status") !== "In Review"
     );
   },
+  isSubmittedApplicationSplit: ({ claim }) =>
+    !isBlank(claim?.split_into_application_id),
 };
 
 /**
@@ -815,6 +818,10 @@ const claimantFlow: {
           //   target: routes.applications.noMatchFound,
           //   cond: "includesNoEmployeeFoundError",
           // },
+          {
+            target: routes.applications.index,
+            cond: "isSubmittedApplicationSplit",
+          },
           {
             target: routes.applications.checklist,
           },

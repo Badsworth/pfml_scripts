@@ -70,7 +70,7 @@ def test_format_amount_fields(generate_1099_step: Generate1099IRSfilingStep):
 
 
 def test_name_ctl(generate_1099_step: Generate1099IRSfilingStep):
-    expected_result = ["JONE", "SMIT", "SMIT", "DELA", "MORA", "NGUY", "LO"]
+    expected_result = ["JONE", "SMIT", "SMIT", "DELA", "MORA", "NGUY", "LO", "WEBB"]
     input_names = [
         "Smith Jones",
         "Smith",
@@ -79,9 +79,9 @@ def test_name_ctl(generate_1099_step: Generate1099IRSfilingStep):
         "Garza Morales",
         "Van Nguyen",
         "Lo",
+        "Webb Sr",
     ]
     result_names = []
-    print(len(input_names))
     for _i in range(len(input_names)):
         result_names.append(generate_1099_step._get_name_ctl(input_names[_i]))
     assert expected_result == result_names
@@ -97,11 +97,31 @@ def test_zip_code(generate_1099_step: Generate1099IRSfilingStep):
     assert results == expected_result
 
 
+def test_replace_title(generate_1099_step: Generate1099IRSfilingStep):
+    expected_name = "BRADY"
+    name = generate_1099_step._replace_title("BRADY MR.")
+    assert name == expected_name
+
+    expected_name = "TESTMRSON"
+    name = generate_1099_step._replace_title("TESTMRSON")
+    assert name == expected_name
+
+    expected_name = "ANDREWS"
+    name = generate_1099_step._replace_title("Andrews")
+    assert name == expected_name
+
+    expected_name = "ANDREWS"
+    name = generate_1099_step._replace_title("Mr Andrews")
+    assert name == expected_name
+
+
 def test_get_full_name(generate_1099_step: Generate1099IRSfilingStep):
-    name_upper = "FernandoDSouzaConstantineJohnVanderbiltF".upper()
-    name_upper2 = "itzerland".upper()
+    name_upper = "FernandoDSouzaConstantine JohnVanderbilt".upper()
+    name_upper2 = "Fitzerland".upper()
+    name_upper_no_title = "Webster Frank".upper()
+
     full_name = generate_1099_step._get_full_name("Johnny", "Depp", "PAYEE_NM1")
-    assert full_name == "DEPPJOHNNY"
+    assert full_name == "DEPP JOHNNY"
     full_name = generate_1099_step._get_full_name("Johnny", "Depp", "PAYEE_NM2")
     assert full_name == ""
 
@@ -113,6 +133,28 @@ def test_get_full_name(generate_1099_step: Generate1099IRSfilingStep):
         "JohnVanderbiltFitzerland", "FernandoDSouzaConstantine", "PAYEE_NM2"
     )
     assert full_name == name_upper2
+
+    full_name = generate_1099_step._get_full_name("Mr Frank", "Webster", "PAYEE_NM1")
+    assert full_name == name_upper_no_title
+
+
+def test_get_full_address(generate_1099_step: Generate1099IRSfilingStep):
+
+    expected_address_one = "1234 OConnor Road Apt 3-B".upper()
+    full_address_one = generate_1099_step._get_address_lines("1234 O'Connor Road", "Apt 3-B")
+    assert full_address_one == expected_address_one
+
+    expected_address_two = "53456 East West Tomato Cranberry Chutney".upper()
+    full_address_two = generate_1099_step._get_address_lines(
+        "53456 East West Tomato Cranberry Chutney Hill Road", "Suite 200"
+    )
+    assert full_address_two == expected_address_two
+
+    expected_address_three = "53 East Tomato Cranberry Hill Road Suite".upper()
+    full_address_three = generate_1099_step._get_address_lines(
+        "53 East Tomato Cranberry Hill Road", "Suite 200"
+    )
+    assert full_address_three == expected_address_three
 
 
 def test_create_t_template(generate_1099_step: Generate1099IRSfilingStep):
@@ -167,7 +209,7 @@ def test_create_b_template(generate_1099_step: Generate1099IRSfilingStep, create
 
 def test_get_correction_ind(generate_1099_step: Generate1099IRSfilingStep):
     correction = generate_1099_step._get_correction_ind(True)
-    assert correction == "G"
+    assert correction == ""
     original = generate_1099_step._get_correction_ind(False)
     assert original == ""
 

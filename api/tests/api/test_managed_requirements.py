@@ -22,6 +22,7 @@ from massgov.pfml.db.models.factories import (
 from massgov.pfml.db.queries.managed_requirements import (
     create_managed_requirement_from_fineos,
     get_managed_requirement_by_fineos_managed_requirement_id,
+    sync_managed_requirements_to_db,
     update_managed_requirement_from_fineos,
 )
 from massgov.pfml.fineos.models.group_client_api import ManagedRequirementDetails
@@ -128,6 +129,27 @@ class TestManagedRequirementQuery:
         self._assert_managed_requirement_data(
             claim, managed_requirement, fineos_managed_requirement
         )
+
+    def test_sync_managed_requirements_to_db(
+        self, client, test_db_session, claim, fineos_managed_requirement
+    ):
+        new_fineos_managed_requirement = fineos_managed_requirement.copy()
+        new_fineos_managed_requirement.managedReqId = 101
+        create_managed_requirement_from_fineos(
+            test_db_session, claim.claim_id, new_fineos_managed_requirement
+        )
+
+        new_fineos_managed_requirement.followUpDate = date.today() + timedelta(days=7)
+        new_fineos_managed_requirement.status = ManagedRequirementStatus.get_description(2)
+
+        (_, logs) = sync_managed_requirements_to_db(
+            [new_fineos_managed_requirement, fineos_managed_requirement],
+            claim.claim_id,
+            test_db_session,
+            {},
+        )
+        assert logs["num_created_requirements"] == 1
+        assert logs["num_updated_requirements"] == 1
 
     def test_get_managed_requirement_by_fineos_managed_requirement_id(
         self, client, test_db_session, claim

@@ -31,17 +31,15 @@ from . import _create_payment_container
 
 @pytest.fixture
 def payment_post_processing_step(
-    local_initialize_factories_session,
-    local_test_db_session,
-    local_test_db_other_session,
-    monkeypatch,
+    initialize_factories_session,
+    test_db_session,
 ):
     return PaymentPostProcessingStep(
-        db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
+        db_session=test_db_session, log_entry_db_session=test_db_session
     )
 
 
-def test_payment_date_mismatch_post_processing(payment_post_processing_step, local_test_db_session):
+def test_payment_date_mismatch_post_processing(payment_post_processing_step, test_db_session):
     absence_period_start_date = date(2020, 1, 5)
     absence_period_end_date = date(2020, 1, 30)
     period_start_date = date(2020, 2, 1)
@@ -64,7 +62,7 @@ def test_payment_date_mismatch_post_processing(payment_post_processing_step, loc
     payment_container = _create_payment_container(
         employee,
         Decimal("600.00"),
-        local_test_db_session,
+        test_db_session,
         start_date=period_start_date,
         periods=1,
         length_of_period=7,
@@ -77,7 +75,7 @@ def test_payment_date_mismatch_post_processing(payment_post_processing_step, loc
 
     payment = payment_container.payment
     payment_flow_log = state_log_util.get_latest_state_log_in_flow(
-        payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+        payment, Flow.DELEGATED_PAYMENT, test_db_session
     )
     assert (
         payment_flow_log.end_state_id
@@ -85,7 +83,7 @@ def test_payment_date_mismatch_post_processing(payment_post_processing_step, loc
     )
 
     audit_report_details: PaymentAuditReportDetails = (
-        local_test_db_session.query(PaymentAuditReportDetails)
+        test_db_session.query(PaymentAuditReportDetails)
         .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
         .one_or_none()
     )
@@ -99,7 +97,7 @@ def test_payment_date_mismatch_post_processing(payment_post_processing_step, loc
     )
 
 
-def test_total_leave_duration_post_processing(payment_post_processing_step, local_test_db_session):
+def test_total_leave_duration_post_processing(payment_post_processing_step, test_db_session):
     employee = EmployeeFactory.create()
     employer = EmployerFactory.create()
     claim = ClaimFactory.create()
@@ -127,7 +125,7 @@ def test_total_leave_duration_post_processing(payment_post_processing_step, loca
     payment_container = _create_payment_container(
         employee,
         Decimal("600.00"),
-        local_test_db_session,
+        test_db_session,
         start_date=absence_period_start_date,
         periods=1,
         length_of_period=7,
@@ -140,7 +138,7 @@ def test_total_leave_duration_post_processing(payment_post_processing_step, loca
     payment = payment_container.payment
     # Check that it is staged for audit
     payment_flow_log = state_log_util.get_latest_state_log_in_flow(
-        payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+        payment, Flow.DELEGATED_PAYMENT, test_db_session
     )
     assert (
         payment_flow_log.end_state_id
@@ -148,7 +146,7 @@ def test_total_leave_duration_post_processing(payment_post_processing_step, loca
     )
 
     audit_report_details = (
-        local_test_db_session.query(PaymentAuditReportDetails)
+        test_db_session.query(PaymentAuditReportDetails)
         .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
         .one()
     )
@@ -161,10 +159,10 @@ def test_total_leave_duration_post_processing(payment_post_processing_step, loca
     )
 
 
-def test_name_mismatch_post_processing(payment_post_processing_step, local_test_db_session):
+def test_name_mismatch_post_processing(payment_post_processing_step, test_db_session):
     employee = EmployeeFactory.create(first_name="Jane", last_name="Smith")
     payment_container = _create_payment_container(
-        employee, Decimal("600.00"), local_test_db_session, start_date=date(2020, 12, 16)
+        employee, Decimal("600.00"), test_db_session, start_date=date(2020, 12, 16)
     )
     payment_container.payment.fineos_employee_first_name = "Sam"
     payment_container.payment.fineos_employee_last_name = "Jones"
@@ -174,7 +172,7 @@ def test_name_mismatch_post_processing(payment_post_processing_step, local_test_
     payment = payment_container.payment
     # Check that it is staged for audit
     payment_flow_log = state_log_util.get_latest_state_log_in_flow(
-        payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+        payment, Flow.DELEGATED_PAYMENT, test_db_session
     )
     assert (
         payment_flow_log.end_state_id
@@ -182,7 +180,7 @@ def test_name_mismatch_post_processing(payment_post_processing_step, local_test_
     )
 
     audit_report_details = (
-        local_test_db_session.query(PaymentAuditReportDetails)
+        test_db_session.query(PaymentAuditReportDetails)
         .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
         .filter(
             PaymentAuditReportDetails.audit_report_type_id
@@ -195,12 +193,12 @@ def test_name_mismatch_post_processing(payment_post_processing_step, local_test_
     )
 
 
-def test_dua_dia_reductions_post_processing(payment_post_processing_step, local_test_db_session):
+def test_dua_dia_reductions_post_processing(payment_post_processing_step, test_db_session):
     fineos_customer_number = "1"
 
     employee = EmployeeFactory.create(fineos_customer_number=fineos_customer_number)
     payment_container = _create_payment_container(
-        employee, Decimal("600.00"), local_test_db_session, start_date=date(2021, 9, 20)
+        employee, Decimal("600.00"), test_db_session, start_date=date(2021, 9, 20)
     )
 
     DuaReductionPaymentFactory.create(
@@ -226,7 +224,7 @@ def test_dua_dia_reductions_post_processing(payment_post_processing_step, local_
     payment = payment_container.payment
     # Check that it is staged for audit
     payment_flow_log = state_log_util.get_latest_state_log_in_flow(
-        payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+        payment, Flow.DELEGATED_PAYMENT, test_db_session
     )
     assert (
         payment_flow_log.end_state_id
@@ -234,7 +232,7 @@ def test_dua_dia_reductions_post_processing(payment_post_processing_step, local_
     )
 
     dua_audit_report_details = (
-        local_test_db_session.query(PaymentAuditReportDetails)
+        test_db_session.query(PaymentAuditReportDetails)
         .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
         .filter(
             PaymentAuditReportDetails.audit_report_type_id
@@ -250,7 +248,7 @@ def test_dua_dia_reductions_post_processing(payment_post_processing_step, local_
     )
 
     dia_audit_report_details = (
-        local_test_db_session.query(PaymentAuditReportDetails)
+        test_db_session.query(PaymentAuditReportDetails)
         .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
         .filter(
             PaymentAuditReportDetails.audit_report_type_id
@@ -267,19 +265,19 @@ def test_dua_dia_reductions_post_processing(payment_post_processing_step, local_
 
 
 def test_mixed_post_processing_scenarios(
-    payment_post_processing_step, local_test_db_session, monkeypatch
+    payment_post_processing_step, test_db_session, monkeypatch
 ):
     fineos_customer_number = "1"
 
     employee = EmployeeFactory.create(fineos_customer_number=fineos_customer_number)
     payment_container = _create_payment_container(
-        employee, Decimal("600.00"), local_test_db_session, start_date=date(2021, 1, 16)
+        employee, Decimal("600.00"), test_db_session, start_date=date(2021, 1, 16)
     )
     # this force a payment over the weekly cap
     _create_payment_container(
         employee,
         Decimal("500.00"),
-        local_test_db_session,
+        test_db_session,
         start_date=date(2021, 1, 16),
         has_processed_state=True,
     )
@@ -302,7 +300,7 @@ def test_mixed_post_processing_scenarios(
 
     # Check that it is staged for audit
     payment_flow_log = state_log_util.get_latest_state_log_in_flow(
-        payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+        payment, Flow.DELEGATED_PAYMENT, test_db_session
     )
     assert (
         payment_flow_log.end_state_id
@@ -310,7 +308,7 @@ def test_mixed_post_processing_scenarios(
     )
 
     audit_report_details = (
-        local_test_db_session.query(PaymentAuditReportDetails)
+        test_db_session.query(PaymentAuditReportDetails)
         .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
         .all()
     )
@@ -344,7 +342,7 @@ def test_mixed_post_processing_scenarios(
 
 
 def test_employer_reimbursement_payment_post_processing(
-    payment_post_processing_step, local_test_db_session
+    payment_post_processing_step, test_db_session
 ):
     fineos_customer_number = "1"
 
@@ -354,7 +352,7 @@ def test_employer_reimbursement_payment_post_processing(
     payment_container = _create_payment_container(
         employee,
         Decimal("600.00"),
-        local_test_db_session,
+        test_db_session,
         start_date=date(2020, 12, 16),
         payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
     )
@@ -367,11 +365,11 @@ def test_employer_reimbursement_payment_post_processing(
     payment = payment_container.payment
     # Check that it is staged for audit
     payment_flow_log = state_log_util.get_latest_state_log_in_flow(
-        payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+        payment, Flow.DELEGATED_PAYMENT, test_db_session
     )
 
     audit_report_details = (
-        local_test_db_session.query(PaymentAuditReportDetails)
+        test_db_session.query(PaymentAuditReportDetails)
         .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
         .one()
     )

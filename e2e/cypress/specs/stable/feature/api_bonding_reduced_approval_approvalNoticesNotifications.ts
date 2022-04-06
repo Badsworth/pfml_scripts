@@ -6,57 +6,76 @@ import {
   findCertificationDoc,
   getDocumentReviewTaskName,
 } from "../../../../src/util/documents";
+import { DehydratedClaim } from "../../../../src/generation/Claim";
 
 describe("Approval (notifications/notices)", () => {
   after(() => {
     portal.deleteDownloadsFolder();
   });
 
-  const submit = it("Given a fully approved claim", () => {
+  it("Given a submitted claim", () => {
+    cy.task("generateClaim", "REDUCED_ER").then((claim) => {
+      cy.stash("claim", claim);
+      cy.task("submitClaimToAPI", claim).then(
+        ({ fineos_absence_id, application_id }) => {
+          cy.stash("submission", {
+            application_id,
+            fineos_absence_id,
+            timestamp_from: Date.now(),
+          });
+        }
+      );
+    });
+  });
+
+  const approve = it("Given a fully approved claim", () => {
+    cy.dependsOnPreviousPass();
     fineos.before();
     // Submit a claim via the API, including Employer Response.
-    cy.task("generateClaim", "REDUCED_ER").then((claim) => {
-      cy.stash("claim", claim.claim);
-      cy.task("submitClaimToAPI", claim).then((response) => {
-        cy.stash("submission", {
-          application_id: response.application_id,
-          fineos_absence_id: response.fineos_absence_id,
-          timestamp_from: Date.now(),
-        });
-
-        const claimPage = fineosPages.ClaimPage.visit(
-          response.fineos_absence_id
-        );
-        claimPage.adjudicate((adjudication) => {
-          adjudication.evidence((evidence) => {
-            // Receive and approve all of the documentation for the claim.
-            claim.documents.forEach((doc) =>
-              evidence.receive(doc.document_type)
-            );
+    cy.unstash<DehydratedClaim>("claim").then((claim) => {
+      cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
+        cy.tryCount().then((tryCount) => {
+          const claimPage = fineosPages.ClaimPage.visit(fineos_absence_id);
+          if (tryCount > 0) {
+            fineos.assertClaimStatus("Approved");
+            claimPage
+              .triggerNotice("Designation Notice")
+              .documents((docPage) =>
+                docPage.assertDocumentExists("Approval Notice")
+              );
+            return;
+          }
+          claimPage.adjudicate((adjudication) => {
+            adjudication.evidence((evidence) => {
+              // Receive and approve all of the documentation for the claim.
+              claim.documents.forEach((doc) =>
+                evidence.receive(doc.document_type)
+              );
+            });
+            adjudication.certificationPeriods((cert) => cert.prefill());
+            adjudication.acceptLeavePlan();
           });
-          adjudication.certificationPeriods((cert) => cert.prefill());
-          adjudication.acceptLeavePlan();
+          claimPage.tasks((tasks) => {
+            const certificationDoc = findCertificationDoc(claim.documents);
+            const certificationTask = getDocumentReviewTaskName(
+              certificationDoc.document_type
+            );
+            tasks.assertTaskExists("ID Review");
+            tasks.assertTaskExists(certificationTask);
+          });
+          claimPage.shouldHaveStatus("Applicability", "Applicable");
+          claimPage.shouldHaveStatus("Eligibility", "Met");
+          claimPage.shouldHaveStatus("Evidence", "Satisfied");
+          claimPage.shouldHaveStatus("Availability", "Time Available");
+          claimPage.shouldHaveStatus("Restriction", "Passed");
+          claimPage.shouldHaveStatus("PlanDecision", "Accepted");
+          claimPage.approve("Approved", config("HAS_APRIL_UPGRADE") === "true");
+          claimPage
+            .triggerNotice("Designation Notice")
+            .documents((docPage) =>
+              docPage.assertDocumentExists("Approval Notice")
+            );
         });
-        claimPage.tasks((tasks) => {
-          const certificationDoc = findCertificationDoc(claim.documents);
-          const certificationTask = getDocumentReviewTaskName(
-            certificationDoc.document_type
-          );
-          tasks.assertTaskExists("ID Review");
-          tasks.assertTaskExists(certificationTask);
-        });
-        claimPage.shouldHaveStatus("Applicability", "Applicable");
-        claimPage.shouldHaveStatus("Eligibility", "Met");
-        claimPage.shouldHaveStatus("Evidence", "Satisfied");
-        claimPage.shouldHaveStatus("Availability", "Time Available");
-        claimPage.shouldHaveStatus("Restriction", "Passed");
-        claimPage.shouldHaveStatus("PlanDecision", "Accepted");
-        claimPage.approve("Approved", config("HAS_APRIL_UPGRADE") === "true");
-        claimPage
-          .triggerNotice("Designation Notice")
-          .documents((docPage) =>
-            docPage.assertDocumentExists("Approval Notice")
-          );
       });
     });
   });
@@ -65,7 +84,7 @@ describe("Approval (notifications/notices)", () => {
     "Should generate a legal notice (Approval) that the claimant can view",
     { retries: 0 },
     () => {
-      cy.dependsOnPreviousPass([submit]);
+      cy.dependsOnPreviousPass([approve]);
       portal.before();
       portal.loginClaimant();
       cy.unstash<Submission>("submission").then((submission) => {
@@ -95,10 +114,10 @@ describe("Approval (notifications/notices)", () => {
     "Should generate a legal notice (Approval) that the Leave Administrator can view",
     { retries: 0 },
     () => {
-      cy.dependsOnPreviousPass([submit]);
+      cy.dependsOnPreviousPass([approve]);
       portal.before();
       cy.unstash<Submission>("submission").then((submission) => {
-        cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
+        cy.unstash<DehydratedClaim>("claim").then(({ claim }) => {
           if (!claim.employer_fein) {
             throw new Error("Claim must include employer FEIN");
           }
@@ -120,7 +139,7 @@ describe("Approval (notifications/notices)", () => {
     "Should generate a 'Action Required' ER notification for the Leave Administrator",
     { retries: 0 },
     () => {
-      cy.dependsOnPreviousPass([submit]);
+      cy.dependsOnPreviousPass([approve]);
       cy.unstash<Submission>("submission").then((submission) => {
         email
           .getEmails({
@@ -143,9 +162,9 @@ describe("Approval (notifications/notices)", () => {
     "Should generate an approval notification for the Leave Administrator",
     { retries: 0 },
     () => {
-      cy.dependsOnPreviousPass([submit]);
+      cy.dependsOnPreviousPass([approve]);
       cy.unstash<Submission>("submission").then((submission) => {
-        cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
+        cy.unstash<DehydratedClaim>("claim").then(({ claim }) => {
           const subjectEmployer = email.getNotificationSubject(
             "approval (employer)",
             submission.fineos_absence_id
@@ -182,7 +201,7 @@ describe("Approval (notifications/notices)", () => {
     "Should generate an approval notification for the claimant",
     { retries: 0 },
     () => {
-      cy.dependsOnPreviousPass([submit]);
+      cy.dependsOnPreviousPass([approve]);
       cy.unstash<Submission>("submission").then((submission) => {
         const subjectClaimant = email.getNotificationSubject(
           "approval (claimant)",

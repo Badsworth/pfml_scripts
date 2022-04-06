@@ -363,6 +363,8 @@ class Application(Base, TimestampMixin):
         index=True,
     )
 
+    nbr_of_retries = Column(Integer, nullable=False, default=0)
+
     user = relationship(User)
     caring_leave_metadata = relationship("CaringLeaveMetadata", back_populates="application")
     claim = relationship(Claim, backref=backref("application", uselist=False))
