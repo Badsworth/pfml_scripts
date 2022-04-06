@@ -265,10 +265,7 @@ describe("Applications", () => {
     expect(successPartOne).not.toBeInTheDocument();
   });
 
-  it("displays prompt for channel switching when feature flag is enabled", () => {
-    const detailsLabel = "Did you start an application by phone?";
-    process.env.featureFlags = JSON.stringify({ channelSwitching: false });
-
+  it("displays prompt for channel switching", () => {
     renderPage(Index, {
       pathname: routes.applications.index,
       addCustomSetup: (appLogicHook) => {
@@ -276,19 +273,9 @@ describe("Applications", () => {
       },
     });
 
-    const detailsText = screen.queryByText(detailsLabel);
-    expect(detailsText).not.toBeInTheDocument();
-
-    process.env.featureFlags = JSON.stringify({ channelSwitching: true });
-
-    renderPage(Index, {
-      pathname: routes.applications.index,
-      addCustomSetup: (appLogicHook) => {
-        setUpHelper(appLogicHook);
-      },
-    });
-
-    expect(screen.getByText(detailsLabel)).toBeInTheDocument();
+    expect(
+      screen.getByText("Did you start an application by phone?")
+    ).toBeInTheDocument();
   });
 
   it("passes mfaSetupSuccess value when it redirects to getReady", () => {

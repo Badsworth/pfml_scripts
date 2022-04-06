@@ -57,7 +57,7 @@
     "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-stage-business-intelligence-tool",
     "TWILIO_NUMBERS": "5076072506,5074188158",
     "HAS_CHANNEL_SWITCHING": "true",
-    "HAS_MARCH_RELEASE": "false"
+    "HAS_MARCH_RELEASE": "true"
   },
   "training": {
     "PORTAL_BASEURL": "https://paidleave-training.mass.gov",

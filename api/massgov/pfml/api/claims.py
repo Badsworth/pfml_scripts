@@ -4,7 +4,7 @@ from uuid import UUID
 import connexion
 import flask
 from sqlalchemy_utils import escape_like
-from werkzeug.exceptions import BadRequest, Forbidden, NotFound
+from werkzeug.exceptions import Forbidden, NotFound
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
@@ -25,14 +25,13 @@ from massgov.pfml.api.util.claims import user_has_access_to_claim
 from massgov.pfml.api.util.logging.search_request import search_request_log_info
 from massgov.pfml.api.util.paginate.paginator import PaginationAPIContext
 from massgov.pfml.api.validation.exceptions import IssueType
-from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.employees import (
     Claim,
     LeaveRequestDecision,
     Role,
     UserLeaveAdministrator,
 )
-from massgov.pfml.db.queries.get_claims_query import ActionRequiredStatusFilter, GetClaimsQuery
+from massgov.pfml.db.queries.get_claims_query import GetClaimsQuery
 from massgov.pfml.util.logging.claims import log_get_claim_metrics
 from massgov.pfml.util.logging.employers import get_employer_log_attributes
 from massgov.pfml.util.users import has_role_in
@@ -219,7 +218,6 @@ def get_claims() -> flask.Response:
     if employee_id_str is not None:
         terms.employee_ids = {UUID(eid.strip()) for eid in employee_id_str.split(",")}
     terms.search = flask.request.args.get("search", type=str)
-    terms.claim_status = flask.request.args.get("claim_status")
     terms.request_decision = flask.request.args.get("request_decision")
     terms.is_reviewable = flask.request.args.get("is_reviewable", type=str)
 
@@ -249,7 +247,6 @@ def _process_claims_request(claim_request: ClaimSearchRequest, method_name: str)
     employee_ids = claim_request_terms.employee_ids
     employer_ids = claim_request_terms.employer_ids
     search_string = claim_request_terms.search
-    absence_statuses = parse_filterable_absence_statuses(claim_request_terms.claim_status)
     is_reviewable = claim_request_terms.is_reviewable
     request_decisions = map_request_decision_param_to_db_columns(
         claim_request_terms.request_decision
@@ -292,16 +289,7 @@ def _process_claims_request(claim_request: ClaimSearchRequest, method_name: str)
             if employee_ids:
                 query.add_employees_filter(employee_ids)
 
-            if len(absence_statuses):
-                # Log the values from the query params rather than the enum groups they
-                # might equate to, since what is sent into the API will be more familiar
-                # to New Relic users since it aligns closer to what Portal users see
-                log_attributes.update(
-                    {"filter.absence_statuses": ", ".join(sorted(absence_statuses))}
-                )
-                query.add_absence_status_filter(absence_statuses)
-            else:
-                query.add_managed_requirements_filter()
+            query.add_managed_requirements_filter()
 
             if search_string:
                 query.add_search_filter(
@@ -342,14 +330,6 @@ def _process_claims_request(claim_request: ClaimSearchRequest, method_name: str)
     ).to_api_response()
 
 
-def parse_filterable_absence_statuses(absence_status_string: Union[str, None]) -> set:
-    if not absence_status_string:
-        return set()
-    absence_statuses = set(absence_status_string.strip().split(","))
-    validate_filterable_absence_statuses(absence_statuses)
-    return absence_statuses
-
-
 def map_request_decision_param_to_db_columns(
     request_decision_str: Optional[str],
 ) -> Set[int]:
@@ -375,18 +355,3 @@ def map_request_decision_param_to_db_columns(
     if not request_decision_str:
         return set()
     return request_decision_map[request_decision_str]
-
-
-def validate_filterable_absence_statuses(absence_statuses: Set[str]) -> None:
-    """Confirm the absence statuses match a filterable status"""
-
-    for absence_status in absence_statuses:
-        if absence_status in ActionRequiredStatusFilter.all():
-            continue
-
-        try:
-            AbsenceStatus.get_id(absence_status)
-        except KeyError:
-            raise BadRequest(f"Invalid claim status {absence_status}.")
-
-    return

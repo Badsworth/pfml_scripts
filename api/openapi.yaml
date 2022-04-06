@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Paid Leave API
   description: An API for managing leave within Massachusetts Paid Family and Medical Leave.
-  version: "2022-03-21"
+  version: "2022-04-06"
 
 servers:
   - url: /v1
@@ -421,16 +421,6 @@ paths:
           description: ID(s) of Employee to query claims for
           required: false
           explode: false
-        - name: claim_status
-          in: query
-          schema:
-            type: string
-            pattern: '[a-zA-Z0-9 ,]+'
-          description: >
-            claim status used to filter the request,
-            single claim status or a comma seperated list of claim status (i.e claim_status="Approved,Closed"),
-            the valid status are "Approved", "Closed", "Completed", "Declined", "Open requirement" and "Pending - no action".
-          required: false
         - name: search
           in: query
           schema:
@@ -1703,7 +1693,7 @@ components:
       schema:
         type: string
         default: "created_at"
-        enum: ["fineos_absence_status", "created_at", "employee", "latest_follow_up_date"]
+        enum: ["created_at", "employee", "latest_follow_up_date"]
     orderDirection:
       name: "order_direction"
       in: query
@@ -3018,6 +3008,7 @@ components:
           example: "Started"
         phone:
           $ref: "#/components/schemas/MaskedPhone"
+          nullable: true
         has_previous_leaves_other_reason:
           type: boolean
           nullable: true
@@ -4504,12 +4495,6 @@ components:
             type: string
             format: uuid
           description: Employee IDs to query claims for
-        claim_status:
-          type: string
-          description: >
-            claim status used to filter the request,
-            single claim status or a comma seperated list of claim status (i.e claim_status="Approved,Closed"),
-            the valid status are "Approved", "Closed", "Completed", "Declined", "Open requirement" and "Pending - no action".
         search:
           type: string
           description: >

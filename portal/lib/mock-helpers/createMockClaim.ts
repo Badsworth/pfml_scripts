@@ -1,7 +1,4 @@
-import Claim, {
-  AbsenceCaseStatusType,
-  ClaimEmployee,
-} from "../../src/models/Claim";
+import Claim, { ClaimEmployee } from "../../src/models/Claim";
 import createAbsencePeriod from "./createAbsencePeriod";
 import { faker } from "@faker-js/faker";
 
@@ -10,12 +7,6 @@ function createMockClaim(customAttrs: Partial<Claim>): Claim {
     absence_periods: [createAbsencePeriod()],
     created_at: faker.date.past().toISOString(),
     fineos_absence_id: `NTN-101-ABS-${faker.datatype.number({ max: 2000 })}`,
-    claim_status: faker.helpers.randomize<AbsenceCaseStatusType>([
-      "Approved",
-      "Declined",
-      "Closed",
-      "Completed",
-    ]),
     employee: new ClaimEmployee({
       first_name: faker.name.firstName(),
       last_name: faker.name.lastName(),

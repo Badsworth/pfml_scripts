@@ -10,10 +10,6 @@ const flagsConfig = {
   // Define a default or all feature flags here.
   // Environments will fallback to these default values.
   defaults: {
-    // When enabled, the "Find my application" flow is displayed.
-    // TODO (PORTAL-1327): Remove channelSwitching flag once enabled everywhere.
-    channelSwitching: true,
-
     // When this flag is enabled, the user can see the "Employment status"
     // question in the claimant flow (CP-1204)
     // TODO (CP-1281): Show employment status question when Portal supports other employment statuses
@@ -55,9 +51,6 @@ const flagsConfig = {
     // update the reference to it in _app.js), but try to keep it prefixed with pfml.
     // https://lwd.atlassian.net/browse/CP-459
     pfmlTerriyay: false,
-
-    // When this flag is true, PDF files up to 10mb are sent to the API.
-    sendLargePdfToApi: true,
 
     // TODO (PORTAL-1893) remove feature flag
     // When this flag is enabled the holiday alert will be displayed on the payments pages.

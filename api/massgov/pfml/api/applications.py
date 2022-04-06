@@ -49,6 +49,7 @@ from massgov.pfml.api.validation.employment_validator import (
     get_contributing_employer_or_employee_issue,
 )
 from massgov.pfml.api.validation.exceptions import (
+    IssueRule,
     IssueType,
     ValidationErrorDetail,
     ValidationException,
@@ -287,11 +288,33 @@ def applications_update(application_id):
             data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
         ).to_api_response()
 
+    if existing_application.nbr_of_retries >= app.get_config().limit_ssn_fein_max_attempts:
+        message = "Application {} could not be updated. Maximum number of attempts reached.".format(
+            existing_application.application_id
+        )
+        return response_util.error_response(
+            status_code=BadRequest,
+            message=message,
+            errors=[
+                ValidationErrorDetail(
+                    type=IssueType.maximum,
+                    rule=IssueRule.max_ssn_fein_update_attempts,
+                    message=message,
+                )
+            ],
+            data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
+        ).to_api_response()
+
     updated_body = applications_service.remove_masked_fields_from_request(
         body, existing_application
     )
 
     application_request = ApplicationRequestBody.parse_obj(updated_body)
+
+    previous_fein = existing_application.employer_fein
+    previous_tax_identifier = None
+    if existing_application.tax_identifier:
+        previous_tax_identifier = existing_application.tax_identifier.tax_identifier
 
     with app.db_session() as db_session:
         applications_service.update_from_request(
@@ -303,13 +326,30 @@ def applications_update(application_id):
         db_session, existing_application.employer_fein, existing_application.tax_identifier
     )
 
-    if employer_issue:
-        issues.append(employer_issue)
-
     # Set log attributes to the updated attributes rather than the previous attributes
     # Also, calling get_application_log_attributes too early causes the application not to update properly for some reason
     # See https://github.com/EOLWD/pfml/pull/2601
     log_attributes = get_application_log_attributes(existing_application)
+
+    if employer_issue:
+        issues.append(employer_issue)
+
+        # If either SSN or FEIN have been recently updated
+        # and an "employer_issue" occurred, it counts as an attempt
+        if (
+            application_request.tax_identifier is not None
+            and previous_tax_identifier != application_request.tax_identifier
+        ) or (
+            application_request.employer_fein is not None
+            and previous_fein != application_request.employer_fein
+        ):
+            existing_application.nbr_of_retries += 1
+            with app.db_session() as db_session:
+                db_session.add(existing_application)
+                db_session.commit()
+                db_session.refresh(existing_application)
+            logger.info("User attempted new combination of SSN/FEIN", extra=log_attributes)
+
     logger.info("applications_update success", extra=log_attributes)
 
     return response_util.success_response(

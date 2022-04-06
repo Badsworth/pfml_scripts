@@ -31,7 +31,6 @@ export default class ClaimsApi extends BaseApi {
 
   /**
    * Fetches a page of claims for a user
-   * @param filters.claim_status - Comma-separated list of statuses
    */
   getClaims = async (params: GetClaimsParams = {}) => {
     const activeParams = { ...params };

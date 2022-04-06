@@ -51,19 +51,6 @@ async function setup({
 }
 
 describe("ImportClaim", () => {
-  beforeEach(() => {
-    process.env.featureFlags = JSON.stringify({
-      channelSwitching: true,
-    });
-  });
-
-  it("renders page not found when feature flag isn't enabled", async () => {
-    process.env.featureFlags = JSON.stringify({ channelSwitching: false });
-    await setup();
-
-    expect(screen.getByText("Page not found")).toBeInTheDocument();
-  });
-
   it("renders the page", async () => {
     const { container } = await setup();
     expect(container).toMatchSnapshot();

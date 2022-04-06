@@ -97,20 +97,16 @@ export const Index = (props: IndexProps) => {
 
           <br />
 
-          {isFeatureEnabled("channelSwitching") && (
-            <Details label={t("pages.applications.startByPhoneLabel")}>
-              <p>{t("pages.applications.startByPhoneDescription")}</p>
-              <Link
-                href={appLogic.portalFlow.getNextPageRoute(
-                  "IMPORT_APPLICATION"
-                )}
-              >
-                <a className="display-inline-block margin-bottom-5">
-                  {t("pages.applications.addApplication")}
-                </a>
-              </Link>
-            </Details>
-          )}
+          <Details label={t("pages.applications.startByPhoneLabel")}>
+            <p>{t("pages.applications.startByPhoneDescription")}</p>
+            <Link
+              href={appLogic.portalFlow.getNextPageRoute("IMPORT_APPLICATION")}
+            >
+              <a className="display-inline-block margin-bottom-5">
+                {t("pages.applications.addApplication")}
+              </a>
+            </Link>
+          </Details>
         </div>
       </div>
     </React.Fragment>
@@ -182,7 +178,7 @@ const ApplicationApprovalsInformation = (props: WithUserProps) => {
           components={{
             "benefit-year-guide-link": (
               <a
-                href={routes.external.massgov.benefitsGuide_benefitYears}
+                href={routes.external.massgov.importantTermsToKnow}
                 rel="noopener noreferrer"
                 target="_blank"
               />
