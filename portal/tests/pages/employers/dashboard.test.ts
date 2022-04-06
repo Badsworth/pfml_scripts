@@ -63,7 +63,6 @@ const getClaim = (customAttrs: Partial<Claim> = {}) => {
       employer_id: verifiedUserLeaveAdministrator.employer_id,
     },
     fineos_absence_id: "NTN-111-ABS-01",
-    claim_status: "Approved",
     ...customAttrs,
   });
 };

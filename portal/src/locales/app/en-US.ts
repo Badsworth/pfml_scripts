@@ -765,11 +765,6 @@ const shared: {
   // This makes the structure easier to navigate and the process of finding a specific element more consistent
   [contentKey: string]: string | I18nContentGroup;
 } = {
-  absenceCaseStatus_approved: "Approved",
-  absenceCaseStatus_closed: "Closed",
-  absenceCaseStatus_denied: "Denied",
-  absenceCaseStatus_noAction: "No action required",
-  absenceCaseStatus_pending: "Pending",
   achTypeChecking: "Checking",
   achTypeSavings: "Savings",
   addApplication: "Add an existing application",
@@ -2838,15 +2833,6 @@ const components: {
   // This makes the structure easier to navigate and the process of finding a specific element more consistent
   [componentKey: string]: I18nContentGroup;
 } = {
-  absenceCaseStatusTag: {
-    status_approved: "$t(shared.absenceCaseStatus_approved)",
-    status_closed: "$t(shared.absenceCaseStatus_closed)",
-    status_completed: "$t(shared.absenceCaseStatus_closed)",
-    status_declined: "$t(shared.absenceCaseStatus_denied)",
-    status_noAction: "$t(shared.absenceCaseStatus_noAction)",
-    status_openRequirements: "Review by {{followupDate}}",
-    status_pending: "$t(shared.absenceCaseStatus_pending)",
-  },
   absencePeriodStatusTag: {
     label_approved: "Approved",
     label_cancelled: "Cancelled",
