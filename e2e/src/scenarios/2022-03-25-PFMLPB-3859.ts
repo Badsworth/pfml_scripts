@@ -148,7 +148,7 @@ export const PORTAL_MEDICAL_SERIOUS_INTERMITTENT_SITFIT: ScenarioSpecification =
         HCP: {},
       },
       employerResponse: {
-        hours_worked_per_week: 40,
+        hours_worked_per_week: 20,
         employer_decision: "Approve",
       },
       metadata: {
