@@ -6,17 +6,25 @@ describe("NewApplication", () => {
   it("redirects to status page", () => {
     let goToPageForSpy!: jest.SpyInstance;
 
-    renderPage(NewApplication, {
-      addCustomSetup: (appLogic) => {
-        goToPageForSpy = jest.spyOn(appLogic.portalFlow, "goToPageFor");
+    renderPage(
+      NewApplication,
+      {
+        addCustomSetup: (appLogic) => {
+          goToPageForSpy = jest.spyOn(appLogic.portalFlow, "goToPageFor");
+        },
+        pathname: routes.employers.newApplication,
       },
-      pathname: routes.employers.newApplication,
-    });
+      {
+        query: {
+          absence_id: "mock-absence-id",
+        },
+      }
+    );
 
     expect(goToPageForSpy).toHaveBeenCalledWith(
       "REDIRECT",
       {},
-      {},
+      { absence_id: "mock-absence-id" },
       { redirect: true }
     );
   });
