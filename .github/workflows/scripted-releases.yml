@@ -74,11 +74,13 @@ jobs:
         run: |
           if [[ ${{ github.event.inputs.scripted-release-task }} == "finalize-release" ]]
           then
-            tag=$(git for-each-ref pattern="${{ github.event.inputs.application }}" --sort=-committerdate refs/tags --count=1 --format='%(refname:short)' | sed -r 's/-[^-]+$//g')
+            tag=$(git tag -l "${{ github.event.inputs.application }}*" --sort=committerdate | tail -1 | sed -r 's/-[^-]+$//g')
             echo "::set-output name=tag::$tag"
+            echo "Grabbed $tag - the latest tag for ${{ github.event.inputs.application }}"
           else
-            tag=$(git for-each-ref pattern="${{ github.event.inputs.application }}" --sort=-committerdate refs/tags --count=1 --format='%(refname:short)')
+            tag=$(git tag -l "${{ github.event.inputs.application }}*" --sort=committerdate | tail -1)
             echo "::set-output name=tag::$tag"
+            echo "Grabbed $tag - the latest tag for ${{ github.event.inputs.application }}"
           fi
 
       # Create release and notes in GitHub
