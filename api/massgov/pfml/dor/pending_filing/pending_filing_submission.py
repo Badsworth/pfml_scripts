@@ -47,7 +47,7 @@ def handler_with_return():
 
     try:
         with massgov.pfml.util.batch.log.log_entry(
-            db_session_raw, "", "DOR Pending Filing Submission", ""
+            db_session_raw, __name__, "DOR Pending Filing Submission", ""
         ) as log_entry:
             report = process_pending_filing_employers()
             log_entry.report = json.dumps(asdict(report), indent=2)
