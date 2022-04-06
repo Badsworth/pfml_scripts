@@ -1594,6 +1594,7 @@ class EmployeeOccupation(Base, TimestampMixin):
 class ImportLog(Base, TimestampMixin):
     __tablename__ = "import_log"
     import_log_id = Column(Integer, primary_key=True)
+    source_context = Column(Text)
     source = Column(Text, index=True)
     import_type = Column(Text, index=True)
     status = Column(Text)
