@@ -78,6 +78,7 @@ def process_entries(
 
 class ImportLogResponse(PydanticBaseModel):
     import_log_id: int
+    source_context: Optional[str]
     source: Optional[str]
     import_type: Optional[str]
     status: Optional[str]
