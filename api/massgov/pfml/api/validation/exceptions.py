@@ -67,6 +67,8 @@ class IssueRule(str, Enum):
     # Disallow suspicious attempts for potential fraud cases.
     # Intentionally vague to avoid leaking this is for fraud prevention
     disallow_attempts = "disallow_attempts"
+    # Restrict claimants from trying several SSN/FEIN combinations
+    max_ssn_fein_update_attempts = "max_ssn_fein_update_attempts"
     # Employee must have wages from the Employer
     require_employee = "require_employee"
 
@@ -152,6 +154,8 @@ class IssueType(str, Enum):
     require_employer = "require_employer"
     # Employer record must exist in the API and FINEOS
     require_contributing_employer = "require_contributing_employer"
+    # Employer must not be fully exempt.
+    require_non_exempt_employer = "require_non_exempt_employer"
     # Data failed a checksum test e.g. Routing number
     checksum = "checksum"
     # Employer can't be verified because there's nothing to verify against
