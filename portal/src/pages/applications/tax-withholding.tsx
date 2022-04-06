@@ -28,21 +28,28 @@ export const TaxWithholding = (props: WithBenefitsApplicationProps) => {
   });
 
   const handleSave = async () => {
-    const data = {
-      is_withholding_tax: withholdTax,
-      skip_fineos: appLogic.benefitsApplications.warningsLists[
-        claim.application_id
-      ].some(
+    // The below warnings are only returned from a PATCH, not a GET.
+    const has_user_not_found_warning =
+      appLogic.benefitsApplications.warningsLists[claim.application_id].some(
         (warning) =>
           warning.type === "require_contributing_employer" ||
           warning.rule === "require_non_exempt_employer" ||
           warning.rule === "require_employee"
-      ),
+      );
+    const data = {
+      is_withholding_tax: withholdTax,
     };
-    await appLogic.benefitsApplications.submitTaxWithholdingPreference(
-      claim.application_id,
-      data
-    );
+    has_user_not_found_warning
+      ? appLogic.benefitsApplications.update(claim.application_id, {
+          additional_user_not_found_info: {
+            ...claim?.additional_user_not_found_info,
+            is_withholding_tax: formState.is_withholding_tax,
+          },
+        })
+      : await appLogic.benefitsApplications.submitTaxWithholdingPreference(
+          claim.application_id,
+          data
+        );
   };
 
   return (

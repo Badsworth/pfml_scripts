@@ -3597,9 +3597,6 @@ components:
         is_withholding_tax:
           type: boolean
           nullable: true
-        skip_fineos:
-          type: boolean
-          nullable: true
 
     EmployerAddFeinRequestBody:
       type: object

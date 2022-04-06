@@ -87,6 +87,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
     employer_name: string | null;
     date_of_hire: string | null;
     date_of_separation: string | null;
+    is_withholding_tax: boolean | null;
     recently_acquired_or_merged: boolean | null;
   };
 

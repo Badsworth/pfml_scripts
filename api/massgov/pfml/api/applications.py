@@ -88,15 +88,17 @@ def application_get(application_id):
         ensure(READ, existing_application)
         application_response = ApplicationResponse.from_orm(existing_application)
 
-    # Only run these validations if the application hasn't already been submitted. This
-    # prevents warnings from showing in the response for rules added after the application
-    # was submitted, which would cause a Portal user's Checklist to revert back to showing
-    # steps as incomplete, and they wouldn't be able to fix this.
-    issues = (
-        application_rules.get_application_submit_issues(existing_application)
-        if not existing_application.submitted_time
-        else []
-    )
+        # Only run these validations if the application hasn't already been submitted. This
+        # prevents warnings from showing in the response for rules added after the application
+        # was submitted, which would cause a Portal user's Checklist to revert back to showing
+        # steps as incomplete, and they wouldn't be able to fix this.
+        issues = []
+        if not existing_application.submitted_time:
+            issues += application_rules.get_application_submit_issues(existing_application)
+            if employment_issue := get_contributing_employer_or_employee_issue(
+                db_session, existing_application.employer_fein, existing_application.tax_identifier
+            ):
+                issues.append(employment_issue)
 
     return response_util.success_response(
         message="Successfully retrieved application",
@@ -805,7 +807,7 @@ def validate_tax_withholding_request(db_session, application_id, tax_preference_
             ]
         )
 
-    if not tax_preference_body.skip_fineos and existing_application.is_withholding_tax is not None:
+    if existing_application.is_withholding_tax is not None:
         logger.info(
             "submit_tax_withholding_preference failure - preference already set",
             extra=get_application_log_attributes(existing_application),
@@ -852,8 +854,7 @@ def submit_tax_withholding_preference(application_id: UUID) -> Response:
         existing_application = validate_tax_withholding_request(
             db_session, application_id, tax_preference_body
         )
-        if not tax_preference_body.skip_fineos:
-            send_tax_selection_to_fineos(existing_application, tax_preference_body)
+        send_tax_selection_to_fineos(existing_application, tax_preference_body)
         save_tax_preference(db_session, existing_application, tax_preference_body)
 
         logger.info(

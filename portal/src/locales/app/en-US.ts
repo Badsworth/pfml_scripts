@@ -53,6 +53,9 @@ const errors = {
   },
   applications: {
     additional_user_not_found_info: {
+      currently_employed: {
+        required: "Your current employment status is required.",
+      },
       date_of_hire: {
         maximum: "The date of hire must be in the past.",
         required: "The date of hire is required.",
