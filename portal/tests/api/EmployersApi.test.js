@@ -1,6 +1,6 @@
 import Address from "../../src/models/Address";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
-import EmployerClaim from "../../src/models/EmployerClaim";
+import EmployerClaimReview from "../../src/models/EmployerClaimReview";
 import EmployersApi from "../../src/api/EmployersApi";
 import { mockAuth } from "../test-utils";
 
@@ -25,7 +25,7 @@ const headers = {
   Authorization: `Bearer ${accessTokenJwt}`,
   "Content-Type": "application/json",
 };
-const mockClaim = new EmployerClaim({
+const mockClaim = new EmployerClaimReview({
   absence_periods: [],
   date_of_birth: "1994-03-05",
   employer_benefits: [],
@@ -33,17 +33,6 @@ const mockClaim = new EmployerClaim({
   fineos_absence_id: absenceId,
   first_name: "Test",
   last_name: "Person",
-  leave_details: {
-    continuous_leave_periods: [
-      {
-        end_date: "2021-10-28",
-        start_date: "2021-06-24",
-      },
-    ],
-    intermittent_leave_periods: null,
-    reason: "Serious Health Condition - Employee",
-    reduced_schedule_leave_periods: null,
-  },
   middle_name: "",
   previous_leaves: [],
   residential_address: new Address({
@@ -157,7 +146,7 @@ describe("EmployersApi", () => {
       it("resolves with claim", async () => {
         const response = await employersApi.getClaim(absenceId);
 
-        expect(response.claim).toBeInstanceOf(EmployerClaim);
+        expect(response.claim).toBeInstanceOf(EmployerClaimReview);
         expect(response.claim).toEqual(mockClaim);
       });
     });
