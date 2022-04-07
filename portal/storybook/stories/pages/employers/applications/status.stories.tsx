@@ -53,7 +53,7 @@ export const Default = ({
 
   if (leaveDurationType.includes("Continuous")) {
     claimBuilder = claimBuilder.continuousAbsencePeriod();
-  
+  }
 
   if (leaveDurationType.includes("Intermittent")) {
     claimBuilder = claimBuilder.intermittentAbsencePeriod();
