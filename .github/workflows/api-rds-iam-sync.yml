@@ -11,6 +11,8 @@
 name: API RDS IAM Sync
 
 on:
+  repository_dispatch:
+    types: [rds_iam_sync]
   workflow_dispatch:
     inputs:
       environment:
