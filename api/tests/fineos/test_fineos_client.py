@@ -790,9 +790,34 @@ class TestCreateOrUpdateLeavePeriodChangeRequest:
             additionalNotes="Withdrawal",
         )
 
-    def test_success(self, fineos_client, change_request):
+    @pytest.fixture
+    def change_request_response(self):
+        return {
+            "additionalNotes": "Withdrawal",
+            "changeRequestPeriods": [{"endDate": "2022-2-15", "startDate": "2022-2-14"}],
+            "id": "string",
+            "reason": {
+                "_links": {"property1": "string", "property2": "string"},
+                "domainId": 0,
+                "domainName": "string",
+                "fullId": 0,
+                "instances": [{"fullId": "string", "name": "string"}],
+                "name": "Employee Requested Removal",
+            },
+            "requestDate": "2022-2-14",
+        }
+
+    def test_success(self, httpserver, fineos_client, change_request, change_request_response):
+        absence_id = "NTN-123456-ABS-01"
+        httpserver.expect_request(
+            f"/customerapi/customer/absence/absences/{absence_id}/leave-period-change-request",
+            method="POST",
+        ).respond_with_data(
+            json.dumps(change_request_response), status=200, content_type="application/json"
+        )
+
         response = fineos_client.create_or_update_leave_period_change_request(
-            "web_id", "absence_id", change_request
+            "web_id", absence_id, change_request
         )
 
         reason = response.reason
