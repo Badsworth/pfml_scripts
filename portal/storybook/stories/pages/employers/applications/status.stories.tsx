@@ -49,18 +49,18 @@ export const Default = ({
   document: string;
   leaveDurationType: string;
 }) => {
-  let claimBuilder = new MockEmployerClaimBuilder().bondingLeaveReason();
+  let claimBuilder = new MockEmployerClaimBuilder());
 
   if (leaveDurationType.includes("Continuous")) {
-    claimBuilder = claimBuilder.continuous();
-  }
+    claimBuilder = claimBuilder.continuousAbsencePeriod();
+  
 
   if (leaveDurationType.includes("Intermittent")) {
-    claimBuilder = claimBuilder.intermittent();
+    claimBuilder = claimBuilder.intermittentAbsencePeriod();
   }
 
   if (leaveDurationType.includes("Reduced")) {
-    claimBuilder = claimBuilder.reducedSchedule();
+    claimBuilder = claimBuilder.reducedScheduleAbsencePeriod();
   }
 
   const documentData: BenefitsApplicationDocument = {
