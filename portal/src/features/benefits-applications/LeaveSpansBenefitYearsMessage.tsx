@@ -9,6 +9,7 @@ import { useTranslation } from "src/locales/i18n";
 interface LeaveSpansBenefitYearsMessageProps {
   computed_application_split: ApplicationSplit;
   computed_earliest_submission_date: string;
+  final_content_before_submit?: boolean;
 }
 
 export const LeaveSpansBenefitYearsMessage = (
@@ -39,6 +40,8 @@ export const LeaveSpansBenefitYearsMessage = (
       .benefit_year_start_date;
   const currentBenefitYearEndDate =
     props.computed_application_split.crossed_benefit_year.benefit_year_end_date;
+
+  const final_content_before_submit = props.final_content_before_submit;
 
   const today = dayjs().format("YYYY-MM-DD");
   const firstCanBeSubmitted = firstLeaveEarliestSubmissionDate <= today;
@@ -83,6 +86,39 @@ export const LeaveSpansBenefitYearsMessage = (
     secondLeaveEarliestSubmissionDate: string;
   }
 
+  const getFinalContentBeforeSubmitMessage = () => {
+    return (
+      <ul className="usa-list">
+        <li>
+          <p>
+            <Trans
+              i18nKey="components.claimsLeaveSpansBenefitYears.secondCannotBeSubmittedCurrentFinalContentPart1"
+              components={{
+                "contact-center-phone-link": (
+                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                ),
+              }}
+            />
+          </p>
+        </li>
+        <li>
+          <p>
+            {t(
+              "components.claimsLeaveSpansBenefitYears.secondCannotBeSubmittedCurrentFinalContentPart2"
+            )}
+          </p>
+        </li>
+        <li>
+          <p>
+            {t(
+              "components.claimsLeaveSpansBenefitYears.secondCannotBeSubmittedCurrentFinalContentPart3"
+            )}
+          </p>
+        </li>
+      </ul>
+    );
+  };
+
   const BothCanBeSubmittedMessage = (props: MessageProps) => {
     return (
       <React.Fragment>
@@ -90,7 +126,7 @@ export const LeaveSpansBenefitYearsMessage = (
           startDate={props.currentBenefitYearStartDate}
           endDate={props.currentBenefitYearEndDate}
         />
-        <ul>
+        <ul className="usa-list">
           <li>
             <p>
               <Trans
@@ -119,7 +155,7 @@ export const LeaveSpansBenefitYearsMessage = (
             "components.claimsLeaveSpansBenefitYears.bothCanBeSubmittedReviewedSeparately"
           )}
         </p>
-        <ul>
+        <ul className="usa-list">
           <li>
             <p>
               {t(
@@ -183,15 +219,18 @@ export const LeaveSpansBenefitYearsMessage = (
             }}
           />
         </p>
-        <ul>
-          <li>
-            <p>
-              {t(
-                "components.claimsLeaveSpansBenefitYears.secondCannotBeSubmittedCurrent"
-              )}
-            </p>
-          </li>
-        </ul>
+        {final_content_before_submit && getFinalContentBeforeSubmitMessage()}
+        {!final_content_before_submit && (
+          <ul className="usa-list">
+            <li>
+              <p>
+                {t(
+                  "components.claimsLeaveSpansBenefitYears.secondCannotBeSubmittedCurrent"
+                )}
+              </p>
+            </li>
+          </ul>
+        )}
         <p>
           <Trans
             i18nKey="components.claimsLeaveSpansBenefitYears.newBenefitYearLeaveDates"
@@ -201,7 +240,7 @@ export const LeaveSpansBenefitYearsMessage = (
             }}
           />
         </p>
-        <ul>
+        <ul className="usa-list">
           <li>
             <p>
               <Trans
@@ -235,7 +274,7 @@ export const LeaveSpansBenefitYearsMessage = (
             }}
           />
         </p>
-        <ul>
+        <ul className="usa-list">
           <li>
             <p>
               <Trans
@@ -258,7 +297,7 @@ export const LeaveSpansBenefitYearsMessage = (
             }}
           />
         </p>
-        <ul>
+        <ul className="usa-list">
           <li>
             <p>
               <Trans
