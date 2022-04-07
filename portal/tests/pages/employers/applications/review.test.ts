@@ -15,7 +15,7 @@ import {
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { AppLogic } from "../../../../src/hooks/useAppLogic";
 import ConcurrentLeave from "../../../../src/models/ConcurrentLeave";
-import EmployerClaim from "../../../../src/models/EmployerClaim";
+import EmployerClaimReview from "../../../../src/models/EmployerClaimReview";
 import LeaveReason from "../../../../src/models/LeaveReason";
 import MockDate from "mockdate";
 import Review from "../../../../src/pages/employers/applications/review";
@@ -73,14 +73,14 @@ const goTo = jest.fn(() => {
 const loadDocuments = jest.fn();
 
 const setup = (
-  employerClaimAttrs: Partial<EmployerClaim> = claimWithV2Eform,
+  employerClaimAttrs: Partial<EmployerClaimReview> = claimWithV2Eform,
   cb?: (appLogic: AppLogic) => void
 ) => {
   return renderPage(
     Review,
     {
       addCustomSetup: (appLogic) => {
-        appLogic.employers.claim = new EmployerClaim(employerClaimAttrs);
+        appLogic.employers.claim = new EmployerClaimReview(employerClaimAttrs);
         appLogic.employers.claimDocumentsMap = new Map();
         appLogic.employers.submitClaimReview = submitClaimReview;
         appLogic.portalFlow.goTo = goTo;

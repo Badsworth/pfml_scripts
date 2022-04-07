@@ -30,7 +30,7 @@ import PreviousLeave, {
 
 import Address from "../../src/models/Address";
 import ConcurrentLeave from "../../src/models/ConcurrentLeave";
-import EmployerClaim from "../../src/models/EmployerClaim";
+import EmployerClaimReview from "../../src/models/EmployerClaimReview";
 import LeaveReason from "../../src/models/LeaveReason";
 import createAbsencePeriod from "./createAbsencePeriod";
 import dayjs from "dayjs";
@@ -477,10 +477,10 @@ export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder
   }
 
   /**
-   * @returns {EmployerClaim}
+   * @returns {EmployerClaimReview}
    */
   create() {
-    return new EmployerClaim(this.claimAttrs);
+    return new EmployerClaimReview(this.claimAttrs);
   }
 }
 

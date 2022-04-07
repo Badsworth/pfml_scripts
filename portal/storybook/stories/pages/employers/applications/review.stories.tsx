@@ -2,7 +2,7 @@ import { ClaimDocument, DocumentType } from "src/models/Document";
 import LeaveReason, { LeaveReasonType } from "src/models/LeaveReason";
 import { AbsencePeriod } from "src/models/AbsencePeriod";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
-import EmployerClaim from "src/models/EmployerClaim";
+import EmployerClaimReview from "src/models/EmployerClaimReview";
 import { ManagedRequirement } from "src/models/ManagedRequirement";
 import { MockEmployerClaimBuilder } from "lib/mock-helpers/mock-model-builder";
 import { Props } from "types/common";
@@ -162,7 +162,7 @@ function createEmployerClaimFromArgs(args: {
   "Claimant EForm Version": string;
   "Number of absence periods for each leave reason": number;
   "Managed Requirements": ManagedRequirement[];
-}): EmployerClaim {
+}): EmployerClaimReview {
   // Generate one absence period for each selected leave reason
   const absence_periods: AbsencePeriod[] = [];
   args["Absence period reasons"].forEach((reason: LeaveReasonType) => {

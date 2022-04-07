@@ -1,5 +1,5 @@
 import { MockEmployerClaimBuilder, renderPage } from "../../../test-utils";
-import EmployerClaim from "../../../../src/models/EmployerClaim";
+import EmployerClaimReview from "../../../../src/models/EmployerClaimReview";
 import Success from "../../../../src/pages/employers/applications/success";
 
 describe("Success", () => {
@@ -12,7 +12,7 @@ describe("Success", () => {
       Success,
       {
         addCustomSetup: (appLogic) => {
-          appLogic.employers.claim = new EmployerClaim(claim);
+          appLogic.employers.claim = new EmployerClaimReview(claim);
           appLogic.portalFlow.getNextPageRoute = jest.fn();
         },
       },
