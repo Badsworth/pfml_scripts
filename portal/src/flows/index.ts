@@ -10,20 +10,16 @@ import claimant, {
   ClaimantFlowContext,
   guards as claimantGuards,
 } from "./claimant";
-import employer, {
-  EmployerFlowContext,
-  guards as employerGuards,
-} from "./employer";
 import auth from "./auth";
+import employer from "./employer";
 import routes from "../routes";
 import user from "./user";
 
-export type FlowContext = ClaimantFlowContext & EmployerFlowContext;
+export type FlowContext = ClaimantFlowContext;
 type GuardFn = (context: FlowContext) => boolean;
 
 export const guards: { [guardName: string]: GuardFn } = {
   ...claimantGuards,
-  ...employerGuards,
 };
 
 export default {

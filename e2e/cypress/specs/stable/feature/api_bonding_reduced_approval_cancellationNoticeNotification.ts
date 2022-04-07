@@ -5,57 +5,71 @@ import {
   getDocumentReviewTaskName,
 } from "../../../../src/util/documents";
 import { config } from "../../../actions/common";
-import { itIf } from "../../../util";
 
 describe("Approval (notifications/notices)", () => {
   after(() => {
     portal.deleteDownloadsFolder();
   });
 
-  const submission = it("Submit a fully approved claim", () => {
-    fineos.before();
-    // Submit a claim via the API, including Employer Response.
+  const submission = it("Submits a claim via the API", () => {
     cy.task("generateClaim", "REDUCED_ER").then((claim) => {
-      cy.task("submitClaimToAPI", claim).then((response) => {
-        if (!response.fineos_absence_id) {
-          throw new Error("Response contained no fineos_absence_id property");
-        }
-        cy.stash("claim", claim);
+      cy.stash("claim", claim);
+      cy.task("submitClaimToAPI", claim).then((res) => {
         cy.stash("submission", {
-          application_id: response.application_id,
-          fineos_absence_id: response.fineos_absence_id,
+          application_id: res.application_id,
+          fineos_absence_id: res.fineos_absence_id,
           timestamp_from: Date.now(),
         });
-        const claimPage = fineosPages.ClaimPage.visit(
-          response.fineos_absence_id
-        )
-          .adjudicate((adjudication) => {
-            adjudication
-              .evidence((evidence) => {
-                // Receive and approve all of the documentation for the claim.
-                claim.documents.forEach((doc) =>
-                  evidence.receive(doc.document_type)
-                );
-              })
-              .certificationPeriods((cert) => cert.prefill())
-              .acceptLeavePlan();
-          })
-          .tasks((tasks) => {
-            const certificationDoc = findCertificationDoc(claim.documents);
-            const certificationTask = getDocumentReviewTaskName(
-              certificationDoc.document_type
-            );
-            tasks.assertTaskExists("ID Review");
-            tasks.assertTaskExists(certificationTask);
-          })
-          .shouldHaveStatus("Applicability", "Applicable")
-          .shouldHaveStatus("Eligibility", "Met")
-          .shouldHaveStatus("Evidence", "Satisfied")
-          .shouldHaveStatus("Availability", "Time Available")
-          .shouldHaveStatus("Restriction", "Passed")
-          .shouldHaveStatus("PlanDecision", "Accepted");
-        claimPage.approve("Approved", config("HAS_APRIL_UPGRADE") === "true");
-        claimPage.triggerNotice("Designation Notice");
+      });
+    });
+  });
+
+  it("Submit a fully approved claim", () => {
+    cy.dependsOnPreviousPass();
+    fineos.before();
+    cy.unstash<DehydratedClaim>("claim").then((claim) => {
+      cy.unstash<Submission>("submission").then((response) => {
+        cy.tryCount().then((tryCount) => {
+          if (!response.fineos_absence_id) {
+            throw new Error("Response contained no fineos_absence_id property");
+          }
+          const claimPage = fineosPages.ClaimPage.visit(
+            response.fineos_absence_id
+          );
+          if (tryCount > 0) {
+            fineos.assertClaimStatus("Approved");
+            claimPage.triggerNotice("Designation Notice");
+            return;
+          }
+          claimPage
+            .adjudicate((adjudication) => {
+              adjudication
+                .evidence((evidence) => {
+                  // Receive and approve all of the documentation for the claim.
+                  claim.documents.forEach((doc) =>
+                    evidence.receive(doc.document_type)
+                  );
+                })
+                .certificationPeriods((cert) => cert.prefill())
+                .acceptLeavePlan();
+            })
+            .tasks((tasks) => {
+              const certificationDoc = findCertificationDoc(claim.documents);
+              const certificationTask = getDocumentReviewTaskName(
+                certificationDoc.document_type
+              );
+              tasks.assertTaskExists("ID Review");
+              tasks.assertTaskExists(certificationTask);
+            })
+            .shouldHaveStatus("Applicability", "Applicable")
+            .shouldHaveStatus("Eligibility", "Met")
+            .shouldHaveStatus("Evidence", "Satisfied")
+            .shouldHaveStatus("Availability", "Time Available")
+            .shouldHaveStatus("Restriction", "Passed")
+            .shouldHaveStatus("PlanDecision", "Accepted");
+          claimPage.approve("Approved", config("HAS_APRIL_UPGRADE") === "true");
+          claimPage.triggerNotice("Designation Notice");
+        });
       });
     });
   });
@@ -127,8 +141,7 @@ describe("Approval (notifications/notices)", () => {
     }
   );
 
-  itIf(
-    config("HAS_FINEOS_JANUARY_RELEASE") === "true",
+  it(
     "Check the Claimant email for the Cancellation notification.",
     { retries: 0 },
     () => {
@@ -168,8 +181,7 @@ describe("Approval (notifications/notices)", () => {
     }
   );
 
-  itIf(
-    config("HAS_FINEOS_JANUARY_RELEASE") === "true",
+  it(
     "Check the Leave Admin email for the Cancellation notification.",
     { retries: 0 },
     () => {

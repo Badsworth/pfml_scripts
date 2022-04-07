@@ -1,4 +1,4 @@
-# This workflow automatically deploys changes to the monitoring modeule whenever the main branch is updated
+# This workflow automatically deploys changes to the monitoring module whenever the main branch is updated
 #
 #
 name: Monitoring Deploy

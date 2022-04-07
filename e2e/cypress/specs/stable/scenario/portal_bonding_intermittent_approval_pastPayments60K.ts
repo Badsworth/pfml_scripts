@@ -1,4 +1,3 @@
-import { itIf } from "./../../../util";
 import { portal, fineos, fineosPages } from "../../../actions";
 import { Submission } from "../../../../src/types";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
@@ -138,32 +137,21 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
     () => {
       cy.dependsOnPreviousPass([recordingHours]);
       fineos.before();
-      cy.unstash<DehydratedClaim>("claim").then((claim) => {
-        cy.unstash<Submission>("submission").then((submission) => {
-          const payment = claim.metadata
-            ?.expected_weekly_payment as unknown as number;
-          fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
-            (leaveCase) => {
-              if (config("HAS_FEB_RELEASE") === "true") {
-                leaveCase.assertAmountsPending([
-                  {
-                    net_payment_amount: 831.06,
-                    paymentProcessingDates: [
-                      calculatePaymentDatePreventingOP(),
-                    ],
-                  },
-                ]);
-              } else {
-                leaveCase.assertPaymentsMade([{ net_payment_amount: payment }]);
-              }
-            }
-          );
-        });
+      cy.unstash<Submission>("submission").then((submission) => {
+        fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
+          (leaveCase) => {
+            leaveCase.assertAmountsPending([
+              {
+                net_payment_amount: 831.06,
+                paymentProcessingDates: [calculatePaymentDatePreventingOP()],
+              },
+            ]);
+          }
+        );
       });
     }
   );
-  itIf(
-    config("HAS_FEB_RELEASE") === "true",
+  it(
     "CSR rep will override payment processing date to be schudeuled for day of approval",
     {},
     () => {

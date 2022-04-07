@@ -5,8 +5,6 @@ import SortDropdown, {
 import withUser, { WithUserProps } from "../../hoc/withUser";
 import Alert from "../../components/core/Alert";
 import Button from "../../components/core/Button";
-import DeprecatedPaginatedClaimsTable from "../../features/employer-dashboard/DeprecatedPaginatedClaimsTable";
-import Details from "../../components/core/Details";
 import EmployerNavigationTabs from "../../components/EmployerNavigationTabs";
 import Filters from "../../features/employer-dashboard/Filters";
 import { GetClaimsParams } from "../../api/ClaimsApi";
@@ -16,7 +14,6 @@ import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
 import { get } from "lodash";
 import isBlank from "../../utils/isBlank";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
@@ -27,13 +24,10 @@ export const Dashboard = (
 ) => {
   const { t } = useTranslation();
   const introElementRef = useRef<HTMLElement>(null);
-  const showMultiLeaveDash = isFeatureEnabled(
-    "employerShowMultiLeaveDashboard"
-  );
   const apiParams = {
     // Default the dashboard to show claims requiring action first
-    order_by: showMultiLeaveDash ? "latest_follow_up_date" : "absence_status",
-    order_direction: showMultiLeaveDash ? "descending" : "ascending",
+    order_by: "latest_follow_up_date",
+    order_direction: "descending",
     page_offset: 1,
     ...props.query,
   } as const;
@@ -68,9 +62,10 @@ export const Dashboard = (
     if (introElementRef.current) introElementRef.current.scrollIntoView();
   };
 
-  const PaginatedClaimsTableWithClaims = showMultiLeaveDash
-    ? withClaims(PaginatedClaimsTable, apiParams)
-    : withClaims(DeprecatedPaginatedClaimsTable, apiParams);
+  const PaginatedClaimsTableWithClaims = withClaims(
+    PaginatedClaimsTable,
+    apiParams
+  );
   const claimsTableProps = {
     updatePageQuery,
     getNextPageRoute: props.appLogic.portalFlow.getNextPageRoute,
@@ -114,31 +109,6 @@ export const Dashboard = (
         )}
       </div>
 
-      {!showMultiLeaveDash && (
-        <section className="margin-bottom-4 margin-top-2">
-          <Details
-            label={t("pages.employersDashboard.statusDescriptionsLabel")}
-          >
-            <ul className="usa-list">
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_reviewBy" />
-              </li>
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_noAction" />
-              </li>
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_denied" />
-              </li>
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_approved" />
-              </li>
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_closed" />
-              </li>
-            </ul>
-          </Details>
-        </section>
-      )}
       <section ref={introElementRef} className="margin-top-2">
         <Search
           initialValue={get(apiParams, "search", "")}

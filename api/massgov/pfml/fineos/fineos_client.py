@@ -1524,7 +1524,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
             models.AdditionalData(name="AbsenceCaseNumber", value=str(absence_id))
         )
         additional_data_set.additional_data.append(
-            models.AdditionalData(name="FlagValue", value=bool(tax_preference))
+            models.AdditionalData(name="FlagValue", value=str(tax_preference))
         )
 
         tax_data = models.TaxWithholdingUpdateData()

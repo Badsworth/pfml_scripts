@@ -60,7 +60,6 @@ import {
 import { DocumentUploadRequest } from "../../src/api";
 import { fineos } from ".";
 import { LeaveReason } from "../../src/generation/Claim";
-import { config } from "./common";
 import { FineosCorrespondanceType, FineosDocumentType } from "./fineos.enums";
 import { convertToTimeZone } from "date-fns-timezone";
 
@@ -2946,23 +2945,19 @@ export class ClaimantPage {
                   .applyStandardWorkWeek();
                 return absenceDetails.nextStep((wrapUp) => {
                   // tax withholdings
-                  if (
-                    config("FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION") ===
-                    "true"
-                  ) {
-                    fineos.waitForAjaxComplete();
-                    if (withholdingPreference) {
-                      cy.get(
-                        "input[type='checkbox'][name$='_somSITFITOptIn_CHECKBOX']"
-                      ).click();
-                    }
-                    // must be selected to proceed
+                  fineos.waitForAjaxComplete();
+                  if (withholdingPreference) {
                     cy.get(
-                      "input[type='checkbox'][name$='_somSITFITVerification_CHECKBOX']"
+                      "input[type='checkbox'][name$='_somSITFITOptIn_CHECKBOX']"
                     ).click();
-
-                    fineos.waitForAjaxComplete();
                   }
+                  // must be selected to proceed
+                  cy.get(
+                    "input[type='checkbox'][name$='_somSITFITVerification_CHECKBOX']"
+                  ).click();
+
+                  fineos.waitForAjaxComplete();
+
                   // Fill military Caregiver description if needed.
                   if (reason === "Military Caregiver")
                     absenceDetails.addMilitaryCaregiverDescription();

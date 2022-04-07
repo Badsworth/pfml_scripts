@@ -1,11 +1,9 @@
 import { fineos, fineosPages, portal, email } from "../../../actions";
 import { Submission } from "../../../../src/types";
 import { getClaimantCredentials } from "../../../config";
-import { describeIf } from "../../../util";
 import { config } from "../../../actions/common";
 
-describeIf(
-  config("HAS_FINEOS_JANUARY_RELEASE") === "true",
+describe(
   "Create a new caring leave claim in API submission and add Historical Absence case",
   {},
   () => {

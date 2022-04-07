@@ -1,24 +1,22 @@
 import BaseBenefitsApplication, {
   BaseLeavePeriod,
 } from "./BaseBenefitsApplication";
-import {
-  ManagedRequirement,
-  getSoonestReviewableManagedRequirement,
-} from "../models/ManagedRequirement";
 import { AbsencePeriod } from "./AbsencePeriod";
 import Address from "./Address";
 import ConcurrentLeave from "./ConcurrentLeave";
 import EmployerBenefit from "./EmployerBenefit";
 import { IntermittentLeavePeriod } from "./BenefitsApplication";
+import { ManagedRequirement } from "../models/ManagedRequirement";
 import PreviousLeave from "./PreviousLeave";
 import isBlank from "../utils/isBlank";
+import { isReviewable } from "src/utils/isReviewable";
 import { merge } from "lodash";
 
 /**
  * This model represents a Claim record that is formed from data directly pulled
  * from the Claims Processing System (CPS). This should not be confused with a record
  * from the API's Claims table, which is represented by the Claim model.
- * TODO (EMPLOYER-1130): Rename this model to clarify this nuance.
+ * TODO (PORTAL-477): Rename this model to clarify this nuance.
  */
 class EmployerClaim extends BaseBenefitsApplication {
   absence_periods: AbsencePeriod[];
@@ -66,8 +64,12 @@ class EmployerClaim extends BaseBenefitsApplication {
     );
   }
 
+  /**
+   * Note we use a utility method to share logic across EmployerClaim and Claim
+   * until such time where we combine these methods (PORTAL-477 pending)
+   */
   get is_reviewable() {
-    return !!getSoonestReviewableManagedRequirement(this.managed_requirements);
+    return isReviewable(this.absence_periods, this.managed_requirements);
   }
 
   get lastReviewedAt(): string | undefined {
