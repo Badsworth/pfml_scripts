@@ -777,7 +777,9 @@ def payment_preference_submit(application_id: UUID) -> Response:
 
                 logger.info("payment_preference_submit success", extra=log_attributes)
 
-                issues, employer_issue = get_all_application_issues(db_session, existing_application)
+                issues, employer_issue = get_all_application_issues(
+                    db_session, existing_application
+                )
                 if employer_issue:
                     issues.append(employer_issue)
 
@@ -845,12 +847,17 @@ def validate_tax_withholding_request(db_session, application_id, tax_preference_
             ]
         )
 
-    allow_multiple_tax_withholding_updates = tax_preference_body.skip_fineos if not existing_application.submitted_time else False
+    allow_multiple_tax_withholding_updates = (
+        tax_preference_body.skip_fineos if not existing_application.submitted_time else False
+    )
 
-    # only allows multiple updates to tax withholding 
-    # if we're in the additional user not found flow 
+    # only allows multiple updates to tax withholding
+    # if we're in the additional user not found flow
     # and the claimant hasn't submitted part 1 yet
-    if not allow_multiple_tax_withholding_updates and existing_application.is_withholding_tax is not None:
+    if (
+        not allow_multiple_tax_withholding_updates
+        and existing_application.is_withholding_tax is not None
+    ):
         # otherwise, block further updates to tax withholding
         logger.info(
             "submit_tax_withholding_preference failure - preference already set",

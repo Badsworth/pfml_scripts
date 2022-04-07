@@ -639,11 +639,40 @@ def get_conditional_issues(application: Application) -> List[ValidationErrorDeta
     # can safely enforce these validation rules across all in-progress claims
     require_other_leaves_fields = not application.submitted_time
 
-    if (
-        application.additional_user_not_found_info is not None
-        and application.additional_user_not_found_info.currently_employed is False
-    ):
-        if not application.additional_user_not_found_info.date_of_separation:
+    if application.additional_user_not_found_info is not None:
+        if not application.additional_user_not_found_info.employer_name:
+            issues.append(
+                ValidationErrorDetail(
+                    type=IssueType.required,
+                    rule=IssueRule.conditional,
+                    message="additional_user_not_found_info.employer_name",
+                    field="additional_user_not_found_info.employer_name",
+                )
+            )
+
+        if not application.additional_user_not_found_info.date_of_hire:
+            issues.append(
+                ValidationErrorDetail(
+                    type=IssueType.required,
+                    rule=IssueRule.conditional,
+                    message="additional_user_not_found_info.date_of_hire",
+                    field="additional_user_not_found_info.date_of_hire",
+                )
+            )
+
+        if application.additional_user_not_found_info.currently_employed is None:
+            issues.append(
+                ValidationErrorDetail(
+                    type=IssueType.required,
+                    rule=IssueRule.conditional,
+                    message="additional_user_not_found_info.currently_employed",
+                    field="additional_user_not_found_info.currently_employed",
+                )
+            )
+        elif (
+            application.additional_user_not_found_info.currently_employed is False
+            and not application.additional_user_not_found_info.date_of_separation
+        ):
             issues.append(
                 ValidationErrorDetail(
                     type=IssueType.required,
@@ -923,9 +952,6 @@ def get_payments_issues(application: Application) -> List[ValidationErrorDetail]
 # Because the DB schema and the API schema differ
 ALWAYS_REQUIRED_FIELDS_DB_NAME_TO_API_NAME_MAP = {
     "date_of_birth": "date_of_birth",
-    "additional_user_not_found_info.currently_employed": "additional_user_not_found_info.currently_employed",
-    "additional_user_not_found_info.date_of_hire": "additional_user_not_found_info.date_of_hire",
-    "additional_user_not_found_info.employer_name": "additional_user_not_found_info.employer_name",
     "employer_notified": "leave_details.employer_notified",
     "employment_status_id": "employment_status",
     "first_name": "first_name",

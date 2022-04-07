@@ -20,16 +20,11 @@ export const DateOfHire = (props: WithBenefitsApplicationProps) => {
   const { t } = useTranslation();
 
   const { formState, updateFields } = useFormState(
-    pick(props, fields).claim?.additional_user_not_found_info
+    pick(props, ["claim.additional_user_not_found_info"]).claim
   );
 
   const handleSave = () =>
-    appLogic.benefitsApplications.update(claim.application_id, {
-      additional_user_not_found_info: {
-        ...claim?.additional_user_not_found_info,
-        ...formState,
-      },
-    });
+    appLogic.benefitsApplications.update(claim.application_id, formState);
 
   const getFunctionalInputProps = useFunctionalInputProps({
     errors: appLogic.errors,
@@ -43,7 +38,7 @@ export const DateOfHire = (props: WithBenefitsApplicationProps) => {
       onSave={handleSave}
     >
       <InputDate
-        {...getFunctionalInputProps("date_of_hire")}
+        {...getFunctionalInputProps("additional_user_not_found_info.date_of_hire")}
         label={t("pages.claimsAdditionalUserNotFoundInfo.dateOfHireLabel")}
         example={t("components.form.dateInputExample")}
         dayLabel={t("components.form.dateInputDayLabel")}

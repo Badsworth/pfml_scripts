@@ -26,17 +26,11 @@ export const DateOfSeparation = (props: WithBenefitsApplicationProps) => {
   const { t } = useTranslation();
 
   const { clearField, formState, getField, updateFields } = useFormState(
-    pick(props, fields).claim?.additional_user_not_found_info
+    pick(props, ["claim.additional_user_not_found_info"]).claim
   );
 
   const handleSave = () =>
-    appLogic.benefitsApplications.update(claim.application_id, {
-      additional_user_not_found_info: {
-        ...claim?.additional_user_not_found_info,
-        currently_employed: formState.currently_employed,
-        date_of_separation: formState.date_of_separation,
-      },
-    });
+    appLogic.benefitsApplications.update(claim.application_id, formState);
 
   const getFunctionalInputProps = useFunctionalInputProps({
     errors: appLogic.errors,
@@ -44,7 +38,7 @@ export const DateOfSeparation = (props: WithBenefitsApplicationProps) => {
     updateFields,
   });
 
-  const currently_employed = get(formState, "currently_employed");
+  const currently_employed = get(formState, "additional_user_not_found_info.currently_employed");
 
   return (
     <QuestionPage
@@ -53,7 +47,7 @@ export const DateOfSeparation = (props: WithBenefitsApplicationProps) => {
     >
       <Fieldset>
         <InputChoiceGroup
-          {...getFunctionalInputProps("currently_employed")}
+          {...getFunctionalInputProps("additional_user_not_found_info.currently_employed")}
           choices={[
             {
               checked: currently_employed === true,
@@ -77,13 +71,13 @@ export const DateOfSeparation = (props: WithBenefitsApplicationProps) => {
         />
         <ConditionalContent
           clearField={clearField}
-          fieldNamesClearedWhenHidden={["date_of_separation"]}
+          fieldNamesClearedWhenHidden={["additional_user_not_found_info.date_of_separation"]}
           getField={getField}
           updateFields={updateFields}
           visible={currently_employed === false}
         >
           <InputDate
-            {...getFunctionalInputProps("date_of_separation")}
+            {...getFunctionalInputProps("additional_user_not_found_info.date_of_separation")}
             label={t(
               "pages.claimsAdditionalUserNotFoundInfo.dateOfSeparationLabel"
             )}
