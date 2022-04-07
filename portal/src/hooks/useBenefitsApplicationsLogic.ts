@@ -317,12 +317,12 @@ const useBenefitsApplicationsLogic = ({
       setBenefitsApplication(claim);
       setClaimWarnings(application_id, warnings);
 
-      const issues = getRelevantIssues([], warnings, []);
+      const issues = getRelevantIssues([], warnings, [portalFlow.page]);
       if (issues.length) {
         throw new ValidationError(issues);
       }
 
-      const context = { claim };
+      const context = { claim, warnings };
       const params: NullableQueryParams = {
         claim_id: claim.application_id,
         "tax-pref-submitted": "true",

@@ -95,11 +95,9 @@ def application_get(application_id):
         # steps as incomplete, and they wouldn't be able to fix this.
         issues = []
         if not existing_application.submitted_time:
-            issues += application_rules.get_application_submit_issues(existing_application)
-            if employment_issue := get_contributing_employer_or_employee_issue(
-                db_session, existing_application.employer_fein, existing_application.tax_identifier
-            ):
-                issues.append(employment_issue)
+            issues, employer_issue = get_all_application_issues(db_session, existing_application)
+            if employer_issue:
+                issues.append(employer_issue)
 
     return response_util.success_response(
         message="Successfully retrieved application",
@@ -323,10 +321,9 @@ def applications_update(application_id):
             db_session, application_request, existing_application
         )
 
-    issues = application_rules.get_application_submit_issues(existing_application)
-    employer_issue = get_contributing_employer_or_employee_issue(
-        db_session, existing_application.employer_fein, existing_application.tax_identifier
-    )
+        issues, employer_issue = get_all_application_issues(db_session, existing_application)
+        if employer_issue:
+            issues.append(employer_issue)
 
     # Set log attributes to the updated attributes rather than the previous attributes
     # Also, calling get_application_log_attributes too early causes the application not to update properly for some reason
@@ -334,8 +331,6 @@ def applications_update(application_id):
     log_attributes = get_application_log_attributes(existing_application)
 
     if employer_issue:
-        issues.append(employer_issue)
-
         # If either SSN or FEIN have been recently updated
         # and an "employer_issue" occurred, it counts as an attempt
         if (
@@ -463,11 +458,7 @@ def applications_submit(application_id):
 
         log_attributes = get_application_log_attributes(existing_application)
 
-        issues = application_rules.get_application_submit_issues(existing_application)
-        employer_issue = get_contributing_employer_or_employee_issue(
-            db_session, existing_application.employer_fein, existing_application.tax_identifier
-        )
-
+        issues, employer_issue = get_all_application_issues(db_session, existing_application)
         if employer_issue:
             issues.append(employer_issue)
 
@@ -847,7 +838,13 @@ def validate_tax_withholding_request(db_session, application_id, tax_preference_
             ]
         )
 
-    if existing_application.is_withholding_tax is not None:
+    allow_multiple_tax_withholding_updates = tax_preference_body.skip_fineos if not existing_application.submitted_time else False
+
+    # only allows multiple updates to tax withholding 
+    # if we're in the additional user not found flow 
+    # and the claimant hasn't submitted part 1 yet
+    if not allow_multiple_tax_withholding_updates and existing_application.is_withholding_tax is not None:
+        # otherwise, block further updates to tax withholding
         logger.info(
             "submit_tax_withholding_preference failure - preference already set",
             extra=get_application_log_attributes(existing_application),
@@ -904,14 +901,24 @@ def submit_tax_withholding_preference(application_id: UUID) -> Response:
             "tax_withholding_preference_submit success",
             extra=log_attributes,
         )
-        employer_issue = get_contributing_employer_or_employee_issue(
-            db_session, existing_application.employer_fein, existing_application.tax_identifier
-        )
+
+        issues, employer_issue = get_all_application_issues(db_session, existing_application)
+        if employer_issue:
+            issues.append(employer_issue)
+
         return response_util.success_response(
             message="Tax Withholding Preference for application {} submitted without errors".format(
                 existing_application.application_id
             ),
             data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
-            warnings=[employer_issue] if employer_issue else [],
+            warnings=issues,
             status_code=201,
         ).to_api_response()
+
+
+def get_all_application_issues(db_session: db.Session, existing_application: Application):
+    issues = application_rules.get_application_submit_issues(existing_application)
+    employer_issue = get_contributing_employer_or_employee_issue(
+        db_session, existing_application.employer_fein, existing_application.tax_identifier
+    )
+    return issues, employer_issue

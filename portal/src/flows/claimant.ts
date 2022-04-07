@@ -114,7 +114,7 @@ export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
           warning.type === "require_contributing_employer" ||
           warning.rule === "require_non_exempt_employer" ||
           warning.rule === "require_employee"
-      ) && get(claim, "status") !== "In Review"
+      ) && get(claim, "status") !== "In Review" && get(claim, "status") !== "Submitted"
     );
   },
   isSubmittedApplicationSplit: ({ claim }) =>

@@ -143,6 +143,7 @@ def get_application_log_attributes(application: Application) -> Dict[str, Option
     )
     result.update(get_employer_benefits_log_attributes(application.employer_benefits))
     result.update(get_other_incomes_log_attributes(application.other_incomes))
+    # todo? add additional user not found log attributes?
 
     return result
 
