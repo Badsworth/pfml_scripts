@@ -24,7 +24,7 @@ gunicorn = { version = "^20.0.4", optional = true }
 # pins lxml dependency to version that addresses CVE-2021-28957.
 lxml = { version = "^4.6.5", optional = true }
 newrelic = "~6.4.0.157"
-paramiko = "^2.7.2"
+paramiko = "^2.10.1"
 phonenumbers = "^8.12.13"
 psycopg2-binary = "^2.8.5"
 puremagic = "^1.10"
