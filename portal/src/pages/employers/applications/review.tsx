@@ -253,9 +253,7 @@ export const Review = (props: WithEmployerClaimProps) => {
     );
 
     if (updatedLeave.type === PreviousLeaveType.sameReason) {
-      updatedLeave.leave_reason = leaveReasonToPreviousLeaveReason(
-        claim.leave_details.reason
-      );
+      updatedLeave.leave_reason = leaveReasonToPreviousLeaveReason("");
     } else if (
       updatedLeave.type === PreviousLeaveType.otherReason &&
       // leave admin did not cancel amendment.
