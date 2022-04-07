@@ -19,10 +19,10 @@ resource "aws_lambda_function" "iam_refresh" {
 
 data "archive_file" "iam_refresh" {
   type        = "zip"
-  output_path = "./.zip/lambda_functions.zip"
+  output_path = "./.zip/aws_iam_refresh.zip"
 
   source {
     filename = ".py"
-    content  = file("./lambda_functions.py")
+    content  = file("./aws_iam_refresh.py")
   }
 }
