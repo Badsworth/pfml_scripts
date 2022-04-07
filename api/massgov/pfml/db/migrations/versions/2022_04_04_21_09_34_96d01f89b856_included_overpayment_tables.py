@@ -1,7 +1,7 @@
 """included overpayment tables
 
 Revision ID: 96d01f89b856
-Revises: 60419262fc32
+Revises: 3fbc57dc3880
 Create Date: 2022-04-04 21:09:34.870994
 
 """
@@ -11,7 +11,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = "96d01f89b856"
-down_revision = "60419262fc32"
+down_revision = "3fbc57dc3880"
 branch_labels = None
 depends_on = None
 
