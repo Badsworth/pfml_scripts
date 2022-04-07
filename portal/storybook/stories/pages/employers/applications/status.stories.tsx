@@ -49,7 +49,7 @@ export const Default = ({
   document: string;
   leaveDurationType: string;
 }) => {
-  let claimBuilder = new MockEmployerClaimBuilder());
+  let claimBuilder = new MockEmployerClaimBuilder();
 
   if (leaveDurationType.includes("Continuous")) {
     claimBuilder = claimBuilder.continuousAbsencePeriod();
