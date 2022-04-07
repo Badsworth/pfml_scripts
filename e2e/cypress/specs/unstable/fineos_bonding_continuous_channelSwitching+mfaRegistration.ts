@@ -1,8 +1,8 @@
 import { Submission } from "types";
 import { assertValidClaim } from "util/typeUtils";
-import { fineos, fineosPages, portal } from "../../../actions";
-import { config } from "../../../actions/common";
-import { describeIf, getTwilioNumber, itIf } from "../../../util";
+import { fineos, fineosPages, portal } from "../../actions";
+import { config } from "../../actions/common";
+import { describeIf, getTwilioNumber, itIf } from "../../util";
 import { add, format } from "date-fns";
 import faker from "faker";
 

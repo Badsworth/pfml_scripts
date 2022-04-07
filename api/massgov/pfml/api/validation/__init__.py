@@ -187,7 +187,7 @@ def convert_pydantic_error_to_validation_exception(
 
         errors.append(
             ValidationErrorDetail(
-                type=err_type,
+                type=err_type,  # type: ignore
                 message=f'Error in field: "{err_field}". {err_message.capitalize()}.',
                 rule=None,
                 field=".".join(str(loc) for loc in e["loc"]),

@@ -1,9 +1,6 @@
-import { portal } from "../../../actions";
-import { assertValidClaim } from "../../../../src/util/typeUtils";
-import {
-  DashboardClaimStatus,
-  FilterOptionsFlags,
-} from "../../../actions/portal";
+import { portal } from "../../actions";
+import { assertValidClaim } from "../../../src/util/typeUtils";
+import { DashboardClaimStatus, FilterOptionsFlags } from "../../actions/portal";
 
 describe("Employer dashboard", () => {
   after(() => {

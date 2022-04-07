@@ -388,7 +388,7 @@ def test_run_step_no_employee(claimant_extract_step, test_db_session):
 
     assert len(claim.state_logs) == 1
     assert claim.state_logs[0].outcome["validation_container"]["validation_issues"] == [
-        {"reason": "MissingInDB", "details": claimant_data.ssn, "field_name": "tax_identifier"},
+        {"reason": "MissingInDB", "details": claimant_data.ssn, "field_name": "employee"},
         {
             "reason": "MissingInDB",
             "details": claimant_data.employer_customer_num,
