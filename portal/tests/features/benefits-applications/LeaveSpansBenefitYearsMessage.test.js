@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import LeaveSpansBenefitYearsMessage from "src/components/LeaveSpansBenefitYearsMessage";
+import LeaveSpansBenefitYearsMessage from "src/features/benefits-applications/LeaveSpansBenefitYearsMessage";
 import React from "react";
 import applicationSplitBuilder from "lib/mock-helpers/createMockApplicationSplit";
 

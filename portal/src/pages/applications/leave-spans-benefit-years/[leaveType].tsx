@@ -1,4 +1,4 @@
-import { LeaveSpansBenefitYearInterstitial } from "src/features/benefits-application/LeaveSpansBenefitYearsInterstitial";
+import { LeaveSpansBenefitYearInterstitial } from "src/features/benefits-applications/LeaveSpansBenefitYearsInterstitial";
 import withBenefitsApplication from "src/hoc/withBenefitsApplication";
 
 export default withBenefitsApplication(LeaveSpansBenefitYearInterstitial);

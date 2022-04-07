@@ -1,6 +1,6 @@
 import BackButton from "src/components/BackButton";
 import ButtonLink from "src/components/ButtonLink";
-import LeaveSpansBenefitYearsMessage from "src/components/LeaveSpansBenefitYearsMessage";
+import LeaveSpansBenefitYearsMessage from "src/features/benefits-applications/LeaveSpansBenefitYearsMessage";
 import React from "react";
 import Spinner from "src/components/core/Spinner";
 import Title from "src/components/core/Title";

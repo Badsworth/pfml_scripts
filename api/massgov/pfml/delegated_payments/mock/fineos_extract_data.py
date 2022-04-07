@@ -364,11 +364,6 @@ class FineosPaymentData(MockData):
             employee_feed_record["NATINSNO"] = self.ssn
             employee_feed_record["DATEOFBIRTH"] = self.date_of_birth
             employee_feed_record["PAYMENTMETHOD"] = self.payment_method
-            employee_feed_record["ADDRESS1"] = self.address_1
-            employee_feed_record["ADDRESS2"] = self.address_2
-            employee_feed_record["ADDRESS4"] = self.city
-            employee_feed_record["ADDRESS6"] = self.state
-            employee_feed_record["POSTCODE"] = self.zip_code
             employee_feed_record["SORTCODE"] = self.routing_nbr
             employee_feed_record["ACCOUNTNO"] = self.account_nbr
             employee_feed_record["ACCOUNTTYPE"] = self.account_type

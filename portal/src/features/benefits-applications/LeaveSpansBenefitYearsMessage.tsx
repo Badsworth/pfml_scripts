@@ -35,11 +35,10 @@ export const LeaveSpansBenefitYearsMessage = (
       .application_outside_benefit_year_submittable_on;
 
   const currentBenefitYearStartDate =
-    props.computed_application_split?.crossed_benefit_year
+    props.computed_application_split.crossed_benefit_year
       .benefit_year_start_date;
   const currentBenefitYearEndDate =
-    props.computed_application_split?.crossed_benefit_year
-      .benefit_year_end_date;
+    props.computed_application_split.crossed_benefit_year.benefit_year_end_date;
 
   const today = dayjs().format("YYYY-MM-DD");
   const firstCanBeSubmitted = firstLeaveEarliestSubmissionDate <= today;

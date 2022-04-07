@@ -489,7 +489,7 @@ def build_contact_details(
                 massgov.pfml.fineos.models.customer_api.PhoneNumber(
                     areaCode=area_code,
                     id=application.phone.fineos_phone_id,
-                    intCode=int_code,
+                    intCode=str(int_code),
                     telephoneNo=telephone_no,
                     phoneNumberType=phone_number_type,
                 )
@@ -1619,6 +1619,9 @@ def convert_change_request_to_fineos_model(
 
     is_withdrawal = change_request_type == ChangeRequestType.WITHDRAWAL.description
     if is_withdrawal:
+        assert claim.absence_period_start_date
+        assert claim.absence_period_end_date
+
         # A withdrawal removes all dates from a claim
         return LeavePeriodChangeRequest(
             reason=ChangeRequestReason(fullId=0, name="Employee Requested Removal"),
@@ -1637,7 +1640,7 @@ def convert_change_request_to_fineos_model(
             additionalNotes="Medical to bonding transition",
             changeRequestPeriods=[
                 ChangeRequestPeriod(
-                    startDate=change_request.start_date, endDate=change_request.end_date
+                    startDate=change_request.start_date, endDate=change_request.end_date  # type: ignore
                 )
             ],
         )
@@ -1653,7 +1656,7 @@ def convert_change_request_to_fineos_model(
             additionalNotes="Extension",
             changeRequestPeriods=[
                 ChangeRequestPeriod(
-                    startDate=change_request.start_date, endDate=change_request.end_date
+                    startDate=change_request.start_date, endDate=change_request.end_date  # type: ignore
                 )
             ],
         )
@@ -1664,8 +1667,6 @@ def convert_change_request_to_fineos_model(
         and change_request.end_date < claim.absence_period_end_date
     )
     if is_cancellation:
-        assert change_request.end_date
-
         # In FINEOS, a cancellation means you are removing time.
         # So the date range represents the dates that will be removed from leave
         return LeavePeriodChangeRequest(
@@ -1673,8 +1674,8 @@ def convert_change_request_to_fineos_model(
             additionalNotes="Cancellation",
             changeRequestPeriods=[
                 ChangeRequestPeriod(
-                    startDate=change_request.end_date + datetime.timedelta(days=1),
-                    endDate=claim.absence_period_end_date,
+                    startDate=change_request.end_date + datetime.timedelta(days=1),  # type: ignore
+                    endDate=claim.absence_period_end_date,  # type: ignore
                 )
             ],
         )

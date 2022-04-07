@@ -103,7 +103,7 @@ export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.fixed,
   isVariableWorkPattern: ({ claim }) =>
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.variable,
-  leaveDatesCrossBenefitYears: ({ claim }) =>
+  doLeaveDatesCrossBenefitYears: ({ claim }) =>
     isFeatureEnabled("splitClaimsAcrossBY") &&
     claim !== undefined &&
     claim.computed_application_split !== null,
@@ -330,7 +330,7 @@ const claimantFlow: {
         CONTINUE: [
           {
             target: routes.applications.leaveSpansBenefitYearsReduced,
-            cond: "leaveDatesCrossBenefitYears",
+            cond: "doLeaveDatesCrossBenefitYears",
           },
           {
             target: routes.applications.leavePeriodIntermittent,
@@ -423,7 +423,7 @@ const claimantFlow: {
         CONTINUE: [
           {
             target: routes.applications.leaveSpansBenefitYearsContinuous,
-            cond: "leaveDatesCrossBenefitYears",
+            cond: "doLeaveDatesCrossBenefitYears",
           },
           {
             target: routes.applications.leavePeriodReducedSchedule,
@@ -487,7 +487,7 @@ const claimantFlow: {
         CONTINUE: [
           {
             target: routes.applications.leaveSpansBenefitYearsIntermittent,
-            cond: "leaveDatesCrossBenefitYears",
+            cond: "doLeaveDatesCrossBenefitYears",
           },
           {
             target: routes.applications.checklist,

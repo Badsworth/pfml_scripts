@@ -1,7 +1,7 @@
 import { MockBenefitsApplicationBuilder, renderPage } from "tests/test-utils";
 import { AppLogic } from "src/hooks/useAppLogic";
 import BenefitsApplication from "src/models/BenefitsApplication";
-import LeaveSpansBenefitYearsInterstitial from "src/features/benefits-application/LeaveSpansBenefitYearsInterstitial";
+import LeaveSpansBenefitYearsInterstitial from "src/features/benefits-applications/LeaveSpansBenefitYearsInterstitial";
 import applicationSplitBuilder from "lib/mock-helpers/createMockApplicationSplit";
 import routes from "src/routes";
 import { screen } from "@testing-library/react";

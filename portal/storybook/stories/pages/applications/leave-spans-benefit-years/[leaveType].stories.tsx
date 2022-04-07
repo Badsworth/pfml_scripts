@@ -1,4 +1,4 @@
-import LeaveSpansBenefitYearsInterstitial from "src/features/benefits-application/LeaveSpansBenefitYearsInterstitial";
+import LeaveSpansBenefitYearsInterstitial from "src/features/benefits-applications/LeaveSpansBenefitYearsInterstitial";
 import { MockBenefitsApplicationBuilder } from "lib/mock-helpers/mock-model-builder";
 import React from "react";
 import User from "src/models/User";
