@@ -19,28 +19,32 @@ class MFAUpdatedBy(Enum):
     ADMIN = MFADeliveryPreferenceUpdatedBy.ADMIN.description.lower()
 
 
-def handle_mfa_enabled(cognito_auth_token: str) -> None:
-    """Helper method for handling necessary actions after MFA is enabled for a user. This handles
-    logging and enabling MFA in Cognito"""
-
-    logger.info("MFA enabled for user")
-
+def enable_mfa(cognito_auth_token: str) -> None:
     try:
         cognito.enable_user_mfa(cognito_auth_token)
     except Exception as error:
         logger.error("Error enabling MFA", exc_info=error)
         raise error
 
+    logger.info("MFA enabled in Cognito")
+
+
+def disable_mfa(cognito_auth_token: str) -> None:
+    try:
+        cognito.disable_user_mfa(cognito_auth_token)
+    except Exception as error:
+        logger.error("Error disabling MFA", exc_info=error)
+        raise error
+
+    logger.info("MFA disabled in Cognito")
+
 
 def handle_mfa_disabled(
     user: User,
     last_enabled_at: Optional[datetime],
-    # todo (PORTAL-1828): Remove X-FF-Sync-Cognito-Preferences feature flag header
-    save_to_cognito: bool,
-    cognito_auth_token: str,
 ) -> None:
-    """Helper method for handling necessary actions after MFA is disabled for a user. This handles logging,
-    sending an MFA disabled email, and optionally disabling MFA in Cognito"""
+    """Helper method for handling necessary side-effect actions after MFA is disabled for a user.
+    This handles some logging used in our metrics dashboard and sending an MFA disabled email."""
     # These values should always be set by the time a user disables MFA but the
     # linter doesn't know that. This prevents a linter failure
     assert user.email_address
@@ -48,13 +52,9 @@ def handle_mfa_disabled(
 
     updated_by = MFAUpdatedBy.USER
     log_attributes = _collect_log_attributes(updated_by, last_enabled_at)
-    log_attributes.update({"save_to_cognito": save_to_cognito})
     logger.info("MFA disabled for user", extra=log_attributes)
 
     try:
-        if save_to_cognito:
-            cognito.disable_user_mfa(cognito_auth_token)
-
         if app.get_config().environment == "local" and app.get_config().disable_sending_emails:
             logger.info(
                 "Skipping updating Cognito or sending an MFA disabled notification email",
@@ -63,7 +63,7 @@ def handle_mfa_disabled(
         else:
             _send_mfa_disabled_email(user.email_address, user.mfa_phone_number_last_four())
     except Exception as error:
-        logger.error("Error disabling user MFA", exc_info=error)
+        logger.error("Error sending MFA disabled email", exc_info=error)
         raise error
 
 

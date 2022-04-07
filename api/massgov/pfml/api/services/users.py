@@ -3,6 +3,7 @@ from typing import Optional, cast
 
 import massgov.pfml.db as db
 import massgov.pfml.db.lookups as db_lookups
+import massgov.pfml.mfa as mfa
 import massgov.pfml.util.logging
 from massgov.pfml.api.models.users.requests import UserUpdateRequest
 from massgov.pfml.db.models.employees import (
@@ -11,12 +12,7 @@ from massgov.pfml.db.models.employees import (
     MFADeliveryPreference,
     User,
 )
-from massgov.pfml.mfa import (
-    MFAUpdatedBy,
-    handle_mfa_disabled,
-    handle_mfa_disabled_by_admin,
-    handle_mfa_enabled,
-)
+from massgov.pfml.mfa import MFAUpdatedBy
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -84,12 +80,27 @@ def _update_mfa_preference(
     }
     logger.info("MFA preference updated for user in DB", extra=log_attributes)
 
+    if save_mfa_preference_to_cognito:
+        _update_mfa_in_cognito(value, cognito_auth_token)
+
     if value == "Opt Out" and existing_mfa_preference is not None:
-        handle_mfa_disabled(
-            user, last_updated_at, save_mfa_preference_to_cognito, cognito_auth_token
-        )
-    elif value == "SMS" and save_mfa_preference_to_cognito:
-        handle_mfa_enabled(cognito_auth_token)
+        # Try to handle MFA side-effects but don't fail the API request if there is a problem. This allows
+        # the DB changes to be committed even if we fail to send the MFA disabled email so that the DB stays
+        # consistent with Cognito
+        try:
+            mfa.handle_mfa_disabled(user, last_updated_at)
+        except Exception as error:
+            logger.error(
+                "Failed to handle MFA disabled. This failure does not block the API request",
+                exc_info=error,
+            )
+
+
+def _update_mfa_in_cognito(value, cognito_auth_token):
+    if value == "SMS":
+        mfa.enable_mfa(cognito_auth_token)
+    elif value == "Opt Out":
+        mfa.disable_mfa(cognito_auth_token)
 
 
 def _update_mfa_preference_audit_trail(
@@ -138,4 +149,4 @@ def admin_disable_mfa(
     }
     logger.info("MFA disabled for user", extra=log_attributes)
 
-    handle_mfa_disabled_by_admin(user, last_updated_at)
+    mfa.handle_mfa_disabled_by_admin(user, last_updated_at)
