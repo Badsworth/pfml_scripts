@@ -72,7 +72,7 @@ from massgov.pfml.fineos.transforms.to_fineos.eforms.employee import (
     PreviousLeavesEFormBuilder,
 )
 from massgov.pfml.util.config import get_env_bool
-from massgov.pfml.util.datetime import convert_minutes_to_hours_minutes
+from massgov.pfml.util.datetime import convert_minutes_to_hours_minutes, utcnow
 from massgov.pfml.util.logging.applications import get_application_log_attributes
 
 logger = logging.get_logger(__name__)
@@ -1607,6 +1607,8 @@ def submit_change_request(
     fineos.create_or_update_leave_period_change_request(
         fineos_web_id, absence_id, fineos_change_request
     )
+
+    change_request.submitted_time = utcnow()
 
     return change_request
 
