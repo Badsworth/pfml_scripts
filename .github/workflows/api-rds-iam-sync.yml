@@ -23,8 +23,8 @@ on:
   # INFRA-764 adjusted cron schedule
   # Start: Mondays at 10:00-14:00 ET, every half hour
 
-  schedule:
-    - cron: '0,30 10-14 * * MON'
+  # schedule:
+  #   - cron: '0,30 10-14 * * MON'
 
 env:
   working-directory: ./infra/api/environments/
