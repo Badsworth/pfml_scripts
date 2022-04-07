@@ -14,7 +14,7 @@ from massgov.pfml.db.models.applications import (
     RMVCheck,
 )
 from massgov.pfml.db.models.azure import AzurePermission
-from massgov.pfml.db.models.employees import Employee, Role, User
+from massgov.pfml.db.models.employees import Role, User
 from massgov.pfml.util.users import has_role_in
 
 
@@ -57,7 +57,7 @@ def administrator(azure_user: AzureUser, they: RuleList) -> None:
 
 def leave_admins(user: User, they: RuleList) -> None:
     if has_role_in(user, [Role.EMPLOYER]):
-        they.can((EDIT, READ), "EMPLOYER_API")
+        they.can(EDIT, "EMPLOYER_API")
 
 
 def financial_eligibility(user: User, they: RuleList) -> None:
@@ -118,7 +118,7 @@ def users(user: User, they: RuleList) -> None:
 
 
 def employees(user: User, they: RuleList) -> None:
-    they.can(READ, Employee)
+    return None
 
 
 def applications(user: User, they: RuleList) -> None:
