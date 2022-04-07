@@ -811,13 +811,6 @@ const claimantFlow: {
             target: routes.applications.success,
             cond: "isCompleted",
           },
-          // If a user filled out the application correctly, then modified
-          // the SSN to something that doesn't match, then reviews and confirms.
-          // Check the error message in this situation.
-          // {
-          //   target: routes.applications.noMatchFound,
-          //   cond: "includesNoEmployeeFoundError",
-          // },
           {
             target: routes.applications.index,
             cond: "isSubmittedApplicationSplit",
