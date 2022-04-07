@@ -90,12 +90,21 @@ describeIf(
                   },
                 ],
               });
-              leaveCase.assertOverpaymentRecord({
-                status: "Pending Recovery",
-                adjustment: 0,
-                amount: OTHER_BENEFIT_AMOUNT,
-                outstandingAmount: OTHER_BENEFIT_AMOUNT,
-              });
+              if (config("HAS_APRIL_UPGRADE") === "true") {
+                leaveCase.assertOverpaymentRecordUpgrade({
+                  status: "Pending Recovery",
+                  adjustment: 0,
+                  amount: OTHER_BENEFIT_AMOUNT,
+                  outstandingAmount: OTHER_BENEFIT_AMOUNT,
+                });
+              } else {
+                leaveCase.assertOverpaymentRecord({
+                  status: "Pending Recovery",
+                  adjustment: 0,
+                  amount: OTHER_BENEFIT_AMOUNT,
+                  outstandingAmount: OTHER_BENEFIT_AMOUNT,
+                });
+              }
             })
             .tasks((tasks) => {
               tasks.assertIsAssignedToDepartment(
@@ -106,7 +115,8 @@ describeIf(
             .paidLeave((paidLeave) => {
               const recoveryPlanPage = paidLeave.createRecoveryPlan(
                 OTHER_BENEFIT_AMOUNT,
-                "Reimbursement"
+                "Reimbursement",
+                config("HAS_APRIL_UPGRADE") === "true"
               );
               recoveryPlanPage
                 .addDocument(

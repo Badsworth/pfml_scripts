@@ -2224,6 +2224,21 @@ class PaidLeavePage {
     return this;
   }
 
+  assertOverpaymentRecordUpgrade(overpayments: OverpaymentRecord) {
+    this.onTab("Financials", "Payment History", "Overpayment Summary");
+    cy.get("table[id$='OverpaymentsListview']").within(() => {
+      cy.contains("td[id$='OverpaymentsListviewStatus0']", overpayments.status);
+    });
+    cy.contains(
+      "[id$='_outstandingGrossAmount']",
+      numToPaymentFormat(overpayments.outstandingAmount)
+    );
+    cy.contains(
+      "[id$='_outstandingNetAmount']",
+      numToPaymentFormat(overpayments.amount)
+    );
+  }
+
   assertOverpaymentRecord(overpayments: OverpaymentRecord) {
     this.onTab("Financials", "Payment History", "Overpayment Summary");
     cy.get("table[id$='OverpaymentsListview']").within(() => {
@@ -2245,13 +2260,17 @@ class PaidLeavePage {
 
   createRecoveryPlan(
     recoveryAmt: number,
-    type: "OffsetRecovery" | "Reimbursement"
+    type: "OffsetRecovery" | "Reimbursement",
+    upgrade: boolean | null | undefined = false
   ): RecoveryPlanPage {
     this.onTab("Financials", "Payment History", "Overpayment Summary");
     waitForAjaxComplete();
     cy.get("tr[class='ListRowSelected']").click({ force: true });
     waitForAjaxComplete();
     cy.get('input[type="submit"][value="Open"]').click({ force: true });
+    if (upgrade) {
+      onTab("Recovery Details");
+    }
     cy.get(
       'input[type="submit"][value="Add"][id^="RecoveryPlanListviewWidget"]'
     ).click();
