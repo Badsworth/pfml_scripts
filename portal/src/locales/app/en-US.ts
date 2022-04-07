@@ -2027,6 +2027,14 @@ const pages: {
       "Estimated {{frequency}} absences per week, each lasting {{duration}} hours.",
     isForCurrentEmployer_false: "From a different employer",
     isForCurrentEmployer_true: "From this employer",
+    leaveDetailsBenefitYearsIntroduction:
+      "<p>Your current <benefit-year-guide-link>benefit year</benefit-year-guide-link> is {{startDate}} to {{endDate}}. After you submit Part 1 of your application, we'll automatically split this application into two, one for each benefit year. You can upload the same supporting documentation for both applications.",
+    leaveDetailsBenefitYearsSixtyYearsAndBelow:
+      "<p>Your current <benefit-year-guide-link>benefit year</benefit-year-guide-link> is {{startDate}} to {{endDate}}. After you submit Part 1 of your application, we'll automatically split this application into two, one for each benefit year. You can upload the same supporting documentation for both applications.</p><ul><li><strong>Current benefit year:</strong> leave dates from 2/14/2022 to 2/26/2022</li><li><strong>New benefit year:</strong> leave dates from 2/27/2022 to 4/19/2022</li></ul><p>We’ll review each application separately. This means that:</p><ul><li>The Department's determination for one application may be different from its determination for the other.</li><li> The Department will calculate your weekly benefit amount for each application separately. You may receive different payment amounts for each application. Learn more about how PFML weekly benefit amounts are calculated.</li><li>You'll have two 7-day waiting periods, one at the start of each period of your leave. Learn more about the <benefit-year-guide-link>7-day waiting period.</benefit-year-guide-link></li></ul>",
+    leaveDetailsCurrentBenefitYearsDates:
+      "<strong>Current benefit year:</strong> leave dates from {{startDate}} to {{endDate}}",
+    leaveDetailsNewBenefitYearsDates:
+      "<strong>New benefit year:</strong> leave dates from {{startDate}} to {{endDate}}",
     leaveDetailsSectionHeading: "$t(shared.leaveDetailsStepTitle)",
     leavePeriodLabel_continuous: "$t(shared.claimDurationTypeContinuous)",
     leavePeriodLabel_intermittent: "$t(shared.claimDurationTypeIntermittent)",
@@ -2942,6 +2950,12 @@ const components: {
       "$t(shared.claimsLeaveSpansBenefitYears.newBenefitYearLeaveDates)",
     secondCannotBeSubmittedCurrent:
       "$t(shared.claimsLeaveSpansBenefitYears.secondCannotBeSubmittedCurrent)",
+    secondCannotBeSubmittedCurrentFinalContentPart1:
+      "Your in-progress application will be viewable by our Contact Center staff. If you need to make edits to Part 1, you’ll need to call our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>",
+    secondCannotBeSubmittedCurrentFinalContentPart2:
+      "We’ll also notify your employer that you’ve started an application for paid family and medical leave.",
+    secondCannotBeSubmittedCurrentFinalContentPart3:
+      "Next, you’ll be able to work on Parts 2 and 3, and submit your application.",
     secondCannotBeSubmittedNew:
       "$t(shared.claimsLeaveSpansBenefitYears.secondCannotBeSubmittedNew)",
   },
