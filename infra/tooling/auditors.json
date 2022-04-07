@@ -1,0 +1,8 @@
+{
+    "lambda": {
+        "actions": [
+            "lambda:ListFunctions",
+            "lambda:GetFunction"
+        ]
+    }
+}

@@ -52,7 +52,6 @@ jobs:
         - component: "monitoring"
         - component: "tooling"
 
-
     steps:
       - uses: actions/checkout@v2
 
