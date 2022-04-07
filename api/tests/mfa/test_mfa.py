@@ -118,7 +118,7 @@ class TestHandleMfaDisabled:
 
         mock_send_email.assert_not_called()
         self.mock_logger.info.assert_any_call(
-            "Skipping updating Cognito or sending an MFA disabled notification email",
+            "Skipping sending an MFA disabled notification email",
             extra={
                 "last_enabled_at": mock.ANY,
                 "time_since_enabled_in_sec": mock.ANY,

@@ -54,14 +54,15 @@ def handle_mfa_disabled(
     log_attributes = _collect_log_attributes(updated_by, last_enabled_at)
     logger.info("MFA disabled for user", extra=log_attributes)
 
+    if app.get_config().environment == "local" and app.get_config().disable_sending_emails:
+        logger.info(
+            "Skipping sending an MFA disabled notification email",
+            extra=log_attributes,
+        )
+        return
+
     try:
-        if app.get_config().environment == "local" and app.get_config().disable_sending_emails:
-            logger.info(
-                "Skipping updating Cognito or sending an MFA disabled notification email",
-                extra=log_attributes,
-            )
-        else:
-            _send_mfa_disabled_email(user.email_address, user.mfa_phone_number_last_four())
+        _send_mfa_disabled_email(user.email_address, user.mfa_phone_number_last_four())
     except Exception as error:
         logger.error("Error sending MFA disabled email", exc_info=error)
         raise error
@@ -122,16 +123,16 @@ def handle_mfa_disabled_by_admin(
     log_attributes = _collect_log_attributes(updated_by, last_enabled_at)
     logger.info("MFA disabled for user", extra=log_attributes)
 
+    if app.get_config().environment == "local" and app.get_config().disable_sending_emails:
+        logger.info(
+            "Skipping updating Cognito or sending an MFA disabled notification email",
+            extra=log_attributes,
+        )
+        return
+
     try:
-        # todo: rename the disable_sending_emails flag to something more generic
-        if app.get_config().environment == "local" and app.get_config().disable_sending_emails:
-            logger.info(
-                "Skipping updating Cognito or sending an MFA disabled notification email",
-                extra=log_attributes,
-            )
-        else:
-            cognito.admin_disable_user_mfa(user.email_address)
-            _send_mfa_disabled_email(user.email_address, user.mfa_phone_number_last_four())
+        cognito.admin_disable_user_mfa(user.email_address)
+        _send_mfa_disabled_email(user.email_address, user.mfa_phone_number_last_four())
     except Exception as error:
         logger.error("Error disabling user MFA", exc_info=error)
         raise error
