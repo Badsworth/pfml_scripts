@@ -54,4 +54,16 @@ function applicationSplitBuilder(daysOffset: number, label: string) {
   };
 }
 
+const createBenefitYearStartEndDates = (startDate = new Date()) => {
+  const start = dayjs(startDate).day(0);
+  const end = start.subtract(52, "week").subtract(1, "day");
+
+  return {
+    startDate: start.format("YYYY-MM-DD"),
+    endDate: end.format("YYYY-MM-DD"),
+  };
+};
+
+export { createBenefitYearStartEndDates };
+
 export default applicationSplitBuilder;
