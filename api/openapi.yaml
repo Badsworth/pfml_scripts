@@ -2675,9 +2675,6 @@ components:
           type: string
           maxLength: 256
           nullable: true
-        is_withholding_tax:
-          type: boolean
-          nullable: true
         recently_acquired_or_merged:
           type: boolean
           nullable: true

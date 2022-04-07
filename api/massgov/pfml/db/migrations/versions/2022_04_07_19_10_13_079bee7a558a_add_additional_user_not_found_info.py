@@ -1,8 +1,8 @@
 """Add additional user not found info
 
-Revision ID: d8f562c78f49
+Revision ID: 079bee7a558a
 Revises: 3fbc57dc3880
-Create Date: 2022-04-07 13:00:12.091279
+Create Date: 2022-04-07 19:10:13.840472
 
 """
 import sqlalchemy as sa
@@ -10,7 +10,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "d8f562c78f49"
+revision = "079bee7a558a"
 down_revision = "3fbc57dc3880"
 branch_labels = None
 depends_on = None
@@ -40,16 +40,10 @@ def upgrade():
         sa.Column("date_of_hire", sa.Date(), nullable=True),
         sa.Column("date_of_separation", sa.Date(), nullable=True),
         sa.Column("employer_name", sa.Text(), nullable=True),
-        sa.Column("is_withholding_tax", sa.Boolean(), nullable=True),
         sa.Column("recently_acquired_or_merged", sa.Boolean(), nullable=True),
-        sa.Column("payment_preference_id", postgresql.UUID(as_uuid=True), nullable=True),
         sa.ForeignKeyConstraint(
             ["application_id"],
             ["application.application_id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["payment_preference_id"],
-            ["application_payment_preference.payment_pref_id"],
         ),
         sa.PrimaryKeyConstraint("additional_user_not_found_info_id"),
     )

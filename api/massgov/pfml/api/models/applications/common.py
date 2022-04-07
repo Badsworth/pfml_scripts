@@ -214,19 +214,7 @@ class AdditionalUserNotFoundInfo(PydanticBaseModel):
     date_of_hire: Optional[date]
     date_of_separation: Optional[date]
     employer_name: Optional[str]
-    is_withholding_tax: Optional[bool]
     recently_acquired_or_merged: Optional[bool]  # Or enum..?
-    # # additional_user_not_found_info_id: Optional[UUID4] # Why is this here?
-    # claimant_email_address: Optional[str] # Potentially different than the user's email?
-    # # hours_worked_per_week: Optional[Decimal] # Why? It already exists on application and ApplicationRequestBody.
-    # employer_name: Optional[str]
-    # employer_address: Optional[Address]
-    # contact_name: Optional[str]
-    # contact_phone: Optional[Phone]
-    # contact_email: Optional[str]
-    # current_employer: Optional[bool]
-    # # industry_type: Optional[str] # Not collecting.
-    # work_state: Optional[str]
 
     @validator("date_of_separation")
     def date_of_separation_validation(cls, date_of_separation, values):  # noqa: B902

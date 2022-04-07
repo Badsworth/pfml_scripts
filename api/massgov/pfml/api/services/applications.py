@@ -806,7 +806,6 @@ def set_additional_user_not_found_info(
         date_of_hire=api_additional_user_not_found_info.date_of_hire,
         date_of_separation=api_additional_user_not_found_info.date_of_separation,
         employer_name=api_additional_user_not_found_info.employer_name,
-        is_withholding_tax=api_additional_user_not_found_info.is_withholding_tax,
         recently_acquired_or_merged=api_additional_user_not_found_info.recently_acquired_or_merged,
     )
     db_session.add(additional_user_not_found_info)

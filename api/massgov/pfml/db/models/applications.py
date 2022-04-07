@@ -230,15 +230,7 @@ class AdditionalUserNotFoundInfo(Base, TimestampMixin):
     date_of_hire = Column(Date)
     date_of_separation = Column(Date)
     employer_name = Column(Text)
-    # It's on the application already, but it uses a separate endpoint with
-    # different validation.
-    is_withholding_tax = Column(Boolean)
     recently_acquired_or_merged = Column(Boolean)
-    payment_preference_id = Column(
-        PostgreSQLUUID, ForeignKey("application_payment_preference.payment_pref_id")
-    )
-    # has_submitted_payment_preference = Column(Boolean) shouldn't be needed.
-    payment_preference = relationship("ApplicationPaymentPreference")
 
 
 class ConcurrentLeave(Base, TimestampMixin):
