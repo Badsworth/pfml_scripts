@@ -3590,6 +3590,9 @@ components:
         payment_preference:
           nullable: false
           $ref: "#/components/schemas/PaymentPreference"
+        skip_fineos:
+          type: boolean
+          nullable: false
 
     TaxWithholdingPreferenceRequestBody:
       type: object

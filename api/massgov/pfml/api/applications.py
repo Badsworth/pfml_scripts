@@ -722,6 +722,7 @@ def payment_preference_submit(application_id: UUID) -> Response:
         )
 
         payment_pref_request = PaymentPreferenceRequestBody.parse_obj(updated_body)
+        log_attributes["skip_fineos"] = payment_pref_request.skip_fineos
 
         if not payment_pref_request.payment_preference:
             logger.info(
@@ -758,22 +759,27 @@ def payment_preference_submit(application_id: UUID) -> Response:
                 ).to_api_response()
 
             if existing_application.payment_preference:
-                try:
-                    submit_payment_preference(existing_application, db_session)
-                except Exception:
-                    logger.warning(
-                        "payment_preference_submit failure - failure submitting payment preference to claims processing system",
-                        extra=log_attributes,
-                        exc_info=True,
-                    )
-                    raise
+                if not payment_pref_request.skip_fineos:
+                    try:
+                        submit_payment_preference(existing_application, db_session)
+                    except Exception:
+                        logger.warning(
+                            "payment_preference_submit failure - failure submitting payment preference to claims processing system",
+                            extra=log_attributes,
+                            exc_info=True,
+                        )
+                        raise
 
-                existing_application.has_submitted_payment_preference = True
-                db_session.add(existing_application)
-                db_session.commit()
-                db_session.refresh(existing_application)
+                    existing_application.has_submitted_payment_preference = True
+                    db_session.add(existing_application)
+                    db_session.commit()
+                    db_session.refresh(existing_application)
 
                 logger.info("payment_preference_submit success", extra=log_attributes)
+
+                issues, employer_issue = get_all_application_issues(db_session, existing_application)
+                if employer_issue:
+                    issues.append(employer_issue)
 
                 return response_util.success_response(
                     message="Payment Preference for application {} submitted without errors".format(
@@ -781,6 +787,7 @@ def payment_preference_submit(application_id: UUID) -> Response:
                     ),
                     data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
                     status_code=201,
+                    warnings=issues,
                 ).to_api_response()
             else:
                 logger.warning(

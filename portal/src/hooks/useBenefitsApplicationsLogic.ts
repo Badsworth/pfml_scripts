@@ -280,7 +280,7 @@ const useBenefitsApplicationsLogic = ({
       );
 
       // This endpoint should only return errors relevant to this page so no need to filter
-      const issues = getRelevantIssues([], warnings, []);
+      const issues = getRelevantIssues([], warnings, [portalFlow.page]);
 
       setBenefitsApplication(claim);
       setClaimWarnings(application_id, warnings);
@@ -289,7 +289,7 @@ const useBenefitsApplicationsLogic = ({
         throw new ValidationError(issues);
       }
 
-      const context = { claim };
+      const context = { claim, warnings };
       const params: NullableQueryParams = {
         claim_id: claim.application_id,
         "payment-pref-submitted": "true",

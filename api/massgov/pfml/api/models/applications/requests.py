@@ -225,6 +225,7 @@ class DocumentRequestBody(PydanticBaseModel):
 
 class PaymentPreferenceRequestBody(PydanticBaseModel):
     payment_preference: Optional[PaymentPreference]
+    skip_fineos: Optional[bool]
 
 
 class TaxWithholdingPreferenceRequestBody(PydanticBaseModel):
