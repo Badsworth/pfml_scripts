@@ -1,5 +1,5 @@
 import base64
-from typing import List, Optional, Tuple
+from typing import List
 from uuid import UUID, uuid4
 
 import connexion
@@ -46,9 +46,6 @@ from massgov.pfml.api.services.fineos_actions import (
     submit_payment_preference,
 )
 from massgov.pfml.api.util.paginate.paginator import PaginationAPIContext, page_for_api_context
-from massgov.pfml.api.validation.employment_validator import (
-    get_contributing_employer_or_employee_issue,
-)
 from massgov.pfml.api.validation.exceptions import (
     IssueRule,
     IssueType,
@@ -96,7 +93,9 @@ def application_get(application_id):
         # steps as incomplete, and they wouldn't be able to fix this.
         issues: List[ValidationErrorDetail] = []
         if not existing_application.submitted_time:
-            issues, employer_issue = get_all_application_issues(db_session, existing_application)
+            issues, employer_issue = application_rules.get_all_application_issues(
+                db_session, existing_application
+            )
             if employer_issue:
                 issues.append(employer_issue)
 
@@ -328,7 +327,9 @@ def applications_update(application_id):
             db_session, application_request, existing_application
         )
 
-        issues, employer_issue = get_all_application_issues(db_session, existing_application)
+        issues, employer_issue = application_rules.get_all_application_issues(
+            db_session, existing_application
+        )
         if employer_issue:
             issues.append(employer_issue)
 
@@ -465,7 +466,9 @@ def applications_submit(application_id):
 
         log_attributes = get_application_log_attributes(existing_application)
 
-        issues, employer_issue = get_all_application_issues(db_session, existing_application)
+        issues, employer_issue = application_rules.get_all_application_issues(
+            db_session, existing_application
+        )
         if employer_issue:
             issues.append(employer_issue)
 
@@ -784,7 +787,7 @@ def payment_preference_submit(application_id: UUID) -> Response:
 
                 logger.info("payment_preference_submit success", extra=log_attributes)
 
-                issues, employer_issue = get_all_application_issues(
+                issues, employer_issue = application_rules.get_all_application_issues(
                     db_session, existing_application
                 )
                 if employer_issue:
@@ -923,7 +926,9 @@ def submit_tax_withholding_preference(application_id: UUID) -> Response:
             extra=log_attributes,
         )
 
-        issues, employer_issue = get_all_application_issues(db_session, existing_application)
+        issues, employer_issue = application_rules.get_all_application_issues(
+            db_session, existing_application
+        )
         if employer_issue:
             issues.append(employer_issue)
 
@@ -935,13 +940,3 @@ def submit_tax_withholding_preference(application_id: UUID) -> Response:
             warnings=issues,
             status_code=201,
         ).to_api_response()
-
-
-def get_all_application_issues(
-    db_session: db.Session, existing_application: Application
-) -> Tuple[List[ValidationErrorDetail], Optional[ValidationErrorDetail]]:
-    issues = application_rules.get_application_submit_issues(existing_application)
-    employer_issue = get_contributing_employer_or_employee_issue(
-        db_session, existing_application.employer_fein, existing_application.tax_identifier
-    )
-    return issues, employer_issue

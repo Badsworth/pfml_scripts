@@ -1,7 +1,7 @@
 import datetime
 from datetime import date
 from itertools import chain, combinations
-from typing import Any, Dict, Iterable, List, Optional, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 from dateutil.relativedelta import relativedelta
 
@@ -31,6 +31,9 @@ from massgov.pfml.api.services.applications import (
 )
 from massgov.pfml.api.services.fineos_actions import get_documents
 from massgov.pfml.api.util.deepgetattr import deepgetattr
+from massgov.pfml.api.validation.employment_validator import (
+    get_contributing_employer_or_employee_issue,
+)
 from massgov.pfml.api.validation.exceptions import (
     IssueRule,
     IssueType,
@@ -1454,6 +1457,16 @@ def validate_application_state(
             },
         )
     return issues
+
+
+def get_all_application_issues(
+    db_session: db.Session, existing_application: Application
+) -> Tuple[List[ValidationErrorDetail], Optional[ValidationErrorDetail]]:
+    issues = get_application_submit_issues(existing_application)
+    employer_issue = get_contributing_employer_or_employee_issue(
+        db_session, existing_application.employer_fein, existing_application.tax_identifier
+    )
+    return issues, employer_issue
 
 
 def get_app_complete_payments_issues(application: Application) -> List[ValidationErrorDetail]:
