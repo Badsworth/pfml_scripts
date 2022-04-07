@@ -376,11 +376,8 @@ export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder
     this.employed();
     this.address();
     if (isIntermittent) {
-      this.intermittent();
       this.intermittentAbsencePeriod();
     } else {
-      this.continuous();
-      this.reducedSchedule();
       this.continuousAbsencePeriod();
       this.reducedScheduleAbsencePeriod();
     }
@@ -423,15 +420,6 @@ export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder
         status: "Complete",
       },
     ]);
-    return this;
-  }
-
-  /**
-   * @param {string} status
-   * @returns {MockEmployerClaimBuilder}
-   */
-  status(status = null) {
-    set(this.claimAttrs, "status", status);
     return this;
   }
 

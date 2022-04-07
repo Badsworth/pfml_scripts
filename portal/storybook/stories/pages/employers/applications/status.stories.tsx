@@ -18,26 +18,12 @@ export default {
   args: {
     document: "Approval notice",
     leaveDurationType: ["Continuous"],
-    status: "Approved",
   },
   argTypes: {
     leaveDurationType: {
       control: {
         type: "check",
         options: ["Continuous", "Intermittent", "Reduced"],
-      },
-    },
-    status: {
-      control: {
-        type: "radio",
-        options: [
-          "Approved",
-          "Declined",
-          "Closed",
-          "Completed",
-          "Adjudication",
-          "Intake In Progress",
-        ],
       },
     },
     document: {
@@ -57,17 +43,13 @@ export default {
 };
 
 export const Default = ({
-  status,
   document,
   leaveDurationType,
 }: {
-  status: string;
   document: string;
   leaveDurationType: string;
 }) => {
-  let claimBuilder = new MockEmployerClaimBuilder()
-    .status(status)
-    .bondingLeaveReason();
+  let claimBuilder = new MockEmployerClaimBuilder().bondingLeaveReason();
 
   if (leaveDurationType.includes("Continuous")) {
     claimBuilder = claimBuilder.continuous();
