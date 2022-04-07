@@ -234,4 +234,34 @@ describe("EmployerClaim", () => {
       expect(claim.isIntermittent).toBe(true);
     });
   });
+
+  describe("#isCaringLeave", () => {
+    it("returns false when there is no caring leave absence period", () => {
+      const claim = new EmployerClaimReview({
+        absence_periods: [
+          createAbsencePeriod({
+            reason: "Child Bonding",
+          }),
+          createAbsencePeriod({
+            reason: "Pregnancy/Maternity",
+          }),
+        ],
+      });
+      expect(claim.isCaringLeave).toBe(false);
+    });
+
+    it("returns true when there is one caring leave absence period", () => {
+      const claim = new EmployerClaimReview({
+        absence_periods: [
+          createAbsencePeriod({
+            reason: "Child Bonding",
+          }),
+          createAbsencePeriod({
+            reason: "Care for a Family Member",
+          }),
+        ],
+      });
+      expect(claim.isCaringLeave).toBe(true);
+    });
+  });
 });

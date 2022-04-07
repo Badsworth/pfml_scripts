@@ -3,6 +3,7 @@ import { AbsencePeriod } from "./AbsencePeriod";
 import Address from "./Address";
 import ConcurrentLeave from "./ConcurrentLeave";
 import EmployerBenefit from "./EmployerBenefit";
+import LeaveReason from "./LeaveReason";
 import { ManagedRequirement } from "./ManagedRequirement";
 import PreviousLeave from "./PreviousLeave";
 import isBlank from "../utils/isBlank";
@@ -121,6 +122,15 @@ class EmployerClaimReview {
   get fullName() {
     return compact([this.first_name, this.middle_name, this.last_name]).join(
       " "
+    );
+  }
+
+  /**
+   * Determine if claim has a Caring Leave absence period
+   */
+  get isCaringLeave(): boolean {
+    return this.absence_periods.some(
+      (absence_period) => absence_period.reason === LeaveReason.care
     );
   }
 }

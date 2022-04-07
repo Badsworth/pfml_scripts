@@ -382,7 +382,6 @@ export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder
       this.reducedScheduleAbsencePeriod();
     }
     this.employerBenefit();
-    set(this.claimAttrs, "leave_details.reason", LeaveReason.medical);
     return this;
   }
 
