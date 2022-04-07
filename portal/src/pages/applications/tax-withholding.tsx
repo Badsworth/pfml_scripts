@@ -16,6 +16,7 @@ export const fields = ["claim.is_withholding_tax"];
 export const TaxWithholding = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
+  // Only loads from claim.
 
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
 
@@ -28,28 +29,15 @@ export const TaxWithholding = (props: WithBenefitsApplicationProps) => {
   });
 
   const handleSave = async () => {
-    // The below warnings are only returned from a PATCH, not a GET.
-    const has_user_not_found_warning =
-      appLogic.benefitsApplications.warningsLists[claim.application_id].some(
-        (warning) =>
-          warning.type === "require_contributing_employer" ||
-          warning.rule === "require_non_exempt_employer" ||
-          warning.rule === "require_employee"
-      );
+    // The below warnings are only returned from a PATCH, not a POST.
     const data = {
       is_withholding_tax: withholdTax,
+      skip_fineos: appLogic.benefitsApplications.hasUserNotFoundError(claim.application_id),
     };
-    has_user_not_found_warning
-      ? appLogic.benefitsApplications.update(claim.application_id, {
-          additional_user_not_found_info: {
-            ...claim?.additional_user_not_found_info,
-            is_withholding_tax: formState.is_withholding_tax,
-          },
-        })
-      : await appLogic.benefitsApplications.submitTaxWithholdingPreference(
-          claim.application_id,
-          data
-        );
+    await appLogic.benefitsApplications.submitTaxWithholdingPreference(
+      claim.application_id,
+      data
+    );
   };
 
   return (

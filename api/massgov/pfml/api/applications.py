@@ -893,17 +893,25 @@ def submit_tax_withholding_preference(application_id: UUID) -> Response:
         existing_application = validate_tax_withholding_request(
             db_session, application_id, tax_preference_body
         )
-        send_tax_selection_to_fineos(existing_application, tax_preference_body)
+        if not tax_preference_body.skip_fineos:
+            send_tax_selection_to_fineos(existing_application, tax_preference_body)
         save_tax_preference(db_session, existing_application, tax_preference_body)
+
+        log_attributes = get_application_log_attributes(existing_application)
+        log_attributes["skip_fineos"] = tax_preference_body.skip_fineos
 
         logger.info(
             "tax_withholding_preference_submit success",
-            extra=get_application_log_attributes(existing_application),
+            extra=log_attributes,
+        )
+        employer_issue = get_contributing_employer_or_employee_issue(
+            db_session, existing_application.employer_fein, existing_application.tax_identifier
         )
         return response_util.success_response(
             message="Tax Withholding Preference for application {} submitted without errors".format(
                 existing_application.application_id
             ),
             data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
+            warnings=[employer_issue] if employer_issue else [],
             status_code=201,
         ).to_api_response()

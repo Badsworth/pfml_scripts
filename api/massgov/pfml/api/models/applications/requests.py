@@ -229,6 +229,7 @@ class PaymentPreferenceRequestBody(PydanticBaseModel):
 
 class TaxWithholdingPreferenceRequestBody(PydanticBaseModel):
     is_withholding_tax: Optional[bool]
+    skip_fineos: Optional[bool]
 
 
 class ApplicationImportRequestBody(PydanticBaseModel):

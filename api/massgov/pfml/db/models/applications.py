@@ -234,6 +234,11 @@ class AdditionalUserNotFoundInfo(Base, TimestampMixin):
     # different validation.
     is_withholding_tax = Column(Boolean)
     recently_acquired_or_merged = Column(Boolean)
+    payment_preference_id = Column(
+        PostgreSQLUUID, ForeignKey("application_payment_preference.payment_pref_id")
+    )
+    # has_submitted_payment_preference = Column(Boolean) shouldn't be needed.
+    payment_preference = relationship("ApplicationPaymentPreference")
 
 
 class ConcurrentLeave(Base, TimestampMixin):

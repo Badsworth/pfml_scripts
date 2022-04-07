@@ -175,7 +175,6 @@ const useBenefitsApplicationsLogic = ({
       ];
 
       const issues = getRelevantIssues([], warnings, [portalFlow.page]);
-
       setBenefitsApplication(claim);
       setClaimWarnings(application_id, warnings);
 
@@ -334,6 +333,18 @@ const useBenefitsApplicationsLogic = ({
     }
   };
 
+  const hasUserNotFoundError = (application_id: string) => {
+    if (!(application_id in warningsLists)) {
+      return false;
+    }
+    return warningsLists[application_id].some(
+      (warning) =>
+        warning.type === "require_contributing_employer" ||
+        warning.rule === "require_non_exempt_employer" ||
+        warning.rule === "require_employee"
+    );
+  };
+
   return {
     benefitsApplications,
     complete,
@@ -348,6 +359,7 @@ const useBenefitsApplicationsLogic = ({
     submit,
     submitPaymentPreference,
     submitTaxWithholdingPreference,
+    hasUserNotFoundError,
     warningsLists,
   };
 };
