@@ -6,7 +6,7 @@ const mockFetch = ({
   response = { data: [] },
   status = 200,
 }: {
-  response?: { data?: unknown; errors?: unknown };
+  response?: { data?: unknown; errors?: unknown; warnings?: unknown };
   status?: number;
 } = {}) => {
   global.fetch = jest.fn().mockResolvedValueOnce({

@@ -8,6 +8,7 @@ const routes = {
     applicationImports: "/application-imports",
     applications: "/applications",
     benefitYears: "/benefit-years",
+    changeRequest: "/change-request",
     claims: "/claims",
     employers: "/employers",
     holidays: "/holidays",
