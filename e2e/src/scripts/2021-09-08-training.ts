@@ -1,7 +1,7 @@
 import dataDirectory from "../generation/DataDirectory";
 import EmployeePool from "../generation/Employee";
 import ClaimPool from "../generation/Claim";
-import * as scenarios from "../scenarios/2021-09-08-training";
+import * as scenarios from "../scenarios/2022-01-10-training";
 import describe from "../specification/describe";
 import { promisify } from "util";
 import { pipeline } from "stream";

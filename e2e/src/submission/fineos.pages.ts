@@ -164,10 +164,13 @@ export class Claim extends FineosPage {
   }
 
   async approve(leaveEndDate: Date): Promise<void> {
-    await this.page.click("a[title='Approve the Pending Leaving Request']", {
-      // This sometimes takes a while. Wait for it to complete.
-      timeout: 60000,
-    });
+    await this.page.click(
+      "a[title='Approve the pending/in review leave request']",
+      {
+        // This sometimes takes a while. Wait for it to complete.
+        timeout: 60000,
+      }
+    );
     if (isAfter(leaveEndDate, new Date()) || isToday(leaveEndDate)) {
       await this.assertClaimStatus("Approved");
     } else {

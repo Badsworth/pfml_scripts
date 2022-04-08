@@ -1338,3 +1338,34 @@ export const TRNER3B: ScenarioSpecification = {
 //     },
 //   },
 // };
+
+// NEW for April	Bonding 	BI	TRNAV	Intermittent	Approved	100	"Randomize between start dates beginning 12/27 through 03/01/2022
+// Max duration of leave (12 weeks)"
+// "1. Add ER task
+//  2. Close all tasks
+// 3. Approve evidence
+// 4. Approve"	Should push all the way through approval
+// 100
+export const TRNAV: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "TRNAV",
+    reason: "Child Bonding",
+    reason_qualifier: "Newborn",
+    leave_dates: generateMaxLeave(12),
+    bondingDate: "far-past",
+    intermittent_leave_spec: true,
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+    },
+    docs: {
+      MASSID: {},
+      BIRTHCERTIFICATE: {},
+    },
+    metadata: {
+      postSubmit: "APPROVE",
+      quantity: 100,
+    },
+  },
+};
