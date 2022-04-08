@@ -110,7 +110,7 @@ class EmployerClaimReview {
   /**
    * Determine if claim has an intermittent absence period
    */
-  get isIntermittent(): boolean {
+  get hasIntermittentPeriod(): boolean {
     return this.absence_periods.some(
       (absence_period) => absence_period.period_type === "Intermittent"
     );
@@ -128,7 +128,7 @@ class EmployerClaimReview {
   /**
    * Determine if claim has a Caring Leave absence period
    */
-  get isCaringLeave(): boolean {
+  get hasCaringLeavePeriod(): boolean {
     return this.absence_periods.some(
       (absence_period) => absence_period.reason === LeaveReason.care
     );

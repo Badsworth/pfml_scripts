@@ -202,7 +202,7 @@ describe("EmployerClaim", () => {
     });
   });
 
-  describe("#isIntermittent", () => {
+  describe("#hasIntermittentPeriod", () => {
     it("returns false when there is no intermittent absence period", () => {
       const claim = new EmployerClaimReview({
         absence_periods: [
@@ -214,7 +214,7 @@ describe("EmployerClaim", () => {
           }),
         ],
       });
-      expect(claim.isIntermittent).toBe(false);
+      expect(claim.hasIntermittentPeriod).toBe(false);
     });
 
     it("returns true when there is one intermittent absence period", () => {
@@ -231,11 +231,11 @@ describe("EmployerClaim", () => {
           }),
         ],
       });
-      expect(claim.isIntermittent).toBe(true);
+      expect(claim.hasIntermittentPeriod).toBe(true);
     });
   });
 
-  describe("#isCaringLeave", () => {
+  describe("#hasCaringLeavePeriod", () => {
     it("returns false when there is no caring leave absence period", () => {
       const claim = new EmployerClaimReview({
         absence_periods: [
@@ -247,7 +247,7 @@ describe("EmployerClaim", () => {
           }),
         ],
       });
-      expect(claim.isCaringLeave).toBe(false);
+      expect(claim.hasCaringLeavePeriod).toBe(false);
     });
 
     it("returns true when there is one caring leave absence period", () => {
@@ -261,7 +261,7 @@ describe("EmployerClaim", () => {
           }),
         ],
       });
-      expect(claim.isCaringLeave).toBe(true);
+      expect(claim.hasCaringLeavePeriod).toBe(true);
     });
   });
 });

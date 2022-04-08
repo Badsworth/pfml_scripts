@@ -160,7 +160,7 @@ export const Review = (props: WithEmployerClaimProps) => {
     (isCommentRequired && !formState.comment) ||
     (formState.believeRelationshipAccurate === "No" &&
       formState.relationshipInaccurateReason === "");
-  const isCaringLeave = claim.isCaringLeave;
+  const isCaringLeave = claim.hasCaringLeavePeriod;
 
   // TODO (PORTAL-1234): Move documents loading and state
   useEffect(() => {
@@ -254,6 +254,7 @@ export const Review = (props: WithEmployerClaimProps) => {
 
     if (updatedLeave.type === PreviousLeaveType.sameReason) {
       updatedLeave.leave_reason = leaveReasonToPreviousLeaveReason(
+        // TODO (PORTAL-2121): which period reason we should use
         claim.absence_periods[0].reason
       );
     } else if (

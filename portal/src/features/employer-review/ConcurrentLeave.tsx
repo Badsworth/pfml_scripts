@@ -40,7 +40,7 @@ const ConcurrentLeave = (props: ConcurrentLeaveProps) => {
     onRemove,
   } = props;
 
-  const leaveContext = claim.isIntermittent
+  const leaveContext = claim.hasIntermittentPeriod
     ? "intermittent"
     : "continuousOrReduced";
 
