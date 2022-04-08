@@ -1,13 +1,13 @@
 import { makeFile, mockAuth, mockFetch } from "../test-utils";
 import ApiResourceCollection from "../../src/models/ApiResourceCollection";
 import ChangeRequest from "../../src/models/ChangeRequest";
-import ChangeRequestApi from "../../src/api/ChangeRequestsApi";
+import ChangeRequestsApi from "../../src/api/ChangeRequestsApi";
 import { ValidationError } from "../../src/errors";
 
 jest.mock("../../src/services/tracker");
 
-describe(ChangeRequestApi, () => {
-  let changeRequestApi;
+describe(ChangeRequestsApi, () => {
+  let changeRequestsApi;
   const accessTokenJwt =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiQnVkIn0.YDRecdsqG_plEwM0H8rK7t2z0R3XRNESJB5ZXk-FRN8";
   const baseRequestHeaders = {
@@ -18,7 +18,7 @@ describe(ChangeRequestApi, () => {
   beforeEach(() => {
     jest.resetAllMocks();
     mockAuth(true, accessTokenJwt);
-    changeRequestApi = new ChangeRequestApi();
+    changeRequestsApi = new ChangeRequestsApi();
   });
 
   describe("getChangeRequests", () => {
@@ -43,7 +43,9 @@ describe(ChangeRequestApi, () => {
     });
 
     it("sends GET request to /change-request?fineos_absence_id=:fineos_absence_id", async () => {
-      await changeRequestApi.getChangeRequests(changeRequest.fineos_absence_id);
+      await changeRequestsApi.getChangeRequests(
+        changeRequest.fineos_absence_id
+      );
       expect(fetch).toHaveBeenCalledWith(
         `${process.env.apiUrl}/change-request?fineos_absence_id=${changeRequest.fineos_absence_id}`,
         {
@@ -56,7 +58,7 @@ describe(ChangeRequestApi, () => {
 
     it("resolves with change request collection", async () => {
       const { changeRequests: changeRequestResponse } =
-        await changeRequestApi.getChangeRequests(
+        await changeRequestsApi.getChangeRequests(
           changeRequest.fineos_absence_id
         );
 
@@ -83,7 +85,7 @@ describe(ChangeRequestApi, () => {
       });
 
       it("sends POST request to /change-request/?fineos_absence_id=:fineos_absence_id", async () => {
-        await changeRequestApi.createChangeRequest(
+        await changeRequestsApi.createChangeRequest(
           changeRequest.fineos_absence_id
         );
         expect(fetch).toHaveBeenCalledWith(
@@ -98,7 +100,7 @@ describe(ChangeRequestApi, () => {
 
       it("resolves with change request properties", async () => {
         const { changeRequest: changeRequestResponse } =
-          await changeRequestApi.createChangeRequest(
+          await changeRequestsApi.createChangeRequest(
             changeRequest.fineos_absence_id
           );
 
@@ -114,7 +116,7 @@ describe(ChangeRequestApi, () => {
         });
 
         try {
-          await changeRequestApi.createChangeRequest("fineos-absence-id");
+          await changeRequestsApi.createChangeRequest("fineos-absence-id");
         } catch (error) {
           expect(error).toBeInstanceOf(ValidationError);
           expect(error.issues[0].namespace).toBe("change_request");
@@ -140,7 +142,7 @@ describe(ChangeRequestApi, () => {
       });
 
       it("sends DELETE request to /change-request/change-request-id", async () => {
-        await changeRequestApi.deleteChangeRequest(
+        await changeRequestsApi.deleteChangeRequest(
           changeRequest.change_request_id
         );
         expect(fetch).toHaveBeenCalledWith(
@@ -155,7 +157,7 @@ describe(ChangeRequestApi, () => {
 
       it("resolves with deleted change request properties", async () => {
         const { changeRequest: changeRequestResponse } =
-          await changeRequestApi.deleteChangeRequest(
+          await changeRequestsApi.deleteChangeRequest(
             changeRequest.fineos_absence_id
           );
 
@@ -171,7 +173,7 @@ describe(ChangeRequestApi, () => {
         });
 
         try {
-          await changeRequestApi.createChangeRequest("fineos-absence-id");
+          await changeRequestsApi.createChangeRequest("fineos-absence-id");
         } catch (error) {
           expect(error).toBeInstanceOf(ValidationError);
           expect(error.issues[0].namespace).toBe("change_request");
@@ -192,7 +194,7 @@ describe(ChangeRequestApi, () => {
     });
 
     it("sends PATCH requesty to /change-request/:change-request-id", async () => {
-      await changeRequestApi.updateChangeRequest(
+      await changeRequestsApi.updateChangeRequest(
         changeRequest.change_request_id,
         changeRequest
       );
@@ -209,7 +211,7 @@ describe(ChangeRequestApi, () => {
 
     it("response resolves with change request and warnings", async () => {
       const { changeRequest: changeRequestResponse, warnings } =
-        await changeRequestApi.updateChangeRequest(
+        await changeRequestsApi.updateChangeRequest(
           changeRequest.change_request_id,
           changeRequest
         );
@@ -234,7 +236,7 @@ describe(ChangeRequestApi, () => {
     });
 
     it("sends POST request to /change-request/:change-request-id/submit", async () => {
-      await changeRequestApi.submitChangeRequest(
+      await changeRequestsApi.submitChangeRequest(
         changeRequest.change_request_id
       );
 
@@ -250,7 +252,7 @@ describe(ChangeRequestApi, () => {
 
     it("responds with change request", async () => {
       const { changeRequest: changeRequestResponse } =
-        await changeRequestApi.submitChangeRequest(
+        await changeRequestsApi.submitChangeRequest(
           changeRequest.change_request_id
         );
 
@@ -275,7 +277,7 @@ describe(ChangeRequestApi, () => {
     it("sends POST request to /change-request/:change-request-id/documents", async () => {
       const file = makeFile();
 
-      await changeRequestApi.attachChangeRequestDocument(
+      await changeRequestsApi.attachChangeRequestDocument(
         changeRequestId,
         file,
         "Child bonding evidence form"
@@ -300,7 +302,7 @@ describe(ChangeRequestApi, () => {
       const file = makeFile();
 
       const { document: documentResponse } =
-        await changeRequestApi.attachChangeRequestDocument(
+        await changeRequestsApi.attachChangeRequestDocument(
           changeRequestId,
           file,
           "Child bonding evidence form"

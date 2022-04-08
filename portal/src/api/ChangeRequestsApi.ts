@@ -8,7 +8,7 @@ import ChangeRequest from "../models/ChangeRequest";
 import { getDocumentFormData } from "./DocumentsApi";
 import routes from "../routes";
 
-export default class ChangeRequestApi extends BaseApi {
+export default class ChangeRequestsApi extends BaseApi {
   get basePath(): string {
     return routes.api.changeRequest;
   }
