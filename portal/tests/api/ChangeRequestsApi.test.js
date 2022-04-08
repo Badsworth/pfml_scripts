@@ -1,8 +1,8 @@
-import { makeFile, mockAuth, mockFetch } from "tests/test-utils";
-import ApiResourceCollection from "src/models/ApiResourceCollection";
-import { ChangeRequest } from "src/models/ChangeRequest";
-import ChangeRequestApi from "src/api/ChangeRequestApi";
-import { ValidationError } from "src/errors";
+import { makeFile, mockAuth, mockFetch } from "../test-utils";
+import ApiResourceCollection from "../../src/models/ApiResourceCollection";
+import ChangeRequest from "../../src/models/ChangeRequest";
+import ChangeRequestApi from "../../src/api/ChangeRequestsApi";
+import { ValidationError } from "../../src/errors";
 
 jest.mock("../../src/services/tracker");
 
@@ -43,9 +43,9 @@ describe(ChangeRequestApi, () => {
     });
 
     it("sends GET request to /change-request?fineos_absence_id=:fineos_absence_id", async () => {
-      await changeRequestApi.getChangeRequests(changeRequest.fineos_abence_id);
+      await changeRequestApi.getChangeRequests(changeRequest.fineos_absence_id);
       expect(fetch).toHaveBeenCalledWith(
-        `${process.env.apiUrl}/change-request?fineos_absence_id=${changeRequest.fineos_abence_id}`,
+        `${process.env.apiUrl}/change-request?fineos_absence_id=${changeRequest.fineos_absence_id}`,
         {
           body: null,
           headers: baseRequestHeaders,
@@ -57,7 +57,7 @@ describe(ChangeRequestApi, () => {
     it("resolves with change request collection", async () => {
       const { changeRequests: changeRequestResponse } =
         await changeRequestApi.getChangeRequests(
-          changeRequest.fineos_abence_id
+          changeRequest.fineos_absence_id
         );
 
       expect(changeRequestResponse).toEqual(
@@ -84,10 +84,10 @@ describe(ChangeRequestApi, () => {
 
       it("sends POST request to /change-request/?fineos_absence_id=:fineos_absence_id", async () => {
         await changeRequestApi.createChangeRequest(
-          changeRequest.fineos_abence_id
+          changeRequest.fineos_absence_id
         );
         expect(fetch).toHaveBeenCalledWith(
-          `${process.env.apiUrl}/change-request/?fineos_absence_id=${changeRequest.fineos_abence_id}`,
+          `${process.env.apiUrl}/change-request/?fineos_absence_id=${changeRequest.fineos_absence_id}`,
           {
             body: null,
             headers: baseRequestHeaders,
@@ -99,7 +99,7 @@ describe(ChangeRequestApi, () => {
       it("resolves with change request properties", async () => {
         const { changeRequest: changeRequestResponse } =
           await changeRequestApi.createChangeRequest(
-            changeRequest.fineos_abence_id
+            changeRequest.fineos_absence_id
           );
 
         expect(changeRequestResponse).toEqual(changeRequest);
@@ -156,7 +156,7 @@ describe(ChangeRequestApi, () => {
       it("resolves with deleted change request properties", async () => {
         const { changeRequest: changeRequestResponse } =
           await changeRequestApi.deleteChangeRequest(
-            changeRequest.fineos_abence_id
+            changeRequest.fineos_absence_id
           );
 
         expect(changeRequestResponse).toEqual(changeRequest);
@@ -185,7 +185,7 @@ describe(ChangeRequestApi, () => {
 
     beforeEach(() => {
       changeRequest = new ChangeRequest({
-        fineos_abence_id: "fineos-absence-id",
+        fineos_absence_id: "fineos-absence-id",
         change_request_id: "change-request-id",
       });
       global.fetch = mockFetch({ response: { data: changeRequest } });
@@ -224,7 +224,7 @@ describe(ChangeRequestApi, () => {
 
     beforeEach(() => {
       changeRequest = new ChangeRequest({
-        fineos_abence_id: "fineos-absence-id",
+        fineos_absence_id: "fineos-absence-id",
         change_request_id: "change-request-id",
       });
       global.fetch = mockFetch({
