@@ -155,24 +155,10 @@ const useBenefitsApplicationsLogic = ({
     errorsLogic.clearErrors();
 
     try {
-      let { claim, warnings } = await applicationsApi.updateClaim(
+      const { claim, warnings } = await applicationsApi.updateClaim(
         application_id,
         patchData
       );
-
-      warnings = [
-        ...warnings,
-        /* {
-          namespace: "applications",
-          rule: "require_contributing_employer",
-          message: "",
-        }, */
-        /* {
-          namespace: "applications",
-          rule: "require_non_exempt_employer",
-          message: "",
-        } */
-      ];
 
       const issues = getRelevantIssues([], warnings, [portalFlow.page]);
       setBenefitsApplication(claim);
