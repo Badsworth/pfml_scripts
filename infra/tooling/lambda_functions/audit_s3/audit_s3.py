@@ -8,16 +8,6 @@ import datetime
 import botocore.exceptions
 import multiprocessing
 
-SESSION = boto3.session.Session(region_name=region())
-S3 = create_client("s3")
-CLOUDWATCH = create_client("cloudwatch")
-TABLE = boto3.resource(
-    'dynamodb',
-    endpoint_url=f'https://dynamodb.{region()}.amazonaws.com'
-).Table(
-    os.environ.get('INVENTORY_TABLE_NAME')
-)
-
 
 class Bucket:
 
@@ -190,3 +180,13 @@ def write_to_dynamodb(bucket):
 def handler(event, context):
     with multiprocessing.Pool() as pool:
         pool.map(write_to_dynamodb, list_buckets())
+
+SESSION = boto3.session.Session(region_name=region())
+S3 = create_client("s3")
+CLOUDWATCH = create_client("cloudwatch")
+TABLE = boto3.resource(
+    'dynamodb',
+    endpoint_url=f'https://dynamodb.{region()}.amazonaws.com'
+).Table(
+    os.environ.get('INVENTORY_TABLE_NAME')
+)
