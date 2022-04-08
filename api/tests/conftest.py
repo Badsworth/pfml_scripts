@@ -705,7 +705,9 @@ def test_db_session(test_db):
     # Based on https://docs.sqlalchemy.org/en/13/orm/session_transaction.html#joining-a-session-into-an-external-transaction-such-as-for-test-suites
     connection = test_db.connect()
     trans = connection.begin()
-    session = scoped_session(sessionmaker(bind=connection))
+    session = scoped_session(
+        sessionmaker(bind=connection, autocommit=False, expire_on_commit=False)
+    )
 
     session.begin_nested()
 
@@ -726,7 +728,9 @@ def test_db_other_session(test_db):
     # Based on https://docs.sqlalchemy.org/en/13/orm/session_transaction.html#joining-a-session-into-an-external-transaction-such-as-for-test-suites
     connection = test_db.connect()
     trans = connection.begin()
-    session = Session(bind=connection)
+    session = scoped_session(
+        sessionmaker(bind=connection, autocommit=False, expire_on_commit=False)
+    )
 
     yield session
 
