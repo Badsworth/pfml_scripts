@@ -23,7 +23,7 @@ gunicorn = { version = "^20.0.4", optional = true }
 # Locking indirect lxml dependency to version that addresses CVE-2021-28957. Can remove when Zeep
 # pins lxml dependency to version that addresses CVE-2021-28957.
 lxml = { version = "^4.6.5", optional = true }
-newrelic = "~6.4.0.157"
+newrelic = "^7.10.0.175"
 paramiko = "^2.7.2"
 phonenumbers = "^8.12.13"
 psycopg2-binary = "^2.8.5"
