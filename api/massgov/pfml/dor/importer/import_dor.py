@@ -468,7 +468,7 @@ def process_daily_import(
     report.invalid_employer_addresses_by_account_key = {}
 
     report_log_entry = massgov.pfml.util.batch.log.create_log_entry(
-        db_session, "DOR", "Initial", report
+        db_session, __name__, "DOR", "Initial", report
     )
 
     db_session.refresh(report_log_entry)

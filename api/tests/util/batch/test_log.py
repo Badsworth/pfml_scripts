@@ -25,7 +25,7 @@ def test_create_import_log_entry(test_db_session):
     report = MockReport(something_name="abc")
 
     entry = massgov.pfml.util.batch.log.create_log_entry(
-        test_db_session, "Special", "weekly", report
+        test_db_session, __name__, "Special", "weekly", report
     )
 
     assert entry.import_log_id is not None
@@ -48,7 +48,7 @@ def test_update_import_log_entry(test_db_session):
     report = MockReport(something_name="abc")
 
     entry = massgov.pfml.util.batch.log.create_log_entry(
-        test_db_session, "Special", "weekly", report
+        test_db_session, __name__, "Special", "weekly", report
     )
 
     report.total_count = 123456

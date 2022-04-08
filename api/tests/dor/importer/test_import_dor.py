@@ -626,7 +626,7 @@ def test_log_employees_with_new_employers(test_db_session):
 def get_new_import_report(test_db_session):
     report = import_dor.ImportReport()
     report_log_entry = massgov.pfml.util.batch.log.create_log_entry(
-        test_db_session, "DOR", "Initial", report
+        test_db_session, __name__, "DOR", "Initial", report
     )
 
     return report, report_log_entry

@@ -215,7 +215,7 @@ def process_exempt_employer_import(
     report.parsed_employers_exception_line_nums = []
 
     report_log_entry = massgov.pfml.util.batch.log.create_log_entry(
-        db_session, "DOR_EXEMPT", "Exempt Employers", report
+        db_session, __name__, "DOR_EXEMPT", "Exempt Employers", report
     )
 
     db_session.refresh(report_log_entry)
