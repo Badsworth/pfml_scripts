@@ -43,8 +43,6 @@ export const LeaveSpansBenefitYearsMessage = (
 
   const final_content_before_submit = props.final_content_before_submit;
 
-  const final_content_before_submit = props.final_content_before_submit;
-
   const today = dayjs().format("YYYY-MM-DD");
   const firstCanBeSubmitted = firstLeaveEarliestSubmissionDate <= today;
   const secondCanBeSubmitted = secondLeaveEarliestSubmissionDate <= today;
