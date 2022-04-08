@@ -30,7 +30,6 @@ from massgov.pfml.api.services.applications import (
     get_document_by_id,
     split_application_by_date,
 )
-from massgov.pfml.api.services.applications_submit.submit_application import submit_applications
 from massgov.pfml.api.services.document_upload import upload_document_to_fineos
 from massgov.pfml.api.services.fineos_actions import (
     download_document,
@@ -57,6 +56,7 @@ from massgov.pfml.fineos.exception import (
     FINEOSFatalUnavailable,
 )
 from massgov.pfml.fineos.models.customer_api import Base64EncodedFileData
+from massgov.pfml.services import applications as application_service
 from massgov.pfml.util.aws import cognito
 from massgov.pfml.util.logging.applications import get_application_log_attributes
 from massgov.pfml.util.sqlalchemy import get_or_404
@@ -481,7 +481,7 @@ def applications_submit(application_id):
                 },
             )
             try:
-                submit_applications(db_session, [application_before_split], current_user)
+                application_service.submit(db_session, [application_before_split], current_user)
             except Exception as e:
                 if isinstance(e, FINEOSClientError):
                     return get_fineos_submit_issues_response(e, existing_application)
@@ -507,7 +507,7 @@ def applications_submit(application_id):
                         extra=split_application_log_attributes,
                     )
                 else:
-                    submit_applications(
+                    application_service.submit(
                         db_session,
                         [application_after_split],
                         current_user,
@@ -518,7 +518,7 @@ def applications_submit(application_id):
                 raise e
         else:
             try:
-                submit_applications(db_session, [existing_application], current_user)
+                application_service.submit(db_session, [existing_application], current_user)
             except Exception as e:
                 if isinstance(e, FINEOSClientError):
                     return get_fineos_submit_issues_response(e, existing_application)

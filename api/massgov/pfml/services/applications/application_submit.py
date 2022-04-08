@@ -111,9 +111,7 @@ def _build_contact_details(
 # Refactor to make cleaner handling applications that have claims already
 
 
-def submit_applications(
-    db_session: db.Session, applications: list[Application], user: User
-) -> None:
+def submit(db_session: db.Session, applications: list[Application], user: User) -> None:
     applications_with_claims = [application for application in applications if application.claim]
     applications_without_claims = [
         application for application in applications if not application.claim
