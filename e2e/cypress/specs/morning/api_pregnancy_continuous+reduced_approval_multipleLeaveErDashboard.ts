@@ -63,26 +63,36 @@ describe("Submit medical pre-birth application via the web portal", () => {
     () => {
       cy.dependsOnPreviousPass();
       fineos.before();
-      cy.unstash<DehydratedClaim>("claim").then((claim) => {
-        cy.unstash<Submission>("submission").then((submission) => {
-          const claimPage = fineosPages.ClaimPage.visit(
-            submission.fineos_absence_id
-          );
-          claimPage.triggerNotice("Preliminary Designation");
-          fineos.onTab("Absence Hub");
-          claimPage.adjudicate((adjudication) => {
-            adjudication
-              .evidence((evidence) => {
-                // Receive all of the claim documentation.
-                claim.documents.forEach((document) => {
-                  evidence.receive(document.document_type);
-                });
-              })
-              .certificationPeriods((cert) => cert.prefill())
-              .acceptLeavePlan();
+      cy.tryCount().then((tryCount) => {
+        cy.unstash<DehydratedClaim>("claim").then((claim) => {
+          cy.unstash<Submission>("submission").then((submission) => {
+            const claimPage = fineosPages.ClaimPage.visit(
+              submission.fineos_absence_id
+            );
+            if (tryCount > 0) {
+              fineos.assertClaimStatus("Approved");
+              claimPage.triggerNotice("Designation Notice");
+              return;
+            }
+            claimPage.triggerNotice("Preliminary Designation");
+            fineos.onTab("Absence Hub");
+            claimPage.adjudicate((adjudication) => {
+              adjudication
+                .evidence((evidence) => {
+                  // Receive all of the claim documentation.
+                  claim.documents.forEach((document) => {
+                    evidence.receive(document.document_type);
+                  });
+                })
+                .certificationPeriods((cert) => cert.prefill())
+                .acceptLeavePlan();
+            });
+            claimPage.approve(
+              "Approved",
+              config("HAS_APRIL_UPGRADE") === "true"
+            );
+            claimPage.triggerNotice("Designation Notice");
           });
-          claimPage.approve("Approved", config("HAS_APRIL_UPGRADE") === "true");
-          claimPage.triggerNotice("Designation Notice");
         });
       });
     }

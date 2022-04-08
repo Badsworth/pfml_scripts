@@ -95,7 +95,7 @@ from massgov.pfml.fineos.models.customer_api.spec import (
     ReadCustomerOccupation,
     TimeOffLeavePeriod,
 )
-from massgov.pfml.util.strings import format_tax_identifier
+from massgov.pfml.util.strings import format_fein, format_tax_identifier
 
 
 def sqlalchemy_object_as_dict(obj):
@@ -1906,6 +1906,99 @@ def test_application_patch_tax_identifier(client, user, auth_token, test_db_sess
     test_db_session.refresh(application)
     assert application.tax_identifier
     assert application.tax_identifier.tax_identifier == "123456789"
+
+
+def test_application_patch_limit_ssn_max_attempts(
+    client, user, limit_ssn_fein_max_attempts, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(
+        user=user, tax_identifier=TaxIdentifierFactory.create(tax_identifier="987654321")
+    )
+    # Make sure the fein doesn't change in between requests,
+    # because it also counts as an attempt
+    initial_fein = application.employer_fein
+
+    # Perform a couple updates to the SSN
+    for new_tax_identifier in ["123-45-6789", "123-45-6788"]:
+        assert application.tax_identifier
+        assert application.tax_identifier.tax_identifier != new_tax_identifier
+
+        response = client.patch(
+            "/v1/applications/{}".format(application.application_id),
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json={"tax_identifier": new_tax_identifier},
+        )
+
+        assert response.status_code == 200
+        assert response.get_json()["data"]["tax_identifier"] == "***-**-" + new_tax_identifier[-4:]
+
+        test_db_session.refresh(application)
+        assert application.tax_identifier
+        assert application.tax_identifier.tax_identifier == new_tax_identifier.replace("-", "")
+        assert application.employer_fein == initial_fein
+
+    # Reached limit SSN max attempts
+    new_tax_identifier = "123-45-6787"
+    assert application.tax_identifier
+    assert application.tax_identifier.tax_identifier != new_tax_identifier
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"tax_identifier": new_tax_identifier},
+    )
+
+    assert response.status_code == 400
+    assert (
+        response.get_json()["data"]["tax_identifier"]
+        == "***-**-" + application.tax_identifier.tax_identifier[-4:]
+    )
+    assert response.get_json()["errors"][0]["rule"] == IssueRule.max_ssn_fein_update_attempts
+    assert application.employer_fein == initial_fein
+
+
+def test_application_patch_limit_fein_max_attempts(
+    client, user, limit_ssn_fein_max_attempts, auth_token, test_db_session
+):
+    application = ApplicationFactory.create(user=user, employer_fein="987654321")
+    # Make sure the ssn doesn't change in between requests,
+    # because it also counts as an attempt
+    initial_tax_identifier = application.tax_identifier.tax_identifier
+
+    # Perform a couple updates to the FEIN
+    for new_employer_fein in ["12-3456789", "12-3456788"]:
+        assert application.employer_fein
+        assert application.employer_fein != new_employer_fein
+
+        response = client.patch(
+            "/v1/applications/{}".format(application.application_id),
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json={"employer_fein": new_employer_fein},
+        )
+
+        assert response.status_code == 200
+        assert response.get_json()["data"]["employer_fein"] == new_employer_fein
+
+        test_db_session.refresh(application)
+        assert application.employer_fein
+        assert application.employer_fein == new_employer_fein.replace("-", "")
+        assert application.tax_identifier.tax_identifier == initial_tax_identifier
+
+    # Reached limit FEIN max attempts
+    new_employer_fein = "12-3456787"
+    assert application.employer_fein
+    assert application.employer_fein != new_employer_fein
+
+    response = client.patch(
+        "/v1/applications/{}".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"employer_fein": new_employer_fein},
+    )
+
+    assert response.status_code == 400
+    assert response.get_json()["data"]["employer_fein"] == format_fein(application.employer_fein)
+    assert response.get_json()["errors"][0]["rule"] == IssueRule.max_ssn_fein_update_attempts
+    assert application.tax_identifier.tax_identifier == initial_tax_identifier
 
 
 def test_application_patch_masked_tax_id_has_no_effect(client, user, auth_token, test_db_session):

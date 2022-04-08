@@ -1013,6 +1013,8 @@ class BenefitYear(Base, TimestampMixin):
 
     total_wages = Column(Numeric(asdecimal=True))
 
+    Index("uix_employee_id_start_date", employee_id, start_date, unique=True)
+
     @typed_hybrid_property
     def current_benefit_year(self) -> bool:
         today = date.today()

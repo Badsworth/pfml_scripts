@@ -36,7 +36,6 @@ function withClaims<T extends WithClaimsProps>(
         page_offset: apiParams.page_offset,
         order_by: apiParams.order_by,
         order_direction: apiParams.order_direction,
-        claim_status: apiParams.claim_status,
         is_reviewable: apiParams.is_reviewable,
         request_decision: apiParams.request_decision,
         employer_id: apiParams.employer_id,

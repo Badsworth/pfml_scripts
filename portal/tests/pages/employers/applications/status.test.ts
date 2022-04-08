@@ -5,7 +5,6 @@ import {
 } from "../../../../src/models/Document";
 import { MockEmployerClaimBuilder, renderPage } from "../../../test-utils";
 import { screen, waitFor } from "@testing-library/react";
-import { AbsenceCaseStatus } from "../../../../src/models/Claim";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import Status from "../../../../src/pages/employers/applications/status";
 import { faker } from "@faker-js/faker";
@@ -19,7 +18,6 @@ function setup(models = {}) {
 
   const absence_id = "NTN-111-ABS-01";
   const newClaim = new MockEmployerClaimBuilder()
-    .status(AbsenceCaseStatus.approved)
     .completed()
     .absenceId(absence_id)
     .create();
@@ -184,9 +182,6 @@ describe("Status", () => {
   });
 
   it("renders employee information section when new format is enabled", () => {
-    process.env.featureFlags = JSON.stringify({
-      employerShowMultiLeaveDashboard: true,
-    });
     setup();
     expect(
       screen.getByRole("heading", { name: "Employee information" })
@@ -200,9 +195,6 @@ describe("Status", () => {
   });
 
   it("renders updated Leave Details section when new format is enabled", () => {
-    process.env.featureFlags = JSON.stringify({
-      employerShowMultiLeaveDashboard: true,
-    });
     const documents = [
       {
         content_type: "application/pdf",
@@ -239,10 +231,6 @@ describe("Status", () => {
   });
 
   it("renders updated lead content when the feature flag is enabled", () => {
-    process.env.featureFlags = JSON.stringify({
-      employerShowMultiLeaveDashboard: true,
-    });
-
     setup();
     expect(
       screen.getByText(

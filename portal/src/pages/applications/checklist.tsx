@@ -160,7 +160,7 @@ export const Checklist = (props: ChecklistProps) => {
               components={{
                 "benefit-year-guide-link": (
                   <a
-                    href={routes.external.massgov.benefitsGuide_benefitYears}
+                    href={routes.external.massgov.importantTermsToKnow}
                     rel="noopener noreferrer"
                     target="_blank"
                   />

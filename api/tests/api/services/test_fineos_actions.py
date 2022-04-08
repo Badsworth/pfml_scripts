@@ -1734,6 +1734,7 @@ class TestSubmitChangeRequest:
         mock_fineos.create_or_update_leave_period_change_request.assert_called_with(
             "web_id", claim.fineos_absence_id, mock.ANY
         )
+        assert change_request.submitted_time is not None
 
 
 class TestConvertChangeRequestToFineosModel:

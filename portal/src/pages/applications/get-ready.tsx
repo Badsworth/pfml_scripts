@@ -13,7 +13,6 @@ import React from "react";
 import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
 import { getMaxBenefitAmount } from "src/utils/getMaxBenefitAmount";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
@@ -216,18 +215,17 @@ export const GetReady = (props: GetReadyProps) => {
         >
           {t("pages.getReady.createClaimButton")}
         </ButtonLink>
-        {isFeatureEnabled("channelSwitching") && (
-          <Details label={t("pages.getReady.startByPhoneLabel")}>
-            <p>{t("pages.getReady.startByPhoneDescription")}</p>
-            <Link
-              href={appLogic.portalFlow.getNextPageRoute("IMPORT_APPLICATION")}
-            >
-              <a className="display-inline-block margin-bottom-5">
-                {t("pages.getReady.addApplication")}
-              </a>
-            </Link>
-          </Details>
-        )}
+
+        <Details label={t("pages.getReady.startByPhoneLabel")}>
+          <p>{t("pages.getReady.startByPhoneDescription")}</p>
+          <Link
+            href={appLogic.portalFlow.getNextPageRoute("IMPORT_APPLICATION")}
+          >
+            <a className="display-inline-block margin-bottom-5">
+              {t("pages.getReady.addApplication")}
+            </a>
+          </Link>
+        </Details>
       </div>
     </React.Fragment>
   );

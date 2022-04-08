@@ -38,6 +38,7 @@ import withClaimDocuments, {
 import Address from "../../models/Address";
 import Alert from "../../components/core/Alert";
 import BackButton from "../../components/BackButton";
+import BenefitYearsSpanAlert from "src/features/benefits-applications/BenefitYearsSpanAlert";
 import Heading from "../../components/core/Heading";
 import HeadingPrefix from "../../components/core/HeadingPrefix";
 import Lead from "../../components/core/Lead";
@@ -51,6 +52,7 @@ import { Trans } from "react-i18next";
 import WeeklyTimeTable from "../../components/WeeklyTimeTable";
 import claimantConfigs from "../../flows/claimant";
 import convertMinutesToHours from "../../utils/convertMinutesToHours";
+import dayjs from "dayjs";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDate from "../../utils/formatDate";
 import formatDateRange from "../../utils/formatDateRange";
@@ -141,6 +143,15 @@ export const Review = (
 
     await appLogic.benefitsApplications.complete(claim.application_id);
   };
+
+  const secondLeaveEarliestSubmissionDate =
+    claim.computed_application_split
+      ?.application_outside_benefit_year_submittable_on;
+
+  const today = dayjs().format("YYYY-MM-DD");
+  const secondCanBeSubmitted = secondLeaveEarliestSubmissionDate
+    ? secondLeaveEarliestSubmissionDate <= today
+    : false;
 
   // Adjust heading levels depending on if there's a "Part 1" heading at the top of the page or not
   const reviewHeadingLevel = usePartOneReview ? "3" : "2";
@@ -417,6 +428,16 @@ export const Review = (
       >
         {t("pages.claimsReview.stepHeading", { context: "leaveDetails" })}
       </ReviewHeading>
+
+      {claim.computed_application_split && secondCanBeSubmitted && (
+        <BenefitYearsSpanAlert
+          computed_application_split={claim.computed_application_split}
+          computed_earliest_submission_date={
+            claim.computed_earliest_submission_date
+          }
+          final_content_before_submit={false}
+        />
+      )}
 
       <ReviewRow
         level={reviewRowLevel}
@@ -715,14 +736,24 @@ export const Review = (
 
       {usePartOneReview ? (
         <div className="margin-top-6 margin-bottom-2">
-          <Trans
-            i18nKey="pages.claimsReview.partOneNextSteps"
-            components={{
-              "contact-center-phone-link": (
-                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-              ),
-            }}
-          />
+          {claim.computed_application_split && !secondCanBeSubmitted ? (
+            <BenefitYearsSpanAlert
+              computed_application_split={claim.computed_application_split}
+              computed_earliest_submission_date={
+                claim.computed_earliest_submission_date
+              }
+              final_content_before_submit={true}
+            />
+          ) : (
+            <Trans
+              i18nKey="pages.claimsReview.partOneNextSteps"
+              components={{
+                "contact-center-phone-link": (
+                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                ),
+              }}
+            />
+          )}
         </div>
       ) : (
         <React.Fragment>

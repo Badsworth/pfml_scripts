@@ -2,7 +2,6 @@
 import { compact, get } from "lodash";
 import { AbsencePeriod } from "./AbsencePeriod";
 import { ManagedRequirement } from "./ManagedRequirement";
-import { ValuesOf } from "../../types/common";
 import { isReviewable } from "src/utils/isReviewable";
 
 /**
@@ -10,7 +9,6 @@ import { isReviewable } from "src/utils/isReviewable";
  */
 class Claim {
   absence_periods: AbsencePeriod[];
-  claim_status: AbsenceCaseStatusType | null;
   created_at: string;
   employee: ClaimEmployee | null;
   employer: ClaimEmployer;
@@ -63,20 +61,5 @@ export interface ClaimEmployer {
   employer_fein: string;
   employer_id: string;
 }
-
-/**
- * Enums for `claim.claim_status` field
- * This is the subset of potential values returned by the API that we show to the user.
- * We currently ignore other potential values like "Adjudication", "Intake In Progress", "Unknown"
- * @enum {string}
- */
-export const AbsenceCaseStatus = {
-  approved: "Approved",
-  closed: "Closed",
-  completed: "Completed",
-  declined: "Declined",
-} as const;
-
-export type AbsenceCaseStatusType = ValuesOf<typeof AbsenceCaseStatus>;
 
 export default Claim;

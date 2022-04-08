@@ -23,7 +23,6 @@ import { compact } from "lodash";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDate from "../../utils/formatDate";
 import formatDateRange from "../../utils/formatDateRange";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import { useTranslation } from "../../locales/i18n";
 
 export interface PaginatedClaimsTableProps extends WithClaimsProps {
@@ -128,11 +127,7 @@ const PaginatedClaimsTable = (props: PaginatedClaimsTableProps) => {
                 claim={claim}
                 href={props.getNextPageRoute(
                   "VIEW_CLAIM",
-                  {
-                    employerShowMultiLeaveDashboard: isFeatureEnabled(
-                      "employerShowMultiLeaveDashboard"
-                    ),
-                  },
+                  {},
                   { absence_id: claim.fineos_absence_id }
                 )}
                 visibleTableColumns={visibleTableColumns}

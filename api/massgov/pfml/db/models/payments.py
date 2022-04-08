@@ -1,5 +1,6 @@
 from enum import Enum
 from typing import Optional, cast
+from uuid import UUID
 
 from sqlalchemy import JSON, TIMESTAMP, Boolean, Column, Date, ForeignKey, Integer, Numeric, Text
 from sqlalchemy.orm import relationship
@@ -16,9 +17,10 @@ from massgov.pfml.db.models.employees import (
     PaymentDetails,
     ReferenceFile,
 )
+from massgov.pfml.util.pydantic import PydanticBaseModel
 
 from ..lookup import LookupTable
-from .base import Base, TimestampMixin, uuid_gen
+from .base import Base, TimestampMixin, deprecated_column, uuid_gen
 from .common import PostgreSQLUUID
 from .common import XMLType as XML
 
@@ -393,6 +395,30 @@ class FineosExtractVbiRequestedAbsenceSom(Base, TimestampMixin):
     reference_file = relationship(ReferenceFile)
 
 
+class MinimizedRequestedAbsenceSom(PydanticBaseModel):
+    """
+    Subset of FineosExtractVbiRequestedAbsenceSom that is used by
+    the ClaimantExtractStep to minimize the number of fields we
+    pull from the DB. Columns specified here are ones actually
+    used from the above table.
+    """
+
+    vbi_requested_absence_som_id: UUID
+    notification_casenumber: Optional[str]
+    absence_casenumber: Optional[str]
+    absence_casestatus: Optional[str]
+    employee_customerno: Optional[str]
+    orgunit_name: Optional[str]
+    employer_customerno: Optional[str]
+    leaverequest_id: Optional[str]
+    leaverequest_evidenceresulttype: Optional[str]
+    absencereason_coverage: Optional[str]
+    absenceperiod_classid: Optional[str]
+    absenceperiod_indexid: Optional[str]
+    absenceperiod_start: Optional[str]
+    absenceperiod_end: Optional[str]
+
+
 class FineosExtractVbiRequestedAbsence(Base, TimestampMixin):
     __tablename__ = "fineos_extract_vbi_requested_absence"
 
@@ -460,6 +486,27 @@ class FineosExtractVbiRequestedAbsence(Base, TimestampMixin):
     )
 
     reference_file = relationship(ReferenceFile)
+
+
+class MinimizedRequestedAbsence(PydanticBaseModel):
+    """
+    Subset of FineosExtractVbiRequestedAbsence that is used by
+    the ClaimantExtractStep to minimize the number of fields we
+    pull from the DB. Columns specified here are ones actually
+    used from the above table.
+    """
+
+    vbi_requested_absence_id: UUID
+    absenceperiod_classid: Optional[str]
+    absenceperiod_indexid: Optional[str]
+    absencereason_coverage: Optional[str]
+    absence_casecreationdate: Optional[str]
+    absenceperiod_type: Optional[str]
+    absencereason_qualifier1: Optional[str]
+    absencereason_qualifier2: Optional[str]
+    absencereason_name: Optional[str]
+    leaverequest_decision: Optional[str]
+    leaverequest_id: Optional[str]
 
 
 class FineosExtractEmployeeFeed(Base, TimestampMixin):
@@ -546,6 +593,32 @@ class FineosExtractEmployeeFeed(Base, TimestampMixin):
     reference_file = relationship(ReferenceFile)
 
 
+class MinimizedEmployeeFeed(PydanticBaseModel):
+    """
+    Subset of FineosExtractEmployeeFeed that is used by
+    the ClaimantExtractStep to minimize the number of fields we
+    pull from the DB. Columns specified here are ones actually
+    used from the above table.
+    """
+
+    employee_feed_id: UUID
+    c: Optional[str]
+    i: Optional[str]
+    defpaymentpref: Optional[str]
+    customerno: Optional[str]
+    natinsno: Optional[str]
+    dateofbirth: Optional[str]
+    paymentmethod: Optional[str]
+    sortcode: Optional[str]
+    accountno: Optional[str]
+    accounttype: Optional[str]
+    firstnames: Optional[str]
+    initials: Optional[str]
+    lastname: Optional[str]
+    extmassid: Optional[str]
+    extoutofstateid: Optional[str]
+
+
 class FineosExtractPaymentFullSnapshot(Base, TimestampMixin):
     __tablename__ = "fineos_extract_payment_full_snapshot"
 
@@ -566,12 +639,12 @@ class FineosExtractPaymentFullSnapshot(Base, TimestampMixin):
     addressline5 = Column(Text)
     addressline6 = Column(Text)
     addressline7 = Column(Text)
-    advicetopay = Column(Text)
+    advicetopay = deprecated_column(Text)  # Being removed in FINEOS' upcoming release
     advicetopayov = Column(Text)
     amalgamationc = Column(Text)
     amount_monamt = Column(Text)
     amount_moncur = Column(Text)
-    checkcutting = Column(Text)
+    checkcutting = deprecated_column(Text)  # Being removed in FINEOS' upcoming release
     confirmedbyus = Column(Text)
     confirmeduid = Column(Text)
     contractref = Column(Text)
@@ -580,7 +653,7 @@ class FineosExtractPaymentFullSnapshot(Base, TimestampMixin):
     dateinterface = Column(Text)
     datelastproce = Column(Text)
     description = Column(Text)
-    employeecontr = Column(Text)
+    employeecontr = deprecated_column(Text)  # Being removed in FINEOS' upcoming release
     eventeffectiv = Column(Text)
     eventreason = Column(Text)
     eventtype = Column(Text)

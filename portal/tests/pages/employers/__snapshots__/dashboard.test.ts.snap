@@ -1,94 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Employer dashboard deprecated: renders a table of claims with links if employer is registered in FINEOS 1`] = `
-<table
-  class="usa-table usa-table--borderless width-full usa-table--stacked"
->
-  <thead>
-    <tr>
-      <th
-        scope="col"
-      >
-        Employee name
-      </th>
-      <th
-        scope="col"
-      >
-        Application ID
-      </th>
-      <th
-        scope="col"
-      >
-        Organization
-      </th>
-      <th
-        scope="col"
-      >
-        Employer ID number
-      </th>
-      <th
-        scope="col"
-      >
-        Application start date
-      </th>
-      <th
-        scope="col"
-      >
-        Status
-      </th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th
-        data-label="Employee name"
-        data-test="employee_name"
-        scope="row"
-      >
-        <a
-          href="/employers/applications/new-application?absence_id=NTN-111-ABS-01"
-        >
-          Jane Doe
-        </a>
-      </th>
-      <td
-        data-label="Application ID"
-      >
-        <a
-          href="/employers/applications/new-application?absence_id=NTN-111-ABS-01"
-        >
-          NTN-111-ABS-01
-        </a>
-      </td>
-      <td
-        data-label="Organization"
-      >
-        Work Inc
-      </td>
-      <td
-        data-label="Employer ID number"
-      >
-        12-3456789
-      </td>
-      <td
-        data-label="Application start date"
-      >
-        1/15/2021
-      </td>
-      <td
-        data-label="Status"
-      >
-        <span
-          class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-success-dark bg-success-lighter"
-        >
-          Approved
-        </span>
-      </td>
-    </tr>
-  </tbody>
-</table>
-`;
-
 exports[`Employer dashboard renders a table of claims, with links to status page 1`] = `
 <table
   class="usa-table usa-table--borderless width-full usa-table--stacked"
@@ -214,23 +125,9 @@ exports[`Employer dashboard renders a verification message in the table, when al
 </td>
 `;
 
-exports[`Employer dashboard renders a verification message in the table, when all employers are unverified 2`] = `
-<td
-  colspan="5"
->
-  You have not verified any organizations. 
-  <a
-    href="/employers/organizations"
-  >
-    Complete this process
-  </a>
-   to review applications.
-</td>
-`;
-
 exports[`Employer dashboard renders the banner if there are any unverified employers 1`] = `
 <div
-  aria-labelledby="alert-heading1157"
+  aria-labelledby="alert-heading739"
   class="usa-alert usa-alert--warning"
   role="region"
   tabindex="-1"
@@ -240,7 +137,7 @@ exports[`Employer dashboard renders the banner if there are any unverified emplo
   >
     <h2
       class="usa-alert__heading font-heading-md text-bold"
-      id="alert-heading1157"
+      id="alert-heading739"
     >
       Verify your account
     </h2>
@@ -290,57 +187,6 @@ exports[`Employer dashboard renders the page with expected content and paginatio
   <div
     class="measure-6"
   />
-  <section
-    class="margin-bottom-4 margin-top-2"
-  >
-    <details
-      class="c-details"
-    >
-      <summary
-        class="margin-bottom-2 text-primary text-underline font-ui-xs"
-      >
-        Status descriptions
-      </summary>
-      <div
-        class="margin-bottom-2"
-      >
-        <ul
-          class="usa-list"
-        >
-          <li>
-            <strong>
-              Review by:
-            </strong>
-             Review this application by this date to provide DFML with your input.
-          </li>
-          <li>
-            <strong>
-              No action required:
-            </strong>
-             This leave request is awaiting a decision from DFML.
-          </li>
-          <li>
-            <strong>
-              Denied:
-            </strong>
-             DFML has denied this leave request.
-          </li>
-          <li>
-            <strong>
-              Approved:
-            </strong>
-             DFML has approved this leave request.
-          </li>
-          <li>
-            <strong>
-              Closed:
-            </strong>
-             The leave has passed or no action can be taken.
-          </li>
-        </ul>
-      </div>
-    </details>
-  </section>
   <section
     class="margin-top-2"
   >
@@ -411,94 +257,177 @@ exports[`Employer dashboard renders the page with expected content and paginatio
         <legend
           class="usa-label text-bold usa-legend font-heading-xs measure-5"
         >
-          Status
+          Review requested
         </legend>
         <div
           class=""
         >
           <div
-            class="usa-checkbox measure-5 bg-transparent"
+            class="usa-radio measure-5 bg-transparent"
           >
             <input
-              class="usa-checkbox__input"
+              class="usa-radio__input"
               id="InputChoice2"
-              name="claim_status"
-              type="checkbox"
-              value="Approved"
+              name="is_reviewable"
+              type="radio"
+              value="yes"
             />
             <label
-              class="usa-checkbox__label"
+              class="usa-radio__label"
               for="InputChoice2"
+            >
+              Yes, review requested
+            </label>
+          </div>
+          <div
+            class="usa-radio measure-5 bg-transparent"
+          >
+            <input
+              class="usa-radio__input"
+              id="InputChoice3"
+              name="is_reviewable"
+              type="radio"
+              value="no"
+            />
+            <label
+              class="usa-radio__label"
+              for="InputChoice3"
+            >
+              No, review not needed
+            </label>
+          </div>
+          <div
+            class="usa-radio measure-5 bg-transparent"
+          >
+            <input
+              checked=""
+              class="usa-radio__input"
+              id="InputChoice4"
+              name="is_reviewable"
+              type="radio"
+              value=""
+            />
+            <label
+              class="usa-radio__label"
+              for="InputChoice4"
+            >
+              Show all
+            </label>
+          </div>
+        </div>
+      </fieldset>
+      <fieldset
+        class="usa-fieldset margin-top-3 usa-form-group"
+      >
+        <legend
+          class="usa-label text-bold usa-legend font-heading-xs measure-5"
+        >
+          Leave details
+        </legend>
+        <div
+          class=""
+        >
+          <div
+            class="usa-radio measure-5 bg-transparent"
+          >
+            <input
+              class="usa-radio__input"
+              id="InputChoice5"
+              name="request_decision"
+              type="radio"
+              value="approved"
+            />
+            <label
+              class="usa-radio__label"
+              for="InputChoice5"
             >
               Approved
             </label>
           </div>
           <div
-            class="usa-checkbox measure-5 bg-transparent"
+            class="usa-radio measure-5 bg-transparent"
           >
             <input
-              class="usa-checkbox__input"
-              id="InputChoice3"
-              name="claim_status"
-              type="checkbox"
-              value="Closed"
+              class="usa-radio__input"
+              id="InputChoice6"
+              name="request_decision"
+              type="radio"
+              value="cancelled"
             />
             <label
-              class="usa-checkbox__label"
-              for="InputChoice3"
+              class="usa-radio__label"
+              for="InputChoice6"
             >
-              Closed
+              Cancelled
             </label>
           </div>
           <div
-            class="usa-checkbox measure-5 bg-transparent"
+            class="usa-radio measure-5 bg-transparent"
           >
             <input
-              class="usa-checkbox__input"
-              id="InputChoice4"
-              name="claim_status"
-              type="checkbox"
-              value="Declined"
+              class="usa-radio__input"
+              id="InputChoice7"
+              name="request_decision"
+              type="radio"
+              value="denied"
             />
             <label
-              class="usa-checkbox__label"
-              for="InputChoice4"
+              class="usa-radio__label"
+              for="InputChoice7"
             >
               Denied
             </label>
           </div>
           <div
-            class="usa-checkbox measure-5 bg-transparent"
+            class="usa-radio measure-5 bg-transparent"
           >
             <input
-              class="usa-checkbox__input"
-              id="InputChoice5"
-              name="claim_status"
-              type="checkbox"
-              value="Pending - no action"
+              class="usa-radio__input"
+              id="InputChoice8"
+              name="request_decision"
+              type="radio"
+              value="pending"
             />
             <label
-              class="usa-checkbox__label"
-              for="InputChoice5"
+              class="usa-radio__label"
+              for="InputChoice8"
             >
-              No action required
+              Pending
             </label>
           </div>
           <div
-            class="usa-checkbox measure-5 bg-transparent"
+            class="usa-radio measure-5 bg-transparent"
           >
             <input
-              class="usa-checkbox__input"
-              id="InputChoice6"
-              name="claim_status"
-              type="checkbox"
-              value="Open requirement"
+              class="usa-radio__input"
+              id="InputChoice9"
+              name="request_decision"
+              type="radio"
+              value="withdrawn"
             />
             <label
-              class="usa-checkbox__label"
-              for="InputChoice6"
+              class="usa-radio__label"
+              for="InputChoice9"
             >
-              Review by
+              Withdrawn
+            </label>
+          </div>
+          <div
+            class="usa-radio measure-5 bg-transparent"
+          >
+            <input
+              checked=""
+              class="usa-radio__input"
+              id="InputChoice10"
+              name="request_decision"
+              type="radio"
+              value=""
+            />
+            <label
+              class="usa-radio__label"
+              for="InputChoice10"
+            >
+              Show all
             </label>
           </div>
         </div>
@@ -533,33 +462,28 @@ exports[`Employer dashboard renders the page with expected content and paginatio
       >
         <label
           class="usa-label text-bold margin-right-1 font-heading-xs measure-5"
-          for="Dropdown43"
-          id="Dropdown43_label"
+          for="Dropdown71"
+          id="Dropdown71_label"
         >
           Sort
         </label>
         <div
           class=""
-          data-default-value="absence_status,ascending"
+          data-default-value="latest_follow_up_date,descending"
         >
           <select
-            aria-labelledby="Dropdown43_label Dropdown43_hint Dropdown43_error"
+            aria-labelledby="Dropdown71_label Dropdown71_hint Dropdown71_error"
             class="usa-select maxw-mobile-lg margin-0"
-            id="Dropdown43"
+            id="Dropdown71"
             name="orderAndDirection"
           >
             <option
-              value="absence_status,ascending"
-            >
-              Status
-            </option>
-            <option
-              value="created_at,descending"
+              value="latest_follow_up_date,descending"
             >
               Newest applications
             </option>
             <option
-              value="created_at,ascending"
+              value="latest_follow_up_date,ascending"
             >
               Oldest applications
             </option>
@@ -589,27 +513,17 @@ exports[`Employer dashboard renders the page with expected content and paginatio
           <th
             scope="col"
           >
-            Employee name
+            Employee (Application ID)
           </th>
           <th
             scope="col"
           >
-            Application ID
+            Leave details
           </th>
           <th
             scope="col"
           >
-            Employer ID number
-          </th>
-          <th
-            scope="col"
-          >
-            Application start date
-          </th>
-          <th
-            scope="col"
-          >
-            Status
+            Review due date
           </th>
         </tr>
       </thead>
@@ -618,7 +532,7 @@ exports[`Employer dashboard renders the page with expected content and paginatio
           data-test="verification-instructions-row"
         >
           <td
-            colspan="5"
+            colspan="3"
           >
             You have not verified any organizations. 
             <a

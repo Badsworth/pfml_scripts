@@ -473,7 +473,7 @@ def get_claim_as_leave_admin(
             **employer_info_for_review.dict(),
             **eform_data.dict(),
             fineos_absence_id=absence_id,
-            hours_worked_per_week=hours_worked_per_week,
+            hours_worked_per_week=hours_worked_per_week,  # type: ignore
             residential_address=claimant_address,
             leave_details=leave_details,
             status=status,

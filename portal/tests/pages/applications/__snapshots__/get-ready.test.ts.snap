@@ -315,6 +315,28 @@ exports[`GetReady renders get ready content 1`] = `
     >
       Create an application
     </a>
+    <details
+      class="c-details"
+    >
+      <summary
+        class="margin-bottom-2 text-primary text-underline font-ui-xs"
+      >
+        Did you start an application by phone?
+      </summary>
+      <div
+        class="margin-bottom-2"
+      >
+        <p>
+          Some applications started on the phone can be added to this website. Once added, you can upload documents and see your application’s status and payments online.
+        </p>
+        <a
+          class="display-inline-block margin-bottom-5"
+          href="/applications/import-claim"
+        >
+          Add an existing application
+        </a>
+      </div>
+    </details>
   </div>
 </div>
 `;
