@@ -33,6 +33,9 @@ export const extractGroup = (item, name) => {
 };
 
 export const labelComponent = (name) => {
+  if (!name) {
+    return name;
+  }
   switch (name) {
     case "api":
       return "API";
