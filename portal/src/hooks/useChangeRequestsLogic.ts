@@ -10,7 +10,7 @@ import getRelevantIssues from "../../src/utils/getRelevantIssues";
 
 import useCollectionState from "./useCollectionState";
 import { useState } from "react";
-const useChangeRequestLogic = ({
+const useChangeRequestsLogic = ({
   errorsLogic,
   portalFlow,
 }: {
@@ -136,4 +136,4 @@ const useChangeRequestLogic = ({
   };
 };
 
-export default useChangeRequestLogic;
+export default useChangeRequestsLogic;
