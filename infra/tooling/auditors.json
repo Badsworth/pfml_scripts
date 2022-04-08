@@ -4,5 +4,20 @@
             "lambda:ListFunctions",
             "lambda:GetFunction"
         ]
+    },
+    "s3": {
+        "actions": [
+            "cloudwatch:GetMetricStatistics",
+            "s3:GetBucketEncryption",
+            "s3:GetBucketVersioning",
+            "s3:GetBucketTagging",
+            "s3:GetBucketLocation",
+            "s3:GetEncryptionConfiguration",
+            "s3:GetBucketPolicy",
+            "s3:GetBucketLogging",
+            "s3:GetObjectLockConfiguration",
+            "s3:GetObjectNotificationConfiguration",
+            "s3:ListAllMyBuckets"
+        ]
     }
 }
