@@ -765,11 +765,6 @@ const shared: {
   // This makes the structure easier to navigate and the process of finding a specific element more consistent
   [contentKey: string]: string | I18nContentGroup;
 } = {
-  absenceCaseStatus_approved: "Approved",
-  absenceCaseStatus_closed: "Closed",
-  absenceCaseStatus_denied: "Denied",
-  absenceCaseStatus_noAction: "No action required",
-  absenceCaseStatus_pending: "Pending",
   achTypeChecking: "Checking",
   achTypeSavings: "Savings",
   addApplication: "Add an existing application",
@@ -814,6 +809,34 @@ const shared: {
   claimsEmploymentInfoTitle: "Employment information",
   claimsLeaveDetailsTitle: "Leave details",
   claimsLeaveDurationTitle: "Leave duration",
+  claimsLeaveSpansBenefitYears: {
+    bothCanBeSubmittedBenefitsCalculatedSeparately:
+      "The Department will calculate your weekly benefit amount for each application separately. You may receive different payment amounts for each application. Learn more about <how-benefit-amounts-are-calculated-link>how PFML weekly benefit amounts are calculated</how-benefit-amounts-are-calculated-link>.",
+    bothCanBeSubmittedDeterminationMayBeDifferent:
+      "The Department's determination for one application may be different from its determination for the other.",
+    bothCanBeSubmittedReviewedSeparately:
+      "We’ll review each application separately. This means that:",
+    bothCanBeSubmittedSevenDayWaitingPeriod:
+      "You'll have two 7-day waiting periods, one at the start of each period of your leave. Learn more about the <seven-day-waiting-period-link>7-day waiting period</seven-day-waiting-period-link>.",
+    bothCannotBeSubmittedCurrent:
+      "You will be able to submit Part 1 of your current benefit year application on <strong>{{submittableDate}}</strong>. This is 60 days before the start of your leave in the current benefit year.",
+    bothCannotBeSubmittedNew:
+      "You will be able to submit Part 1 of your new benefit year application on <strong>{{submittableDate}}</strong>. This is 60 days before the start of your leave in the new benefit year.",
+    bothCannotBeSubmittedReminder:
+      "Applications cannot be submitted earlier than 60 days before the start of leave.",
+    currentBenefitYearLeaveDates:
+      "<strong>Current benefit year</strong>: leave dates from {{startDate}} to {{endDate}}",
+    introduction:
+      "Your current <benefit-year-guide-link>benefit year</benefit-year-guide-link> is {{startDate}} to {{endDate}}. After you submit Part 1 of your application, we'll automatically split this application into two, one for each benefit year. You can upload the same supporting documentation for both applications.",
+    newBenefitYearLeaveDates:
+      "<strong>New benefit year</strong>: leave dates from {{startDate}} to {{endDate}}",
+    secondCannotBeSubmittedCurrent:
+      "You will be able to submit your current benefit year application right away.",
+    secondCannotBeSubmittedNew:
+      "You will be able to submit your new benefit year application on <strong>{{submittableDate}}</strong>. This is 60 days before the start of your leave in the new benefit year. Applications cannot be submitted earlier than 60 days before the start of leave.",
+    title: "Your leave dates extend into a new benefit year.",
+  },
+  claimsModifyTitle: "Change your application",
   claimsOtherLeaveTitle: "Other leave, benefits, and income",
   claimsPreviousLeaveDetails: {
     addButton: "Add another previous leave",
@@ -1012,18 +1035,30 @@ const pages: {
   },
   applications: {
     addApplication: "$t(shared.addApplication)",
+    applicationOneSuccess:
+      "You successfully submitted Part 1. Submit Parts 2 and 3 so that we can review your application.",
+    applicationTwoSubmitLater:
+      "You will be able to submit Part 1 of your new benefit year application on <strong>{{submitDate}}</strong>. This is 60 days before the start of your leave in the new benefit year. Applications cannot be submitted earlier than 60 days before the start of leave.",
+    bothApplicationsWereSubmitted:
+      "You successfully submitted Part 1. Your application was split into two, one for each benefit year. Submit Parts 2 and 3 so that we can review your applications.",
     can_submit_application_across_benefit_year:
       "If you submit an application with leave dates that are in both your current and a new benefit year, we'll review the request as two separate applications. $t(pages.applications.claimsApprovalProcess)",
     claimsApprovalProcess:
       "Learn more about the <approval-process-link>application review and approval process</approval-process-link>.",
     createApplicationHeading: "Create a new application",
+    currentBenefitYearLeave:
+      "<strong>Current benefit year:</strong> leave dates from {{startDate}} to {{endDate}}",
     getReadyLink: "Start a new application",
+    nextBenefitYearLeave:
+      "<strong>New benefit year:</strong> leave dates from {{startDate}} to {{endDate}}",
     startByPhoneDescription: "$t(shared.startByPhoneDescription)",
     startByPhoneLabel: "$t(shared.startByPhoneLabel)",
     title: "Your applications",
     uploadSuccessHeading: "You successfully submitted your documents",
     uploadSuccessMessage:
       "Our Contact Center staff will review your documents for {{absence_id}}.",
+    yourApplicationWasSplit:
+      "Your application was split into two, one for each benefit year.",
     your_benefit_year:
       "Your current <benefit-year-guide-link>benefit year</benefit-year-guide-link> is {{startDate}} to {{endDate}}. Most Massachusetts employees are eligible for up to 26 weeks of combined family and medical leave per benefit year.",
   },
@@ -1193,6 +1228,8 @@ const pages: {
     completed_uneditable: "Confirmed",
     documentsLoadError: "$t(shared.documentsLoadError)",
     edit: "Edit",
+    leaveDetailsBenefitYears:
+      "Your leave dates extend into a new benefit year. Your current <benefit-year-guide-link>benefit year</benefit-year-guide-link> is {{startDate}} to {{endDate}}. After you submit Part 1 of your application, we'll automatically split this application into two, one for each benefit year.",
     // TODO (CP-2354) Remove CC guidance for claims with Part 1 submitted without reductions data
     otherLeaveSubmittedDetailsBody:
       "<ul><li>You have already taken leave to care for a family member since July 1, 2021</li><li>You have already taken leave since {{otherLeaveStartDate}} <when-can-i-use-pfml>for any other reason that qualifies for PFML</when-can-i-use-pfml></li><li>You plan to use any accrued paid leave or any other benefits from your employer during your paid leave from PFML (for example: your employer’s parental leave program or paid sick time)</li><li>You expect to get income from any other sources during your leave (for example: disability insurance, retirement benefits, or another job)</li></ul>",
@@ -1598,6 +1635,42 @@ const pages: {
       "I need to care for a family member who serves in the armed forces.",
     title: "$t(shared.claimsLeaveDetailsTitle)",
   },
+  claimsLeaveSpansBenefitYears: {
+    continueLabel: "I understand",
+    loadingLabel: "Redirecting to applications index",
+    title: "$t(shared.claimsLeaveSpansBenefitYears.title)",
+  },
+  claimsModifyCancel: {
+    sectionLabel: "Are you sure you want to cancel your leave?",
+    title: "$t(shared.claimsModifyTitle)",
+  },
+  claimsModifyChecklist: {
+    backButtonLabel: "$t(shared.backToYourApplicationsLink)",
+    title: "Welcome back to your in-progress change request",
+  },
+  claimsModifyGetReady: {
+    backButtonLabel: "$t(shared.backToYourApplicationsLink)",
+    button: "Continue",
+    title: "Request a change to your application",
+  },
+  claimsModifyReview: {
+    sectionLabel: "Review and submit your requested change",
+    title: "$t(shared.claimsModifyTitle)",
+  },
+  claimsModifySuccess: {
+    adjudicationProcess:
+      "<ul> <li>Your employer has 10 business days to provide feedback on your application.</li> <li>We’ll confirm your eligibility and make sure that your documents are valid.</li> <li>We will notify you once we’ve made a decision. You’ll be able to read the details of the decision on this website. Your employer will also get a copy of the decision.</li><li>Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.</li><li>$t(shared.trackStatus)</li></ul>",
+    adjudicationProcessHeading: "What happens next",
+    backButtonLabel: "$t(shared.backToYourApplicationsLink)",
+    claimantApplicationId:
+      "Your application ID is <strong>{{absence_id}}</strong>",
+    title: "You've submitted your change request",
+    viewStatus: "View status and details for your application",
+  },
+  claimsModifyType: {
+    sectionLabel: "How do you want to change your application?",
+    title: "$t(shared.claimsModifyTitle)",
+  },
   claimsName: {
     firstNameLabel: "First name",
     lastNameLabel: "Last name",
@@ -1960,6 +2033,14 @@ const pages: {
       "Estimated {{frequency}} absences per week, each lasting {{duration}} hours.",
     isForCurrentEmployer_false: "From a different employer",
     isForCurrentEmployer_true: "From this employer",
+    leaveDetailsBenefitYearsIntroduction:
+      "<p>Your current <benefit-year-guide-link>benefit year</benefit-year-guide-link> is {{startDate}} to {{endDate}}. After you submit Part 1 of your application, we'll automatically split this application into two, one for each benefit year. You can upload the same supporting documentation for both applications.",
+    leaveDetailsBenefitYearsSixtyYearsAndBelow:
+      "<p>Your current <benefit-year-guide-link>benefit year</benefit-year-guide-link> is {{startDate}} to {{endDate}}. After you submit Part 1 of your application, we'll automatically split this application into two, one for each benefit year. You can upload the same supporting documentation for both applications.</p><ul><li><strong>Current benefit year:</strong> leave dates from 2/14/2022 to 2/26/2022</li><li><strong>New benefit year:</strong> leave dates from 2/27/2022 to 4/19/2022</li></ul><p>We’ll review each application separately. This means that:</p><ul><li>The Department's determination for one application may be different from its determination for the other.</li><li> The Department will calculate your weekly benefit amount for each application separately. You may receive different payment amounts for each application. Learn more about how PFML weekly benefit amounts are calculated.</li><li>You'll have two 7-day waiting periods, one at the start of each period of your leave. Learn more about the <benefit-year-guide-link>7-day waiting period.</benefit-year-guide-link></li></ul>",
+    leaveDetailsCurrentBenefitYearsDates:
+      "<strong>Current benefit year:</strong> leave dates from {{startDate}} to {{endDate}}",
+    leaveDetailsNewBenefitYearsDates:
+      "<strong>New benefit year:</strong> leave dates from {{startDate}} to {{endDate}}",
     leaveDetailsSectionHeading: "$t(shared.leaveDetailsStepTitle)",
     leavePeriodLabel_continuous: "$t(shared.claimDurationTypeContinuous)",
     leavePeriodLabel_intermittent: "$t(shared.claimDurationTypeIntermittent)",
@@ -2025,7 +2106,7 @@ const pages: {
     previousLeaveReason_medical: "Medical leave for an illness or injury",
     previousLeaveReason_pregnancy: "Medical leave related to pregnancy",
     previousLeaveReason_serviceMemberFamily:
-      "Famliy leave to care for a family member who serves in the armed forces",
+      "Family leave to care for a family member who serves in the armed forces",
     previousLeaveType_otherReason: "Leave for a different qualifying reason",
     previousLeaveType_sameReason: "Leave for the same qualifying reason",
     previousLeaveWorkedPerWeekMinutes: "$t(shared.displayTime)",
@@ -2232,6 +2313,7 @@ const pages: {
       "<ul><li>Your employer has 10 business days to provide feedback on your application.</li> <li>We’ll confirm your eligibility and make sure that your documents are valid.</li> <li>We will notify you once we’ve made a decision. You’ll be able to read the details of the decision on this website. Your employer will also get a copy of the decision.</li><li>Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.</li><li>If you need to end your leave early, you must call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</li><li>$t(shared.trackStatus)</li><li>$t(shared.viewPostSubmissionVideo)</li></ul>",
     adjudicationProcess_medicalPregnantFuture:
       "<ul><li>Your employer has 10 days to provide feedback on your application.</li><li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li><li>If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.</li><li>$t(shared.trackStatus)</li><li>$t(shared.viewPostSubmissionVideo)</li></ul>",
+    backButtonLabel: "$t(shared.backToYourApplicationsLink)",
     claimantApplicationId:
       "Your application ID is <strong>{{absence_id}}</strong>",
     exitLink: "View your application",
@@ -2412,37 +2494,6 @@ const pages: {
       "<strong>Employer ID number (EIN):</strong> {{employerFein}}",
     title: "We can't verify this organization",
   },
-  employersClaimsConfirmation: {
-    applicationIdLabel: "<strong>Application ID:</strong> {{absenceId}}",
-    instructions:
-      "<p>Thanks for letting us know that you’re not the right person to review this.</p><ul><li>Please check with your human resources team and your colleagues to see who should respond.</li><li>If the right person at your organization already has an employer account, they received the same email you did and can respond directly.</li><li>Otherwise, please ask them to call us at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</li></ul>",
-    instructionsFollowUpDateLabel:
-      "<div><strong>Review by:</strong> {{date}} at 11:59 p.m. Eastern time</div>",
-    instructions_processingApplication:
-      "If we do not hear from anyone at your organization before the deadline, we will process the application solely based on the information the employee provided.",
-    title: "Help us find the right person to review the application",
-  },
-  employersClaimsNewApplication: {
-    agreementBody:
-      "I understand that I need to give true answers to all questions in order to fulfill my responsibilities as a Massachusetts employer, and that my response may be shared with the employee and third parties. I certify under penalty of perjury that my answers will be complete and accurate.",
-    choiceNo: "$t(shared.choiceNo)",
-    choiceYes: "$t(shared.choiceYes)",
-    dobLabel: "Date of birth",
-    employeeNameLabel: "Employee name",
-    employerIdNumberLabel: "Employer ID number (EIN)",
-    instructions:
-      "<p>This takes about 10 minutes. We use the information you provide to determine the leave time and benefit amount your employee will receive.</p><p>Your response may be shared with the employee and third parties for purposes of processing and adjudicating this application.</p><p>We need true answers to every question so that we can manage the program the way the law requires. Please confirm that you will answer as truthfully as you can.</p>",
-    instructionsFollowUpDate: "$t(shared.employerInstructions_followUpDate)",
-    instructionsLabel:
-      "Are you the right person to respond to this application?",
-    organizationNameLabel: "Organization",
-    ssnOrItinLabel:
-      "Social Security Number or Individual Taxpayer Identification Number",
-    submitButton: "Submit",
-    submitButton_secondary: "Agree and submit",
-    title: "New application from {{name}}",
-    truthAttestationHeading: "Start the review process",
-  },
   employersClaimsReview: {
     absenceIdLabel: "Application ID: {{absenceId}}",
     instructionsAmendment:
@@ -2465,36 +2516,19 @@ const pages: {
     title: "Review application from {{name}}",
   },
   employersClaimsStatus: {
-    applicationIdLabel: "Application ID",
     lead: "No action is required of you. You can view this page at any time to download notices, see decisions, or access the leave details for this application. Your employee has the right to appeal decisions under Massachusetts regulations (<dfml-regulations-link>458 CMR 2.14</dfml-regulations-link>).",
-    lead_decision:
-      "A decision has been made for this application. No action is required of you, but you can download a copy of the decision notice for details. Your employee has the right to appeal this decision under Massachusetts regulations (<dfml-regulations-link>458 CMR 2.14</dfml-regulations-link>).",
-    lead_pending:
-      "No action is required of you.<br /><br />When the application progresses you'll receive an email with a direct link for more details.",
-    leaveDetailsLabel: "$t(shared.claimsLeaveDetailsTitle)",
-    leaveDurationLabel: "$t(shared.claimsLeaveDurationTitle)",
-    leaveDurationLabel_continuous: "$t(shared.claimDurationTypeContinuous)",
-    leaveDurationLabel_intermittent: "$t(shared.claimDurationTypeIntermittent)",
-    leaveDurationLabel_reduced: "$t(shared.claimDurationTypeReducedSchedule)",
-    leaveReasonLabel: "Leave type",
-    leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
-    leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
-    leaveReasonValue_care: "$t(shared.leaveReasonCare)",
-    leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
-    leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedical)",
-    leaveReasonValue_serviceMemberFamily:
-      "$t(shared.leaveReasonServiceMemberFamily)",
     noticesLabel: "Notices",
-    statusLabel: "Status",
     title: "Application status for {{name}}",
   },
   employersClaimsSuccess: {
     applicationIdLabel: "<strong>Application ID:</strong> {{absenceId}}",
     backToDashboardLabel: "Back to Dashboard",
+    employeeNameLabel: "<strong>Employee name:</strong> {{employeeName}}",
     instructions_processingApplication:
       "We’ll begin processing this application and your employee should hear from us within 14 calendar days. Once we’ve made a decision, you’ll receive an email with a direct link to details about the decision.",
     instructions_reimbursement:
       "If your organization has a paid disability, family, or medical leave policy for employees, you may qualify for <reimbursements-link>reimbursements for payments made during this leave</reimbursements-link>.",
+    reviewedOnLabel: "<strong>Reviewed on:</strong>  {{date}}",
     title: "Thanks for reviewing the application",
   },
   employersDashboard: {
@@ -2526,12 +2560,6 @@ const pages: {
     filterReviewable_all: "Show all",
     filterReviewable_no: "No, review not needed",
     filterReviewable_yes: "Yes, review requested",
-    filterStatusChoice_Approved: "$t(shared.absenceCaseStatus_approved)",
-    filterStatusChoice_Closed: "$t(shared.absenceCaseStatus_closed)",
-    filterStatusChoice_Declined: "$t(shared.absenceCaseStatus_denied)",
-    filterStatusChoice_OpenRequirement: "Review by",
-    filterStatusChoice_PendingNoAction: "$t(shared.absenceCaseStatus_noAction)",
-    filterStatusLabel: "Status",
     filtersApply: "Apply filters",
     filtersReset: "Reset all filters",
     filtersShowWithCount: "Show filters ({{count}})",
@@ -2547,30 +2575,11 @@ const pages: {
     sortChoice_employee_za: "Last name – Z to A",
     sortChoice_newest: "Newest applications",
     sortChoice_oldest: "Oldest applications",
-    sortChoice_status: "Status",
     sortLabel: "Sort",
-    startDateTooltip: "When an employee started a new leave application",
-    statusDescription_approved:
-      "<strong>Approved:</strong> DFML has approved this leave request.",
-    statusDescription_closed:
-      "<strong>Closed:</strong> The leave has passed or no action can be taken.",
-    statusDescription_denied:
-      "<strong>Denied:</strong> DFML has denied this leave request.",
-    statusDescription_noAction:
-      "<strong>No action required:</strong> This leave request is awaiting a decision from DFML.",
-    statusDescription_reviewBy:
-      "<strong>Review by:</strong> Review this application by this date to provide DFML with your input.",
-    statusDescriptionsLabel: "Status descriptions",
-    tableColHeading_created_at: "Application start date",
     tableColHeading_employee_and_case: "Employee (Application ID)",
-    tableColHeading_employee_name: "Employee name",
     tableColHeading_employer: "Organization (FEIN)",
-    tableColHeading_employer_dba: "Organization",
-    tableColHeading_employer_fein: "Employer ID number",
-    tableColHeading_fineos_absence_id: "Application ID",
     tableColHeading_leave_details: "Leave details",
     tableColHeading_review_status: "Review due date",
-    tableColHeading_status: "Status",
     title: "Dashboard",
     verificationBody:
       "Every employer must verify paid leave contributions when creating an account. You need to <your-organizations-link>complete this process</your-organizations-link> to review applications from your team. If you have an EIN that isn't verified you won't see any applications related to that EIN.",
@@ -2728,24 +2737,50 @@ const pages: {
     infoAlertHeading_bonding: "$t(shared.infoAlertHeading_bonding)",
     infoAlertHeading_pregnancy: "$t(shared.infoAlertHeading_pregnancy)",
     loadingClaimDetailLabel: "$t(shared.loadingClaimDetailLabel)",
+    paymentsIntro_Continuous_ApprovalPreStartDate:
+      "<p>Your first payment will be scheduled on <strong>{{checkbackDate}} </strong>. Payments are scheduled to be paid after each week of your leave on Mondays, or on Tuesday if Monday is a holiday.</p>",
+    paymentsIntro_Continuous_ApprovalPreStartDate_PostMondayPaymentSchedule:
+      "<p>Your first payment will be scheduled on <strong>{{checkbackDate}}</strong>.</p><p>Payments are scheduled to be paid after each week of your leave on Mondays, or on Tuesday if Monday is a holiday.</p>",
     paymentsIntro_Continuous_PostFourteenthClaimDate:
       "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, expect to be paid weekly.</p>",
+    paymentsIntro_Continuous_PostFourteenthClaimDate_PostMondayPaymentSchedule:
+      "<p>Your first payment will be scheduled on <strong>{{checkbackDate}}</strong>. This payment will include multiple weeks of your leave.</p> <p>Payments are scheduled to be paid after each week of your leave on Mondays, or on Tuesday if Monday is a holiday.</p>",
+    paymentsIntro_Continuous_PostFourteenthClaimDate_PreMondayPaymentSchedule:
+      "Your first payment will be scheduled on <strong>{{checkbackDate}}</strong> to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, expect to be paid weekly.</p>",
     paymentsIntro_Continuous_PreFourteenthClaimDate:
       "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.</p>",
+    paymentsIntro_Continuous_PreFourteenthClaimDate_PreMondayPaymentSchedule:
+      "<p>Your first payment will be scheduled on <strong>{{checkbackDate}}</strong> to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.</p>",
     paymentsIntro_Continuous_Retroactive:
       "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. You’ll receive one payment for your entire leave.</p>",
     paymentsIntro_Intermittent:
       "Once you report at least 8 hours, you can expect to receive a payment about one week later. You can receive more than one payment in a week depending on how your hours are reported. You can report your hours by calling <contact-center-report-phone-link>$t(shared.contactCenterReportHoursPhoneNumber)</contact-center-report-phone-link>.",
+    paymentsIntro_Intermittent_PostMondayPaymentSchedule:
+      "Once you report at least 8 hours, you can expect to receive a payment the following Monday, or on Tuesday if Monday is a holiday. You can receive more than one payment in a week depending on how your hours are reported. You can report your hours by calling  <contact-center-report-phone-link>$t(shared.contactCenterReportHoursPhoneNumber)</contact-center-report-phone-link>.",
     paymentsIntro_Intermittent_Unpaid:
       "<p>Your application has an unpaid 7-day waiting period that begins the first day you report taking leave.</p><p>You need to complete your unpaid 7-day waiting period waiting period and report at least 8 hours of leave before you will receive a payment from the Department. You may receive more than one payment per week depending on how your hours are reported.</p><p>Call the Hours Reporting line at <contact-center-report-phone-link>$t(shared.contactCenterReportHoursPhoneNumber)</contact-center-report-phone-link> each week to report the intermittent leave hours you used.</p>",
     paymentsIntro_NonIntermittent_NonRetro:
       "Payments are scheduled to be paid after each week of your leave. Check back weekly to see when your next payment will be scheduled.",
+    paymentsIntro_NonIntermittent_NonRetro_PostMondayPaymentSchedule:
+      "Payments are scheduled to be paid after each week of your leave on Mondays, or on Tuesday if Monday is a holiday.",
     paymentsIntro_NonIntermittent_Retro:
       "Since you were approved after your leave ended, you’ll receive one payment for your entire leave.",
+    paymentsIntro_NonIntermittent_Retro_PreMondayPaymentSchedule:
+      "Since your application was approved after your leave ended, you’ll receive one payment for your entire leave.",
+    paymentsIntro_ReducedSchedule_ApprovalPreStartDate:
+      "<p>Your first payment will be scheduled on <strong>{{checkbackDate}}</strong>.  You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.</p><p>Payments are scheduled to be paid after each week of your leave on Mondays, or on Tuesday if Monday is a holiday.</p>",
+    paymentsIntro_ReducedSchedule_ApprovalPreStartDate_PostMondayPaymentSchedule:
+      "<p>Your first payment will be scheduled on <strong>{{checkbackDate}}</strong>.  You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.</p><p>Payments are scheduled to be paid after each week of your leave on Mondays, or on Tuesday if Monday is a holiday.</p>",
     paymentsIntro_ReducedSchedule_PostFourteenthClaimDate:
       "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.</p>",
+    paymentsIntro_ReducedSchedule_PostFourteenthClaimDate_PostMondayPaymentSchedule:
+      "<p>Your first payment will be scheduled on <strong>{{checkbackDate}}</strong>. This payment will include multiple weeks of your leave. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.</p><p>Payments are scheduled to be paid after each week of your leave on Mondays, or on Tuesday if Monday is a holiday.</p>",
+    paymentsIntro_ReducedSchedule_PostFourteenthClaimDate_PreMondayPaymentSchedule:
+      "<p>Your first payment will be scheduled on <strong>{{checkbackDate}}</strong> to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.</p>",
     paymentsIntro_ReducedSchedule_PreFourteenthClaimDate:
       "<p>Check back on {{checkbackDate}} to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.</p>",
+    paymentsIntro_ReducedSchedule_PreFourteenthClaimDate_PreMondayPaymentSchedule:
+      "<p>Your first payment will be scheduled on <strong>{{checkbackDate}}</strong> to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.</p>",
     paymentsIntro_ReducedSchedule_Retroactive:
       "$t(pages.payments.paymentsIntro_Continuous_Retroactive)",
     paymentsTitle: "Payments",
@@ -2845,15 +2880,6 @@ const components: {
   // This makes the structure easier to navigate and the process of finding a specific element more consistent
   [componentKey: string]: I18nContentGroup;
 } = {
-  absenceCaseStatusTag: {
-    status_approved: "$t(shared.absenceCaseStatus_approved)",
-    status_closed: "$t(shared.absenceCaseStatus_closed)",
-    status_completed: "$t(shared.absenceCaseStatus_closed)",
-    status_declined: "$t(shared.absenceCaseStatus_denied)",
-    status_noAction: "$t(shared.absenceCaseStatus_noAction)",
-    status_openRequirements: "Review by {{followupDate}}",
-    status_pending: "$t(shared.absenceCaseStatus_pending)",
-  },
   absencePeriodStatusTag: {
     label_approved: "Approved",
     label_cancelled: "Cancelled",
@@ -2908,6 +2934,37 @@ const components: {
     tag: "Beta",
     message:
       "This is a new service. Help us improve it with <user-feedback-link>your feedback</user-feedback-link>.",
+  },
+  claimsLeaveSpansBenefitYears: {
+    bothCanBeSubmittedBenefitsCalculatedSeparately:
+      "$t(shared.claimsLeaveSpansBenefitYears.bothCanBeSubmittedBenefitsCalculatedSeparately)",
+    bothCanBeSubmittedDeterminationMayBeDifferent:
+      "$t(shared.claimsLeaveSpansBenefitYears.bothCanBeSubmittedDeterminationMayBeDifferent)",
+    bothCanBeSubmittedReviewedSeparately:
+      "$t(shared.claimsLeaveSpansBenefitYears.bothCanBeSubmittedReviewedSeparately)",
+    bothCanBeSubmittedSevenDayWaitingPeriod:
+      "$t(shared.claimsLeaveSpansBenefitYears.bothCanBeSubmittedSevenDayWaitingPeriod)",
+    bothCannotBeSubmittedCurrent:
+      "$t(shared.claimsLeaveSpansBenefitYears.bothCannotBeSubmittedCurrent)",
+    bothCannotBeSubmittedNew:
+      "$t(shared.claimsLeaveSpansBenefitYears.bothCannotBeSubmittedNew)",
+    bothCannotBeSubmittedReminder:
+      "$t(shared.claimsLeaveSpansBenefitYears.bothCannotBeSubmittedReminder)",
+    currentBenefitYearLeaveDates:
+      "$t(shared.claimsLeaveSpansBenefitYears.currentBenefitYearLeaveDates)",
+    introduction: "$t(shared.claimsLeaveSpansBenefitYears.introduction)",
+    newBenefitYearLeaveDates:
+      "$t(shared.claimsLeaveSpansBenefitYears.newBenefitYearLeaveDates)",
+    secondCannotBeSubmittedCurrent:
+      "$t(shared.claimsLeaveSpansBenefitYears.secondCannotBeSubmittedCurrent)",
+    secondCannotBeSubmittedCurrentFinalContentPart1:
+      "Your in-progress application will be viewable by our Contact Center staff. If you need to make edits to Part 1, you’ll need to call our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>",
+    secondCannotBeSubmittedCurrentFinalContentPart2:
+      "We’ll also notify your employer that you’ve started an application for paid family and medical leave.",
+    secondCannotBeSubmittedCurrentFinalContentPart3:
+      "Next, you’ll be able to work on Parts 2 and 3, and submit your application.",
+    secondCannotBeSubmittedNew:
+      "$t(shared.claimsLeaveSpansBenefitYears.secondCannotBeSubmittedNew)",
   },
   confirmSignUp: {
     codeLabel: "$t(shared.verificationCodeLabel)",
@@ -3256,6 +3313,8 @@ const components: {
   leaveDatesAlert: {
     heading: "Your leave dates for paid leave from PFML",
     leaveDatesHeading: "Your 7-day waiting period dates",
+    splitApplicationDates:
+      "<ul><li><strong>Current benefit year:</strong> {{currDateRange}}</li><li><strong>New benefit year:</strong> {{newDateRange}}</li></ul>",
   },
   maintenanceAlertBar: {
     message_withEndTime:

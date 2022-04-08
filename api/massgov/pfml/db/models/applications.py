@@ -346,6 +346,8 @@ class Application(Base, TimestampMixin):
         index=True,
     )
 
+    nbr_of_retries = Column(Integer, nullable=False, default=0)
+
     user = relationship(User)
     caring_leave_metadata = relationship("CaringLeaveMetadata", back_populates="application")
     claim = relationship(Claim, backref=backref("application", uselist=False))
@@ -482,15 +484,6 @@ class Application(Base, TimestampMixin):
             return None
 
         return self.claim.fineos_absence_id
-
-    def copy(self):
-        table = self.__table__
-        non_pk_columns = [
-            k for k in table.columns.keys() if k not in table.primary_key.columns.keys()
-        ]
-        data = {c: getattr(self, c) for c in non_pk_columns}
-        copy = self.__class__(**data)
-        return copy
 
 
 class CaringLeaveMetadata(Base, TimestampMixin):

@@ -8,7 +8,7 @@ from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union, cast
 
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import ColumnProperty, class_mapper
+from sqlalchemy.orm import ColumnProperty, class_mapper, joinedload
 
 import massgov.pfml.delegated_payments.delegated_config as payments_config
 import massgov.pfml.util.files as file_util
@@ -22,6 +22,7 @@ from massgov.pfml.db.models.employees import (
     Claim,
     ClaimType,
     Employee,
+    EmployeePubEftPair,
     Employer,
     ExperianAddressPair,
     LkClaimType,
@@ -29,6 +30,7 @@ from massgov.pfml.db.models.employees import (
     Payment,
     PaymentDetails,
     PaymentTransactionType,
+    PrenoteState,
     PubEft,
     ReferenceFile,
     ReferenceFileType,
@@ -56,6 +58,7 @@ from massgov.pfml.util.collections.dict import filter_dict, make_keys_lowercase
 from massgov.pfml.util.compare import compare_attributes
 from massgov.pfml.util.converters.str_to_numeric import str_to_int
 from massgov.pfml.util.datetime import date_to_isoformat, get_now_us_eastern
+from massgov.pfml.util.pydantic.types import MassIdStr
 from massgov.pfml.util.routing_number_validation import validate_routing_number
 
 logger = logging.get_logger(__package__)
@@ -167,6 +170,7 @@ class Constants:
         State.STATE_WITHHOLDING_RELATED_PENDING_AUDIT,
         State.FEDERAL_WITHHOLDING_ORPHANED_PENDING_AUDIT,
         State.STATE_WITHHOLDING_ORPHANED_PENDING_AUDIT,
+        State.EMPLOYER_REIMBURSEMENT_RELATED_PENDING_AUDIT,
     ]
 
     # These overpayment transaction types don't have payment details
@@ -222,19 +226,19 @@ class FineosExtractConstants:
         file_name="VBI_REQUESTEDABSENCE_SOM.csv",
         table=FineosExtractVbiRequestedAbsenceSom,
         field_names=[
-            "ABSENCEPERIOD_CLASSID",
-            "ABSENCEPERIOD_INDEXID",
-            "ABSENCEREASON_COVERAGE",
-            "ABSENCE_CASENUMBER",
             "NOTIFICATION_CASENUMBER",
+            "ABSENCE_CASENUMBER",
             "ABSENCE_CASESTATUS",
-            "ABSENCEPERIOD_START",
-            "ABSENCEPERIOD_END",
-            "LEAVEREQUEST_EVIDENCERESULTTYPE",
             "EMPLOYEE_CUSTOMERNO",
+            "ORGUNIT_NAME",
             "EMPLOYER_CUSTOMERNO",
             "LEAVEREQUEST_ID",
-            "ORGUNIT_NAME",
+            "LEAVEREQUEST_EVIDENCERESULTTYPE",
+            "ABSENCEREASON_COVERAGE",
+            "ABSENCEPERIOD_CLASSID",
+            "ABSENCEPERIOD_INDEXID",
+            "ABSENCEPERIOD_START",
+            "ABSENCEPERIOD_END",
         ],
     )
 
@@ -249,17 +253,14 @@ class FineosExtractConstants:
             "NATINSNO",
             "DATEOFBIRTH",
             "PAYMENTMETHOD",
-            "ADDRESS1",
-            "ADDRESS2",
-            "ADDRESS4",
-            "ADDRESS6",
-            "POSTCODE",
             "SORTCODE",
             "ACCOUNTNO",
             "ACCOUNTTYPE",
             "FIRSTNAMES",
             "INITIALS",
             "LASTNAME",
+            "EXTMASSID",
+            "EXTOUTOFSTATEID",
         ],
     )
     VBI_1099DATA_SOM = FineosExtract(
@@ -338,14 +339,14 @@ class FineosExtractConstants:
         field_names=[
             "ABSENCEPERIOD_CLASSID",
             "ABSENCEPERIOD_INDEXID",
-            "LEAVEREQUEST_DECISION",
-            "LEAVEREQUEST_ID",
             "ABSENCEREASON_COVERAGE",
             "ABSENCE_CASECREATIONDATE",
             "ABSENCEPERIOD_TYPE",
             "ABSENCEREASON_QUALIFIER1",
             "ABSENCEREASON_QUALIFIER2",
             "ABSENCEREASON_NAME",
+            "LEAVEREQUEST_DECISION",
+            "LEAVEREQUEST_ID",
         ],
     )
 
@@ -368,13 +369,11 @@ class FineosExtractConstants:
             "ADDRESSLINE5",
             "ADDRESSLINE6",
             "ADDRESSLINE7",
-            "ADVICETOPAY",
             "ADVICETOPAYOV",
             "AMALGAMATIONC",
             "PAYMENTTYPE",
             "AMOUNT_MONAMT",
             "AMOUNT_MONCUR",
-            "CHECKCUTTING",
             "CONFIRMEDBYUS",
             "CONFIRMEDUID",
             "CONTRACTREF",
@@ -383,7 +382,6 @@ class FineosExtractConstants:
             "DATEINTERFACE",
             "DATELASTPROCE",
             "DESCRIPTION",
-            "EMPLOYEECONTR",
             "EVENTEFFECTIV",
             "EVENTREASON",
             "EVENTTYPE",
@@ -714,6 +712,14 @@ def amount_validator(amount_str: str) -> Optional[ValidationReason]:
     try:
         Decimal(amount_str)
     except (InvalidOperation, TypeError):  # Amount is not numeric
+        return ValidationReason.INVALID_VALUE
+    return None
+
+
+def mass_id_validator(value: str) -> Optional[ValidationReason]:
+    try:
+        MassIdStr.validate_type(value)
+    except (TypeError, ValueError):
         return ValidationReason.INVALID_VALUE
     return None
 
@@ -1129,7 +1135,9 @@ def find_existing_eft(employee: Optional[Employee], new_eft: PubEft) -> Optional
     if not employee:
         return None
 
-    for pub_eft_pair in employee.pub_efts.all():
+    pub_eft_pairs = employee.pub_efts.options(joinedload(EmployeePubEftPair.pub_eft)).all()
+
+    for pub_eft_pair in pub_eft_pairs:
         if is_same_eft(pub_eft_pair.pub_eft, new_eft):
             return pub_eft_pair.pub_eft
 
@@ -1372,7 +1380,7 @@ def get_traceable_pub_eft_details(
     details["pub_eft_id"] = pub_eft.pub_eft_id
     details["pub_eft_individual_id"] = pub_eft.pub_individual_id
     details["pub_eft_prenote_state"] = (
-        pub_eft.prenote_state.prenote_state_description if pub_eft.prenote_state else None
+        PrenoteState.get_description(pub_eft.prenote_state_id) if pub_eft.prenote_state_id else None
     )
     if employee:
         details["employee_id"] = employee.employee_id

@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Paid Leave API
   description: An API for managing leave within Massachusetts Paid Family and Medical Leave.
-  version: "2022-03-21"
+  version: "2022-04-06"
 
 servers:
   - url: /v1
@@ -72,7 +72,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Flag"
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Flag"
         "503":
           $ref: "#/components/responses/ServiceUnavailableError"
   /users:
@@ -391,6 +393,8 @@ paths:
         - oauth2: []
           agent-id: []
       summary: Retrieve claims
+      description: |
+        Deprecated. For new integrations use `POST /claims/search`.
       operationId: massgov.pfml.api.claims.get_claims
       tags:
         - Claims
@@ -419,17 +423,7 @@ paths:
           description: ID(s) of Employee to query claims for
           required: false
           explode: false
-        - name: "claim_status"
-          in: query
-          schema:
-            type: string
-            pattern: '[a-zA-Z0-9 ,]+'
-          description: >
-            claim status used to filter the request,
-            single claim status or a comma seperated list of claim status (i.e claim_status="Approved,Closed"),
-            the valid status are "Approved", "Closed", "Completed", "Declined", "Open requirement" and "Pending - no action".
-          required: false
-        - name: "search"
+        - name: search
           in: query
           schema:
             type: string
@@ -439,13 +433,13 @@ paths:
             Absence Case IDs, in addition to the employees' first, middle, and last names.
             When the string is empty, it is ignored.
           required: false
-        - name: "is_reviewable"
+        - name: is_reviewable
           in: query
           schema:
             type: string
             enum: ["yes", "no"]
           description: A string value used to check whether or not to filter claims where a review is requested for a leave admin.
-        - name: "request_decision"
+        - name: request_decision
           in: query
           schema:
             type: string
@@ -476,6 +470,7 @@ paths:
       security:
         - jwt: []
         - oauth2: []
+          agent-id: []
       summary: Retrieve claims
       operationId: massgov.pfml.api.claims.retrieve_claims
       tags:
@@ -733,7 +728,7 @@ paths:
   /employers/claims/{fineos_absence_id}/documents/{fineos_document_id}:
     get:
       summary: Retrieve a FINEOS documents for a specified absence ID and document ID
-      operationId: massgov.pfml.api.claims.employer_document_download
+      operationId: massgov.pfml.api.employer_claim.employer_document_download
       tags:
         - Claims
       parameters:
@@ -769,7 +764,7 @@ paths:
   /employers/claims/{fineos_absence_id}/documents:
     get:
       summary: Retrieve a list of FINEOS documents for a specified absence ID
-      operationId: massgov.pfml.api.claims.employer_get_claim_documents
+      operationId: massgov.pfml.api.employer_claim.employer_get_claim_documents
       tags:
         - Claims
       parameters:
@@ -803,7 +798,7 @@ paths:
   /employers/claims/{fineos_absence_id}/review:
     get:
       summary: Retrieve FINEOS claim review data for a specified absence ID
-      operationId: massgov.pfml.api.claims.employer_get_claim_review
+      operationId: massgov.pfml.api.employer_claim.employer_get_claim_review
       tags:
         - Claims
       parameters:
@@ -837,7 +832,7 @@ paths:
       tags:
         - Claims
       summary: Save review claim from leave admin
-      operationId: massgov.pfml.api.claims.employer_update_claim_review
+      operationId: massgov.pfml.api.employer_claim.employer_update_claim_review
       parameters:
         - name: fineos_absence_id
           in: path
@@ -1401,8 +1396,6 @@ paths:
     post:
       security:
         - jwt: []
-        - oauth2: []
-          agent-id: []
       tags:
         - Benefit Years
       summary: >
@@ -1702,7 +1695,7 @@ components:
       schema:
         type: string
         default: "created_at"
-        enum: ["fineos_absence_status", "created_at", "employee", "latest_follow_up_date"]
+        enum: ["created_at", "employee", "latest_follow_up_date"]
     orderDirection:
       name: "order_direction"
       in: query
@@ -2325,26 +2318,38 @@ components:
       type: object
       properties:
         terms:
-          $ref: "#/components/schemas/ClaimSearchRequestTermsMetadata"
+          $ref: "#/components/schemas/ClaimSearchRequestTerms"
         order:
-          $ref: "#/components/schemas/SearchRequestOrderMetadata"
-          nullable: true
+          $ref: "#/components/schemas/ClaimSearchRequestOrder"
         paging:
-          $ref: "#/components/schemas/SearchRequestPagingMetadata"
-          nullable: true
+          $ref: "#/components/schemas/SearchRequestPaging"
       required: ["terms"]
+
+    ClaimSearchRequestOrder:
+      allOf:
+        - $ref: "#/components/schemas/SearchRequestOrder"
+        - type: object
+          properties:
+            by:
+              type: string
+              default: "created_at"
+              enum:
+                [
+                  "fineos_absence_status",
+                  "created_at",
+                  "employee",
+                  "latest_follow_up_date",
+                ]
 
     EmployeeSearchRequest:
       type: object
       properties:
         terms:
-          $ref: "#/components/schemas/EmployeeSearchRequestTermsMetadata"
+          $ref: "#/components/schemas/EmployeeSearchRequestTerms"
         order:
-          $ref: "#/components/schemas/SearchRequestOrderMetadata"
-          nullable: true
+          $ref: "#/components/schemas/SearchRequestOrder"
         paging:
-          $ref: "#/components/schemas/SearchRequestPagingMetadata"
-          nullable: true
+          $ref: "#/components/schemas/SearchRequestPaging"
       required: ["terms"]
 
     EmployeeErrorResponse:
@@ -3005,6 +3010,7 @@ components:
           example: "Started"
         phone:
           $ref: "#/components/schemas/MaskedPhone"
+          nullable: true
         has_previous_leaves_other_reason:
           type: boolean
           nullable: true
@@ -4446,7 +4452,7 @@ components:
             - Other
             - Spouse
 
-    BenefitYearsSearchTermsMetadata:
+    BenefitYearsSearchTerms:
       type: object
       properties:
         employee_id:
@@ -4469,16 +4475,14 @@ components:
       type: object
       properties:
         terms:
-          $ref: "#/components/schemas/BenefitYearsSearchTermsMetadata"
+          $ref: "#/components/schemas/BenefitYearsSearchTerms"
           nullable: true
         order:
-          $ref: "#/components/schemas/SearchRequestOrderMetadata"
-          nullable: true
+          $ref: "#/components/schemas/SearchRequestOrder"
         paging:
-          $ref: "#/components/schemas/SearchRequestPagingMetadata"
-          nullable: true
+          $ref: "#/components/schemas/SearchRequestPaging"
 
-    ClaimSearchRequestTermsMetadata:
+    ClaimSearchRequestTerms:
       type: object
       properties:
         employer_id:
@@ -4486,19 +4490,13 @@ components:
           items:
             type: string
             format: uuid
-          description: ID of Employer to query claims for
+          description: Employer IDs to query claims for
         employee_id:
           type: array
           items:
             type: string
             format: uuid
-          description: ID(s) of Employee to query claims for
-        claim_status:
-          type: string
-          description: >
-            claim status used to filter the request,
-            single claim status or a comma seperated list of claim status (i.e claim_status="Approved,Closed"),
-            the valid status are "Approved", "Closed", "Completed", "Declined", "Open requirement" and "Pending - no action".
+          description: Employee IDs to query claims for
         search:
           type: string
           description: >
@@ -4516,7 +4514,7 @@ components:
           description: > 
             request decision used in filtering, request_decision is a status associated with an absence_period
 
-    EmployeeSearchRequestTermsMetadata:
+    EmployeeSearchRequestTerms:
       type: object
       properties:
         first_name:
@@ -4560,13 +4558,12 @@ components:
           example: "111111"
           nullable: true
 
-    SearchRequestOrderMetadata:
+    SearchRequestOrder:
       type: object
       properties:
         by:
           type: string
           default: "created_at"
-          nullable: true
           enum: ["created_at"]
         direction:
           type: string
@@ -4575,22 +4572,19 @@ components:
           enum:
             - ascending
             - descending
-          nullable: true
 
-    SearchRequestPagingMetadata:
+    SearchRequestPaging:
       type: object
       properties:
         offset:
           type: integer
           example: 1
           default: 1
-          nullable: true
         size:
           type: integer
           default: 25
           example: 10
-          nullable: true
-          
+
     ChangeRequest:
       type: object
       properties:

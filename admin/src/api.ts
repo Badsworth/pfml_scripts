@@ -1,5 +1,6 @@
 import { ApiResponse, http, RequestOptions } from "./_api";
 import configs from "./config.json";
+import { getAuthorizationHeader } from "./utils/azure_sso_authorization";
 
 /**
  * This file monkey patches the API methods to catch errors and add some debug information to them
@@ -46,6 +47,14 @@ const _fetchJson = http.fetchJson;
 http.fetchJson = async (
   ...args: Parameters<typeof http.fetchJson>
 ): Promise<ApiResponse<any>> => {
+  // If the Azure authentication header exists, pass it through by default.
+  // This should allow the Authorization header to be overridden if it's passed through.
+  // However, it will still check local store.
+  const authorization_header = getAuthorizationHeader();
+  if ("headers" in authorization_header) {
+    const headers = { ...authorization_header.headers, ...args[1]?.headers };
+    args[1] = { ...args[1], headers };
+  }
   const res = await _fetchJson(...args);
   return res.data;
 };

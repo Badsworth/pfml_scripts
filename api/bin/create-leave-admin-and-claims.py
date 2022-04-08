@@ -28,7 +28,9 @@ db_session = massgov.pfml.db.init(sync_lookups=True)
 @click.command()
 @click.option("--total_claims", default=10, help="Number of claims to create.")
 def main(total_claims: int) -> None:
-    user = UserFactory.create(consented_to_data_sharing=True, roles=[Role.EMPLOYER])
+    user = UserFactory.create(
+        consented_to_data_sharing=True, email_address=fake.email(), roles=[Role.EMPLOYER]
+    )
     employer = EmployerOnlyDORDataFactory.create()
     verification = Verification(verification_type_id=VerificationType.MANUAL.verification_type_id)
     user_leave_admin = UserLeaveAdministrator(
@@ -50,8 +52,15 @@ def main(total_claims: int) -> None:
             fineos_managed_requirement_id=fake.unique.random_int(),
             follow_up_date=fake.date_time_between(start_date="-1d", end_date="+11d"),
             managed_requirement_status_id=random.randint(1, 3),
+            respondent_user=None,
+            respondent_user_id=None,
         )
-        absence_period = AbsencePeriodFactory.create(claim=claim)
+        absence_period = AbsencePeriodFactory.create(
+            claim=claim,
+            absence_period_type_id=random.randint(1, 3),
+            absence_reason_id=random.randint(1, 7),
+            leave_request_decision_id=random.randint(1, 8),
+        )
         click.secho(
             f"Created Claim {claim.claim_id}, ManagedRequirement {managed_requirement.managed_requirement_id} and AbsencePeriod {absence_period.absence_period_id}",
             fg="cyan",

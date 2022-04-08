@@ -23,7 +23,6 @@ import { compact } from "lodash";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDate from "../../utils/formatDate";
 import formatDateRange from "../../utils/formatDateRange";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import { useTranslation } from "../../locales/i18n";
 
 export interface PaginatedClaimsTableProps extends WithClaimsProps {
@@ -128,11 +127,7 @@ const PaginatedClaimsTable = (props: PaginatedClaimsTableProps) => {
                 claim={claim}
                 href={props.getNextPageRoute(
                   "VIEW_CLAIM",
-                  {
-                    employerShowMultiLeaveDashboard: isFeatureEnabled(
-                      "employerShowMultiLeaveDashboard"
-                    ),
-                  },
+                  {},
                   { absence_id: claim.fineos_absence_id }
                 )}
                 visibleTableColumns={visibleTableColumns}
@@ -185,12 +180,7 @@ const ClaimTableRow = (props: ClaimTableRowProps) => {
       case "leave_details":
         return <LeaveDetailsCell absence_periods={claim.absence_periods} />;
       case "review_status":
-        return (
-          <ReviewStatusCell
-            href={props.href}
-            managed_requirements={claim.managed_requirements}
-          />
-        );
+        return <ReviewStatusCell href={props.href} claim={claim} />;
     }
   };
 
@@ -287,20 +277,20 @@ const LeaveDetailsCell = (props: {
   );
 };
 
-const ReviewStatusCell = (props: {
-  href: string;
-  managed_requirements: Claim["managed_requirements"];
-}) => {
+const ReviewStatusCell = (props: { href: string; claim: Claim }) => {
   const { t } = useTranslation();
-  const { managed_requirements } = props;
-  const reviewableManagedRequirement =
-    getSoonestReviewableManagedRequirement(managed_requirements);
+  const { claim } = props;
+  const managedRequirements = claim.managed_requirements;
+  const isReviewable = claim.isReviewable;
 
-  if (managed_requirements.length === 0) {
+  const reviewableManagedRequirement =
+    getSoonestReviewableManagedRequirement(managedRequirements);
+
+  if (managedRequirements.length === 0) {
     return <React.Fragment>--</React.Fragment>;
   }
 
-  if (reviewableManagedRequirement) {
+  if (isReviewable) {
     return (
       <React.Fragment>
         <ButtonLink className="margin-bottom-05" href={props.href}>
@@ -308,7 +298,9 @@ const ReviewStatusCell = (props: {
         </ButtonLink>
         <br />
         {t("pages.employersDashboard.respondBy", {
-          date: formatDate(reviewableManagedRequirement.follow_up_date).short(),
+          date: formatDate(
+            reviewableManagedRequirement?.follow_up_date
+          ).short(),
         })}
       </React.Fragment>
     );
@@ -316,7 +308,7 @@ const ReviewStatusCell = (props: {
 
   return (
     <React.Fragment>
-      {formatDate(getLatestFollowUpDate(managed_requirements)).short()}
+      {formatDate(getLatestFollowUpDate(managedRequirements)).short()}
     </React.Fragment>
   );
 };

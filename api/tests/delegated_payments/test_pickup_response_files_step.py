@@ -60,10 +60,8 @@ def verify_metrics(step, expected_metrics):
 
 
 @pytest.fixture
-def pickup_response_file_step(initialize_factories_session, test_db_session, test_db_other_session):
-    return PickupResponseFilesStep(
-        db_session=test_db_session, log_entry_db_session=test_db_other_session
-    )
+def pickup_response_file_step(initialize_factories_session, test_db_session):
+    return PickupResponseFilesStep(db_session=test_db_session, log_entry_db_session=test_db_session)
 
 
 @pytest.fixture

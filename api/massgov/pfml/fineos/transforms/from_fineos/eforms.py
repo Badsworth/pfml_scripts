@@ -33,6 +33,7 @@ class TransformOtherLeaveAttributes(TransformEformAttributes):
             "name": "leave_reason",
             "type": "enumValue",
             "embeddedProperty": "instanceValue",
+            "defaultValue": None,
         },
         "V2LeaveFromEmployer": {
             "name": "is_for_current_employer",

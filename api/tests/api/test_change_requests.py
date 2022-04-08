@@ -1,3 +1,4 @@
+import io
 from datetime import date
 from typing import Dict
 from unittest import mock
@@ -131,21 +132,36 @@ class TestSubmitChangeRequest:
     @mock.patch(
         "massgov.pfml.api.change_requests.claim_rules.get_change_request_issues", return_value=[]
     )
+    @mock.patch("massgov.pfml.api.change_requests.submit_change_request_to_fineos")
+    @mock.patch("massgov.pfml.api.change_requests.app.db_session")
     def test_successful_call(
-        self, mock_get_issues, mock_get_or_404, auth_token, change_request, client
+        self,
+        mock_db,
+        mock_submit,
+        mock_get_issues,
+        mock_get_or_404,
+        auth_token,
+        change_request,
+        client,
     ):
+        db_mock = mock.MagicMock()
+        mock_db.return_value = db_mock
         mock_get_or_404.return_value = change_request
+        mock_submit.return_value = change_request
         response = client.post(
             "/v1/change-request/5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32/submit",
             headers={"Authorization": f"Bearer {auth_token}"},
         )
-        assert change_request.submitted_time is not None
         assert response.status_code == 200
+        mock_submit.assert_called_once_with(
+            change_request, change_request.claim, db_mock.__enter__.return_value
+        )
 
     @mock.patch("massgov.pfml.api.change_requests.get_or_404")
     @mock.patch("massgov.pfml.api.change_requests.claim_rules.get_change_request_issues")
+    @mock.patch("massgov.pfml.api.change_requests.submit_change_request_to_fineos")
     def test_validation_issues(
-        self, mock_get_issues, mock_get_or_404, auth_token, change_request, client
+        self, mock_submit, mock_get_issues, mock_get_or_404, auth_token, change_request, client
     ):
         mock_get_or_404.return_value = change_request
         mock_get_issues.return_value = [
@@ -161,6 +177,7 @@ class TestSubmitChangeRequest:
         )
         assert response.status_code == 400
         assert response.get_json()["message"] == "Invalid change request"
+        mock_submit.assert_not_called()
 
     def test_missing_claim(self, auth_token, claim, client):
         response = client.post(
@@ -253,3 +270,36 @@ class TestUpdateChangeRequest:
             response_body["message"]
             == "Could not find ChangeRequest with ID 009fa369-291b-403f-a85a-15e938c26f2f"
         )
+
+
+class TestUploadDocument:
+    def test_success(
+        self, application, change_request, client, consented_user, consented_user_token
+    ):
+
+        form_data = {"document_type": "Passport", "name": "passport.png", "description": "Passport"}
+        form_data["file"] = (io.BytesIO(b"abcdef"), "test.png")
+
+        application.user = consented_user
+
+        response = client.post(
+            "/v1/change-request/{}/documents".format(change_request.change_request_id),
+            headers={"Authorization": f"Bearer {consented_user_token}"},
+            content_type="multipart/form-data",
+            data=form_data,
+        )
+
+        response_json = response.get_json()
+
+        assert response_json["status_code"] == 200
+
+        response_data = response_json["data"]
+        assert response_data["content_type"] == "image/png"
+        assert response_data["description"] == "Passport"
+        assert response_data["document_type"] == "Passport"
+        assert (
+            response_data["fineos_document_id"] == "3011"
+        )  # See massgov/pfml/fineos/mock_client.py
+        assert response_data["name"] == "passport.png"
+        assert response_data["user_id"] == str(consented_user.user_id)
+        assert response_data["created_at"] is not None

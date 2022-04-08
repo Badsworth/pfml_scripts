@@ -22,13 +22,11 @@ from tests.delegated_payments.postprocessing import (
 
 @pytest.fixture
 def payment_post_processing_step(
-    local_initialize_factories_session,
-    local_test_db_session,
-    local_test_db_other_session,
-    monkeypatch,
+    initialize_factories_session,
+    test_db_session,
 ):
     return PaymentPostProcessingStep(
-        db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
+        db_session=test_db_session, log_entry_db_session=test_db_session
     )
 
 
@@ -38,12 +36,12 @@ def fineos_total_leave_duration_processor(payment_post_processing_step):
 
 
 @pytest.fixture
-def use_employee(local_initialize_factories_session):
+def use_employee(initialize_factories_session):
     return EmployeeFactory.create()
 
 
 @pytest.fixture
-def by(local_initialize_factories_session, use_employee):
+def by(initialize_factories_session, use_employee):
     def create(start_date: date, end_date: date):
         return BenefitYearFactory.create(
             employee=use_employee, start_date=start_date, end_date=end_date
@@ -78,8 +76,8 @@ def by_3(by):
 )
 def test_processor_leave_less_than_26_weeks(
     fineos_total_leave_duration_processor: FineosTotalLeaveDurationProcessor,
-    local_test_db_session: db.Session,
-    local_initialize_factories_session,
+    test_db_session: db.Session,
+    initialize_factories_session,
     absence_status: AbsenceStatus,
     by_1: BenefitYear,
 ):
@@ -89,14 +87,14 @@ def test_processor_leave_less_than_26_weeks(
         by_1, leave_duration, 2, fineos_absence_status=absence_status
     )[0]
     payment_factory = DelegatedPaymentFactory(
-        local_test_db_session, employee=by_1.employee, employer=employer
+        test_db_session, employee=by_1.employee, employer=employer
     )
     payment = payment_factory.get_or_create_payment()
 
     fineos_total_leave_duration_processor.process(payment)
 
     audit_report = (
-        local_test_db_session.query(PaymentAuditReportDetails)
+        test_db_session.query(PaymentAuditReportDetails)
         .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
         .one_or_none()
     )
@@ -108,8 +106,8 @@ def test_processor_leave_less_than_26_weeks(
 )
 def test_processor_leave_greater_than_26_weeks(
     fineos_total_leave_duration_processor: FineosTotalLeaveDurationProcessor,
-    local_test_db_session: db.Session,
-    local_initialize_factories_session,
+    test_db_session: db.Session,
+    initialize_factories_session,
     absence_status: AbsenceStatus,
     by_1: BenefitYear,
     use_employee: Employee,
@@ -128,14 +126,14 @@ def test_processor_leave_greater_than_26_weeks(
     assert leave_duration_total == leave_duration
 
     payment_factory = DelegatedPaymentFactory(
-        local_test_db_session, employee=by_1.employee, employer=employer
+        test_db_session, employee=by_1.employee, employer=employer
     )
     payment = payment_factory.get_or_create_payment()
 
     fineos_total_leave_duration_processor.process(payment)
 
     audit_report = (
-        local_test_db_session.query(PaymentAuditReportDetails)
+        test_db_session.query(PaymentAuditReportDetails)
         .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
         .one_or_none()
     )
@@ -151,8 +149,8 @@ def test_processor_leave_greater_than_26_weeks(
 
 def test_processor_leave_greater_than_26_weeks__multiple_employers_within_benefit_year(
     fineos_total_leave_duration_processor: FineosTotalLeaveDurationProcessor,
-    local_test_db_session: db.Session,
-    local_initialize_factories_session,
+    test_db_session: db.Session,
+    initialize_factories_session,
 ):
     """
     Leave duration for multiple employers exceed the
@@ -192,12 +190,12 @@ def test_processor_leave_greater_than_26_weeks__multiple_employers_within_benefi
     # does not exceeds maximum
     _create_absence_data(employee, [(start_date_A, 23)])
 
-    payment_factory = DelegatedPaymentFactory(local_test_db_session, employee=employee)
+    payment_factory = DelegatedPaymentFactory(test_db_session, employee=employee)
     payment = payment_factory.get_or_create_payment()
 
     fineos_total_leave_duration_processor.process(payment)
     audit_report = (
-        local_test_db_session.query(PaymentAuditReportDetails)
+        test_db_session.query(PaymentAuditReportDetails)
         .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
         .one_or_none()
     )
@@ -224,8 +222,8 @@ def test_processor_leave_greater_than_26_weeks__multiple_employers_within_benefi
 
 def test_processor_leave_greater_than_26_weeks__multi_employers_multi_benefit_years(
     fineos_total_leave_duration_processor: FineosTotalLeaveDurationProcessor,
-    local_test_db_session: db.Session,
-    local_initialize_factories_session,
+    test_db_session: db.Session,
+    initialize_factories_session,
     use_employee: Employee,
     by_0: BenefitYear,
     by_1: BenefitYear,
@@ -264,12 +262,12 @@ def test_processor_leave_greater_than_26_weeks__multi_employers_multi_benefit_ye
     _create_absence_periods_data(by_3, 60, 2)
     _create_absence_periods_data(by_3, 60, 3)
 
-    payment_factory = DelegatedPaymentFactory(local_test_db_session, employee=use_employee)
+    payment_factory = DelegatedPaymentFactory(test_db_session, employee=use_employee)
     payment = payment_factory.get_or_create_payment()
 
     fineos_total_leave_duration_processor.process(payment)
     audit_report = (
-        local_test_db_session.query(PaymentAuditReportDetails)
+        test_db_session.query(PaymentAuditReportDetails)
         .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
         .one_or_none()
     )

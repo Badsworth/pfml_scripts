@@ -67,7 +67,7 @@ describe("dor_upload", () => {
     async () => {
       const dayOfWeek = format(new Date(), "EEEE");
       const isMonday = dayOfWeek === "Monday";
-      // Training refresh takes place Monday morning after testing (before employee's are picked up before the nightly eligibilty batch job).
+      // Training refresh takes place Monday morning after testing (before employee's are picked up before the nightly eligibility batch job).
       // This will cause test data from the previous day to be "wiped"
       if (dayOfWeek === "Tuesday" && config("ENVIRONMENT") === "training")
         return;

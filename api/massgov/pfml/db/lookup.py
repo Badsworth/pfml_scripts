@@ -89,6 +89,9 @@ class LookupTable:
         row = tuple(map(template_instance.__getattribute__, cls.column_names))
         row_id, description = row[0], row[1]
 
+        if row_id in cls.id_to_template_instance:
+            raise ValueError("%s: duplicate row id %s for key %s" % (cls.repr(), row_id, key))
+
         cls.attr_name_to_template_instance[key] = template_instance
         cls.id_to_template_instance[row_id] = template_instance
         cls.description_to_template_instance[description] = template_instance

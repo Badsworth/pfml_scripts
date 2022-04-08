@@ -22,11 +22,9 @@ from tests.delegated_payments.postprocessing import (
 
 
 @pytest.fixture
-def max_weekly_benefit_amount_validation_step(
-    local_initialize_factories_session, local_test_db_session, local_test_db_other_session
-):
+def max_weekly_benefit_amount_validation_step(initialize_factories_session, test_db_session):
     return MaxWeeklyBenefitAmountValidationStep(
-        db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
+        db_session=test_db_session, log_entry_db_session=test_db_session
     )
 
 
@@ -44,7 +42,7 @@ def validate_payment_failed(payment_container):
     assert payment_container.maximum_weekly_audit_report_msg
 
 
-def test_get_maximum_amount_for_week(maximum_weekly_processor, local_test_db_session):
+def test_get_maximum_amount_for_week(maximum_weekly_processor, test_db_session):
     # manually set the maximum weekly benefit amounts
     # If fetched from the DB they would be in descending order like so
 
@@ -88,32 +86,26 @@ def test_get_maximum_amount_for_week(maximum_weekly_processor, local_test_db_ses
         maximum_weekly_processor._get_maximum_amount_for_start_date(date(2020, 12, 31))
 
 
-def test_validate_payments_not_exceeding_cap(maximum_weekly_processor, local_test_db_session):
+def test_validate_payments_not_exceeding_cap(maximum_weekly_processor, test_db_session):
     # New payments that are being processed
     employee = EmployeeFactory.create()
-    payment_container1 = _create_payment_container(
-        employee, Decimal("225.00"), local_test_db_session
-    )
-    payment_container2 = _create_payment_container(
-        employee, Decimal("225.00"), local_test_db_session
-    )
+    payment_container1 = _create_payment_container(employee, Decimal("225.00"), test_db_session)
+    payment_container2 = _create_payment_container(employee, Decimal("225.00"), test_db_session)
 
     # Prior payments already processed
     _create_payment_container(
-        employee, Decimal("200.00"), local_test_db_session, has_processed_state=True
+        employee, Decimal("200.00"), test_db_session, has_processed_state=True
     )
     _create_payment_container(
-        employee, Decimal("200.00"), local_test_db_session, has_processed_state=True
+        employee, Decimal("200.00"), test_db_session, has_processed_state=True
     )
 
     # Prior payments that errored/are adhoc and aren't factored into the calculation
-    _create_payment_container(
-        employee, Decimal("500.00"), local_test_db_session, has_errored_state=True
-    )
+    _create_payment_container(employee, Decimal("500.00"), test_db_session, has_errored_state=True)
     _create_payment_container(
         employee,
         Decimal("500.00"),
-        local_test_db_session,
+        test_db_session,
         has_processed_state=True,
         is_adhoc_payment=True,
     )
@@ -128,7 +120,7 @@ def test_validate_payments_not_exceeding_cap(maximum_weekly_processor, local_tes
 
 
 def test_validate_payments_not_exceeding_cap_in_same_claim(
-    maximum_weekly_processor, local_test_db_session
+    maximum_weekly_processor, test_db_session
 ):
     employee = EmployeeFactory.create()
     claim = ClaimFactory.create(employee=employee)
@@ -139,21 +131,21 @@ def test_validate_payments_not_exceeding_cap_in_same_claim(
     payment_container1 = _create_payment_container(
         employee,
         Decimal("850.00"),
-        local_test_db_session,
+        test_db_session,
         start_date=date(2021, 8, 1),  # Sunday
         claim=claim,
     )
     payment_container2 = _create_payment_container(
         employee,
         Decimal("850.00"),
-        local_test_db_session,
+        test_db_session,
         start_date=date(2021, 8, 2),  # Monday
         claim=claim,
     )
     payment_container3 = _create_payment_container(
         employee,
         Decimal("850.00"),
-        local_test_db_session,
+        test_db_session,
         start_date=date(2021, 8, 3),  # Tuesday
         claim=claim,
     )
@@ -161,7 +153,7 @@ def test_validate_payments_not_exceeding_cap_in_same_claim(
     _create_payment_container(
         employee,
         Decimal("850.00"),
-        local_test_db_session,
+        test_db_session,
         start_date=date(2021, 8, 1),  # Sunday
         has_processed_state=True,
         claim=claim,
@@ -170,10 +162,10 @@ def test_validate_payments_not_exceeding_cap_in_same_claim(
     # These last two payments will cause it to go over
     # the cap because they have a different claim (generated in the method)
     payment_container4 = _create_payment_container(
-        employee, Decimal("850.00"), local_test_db_session, start_date=date(2021, 8, 4)  # Wednesday
+        employee, Decimal("850.00"), test_db_session, start_date=date(2021, 8, 4)  # Wednesday
     )
     payment_container5 = _create_payment_container(
-        employee, Decimal("850.00"), local_test_db_session, start_date=date(2021, 8, 5)  # Thursday
+        employee, Decimal("850.00"), test_db_session, start_date=date(2021, 8, 5)  # Thursday
     )
     successful_containers = [payment_container1, payment_container2, payment_container3]
     failed_containers = [payment_container4, payment_container5]
@@ -193,33 +185,33 @@ def test_validate_payments_not_exceeding_cap_in_same_claim(
 
 
 def test_validate_payments_not_exceeding_cap_many_overlap(
-    maximum_weekly_processor, local_test_db_session
+    maximum_weekly_processor, test_db_session
 ):
     employee = EmployeeFactory.create()
 
     # First four payments are all capable of being
     # paid without issue
     payment_container1 = _create_payment_container(
-        employee, Decimal("461.54"), local_test_db_session, start_date=date(2021, 6, 22)  # Tuesday
+        employee, Decimal("461.54"), test_db_session, start_date=date(2021, 6, 22)  # Tuesday
     )
     payment_container2 = _create_payment_container(
-        employee, Decimal("461.54"), local_test_db_session, start_date=date(2021, 6, 29)  # Tuesday
+        employee, Decimal("461.54"), test_db_session, start_date=date(2021, 6, 29)  # Tuesday
     )
     payment_container3 = _create_payment_container(
-        employee, Decimal("461.54"), local_test_db_session, start_date=date(2021, 7, 6)  # Tuesday
+        employee, Decimal("461.54"), test_db_session, start_date=date(2021, 7, 6)  # Tuesday
     )
     payment_container4 = _create_payment_container(
-        employee, Decimal("461.54"), local_test_db_session, start_date=date(2021, 7, 13)  # Tuesday
+        employee, Decimal("461.54"), test_db_session, start_date=date(2021, 7, 13)  # Tuesday
     )
 
     # These last two payments will cause it to go over
     # the cap because payments above are counted first
     # for the weeks they overlap
     payment_container5 = _create_payment_container(
-        employee, Decimal("850.00"), local_test_db_session, start_date=date(2021, 7, 2)  # Saturday
+        employee, Decimal("850.00"), test_db_session, start_date=date(2021, 7, 2)  # Saturday
     )
     payment_container6 = _create_payment_container(
-        employee, Decimal("850.00"), local_test_db_session, start_date=date(2021, 7, 9)  # Saturday
+        employee, Decimal("850.00"), test_db_session, start_date=date(2021, 7, 9)  # Saturday
     )
 
     successful_containers = [
@@ -238,7 +230,7 @@ def test_validate_payments_not_exceeding_cap_many_overlap(
         validate_payment_failed(container)
 
 
-def test_validate_payments_not_exceeding_cap_adhoc(maximum_weekly_processor, local_test_db_session):
+def test_validate_payments_not_exceeding_cap_adhoc(maximum_weekly_processor, test_db_session):
     employee = EmployeeFactory.create()
 
     # New payments that are being processed, but are all adhoc
@@ -246,14 +238,14 @@ def test_validate_payments_not_exceeding_cap_adhoc(maximum_weekly_processor, loc
     payment_container1 = _create_payment_container(
         employee,
         Decimal("5000.00"),
-        local_test_db_session,
+        test_db_session,
         is_adhoc_payment=True,
         start_date=date(2021, 8, 1),  # Sunday
     )
     payment_container2 = _create_payment_container(
         employee,
         Decimal("5000.00"),
-        local_test_db_session,
+        test_db_session,
         is_adhoc_payment=True,
         start_date=date(2021, 8, 1),  # Sunday
     )
@@ -261,14 +253,14 @@ def test_validate_payments_not_exceeding_cap_adhoc(maximum_weekly_processor, loc
     payment_container3 = _create_payment_container(
         employee,
         Decimal("425.00"),
-        local_test_db_session,
+        test_db_session,
         is_adhoc_payment=False,
         start_date=date(2021, 8, 1),  # Sunday
     )
     payment_container4 = _create_payment_container(
         employee,
         Decimal("425.00"),
-        local_test_db_session,
+        test_db_session,
         is_adhoc_payment=False,
         start_date=date(2021, 8, 1),  # Sunday
     )
@@ -277,7 +269,7 @@ def test_validate_payments_not_exceeding_cap_adhoc(maximum_weekly_processor, loc
     _create_payment_container(
         employee,
         Decimal("850.00"),
-        local_test_db_session,
+        test_db_session,
         has_processed_state=True,
         is_adhoc_payment=True,
         start_date=date(2021, 8, 1),  # Sunday
@@ -290,7 +282,7 @@ def test_validate_payments_not_exceeding_cap_adhoc(maximum_weekly_processor, loc
 
 
 def test_validate_payments_not_exceeding_cap_for_multiweek_payments(
-    maximum_weekly_processor, local_test_db_session
+    maximum_weekly_processor, test_db_session
 ):
     # Several 2-week payments that overlap one week each
     # Note the totals shown below are divided evenly to each week
@@ -300,7 +292,7 @@ def test_validate_payments_not_exceeding_cap_for_multiweek_payments(
     payment_container1 = _create_payment_container(
         employee,
         Decimal("1600.00"),
-        local_test_db_session,
+        test_db_session,
         periods=4,
         start_date=date(2021, 8, 1),  # Sunday
     )
@@ -309,7 +301,7 @@ def test_validate_payments_not_exceeding_cap_for_multiweek_payments(
     payment_container2 = _create_payment_container(
         employee,
         Decimal("1600.00"),
-        local_test_db_session,
+        test_db_session,
         periods=4,
         start_date=date(2021, 8, 15),  # Sunday
     )
@@ -319,7 +311,7 @@ def test_validate_payments_not_exceeding_cap_for_multiweek_payments(
     payment_container3 = _create_payment_container(
         employee,
         Decimal("1600.00"),
-        local_test_db_session,
+        test_db_session,
         periods=4,
         start_date=date(2021, 8, 22),  # Sunday
     )
@@ -327,7 +319,7 @@ def test_validate_payments_not_exceeding_cap_for_multiweek_payments(
     _create_payment_container(
         employee,
         Decimal("50.00"),
-        local_test_db_session,
+        test_db_session,
         start_date=date(2021, 8, 22),  # Sunday
         has_processed_state=True,
     )
@@ -340,7 +332,7 @@ def test_validate_payments_not_exceeding_cap_for_multiweek_payments(
 
 
 def test_validate_payments_not_exceeding_cap_for_overpayments(
-    maximum_weekly_processor, local_test_db_session
+    maximum_weekly_processor, test_db_session
 ):
     # Two payments for the same 7-day period
     # that are at the cap on their own, however
@@ -349,17 +341,17 @@ def test_validate_payments_not_exceeding_cap_for_overpayments(
     employee = EmployeeFactory.create()
 
     payment_container1 = _create_payment_container(
-        employee, Decimal("850.00"), local_test_db_session, start_date=date(2021, 8, 1)  # Sunday
+        employee, Decimal("850.00"), test_db_session, start_date=date(2021, 8, 1)  # Sunday
     )
 
     payment_container2 = _create_payment_container(
-        employee, Decimal("850.00"), local_test_db_session, start_date=date(2021, 8, 1)  # Sunday
+        employee, Decimal("850.00"), test_db_session, start_date=date(2021, 8, 1)  # Sunday
     )
 
     _create_payment_container(
         employee,
         Decimal("-850.00"),
-        local_test_db_session,
+        test_db_session,
         is_overpayment=True,
         payment_transaction_type=PaymentTransactionType.OVERPAYMENT,
         start_date=date(2021, 8, 1),  # Sunday
@@ -372,11 +364,11 @@ def test_validate_payments_not_exceeding_cap_for_overpayments(
 
 
 def test_get_payment_details_per_pay_period_missing_payment_details(
-    maximum_weekly_processor, local_test_db_session
+    maximum_weekly_processor, test_db_session
 ):
     employee = EmployeeFactory.create()
     payment_container = _create_payment_container(
-        employee, Decimal("225.00"), local_test_db_session, skip_pay_periods=True
+        employee, Decimal("225.00"), test_db_session, skip_pay_periods=True
     )
     pay_period_group = PayPeriodGroup(
         start_date=payment_container.payment.period_start_date,
@@ -389,7 +381,7 @@ def test_get_payment_details_per_pay_period_missing_payment_details(
 
 
 def test_get_payment_details_per_pay_period_not_overlapping_pay_period(
-    maximum_weekly_processor, local_test_db_session
+    maximum_weekly_processor, test_db_session
 ):
     # I'm not sure this is even possible with our logic,
     # but in case anything changes that could cause it,
@@ -400,7 +392,7 @@ def test_get_payment_details_per_pay_period_not_overlapping_pay_period(
     payment_container = _create_payment_container(
         employee,
         Decimal("225.00"),
-        local_test_db_session,
+        test_db_session,
         start_date=date(2021, 8, 1),
         periods=2,
         length_of_period=7,
@@ -414,17 +406,17 @@ def test_get_payment_details_per_pay_period_not_overlapping_pay_period(
 
 
 def test_validate_payments_not_exceeding_cap_other_payment_types(
-    maximum_weekly_processor, local_test_db_session
+    maximum_weekly_processor, test_db_session
 ):
     employee = EmployeeFactory.create()
 
     # New payments that are being processed, sum exactly to cap
     # and will be accepted
     payment_container1 = _create_payment_container(
-        employee, Decimal("425.00"), local_test_db_session, start_date=date(2021, 8, 1)  # Sunday
+        employee, Decimal("425.00"), test_db_session, start_date=date(2021, 8, 1)  # Sunday
     )
     payment_container2 = _create_payment_container(
-        employee, Decimal("425.00"), local_test_db_session, start_date=date(2021, 8, 1)  # Sunday
+        employee, Decimal("425.00"), test_db_session, start_date=date(2021, 8, 1)  # Sunday
     )
 
     # Other payments of non-standard types. Despite all of these
@@ -440,14 +432,14 @@ def test_validate_payments_not_exceeding_cap_other_payment_types(
         _create_payment_container(
             employee,
             Decimal("850.00"),
-            local_test_db_session,
+            test_db_session,
             payment_transaction_type=payment_type,
             start_date=date(2021, 8, 1),  # Sunday
         )
         _create_payment_container(
             employee,
             Decimal("850.00"),
-            local_test_db_session,
+            test_db_session,
             payment_transaction_type=payment_type,
             has_processed_state=True,
             start_date=date(2021, 8, 1),  # Sunday
@@ -455,7 +447,7 @@ def test_validate_payments_not_exceeding_cap_other_payment_types(
         _create_payment_container(
             employee,
             Decimal("850.00"),
-            local_test_db_session,
+            test_db_session,
             payment_transaction_type=payment_type,
             has_errored_state=True,
             start_date=date(2021, 8, 1),  # Sunday
@@ -471,7 +463,7 @@ def test_validate_payments_not_exceeding_cap_other_payment_types(
 
 
 def test_validate_payments_not_exceeding_cap_multiple_claims(
-    maximum_weekly_processor, local_test_db_session
+    maximum_weekly_processor, test_db_session
 ):
     # This is validating a problem found in https://lwd.atlassian.net/browse/API-2245
     # Before, the logic was letting all payments after
@@ -485,7 +477,7 @@ def test_validate_payments_not_exceeding_cap_multiple_claims(
     _create_payment_container(
         employee,
         Decimal("100.00"),
-        local_test_db_session,
+        test_db_session,
         has_processed_state=True,
         claim=claim1,
         start_date=date(2021, 12, 19),
@@ -495,7 +487,7 @@ def test_validate_payments_not_exceeding_cap_multiple_claims(
     payment_container1 = _create_payment_container(
         employee,
         Decimal("700.00"),
-        local_test_db_session,
+        test_db_session,
         claim=claim1,
         start_date=date(2021, 12, 20),
         length_of_period=7,
@@ -505,7 +497,7 @@ def test_validate_payments_not_exceeding_cap_multiple_claims(
     _create_payment_container(
         employee,
         Decimal("125.00"),
-        local_test_db_session,
+        test_db_session,
         has_processed_state=True,
         claim=claim2,
         start_date=date(2021, 12, 19),
@@ -515,7 +507,7 @@ def test_validate_payments_not_exceeding_cap_multiple_claims(
     payment_container2 = _create_payment_container(
         employee,
         Decimal("725.00"),
-        local_test_db_session,
+        test_db_session,
         claim=claim2,
         start_date=date(2021, 12, 20),
         length_of_period=7,
@@ -530,17 +522,15 @@ def test_validate_payments_not_exceeding_cap_multiple_claims(
     validate_payment_failed(payment_container2)
 
 
-def test_validate_payments_use_correct_maximum_benefit(
-    maximum_weekly_processor, local_test_db_session
-):
+def test_validate_payments_use_correct_maximum_benefit(maximum_weekly_processor, test_db_session):
     # payments in 2022 for claims starting in 2022 have a maximum payment of $1084.31,
     # so this should be paid in full
     employee = EmployeeFactory.create()
     payment_container1 = _create_payment_container(
-        employee, Decimal("750"), local_test_db_session, start_date=date(2022, 1, 14)
+        employee, Decimal("750"), test_db_session, start_date=date(2022, 1, 14)
     )
     payment_container2 = _create_payment_container(
-        employee, Decimal("250"), local_test_db_session, start_date=date(2022, 1, 14)
+        employee, Decimal("250"), test_db_session, start_date=date(2022, 1, 14)
     )
     maximum_weekly_processor.process(employee, [payment_container1, payment_container2])
     validate_payment_success(payment_container1)
@@ -552,7 +542,7 @@ def test_validate_payments_use_correct_maximum_benefit(
     payment_container3 = _create_payment_container(
         employee2,
         Decimal("750"),
-        local_test_db_session,
+        test_db_session,
         start_date=date(2022, 1, 14),
         claim=claim3,
         add_single_absence_period=False,
@@ -567,7 +557,7 @@ def test_validate_payments_use_correct_maximum_benefit(
     payment_container4 = _create_payment_container(
         employee2,
         Decimal("250"),
-        local_test_db_session,
+        test_db_session,
         start_date=date(2022, 1, 14),
         claim=claim4,
         add_single_absence_period=False,
@@ -590,7 +580,7 @@ def test_validate_payments_use_correct_maximum_benefit(
     payment_container5 = _create_payment_container(
         employee3,
         Decimal("750"),
-        local_test_db_session,
+        test_db_session,
         start_date=date(2022, 1, 14),
         claim=claim5,
         add_single_absence_period=False,
@@ -608,7 +598,7 @@ def test_validate_payments_use_correct_maximum_benefit(
     payment_container6 = _create_payment_container(
         employee3,
         Decimal("250"),
-        local_test_db_session,
+        test_db_session,
         start_date=date(2022, 1, 14),
         claim=claim6,
         add_single_absence_period=False,
@@ -629,7 +619,7 @@ def test_validate_payments_use_correct_maximum_benefit(
     payment_container7 = _create_payment_container(
         employee4,
         Decimal("900"),
-        local_test_db_session,
+        test_db_session,
         start_date=date(2022, 1, 14),
         claim=claim7,
         add_single_absence_period=False,
@@ -649,7 +639,7 @@ def test_validate_payments_use_correct_maximum_benefit(
     payment_container8 = _create_payment_container(
         employee4,
         Decimal("100"),
-        local_test_db_session,
+        test_db_session,
         start_date=date(2022, 1, 14),
         claim=claim8,
         add_single_absence_period=False,
@@ -666,9 +656,7 @@ def test_validate_payments_use_correct_maximum_benefit(
     validate_payment_success(payment_container8)
 
 
-def test_validate_payments_with_employer_reimbursement(
-    maximum_weekly_processor, local_test_db_session
-):
+def test_validate_payments_with_employer_reimbursement(maximum_weekly_processor, test_db_session):
     employee = EmployeeFactory.create()
 
     # Create two payments, one standard
@@ -676,7 +664,7 @@ def test_validate_payments_with_employer_reimbursement(
     employer_reimbursement_payment = _create_payment_container(
         employee,
         Decimal("100.00"),
-        local_test_db_session,
+        test_db_session,
         start_date=date(2021, 8, 1),
         payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,  # Sunday
     )
@@ -687,7 +675,7 @@ def test_validate_payments_with_employer_reimbursement(
     standard_payment = _create_payment_container(
         employee,
         Decimal("800.00"),
-        local_test_db_session,
+        test_db_session,
         start_date=date(2021, 8, 1),
         employer_reimbursement_amount=Decimal("-100.00"),  # Sunday
     )
@@ -704,7 +692,7 @@ def test_validate_payments_with_employer_reimbursement(
     employer_reimbursement_payment2 = _create_payment_container(
         employee2,
         Decimal("100.00"),
-        local_test_db_session,
+        test_db_session,
         start_date=date(2021, 8, 1),
         payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,  # Sunday
     )
@@ -715,7 +703,7 @@ def test_validate_payments_with_employer_reimbursement(
     standard_payment2 = _create_payment_container(
         employee2,
         Decimal("900.00"),
-        local_test_db_session,
+        test_db_session,
         start_date=date(2021, 8, 1),
         employer_reimbursement_amount=Decimal("-100.00"),  # Sunday
     )
@@ -734,7 +722,7 @@ def test_validate_payments_with_employer_reimbursement(
     employer_reimbursement_payment3 = _create_payment_container(
         employee3,
         Decimal("1000.00"),
-        local_test_db_session,
+        test_db_session,
         is_adhoc_payment=True,
         start_date=date(2021, 8, 1),
         payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,  # Sunday
@@ -746,7 +734,7 @@ def test_validate_payments_with_employer_reimbursement(
     standard_payment3 = _create_payment_container(
         employee3,
         Decimal("9000.00"),
-        local_test_db_session,
+        test_db_session,
         is_adhoc_payment=True,
         start_date=date(2021, 8, 1),
         employer_reimbursement_amount=Decimal("-100.00"),  # Sunday

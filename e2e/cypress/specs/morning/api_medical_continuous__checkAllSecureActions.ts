@@ -30,7 +30,7 @@ describe("Create a new caring leave claim in FINEOS and check multiple secure ac
       cy.unstash<Submission>("submission").then((submission) => {
         fineosPages.ClaimPage.visit(
           submission.fineos_absence_id
-        ).addHistoricalAbsenceCase();
+        ).addHistoricalAbsenceCase(config("HAS_APRIL_UPGRADE") === "true");
       });
     }
   );
@@ -55,19 +55,25 @@ describe("Create a new caring leave claim in FINEOS and check multiple secure ac
     it("Approve the Absence Case for the other secure actions checks", () => {
       cy.dependsOnPreviousPass([adjClaim]);
       fineos.before();
-      cy.unstash<Submission>("submission").then((submission) => {
-        const claimPage = fineosPages.ClaimPage.visit(
-          submission.fineos_absence_id
-        );
-        claimPage.adjudicate((adjudicate) => {
-          adjudicate.evidence((evidence) => {
-            evidence.receive("Own serious health condition form");
-            evidence.receive("Identification Proof");
+      cy.tryCount().then((tryCount) => {
+        if (tryCount > 0) {
+          fineos.assertClaimStatus("Approved");
+          return;
+        }
+        cy.unstash<Submission>("submission").then((submission) => {
+          const claimPage = fineosPages.ClaimPage.visit(
+            submission.fineos_absence_id
+          );
+          claimPage.adjudicate((adjudicate) => {
+            adjudicate.evidence((evidence) => {
+              evidence.receive("Own serious health condition form");
+              evidence.receive("Identification Proof");
+            });
+            adjudicate.certificationPeriods((cert) => cert.prefill());
+            adjudicate.acceptLeavePlan();
           });
-          adjudicate.certificationPeriods((cert) => cert.prefill());
-          adjudicate.acceptLeavePlan();
+          claimPage.approve("Approved", config("HAS_APRIL_UPGRADE") === "true");
         });
-        claimPage.approve("Approved", config("HAS_APRIL_UPGRADE") === "true");
       });
     });
 

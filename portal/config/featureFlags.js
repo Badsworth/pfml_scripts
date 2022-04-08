@@ -10,10 +10,6 @@ const flagsConfig = {
   // Define a default or all feature flags here.
   // Environments will fallback to these default values.
   defaults: {
-    // When enabled, the "Find my application" flow is displayed.
-    // TODO (PORTAL-1327): Remove channelSwitching flag once enabled everywhere.
-    channelSwitching: true,
-
     // When this flag is enabled, the user can see the "Employment status"
     // question in the claimant flow (CP-1204)
     // TODO (CP-1281): Show employment status question when Portal supports other employment statuses
@@ -23,21 +19,27 @@ const flagsConfig = {
     claimantShowMFA: false,
     claimantSyncCognitoPreferences: false,
 
+    // When this flag is enabled, a claimant can request modifications to their leave
+    // TODO (PORTAL-2064) Remove flag
+    claimantShowModifications: false,
+
     // When this flag is enabled, the military leave options are selectable on
     // the Leave Reason page in the claimant flow (CP-1145)
     // TODO (CP-534): Show all options when portal supports activeDutyFamily, serviceMemberFamily
     claimantShowMilitaryLeaveTypes: false,
 
     // When this flag is enabled payment status phase three work will be displayed.
-    claimantShowPaymentsPhaseThree: false,
+    // Phase 3 work encompasses detailed information on payment table Delays and Holiday Alerts
+    // TODO (PORTAL-1934): remove flag
+    claimantShowPaymentsPhaseThree: true,
 
     // When this flag is enabled logic in code will account for new payment schedule post FINEOS deploy
-    // TODO (PORTAL-1934) Remove flag
+    // TODO (PORTAL-1915) Remove flag
     claimantUseFineosNewPaymentSchedule: false,
 
-    // Show multiple leave request UI updates to leave admins (dashboard++)
-    // TODO (PORTAL-1560) Remove flag
-    employerShowMultiLeaveDashboard: true,
+    // When enabled, collect leave admin phone, first name, and last name
+    // TODO (PORTAL-2089) Remove flag
+    employerCollectNameAndPhone: false,
 
     // When this flag true, you can BYPASS maintenance pages that are currently present.
     // See docs/portal/maintenance-pages.md for more details.
@@ -50,13 +52,9 @@ const flagsConfig = {
     // https://lwd.atlassian.net/browse/CP-459
     pfmlTerriyay: false,
 
-    // When this flag is true, PDF files up to 10mb are sent to the API.
-    sendLargePdfToApi: true,
-
-    // TODO (PORTAL-1893) This flag should be enabled when the /holidays endpoint is ready for production.
-    // The /holidays endpoint is still under development, but the holiday alert component is done.
+    // TODO (PORTAL-1893) remove feature flag
     // When this flag is enabled the holiday alert will be displayed on the payments pages.
-    showHolidayAlert: false,
+    showHolidayAlert: true,
 
     // When this flag is true, claims that would span multiple benefit years
     // are split into separate claims
@@ -68,34 +66,52 @@ const flagsConfig = {
   // environment config files.
   "cps-preview": {
     claimantShowMFA: true,
+    claimantShowPaymentsPhaseThree: true,
+    showHolidayAlert: true,
   },
   development: {
     example: true,
     pfmlTerriyay: true,
     claimantShowMFA: true,
+    claimantShowPaymentsPhaseThree: true,
+    showHolidayAlert: true,
   },
   test: {
     claimantShowMFA: true,
+    claimantShowPaymentsPhaseThree: true,
+    showHolidayAlert: true,
   },
   stage: {
     claimantShowMFA: true,
+    claimantShowPaymentsPhaseThree: true,
+    showHolidayAlert: true,
   },
   training: {
     claimantShowMFA: true,
+    claimantShowPaymentsPhaseThree: true,
+    showHolidayAlert: true,
   },
   performance: {
     claimantShowMFA: true,
+    claimantShowPaymentsPhaseThree: true,
+    showHolidayAlert: true,
   },
   uat: {
     claimantShowMFA: true,
+    claimantShowPaymentsPhaseThree: true,
+    showHolidayAlert: true,
   },
   local: {
     pfmlTerriyay: true,
     claimantShowMFA: true,
+    claimantShowPaymentsPhaseThree: true,
+    showHolidayAlert: true,
   },
   prod: {
     pfmlTerriyay: true,
     claimantShowMFA: true,
+    claimantShowPaymentsPhaseThree: true,
+    showHolidayAlert: true,
   },
 };
 

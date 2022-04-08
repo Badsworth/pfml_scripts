@@ -66,11 +66,21 @@ const useClaimsLogic = ({
     try {
       const { claims, paginationMeta } = await claimsApi.getClaims(queryParams);
       setClaims(claims);
-      setActiveParams(queryParams);
       setPaginationMeta(paginationMeta);
-      setIsLoadingClaims(false);
     } catch (error) {
       errorsLogic.catchError(error);
+      // to avoid infinite loop when errors are encountered:
+      setPaginationMeta({
+        page_offset: Number(queryParams.page_offset),
+        page_size: 0,
+        total_pages: 0,
+        total_records: 0,
+        order_by: queryParams.order_by || "",
+        order_direction: queryParams.order_direction || "descending",
+      });
+    } finally {
+      setActiveParams(queryParams);
+      setIsLoadingClaims(false);
     }
   };
 

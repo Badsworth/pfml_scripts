@@ -66,7 +66,7 @@ def update_employer_confirmation_requirements(
     ]
 
     records = [valid_update for valid_update in managed_req_updates if valid_update]
-    commit_managed_requirements(db_session)
+    commit_managed_requirements(db_session, {})
     updated_records = [updated for updated in records if updated]
 
     return updated_records

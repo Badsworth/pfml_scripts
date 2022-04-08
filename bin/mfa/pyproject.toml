@@ -1,0 +1,8 @@
+[tool.poetry]
+ name = "batch-mfa-disable"
+ version = "0.0.5"
+ description = "script for batch running of mfa-lockout-resolution ecs task"
+ authors = ["Jay Reed <jayreed@navapbc.com>"]
+
+ [tool.poetry.dependencies]
+ python = "^3.8"

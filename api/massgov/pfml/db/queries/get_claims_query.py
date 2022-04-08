@@ -1,11 +1,8 @@
 import re
-from datetime import date
-from enum import Enum
-from typing import Any, Callable, List, Optional, Set, Type, Union, no_type_check
+from typing import Any, Callable, Optional, Set, Type, Union, no_type_check
 from uuid import UUID
 
 from sqlalchemy import Column, and_, asc, desc, func, or_
-from sqlalchemy.orm import contains_eager
 from sqlalchemy.sql.elements import UnaryExpression
 from sqlalchemy.sql.selectable import Alias
 
@@ -16,7 +13,6 @@ from massgov.pfml.api.util.paginate.paginator import (
     PaginationAPIContext,
     page_for_api_context,
 )
-from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.applications import Application
 from massgov.pfml.db.models.base import Base
 from massgov.pfml.db.models.employees import (
@@ -24,42 +20,15 @@ from massgov.pfml.db.models.employees import (
     Claim,
     Employee,
     Employer,
-    LkAbsenceStatus,
     ManagedRequirement,
-    ManagedRequirementStatus,
     ManagedRequirementType,
     User,
 )
 
 
-# Extra Absence Statuses defined in the UI
-# enum values for claim_status url param in claims endpoint
-class ActionRequiredStatusFilter(str, Enum):
-    OPEN_REQUIREMENT = "Open requirement"
-    PENDING_NO_ACTION = "Pending - no action"
-
-    @classmethod
-    def all(cls):
-        return [cls.OPEN_REQUIREMENT, cls.PENDING_NO_ACTION]
-
-
-PendingAbsenceStatuses = [
-    AbsenceStatus.INTAKE_IN_PROGRESS.absence_status_description,
-    AbsenceStatus.IN_REVIEW.absence_status_description,
-    AbsenceStatus.ADJUDICATION.absence_status_description,
-    None,
-]
-NoOpenRequirementAbsenceStatuses = [
-    AbsenceStatus.APPROVED.absence_status_description,
-    AbsenceStatus.CLOSED.absence_status_description,
-    AbsenceStatus.DECLINED.absence_status_description,
-    AbsenceStatus.COMPLETED.absence_status_description,
-]
 # Wrapper for the DB layer of the `get_claims` endpoint
 # Create a query for filtering and ordering Claim results
 # The "get" methods are idempotent, the rest will change the query and affect the results
-
-
 class GetClaimsQuery:
     joined: Set[Union[Type[Base], Alias]]
 
@@ -124,64 +93,27 @@ class GetClaimsQuery:
         filter = Claim.application.has(Application.user_id == current_user.user_id)  # type: ignore
         self.query = self.query.filter(filter)
 
-    def get_managed_requirement_status_filters(self, absence_statuses: Set[str]) -> List[Any]:
-        has_pending_no_action = ActionRequiredStatusFilter.PENDING_NO_ACTION in absence_statuses
-        has_open_requirement = ActionRequiredStatusFilter.OPEN_REQUIREMENT in absence_statuses
-        # remove absence status not in database
-        absence_statuses.difference_update(ActionRequiredStatusFilter.all())
-        filters = []
-        has_open_requirements_filter = Claim.managed_requirements.any(  # type: ignore
-            and_(
-                *[
-                    ManagedRequirement.managed_requirement_type_id
-                    == ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
-                    ManagedRequirement.managed_requirement_status_id
-                    == ManagedRequirementStatus.OPEN.managed_requirement_status_id,
-                    ManagedRequirement.follow_up_date >= date.today(),
-                ]
-            )
-        )
-
-        # handles Approved, Closed, Denied, those should only be returned if they do not have open managed requirements
-        no_requirement_statuses = list(
-            set(absence_statuses).intersection(NoOpenRequirementAbsenceStatuses)
-        )
-        if len(no_requirement_statuses):
-            no_requirement_statuses_filters = [
-                LkAbsenceStatus.absence_status_description.in_(no_requirement_statuses),
-                ~has_open_requirements_filter,
-            ]
-            filters.append(and_(*no_requirement_statuses_filters))
-
-        if has_open_requirement:
-            filters.append(has_open_requirements_filter)
-        if has_pending_no_action:
-            pending_no_action_filters = [
-                or_(
-                    LkAbsenceStatus.absence_status_description.in_(PendingAbsenceStatuses),
-                    Claim.fineos_absence_status_id.is_(None),
-                ),
-                ~has_open_requirements_filter,
-            ]
-            filters.append(and_(*pending_no_action_filters))
-        return filters
-
-    def add_absence_status_filter(self, absence_statuses: Set[str]) -> None:
-        # use outer join to return claims without fineos_absence_status_id
-        self.join(Claim.fineos_absence_status, isouter=True)  # type:ignore
-        filters = self.get_managed_requirement_status_filters(absence_statuses)
-        if len(filters):
-            self.query = self.query.filter(or_(*filters))
-
     @no_type_check
     def add_is_reviewable_filter(self, is_reviewable: str) -> None:
         """
         Filters claims by checking if they are reviewable or not.
+
+        A claim is reviewable if it has an associated open requirement (soonest_open_requirement_date isn't None)
+        AND the claim has at least one reviewable (non-final) absence period request decision
         """
         if is_reviewable == "yes":
-            self.query = self.query.filter(Claim.soonest_open_requirement_date.isnot(None))
+            self.query = self.query.filter(
+                Claim.soonest_open_requirement_date.isnot(None),
+                Claim.absence_periods.any(~AbsencePeriod.has_final_decision),
+            )
+
         if is_reviewable == "no":
-            self.query = self.query.filter(Claim.soonest_open_requirement_date.is_(None))
+            self.query = self.query.filter(
+                or_(
+                    Claim.soonest_open_requirement_date.is_(None),
+                    ~Claim.absence_periods.any(~AbsencePeriod.has_final_decision),
+                )
+            )
 
     def add_request_decision_filter(self, request_decisions: Set[int]) -> None:
         filter = Claim.absence_periods.any(  # type: ignore
@@ -263,20 +195,18 @@ class GetClaimsQuery:
         ]
         # use outer join to return claims without managed_requirements (one to many)
         self.join(ManagedRequirement, isouter=True, join_filter=and_(*filters))
-        self.query = self.query.options(contains_eager("managed_requirements"))
 
     def add_order_by(self, context: PaginationAPIContext, is_reviewable: Optional[str]) -> None:
         is_asc = context.order_direction == OrderDirection.asc.value
         sort_fn = asc_null_first if is_asc else desc_null_last
+
+        self.query = self.query.distinct()
 
         if context.order_key is Claim.employee:
             self.add_order_by_employee(sort_fn)
 
         elif context.order_by == "latest_follow_up_date":
             self.add_order_by_follow_up_date(is_asc, is_reviewable)
-
-        elif context.order_key is Claim.fineos_absence_status:
-            self.add_order_by_absence_status(is_asc)
 
         elif context.order_by in Claim.__table__.columns:
             self.add_order_by_column(is_asc, context)
@@ -325,24 +255,6 @@ class GetClaimsQuery:
         # use outer join to return claims with missing relationship data
         self.join(Claim.employee, isouter=True)  # type:ignore
         self.query = self.query.order_by(*order_keys)
-
-    def add_order_by_absence_status(self, is_asc: bool) -> None:
-        sort_fn = asc_null_first if is_asc else desc_null_last
-        # oldest follow up date first if ascending
-        sort_req = asc if is_asc else desc
-
-        # use outer join to return claims without fineos_absence_status_id
-        self.join(Claim.fineos_absence_status, isouter=True)  # type:ignore
-
-        # use outer join to return claims with missing relationship data
-        self.join(Claim.employee, isouter=True)  # type:ignore
-
-        order = [
-            sort_req(Claim.soonest_open_requirement_date),  # type:ignore
-            sort_fn(LkAbsenceStatus.sort_order),
-            sort_fn(Employee.last_name),
-        ]
-        self.query = self.query.order_by(*order)
 
     def add_order_by_column(self, is_asc: bool, context: PaginationAPIContext) -> None:
         order_key = context.order_key.asc() if is_asc else context.order_key.desc()

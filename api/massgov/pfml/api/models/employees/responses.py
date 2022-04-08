@@ -49,6 +49,11 @@ class EmployeeResponse(EmployeeBasicResponse):
         if employee.tax_identifier:
             employee_response.tax_identifier_last4 = employee.tax_identifier.tax_identifier[-4:]
 
+        if not employee.mass_id_number and (
+            mass_id := employee.latest_mass_id_number_from_id_proofed_applications
+        ):
+            employee_response.mass_id_number = MassIdStr(mass_id)
+
         return employee_response
 
 
@@ -70,6 +75,11 @@ class EmployeeForPfmlCrmResponse(EmployeeBasicResponse):
 
         if employee.tax_identifier:
             employee_response.tax_identifier_last4 = employee.tax_identifier.tax_identifier[-4:]
+
+        if not employee.mass_id_number and (
+            mass_id := employee.latest_mass_id_number_from_id_proofed_applications
+        ):
+            employee_response.mass_id_number = MassIdStr(mass_id)
 
         return employee_response
 
