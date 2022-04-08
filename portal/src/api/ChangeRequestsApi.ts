@@ -1,12 +1,12 @@
 import {
   BenefitsApplicationDocument,
   DocumentTypeEnum,
-} from "src/models/Document";
-import ApiResourceCollection from "src/models/ApiResourceCollection";
+} from "../models/Document";
+import ApiResourceCollection from "../models/ApiResourceCollection";
 import BaseApi from "./BaseApi";
-import { ChangeRequest } from "src/models/ChangeRequest";
+import ChangeRequest from "../models/ChangeRequest";
 import { getDocumentFormData } from "./DocumentsApi";
-import routes from "src/routes";
+import routes from "../routes";
 
 export default class ChangeRequestApi extends BaseApi {
   get basePath(): string {
