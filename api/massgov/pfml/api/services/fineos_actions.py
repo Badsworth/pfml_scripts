@@ -58,7 +58,7 @@ from massgov.pfml.fineos.models import CreateOrUpdateServiceAgreement
 from massgov.pfml.fineos.models.customer_api import (
     AbsenceDetails,
     Base64EncodedFileData,
-    ChangeRequestPeriod,
+    ChangeRequestPeriodCommand,
     ChangeRequestReason,
     EmailAddressV20,
     EmailAddressV21,
@@ -1629,7 +1629,7 @@ def convert_change_request_to_fineos_model(
             reason=ChangeRequestReason(fullId=0, name="Employee Requested Removal"),
             additionalNotes="Withdrawal",
             changeRequestPeriods=[
-                ChangeRequestPeriod(
+                ChangeRequestPeriodCommand(
                     startDate=claim.absence_period_start_date, endDate=claim.absence_period_end_date
                 )
             ],
@@ -1641,8 +1641,8 @@ def convert_change_request_to_fineos_model(
             reason=ChangeRequestReason(fullId=0, name="Add time for different Absence Reason"),
             additionalNotes="Medical to bonding transition",
             changeRequestPeriods=[
-                ChangeRequestPeriod(
-                    startDate=change_request.start_date, endDate=change_request.end_date  # type: ignore
+                ChangeRequestPeriodCommand(
+                    startDate=change_request.start_date, endDate=change_request.end_date
                 )
             ],
         )
@@ -1657,8 +1657,8 @@ def convert_change_request_to_fineos_model(
             reason=ChangeRequestReason(fullId=0, name="Add time for identical Absence Reason"),
             additionalNotes="Extension",
             changeRequestPeriods=[
-                ChangeRequestPeriod(
-                    startDate=change_request.start_date, endDate=change_request.end_date  # type: ignore
+                ChangeRequestPeriodCommand(
+                    startDate=change_request.start_date, endDate=change_request.end_date
                 )
             ],
         )
@@ -1675,9 +1675,13 @@ def convert_change_request_to_fineos_model(
             reason=ChangeRequestReason(fullId=0, name="Employee Requested Removal"),
             additionalNotes="Cancellation",
             changeRequestPeriods=[
-                ChangeRequestPeriod(
-                    startDate=change_request.end_date + datetime.timedelta(days=1),  # type: ignore
-                    endDate=claim.absence_period_end_date,  # type: ignore
+                ChangeRequestPeriodCommand(
+                    startDate=(
+                        change_request.end_date + datetime.timedelta(days=1)
+                        if change_request.end_date
+                        else None
+                    ),
+                    endDate=claim.absence_period_end_date,
                 )
             ],
         )

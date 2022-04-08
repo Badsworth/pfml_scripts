@@ -21,7 +21,10 @@ import xmlschema
 from requests.models import Response
 
 import massgov.pfml.util.logging
-from massgov.pfml.fineos.models.customer_api import LeavePeriodChangeRequest
+from massgov.pfml.fineos.models.customer_api import (
+    CreateLeavePeriodsChangeRequestCommand,
+    LeavePeriodsChangeRequestResource,
+)
 from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
 from massgov.pfml.fineos.util.response import (
     fineos_document_empty_dates_to_none,
@@ -1282,18 +1285,21 @@ class FINEOSClient(client.AbstractFINEOSClient):
         return employer_create_or_update.fineos_customer_nbr, fineos_employer_id_int
 
     def create_or_update_leave_period_change_request(
-        self, fineos_web_id: str, absence_id: str, change_request: LeavePeriodChangeRequest
-    ) -> LeavePeriodChangeRequest:
+        self,
+        fineos_web_id: str,
+        absence_id: str,
+        change_request: CreateLeavePeriodsChangeRequestCommand,
+    ) -> LeavePeriodsChangeRequestResource:
         # NOTE: this call will not work in some envs until https://lwd.atlassian.net/browse/PFMLPB-2055 is complete
         response = self._customer_api(
             "POST",
-            f"customer/absence/absences/{absence_id}/leave-period-change-request",
+            f"customer/absence/absences/{absence_id}/leave-periods-change-requests",
             fineos_web_id,
             "create_or_update_leave_period_change_request",
             data=change_request.json(exclude_none=True),
         )
         response_json = response.json()
-        return LeavePeriodChangeRequest.parse_obj(response_json)
+        return LeavePeriodsChangeRequestResource.parse_obj(response_json)
 
     @staticmethod
     def _create_or_update_leave_admin_payload(

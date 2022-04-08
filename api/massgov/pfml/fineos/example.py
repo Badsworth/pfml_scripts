@@ -86,7 +86,6 @@ def main():
                 startDate=datetime.date(2020, 8, 2),
                 endDate=datetime.date(2020, 10, 2),
                 lastDayWorked=datetime.date(2020, 7, 30),
-                expectedReturnToWorkDate=datetime.date(2020, 10, 24),
                 startDateFullDay=True,
                 endDateFullDay=True,
                 status="Known",

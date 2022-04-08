@@ -810,7 +810,7 @@ class TestCreateOrUpdateLeavePeriodChangeRequest:
     def test_success(self, httpserver, fineos_client, change_request, change_request_response):
         absence_id = "NTN-123456-ABS-01"
         httpserver.expect_request(
-            f"/customerapi/customer/absence/absences/{absence_id}/leave-period-change-request",
+            f"/customerapi/customer/absence/absences/{absence_id}/leave-periods-change-requests",
             method="POST",
         ).respond_with_data(
             json.dumps(change_request_response), status=200, content_type="application/json"

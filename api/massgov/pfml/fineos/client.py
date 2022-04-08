@@ -284,8 +284,8 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         self,
         fineos_web_id: str,
         absence_id: str,
-        change_request: models.customer_api.LeavePeriodChangeRequest,
-    ) -> models.customer_api.LeavePeriodChangeRequest:
+        change_request: models.customer_api.CreateLeavePeriodsChangeRequestCommand,
+    ) -> models.customer_api.LeavePeriodsChangeRequestResource:
         """Create or update a leave period change request in FINEOS."""
         pass
 
