@@ -1,27 +1,25 @@
-import ApiResourceCollection from "src/models/ApiResourceCollection";
-import ChangeRequest from "src/models/ChangeRequest";
-import ChangeRequestApi from "src/api/ChangeRequestApi";
+import ApiResourceCollection from "../../src/models/ApiResourceCollection";
+import ChangeRequest from "../../src/models/ChangeRequest";
+import ChangeRequestsApi from "../../src/api/ChangeRequestsApi";
 import { ErrorsLogic } from "./useErrorsLogic";
 import { PortalFlow } from "./usePortalFlow";
+import TempFile from "src/models/TempFile";
+import { ValidationError } from "../../src/errors";
+import assert from "assert";
+import getRelevantIssues from "../../src/utils/getRelevantIssues";
+
 import useCollectionState from "./useCollectionState";
 import { useState } from "react";
-import getRelevantIssues from "src/utils/getRelevantIssues";
-import { ValidationError } from "src/errors";
-import { P } from "@storybook/components";
-import TempFile from "src/models/TempFile";
-import assert from "assert";
-
 const useChangeRequestLogic = ({
   errorsLogic,
   portalFlow,
 }: {
-  errorLogic: ErrorsLogic;
+  errorsLogic: ErrorsLogic;
   portalFlow: PortalFlow;
 }) => {
   const {
     collection: changeRequests,
     setCollection: setChangeRequests,
-    addItem: addChangeRequest,
     removeItem: removeChangeRequest,
     updateItem: setChangeRequest,
   } = useCollectionState(
@@ -31,7 +29,7 @@ const useChangeRequestLogic = ({
     useState<boolean>();
   const [hasLoadedChangeRequests, setHasLoadedChangeRequests] =
     useState<boolean>();
-  const changeRequestApi = new ChangeRequestApi();
+  const changeRequestsApi = new ChangeRequestsApi();
 
   const loadAll = async (absenceId: string) => {
     if (isLoadingChangeRequests || hasLoadedChangeRequests) return;
@@ -40,7 +38,7 @@ const useChangeRequestLogic = ({
     errorsLogic.clearErrors();
 
     try {
-      const { changeRequests } = await changeRequestApi.getChangeRequests(
+      const { changeRequests } = await changeRequestsApi.getChangeRequests(
         absenceId
       );
       setChangeRequests(changeRequests);
@@ -56,7 +54,7 @@ const useChangeRequestLogic = ({
     errorsLogic.clearErrors();
 
     try {
-      await changeRequestApi.createChangeRequest(absenceId);
+      await changeRequestsApi.createChangeRequest(absenceId);
       // force reload of change requests next time `loadAll` is called
       setHasLoadedChangeRequests(false);
     } catch (error) {
@@ -68,7 +66,7 @@ const useChangeRequestLogic = ({
     errorsLogic.clearErrors();
 
     try {
-      const { changeRequest } = await changeRequestApi.deleteChangeRequest(
+      const { changeRequest } = await changeRequestsApi.deleteChangeRequest(
         changeRequestId
       );
 
@@ -86,7 +84,7 @@ const useChangeRequestLogic = ({
 
     try {
       const { changeRequest, warnings } =
-        await changeRequestApi.updateChangeRequest(changeRequestId, patchData);
+        await changeRequestsApi.updateChangeRequest(changeRequestId, patchData);
 
       const issues = getRelevantIssues([], warnings, [portalFlow.page]);
 
@@ -102,7 +100,7 @@ const useChangeRequestLogic = ({
     errorsLogic.clearErrors();
 
     try {
-      const { changeRequest } = await changeRequestApi.submitChangeRequest(
+      const { changeRequest } = await changeRequestsApi.submitChangeRequest(
         changeRequestId
       );
 
