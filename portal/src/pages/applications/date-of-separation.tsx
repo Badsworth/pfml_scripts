@@ -38,7 +38,10 @@ export const DateOfSeparation = (props: WithBenefitsApplicationProps) => {
     updateFields,
   });
 
-  const currently_employed = get(formState, "additional_user_not_found_info.currently_employed");
+  const currently_employed = get(
+    formState,
+    "additional_user_not_found_info.currently_employed"
+  );
 
   return (
     <QuestionPage
@@ -47,7 +50,9 @@ export const DateOfSeparation = (props: WithBenefitsApplicationProps) => {
     >
       <Fieldset>
         <InputChoiceGroup
-          {...getFunctionalInputProps("additional_user_not_found_info.currently_employed")}
+          {...getFunctionalInputProps(
+            "additional_user_not_found_info.currently_employed"
+          )}
           choices={[
             {
               checked: currently_employed === true,
@@ -71,13 +76,17 @@ export const DateOfSeparation = (props: WithBenefitsApplicationProps) => {
         />
         <ConditionalContent
           clearField={clearField}
-          fieldNamesClearedWhenHidden={["additional_user_not_found_info.date_of_separation"]}
+          fieldNamesClearedWhenHidden={[
+            "additional_user_not_found_info.date_of_separation",
+          ]}
           getField={getField}
           updateFields={updateFields}
           visible={currently_employed === false}
         >
           <InputDate
-            {...getFunctionalInputProps("additional_user_not_found_info.date_of_separation")}
+            {...getFunctionalInputProps(
+              "additional_user_not_found_info.date_of_separation"
+            )}
             label={t(
               "pages.claimsAdditionalUserNotFoundInfo.dateOfSeparationLabel"
             )}

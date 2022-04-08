@@ -38,7 +38,9 @@ export const DateOfHire = (props: WithBenefitsApplicationProps) => {
       onSave={handleSave}
     >
       <InputDate
-        {...getFunctionalInputProps("additional_user_not_found_info.date_of_hire")}
+        {...getFunctionalInputProps(
+          "additional_user_not_found_info.date_of_hire"
+        )}
         label={t("pages.claimsAdditionalUserNotFoundInfo.dateOfHireLabel")}
         example={t("components.form.dateInputExample")}
         dayLabel={t("components.form.dateInputDayLabel")}

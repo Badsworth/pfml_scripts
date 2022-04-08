@@ -90,7 +90,8 @@ export const PaymentMethod = (props: WithBenefitsApplicationProps) => {
       set(requestData, retypeAccountNumberField, null);
     }
 
-    requestData.skip_fineos = appLogic.benefitsApplications.hasUserNotFoundError(claim.application_id)
+    requestData.skip_fineos =
+      appLogic.benefitsApplications.hasUserNotFoundError(claim.application_id);
     await appLogic.benefitsApplications.submitPaymentPreference(
       claim.application_id,
       requestData

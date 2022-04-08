@@ -32,7 +32,9 @@ export const TaxWithholding = (props: WithBenefitsApplicationProps) => {
     // The below warnings are only returned from a PATCH, not a POST.
     const data = {
       is_withholding_tax: withholdTax,
-      skip_fineos: appLogic.benefitsApplications.hasUserNotFoundError(claim.application_id),
+      skip_fineos: appLogic.benefitsApplications.hasUserNotFoundError(
+        claim.application_id
+      ),
     };
     await appLogic.benefitsApplications.submitTaxWithholdingPreference(
       claim.application_id,
