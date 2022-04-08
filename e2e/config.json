@@ -145,7 +145,7 @@
     "HAS_ORGUNITS_SETUP": "true",
     "HAS_LARGE_FILE_COMPRESSION": "true",
     "HAS_EMPLOYER_REIMBURSEMENTS": "true",
-    "HAS_APRIL_UPGRADE": "false",
+    "HAS_APRIL_UPGRADE": "true",
     "MFA_ENABLED": "true",
     "S3_INTELLIGENCE_TOOL_BUCKET": "massgov-pfml-performance-business-intelligence-tool",
     "TWILIO_NUMBERS": "8045342047,8106349684",
