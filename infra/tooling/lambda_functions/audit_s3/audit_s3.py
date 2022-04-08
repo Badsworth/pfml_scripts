@@ -6,7 +6,6 @@ import boto3
 import os
 import datetime
 import botocore.exceptions
-import multiprocessing
 
 
 class Bucket:
@@ -178,8 +177,8 @@ def write_to_dynamodb(bucket):
     )
 
 def handler(event, context):
-    with multiprocessing.Pool() as pool:
-        pool.map(write_to_dynamodb, list_buckets())
+    for bucket in list_buckets():
+        write_to_dynamodb(bucket)
 
 SESSION = boto3.session.Session(region_name=region())
 S3 = create_client("s3")
