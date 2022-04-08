@@ -21,7 +21,7 @@ import sqlalchemy
 from jose import jwt
 from jose.constants import ALGORITHMS
 from pytest import Item
-from sqlalchemy.orm import Session, scoped_session, sessionmaker
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 import massgov.pfml.api.app
 import massgov.pfml.api.authentication as authentication
