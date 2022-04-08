@@ -1,6 +1,6 @@
 import { makeFile, mockAuth, mockFetch } from "tests/test-utils";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
-import { ChangeRequest } from "src/models/ChangeRequest";
+import ChangeRequest from "src/models/ChangeRequest";
 import ChangeRequestApi from "src/api/ChangeRequestApi";
 import { ValidationError } from "src/errors";
 
