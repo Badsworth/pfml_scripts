@@ -1,6 +1,6 @@
 /* eslint-disable no-alert */
 import ApplicationSplit from "src/models/ApplicationSplit";
-import LeaveSpansBenefitYearsMessage from "src/components/LeaveSpansBenefitYearsMessage";
+import LeaveSpansBenefitYearsMessage from "src/features/benefits-applications/LeaveSpansBenefitYearsMessage";
 import React from "react";
 import applicationSplitBuilder from "lib/mock-helpers/createMockApplicationSplit";
 
@@ -13,7 +13,7 @@ const applicationSplits = [
 ];
 
 export default {
-  title: "Components/LeaveSpansBenefitYearsMessage",
+  title: "Features/Benefits Applications/LeaveSpansBenefitYearsMessage",
   component: LeaveSpansBenefitYearsMessage,
   argTypes: {
     ApplicationSplitLabel: {

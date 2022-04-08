@@ -8,7 +8,7 @@ from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union, cast
 
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import ColumnProperty, class_mapper
+from sqlalchemy.orm import ColumnProperty, class_mapper, joinedload
 
 import massgov.pfml.delegated_payments.delegated_config as payments_config
 import massgov.pfml.util.files as file_util
@@ -22,6 +22,7 @@ from massgov.pfml.db.models.employees import (
     Claim,
     ClaimType,
     Employee,
+    EmployeePubEftPair,
     Employer,
     ExperianAddressPair,
     LkClaimType,
@@ -29,6 +30,7 @@ from massgov.pfml.db.models.employees import (
     Payment,
     PaymentDetails,
     PaymentTransactionType,
+    PrenoteState,
     PubEft,
     ReferenceFile,
     ReferenceFileType,
@@ -224,19 +226,19 @@ class FineosExtractConstants:
         file_name="VBI_REQUESTEDABSENCE_SOM.csv",
         table=FineosExtractVbiRequestedAbsenceSom,
         field_names=[
-            "ABSENCEPERIOD_CLASSID",
-            "ABSENCEPERIOD_INDEXID",
-            "ABSENCEREASON_COVERAGE",
-            "ABSENCE_CASENUMBER",
             "NOTIFICATION_CASENUMBER",
+            "ABSENCE_CASENUMBER",
             "ABSENCE_CASESTATUS",
-            "ABSENCEPERIOD_START",
-            "ABSENCEPERIOD_END",
-            "LEAVEREQUEST_EVIDENCERESULTTYPE",
             "EMPLOYEE_CUSTOMERNO",
+            "ORGUNIT_NAME",
             "EMPLOYER_CUSTOMERNO",
             "LEAVEREQUEST_ID",
-            "ORGUNIT_NAME",
+            "LEAVEREQUEST_EVIDENCERESULTTYPE",
+            "ABSENCEREASON_COVERAGE",
+            "ABSENCEPERIOD_CLASSID",
+            "ABSENCEPERIOD_INDEXID",
+            "ABSENCEPERIOD_START",
+            "ABSENCEPERIOD_END",
         ],
     )
 
@@ -251,11 +253,6 @@ class FineosExtractConstants:
             "NATINSNO",
             "DATEOFBIRTH",
             "PAYMENTMETHOD",
-            "ADDRESS1",
-            "ADDRESS2",
-            "ADDRESS4",
-            "ADDRESS6",
-            "POSTCODE",
             "SORTCODE",
             "ACCOUNTNO",
             "ACCOUNTTYPE",
@@ -342,14 +339,14 @@ class FineosExtractConstants:
         field_names=[
             "ABSENCEPERIOD_CLASSID",
             "ABSENCEPERIOD_INDEXID",
-            "LEAVEREQUEST_DECISION",
-            "LEAVEREQUEST_ID",
             "ABSENCEREASON_COVERAGE",
             "ABSENCE_CASECREATIONDATE",
             "ABSENCEPERIOD_TYPE",
             "ABSENCEREASON_QUALIFIER1",
             "ABSENCEREASON_QUALIFIER2",
             "ABSENCEREASON_NAME",
+            "LEAVEREQUEST_DECISION",
+            "LEAVEREQUEST_ID",
         ],
     )
 
@@ -1141,7 +1138,9 @@ def find_existing_eft(employee: Optional[Employee], new_eft: PubEft) -> Optional
     if not employee:
         return None
 
-    for pub_eft_pair in employee.pub_efts.all():
+    pub_eft_pairs = employee.pub_efts.options(joinedload(EmployeePubEftPair.pub_eft)).all()
+
+    for pub_eft_pair in pub_eft_pairs:
         if is_same_eft(pub_eft_pair.pub_eft, new_eft):
             return pub_eft_pair.pub_eft
 
@@ -1384,7 +1383,7 @@ def get_traceable_pub_eft_details(
     details["pub_eft_id"] = pub_eft.pub_eft_id
     details["pub_eft_individual_id"] = pub_eft.pub_individual_id
     details["pub_eft_prenote_state"] = (
-        pub_eft.prenote_state.prenote_state_description if pub_eft.prenote_state else None
+        PrenoteState.get_description(pub_eft.prenote_state_id) if pub_eft.prenote_state_id else None
     )
     if employee:
         details["employee_id"] = employee.employee_id

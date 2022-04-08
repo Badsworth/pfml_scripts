@@ -90,7 +90,7 @@ export const Success = (props: WithBenefitsApplicationProps) => {
   return (
     <React.Fragment>
       <BackButton
-        label={t("pages.claimsStatus.backButtonLabel")}
+        label={t("pages.claimsSuccess.backButtonLabel")}
         href={routes.applications.index}
       />
       <Title>{t("pages.claimsSuccess.title")}</Title>

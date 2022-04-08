@@ -150,9 +150,15 @@ describe("Approval (notifications/notices)", () => {
             debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
           })
           .then(() => {
-            cy.get(
-              `a[href*="/employers/applications/new-application/?absence_id=${submission.fineos_absence_id}"]`
-            );
+            if (config("HAS_PORTAL_DASH_UPODATE_v65") === "true") {
+              cy.get(
+                `a[href*="/employers/applications/review/?absence_id=${submission.fineos_absence_id}"]`
+              );
+            } else {
+              cy.get(
+                `a[href*="/employers/applications/new-application/?absence_id=${submission.fineos_absence_id}"]`
+              );
+            }
           });
       });
     }
