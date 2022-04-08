@@ -80,6 +80,7 @@ module "api" {
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/PERF/dataexports"
   fineos_aws_iam_role_arn                             = "arn:aws:iam::666444232783:role/somdev-IAMRoles-CustomerAccountAccessRole-BF05IBJSG74B"
   fineos_aws_iam_role_external_id                     = "12345"
+  fineos_is_running_v21                               = "true"
   pfml_email_address                                  = "PFML_DoNotReply@eol.mass.gov"
   bounce_forwarding_email_address                     = "PFML_DoNotReply@eol.mass.gov"
   bounce_forwarding_email_address_arn                 = "arn:aws:ses:us-east-1:498823821309:identity/PFML_DoNotReply@eol.mass.gov"

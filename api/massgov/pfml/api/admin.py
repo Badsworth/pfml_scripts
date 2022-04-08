@@ -14,7 +14,9 @@ from massgov.pfml.api.authentication import (
     build_logout_flow,
 )
 from massgov.pfml.api.authentication.azure import AzureUser
-from massgov.pfml.api.authorization.flask import READ, ensure
+from massgov.pfml.api.authorization.flask import EDIT, READ, ensure
+from massgov.pfml.api.models.flags.requests import FlagRequest
+from massgov.pfml.api.models.flags.responses import FlagLogResponse
 from massgov.pfml.api.models.users.requests import AdminTokenRequest
 from massgov.pfml.api.models.users.responses import (
     AdminTokenResponse,
@@ -26,6 +28,7 @@ from massgov.pfml.api.util.paginate.paginator import PaginationAPIContext, page_
 from massgov.pfml.api.validation.exceptions import IssueType, ValidationErrorDetail
 from massgov.pfml.db.models.azure import AzurePermission, LkAzurePermission
 from massgov.pfml.db.models.employees import User
+from massgov.pfml.db.models.flags import FeatureFlag, FeatureFlagValue, LkFeatureFlag
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -101,14 +104,80 @@ def admin_logout():
 
 
 def admin_get_flag_logs(name):
-    return response_util.success_response(
-        data={}, message=f"Successfully retrieved flag {name}"
-    ).to_api_response()
+    azure_user = app.azure_user()
+    # This should never be the case.
+    if azure_user is None:
+        raise Unauthorized
+    ensure(READ, azure_user)
+    # There's a single API endpoint to set feature flags and maintenance is
+    # the only feature flag right now. This will need to change if more feature
+    # flags are set from the Admin Portal. This will disallow other feature
+    # flags from being unset until the decision is made.
+    if name == FeatureFlag.MAINTENANCE.name:
+        ensure(EDIT, AzurePermission.MAINTENANCE_EDIT)
+    else:
+        raise Unauthorized
+    with app.db_session() as db_session:
+        logs = FeatureFlag.get_instance(db_session, description=name).logs()
+        response = response_util.success_response(
+            data=[
+                FlagLogResponse(
+                    first_name=log.given_name,
+                    last_name=log.family_name,
+                    updated_at=log.updated_at,
+                    enabled=log.enabled,
+                    name=log.name,
+                    start=log.start,
+                    end=log.end,
+                    options=log.options,
+                ).__dict__
+                for log in logs
+            ],
+            message="Successfully retrieved flag",
+        ).to_api_response()
+        return response
 
 
 def admin_flags_patch(name):
+    azure_user = app.azure_user()
+    # This should never be the case.
+    if azure_user is None:
+        raise Unauthorized
+    ensure(READ, azure_user)
+    # There's a single API endpoint to set feature flags and maintenance is
+    # the only feature flag right now. This will need to change if more feature
+    # flags are set from the Admin Portal. This will disallow other feature
+    # flags from being unset until the decision is made.
+    if name == FeatureFlag.MAINTENANCE.name:
+        ensure(EDIT, AzurePermission.MAINTENANCE_EDIT)
+    else:
+        raise Unauthorized
+    body = FlagRequest.parse_obj(connexion.request.json)
+
+    with app.db_session() as db_session:
+        try:
+            flag = FeatureFlag.get_instance(db_session, description=name)
+        except KeyError:
+            raise NotFound(
+                description="Could not find {} with name {}".format(LkFeatureFlag.__name__, name)
+            )
+        feature_flag_value = FeatureFlagValue()
+        feature_flag_value.feature_flag = flag
+        feature_flag_value.email_address = azure_user.email_address
+        feature_flag_value.sub_id = azure_user.sub_id
+        feature_flag_value.given_name = azure_user.first_name
+        feature_flag_value.family_name = azure_user.last_name
+        feature_flag_value.action = "INSERT"
+
+        for key in body.__fields_set__:
+            value = getattr(body, key)
+            setattr(feature_flag_value, key, value)
+        db_session.add(feature_flag_value)
+        db_session.commit()
+
     return response_util.success_response(
-        message=f"Successfully updated feature flag {name}", data={}
+        message="Successfully updated feature flag",
+        data=FlagRequest.from_orm(flag).dict(),
     ).to_api_response()
 
 

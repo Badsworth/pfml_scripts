@@ -5,7 +5,6 @@ import {
   getDocumentReviewTaskName,
 } from "../../../../src/util/documents";
 import { config } from "../../../actions/common";
-import { itIf } from "../../../util";
 
 describe("Approval (notifications/notices)", () => {
   after(() => {
@@ -142,8 +141,7 @@ describe("Approval (notifications/notices)", () => {
     }
   );
 
-  itIf(
-    config("HAS_FINEOS_JANUARY_RELEASE") === "true",
+  it(
     "Check the Claimant email for the Cancellation notification.",
     { retries: 0 },
     () => {
@@ -183,8 +181,7 @@ describe("Approval (notifications/notices)", () => {
     }
   );
 
-  itIf(
-    config("HAS_FINEOS_JANUARY_RELEASE") === "true",
+  it(
     "Check the Leave Admin email for the Cancellation notification.",
     { retries: 0 },
     () => {

@@ -2,10 +2,6 @@ import { fineos, fineosPages, portal, email } from "../../../actions";
 import { Submission } from "../../../../src/types";
 import { getClaimantCredentials } from "../../../config";
 import { config } from "../../../actions/common";
-import { itIf } from "../../../util";
-
-// @TODO parts of this test is only available in certain environments with the FINEOS
-// @TODO January release and the email template updates.
 
 describe("Post-approval (notifications/notices)", () => {
   const APRIL_UPGRADE: boolean = config("HAS_APRIL_UPGRADE") === "true";
@@ -104,27 +100,15 @@ describe("Post-approval (notifications/notices)", () => {
             status: "Denied",
           },
         ]);
-        //@TODO this will need to be adjusted for the January release for FINEOS version
-        // If the environment has the January release add to the if statement
-        if (config("HAS_FINEOS_JANUARY_RELEASE") === "true") {
-          cy.findByText("Change Request Denied (PDF)")
-            .should("be.visible")
-            .click({ force: true });
-          portal.downloadLegalNotice(submission.fineos_absence_id);
-        } else {
-          // Any other FINEOS version from Dec or before will need to use the else statement
-          cy.findByText("Approval notice (PDF)")
-            .should("be.visible")
-            .click({ force: true });
-          portal.downloadLegalNotice(submission.fineos_absence_id);
-        }
+        cy.findByText("Change Request Denied (PDF)")
+          .should("be.visible")
+          .click({ force: true });
+        portal.downloadLegalNotice(submission.fineos_absence_id);
       });
     }
   );
 
-  const hasJanuaryRelease = config("HAS_FINEOS_JANUARY_RELEASE") === "true";
-  itIf(
-    hasJanuaryRelease,
+  it(
     "Check the Leave Admin Portal for the Change Request Denied notice",
     { retries: 0 },
     () => {
@@ -149,8 +133,7 @@ describe("Post-approval (notifications/notices)", () => {
     }
   );
 
-  itIf(
-    hasJanuaryRelease,
+  it(
     "Check the Claimant email for the Change Request Denial notification.",
     { retries: 0 },
     () => {
@@ -189,8 +172,7 @@ describe("Post-approval (notifications/notices)", () => {
     }
   );
 
-  itIf(
-    hasJanuaryRelease,
+  it(
     "Check the Leave Admin email for the Change Request Denial notification.",
     { retries: 0 },
     () => {

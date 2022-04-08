@@ -930,7 +930,13 @@ def test_find_all_benefit_years(
     assert len(benefit_years) == 0
 
     # Same employee now has benefit years
-    employee_benefit_years = [BenefitYearFactory.create(employee=employee) for _ in range(3)]
+    employee_benefit_years = []
+    for c in range(3):
+        start_date = date(2019, 1, 1) + timedelta(weeks=52 * c)
+        end_date = start_date + timedelta(weeks=52) - timedelta(days=1)
+        employee_benefit_years.append(
+            BenefitYearFactory.create(employee=employee, start_date=start_date, end_date=end_date)
+        )
     benefit_years = get_all_benefit_years_by_employee_id(test_db_session, employee.employee_id)
     assert len(benefit_years) == len(employee_benefit_years)
     assert employee_benefit_years == benefit_years

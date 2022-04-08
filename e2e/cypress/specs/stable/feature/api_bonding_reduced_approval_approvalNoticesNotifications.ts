@@ -1,3 +1,4 @@
+import { itIf } from "./../../../util";
 import { fineos, portal, email, fineosPages } from "../../../actions";
 import { getClaimantCredentials } from "../../../config";
 import { Submission } from "../../../../src/types";
@@ -7,6 +8,7 @@ import {
   getDocumentReviewTaskName,
 } from "../../../../src/util/documents";
 import { DehydratedClaim } from "../../../../src/generation/Claim";
+import { isSaturday } from "date-fns";
 
 describe("Approval (notifications/notices)", () => {
   after(() => {
@@ -14,7 +16,7 @@ describe("Approval (notifications/notices)", () => {
   });
 
   it("Given a submitted claim", () => {
-    cy.task("generateClaim", "REDUCED_ER").then((claim) => {
+    cy.task("generateClaim", "REDUCED_ER_MIDWEEK").then((claim) => {
       cy.stash("claim", claim);
       cy.task("submitClaimToAPI", claim).then(
         ({ fineos_absence_id, application_id }) => {
@@ -79,6 +81,32 @@ describe("Approval (notifications/notices)", () => {
       });
     });
   });
+
+  itIf(
+    config("HAS_APRIL_UPGRADE") === "true",
+    "Payments are scheduled for Sundays even though claim doesn't start on a Sunday",
+    {},
+    () => {
+      cy.dependsOnPreviousPass();
+      fineos.before();
+      cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
+        fineosPages.ClaimPage.visit(fineos_absence_id).paidLeave(
+          (paidLeavePage) => {
+            paidLeavePage.getAmountsPending().then((records) => {
+              const processingDates = records.reduce<Date[]>((acc, record) => {
+                acc.push(new Date(record.processingDate));
+                return acc;
+              }, []);
+              expect(processingDates.every((val) => isSaturday(val))).equal(
+                true,
+                "Payments are scheduled for Saturday"
+              );
+            });
+          }
+        );
+      });
+    }
+  );
 
   it(
     "Should generate a legal notice (Approval) that the claimant can view",
@@ -150,9 +178,15 @@ describe("Approval (notifications/notices)", () => {
             debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
           })
           .then(() => {
-            cy.get(
-              `a[href*="/employers/applications/new-application/?absence_id=${submission.fineos_absence_id}"]`
-            );
+            if (config("HAS_PORTAL_DASH_UPODATE_v65") === "true") {
+              cy.get(
+                `a[href*="/employers/applications/review/?absence_id=${submission.fineos_absence_id}"]`
+              );
+            } else {
+              cy.get(
+                `a[href*="/employers/applications/new-application/?absence_id=${submission.fineos_absence_id}"]`
+              );
+            }
           });
       });
     }

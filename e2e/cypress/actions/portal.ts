@@ -892,9 +892,13 @@ export function visitActionRequiredERFormPage(
         cy.contains("Review Application").click();
       });
   } else {
-    cy.visit(
-      `/employers/applications/new-application/?absence_id=${fineosAbsenceId}`
-    );
+    if (config("HAS_PORTAL_DASH_UPODATE_v65") === "true") {
+      cy.visit(`/employers/applications/review/?absence_id=${fineosAbsenceId}`);
+    } else {
+      cy.visit(
+        `/employers/applications/new-application/?absence_id=${fineosAbsenceId}`
+      );
+    }
   }
   cy.contains("span", fineosAbsenceId);
 }

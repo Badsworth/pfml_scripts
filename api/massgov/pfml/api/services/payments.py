@@ -248,13 +248,13 @@ def to_response_dict(payment_data: List[PaymentContainer], absence_case_id: Opti
         payments.append(
             PaymentResponse(
                 payment_id=payment.payment_id,
-                fineos_c_value=payment.fineos_pei_c_value,
-                fineos_i_value=payment.fineos_pei_i_value,
-                period_start_date=payment.period_start_date,
-                period_end_date=payment.period_end_date,
+                fineos_c_value=payment.fineos_pei_c_value,  # type: ignore
+                fineos_i_value=payment.fineos_pei_i_value,  # type: ignore
+                period_start_date=payment.period_start_date,  # type: ignore
+                period_end_date=payment.period_end_date,  # type: ignore
                 amount=scenario_data.amount,
                 sent_to_bank_date=scenario_data.sent_date,
-                payment_method=payment.disb_method
+                payment_method=payment.disb_method  # type: ignore
                 and payment.disb_method.payment_method_description,
                 expected_send_date_start=scenario_data.expected_send_date_start,
                 expected_send_date_end=scenario_data.expected_send_date_end,
