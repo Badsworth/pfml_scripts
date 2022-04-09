@@ -21,14 +21,14 @@ class Bucket:
         except (IndexError, KeyError):
             return {}
 
-    def bucket_name(self):
-        return self.get('Name')
-
     def get(self, key):
         try:
             return self.dictionary[key]
         except KeyError:
             return
+
+    def bucket_name(self):
+        return self.get('Name')
 
     def get_last_modified_date(self):
         return self.get('CreationDate').strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -72,10 +72,16 @@ class Bucket:
         return S3.get_bucket_versioning(Bucket=self.bucket_name())
 
     def get_bucket_location(self):
-        return S3.get_bucket_location(Bucket=self.bucket_name())['LocationConstraint']
+        try:
+            return S3.get_bucket_location(Bucket=self.bucket_name())['LocationConstraint']
+        except KeyError:
+            return
 
     def get_object_lock_configuration(self):
-        return S3.get_object_lock_configuration(Bucket=self.bucket_name())['ObjectLockConfiguration']['ObjectLockEnabled']
+        try:
+            return S3.get_object_lock_configuration(Bucket=self.bucket_name())['ObjectLockConfiguration']['ObjectLockEnabled']
+        except KeyError:
+            return 'Disabled'
 
     def get_enforce_ssl(self):
         bucket_policy_statements = S3.get_bucket_policy(Bucket=self.bucket_name())['Statement']
@@ -101,9 +107,6 @@ class Bucket:
 
     def get_bucket_logging(self):
         return 'LoggingEnabled' in S3.get_bucket_logging(Bucket=self.bucket_name())
-
-    def stringify(resource, arn, result, key):
-        return ','.join(resource[arn] for resource in result[key])
 
     def get_bucket_notification_configuration(self):
         configuration = S3.get_bucket_notification_configuration(Bucket=self.bucket_name())
@@ -161,7 +164,6 @@ def region():
     return os.environ.get('AWS_REGION', 'us-east-1')
 
 def endpoint_url(service):
-    return
     return f"https://{service}.{region()}.amazonaws.com"
 
 def create_client(service):
