@@ -161,6 +161,7 @@ def region():
     return os.environ.get('AWS_REGION', 'us-east-1')
 
 def endpoint_url(service):
+    return
     return f"https://{service}.{region()}.amazonaws.com"
 
 def create_client(service):
