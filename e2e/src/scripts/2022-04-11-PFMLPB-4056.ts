@@ -4,35 +4,25 @@ import EmployeePool from "../generation/Employee";
 import DOR from "../generation/writers/DOR";
 import EmployeeIndex from "../generation/writers/EmployeeIndex";
 import EmployerIndex from "../generation/writers/EmployerIndex";
-import { format } from "date-fns";
 
 (async () => {
-  //   const date = format(new Date(), "yyyy-MM-dd");
-
-  //   // Prepare a "data directory" to save the generated data to disk.
-  //   const storage = dataDirectory(`e2e-${date}`);
-  //   await storage.prepare();
-
   const storage = dataDirectory("2022-04-11-PFMLPB-4056");
   await storage.prepare();
 
   // Generate 30 employer with withholding amounts in every quarter.
   const ineligibleLAEmployers = EmployerPool.generate(30, {
       size: "small",
-      withholdings: [100, 350, 200, 300],
-    //   metadata: { register_leave_admins: true },
     });
     // Generate 15 employers having withholding amounts in one of the last 4 quarters.
     const eligibleLAEmployers = EmployerPool.generate(15, {
         size: "small",
-        withholdings: [0, 100, 0, 0],
-        // metadata: { register_leave_admins: true },
+        withholdings: [0,2000,0,0],
     });
     
     // Generate 5 employers having NO withholding amount.
     const employersWithEmployees = EmployerPool.generate(5, {
       size: "small",
-    //   metadata: { has_employees: true },
+      withholdings: [0,0,0,0],
     });
   // Combine all of our employers into one big pool that we'll save.
   const employerPool = EmployerPool.merge(
@@ -68,9 +58,6 @@ import { format } from "date-fns";
   // Write an employee "index" file for human consumption.
   await EmployeeIndex.write(employeePool, storage.dir + "/employees.csv");
 
-//   // Additionally save the JSON files to the employers/employees directory at the top level.
-//   await employeePool.save(storage.dir + "/employees-2.json");
-//   await employerPool.save(storage.dir + "/employers-2.json");
   const used = process.memoryUsage().heapUsed / 1024 / 1024;
   console.log(
     `The script uses approximately ${Math.round(used * 100) / 100} MB`
