@@ -326,7 +326,7 @@ const useBenefitsApplicationsLogic = ({
     return warningsLists[application_id].some(
       (warning) =>
         warning.type === "require_contributing_employer" ||
-        warning.rule === "require_non_exempt_employer" ||
+        warning.type === "require_non_exempt_employer" ||
         warning.rule === "require_employee"
     );
   };

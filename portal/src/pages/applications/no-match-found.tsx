@@ -19,10 +19,17 @@ export const fields = ["claim.tax_identifier", "claim.employer_fein"];
 export const NoMatchFound = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
-  const includesNoEmployeeFoundError =
-    appLogic.benefitsApplications.warningsLists[claim.application_id].some(
-      (warning) => warning.rule === "require_employee"
-    );
+
+  const includesNoEmployeeFoundError = () => {
+    if (
+      !(claim.application_id in appLogic.benefitsApplications.warningsLists)
+    ) {
+      return false;
+    }
+    return appLogic.benefitsApplications.warningsLists[
+      claim.application_id
+    ].some((warning) => warning.rule === "require_employee");
+  };
 
   const { formState, updateFields } = useFormState({
     tax_identifier: "",
@@ -52,7 +59,7 @@ export const NoMatchFound = (props: WithBenefitsApplicationProps) => {
         >
           {t(
             "pages.claimsAdditionalUserNotFoundInfo." +
-              (includesNoEmployeeFoundError
+              (includesNoEmployeeFoundError()
                 ? "noEmployeeFoundTitle"
                 : "noEmployerFoundTitle")
           )}
