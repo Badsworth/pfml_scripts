@@ -127,6 +127,10 @@ services:
       - IRS_1099_TAX_YEAR=2021
       - MOVEIT_SFTP_URI=sftp://foo@mass-pfml-sftp:22
       - SFTP_URI=sftp://foo@mass-pfml-sftp:22
+      #- FULL CHECK SOLUTION
+      - ENABLE_FULL_CHECK_SOLUTION=0
+
+
 
     networks:
       main:

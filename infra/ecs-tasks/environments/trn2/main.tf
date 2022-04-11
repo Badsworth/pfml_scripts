@@ -92,4 +92,6 @@ module "tasks" {
   enable_1099_testfile_generation = "0"
 
   enable_employer_reimbursement_payments = "1"
+
+  enable_full_check_solution = "0"
 }

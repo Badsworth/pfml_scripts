@@ -43,6 +43,7 @@ class AppConfig:
     enable_1099_testfile_generation: bool
     disable_sending_emails: bool
     enable_response_validation: bool
+    enable_full_check_solution: bool
 
 
 def get_config() -> AppConfig:
@@ -79,4 +80,5 @@ def get_config() -> AppConfig:
         # desired eg for local development
         disable_sending_emails=os.environ.get("DISABLE_SENDING_EMAILS", "0") == "1",
         enable_response_validation=os.environ.get("ENABLE_RESPONSE_VALIDATION", "0") == "1",
+        enable_full_check_solution=os.environ.get("ENABLE_FULL_CHECK_SOLUTION", "0") == "1",
     )

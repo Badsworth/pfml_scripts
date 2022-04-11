@@ -179,6 +179,7 @@ IRS_1099_CORRECTION_IND=0
 IRS_1099_TAX_YEAR=2021
 MOVEIT_SFTP_URI=sftp://foo@mass-pfml-sftp:22
 SFTP_URI=sftp://foo@mass-pfml-sftp:22
+ENABLE_FULL_CHECK_SOLUTION=0
 ```
 
 ```json

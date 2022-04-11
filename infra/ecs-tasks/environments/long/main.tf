@@ -100,4 +100,6 @@ module "tasks" {
   irs_1099_correction_ind         = "0"
 
   enable_employer_reimbursement_payments = "1"
+
+  enable_full_check_solution = "0"
 }

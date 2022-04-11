@@ -395,3 +395,8 @@ variable "enforce_execute_sql_read_only" {
   type        = bool
   default     = true
 }
+
+variable "enable_full_check_solution" {
+  description = "Enable full check solution."
+  default     = "0"
+}
