@@ -50,38 +50,41 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
       });
     });
 
-  const claimApproval = it(
-    "CSR rep will approve intermittent bonding application",
-    { retries: 0 },
-    () => {
+  const claimApproval =
+    it("CSR rep will approve intermittent bonding application", () => {
       cy.dependsOnPreviousPass([erApproval]);
       fineos.before();
       cy.unstash<DehydratedClaim>("claim").then((claim) => {
         cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
-          const claimPage = fineosPages.ClaimPage.visit(fineos_absence_id);
-          claimPage.shouldHaveStatus("Eligibility", "Met");
-          claimPage.adjudicate((adjudication) => {
-            adjudication
-              .evidence((evidence) => {
-                claim.documents.forEach(({ document_type }) =>
-                  evidence.receive(document_type)
-                );
-              })
-              .certificationPeriods((certPeriods) => certPeriods.prefill())
-              .acceptLeavePlan();
-            adjudication.paidBenefits((paidBenefits) => {
-              paidBenefits.assertSitFitOptIn(claim.is_withholding_tax);
+          cy.tryCount().then((tryCount) => {
+            if (tryCount > 0) {
+              fineos.assertClaimStatus("Completed");
+              return;
+            }
+            const claimPage = fineosPages.ClaimPage.visit(fineos_absence_id);
+            claimPage.shouldHaveStatus("Eligibility", "Met");
+            claimPage.adjudicate((adjudication) => {
+              adjudication
+                .evidence((evidence) => {
+                  claim.documents.forEach(({ document_type }) =>
+                    evidence.receive(document_type)
+                  );
+                })
+                .certificationPeriods((certPeriods) => certPeriods.prefill())
+                .acceptLeavePlan();
+              adjudication.paidBenefits((paidBenefits) => {
+                paidBenefits.assertSitFitOptIn(claim.is_withholding_tax);
+              });
             });
+            claimPage.shouldHaveStatus("Availability", "As Certified");
+            claimPage.approve(
+              "Completed",
+              config("HAS_APRIL_UPGRADE") === "true"
+            );
           });
-          claimPage.shouldHaveStatus("Availability", "As Certified");
-          claimPage.approve(
-            "Completed",
-            config("HAS_APRIL_UPGRADE") === "true"
-          );
         });
       });
-    }
-  );
+    });
 
   const recordingHours = it(
     "CSR rep will record actual hours reported by employee",
@@ -151,19 +154,15 @@ describe("Submit bonding application via the web portal: Adjudication Approval, 
       });
     }
   );
-  it(
-    "CSR rep will override payment processing date to be schudeuled for day of approval",
-    {},
-    () => {
-      cy.dependsOnPreviousPass([recordingHours]);
-      fineos.before();
-      cy.unstash<Submission>("submission").then((submission) => {
-        fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
-          (paidLeavePage) => {
-            paidLeavePage.editPaymentProcessingDate();
-          }
-        );
-      });
-    }
-  );
+  it("CSR rep will override payment processing date to be schudeuled for day of approval", () => {
+    cy.dependsOnPreviousPass([recordingHours]);
+    fineos.before();
+    cy.unstash<Submission>("submission").then((submission) => {
+      fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
+        (paidLeavePage) => {
+          paidLeavePage.editPaymentProcessingDate();
+        }
+      );
+    });
+  });
 });

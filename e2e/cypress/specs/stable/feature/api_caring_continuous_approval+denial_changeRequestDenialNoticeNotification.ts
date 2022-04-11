@@ -8,27 +8,38 @@ describe("Post-approval (notifications/notices)", () => {
   after(() => {
     portal.deleteDownloadsFolder();
   });
-  const approval =
-    it("Submit a Care for a Family member claim for approval", () => {
-      fineos.before();
-      //Submit a claim via the API, including Employer Response.
-      cy.task("generateClaim", "CHAP_ER").then((claim) => {
+
+  it("Submits a claim via the API", () => {
+    cy.task("generateClaim", "CHAP_ER").then((claim) => {
+      cy.task("submitClaimToAPI", claim).then((res) => {
         cy.stash("claim", claim);
-        cy.task("submitClaimToAPI", claim).then((response) => {
+        cy.stash("submission", {
+          application_id: res.application_id,
+          fineos_absence_id: res.fineos_absence_id,
+          timestamp_from: Date.now(),
+        });
+      });
+    });
+  });
+
+  const approval = it("CSR rep approves caring leave claim", () => {
+    cy.dependsOnPreviousPass();
+    fineos.before();
+    cy.unstash<DehydratedClaim>("claim").then((claim) => {
+      cy.unstash<Submission>("submission").then((response) => {
+        cy.tryCount().then((tryCount) => {
           if (!response.fineos_absence_id) {
             throw new Error("Response contained no fineos_absence_id property");
           }
-          const submission: Submission = {
-            application_id: response.application_id,
-            fineos_absence_id: response.fineos_absence_id,
-            timestamp_from: Date.now(),
-          };
-
-          cy.stash("submission", submission);
           // Approve the claim
           const claimPage = fineosPages.ClaimPage.visit(
             response.fineos_absence_id
           );
+          if (tryCount > 0) {
+            fineos.assertClaimStatus("Approved");
+            claimPage.triggerNotice("Designation Notice");
+            return;
+          }
           claimPage.triggerNotice("Preliminary Designation");
           fineos.onTab("Absence Hub");
           claimPage.adjudicate((adjudication) => {
@@ -48,6 +59,7 @@ describe("Post-approval (notifications/notices)", () => {
         });
       });
     });
+  });
 
   const denyModification =
     it('Generates a "Change Request Denial" document when deny an approved claim in review', () => {
@@ -100,7 +112,8 @@ describe("Post-approval (notifications/notices)", () => {
             status: "Denied",
           },
         ]);
-        cy.findByText("Change Request Denied (PDF)")
+        // Any other FINEOS version from Dec or before will need to use the else statement
+        cy.findByText("Approval notice (PDF)")
           .should("be.visible")
           .click({ force: true });
         portal.downloadLegalNotice(submission.fineos_absence_id);

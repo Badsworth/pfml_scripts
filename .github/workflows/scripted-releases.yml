@@ -47,6 +47,8 @@ jobs:
       - name: Checkout PMFL repo
         uses: actions/checkout@v3
         with:
+          # Token now required as actions/checkout is requesting git config
+          token: ${{ secrets.PFML_DEVOPS_TOKEN }}
           fetch-depth: 0
 
       - name: Install Poetry
