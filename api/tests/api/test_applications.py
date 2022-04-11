@@ -4977,7 +4977,6 @@ def test_application_post_submit_app_already_submitted(client, user, auth_token,
     ]
 
 
-# This test
 def test_application_post_submit_caring_leave_app_before_july(
     client, user, auth_token, test_db_session
 ):
