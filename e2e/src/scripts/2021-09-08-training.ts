@@ -16,7 +16,7 @@ import path from "path";
 const pipelineP = promisify(pipeline);
 
 (async () => {
-  const storage = dataDirectory("2021-09-08-training");
+  const storage = dataDirectory("2022-05-10-training");
   await storage.prepare();
 
   const employerPool = await EmployerPool.load(
@@ -69,7 +69,7 @@ const pipelineP = promisify(pipeline);
 
   // used to generate fresh employees and employers for training
   const claimantsOnlyStorage = dataDirectory(
-    "2021-09-08-training-claimants-only"
+    "2022-05-10-training-claimants-only"
   );
   await claimantsOnlyStorage.prepare();
 

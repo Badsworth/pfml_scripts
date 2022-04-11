@@ -1,5 +1,5 @@
 import { ScenarioSpecification } from "../generation/Scenario";
-import { parseISO, addWeeks, subDays } from "date-fns";
+import { parseISO, addWeeks, subDays, addDays } from "date-fns";
 import faker from "faker";
 const getRandomNumber = (min: number, max: number) => {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -11,8 +11,8 @@ const randomWeeksLeave = () => {
 
 const generateRandomLeave = (): [Date, Date] => {
   const start = faker.date.between(
-    parseISO("2021-12-27"),
-    parseISO("2022-03-01")
+    parseISO("2022-05-01"),
+    addDays(new Date(), 60)
   );
   const end = addWeeks(start, randomWeeksLeave());
   return [start, end];
@@ -20,18 +20,18 @@ const generateRandomLeave = (): [Date, Date] => {
 
 const generateMaxLeave = (maxLeaveLength: 20 | 12): [Date, Date] => {
   const start = faker.date.between(
-    parseISO("2021-12-27"),
-    parseISO("2022-03-01")
+    parseISO("2022-05-01"),
+    addDays(new Date(), 60)
   );
   const end = subDays(addWeeks(start, maxLeaveLength), 1);
   return [start, end];
 };
 
 const GENERATE_LEAVE_DATES_DESCRIPTION =
-  "Leave begins between 12/27/21 - 03/01/22\nEnds 4-12 weeks after start date";
+  "Leave begins between 05/01/22 - 07/XX/22\nEnds 4-12 weeks after start date";
 
 const FIRST_OF_MONTH_START_MAX_LEAVE_DESCRIPTION =
-  "Leave begins between 12/27/21 - 03/01/22\nMaximum leave length";
+  "Leave begins between 05/01/22 - 07/XX/22\nMaximum leave length";
 
 // Deny claim for financial eligibility
 export const TRNA: ScenarioSpecification = {
@@ -114,7 +114,7 @@ export const TRND: ScenarioSpecification = {
     metadata: {
       postSubmit: "APPROVE",
       leaveDescription: FIRST_OF_MONTH_START_MAX_LEAVE_DESCRIPTION,
-      quantity: 100,
+      quantity: 200,
     },
     leave_dates: () => generateMaxLeave(20),
   },
@@ -200,7 +200,7 @@ export const TRNI: ScenarioSpecification = {
     metadata: {
       postSubmit: "APPROVE",
       leaveDescription: FIRST_OF_MONTH_START_MAX_LEAVE_DESCRIPTION,
-      quantity: 100,
+      quantity: 200,
     },
   },
 };
@@ -314,7 +314,7 @@ export const TRNQ: ScenarioSpecification = {
     metadata: {
       postSubmit: "APPROVE",
       leaveDescription: FIRST_OF_MONTH_START_MAX_LEAVE_DESCRIPTION,
-      quantity: 100,
+      quantity: 200,
     },
     leave_dates: () => generateMaxLeave(12),
   },
@@ -376,7 +376,7 @@ export const TRNT: ScenarioSpecification = {
     metadata: {
       postSubmit: "APPROVE",
       leaveDescription: FIRST_OF_MONTH_START_MAX_LEAVE_DESCRIPTION,
-      quantity: 100,
+      quantity: 200,
     },
     leave_dates: () => generateMaxLeave(12),
   },
@@ -463,7 +463,7 @@ export const TRNZ: ScenarioSpecification = {
     metadata: {
       postSubmit: "APPROVE",
       leaveDescription: FIRST_OF_MONTH_START_MAX_LEAVE_DESCRIPTION,
-      quantity: 100,
+      quantity: 200,
     },
     leave_dates: () => generateMaxLeave(12),
   },
@@ -487,7 +487,7 @@ export const TRNAB: ScenarioSpecification = {
     metadata: {
       postSubmit: "APPROVEDOCSEROPEN",
       leaveDescription: GENERATE_LEAVE_DATES_DESCRIPTION,
-      quantity: 200,
+      quantity: 300,
     },
     leave_dates: () => generateRandomLeave(),
   },
@@ -600,7 +600,7 @@ export const TRNAG: ScenarioSpecification = {
     metadata: {
       postSubmit: "APPROVE",
       leaveDescription: FIRST_OF_MONTH_START_MAX_LEAVE_DESCRIPTION,
-      quantity: 100,
+      quantity: 200,
     },
     leave_dates: () => generateMaxLeave(12),
   },
@@ -684,7 +684,7 @@ export const TRNAM: ScenarioSpecification = {
     metadata: {
       postSubmit: "APPROVE",
       leaveDescription: FIRST_OF_MONTH_START_MAX_LEAVE_DESCRIPTION,
-      quantity: 100,
+      quantity: 200,
     },
     leave_dates: () => generateMaxLeave(12),
   },
@@ -774,7 +774,7 @@ export const TRNAT: ScenarioSpecification = {
     metadata: {
       postSubmit: "APPROVE",
       leaveDescription: FIRST_OF_MONTH_START_MAX_LEAVE_DESCRIPTION,
-      quantity: 100,
+      quantity: 200,
     },
     leave_dates: () => generateMaxLeave(12),
   },
