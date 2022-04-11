@@ -556,7 +556,7 @@ def applications_submit(application_id):
                 submit_application_to_fineos(application_before_split, db_session, current_user)
             except Exception as e:
                 if isDocumentAlreadyReceivedError(e):
-                    pass 
+                    return
                 if isinstance(e, FINEOSClientError):
                     return get_fineos_submit_issues_response(e, existing_application)
                 raise e
@@ -588,7 +588,7 @@ def applications_submit(application_id):
                     )
             except Exception as e:
                 if isDocumentAlreadyReceivedError(e):
-                    pass
+                    return
                 if isinstance(e, FINEOSClientError):
                     return get_fineos_submit_issues_response(e, existing_application)
                 raise e
@@ -597,7 +597,7 @@ def applications_submit(application_id):
                 submit_application_to_fineos(existing_application, db_session, current_user)
             except Exception as e:
                 if isDocumentAlreadyReceivedError(e):
-                    pass
+                    return
                 if isinstance(e, FINEOSClientError):
                     return get_fineos_submit_issues_response(e, existing_application)
                 raise e
