@@ -20,7 +20,7 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
 from ..lookup import LookupTable
-from .base import Base, TimestampMixin, uuid_gen
+from .base import Base, TimestampMixin, deprecated_column, uuid_gen
 from .common import PostgreSQLUUID
 from .common import XMLType as XML
 
@@ -639,12 +639,12 @@ class FineosExtractPaymentFullSnapshot(Base, TimestampMixin):
     addressline5 = Column(Text)
     addressline6 = Column(Text)
     addressline7 = Column(Text)
-    advicetopay = Column(Text)
+    advicetopay = deprecated_column(Text)  # Being removed in FINEOS' upcoming release
     advicetopayov = Column(Text)
     amalgamationc = Column(Text)
     amount_monamt = Column(Text)
     amount_moncur = Column(Text)
-    checkcutting = Column(Text)
+    checkcutting = deprecated_column(Text)  # Being removed in FINEOS' upcoming release
     confirmedbyus = Column(Text)
     confirmeduid = Column(Text)
     contractref = Column(Text)
@@ -653,7 +653,7 @@ class FineosExtractPaymentFullSnapshot(Base, TimestampMixin):
     dateinterface = Column(Text)
     datelastproce = Column(Text)
     description = Column(Text)
-    employeecontr = Column(Text)
+    employeecontr = deprecated_column(Text)  # Being removed in FINEOS' upcoming release
     eventeffectiv = Column(Text)
     eventreason = Column(Text)
     eventtype = Column(Text)
