@@ -150,6 +150,60 @@ exports[`Payments Checkback date implementation renders intro text for reduced s
 </section>
 `;
 
+exports[`Payments Post FINEOS deploy checkback date updates returns monday checkback date approved before claim start date  1`] = `
+<section
+  data-testid="your-payments-intro"
+>
+  <p>
+    Your first payment will be scheduled on 
+    <strong>
+      May 16, 2022
+    </strong>
+    . This payment will include multiple weeks of your leave.
+  </p>
+   
+  <p>
+    Payments are scheduled to be paid after each week of your leave on Mondays, or on Tuesday if Monday is a holiday.
+  </p>
+</section>
+`;
+
+exports[`Payments Post FINEOS deploy checkback date updates returns monday checkback date approved mid week after claim start date  1`] = `
+<section
+  data-testid="your-payments-intro"
+>
+  <p>
+    Your first payment will be scheduled on 
+    <strong>
+      May 23, 2022
+    </strong>
+    . This payment will include multiple weeks of your leave.
+  </p>
+   
+  <p>
+    Payments are scheduled to be paid after each week of your leave on Mondays, or on Tuesday if Monday is a holiday.
+  </p>
+</section>
+`;
+
+exports[`Payments Post FINEOS deploy checkback date updates returns monday checkback date approved on claim start date  1`] = `
+<section
+  data-testid="your-payments-intro"
+>
+  <p>
+    Your first payment will be scheduled on 
+    <strong>
+      May 23, 2022
+    </strong>
+    . This payment will include multiple weeks of your leave.
+  </p>
+   
+  <p>
+    Payments are scheduled to be paid after each week of your leave on Mondays, or on Tuesday if Monday is a holiday.
+  </p>
+</section>
+`;
+
 exports[`Payments does not render payments if the is a 404 status 1`] = `
 <a
   class="usa-button margin-bottom-5 usa-button--unstyled"

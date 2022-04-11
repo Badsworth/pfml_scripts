@@ -14,7 +14,6 @@ import { config } from "../../actions/common";
 
     const submit =
       it("Submit a claim through the API for a Serious Health Condition - Employee with 4 wks", () => {
-        fineos.before();
         // Submit a claim via the API, including Employer Response.
         cy.task("generateClaim", "MED_ERRE").then((claim) => {
           cy.stash("claim", claim);
@@ -52,29 +51,44 @@ import { config } from "../../actions/common";
     const approve = it("CSR approves the leave plan and absence case", () => {
       cy.dependsOnPreviousPass([submit, ERProcess]);
       fineos.before();
-      cy.unstash<DehydratedClaim>("claim").then((claim) => {
-        cy.unstash<Submission>("submission").then((submission) => {
-          const claimPage = fineosPages.ClaimPage.visit(
-            submission.fineos_absence_id
-          );
-          claimPage.adjudicate((adjudication) => {
-            adjudication.evidence((evidence) => {
-              // Receive and approve all documents for the claim.
-              claim.documents.forEach((document) => {
-                evidence.receive(document.document_type);
+      cy.tryCount().then((tryCount) => {
+        cy.unstash<DehydratedClaim>("claim").then((claim) => {
+          cy.unstash<Submission>("submission").then((submission) => {
+            const claimPage = fineosPages.ClaimPage.visit(
+              submission.fineos_absence_id
+            );
+            if (tryCount > 0) {
+              fineos.assertClaimStatus("Approved");
+              claimPage.tasks((task) => {
+                task.closeWithAdditionalSelection(
+                  "Employer Reimbursement",
+                  "Reimbursement Approved"
+                );
               });
+              return;
+            }
+            claimPage.adjudicate((adjudication) => {
+              adjudication.evidence((evidence) => {
+                // Receive and approve all documents for the claim.
+                claim.documents.forEach((document) => {
+                  evidence.receive(document.document_type);
+                });
+              });
+              adjudication.certificationPeriods((certificationPeriods) =>
+                certificationPeriods.prefill()
+              );
+              adjudication.acceptLeavePlan();
             });
-            adjudication.certificationPeriods((certificationPeriods) =>
-              certificationPeriods.prefill()
+            claimPage.approve(
+              "Approved",
+              config("HAS_APRIL_UPGRADE") === "true"
             );
-            adjudication.acceptLeavePlan();
-          });
-          claimPage.approve("Approved", config("HAS_APRIL_UPGRADE") === "true");
-          claimPage.tasks((task) => {
-            task.closeWithAdditionalSelection(
-              "Employer Reimbursement",
-              "Reimbursement Approved"
-            );
+            claimPage.tasks((task) => {
+              task.closeWithAdditionalSelection(
+                "Employer Reimbursement",
+                "Reimbursement Approved"
+              );
+            });
           });
         });
       });
@@ -177,34 +191,18 @@ import { config } from "../../actions/common";
             throw new Error("expected_weekly_payment must be defined");
           }
           claimPage.paidLeave((paidLeave) => {
-            if (config("HAS_FEB_RELEASE") === "true") {
-              paidLeave.assertAmountsPending([
-                {
-                  net_payment_amount:
-                    parseFloat(expected_weekly_payment) -
-                    (claim.metadata?.employerReAmount as number),
-                  paymentInstances: 2,
-                },
-                {
-                  net_payment_amount: claim.metadata
-                    ?.employerReAmount as number,
-                  paymentInstances: 2,
-                },
-              ]);
-            } else {
-              paidLeave.assertAmountsPending([
-                {
-                  net_payment_amount:
-                    parseFloat(expected_weekly_payment) -
-                    (claim.metadata?.employerReAmount as number),
-                },
-                {
-                  net_payment_amount: claim.metadata
-                    ?.employerReAmount as number,
-                  paymentInstances: 2,
-                },
-              ]);
-            }
+            paidLeave.assertAmountsPending([
+              {
+                net_payment_amount:
+                  parseFloat(expected_weekly_payment) -
+                  (claim.metadata?.employerReAmount as number),
+                paymentInstances: 2,
+              },
+              {
+                net_payment_amount: claim.metadata?.employerReAmount as number,
+                paymentInstances: 2,
+              },
+            ]);
           });
         });
       });

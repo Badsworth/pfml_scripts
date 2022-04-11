@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional
+from typing import List, Optional
 from uuid import UUID
 
 import connexion
@@ -21,15 +21,14 @@ from massgov.pfml.api.services.managed_requirements import (
 )
 from massgov.pfml.api.services.service_now_actions import send_notification_to_service_now
 from massgov.pfml.db.models.applications import Notification
-from massgov.pfml.db.models.employees import Claim, Employee, Employer
+from massgov.pfml.db.models.employees import Claim, Employee, Employer, ManagedRequirement
 from massgov.pfml.db.queries.absence_periods import sync_customer_api_absence_periods_to_db
 from massgov.pfml.db.queries.managed_requirements import (
     commit_managed_requirements,
-    create_or_update_managed_requirement_from_fineos,
+    sync_managed_requirements_to_db,
 )
-from massgov.pfml.util.logging.managed_requirements import (
-    get_fineos_managed_requirement_log_attributes,
-)
+from massgov.pfml.fineos.models.group_client_api.overrides import ManagedRequirementDetails
+from massgov.pfml.util.logging.managed_requirements import log_managed_requirement_issues
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -134,19 +133,9 @@ def notifications_post():
                 db_session.add(claim)
                 db_session.commit()
 
-        try:
-            handle_managed_requirements(
-                notification_request, claim.claim_id, db_session, log_attributes
-            )
-        except Exception as error:  # catch all exception handler
-            logger.error(
-                "Failed to handle the claim's managed requirements in notification call.",
-                extra=log_attributes,
-                exc_info=error,
-            )
-            db_session.rollback()  # handle insert errors
-
         # Update absence period table
+        db_absence_periods = None
+
         try:
             if not employee or not employee.tax_identifier:
                 logger.warning(
@@ -154,7 +143,7 @@ def notifications_post():
                 )
             else:
                 absence_periods = get_absence_periods_from_claim(claim, db_session)
-                sync_customer_api_absence_periods_to_db(
+                db_absence_periods = sync_customer_api_absence_periods_to_db(
                     absence_periods, claim, db_session, log_attributes
                 )
         except Exception as error:  # catch all exception handler
@@ -165,6 +154,30 @@ def notifications_post():
             )
             newrelic.agent.notice_error(attributes=log_attributes)
             db_session.rollback()  # handle insert errors
+
+        if notification_request.recipient_type == FineosRecipientType.LEAVE_ADMINISTRATOR:
+            try:
+                fineos_requirements = handle_managed_requirements(
+                    notification_request, claim.claim_id, db_session, log_attributes
+                )
+
+                updated_db_requirements = (
+                    db_session.query(ManagedRequirement)
+                    .filter(ManagedRequirement.claim_id == claim.claim_id)
+                    .all()
+                )
+
+                log_managed_requirement_issues(
+                    fineos_requirements, updated_db_requirements, db_absence_periods, log_attributes
+                )
+            except Exception as error:  # catch all exception handler
+                logger.error(
+                    "Failed to handle the claim's managed requirements in notification call.",
+                    extra=log_attributes,
+                    exc_info=error,
+                )
+                newrelic.agent.notice_error(attributes=log_attributes)
+                db_session.rollback()  # handle insert errors
 
     # Send the request to Service Now
     send_notification_to_service_now(notification_request, employer)
@@ -264,23 +277,17 @@ def _err400_multiple_employer_feins_found(notification_request, log_attributes):
 
 def handle_managed_requirements(
     notification: NotificationRequest, claim_id: UUID, db_session: Session, log_attributes: dict
-) -> None:
-    fineos_requirements = []
-    if notification.recipient_type == FineosRecipientType.LEAVE_ADMINISTRATOR:
-        fineos_requirements = get_fineos_managed_requirements_from_notification(
-            notification, log_attributes
-        )
+) -> List[ManagedRequirementDetails]:
+    fineos_requirements = get_fineos_managed_requirements_from_notification(
+        notification, log_attributes
+    )
 
     if len(fineos_requirements) == 0:
         logger.info("No managed requirements returned by Fineos", extra=log_attributes)
-        return
-    for fineos_requirement in fineos_requirements:
-        log_attr = {
-            **log_attributes.copy(),
-            **get_fineos_managed_requirement_log_attributes(fineos_requirement),
-        }
-        create_or_update_managed_requirement_from_fineos(
-            db_session, claim_id, fineos_requirement, log_attr
-        )
-    commit_managed_requirements(db_session)
-    return
+        return []
+
+    (_, log_attrs) = sync_managed_requirements_to_db(
+        fineos_requirements, claim_id, db_session, log_attributes
+    )
+    commit_managed_requirements(db_session, log_attrs)
+    return fineos_requirements

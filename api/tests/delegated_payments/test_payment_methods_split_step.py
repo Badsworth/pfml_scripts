@@ -10,9 +10,9 @@ misc_states = [State.DELEGATED_PAYMENT_COMPLETE, State.DELEGATED_PAYMENT_PUB_TRA
 
 
 @pytest.fixture
-def payment_split_step(initialize_factories_session, test_db_session, test_db_other_session):
+def payment_split_step(initialize_factories_session, test_db_session):
     return payment_split.PaymentMethodsSplitStep(
-        db_session=test_db_session, log_entry_db_session=test_db_other_session
+        db_session=test_db_session, log_entry_db_session=test_db_session
     )
 
 

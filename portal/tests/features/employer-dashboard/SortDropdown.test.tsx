@@ -10,18 +10,7 @@ const setup = () => {
 };
 
 describe("SortDropdown", () => {
-  it("defaults to Sort by Status option", () => {
-    setup();
-
-    expect(screen.getByRole("combobox", { name: /sort/i })).toHaveValue(
-      "absence_status,ascending"
-    );
-  });
-
-  it("defaults to Sort by New applications option when is enabled", () => {
-    process.env.featureFlags = JSON.stringify({
-      employerShowMultiLeaveDashboard: true,
-    });
+  it("defaults to Sort by New applications option", () => {
     setup();
 
     expect(screen.getByRole("combobox", { name: /sort/i })).toHaveValue(

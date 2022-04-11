@@ -326,7 +326,7 @@ lint-flake: ## Run flake8
 	$(PY_RUN_CMD) flake8 --format=$(FLAKE8_FORMAT) massgov tests bin
 
 lint-mypy: ## Run mypy
-	$(PY_RUN_CMD) mypy $(MYPY_FLAGS) massgov bin $(MYPY_POSTPROC)
+	$(PY_RUN_CMD) mypy --show-error-codes $(MYPY_FLAGS) massgov bin $(MYPY_POSTPROC)
 
 lint-security: ## Run security linting
 	$(PY_RUN_CMD) bandit -r . --number 3 --skip B101 -ll

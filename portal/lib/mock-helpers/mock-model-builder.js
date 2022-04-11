@@ -355,6 +355,23 @@ export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder
   /**
    * @returns {MockEmployerClaimBuilder}
    */
+  pendingAbsencePeriod() {
+    set(this.claimAttrs, "absence_periods", [
+      ...this.claimAttrs.absence_periods,
+      createAbsencePeriod({
+        request_decision: "Pending",
+        absence_period_end_date: "2022-07-01",
+        absence_period_start_date: "2022-02-01",
+        period_type: "Continuous",
+        reason: LeaveReason.medical,
+      }),
+    ]);
+    return this;
+  }
+
+  /**
+   * @returns {MockEmployerClaimBuilder}
+   */
   completed(isIntermittent = false) {
     this.employed();
     this.address();
@@ -381,10 +398,11 @@ export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder
   }
 
   /**
-   * claim with open managed requirements
+   * claim with open managed requirements and non-final absence period
    * @returns {MockEmployerClaimBuilder}
    */
   reviewable(date) {
+    this.pendingAbsencePeriod();
     set(this.claimAttrs, "managed_requirements", [
       {
         follow_up_date: date || dayjs().add(10, "day").format("YYYY-MM-DD"),
@@ -496,6 +514,7 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
       application_id: "mock_application_id",
       status: BenefitsApplicationStatus.started,
       computed_start_dates: {},
+      leave_details: {},
     };
   }
 
@@ -998,6 +1017,24 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
       "computed_earliest_submission_date",
       computed_earliest_submission_date
     );
+    return this;
+  }
+
+  /**
+   * @param {string} [id]
+   * @returns {MockBenefitsApplicationBuilder}
+   */
+  splitIntoApplicationId(id) {
+    set(this.claimAttrs, "split_into_application_id", id);
+    return this;
+  }
+
+  /**
+   * @param {string} [id]
+   * @returns {MockBenefitsApplicationBuilder}
+   */
+  splitFromApplicationId(id) {
+    set(this.claimAttrs, "split_from_application_id", id);
     return this;
   }
 

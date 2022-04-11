@@ -50,10 +50,13 @@ from massgov.pfml.util.datetime import get_now_us_eastern
 
 
 @pytest.fixture
-def payment_rejects_step(initialize_factories_session, test_db_session, test_db_other_session):
-    return PaymentRejectsStep(
-        db_session=test_db_session, log_entry_db_session=test_db_other_session
-    )
+def payment_rejects_step(initialize_factories_session, test_db_session, monkeypatch):
+    payment_rejects_archive_folder_path = str(tempfile.mkdtemp())
+    monkeypatch.setenv("PFML_PAYMENT_REJECTS_ARCHIVE_PATH", payment_rejects_archive_folder_path)
+
+    step = PaymentRejectsStep(db_session=test_db_session, log_entry_db_session=test_db_session)
+
+    return step
 
 
 @freeze_time("2021-01-15 12:00:00", tz_offset=5)  # payments_util.get_now returns EST time
@@ -569,19 +572,12 @@ def _generate_rejects_file(payment_rejects_received_folder_path, file_name, db_s
 
 
 @freeze_time("2021-01-15 12:00:00", tz_offset=5)  # payments_util.get_now returns EST time
-def test_process_rejects(
-    test_db_session, test_db_other_session, initialize_factories_session, monkeypatch
-):
+def test_process_rejects(payment_rejects_step, test_db_session, initialize_factories_session):
     # setup folder path configs
-    payment_rejects_archive_folder_path = str(tempfile.mkdtemp())
-    payment_rejects_received_folder_path = os.path.join(
-        payment_rejects_archive_folder_path, "received"
+    payment_rejects_received_folder_path = payment_rejects_step.payment_rejects_received_folder_path
+    payment_rejects_processed_folder_path = payment_rejects_received_folder_path.replace(
+        "received", "processed"
     )
-    payment_rejects_processed_folder_path = os.path.join(
-        payment_rejects_archive_folder_path, "processed"
-    )
-
-    monkeypatch.setenv("PFML_PAYMENT_REJECTS_ARCHIVE_PATH", payment_rejects_archive_folder_path)
 
     date_folder = get_now_us_eastern().strftime("%Y-%m-%d")
     timestamp_file_prefix = "2021-01-15-12-00-00"
@@ -599,9 +595,6 @@ def test_process_rejects(
     )
 
     # process rejects
-    payment_rejects_step = PaymentRejectsStep(
-        db_session=test_db_session, log_entry_db_session=test_db_other_session
-    )
     payment_rejects_step.process_rejects()
 
     # check some are rejected
@@ -633,17 +626,12 @@ def test_process_rejects(
 
 
 @freeze_time("2021-01-15 12:00:00", tz_offset=5)  # payments_util.get_now returns EST time
-def test_process_rejects_error(
-    test_db_session, test_db_other_session, initialize_factories_session, monkeypatch
-):
+def test_process_rejects_error(payment_rejects_step, test_db_session, initialize_factories_session):
     # setup folder path configs
-    payment_rejects_archive_folder_path = str(tempfile.mkdtemp())
-    payment_rejects_received_folder_path = os.path.join(
-        payment_rejects_archive_folder_path, "received"
+    payment_rejects_received_folder_path = payment_rejects_step.payment_rejects_received_folder_path
+    payment_rejects_errored_folder_path = payment_rejects_received_folder_path.replace(
+        "received", "error"
     )
-    payment_rejects_errored_folder_path = os.path.join(payment_rejects_archive_folder_path, "error")
-
-    monkeypatch.setenv("PFML_PAYMENT_REJECTS_ARCHIVE_PATH", payment_rejects_archive_folder_path)
 
     # generate two rejects files to trigger a processing error
     _generate_rejects_file(
@@ -657,9 +645,6 @@ def test_process_rejects_error(
     rejects_file_name_1 = f"{current_timestamp}-Payment-Audit-Report-Response-1.csv"
     rejects_file_name_2 = f"{current_timestamp}-Payment-Audit-Report-Response-2.csv"
 
-    payment_rejects_step = PaymentRejectsStep(
-        db_session=test_db_session, log_entry_db_session=test_db_other_session
-    )
     with pytest.raises(
         PaymentRejectsException,
         match=f"Too many Payment Rejects files found: {rejects_file_name_1}, {rejects_file_name_2}",

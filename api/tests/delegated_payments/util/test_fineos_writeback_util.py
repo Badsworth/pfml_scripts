@@ -9,13 +9,13 @@ from massgov.pfml.delegated_payments.util.fineos_writeback_util import (
 )
 
 
-def test_stage_payment_fineos_writeback(local_test_db_session, local_initialize_factories_session):
+def test_stage_payment_fineos_writeback(test_db_session, initialize_factories_session):
     transaction_status = FineosWritebackTransactionStatus.PAID
     import_log_id = 1
     outcome_message = "Test"
 
     import_log = ImportLog(import_log_id=import_log_id)
-    local_test_db_session.add(import_log)
+    test_db_session.add(import_log)
 
     # standard usage
     payment = PaymentFactory.create()
@@ -23,20 +23,18 @@ def test_stage_payment_fineos_writeback(local_test_db_session, local_initialize_
         payment=payment,
         writeback_transaction_status=transaction_status,
         outcome=state_log_util.build_outcome(outcome_message),
-        db_session=local_test_db_session,
+        db_session=test_db_session,
         import_log_id=import_log_id,
     )
 
-    assert_writeback(
-        payment, transaction_status, outcome_message, local_test_db_session, import_log_id
-    )
+    assert_writeback(payment, transaction_status, outcome_message, test_db_session, import_log_id)
 
     # no outcome
     payment_2 = PaymentFactory.create()
     stage_payment_fineos_writeback(
         payment=payment_2,
         writeback_transaction_status=transaction_status,
-        db_session=local_test_db_session,
+        db_session=test_db_session,
         import_log_id=import_log_id,
     )
 
@@ -44,20 +42,20 @@ def test_stage_payment_fineos_writeback(local_test_db_session, local_initialize_
         payment_2,
         transaction_status,
         transaction_status.transaction_status_description,
-        local_test_db_session,
+        test_db_session,
         import_log_id,
     )
 
 
 def test_create_payment_finished_state_log_with_writeback(
-    local_test_db_session, local_initialize_factories_session
+    test_db_session, initialize_factories_session
 ):
     transaction_status = FineosWritebackTransactionStatus.PAID
     import_log_id = 1
     outcome_message = "Test"
 
     import_log = ImportLog(import_log_id=import_log_id)
-    local_test_db_session.add(import_log)
+    test_db_session.add(import_log)
 
     payment = PaymentFactory.create()
     create_payment_finished_state_log_with_writeback(
@@ -66,16 +64,14 @@ def test_create_payment_finished_state_log_with_writeback(
         payment_outcome=state_log_util.build_outcome(outcome_message),
         writeback_transaction_status=transaction_status,
         writeback_outcome=state_log_util.build_outcome(outcome_message),
-        db_session=local_test_db_session,
+        db_session=test_db_session,
         import_log_id=import_log_id,
     )
 
-    assert_writeback(
-        payment, transaction_status, outcome_message, local_test_db_session, import_log_id
-    )
+    assert_writeback(payment, transaction_status, outcome_message, test_db_session, import_log_id)
 
     payment_flow_log = state_log_util.get_latest_state_log_in_flow(
-        payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+        payment, Flow.DELEGATED_PAYMENT, test_db_session
     )
     assert payment_flow_log.end_state_id == State.DELEGATED_PAYMENT_COMPLETE.state_id
     assert payment_flow_log.import_log_id == import_log_id

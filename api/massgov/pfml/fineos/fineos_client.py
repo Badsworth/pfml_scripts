@@ -1284,15 +1284,16 @@ class FINEOSClient(client.AbstractFINEOSClient):
     def create_or_update_leave_period_change_request(
         self, fineos_web_id: str, absence_id: str, change_request: LeavePeriodChangeRequest
     ) -> LeavePeriodChangeRequest:
-        # call the FINEOS POST change_request endpoint when the upgrade is complete
-        # TODO: https://lwd.atlassian.net/browse/PFMLPB-2055
-        mock_response_json = {
-            "additionalNotes": "Withdrawal",
-            "changeRequestPeriods": [{"endDate": "2022-02-15", "startDate": "2022-02-14"}],
-            "reason": {"fullId": 0, "name": "Employee Requested Removal"},
-        }
-
-        return LeavePeriodChangeRequest.parse_obj(mock_response_json)
+        # NOTE: this call will not work in some envs until https://lwd.atlassian.net/browse/PFMLPB-2055 is complete
+        response = self._customer_api(
+            "POST",
+            f"customer/absence/absences/{absence_id}/leave-period-change-request",
+            fineos_web_id,
+            "create_or_update_leave_period_change_request",
+            data=change_request.json(exclude_none=True),
+        )
+        response_json = response.json()
+        return LeavePeriodChangeRequest.parse_obj(response_json)
 
     @staticmethod
     def _create_or_update_leave_admin_payload(
@@ -1524,7 +1525,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
             models.AdditionalData(name="AbsenceCaseNumber", value=str(absence_id))
         )
         additional_data_set.additional_data.append(
-            models.AdditionalData(name="FlagValue", value=bool(tax_preference))
+            models.AdditionalData(name="FlagValue", value=str(tax_preference))
         )
 
         tax_data = models.TaxWithholdingUpdateData()

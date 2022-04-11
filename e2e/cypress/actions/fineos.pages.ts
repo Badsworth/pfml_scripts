@@ -60,7 +60,6 @@ import {
 import { DocumentUploadRequest } from "../../src/api";
 import { fineos } from ".";
 import { LeaveReason } from "../../src/generation/Claim";
-import { config } from "./common";
 import { FineosCorrespondanceType, FineosDocumentType } from "./fineos.enums";
 import { convertToTimeZone } from "date-fns-timezone";
 
@@ -95,8 +94,8 @@ export class ClaimPage {
     return new ClaimPage();
   }
 
-  addHistoricalAbsenceCase(): HistoricalAbsence {
-    return HistoricalAbsence.create();
+  addHistoricalAbsenceCase(upgrade?: boolean): HistoricalAbsence {
+    return HistoricalAbsence.create(upgrade);
   }
 
   recordActualLeave<T>(cb: (page: RecordActualTime) => T): T {
@@ -1764,6 +1763,12 @@ type PaidLeaveCorrespondenceDocument =
   | "Benefit Amount Change Notice"
   | "Maximum Weekly Benefit Change Notice"
   | "Overpayment Notice - Full Balance Recovery";
+
+type PendingAmount = Record<
+  "netAmount" | "netPaymentAmount" | "processingDate",
+  string
+>;
+
 /**
  * Class representing the Absence Paid Leave Case,
  * Claim should be adjudicated and approved before trying to access this.
@@ -2284,25 +2289,26 @@ class PaidLeavePage {
     return new RecoveryPlanPage();
   }
 
-  getAmountsPending(): Cypress.Chainable<
-    Record<"netAmount" | "netPaymentAmount", string>[]
-  > {
+  getAmountsPending(): Cypress.Chainable<PendingAmount[]> {
     this.onTab("Financials", "Payment History", "Amounts Pending");
     waitForAjaxComplete();
     // net amount
     return cy.get("td[id$='benefit_amount_money0']").then(([...netPymt]) => {
       // net payment amount
       return cy.get("td[id$='payment_amount_money0']").then((netPymtCols) => {
-        return cy.wrap(
-          [...netPymtCols].reduce((acc, netPaymentAmountCol, idx) => {
-            const rowData = {
-              netAmount: netPymt[idx].textContent as string,
-              netPaymentAmount: netPaymentAmountCol.textContent as string,
-            };
-            acc.push(rowData);
-            return acc;
-          }, [] as Record<"netAmount" | "netPaymentAmount", string>[])
-        );
+        return cy.get("td[id$='processing_date0']").then((processingDates) => {
+          return cy.wrap(
+            [...netPymtCols].reduce((acc, netPaymentAmountCol, idx) => {
+              const rowData = {
+                netAmount: netPymt[idx].textContent as string,
+                netPaymentAmount: netPaymentAmountCol.textContent as string,
+                processingDate: processingDates[idx].textContent as string,
+              };
+              acc.push(rowData);
+              return acc;
+            }, [] as PendingAmount[])
+          );
+        });
       });
     });
   }
@@ -2406,7 +2412,10 @@ export function numToPaymentFormat(num: number): string {
  * Read more on preventing overpayments here: https://lwd.atlassian.net/browse/CPS-3115
  * @returns Date
  */
-export function calculatePaymentDatePreventingOP(approvalDate?: Date) {
+export function calculatePaymentDatePreventingOP(
+  approvalDate?: Date,
+  considerEST = true
+) {
   const PFML_HOLIDAYS = [
     "2022-02-21",
     "2022-04-18",
@@ -2436,14 +2445,21 @@ export function calculatePaymentDatePreventingOP(approvalDate?: Date) {
     })
   );
   const isBeforeEndBusinessDay = estTimeHour < 17;
-  const afterNormalBusinessDays = addBusinessDays(
-    approvalDate ?? new Date(),
-    isBeforeEndBusinessDay ? 5 : 6
-  );
+
+  // Determines if EST time should be used to determine if an extra day should be applied to the Date returned by calculatePaymentDatePreventingOP
+  const considerBusinessDay = () => {
+    if (considerEST) {
+      return addBusinessDays(
+        approvalDate ?? new Date(),
+        isBeforeEndBusinessDay ? 5 : 6
+      );
+    } else return addBusinessDays(approvalDate ?? new Date(), 5);
+  };
+
   const hasHoliday = (holiday: Date) => {
     return (
       isAfter(holiday, subDays(new Date(), 1)) &&
-      isBefore(holiday, addDays(afterNormalBusinessDays, 1))
+      isBefore(holiday, addDays(considerBusinessDay(), 1))
     );
   };
   // account for holidays - which further delays the payment processing date
@@ -2451,7 +2467,7 @@ export function calculatePaymentDatePreventingOP(approvalDate?: Date) {
   for (let i = 0; i < PFML_HOLIDAYS.length; i++) {
     if (hasHoliday(parseISO(PFML_HOLIDAYS[i]))) totalHolidays += 1;
   }
-  return addBusinessDays(afterNormalBusinessDays, totalHolidays);
+  return addBusinessDays(considerBusinessDay(), totalHolidays);
 }
 
 class BenefitsExtensionPage {
@@ -2936,23 +2952,19 @@ export class ClaimantPage {
                   .applyStandardWorkWeek();
                 return absenceDetails.nextStep((wrapUp) => {
                   // tax withholdings
-                  if (
-                    config("FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION") ===
-                    "true"
-                  ) {
-                    fineos.waitForAjaxComplete();
-                    if (withholdingPreference) {
-                      cy.get(
-                        "input[type='checkbox'][name$='_somSITFITOptIn_CHECKBOX']"
-                      ).click();
-                    }
-                    // must be selected to proceed
+                  fineos.waitForAjaxComplete();
+                  if (withholdingPreference) {
                     cy.get(
-                      "input[type='checkbox'][name$='_somSITFITVerification_CHECKBOX']"
+                      "input[type='checkbox'][name$='_somSITFITOptIn_CHECKBOX']"
                     ).click();
-
-                    fineos.waitForAjaxComplete();
                   }
+                  // must be selected to proceed
+                  cy.get(
+                    "input[type='checkbox'][name$='_somSITFITVerification_CHECKBOX']"
+                  ).click();
+
+                  fineos.waitForAjaxComplete();
+
                   // Fill military Caregiver description if needed.
                   if (reason === "Military Caregiver")
                     absenceDetails.addMilitaryCaregiverDescription();
@@ -3681,14 +3693,14 @@ export type FixedTimeOffPeriodDescription = {
 
 class HistoricalAbsence {
   /**To be called from Absence Hub */
-  static create(): HistoricalAbsence {
+  static create(upgrade?: boolean): HistoricalAbsence {
     const historicalPeriodDescription: AbsenceReasonDescription = {
       reason: "Serious Health Condition - Employee",
       relates_to: "Employee",
       qualifier_1: "Not Work Related",
       qualifier_2: "Sickness",
     };
-    cy.contains("Options").click();
+    cy.contains("Options").click({ force: true });
     cy.contains("Add Historical Absence").click({ force: true });
     HistoricalAbsence.fillAbsenceDescription(historicalPeriodDescription);
     cy.contains("div", "timeOffHistoricalAbsencePeriodsListviewWidget")
@@ -3718,10 +3730,12 @@ class HistoricalAbsence {
       'a[id="com.fineos.frontoffice.casemanager.casekeyinformation.CaseKeyInfoBar_un8_KeyInfoBarLink_0"]'
     ).click();
     onTab("Cases");
-    cy.get(".ListRowSelected > td").should(($td) => {
-      expect($td.eq(4)).to.contain("Absence Historical Case");
+    const selector = upgrade
+      ? ".ant-table-row-selected > td"
+      : ".ListRowSelected > td";
+    cy.get(selector).should(($td) => {
+      expect($td.eq(upgrade ? 2 : 4)).to.contain("Absence Historical Case");
     });
-    cy.get('input[title="Open"]').click();
     waitForAjaxComplete();
     return new HistoricalAbsence();
   }
