@@ -60,6 +60,7 @@ from massgov.pfml.fineos.exception import (
     FINEOSClientError,
     FINEOSEntityNotFound,
     FINEOSFatalUnavailable,
+    FINEOSUnprocessableEntity,
 )
 from massgov.pfml.fineos.models.customer_api import Base64EncodedFileData
 from massgov.pfml.util.aws import cognito
@@ -365,6 +366,12 @@ def applications_update(application_id):
     ).to_api_response()
 
 
+def isDocumentAlreadyReceivedError(err):
+    if isinstance(err, FINEOSUnprocessableEntity) and err.method_name == "upload_document":
+        if err.message.startswith("A document of type") and err.message.endswith("is not required for the case provided"):
+            return True
+    return False
+
 def get_fineos_submit_issues_response(err, existing_application):
     if isinstance(err, FINEOSEntityNotFound):
         return response_util.error_response(
@@ -548,6 +555,8 @@ def applications_submit(application_id):
             try:
                 submit_application_to_fineos(application_before_split, db_session, current_user)
             except Exception as e:
+                if isDocumentAlreadyReceivedError(e):
+                    pass 
                 if isinstance(e, FINEOSClientError):
                     return get_fineos_submit_issues_response(e, existing_application)
                 raise e
@@ -578,6 +587,8 @@ def applications_submit(application_id):
                         current_user,
                     )
             except Exception as e:
+                if isDocumentAlreadyReceivedError(e):
+                    pass
                 if isinstance(e, FINEOSClientError):
                     return get_fineos_submit_issues_response(e, existing_application)
                 raise e
@@ -585,6 +596,8 @@ def applications_submit(application_id):
             try:
                 submit_application_to_fineos(existing_application, db_session, current_user)
             except Exception as e:
+                if isDocumentAlreadyReceivedError(e):
+                    pass
                 if isinstance(e, FINEOSClientError):
                     return get_fineos_submit_issues_response(e, existing_application)
                 raise e
