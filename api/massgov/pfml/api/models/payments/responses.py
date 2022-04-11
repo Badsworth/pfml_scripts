@@ -7,6 +7,24 @@ from pydantic import UUID4
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
 
+class PaymentLineResponse(PydanticBaseModel):
+    payment_line_id: UUID4
+    payment_line_c_value: str
+    payment_line_i_value: str
+    amount: Decimal
+    line_type: str
+
+
+class PaymentDetailsResponse(PydanticBaseModel):
+    payment_details_id: UUID4
+    payment_details_c_value: str
+    payment_details_i_value: str
+    period_start_date: date
+    period_end_date: date
+    amount: Decimal
+    payment_lines: list[PaymentLineResponse]
+
+
 class PaymentResponse(PydanticBaseModel):
     payment_id: Optional[UUID4]
     fineos_c_value: str
@@ -23,3 +41,4 @@ class PaymentResponse(PydanticBaseModel):
     writeback_transaction_status: Optional[str]
     transaction_date: Optional[date]
     transaction_date_could_change: bool
+    payment_details: list[PaymentDetailsResponse]

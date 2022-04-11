@@ -513,6 +513,78 @@ def test_consolidate_successors_cancelled_and_regular(test_db_session):
     assert original_payment2.payment_id == consolidated_payment_containers[0].payment.payment_id
 
 
+def test_get_payments_with_details_and_lines(test_db_session):
+    payment_factory_1 = DelegatedPaymentFactory(
+        test_db_session,
+        amount=100,
+        period_start_date=date(2021, 11, 1),
+        period_end_date=date(2021, 11, 7),
+        payment_method=PaymentMethod.ACH,
+    )
+    claim_1 = payment_factory_1.get_or_create_claim()
+    payment_factory_1.get_or_create_payment()
+    payment_1_details_1 = payment_factory_1.create_payment_detail()
+    payment_1_details_1_line_1 = payment_factory_1.create_payment_line(
+        payment_detail=payment_1_details_1
+    )
+    payment_1_details_2 = payment_factory_1.create_payment_detail()
+
+    payment_factory_2 = DelegatedPaymentFactory(
+        test_db_session,
+        amount=200,
+        period_start_date=date(2020, 11, 1),
+        period_end_date=date(2020, 11, 7),
+        payment_method=PaymentMethod.ACH,
+    )
+    payment_factory_2.get_or_create_payment()
+    claim_2 = payment_factory_2.get_or_create_claim()
+    payment_2_details = payment_factory_2.create_payment_detail()
+    payment_2_details_line_1 = payment_factory_2.create_payment_line(
+        payment_detail=payment_2_details
+    )
+    payment_2_details_line_2 = payment_factory_2.create_payment_line(
+        payment_detail=payment_2_details
+    )
+
+    claim_1_response = payment_services.get_payments_with_status(test_db_session, claim_1)
+    assert len(claim_1_response["payments"]) == 1
+    assert len(claim_1_response["payments"][0]["payment_details"]) == 2
+    assert len(claim_1_response["payments"][0]["payment_details"][0]["payment_lines"]) == 1
+    assert len(claim_1_response["payments"][0]["payment_details"][1]["payment_lines"]) == 0
+
+    assert (
+        claim_1_response["payments"][0]["payment_details"][0]["payment_details_id"]
+        == payment_1_details_1.payment_details_id
+    )
+    assert (
+        claim_1_response["payments"][0]["payment_details"][1]["payment_details_id"]
+        == payment_1_details_2.payment_details_id
+    )
+
+    assert (
+        claim_1_response["payments"][0]["payment_details"][0]["payment_lines"][0]["payment_line_id"]
+        == payment_1_details_1_line_1.payment_line_id
+    )
+
+    claim_2_response = payment_services.get_payments_with_status(test_db_session, claim_2)
+    assert len(claim_2_response["payments"]) == 1
+    assert len(claim_2_response["payments"][0]["payment_details"]) == 1
+    assert len(claim_2_response["payments"][0]["payment_details"][0]["payment_lines"]) == 2
+
+    assert (
+        claim_2_response["payments"][0]["payment_details"][0]["payment_details_id"]
+        == payment_2_details.payment_details_id
+    )
+    assert (
+        claim_2_response["payments"][0]["payment_details"][0]["payment_lines"][0]["payment_line_id"]
+        == payment_2_details_line_1.payment_line_id
+    )
+    assert (
+        claim_2_response["payments"][0]["payment_details"][0]["payment_lines"][1]["payment_line_id"]
+        == payment_2_details_line_2.payment_line_id
+    )
+
+
 def test_get_payments_with_status(test_db_session, caplog):
     caplog.set_level(logging.INFO)  # noqa: B1
 

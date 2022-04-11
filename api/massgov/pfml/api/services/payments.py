@@ -263,6 +263,7 @@ def to_response_dict(payment_data: List[PaymentContainer], absence_case_id: Opti
                 writeback_transaction_status=scenario_data.writeback_transaction_status,
                 transaction_date=scenario_data.transaction_date,
                 transaction_date_could_change=scenario_data.transaction_date_could_change,
+                payment_details=payment.payment_details,  # type: ignore
             ).dict()
         )
 

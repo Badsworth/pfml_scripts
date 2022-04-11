@@ -154,6 +154,7 @@ def test_get_payments_200(
         "writeback_transaction_status": expected_description,
         "transaction_date": expected_transaction_date,
         "transaction_date_could_change": expected_transaction_date_could_change,
+        "payment_details": [],
     }
 
 
@@ -214,6 +215,7 @@ def test_get_payments_200_pending_validation_scenario_no_prenote_sent_at(
         "writeback_transaction_status": transaction_status.transaction_status_description,
         "transaction_date": now.date().isoformat(),
         "transaction_date_could_change": True,
+        "payment_details": [],
     }
 
 
@@ -273,6 +275,7 @@ def test_get_payments_200_range_before_today(client, auth_token, user, test_db_s
         "writeback_transaction_status": transaction_status.transaction_status_description,
         "transaction_date": now.date().isoformat(),
         "transaction_date_could_change": False,
+        "payment_details": [],
     }
 
 
@@ -330,6 +333,7 @@ def test_get_payments_200_cancelled_payments(client, auth_token, user, test_db_s
         "writeback_transaction_status": transaction_status.transaction_status_description,
         "transaction_date": now.date().isoformat(),
         "transaction_date_could_change": False,
+        "payment_details": [],
     }
 
 
@@ -385,6 +389,7 @@ def test_get_payments_200_zero_dollar(client, auth_token, user, test_db_session)
         "writeback_transaction_status": transaction_status.transaction_status_description,
         "transaction_date": now.date().isoformat(),
         "transaction_date_could_change": False,
+        "payment_details": [],
     }
 
 
@@ -434,6 +439,7 @@ def test_get_payments_200_legacy_payments(client, auth_token, user, test_db_sess
         "writeback_transaction_status": None,
         "transaction_date": None,
         "transaction_date_could_change": True,
+        "payment_details": [],
     }
 
 
@@ -502,6 +508,7 @@ def test_get_payments_returns_200_when_no_payment_method(client, auth_token, use
         "writeback_transaction_status": transaction_status.transaction_status_description,
         "transaction_date": now.date().isoformat(),
         "transaction_date_could_change": False,
+        "payment_details": [],
     }
 
 
