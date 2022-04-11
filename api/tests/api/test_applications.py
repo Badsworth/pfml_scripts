@@ -4837,7 +4837,7 @@ def test_continue_submit_after_requirement_already_satisfied_error(
     )
 
     # Check that the post succeeded despite the FINEOS error
-    assert response.status_code == 201
+    assert response.status_code == 204
 
 
 def test_application_post_submit_complete_intake_fineos_api_errors(
