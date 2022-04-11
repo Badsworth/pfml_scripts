@@ -3222,24 +3222,32 @@ components:
       properties:
         employer:
           $ref: "#/components/schemas/EmployerResponse"
+          nullable: true
         employee:
           $ref: "#/components/schemas/EmployeeBasicResponse"
+          nullable: true
         application_id:
           type: string
           format: uuid
           example: "fdc23456-c8fa-48bf-89a1-5c7c6a3af164"
+          nullable: true
         fineos_absence_id:
-          format: string
+          type: string
           example: "NTN-01-ABS-01"
+          nullable: true
         fineos_notification_id:
-          format: string
+          type: string
           example: "NTN-01"
+          nullable: true
         created_at:
+          type: string
           format: date
+          nullable: true
         absence_periods:
-            type: array
-            items:
-              $ref: "#/components/schemas/AbsencePeriodResponse"
+          type: array
+          items:
+            $ref: "#/components/schemas/AbsencePeriodResponse"
+          nullable: true
         outstanding_evidence:
           type: object
           nullable: true
@@ -3266,47 +3274,49 @@ components:
           nullable: true
           $ref: "#/components/schemas/EmployeeBasicResponse"
         fineos_absence_id:
-          format: string
-          example: "NTN-01-ABS-01"
-        fineos_notification_id:
-          format: string
-          example: "NTN-01"
-        absence_period_start_date:
-          format: date
-          example: "1970-06-01"
-        absence_period_end_date:
-          format: date
-          example: "1970-06-01"
-        claim_status:
-          description: "Absence case status"
           type: string
-          enum:
-            [
-              "Adjudication",
-              "Approved",
-              "Closed",
-              "Completed",
-              "Declined",
-              "In Review",
-              "Intake In Progress",
-            ]
+          example: "NTN-01-ABS-01"
+          nullable: true
+        fineos_notification_id:
+          type: string
+          example: "NTN-01"
+          nullable: true
+        absence_period_start_date:
+          type: string
+          format: date
+          example: "1970-06-01"
+          nullable: true
+        absence_period_end_date:
+          type: string
+          format: date
+          example: "1970-06-01"
+          nullable: true
+        claim_status:
+          $ref: "#/components/schemas/AbsenceCaseStatus"
+          nullable: true
         claim_type_description:
-          format: string
+          type: string
           example: "Medical Leave"
+          nullable: true
         organization_unit_id:
           type: string
           format: uuid
           example: "2f0f58a0-fcad-465b-b474-ee6c961cd6e3"
+          nullable: true
         created_at:
+          type: string
           format: date
+          nullable: true
         managed_requirements:
-            type: array
-            items:
-              $ref: "#/components/schemas/ManagedRequirementResponse"
+          type: array
+          nullable: true
+          items:
+            $ref: "#/components/schemas/ManagedRequirementResponse"
         absence_periods:
-            type: array
-            items:
-              $ref: "#/components/schemas/AbsencePeriodResponse"
+          type: array
+          nullable: true
+          items:
+            $ref: "#/components/schemas/AbsencePeriodResponse"
         has_paid_payments:
           type: boolean
           example: false
@@ -3336,7 +3346,7 @@ components:
       type: object
       properties:
         absence_case_id:
-          format: string
+          type: string
           example: "NTN-01-ABS-01"
         payments:
           type: array
@@ -4720,3 +4730,17 @@ components:
           format: date-time
           example: "2020-06-26T01:02:03.967736+00:00"
           nullable: true
+
+    AbsenceCaseStatus:
+      description: Absence case status
+      type: string
+      enum:
+        [
+          "Adjudication",
+          "Approved",
+          "Closed",
+          "Completed",
+          "Declined",
+          "In Review",
+          "Intake In Progress",
+        ]

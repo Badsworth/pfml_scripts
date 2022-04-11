@@ -6,6 +6,7 @@ from pydantic import UUID4
 
 import massgov.pfml.util.logging
 from massgov.pfml.api.models.claims.common import (
+    AbsenceStatus,
     Address,
     ChangeRequestType,
     EmployerBenefit,
@@ -129,7 +130,7 @@ class ClaimResponse(PydanticBaseModel):
     fineos_notification_id: Optional[str]
     absence_period_start_date: Optional[date]
     absence_period_end_date: Optional[date]
-    claim_status: Optional[str]
+    claim_status: Optional[AbsenceStatus]
     claim_type_description: Optional[str]
     created_at: Optional[date]
     managed_requirements: Optional[List[ManagedRequirementResponse]]
@@ -140,7 +141,9 @@ class ClaimResponse(PydanticBaseModel):
     def from_orm(cls, claim: Claim) -> "ClaimResponse":
         claim_response = super().from_orm(claim)
         if claim.fineos_absence_status:
-            claim_response.claim_status = claim.fineos_absence_status.absence_status_description
+            claim_response.claim_status = AbsenceStatus(
+                claim.fineos_absence_status.absence_status_description
+            )
         if claim.claim_type:
             claim_response.claim_type_description = claim.claim_type.claim_type_description
         return claim_response
@@ -160,7 +163,7 @@ class DetailedClaimResponse(PydanticBaseModel):
     employer: Optional[EmployerResponse]
     employee: Optional[EmployeeBasicResponse]
     fineos_notification_id: Optional[str]
-    claim_status: Optional[str]
+    claim_status: Optional[AbsenceStatus]
     created_at: Optional[date]
     absence_periods: Optional[List[AbsencePeriodResponse]]
     managed_requirements: Optional[List[ManagedRequirementResponse]]
@@ -172,7 +175,9 @@ class DetailedClaimResponse(PydanticBaseModel):
     def from_orm(cls, claim: Claim) -> "DetailedClaimResponse":
         claim_response = super().from_orm(claim)
         if claim.fineos_absence_status:
-            claim_response.claim_status = claim.fineos_absence_status.absence_status_description
+            claim_response.claim_status = AbsenceStatus(
+                claim.fineos_absence_status.absence_status_description
+            )
         # Dropping data from DB acquired automatically through the super()_from_orm call.
         # The periods are populated using FINEOS API data.
         claim_response.absence_periods = []

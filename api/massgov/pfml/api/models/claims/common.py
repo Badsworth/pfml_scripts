@@ -16,6 +16,16 @@ from massgov.pfml.db.models.employees import LkChangeRequestType
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
 
+class AbsenceStatus(str, LookupEnum):
+    ADJUDICATION = "Adjudication"
+    APPROVED = "Approved"
+    CLOSED = "Closed"
+    COMPLETED = "Completed"
+    DECLINED = "Declined"
+    IN_REVIEW = "In Review"
+    INTAKE_IN_PROGRESS = "Intake In Progress"
+
+
 class Address(PydanticBaseModel):
     line_1: Optional[str]
     line_2: Optional[str]
