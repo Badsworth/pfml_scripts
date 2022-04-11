@@ -118,7 +118,7 @@ export default class InfraClient {
   }
 
   // "exitEvent" determines at which step we want to stop monitoring etl progress
-  // i.e if we want to register leave admins, we only need to monitor progress up until "fineos_eligibilty_feed_export" begins
+  // i.e if we want to register leave admins, we only need to monitor progress up until "fineos_eligibility_feed_export" begins
   async runDorEtl(
     exitEvent: SfnEventName = "fineos_eligibility_feed_export"
   ): Promise<boolean | void> {
