@@ -84,6 +84,7 @@ from massgov.pfml.fineos.exception import (
     FINEOSEntityNotFound,
     FINEOSFatalResponseError,
     FINEOSFatalUnavailable,
+    FINEOSUnprocessableEntity,
 )
 from massgov.pfml.fineos.factory import FINEOSClientConfig
 from massgov.pfml.fineos.models.customer_api.spec import (
@@ -4793,6 +4794,52 @@ def test_application_post_submit_fineos_register_api_errors(
         assert response_body.get("data").get("status") == ApplicationStatus.Started.value
 
 
+@mock.patch("massgov.pfml.api.applications.submit_application_to_fineos")
+def test_continue_submit_after_requirement_already_satisfied_error(
+    mock_submit_application_to_fineos,
+    client,
+    user,
+    auth_token,
+    test_db_session,
+):
+    # Boilerplate to create an application (copied from other tests in this file)
+    employer = EmployerFactory.create()
+    employee = EmployeeFactory.create()
+    application = ApplicationFactory.create(
+        user=user, employer_fein=employer.employer_fein, tax_identifier=employee.tax_identifier
+    )
+    WagesAndContributionsFactory.create(employer=employer, employee=employee)
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
+    ]
+    application.date_of_birth = date(1997, 6, 6)
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.hours_worked_per_week = 70
+    application.has_continuous_leave_periods = True
+    application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
+    test_db_session.commit()
+    # /Boilerplate
+
+    # Mock the error that FINEOS returns on submit when document requirements already satisfied
+    error = FINEOSUnprocessableEntity(
+        "upload_document",
+        200,
+        422,
+        "A document of type Identification Proof is not required for the case provided",
+    )
+    mock_submit_application_to_fineos.side_effect = error
+
+    # Call the submit endpoint
+    response = client.post(
+        "/v1/applications/{}/submit_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    # Check that the post succeeded despite the FINEOS error
+    assert response.status_code == 201
+
+
 def test_application_post_submit_complete_intake_fineos_api_errors(
     client, user, auth_token, test_db_session, monkeypatch
 ):
@@ -4930,6 +4977,7 @@ def test_application_post_submit_app_already_submitted(client, user, auth_token,
     ]
 
 
+# This test
 def test_application_post_submit_caring_leave_app_before_july(
     client, user, auth_token, test_db_session
 ):
