@@ -483,7 +483,8 @@ def submit(
                     application.application_id,
                 )
             )
-    for _complete_intake_future in as_completed(complete_intake_futures):
+    for complete_intake_future in as_completed(complete_intake_futures):
+        complete_intake_future.result()
         applications = application_without_claims_by_ssn_fein[ssn_fein_pair]
         application = next(
             application
