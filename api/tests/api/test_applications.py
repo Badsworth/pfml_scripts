@@ -5613,7 +5613,7 @@ def test_application_post_submit_to_fineos_reduced_schedule_leave(
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
 
-    assert capture[6][2]["absence_case"].reducedScheduleLeavePeriods == [
+    assert capture[7][2]["absence_case"].reducedScheduleLeavePeriods == [
         massgov.pfml.fineos.models.customer_api.ReducedScheduleLeavePeriod(
             startDate=date(2021, 1, 1),
             endDate=date(2021, 2, 9),
@@ -5672,7 +5672,7 @@ def test_application_post_submit_to_fineos_bonding_adoption(
     assert response.status_code == 201
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
-    captured_absence_case = capture[6][2]["absence_case"]
+    captured_absence_case = capture[7][2]["absence_case"]
 
     assert captured_absence_case.reason == LeaveReason.CHILD_BONDING.leave_reason_description
     assert (
@@ -5729,7 +5729,7 @@ def test_application_post_submit_to_fineos_bonding_foster(
     assert response.status_code == 201
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
-    captured_absence_case = capture[6][2]["absence_case"]
+    captured_absence_case = capture[7][2]["absence_case"]
 
     assert captured_absence_case.reason == LeaveReason.CHILD_BONDING.leave_reason_description
     assert (
@@ -5785,7 +5785,7 @@ def test_application_post_submit_to_fineos_bonding_newborn(
     assert response.status_code == 201
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
-    captured_absence_case = capture[6][2]["absence_case"]
+    captured_absence_case = capture[7][2]["absence_case"]
 
     assert captured_absence_case.reason == LeaveReason.CHILD_BONDING.leave_reason_description
     assert (
@@ -5838,7 +5838,7 @@ def test_application_post_submit_to_fineos_medical(client, user, auth_token, tes
     assert response.status_code == 201
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
-    captured_absence_case = capture[6][2]["absence_case"]
+    captured_absence_case = capture[7][2]["absence_case"]
 
     # Maps to FINEOS:
     # Reason = Serious Health Condition - Employee
@@ -5895,7 +5895,7 @@ def test_application_post_submit_to_fineos_pregnant_true(client, user, auth_toke
     assert response.status_code == 201
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
-    captured_absence_case = capture[6][2]["absence_case"]
+    captured_absence_case = capture[7][2]["absence_case"]
 
     # Maps to FINEOS:
     # Reason = Pregnancy/Maternity
@@ -5945,7 +5945,7 @@ def test_application_post_submit_to_fineos_pregnant(client, user, auth_token, te
     assert response.status_code == 201
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
-    captured_absence_case = capture[6][2]["absence_case"]
+    captured_absence_case = capture[7][2]["absence_case"]
 
     # Maps to FINEOS:
     # Reason = Pregnancy/Maternity
@@ -6171,7 +6171,7 @@ def test_application_post_submit_to_fineos_caring_leave(client, user, auth_token
     )
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
-    captured_absence_case = capture[6][2]["absence_case"]
+    captured_absence_case = capture[7][2]["absence_case"]
 
     assert response.status_code == 201
     assert (
