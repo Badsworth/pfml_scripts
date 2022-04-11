@@ -127,6 +127,7 @@ const useChangeRequestsLogic = ({
   return {
     changeRequests,
     hasLoadedChangeRequests,
+    isLoadingChangeRequests,
     loadAll,
     create,
     destroy,

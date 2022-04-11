@@ -14,30 +14,37 @@ import usePortalFlow from "../../src/hooks/usePortalFlow";
 
 jest.mock("../../src/services/tracker");
 
+function mockChangeRequestFetch(mockResponseData = [], warnings) {
+  mockFetch({
+    response: {
+      data: mockResponseData,
+      warnings,
+    },
+  });
+}
+
+let changeRequestsLogic, errorsLogic, portalFlow;
+function setup() {
+  const { waitFor } = renderHook(() => {
+    portalFlow = usePortalFlow();
+    errorsLogic = useErrorsLogic({ portalFlow });
+    changeRequestsLogic = useChangeRequestsLogic({ errorsLogic, portalFlow });
+  });
+
+  return { waitFor };
+}
+
 describe(useChangeRequestsLogic, () => {
-  function mockChangeRequestFetch(mockResponseData = [], warnings) {
-    mockFetch({
-      response: {
-        data: mockResponseData,
-        warnings,
-      },
-    });
-  }
-
-  let changeRequestsLogic, errorsLogic, portalFlow;
-  function setup() {
-    const { waitFor } = renderHook(() => {
-      portalFlow = usePortalFlow();
-      errorsLogic = useErrorsLogic({ portalFlow });
-      changeRequestsLogic = useChangeRequestsLogic({ errorsLogic, portalFlow });
-    });
-
-    return { waitFor };
-  }
+  mockAuth();
   it("sets initial change request data to empty collection", () => {
     setup();
 
-    expect(changeRequestLogic.changeRequests).toMatchInlineSnapshots();
+    expect(changeRequestsLogic.changeRequests).toMatchInlineSnapshot(`
+      ApiResourceCollection {
+        "idKey": "change_request_id",
+        "map": Map {},
+      }
+    `);
   });
 
   describe("loadAll", () => {
@@ -46,7 +53,8 @@ describe(useChangeRequestsLogic, () => {
       mockChangeRequestFetch([
         { change_request_id: "id-1" },
         { change_request_id: "id-2" },
-      ])(({ waitFor } = setup()));
+      ]);
+      ({ waitFor } = setup());
     });
 
     it("sends API request", async () => {
@@ -54,8 +62,8 @@ describe(useChangeRequestsLogic, () => {
         await changeRequestsLogic.loadAll("fineos-absence-id");
       });
 
-      expect(fetch).toHaveBeenCalledWith(
-        `${process.env.apiUrl}/change-request/?fineos_absence_id=fineos-absence-id`,
+      expect(global.fetch).toHaveBeenCalledWith(
+        `${process.env.apiUrl}/change-request?fineos_absence_id=fineos-absence-id`,
         expect.objectContaining({ method: "GET" })
       );
     });
@@ -98,9 +106,8 @@ describe(useChangeRequestsLogic, () => {
   });
 
   describe("create", () => {
-    let waitFor;
     beforeEach(() => {
-      ({ waitFor } = setup());
+      setup();
       mockChangeRequestFetch({ change_request_id: "id-1" });
     });
 
@@ -108,7 +115,7 @@ describe(useChangeRequestsLogic, () => {
       await act(
         async () => await changeRequestsLogic.create("fineos-absence-id")
       );
-      expect(fetch).toHaveBeenCalledWith(
+      expect(global.fetch).toHaveBeenCalledWith(
         `${process.env.apiUrl}/change-request/?fineos_absence_id=fineos-absence-id`,
         expect.objectContaining({ method: "POST" })
       );
@@ -138,7 +145,7 @@ describe(useChangeRequestsLogic, () => {
     });
 
     it("sends API request", () => {
-      expect(fetch).toHaveBeenCalledWith(
+      expect(global.fetch).toHaveBeenCalledWith(
         `${process.env.apiUrl}/change-request/id-1`,
         expect.objectContaining({ method: "DELETE" })
       );
@@ -154,52 +161,63 @@ describe(useChangeRequestsLogic, () => {
   });
 
   describe("update", () => {
-    describe("when there are no issues", () => {
-      const patchData = {
-        startDate: "2022-12-31",
-      };
+    const patchData = {
+      startDate: "2022-12-31",
+    };
 
-      beforeEach(async () => {
-        setup();
-        mockChangeRequestFetch({
-          change_request_id: "change-request-id",
-          ...patchData,
-        });
-        await act(async () => {
-          await changeRequestsLogic.update("change-request-id", patchData);
-        });
+    beforeEach(async () => {
+      setup();
+      mockChangeRequestFetch({
+        change_request_id: "change-request-id",
+        ...patchData,
       });
-
-      it("sends API request", () => {
-        expect(fetch).toHaveBeenCalledWith(
-          `${process.env.apiUrl}/change-request/change-request-id`,
-          expect.objectContaining({ method: "PATCH" })
-        );
-      });
-
-      it("sets change request", () => {
-        expect(
-          changeRequestsLogic.changeRequests.getItem("change-request-id")
-        ).toMatchInlineSnapshot(`undefined`);
+      await act(async () => {
+        await changeRequestsLogic.update("change-request-id", patchData);
       });
     });
 
-    describe("when there are issues", () => {
-      setup();
-
-      mockChangeRequestFetch(
-        {
-          change_request_id: "change-request-id",
-        },
-        [{ type: "invalid" }]
+    it("sends API request", () => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        `${process.env.apiUrl}/change-request/change-request-id`,
+        expect.objectContaining({ method: "PATCH" })
       );
+    });
 
+    it("sets change request", () => {
+      expect(changeRequestsLogic.changeRequests.getItem("change-request-id"))
+        .toMatchInlineSnapshot(`
+        ChangeRequest {
+          "change_request_id": "change-request-id",
+          "change_request_type": undefined,
+          "end_date": undefined,
+          "fineos_absence_id": undefined,
+          "startDate": "2022-12-31",
+          "start_date": undefined,
+          "submitted_time": undefined,
+        }
+      `);
+    });
+
+    describe("when warnings are returned", () => {
       it("raises ValidationError", async () => {
+        // ValidationErrors are filtered by page depending on
+        // what fields are on that page. We need to mock portalFlow
+        // with a page context so we can test that ValidationErrors
+        // are returned correctly.
+        const fieldName = "start_date";
+        portalFlow.page = { meta: { fields: [fieldName] } };
+
+        mockChangeRequestFetch(
+          {
+            change_request_id: "change-request-id",
+          },
+          [{ field: fieldName, type: "invalid" }]
+        );
         const catchErrorSpy = jest.spyOn(errorsLogic, "catchError");
         await act(async () => {
           await changeRequestsLogic.update("change-request-id", {});
         });
-        expect(catchErrorSpy).toHaveBeenCalledWith(ValidationError);
+        expect(catchErrorSpy).toHaveBeenCalledWith(expect.any(ValidationError));
       });
     });
   });
@@ -214,16 +232,24 @@ describe(useChangeRequestsLogic, () => {
     });
 
     it("sends API request", () => {
-      expect(fetch).toHaveBeenCalledWith(
+      expect(global.fetch).toHaveBeenCalledWith(
         `${process.env.apiUrl}/change-request/change-request-id/submit`,
         expect.objectContaining({ method: "POST" })
       );
     });
 
     it("sets change request", () => {
-      expect(
-        changeRequestsLogic.changeRequests.getItem("change-request-id")
-      ).toMatchInlineSnapshot(`undefined`);
+      expect(changeRequestsLogic.changeRequests.getItem("change-request-id"))
+        .toMatchInlineSnapshot(`
+        ChangeRequest {
+          "change_request_id": "change-request-id",
+          "change_request_type": undefined,
+          "end_date": undefined,
+          "fineos_absence_id": undefined,
+          "start_date": undefined,
+          "submitted_time": undefined,
+        }
+      `);
     });
   });
 });
