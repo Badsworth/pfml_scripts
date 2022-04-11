@@ -103,6 +103,33 @@ describe(useChangeRequestsLogic, () => {
 
       expect(changeRequestsLogic.hasLoadedChangeRequests).toBe(true);
     });
+
+    it("does not load if already loaded", async () => {
+      await act(
+        async () => await changeRequestsLogic.loadAll("fineos-absence-id")
+      );
+
+      await act(
+        async () => await changeRequestsLogic.loadAll("fineos-absence-id")
+      );
+
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not load while loading", async () => {
+      await act(async () => {
+        await act(async () => {
+          changeRequestsLogic.loadAll("fineos-absence-id");
+
+          await waitFor(() => {
+            expect(changeRequestsLogic.isLoadingChangeRequests).toBe(true);
+            changeRequestsLogic.loadAll("fineos-absence-id");
+          });
+        });
+      });
+
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("create", () => {
