@@ -18,26 +18,12 @@ export default {
   args: {
     document: "Approval notice",
     leaveDurationType: ["Continuous"],
-    status: "Approved",
   },
   argTypes: {
     leaveDurationType: {
       control: {
         type: "check",
         options: ["Continuous", "Intermittent", "Reduced"],
-      },
-    },
-    status: {
-      control: {
-        type: "radio",
-        options: [
-          "Approved",
-          "Declined",
-          "Closed",
-          "Completed",
-          "Adjudication",
-          "Intake In Progress",
-        ],
       },
     },
     document: {
@@ -57,28 +43,24 @@ export default {
 };
 
 export const Default = ({
-  status,
   document,
   leaveDurationType,
 }: {
-  status: string;
   document: string;
   leaveDurationType: string;
 }) => {
-  let claimBuilder = new MockEmployerClaimBuilder()
-    .status(status)
-    .bondingLeaveReason();
+  let claimBuilder = new MockEmployerClaimBuilder();
 
   if (leaveDurationType.includes("Continuous")) {
-    claimBuilder = claimBuilder.continuous();
+    claimBuilder = claimBuilder.continuousAbsencePeriod();
   }
 
   if (leaveDurationType.includes("Intermittent")) {
-    claimBuilder = claimBuilder.intermittent();
+    claimBuilder = claimBuilder.intermittentAbsencePeriod();
   }
 
   if (leaveDurationType.includes("Reduced")) {
-    claimBuilder = claimBuilder.reducedSchedule();
+    claimBuilder = claimBuilder.reducedScheduleAbsencePeriod();
   }
 
   const documentData: BenefitsApplicationDocument = {

@@ -1,16 +1,13 @@
-import BaseBenefitsApplication, {
-  BaseLeavePeriod,
-} from "./BaseBenefitsApplication";
+import { compact, merge } from "lodash";
 import { AbsencePeriod } from "./AbsencePeriod";
 import Address from "./Address";
 import ConcurrentLeave from "./ConcurrentLeave";
 import EmployerBenefit from "./EmployerBenefit";
-import { IntermittentLeavePeriod } from "./BenefitsApplication";
-import { ManagedRequirement } from "../models/ManagedRequirement";
+import LeaveReason from "./LeaveReason";
+import { ManagedRequirement } from "./ManagedRequirement";
 import PreviousLeave from "./PreviousLeave";
 import isBlank from "../utils/isBlank";
 import { isReviewable } from "src/utils/isReviewable";
-import { merge } from "lodash";
 
 /**
  * This model represents a Claim record that is formed from data directly pulled
@@ -18,7 +15,7 @@ import { merge } from "lodash";
  * from the API's Claims table, which is represented by the Claim model.
  * TODO (PORTAL-477): Rename this model to clarify this nuance.
  */
-class EmployerClaim extends BaseBenefitsApplication {
+class EmployerClaimReview {
   absence_periods: AbsencePeriod[];
   employer_id: string;
   fineos_absence_id: string;
@@ -34,7 +31,6 @@ class EmployerClaim extends BaseBenefitsApplication {
   hours_worked_per_week: number | null = null;
   managed_requirements: ManagedRequirement[] = [];
   residential_address: Address;
-  status: string;
   tax_identifier: string | null = null;
   previous_leaves: PreviousLeave[];
   // does this claim use the old or new version of other leave / income eforms?
@@ -46,16 +42,7 @@ class EmployerClaim extends BaseBenefitsApplication {
     same_reason: string | null;
   };
 
-  leave_details: {
-    continuous_leave_periods: BaseLeavePeriod[];
-    employer_notification_date: string | null;
-    intermittent_leave_periods: IntermittentLeavePeriod[];
-    reason: string | null;
-    reduced_schedule_leave_periods: BaseLeavePeriod[];
-  };
-
-  constructor(attrs: Partial<EmployerClaim>) {
-    super();
+  constructor(attrs: Partial<EmployerClaimReview>) {
     // Recursively merge with the defaults
     merge(this, attrs);
 
@@ -119,6 +106,33 @@ class EmployerClaim extends BaseBenefitsApplication {
 
     return endDates[endDates.length - 1];
   }
+
+  /**
+   * Determine if claim has an intermittent absence period
+   */
+  get hasIntermittentPeriod(): boolean {
+    return this.absence_periods.some(
+      (absence_period) => absence_period.period_type === "Intermittent"
+    );
+  }
+
+  /**
+   * Returns full name accounting for any false values
+   */
+  get fullName() {
+    return compact([this.first_name, this.middle_name, this.last_name]).join(
+      " "
+    );
+  }
+
+  /**
+   * Determine if claim has a Caring Leave absence period
+   */
+  get hasCaringLeavePeriod(): boolean {
+    return this.absence_periods.some(
+      (absence_period) => absence_period.reason === LeaveReason.care
+    );
+  }
 }
 
-export default EmployerClaim;
+export default EmployerClaimReview;

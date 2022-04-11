@@ -1,7 +1,7 @@
 import { ClaimDocument, DocumentType } from "../../models/Document";
 import User, { UserLeaveAdministrator } from "../../models/User";
 import ApiResourceCollection from "../../models/ApiResourceCollection";
-import EmployerClaim from "../../models/EmployerClaim";
+import EmployerClaimReview from "../../models/EmployerClaimReview";
 import { faker } from "@faker-js/faker";
 import { uniqueId } from "lodash";
 
@@ -20,7 +20,7 @@ export const addEmployerMock = jest.fn().mockResolvedValue({
 
 export const getClaimMock = jest.fn().mockResolvedValue((absenceId: string) => {
   return {
-    claim: new EmployerClaim({
+    claim: new EmployerClaimReview({
       absence_periods: [],
       fineos_absence_id: absenceId,
     }),

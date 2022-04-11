@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import withUser, { WithUserProps } from "./withUser";
-import EmployerClaim from "../models/EmployerClaim";
+import EmployerClaimReview from "../models/EmployerClaimReview";
 import PageNotFound from "../components/PageNotFound";
 import { Spinner } from "../components/core/Spinner";
 import { useTranslation } from "react-i18next";
@@ -9,7 +9,7 @@ interface QueryForWithEmployerClaim {
   absence_id?: string;
 }
 export interface WithEmployerClaimProps extends WithUserProps {
-  claim: EmployerClaim;
+  claim: EmployerClaimReview;
 }
 
 /**
