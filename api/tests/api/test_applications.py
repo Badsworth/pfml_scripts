@@ -5549,7 +5549,7 @@ def test_application_post_submit_to_fineos_intermittent_leave(
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
 
-    assert capture[6][2]["absence_case"].episodicLeavePeriods == [
+    assert capture[7][2]["absence_case"].episodicLeavePeriods == [
         massgov.pfml.fineos.models.customer_api.EpisodicLeavePeriod(
             startDate=date(2021, 1, 1),
             endDate=date(2021, 3, 2),
