@@ -4241,6 +4241,30 @@ def test_application_post_submit_app_split_across_by_both_sumbittable(
             },
         ),
         (
+            "update_customer_contact_details",
+            fineos_user_id,
+            {
+                "contact_details": massgov.pfml.fineos.models.customer_api.ContactDetails(
+                    phoneNumbers=[
+                        massgov.pfml.fineos.models.customer_api.PhoneNumber(
+                            id=1,
+                            preferred=None,
+                            phoneNumberType="Cell",
+                            intCode="1",
+                            areaCode="240",
+                            telephoneNo="4879945",
+                            classExtensionInformation=None,
+                        )
+                    ],
+                    emailAddresses=[
+                        massgov.pfml.fineos.models.customer_api.EmailAddressV20(
+                            emailAddress=application.user.email_address
+                        )
+                    ],
+                )
+            },
+        ),
+        (
             "start_absence",
             fineos_user_id,
             {
@@ -4267,30 +4291,6 @@ def test_application_post_submit_app_split_across_by_both_sumbittable(
                     employerNotified=False,
                     employerNotificationDate=None,
                     employerNotificationMethod=None,
-                )
-            },
-        ),
-        (
-            "update_customer_contact_details",
-            fineos_user_id,
-            {
-                "contact_details": massgov.pfml.fineos.models.customer_api.ContactDetails(
-                    phoneNumbers=[
-                        massgov.pfml.fineos.models.customer_api.PhoneNumber(
-                            id=1,
-                            preferred=None,
-                            phoneNumberType="Cell",
-                            intCode="1",
-                            areaCode="240",
-                            telephoneNo="4879945",
-                            classExtensionInformation=None,
-                        )
-                    ],
-                    emailAddresses=[
-                        massgov.pfml.fineos.models.customer_api.EmailAddressV20(
-                            emailAddress=application.user.email_address
-                        )
-                    ],
                 )
             },
         ),
@@ -4383,6 +4383,30 @@ def test_application_post_submit_app_split_across_by_both_sumbittable(
             },
         ),
         (
+            "update_customer_contact_details",
+            fineos_user_id,
+            {
+                "contact_details": massgov.pfml.fineos.models.customer_api.ContactDetails(
+                    phoneNumbers=[
+                        massgov.pfml.fineos.models.customer_api.PhoneNumber(
+                            id=1,
+                            preferred=None,
+                            phoneNumberType="Cell",
+                            intCode="1",
+                            areaCode="240",
+                            telephoneNo="4879945",
+                            classExtensionInformation=None,
+                        )
+                    ],
+                    emailAddresses=[
+                        massgov.pfml.fineos.models.customer_api.EmailAddressV20(
+                            emailAddress=application.user.email_address
+                        )
+                    ],
+                )
+            },
+        ),
+        (
             "start_absence",
             fineos_user_id,
             {
@@ -4409,30 +4433,6 @@ def test_application_post_submit_app_split_across_by_both_sumbittable(
                     employerNotified=False,
                     employerNotificationDate=None,
                     employerNotificationMethod=None,
-                )
-            },
-        ),
-        (
-            "update_customer_contact_details",
-            fineos_user_id,
-            {
-                "contact_details": massgov.pfml.fineos.models.customer_api.ContactDetails(
-                    phoneNumbers=[
-                        massgov.pfml.fineos.models.customer_api.PhoneNumber(
-                            id=1,
-                            preferred=None,
-                            phoneNumberType="Cell",
-                            intCode="1",
-                            areaCode="240",
-                            telephoneNo="4879945",
-                            classExtensionInformation=None,
-                        )
-                    ],
-                    emailAddresses=[
-                        massgov.pfml.fineos.models.customer_api.EmailAddressV20(
-                            emailAddress=application.user.email_address
-                        )
-                    ],
                 )
             },
         ),
@@ -5442,6 +5442,30 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
             },
         ),
         (
+            "update_customer_contact_details",
+            fineos_user_id,
+            {
+                "contact_details": massgov.pfml.fineos.models.customer_api.ContactDetails(
+                    phoneNumbers=[
+                        massgov.pfml.fineos.models.customer_api.PhoneNumber(
+                            id=111,
+                            preferred=None,
+                            phoneNumberType="Cell",
+                            intCode="1",
+                            areaCode="240",
+                            telephoneNo="4879945",
+                            classExtensionInformation=None,
+                        )
+                    ],
+                    emailAddresses=[
+                        massgov.pfml.fineos.models.customer_api.EmailAddressV20(
+                            emailAddress=application.user.email_address
+                        )
+                    ],
+                )
+            },
+        ),
+        (
             "start_absence",
             fineos_user_id,
             {
@@ -5468,30 +5492,6 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
                     employerNotified=True,
                     employerNotificationDate=date(2021, 1, 7),
                     employerNotificationMethod=None,
-                )
-            },
-        ),
-        (
-            "update_customer_contact_details",
-            fineos_user_id,
-            {
-                "contact_details": massgov.pfml.fineos.models.customer_api.ContactDetails(
-                    phoneNumbers=[
-                        massgov.pfml.fineos.models.customer_api.PhoneNumber(
-                            id=111,
-                            preferred=None,
-                            phoneNumberType="Cell",
-                            intCode="1",
-                            areaCode="240",
-                            telephoneNo="4879945",
-                            classExtensionInformation=None,
-                        )
-                    ],
-                    emailAddresses=[
-                        massgov.pfml.fineos.models.customer_api.EmailAddressV20(
-                            emailAddress=application.user.email_address
-                        )
-                    ],
                 )
             },
         ),
