@@ -20,20 +20,20 @@ def search_envelope_log_info(
 
     log_info: Dict[str, LogTypes] = {
         # top level fields info
-        "request_top_level_fields_provided": ",".join(request.__fields_set__),
+        "request_top_level_fields_provided": ",".join(sorted(request.__fields_set__)),
         "request_top_level_fields_provided_length": len(request.__fields_set__),
         # order fields info
-        "order_fields_provided": ",".join(request.order.__fields_set__),
+        "order_fields_provided": ",".join(sorted(request.order.__fields_set__)),
         "order_fields_provided_length": len(request.order.__fields_set__),
         "order.by": request.order.by,
         "order.direction": request.order.direction.value,
         # paging fields info
-        "paging_fields_provided": ",".join(request.paging.__fields_set__),
+        "paging_fields_provided": ",".join(sorted(request.paging.__fields_set__)),
         "paging_fields_provided_length": len(request.paging.__fields_set__),
         "paging.offset": request.paging.offset,
         "paging.size": request.paging.size,
         # high-level terms fields info
-        "terms_fields_provided": ",".join(USER_PROVIDED_TERMS),
+        "terms_fields_provided": ",".join(sorted(USER_PROVIDED_TERMS)),
         "terms_fields_provided_length": len(USER_PROVIDED_TERMS),
     }
 

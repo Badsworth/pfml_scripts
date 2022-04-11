@@ -76,7 +76,7 @@ def test_search_request_log_info(mocker):
         pytest.param(
             SearchEnvelope(terms=EmptyTerms(), order=OrderData(by="foo")),
             {
-                "request_top_level_fields_provided": "terms,order",
+                "request_top_level_fields_provided": "order,terms",
                 "request_top_level_fields_provided_length": 2,
                 "terms_fields_provided": "",
                 "terms_fields_provided_length": 0,
