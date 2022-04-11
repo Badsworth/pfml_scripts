@@ -561,7 +561,7 @@ class PaymentDetailsFactory(BaseFactory):
         "date_between_dates", date_start=date(2021, 1, 16), date_end=date(2021, 1, 28)
     )
 
-    payment_details_c_value = factory.Sequence(lambda n: "%d" % n)
+    payment_details_c_value = "7806"
     payment_details_i_value = factory.Sequence(lambda n: "%d" % n)
 
     amount = Generators.Money
