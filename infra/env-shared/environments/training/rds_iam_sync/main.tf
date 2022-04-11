@@ -7,8 +7,8 @@ terraform {
     aws     = "3.74.1"
   }
 }
-data "aws_ssm_parameter" "rds-iam-refresh" {
-  name  = "rds-iam_refresh"
+data "aws_ssm_parameter" "/service/pfml-api/github/trigger-rds-iam-sync-token" {
+  name  = "/service/pfml-api/github/trigger-rds-iam-sync-token"
   type  = "String"
   value = "Hello World"
 }

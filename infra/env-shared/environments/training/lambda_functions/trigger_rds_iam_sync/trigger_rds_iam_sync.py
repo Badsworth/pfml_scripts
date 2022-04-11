@@ -23,3 +23,12 @@ def lambda_handler(event, context=None):
 
 if __name__ == "__main__":
     lambda_handler(None)
+
+# to do
+# Add repo dispatch to rds_iam_sync github action
+# - My branch  
+# - Main
+# Test repo dispatch to rds_iam_sync github action 
+# - My branch  
+# - Main
+

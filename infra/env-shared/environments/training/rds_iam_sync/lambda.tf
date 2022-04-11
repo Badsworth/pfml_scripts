@@ -19,10 +19,10 @@ resource "aws_lambda_function" "iam_refresh" {
 
 data "archive_file" "iam_refresh" {
   type        = "zip"
-  output_path = "./.zip/aws_iam_refresh.zip"
+  output_path = "./.zip/trigger_rds_iam_sync.zip"
 
   source {
     filename = ".py"
-    content  = file("./aws_iam_refresh.py")
+    content  = file("./trigger_rds_iam_sync.py")
   }
 }
