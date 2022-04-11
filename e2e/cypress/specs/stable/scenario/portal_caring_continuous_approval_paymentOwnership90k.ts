@@ -48,15 +48,17 @@ describe("Submit caring application via the web portal: Adjudication Approval & 
     });
   });
 
-  it(
-    "CSR rep will approve continous caring application",
-    { retries: 0 },
-    () => {
-      cy.dependsOnPreviousPass();
-      fineos.before();
-      cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
-        cy.unstash<DehydratedClaim>("claim").then((claim) => {
-          const claimPage = fineosPages.ClaimPage.visit(fineos_absence_id)
+  it("CSR rep will approve continous caring application", () => {
+    cy.dependsOnPreviousPass();
+    fineos.before();
+    cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
+      cy.unstash<DehydratedClaim>("claim").then((claim) => {
+        cy.tryCount().then((tryCount) => {
+          if (tryCount > 0) {
+            fineos.assertClaimStatus("Approved");
+            return;
+          }
+          fineosPages.ClaimPage.visit(fineos_absence_id)
             .tasks((tasks) => {
               claim.documents.forEach((doc) =>
                 tasks.assertTaskExists(
@@ -75,16 +77,12 @@ describe("Submit caring application via the web portal: Adjudication Approval & 
                 )
                 .certificationPeriods((certPreiods) => certPreiods.prefill())
                 .acceptLeavePlan();
-            });
-          if (config("HAS_APRIL_UPGRADE") === "true") {
-            claimPage.approve("Approved", true);
-          } else {
-            claimPage.approve("Approved", false);
-          }
+            })
+            .approve("Approved", config("HAS_APRIL_UPGRADE") === "true");
         });
       });
-    }
-  );
+    });
+  });
 
   it(
     "Should be able to confirm the weekly payment amount and check Ownership is Assigned To",
