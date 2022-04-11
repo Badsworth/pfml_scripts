@@ -64,6 +64,9 @@ class ApplicationsContainer:
     ) -> models.customer_api.AbsenceCase:
         return self.absence_cases[application_id]
 
+    def does_claim_exist_for_any_application(self):
+        return True in (application.claim is not None for application in self.applications)
+
 
 def _thread_safe_read_employer(fein: str) -> Dict[str, models.OCOrganisation]:
     fineos_client = fineos.create_client()
@@ -292,30 +295,66 @@ def submit(
 
     update_customer_details_futures = []
     for container in applications_containers:
-        assert container.customer
-        fineos_employer = all_fineos_employers[container.ssn_fein_pair.employer_fein]
+        if not container.does_claim_exist_for_any_application():
+            assert container.customer
+            fineos_employer = all_fineos_employers[container.ssn_fein_pair.employer_fein]
 
-        update_customer_details_futures.append(
-            executor.submit(_update_customer_details, container.fineos_web_id, container.customer)
-        )
+            update_customer_details_futures.append(
+                executor.submit(
+                    _update_customer_details, container.fineos_web_id, container.customer
+                )
+            )
     wait(update_customer_details_futures)
 
     update_occupation_futures = []
     for container in applications_containers:
-        assert container.customer
-        fineos_employer = all_fineos_employers[container.ssn_fein_pair.employer_fein]
+        if not container.does_claim_exist_for_any_application():
+            assert container.customer
+            fineos_employer = all_fineos_employers[container.ssn_fein_pair.employer_fein]
 
-        update_occupation_futures.append(
-            executor.submit(
-                _update_occupation,  # TODO this should be concurrently done for the applications
-                container.fineos_web_id,
-                container.customer,
-                fineos_employer,
-                container.applications,
+            update_occupation_futures.append(
+                executor.submit(
+                    _update_occupation,  # TODO this should be concurrently done for the applications
+                    container.fineos_web_id,
+                    container.customer,
+                    fineos_employer,
+                    container.applications,
+                )
             )
-        )
 
     wait(update_occupation_futures)
+
+    updated_customer_contact_details_futures = []
+    for container in applications_containers:
+        if not container.does_claim_exist_for_any_application():
+            for application in applications:
+                updated_customer_contact_details_futures.append(
+                    executor.submit(
+                        _update_customer_contact_details,
+                        container.ssn_fein_pair,
+                        container.fineos_web_id,
+                        container.customer_contact_details,
+                        application.application_id,
+                    )
+                )
+
+    for update_customer_contact_details_future in as_completed(
+        updated_customer_contact_details_futures
+    ):
+        (
+            ssn_fein_pair,
+            application_id,
+            updated_contact_details,
+        ) = update_customer_contact_details_future.result()
+        container = next(
+            container
+            for container in applications_containers
+            if container.ssn_fein_pair == ssn_fein_pair
+        )
+        application = container.get_application(application_id)
+        phone_numbers = updated_contact_details.phoneNumbers
+        if phone_numbers is not None and len(phone_numbers) > 0:
+            application.phone.fineos_phone_id = phone_numbers[0].id
 
     create_absence_futures = []
     for container in applications_containers:
@@ -391,37 +430,6 @@ def submit(
         if application.organization_unit_id:
             new_claim.organization_unit_id = application.organization_unit_id
         application.claim = new_claim
-
-    updated_customer_contact_details_futures = []
-    for container in applications_containers:
-        for application in applications:
-            updated_customer_contact_details_futures.append(
-                executor.submit(
-                    _update_customer_contact_details,
-                    container.ssn_fein_pair,
-                    container.fineos_web_id,
-                    container.customer_contact_details,
-                    application.application_id,
-                )
-            )
-
-    for update_customer_contact_details_future in as_completed(
-        updated_customer_contact_details_futures
-    ):
-        (
-            ssn_fein_pair,
-            application_id,
-            updated_contact_details,
-        ) = update_customer_contact_details_future.result()
-        container = next(
-            container
-            for container in applications_containers
-            if container.ssn_fein_pair == ssn_fein_pair
-        )
-        application = container.get_application(application_id)
-        phone_numbers = updated_contact_details.phoneNumbers
-        if phone_numbers is not None and len(phone_numbers) > 0:
-            application.phone.fineos_phone_id = phone_numbers[0].id
 
     update_reflexive_questions_futures = []
     for container in applications_containers:
