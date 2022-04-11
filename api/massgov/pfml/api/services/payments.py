@@ -248,8 +248,6 @@ def to_response_dict(payment_data: List[PaymentContainer], absence_case_id: Opti
         payments.append(
             PaymentResponse(
                 payment_id=payment.payment_id,
-                fineos_c_value=payment.fineos_pei_c_value,  # type: ignore
-                fineos_i_value=payment.fineos_pei_i_value,  # type: ignore
                 period_start_date=payment.period_start_date,  # type: ignore
                 period_end_date=payment.period_end_date,  # type: ignore
                 amount=scenario_data.amount,

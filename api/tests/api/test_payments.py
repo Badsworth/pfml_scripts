@@ -140,8 +140,6 @@ def test_get_payments_200(
 
     assert payment_response == {
         "payment_id": str(payment.payment_id),
-        "fineos_c_value": str(payment.fineos_pei_c_value),
-        "fineos_i_value": str(payment.fineos_pei_i_value),
         "period_start_date": str(payment.period_start_date),
         "period_end_date": str(payment.period_end_date),
         "amount": amount,
@@ -201,8 +199,6 @@ def test_get_payments_200_pending_validation_scenario_no_prenote_sent_at(
 
     assert payment_response == {
         "payment_id": str(payment.payment_id),
-        "fineos_c_value": str(payment.fineos_pei_c_value),
-        "fineos_i_value": str(payment.fineos_pei_i_value),
         "period_start_date": str(payment.period_start_date),
         "period_end_date": str(payment.period_end_date),
         "amount": None,
@@ -261,8 +257,6 @@ def test_get_payments_200_range_before_today(client, auth_token, user, test_db_s
 
     assert payment_response == {
         "payment_id": str(payment.payment_id),
-        "fineos_c_value": str(payment.fineos_pei_c_value),
-        "fineos_i_value": str(payment.fineos_pei_i_value),
         "period_start_date": str(payment.period_start_date),
         "period_end_date": str(payment.period_end_date),
         "amount": None,
@@ -319,8 +313,6 @@ def test_get_payments_200_cancelled_payments(client, auth_token, user, test_db_s
 
     assert payment_response == {
         "payment_id": str(payment.payment_id),
-        "fineos_c_value": str(payment.fineos_pei_c_value),
-        "fineos_i_value": str(payment.fineos_pei_i_value),
         "period_start_date": str(payment.period_start_date),
         "period_end_date": str(payment.period_end_date),
         "amount": Decimal("0.00"),
@@ -375,8 +367,6 @@ def test_get_payments_200_zero_dollar(client, auth_token, user, test_db_session)
 
     assert payment_response == {
         "payment_id": str(payment.payment_id),
-        "fineos_c_value": str(payment.fineos_pei_c_value),
-        "fineos_i_value": str(payment.fineos_pei_i_value),
         "period_start_date": str(payment.period_start_date),
         "period_end_date": str(payment.period_end_date),
         "amount": Decimal("0.00"),
@@ -425,8 +415,6 @@ def test_get_payments_200_legacy_payments(client, auth_token, user, test_db_sess
 
     assert payment_response == {
         "payment_id": str(payment.payment_id),
-        "fineos_c_value": str(payment.fineos_pei_c_value),
-        "fineos_i_value": str(payment.fineos_pei_i_value),
         "period_start_date": str(payment.period_start_date),
         "period_end_date": str(payment.period_end_date),
         "amount": 750.67,
@@ -494,8 +482,6 @@ def test_get_payments_returns_200_when_no_payment_method(client, auth_token, use
 
     assert payment_response == {
         "payment_id": str(payment.payment_id),
-        "fineos_c_value": str(payment.fineos_pei_c_value),
-        "fineos_i_value": str(payment.fineos_pei_i_value),
         "period_start_date": str(payment.period_start_date),
         "period_end_date": str(payment.period_end_date),
         "amount": 750.67,

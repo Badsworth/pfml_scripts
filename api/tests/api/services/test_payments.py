@@ -632,8 +632,6 @@ def test_get_payments_with_status(test_db_session, caplog):
         resp_payment = payment_response["payments"][i]
 
         assert resp_payment["payment_id"] == expected_payment.payment_id
-        assert resp_payment["fineos_c_value"] == expected_payment.fineos_pei_c_value
-        assert resp_payment["fineos_i_value"] == expected_payment.fineos_pei_i_value
         assert resp_payment["period_start_date"] == expected_payment.period_start_date
         assert resp_payment["period_end_date"] == expected_payment.period_end_date
 
@@ -837,8 +835,6 @@ def validate_payment_matches(
 ):
     # These fields never vary and are just passed through from the payment itself
     assert payment_response["payment_id"] == expected_payment.payment_id
-    assert payment_response["fineos_c_value"] == expected_payment.fineos_pei_c_value
-    assert payment_response["fineos_i_value"] == expected_payment.fineos_pei_i_value
     assert payment_response["period_start_date"] == expected_payment.period_start_date
     assert payment_response["period_end_date"] == expected_payment.period_end_date
     assert (
