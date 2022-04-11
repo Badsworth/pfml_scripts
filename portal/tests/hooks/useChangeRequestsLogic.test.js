@@ -1,13 +1,6 @@
 import { act, renderHook } from "@testing-library/react-hooks";
-import {
-  createAbsencePeriod,
-  createMockClaimDetail,
-  mockAuth,
-  mockFetch,
-} from "../test-utils";
-import ChangeRequest from "../../src/models/ChangeRequest";
+import { mockAuth, mockFetch } from "../test-utils";
 import { ValidationError } from "../../src/errors";
-import useAppLogic from "../../src/hooks/useAppLogic";
 import useChangeRequestsLogic from "../../src/hooks/useChangeRequestsLogic";
 import useErrorsLogic from "../../src/hooks/useErrorsLogic";
 import usePortalFlow from "../../src/hooks/usePortalFlow";
