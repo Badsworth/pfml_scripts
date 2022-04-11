@@ -15,7 +15,6 @@ from massgov.pfml.api.exceptions import ClaimWithdrawn
 from massgov.pfml.api.models.applications.common import OrganizationUnit
 from massgov.pfml.api.models.claims.requests import ClaimSearchRequest, ClaimSearchTerms
 from massgov.pfml.api.models.claims.responses import ClaimForPfmlCrmResponse, ClaimResponse
-from massgov.pfml.api.models.common import OrderData, PagingData
 from massgov.pfml.api.services.claims import (
     ClaimWithdrawnError,
     get_claim_detail,
@@ -23,8 +22,12 @@ from massgov.pfml.api.services.claims import (
 )
 from massgov.pfml.api.util.claims import user_has_access_to_claim
 from massgov.pfml.api.util.logging.search_request import search_request_log_info
-from massgov.pfml.api.util.paginate.paginator import PaginationAPIContext
+from massgov.pfml.api.util.paginate.paginator import (
+    PaginationAPIContext,
+    make_pagination_params,
+)
 from massgov.pfml.api.validation.exceptions import IssueType
+from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.employees import (
     Claim,
     LeaveRequestDecision,
@@ -211,34 +214,24 @@ def retrieve_claims() -> flask.Response:
 def get_claims() -> flask.Response:
     employer_id_str = flask.request.args.get("employer_id")
     employee_id_str = flask.request.args.get("employee_id")
+    is_reviewable_str = flask.request.args.get("is_reviewable", type=str)
 
-    terms = ClaimSearchTerms()
+    terms = ClaimSearchTerms(
+        search=flask.request.args.get("search", type=str),
+        request_decision=flask.request.args.get("request_decision"),
+        is_reviewable=is_reviewable_str,
+    )
     if employer_id_str is not None:
         terms.employer_ids = {UUID(eid.strip()) for eid in employer_id_str.split(",")}
     if employee_id_str is not None:
         terms.employee_ids = {UUID(eid.strip()) for eid in employee_id_str.split(",")}
-    terms.search = flask.request.args.get("search", type=str)
-    terms.request_decision = flask.request.args.get("request_decision")
-    terms.is_reviewable = flask.request.args.get("is_reviewable", type=str)
 
-    request_body = _prepare_request_body(flask.request, terms)
-    claim_request = ClaimSearchRequest.parse_obj(request_body)
+    pagination_params = make_pagination_params(flask.request)
+    claim_request = ClaimSearchRequest(
+        terms=terms, order=pagination_params.order, paging=pagination_params.paging
+    )
 
     return _process_claims_request(claim_request=claim_request, method_name="get_claims")
-
-
-def _prepare_request_body(request: flask.Request, terms: ClaimSearchTerms) -> Dict:
-    order_data = OrderData()
-    order = {
-        "by": request.args.get("order_by", order_data.by, type=str),
-        "direction": request.args.get("order_direction", order_data.direction, type=str),
-    }
-    paging_data = PagingData()
-    paging = {
-        "offset": request.args.get("page_offset", paging_data.offset, type=int),
-        "size": request.args.get("page_size", paging_data.size, type=int),
-    }
-    return {"terms": terms, "paging": paging, "order": order}
 
 
 def _process_claims_request(claim_request: ClaimSearchRequest, method_name: str) -> flask.Response:
