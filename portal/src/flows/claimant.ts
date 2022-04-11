@@ -826,7 +826,16 @@ const claimantFlow: {
         fields: paymentMethodFields,
       },
       on: {
-        CONTINUE: routes.applications.checklist,
+        CONTINUE: [
+          {
+            // TODO (PFMLPB-3822) Does this make sense if they no longer work at that employer?
+            target: routes.applications.notifiedEmployer,
+            cond: "includesUserNotFoundError",
+          },
+          {
+            target: routes.applications.checklist,
+          },
+        ],
       },
     },
     [routes.applications.taxWithholding]: {
