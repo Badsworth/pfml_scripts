@@ -3279,8 +3279,17 @@ components:
           example: "1970-06-01"
         claim_status:
           description: "Absence case status"
-          format: string
-          example: "Approved"
+          type: string
+          enum:
+            [
+              "Adjudication",
+              "Approved",
+              "Closed",
+              "Completed",
+              "Declined",
+              "In Review",
+              "Intake In Progress",
+            ]
         claim_type_description:
           format: string
           example: "Medical Leave"
@@ -4539,35 +4548,51 @@ components:
       type: object
       properties:
         employer_id:
-          type: array
-          items:
-            type: string
-            format: uuid
-          description: Employer IDs to query claims for
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+                format: uuid
+          description: |
+            Employer IDs to query claims for.
+
+            Can provide a single string, optionally as comma separated list of
+            IDs, or an array strings. The latter is preferred.
         employee_id:
-          type: array
-          items:
-            type: string
-            format: uuid
-          description: Employee IDs to query claims for
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+                format: uuid
+          description: |
+            Employee IDs to query claims for.
+
+            Can provide a single string, optionally as comma separated list of
+            IDs, or an array of strings. The latter is preferred.
         search:
           type: string
-          description: >
-            A search string used to filter the request that,
-            when provided, is used in a fuzzy search against the claims'
-            Absence Case IDs, in addition to the employees' first, middle, and last names.
+          description: |
+            A search string used to filter the request that, when provided, is
+            used in a fuzzy search against the claims' Absence Case IDs, in
+            addition to the employees' first, middle, and last names.
+
             When the string is empty, it is ignored.
         is_reviewable:
           oneOf:
             - type: boolean
             - type: string
               enum: ["yes", "no"]
-          description: Whether or not to filter claims where a review is requested for a leave admin.
+          description: |
+            Whether or not to filter claims where a review is requested for a
+            leave admin.
         request_decision:
           type: string
           enum: ["approved", "denied", "withdrawn", "pending", "cancelled"]
-          description: > 
-            request decision used in filtering, request_decision is a status associated with an absence_period
+          description: |
+            Request decision used in filtering, which is a status associated
+            with an Absence Period.
 
     EmployeeSearchRequestTerms:
       type: object

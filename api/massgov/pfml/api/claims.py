@@ -13,7 +13,11 @@ from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
 from massgov.pfml.api.authorization.flask import READ, can
 from massgov.pfml.api.exceptions import ClaimWithdrawn
 from massgov.pfml.api.models.applications.common import OrganizationUnit
-from massgov.pfml.api.models.claims.requests import ClaimSearchRequest, ClaimSearchTerms
+from massgov.pfml.api.models.claims.requests import (
+    ClaimSearchRequest,
+    ClaimSearchTerms,
+    RequestDecision,
+)
 from massgov.pfml.api.models.claims.responses import ClaimForPfmlCrmResponse, ClaimResponse
 from massgov.pfml.api.services.claims import (
     ClaimWithdrawnError,
@@ -31,6 +35,7 @@ from massgov.pfml.db.models.employees import (
     UserLeaveAdministrator,
 )
 from massgov.pfml.db.queries.get_claims_query import GetClaimsQuery
+from massgov.pfml.util.collections.dict import filter_dict
 from massgov.pfml.util.logging.claims import log_get_claim_metrics
 from massgov.pfml.util.logging.employers import get_employer_log_attributes
 from massgov.pfml.util.users import has_role_in
@@ -208,20 +213,18 @@ def retrieve_claims() -> flask.Response:
 
 
 def get_claims() -> flask.Response:
-    employer_id_str = flask.request.args.get("employer_id")
-    employee_id_str = flask.request.args.get("employee_id")
-    is_reviewable_str = flask.request.args.get("is_reviewable", type=str)
-
-    terms = ClaimSearchTerms(
-        search=flask.request.args.get("search", type=str),
-        request_decision=flask.request.args.get("request_decision"),
-        is_reviewable=is_reviewable_str,  # type: ignore
+    terms = ClaimSearchTerms.parse_obj(
+        filter_dict(
+            flask.request.args,
+            {
+                "employee_id",
+                "employer_id",
+                "is_reviewable",
+                "request_decision",
+                "search",
+            },
+        )
     )
-    if employer_id_str is not None:
-        terms.employer_ids = {UUID(eid.strip()) for eid in employer_id_str.split(",")}
-    if employee_id_str is not None:
-        terms.employee_ids = {UUID(eid.strip()) for eid in employee_id_str.split(",")}
-
     pagination_params = make_pagination_params(flask.request)
     claim_request = ClaimSearchRequest(
         terms=terms, order=pagination_params.order, paging=pagination_params.paging
@@ -290,10 +293,10 @@ def _process_claims_request(claim_request: ClaimSearchRequest, method_name: str)
                 query.add_is_reviewable_filter(is_reviewable)
 
             if request_decisions:
-                # Log values from query param since more familiar to new relic users
-                log_attributes.update(
-                    {"filter.request_decision": claim_request_terms.request_decision}
-                )
+                if claim_request_terms.request_decision:
+                    log_attributes.update(
+                        {"filter.request_decision": claim_request_terms.request_decision.value}
+                    )
                 query.add_request_decision_filter(request_decisions)
 
             query.add_order_by(pagination_context, is_reviewable)
@@ -320,20 +323,20 @@ def _process_claims_request(claim_request: ClaimSearchRequest, method_name: str)
 
 
 def map_request_decision_param_to_db_columns(
-    request_decision_str: Optional[str],
+    request_decision: Optional[RequestDecision],
 ) -> Set[int]:
     request_decision_map = {
-        "approved": set([LeaveRequestDecision.APPROVED.leave_request_decision_id]),
-        "denied": set([LeaveRequestDecision.DENIED.leave_request_decision_id]),
-        "withdrawn": set([LeaveRequestDecision.WITHDRAWN.leave_request_decision_id]),
-        "pending": set(
+        RequestDecision.APPROVED: set([LeaveRequestDecision.APPROVED.leave_request_decision_id]),
+        RequestDecision.DENIED: set([LeaveRequestDecision.DENIED.leave_request_decision_id]),
+        RequestDecision.WITHDRAWN: set([LeaveRequestDecision.WITHDRAWN.leave_request_decision_id]),
+        RequestDecision.PENDING: set(
             [
                 LeaveRequestDecision.PENDING.leave_request_decision_id,
                 LeaveRequestDecision.IN_REVIEW.leave_request_decision_id,
                 LeaveRequestDecision.PROJECTED.leave_request_decision_id,
             ]
         ),
-        "cancelled": set(
+        RequestDecision.CANCELLED: set(
             [
                 LeaveRequestDecision.CANCELLED.leave_request_decision_id,
                 LeaveRequestDecision.VOIDED.leave_request_decision_id,
@@ -341,6 +344,6 @@ def map_request_decision_param_to_db_columns(
         ),
     }
 
-    if not request_decision_str:
+    if not request_decision:
         return set()
-    return request_decision_map[request_decision_str]
+    return request_decision_map[request_decision]

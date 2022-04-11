@@ -10,6 +10,7 @@ from jose.constants import ALGORITHMS
 import massgov.pfml.util.datetime as datetime_util
 import tests.api
 from massgov.pfml.api.claims import map_request_decision_param_to_db_columns
+from massgov.pfml.api.models.claims.requests import RequestDecision
 from massgov.pfml.api.services.claims import ClaimWithdrawnError
 from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.applications import FINEOSWebIdExt
@@ -1998,8 +1999,12 @@ class TestGetClaimsEndpoint:
             ]
             assert response.status_code == status_code
             response_body = response.get_json()
-            claim_data = response_body.get("data", [])
-            for claim in response_body.get("data", []):
+
+            claim_data = []
+            if "errors" not in response_body:
+                claim_data = response_body.get("data", [])
+
+            for claim in claim_data:
                 fineos_absence_id = claim.get("fineos_absence_id", None)
                 assert fineos_absence_id in expected_claims_fineos_absence_id
             assert len(claim_data) == len(expected_claims)
@@ -3178,15 +3183,22 @@ class TestGetClaimsEndpoint:
             self._assert_400_error_response(response)
 
 
+# TODO: just remove this test?
 class TestClaimsHelpers:
     @pytest.mark.parametrize(
         "request_decision_param, expected_output",
         [
-            ["approved", set([LeaveRequestDecision.APPROVED.leave_request_decision_id])],
-            ["denied", set([LeaveRequestDecision.DENIED.leave_request_decision_id])],
-            ["withdrawn", set([LeaveRequestDecision.WITHDRAWN.leave_request_decision_id])],
             [
-                "pending",
+                RequestDecision.APPROVED,
+                set([LeaveRequestDecision.APPROVED.leave_request_decision_id]),
+            ],
+            [RequestDecision.DENIED, set([LeaveRequestDecision.DENIED.leave_request_decision_id])],
+            [
+                RequestDecision.WITHDRAWN,
+                set([LeaveRequestDecision.WITHDRAWN.leave_request_decision_id]),
+            ],
+            [
+                RequestDecision.PENDING,
                 set(
                     [
                         LeaveRequestDecision.PENDING.leave_request_decision_id,
@@ -3196,7 +3208,7 @@ class TestClaimsHelpers:
                 ),
             ],
             [
-                "cancelled",
+                RequestDecision.CANCELLED,
                 set(
                     [
                         LeaveRequestDecision.CANCELLED.leave_request_decision_id,
