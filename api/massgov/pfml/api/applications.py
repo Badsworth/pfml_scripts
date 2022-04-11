@@ -469,7 +469,8 @@ def applications_submit(application_id):
         issues, employer_issue = application_rules.get_all_application_issues(
             db_session, existing_application
         )
-        if employer_issue:
+
+        if employer_issue and not existing_application.additional_user_not_found_info:
             issues.append(employer_issue)
 
         if issues:
@@ -529,6 +530,11 @@ def applications_submit(application_id):
                 **{"split_claims_across_by_enabled": split_claims_across_by_enabled},
             },
         )
+        # submit_function = submit_application_to_fineos
+
+        # if employer_issue:
+        #     # TODO create PDF, send to Fineos. Return success..?
+        #     submit_function = upload_user_not_found_document
 
         if application_split is not None and split_claims_across_by_enabled:
             application_before_split, application_after_split = split_application_by_date(

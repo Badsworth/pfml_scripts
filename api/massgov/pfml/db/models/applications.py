@@ -888,6 +888,7 @@ class DocumentType(LookupTable):
     CHANGE_REQUEST_APPROVED = LkDocumentType(20, "Change Request Approved")
     CHANGE_REQUEST_DENIED = LkDocumentType(21, "Change Request Denied")
     IRS_1099G_TAX_FORM_FOR_CLAIMANTS = LkDocumentType(22, "1099G Tax Form for Claimants")
+    USER_NOT_FOUND_CLAIMANT_INFO = LkDocumentType(23, "User Not Found Claimant Information")
 
 
 class Document(Base, TimestampMixin):

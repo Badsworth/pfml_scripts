@@ -77,6 +77,7 @@ def get_application_complete_issues(
     """
     issues = []
     issues += get_app_complete_payments_issues(application)
+    issues += get_app_is_withholding_tax_issues(application)
     issues += get_documents_issues(application, db_session)
 
     # Application must have a case in Fineos in order to be completed. This is equivalent to saying
@@ -684,6 +685,8 @@ def get_conditional_issues(application: Application) -> List[ValidationErrorDeta
                     field="additional_user_not_found_info.date_of_separation",
                 )
             )
+        issues += get_app_is_withholding_tax_issues(application)
+        issues += get_payments_issues(application)
 
     # Fields involved in Part 1 of the progressive application
     if application.has_state_id and not application.mass_id:
@@ -900,7 +903,10 @@ def get_caring_leave_issues(application: Application) -> List[ValidationErrorDet
 def get_payments_issues(application: Application) -> List[ValidationErrorDetail]:
     issues = []
 
-    if not application.payment_preference.payment_method_id:
+    if (
+        application.payment_preference is None
+        or not application.payment_preference.payment_method_id
+    ):
         issues.append(
             ValidationErrorDetail(
                 type=IssueType.required,
@@ -1469,6 +1475,21 @@ def get_all_application_issues(
     return issues, employer_issue
 
 
+def get_app_is_withholding_tax_issues(application: Application) -> List[ValidationErrorDetail]:
+    """Validates that tax withholding preference has been collected."""
+    issues = []
+
+    if not isinstance(application.is_withholding_tax, bool):
+        issues.append(
+            ValidationErrorDetail(
+                type=IssueType.required,
+                message="Tax withholding preference is required",
+                field="is_withholding_tax",
+            )
+        )
+    return issues
+
+
 def get_app_complete_payments_issues(application: Application) -> List[ValidationErrorDetail]:
     """Validate payments related selections are complete. Called from application complete endpoint."""
     issues = []
@@ -1482,14 +1503,6 @@ def get_app_complete_payments_issues(application: Application) -> List[Validatio
             )
         )
 
-    if not isinstance(application.is_withholding_tax, bool):
-        issues.append(
-            ValidationErrorDetail(
-                type=IssueType.required,
-                message="Tax withholding preference is required",
-                field="is_withholding_tax",
-            )
-        )
     return issues
 
 
