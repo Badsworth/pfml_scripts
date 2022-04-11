@@ -13,7 +13,8 @@ def lambda_handler(event, context=None):
     github_client = github.Github(
         login_or_token=get_github_token()
     )
-    eolwd = github_client.get_repo('EOLWD/pfml')
+    # eolwd = github_client.get_repo('EOLWD/pfml')
+    eolwd = github_client.get_repo('EOLWD/pfml/tree/wilfredokoro/INFRA-1363-add-repository-dispatch-to-rds-iam-sync-github-action')
     result = eolwd.create_repository_dispatch(
         event_type='trigger_rds_iam_sync',
     )
