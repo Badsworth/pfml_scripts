@@ -1177,7 +1177,7 @@ def _parse_reduced_leave_period(
 
 
 def _set_continuous_leave_periods(
-    application: Application, absence_details: AbsenceDetails
+    application: Application, absence_details: AbsenceDetails, only_import_open: bool
 ) -> None:
 
     continuous_leave_periods: List[ContinuousLeavePeriod] = []
@@ -1188,17 +1188,25 @@ def _set_continuous_leave_periods(
                 absence_period.absenceType
                 == AbsencePeriodType.CONTINUOUS.absence_period_type_description
             ):
-                continuous_leave = _parse_continuous_leave_period(
-                    application.application_id, absence_period
-                )
-                continuous_leave_periods.append(continuous_leave)
+                perform_import = not only_import_open
+                if (
+                    only_import_open
+                    and absence_period.requestStatus
+                    == LeaveRequestDecision.PENDING.leave_request_decision_description
+                ):
+                    perform_import = True
+                if perform_import:
+                    continuous_leave = _parse_continuous_leave_period(
+                        application.application_id, absence_period
+                    )
+                    continuous_leave_periods.append(continuous_leave)
 
     application.continuous_leave_periods = continuous_leave_periods
     application.has_continuous_leave_periods = len(continuous_leave_periods) > 0
 
 
 def _set_intermittent_leave_periods(
-    application: Application, absence_details: AbsenceDetails
+    application: Application, absence_details: AbsenceDetails, only_import_open: bool
 ) -> None:
     intermittent_leave_periods: List[IntermittentLeavePeriod] = []
 
@@ -1210,16 +1218,26 @@ def _set_intermittent_leave_periods(
                 or absence_period.absenceType
                 == AbsencePeriodType.EPISODIC.absence_period_type_description
             ):
+                perform_import = not only_import_open
+                if (
+                    only_import_open
+                    and absence_period.requestStatus
+                    == LeaveRequestDecision.PENDING.leave_request_decision_description
+                ):
+                    perform_import = True
+                if perform_import:
+                    intermittent_leave = _parse_intermittent_leave_period(
+                        application.application_id, absence_period
+                    )
+                    intermittent_leave_periods.append(intermittent_leave)
 
-                intermittent_leave = _parse_intermittent_leave_period(
-                    application.application_id, absence_period
-                )
-                intermittent_leave_periods.append(intermittent_leave)
     application.intermittent_leave_periods = intermittent_leave_periods
     application.has_intermittent_leave_periods = len(intermittent_leave_periods) > 0
 
 
-def _set_reduced_leave_periods(application: Application, absence_details: AbsenceDetails) -> None:
+def _set_reduced_leave_periods(
+    application: Application, absence_details: AbsenceDetails, only_import_open: bool
+) -> None:
     reduced_schedule_leave_periods: List[ReducedScheduleLeavePeriod] = []
 
     if absence_details.absencePeriods:
@@ -1229,13 +1247,21 @@ def _set_reduced_leave_periods(application: Application, absence_details: Absenc
                 == AbsencePeriodType.REDUCED_SCHEDULE.absence_period_type_description
                 and absence_details.absenceDays
             ):
-                reduced_leave = _parse_reduced_leave_period(
-                    application.application_id,
-                    absence_period,
-                    absence_details.absenceDays,
-                    bool(len(absence_details.absencePeriods)),
-                )
-                reduced_schedule_leave_periods.append(reduced_leave)
+                perform_import = not only_import_open
+                if (
+                    only_import_open
+                    and absence_period.requestStatus
+                    == LeaveRequestDecision.PENDING.leave_request_decision_description
+                ):
+                    perform_import = True
+                if perform_import:
+                    reduced_leave = _parse_reduced_leave_period(
+                        application.application_id,
+                        absence_period,
+                        absence_details.absenceDays,
+                        bool(len(absence_details.absencePeriods)),
+                    )
+                    reduced_schedule_leave_periods.append(reduced_leave)
 
     application.has_reduced_schedule_leave_periods = len(reduced_schedule_leave_periods) > 0
     application.reduced_schedule_leave_periods = reduced_schedule_leave_periods
@@ -1347,10 +1373,17 @@ def set_application_absence_and_leave_period(
         )
         _set_has_future_child_date(application, absence_period)
 
-    # TODO (PORTAL-2009) Use same absence period(s) as the one selected above
-    _set_continuous_leave_periods(application, absence_details)
-    _set_intermittent_leave_periods(application, absence_details)
-    _set_reduced_leave_periods(application, absence_details)
+    # When a claim has multiple leaves with different reasons and a mix of open and completed leaves,
+    # we only need to set the Continuous, Reduced, Intermittent leave related to the open leaves.
+    # Check the absence period selected above to see if it is open, and set flag accordingly.
+    only_import_open = (
+        absence_period is not None
+        and absence_period.requestStatus
+        == LeaveRequestDecision.PENDING.leave_request_decision_description
+    )
+    _set_continuous_leave_periods(application, absence_details, only_import_open)
+    _set_intermittent_leave_periods(application, absence_details, only_import_open)
+    _set_reduced_leave_periods(application, absence_details, only_import_open)
     application.submitted_time = absence_details.creationDate
 
 
