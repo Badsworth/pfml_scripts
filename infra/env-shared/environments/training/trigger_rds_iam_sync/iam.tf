@@ -1,4 +1,7 @@
-resource "aws_iam_policy_document" "iam_refresh_trust_policy" {
+data "aws_ssm_parameter" "trigger_rds_iam_sync_token" {
+  name = "/service/pfml-api/github/trigger-rds-iam-sync-token"
+}
+resource "aws_iam_policy_document" "trigger_rds_iam_sync_trust_policy" {
   statement {
     actions = ["sts:AssumeRole"]
     effect  = "Allow"
@@ -9,10 +12,10 @@ resource "aws_iam_policy_document" "iam_refresh_trust_policy" {
   }
 }
 
-# IAM Role for lambda
-resource "aws_iam_role" "iam_refresh" {
+resource "aws_iam_role" "trigger_rds_iam_sync" {
   name               = "rds-iam-refresh-lambda-role"
-  assume_role_policy = data.aws_iam_policy_document.iam_refresh_trust_policy.json
+  assume_role_policy = data.aws_iam_policy_document.trigger_rds_iam_sync_trust_policy.json
+  managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"]
   inline_policy {
     name = "lambda-get-parameter"
     policy = jsonencode({
@@ -21,17 +24,9 @@ resource "aws_iam_role" "iam_refresh" {
         {
           Action   = "ssm:GetParameter"
           Effect   = "Allow"
-          Resource = data.aws_ssm_parameter.iam_refresh.arn
+          Resource = data.aws_ssm_parameter.trigger_rds_iam_sync_token.arn
         },
       ]
     })
   }
-}
-
-# Allow lambda to create logs
-
-resource "aws_iam_role_policy_attachment" "wokoro-iam_refresh" {
-  role = aws_iam_role.wokoro-iam_refresh.name
-  # Managed policy, granting permission to upload logs to CloudWatch
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
