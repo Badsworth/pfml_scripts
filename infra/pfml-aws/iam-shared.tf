@@ -17,6 +17,11 @@
 # after July 1st, 2021. All other roles are transitioning to Smartronix-managed SSO
 # and will no longer be managed through Nava-owned Terraform.
 #
+data "aws_route53_zone" "comacloud" {
+  name         = "pfml.eol.comacloud.net."
+  private_zone = false
+}
+
 data "aws_iam_policy_document" "developers_and_ci_deploy_access_policy" {
   # TODO: This is probably more wide-ranging than it needs to be,
   #       and can be more granular in scope for certain services.
@@ -130,6 +135,29 @@ data "aws_iam_policy_document" "developers_and_ci_deploy_access_policy" {
   }
 }
 
+# Allow Route53 management for dev (preview) environments
+data "aws_iam_policy_document" "ci_route_53_policy" {
+  statement {
+    actions = [
+      "route53:Get*",
+      "route53:List*",
+    ]
+
+    resources = [
+      "*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "route53:ChangeResourceRecordSets",
+    ]
+    resources = [
+      data.aws_route53_zone.comacloud.arn
+    ]
+  }
+}
+
 data "aws_iam_policy_document" "developers_and_ci_iam_policy" {
   # Allow access to create, update, and delete any IAM roles that weren't created by EOTSS.
   #
@@ -171,4 +199,10 @@ resource "aws_iam_policy" "developers_and_ci_iam_policy" {
   name        = "infrastructure-admin-and-ci-iam-policy"
   description = "IAM access policies for infrastructure admins and Github Actions"
   policy      = data.aws_iam_policy_document.developers_and_ci_iam_policy.json
+}
+
+resource "aws_iam_policy" "ci_route53_iam_policy" {
+  name        = "ci-route53-iam-policy"
+  description = "Route53 IAM access policies for Github Actions"
+  policy      = data.aws_iam_policy_document.ci_route53_iam_policy.json
 }
