@@ -22,19 +22,24 @@ namespace PfmlPdfApi.Services
     public class PdfDocumentService : IPdfDocumentService
     {
         private readonly IAmazonS3Service _amazonS3Service;
-        private readonly string template1099;
+        private AmazonS3Setting bucket;
 
         public PdfDocumentService(IConfiguration configuration, IAmazonS3Service amazonS3Service)
         {
             _amazonS3Service = amazonS3Service;
-            template1099 = configuration.GetValue<string>("AppSettings:Template1099");
+            string defaultBucket = configuration.GetValue<string>("AppSettings:DefaultBucket");
+            switchToBucket(defaultBucket);
+        }
+
+        private void switchToBucket(string key) {
+          bucket = _amazonS3Service.PickBucket(key);
         }
 
         public async Task<ResponseMessage<CreatedDocumentDto>> UpdateTemplate()
         {
             var response = new ResponseMessage<CreatedDocumentDto>(null);
-            string srcFileName = $"Assets/1099/{template1099}";
-            string desFileName = template1099;
+            string srcFileName = $"Assets/{bucket.Key}/{bucket.Template}";
+            string desFileName = bucket.Template;
 
             try
             {
@@ -52,6 +57,7 @@ namespace PfmlPdfApi.Services
 
         public async Task<ResponseMessage<CreatedDocumentDto>> Generate(DocumentDto dto)
         {
+            switchToBucket("1099");
             var response = new ResponseMessage<CreatedDocumentDto>(null);
             string folderName = $"Batch-{dto.BatchId}";
             string formsFolderName = $"{folderName}/Forms";
@@ -60,7 +66,38 @@ namespace PfmlPdfApi.Services
 
             try
             {
-                var template = await _amazonS3Service.GetFileAsync(template1099);
+                var template = await _amazonS3Service.GetFileAsync(bucket.Template);
+                string document = ReplaceValuesInTemplate(new StreamReader(template).ReadToEnd(), dto);
+                var stream = new MemoryStream();
+                HtmlConverter.ConvertToPdf(document, stream);
+                var folderCreated = await _amazonS3Service.CreateFolderAsync(folderName);
+                var fileCreated = await _amazonS3Service.CreateFileAsync(fileName, stream);
+
+                var createdDocumentDto = new CreatedDocumentDto
+                {
+                    Name = fileName
+                };
+                response.Payload = createdDocumentDto;
+            }
+            catch (Exception ex)
+            {
+                response.Status = MessageConstants.MsgStatusFailed;
+                response.ErrorMessage = ex.Message;
+            }
+
+            return response;
+        }
+
+        public async Task<ResponseMessage<CreatedDocumentDto>> Generate(DocumentClaimantInfo dto)
+        {
+            switchToBucket("UserNotFound");
+            var response = new ResponseMessage<CreatedDocumentDto>(null);
+            string folderName = $"placeholderhere";
+            string fileName = $"{folderName}/{dto.Id}.pdf";
+
+            try
+            {
+                var template = await _amazonS3Service.GetFileAsync(bucket.Template);
                 string document = ReplaceValuesInTemplate(new StreamReader(template).ReadToEnd(), dto);
                 var stream = new MemoryStream();
                 HtmlConverter.ConvertToPdf(document, stream);
@@ -163,6 +200,14 @@ namespace PfmlPdfApi.Services
             template = template.Replace("[STATE_TAX_WITHHELD]", dto.StateTaxesWithheld.ToString());
             template = template.Replace("[REPAYMENTS]", dto.Repayments.ToString());
             template = template.Replace("[VERSION]", "1.0");
+
+            return template;
+        }
+
+
+        private string ReplaceValuesInTemplate(string template, DocumentClaimantInfo dto)
+        {
+            template = template.Replace("[PAGE]", "YEP it works");
 
             return template;
         }

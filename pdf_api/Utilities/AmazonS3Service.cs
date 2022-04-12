@@ -13,6 +13,13 @@ namespace PfmlPdfApi.Utilities
     public interface IAmazonS3Service
     {
         /// <summary>
+        /// Selects the current S3 bucket to use
+        /// </summary>
+        /// <param name="key">The Key is a bucket's unique identifier</param>
+        /// <returns></returns>
+        AmazonS3Setting PickBucket(string key);
+
+        /// <summary>
         /// Creates a folder
         /// </summary>
         /// <param name="folderName">The folder name</param>
@@ -52,11 +59,17 @@ namespace PfmlPdfApi.Utilities
 
     public class AmazonS3Service : IAmazonS3Service
     {
-        private readonly AmazonS3Setting _amazonS3Setting;
+        private readonly List<AmazonS3Setting> _amazonS3Settings;
+        public AmazonS3Setting _amazonS3Setting;
 
         public AmazonS3Service(IConfiguration configuration)
         {
-            _amazonS3Setting = configuration.GetSection("AmazonS3").Get<AmazonS3Setting>();
+            _amazonS3Settings = configuration.GetSection("AmazonS3").Get<List<AmazonS3Setting>>();
+        }
+
+        public AmazonS3Setting PickBucket(string key) {
+            _amazonS3Setting = _amazonS3Settings.Find(bucket => bucket.Key == key);
+            return _amazonS3Setting;
         }
 
         public async Task<bool> CreateFolderAsync(string folderName)

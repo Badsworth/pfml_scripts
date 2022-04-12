@@ -4,5 +4,6 @@ namespace PfmlPdfApi.Utilities
     {
         public string BucketName { get; set; }
         public string Key { get; set; }
+        public string Template { get; set; }
     }
 }

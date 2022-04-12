@@ -8,11 +8,17 @@ namespace PfmlPdfApi.Utilities.Mock
 {
     public class AmazonS3ServiceMock : IAmazonS3Service
     {
-        private readonly AmazonS3Setting _amazonS3Setting;
+        private readonly List<AmazonS3Setting> _amazonS3Settings;
+        private AmazonS3Setting _amazonS3Setting;
         private string BASEFOLDER = @"Assets";
         public AmazonS3ServiceMock(IConfiguration configuration)
         {
-            _amazonS3Setting = configuration.GetSection("AmazonS3").Get<AmazonS3Setting>();
+            _amazonS3Settings = configuration.GetSection("AmazonS3").Get<List<AmazonS3Setting>>();
+        }
+ 
+        public AmazonS3Setting PickBucket(string key) {
+            _amazonS3Setting = _amazonS3Settings.Find(bucket => bucket.Key == key);
+            return _amazonS3Setting;
         }
 
         public async Task<bool> CreateFolderAsync(string folderName)

@@ -35,7 +35,7 @@ namespace PfmlPdfApi
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "PfmlPdfApi", Version = "v1" });
             });
             services.AddTransient<IPdfDocumentService, PdfDocumentService>();
-            services.AddTransient<IAmazonS3Service, AmazonS3Service>();
+            services.AddTransient<IAmazonS3Service, AmazonS3ServiceMock>();
             services.AddSingleton(Configuration);
         }
 
