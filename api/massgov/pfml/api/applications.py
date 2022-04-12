@@ -368,9 +368,12 @@ def applications_update(application_id):
 
 def isDocumentAlreadyReceivedError(err):
     if isinstance(err, FINEOSUnprocessableEntity) and err.method_name == "upload_document":
-        if err.message.startswith("A document of type") and err.message.endswith("is not required for the case provided"):
+        if err.message.startswith("A document of type") and err.message.endswith(
+            "is not required for the case provided"
+        ):
             return True
     return False
+
 
 def get_fineos_submit_issues_response(err, existing_application):
     if isinstance(err, FINEOSEntityNotFound):
