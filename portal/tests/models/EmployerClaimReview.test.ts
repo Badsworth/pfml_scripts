@@ -1,11 +1,11 @@
 import { MockEmployerClaimBuilder, createAbsencePeriod } from "../test-utils";
 import { AbsencePeriod } from "src/models/AbsencePeriod";
-import EmployerClaim from "../../src/models/EmployerClaim";
+import EmployerClaimReview from "../../src/models/EmployerClaimReview";
 import MockDate from "mockdate";
 import { createMockManagedRequirement } from "../../lib/mock-helpers/createMockManagedRequirement";
 
 describe("EmployerClaim", () => {
-  const claimWithMultiAbsencePeriods = new EmployerClaim({
+  const claimWithMultiAbsencePeriods = new EmployerClaimReview({
     absence_periods: [
       createAbsencePeriod({
         absence_period_start_date: "2021-03-13",
@@ -20,7 +20,7 @@ describe("EmployerClaim", () => {
 
   describe("#constructor", () => {
     it("instantiates AbsencePeriod for absence_period entries", () => {
-      const claim = new EmployerClaim({
+      const claim = new EmployerClaimReview({
         absence_periods: [createAbsencePeriod()],
       });
 
@@ -67,7 +67,7 @@ describe("EmployerClaim", () => {
 
   describe("lastReviewedAt", () => {
     it("returns the most recent ManagedRequirement responded_at", () => {
-      const claim = new EmployerClaim({
+      const claim = new EmployerClaimReview({
         absence_periods: [],
         managed_requirements: [
           createMockManagedRequirement({
@@ -86,7 +86,7 @@ describe("EmployerClaim", () => {
     });
 
     it("returns undefined when there are no ManagedRequirements", () => {
-      const claim = new EmployerClaim({
+      const claim = new EmployerClaimReview({
         absence_periods: [],
         managed_requirements: [],
       });
@@ -95,7 +95,7 @@ describe("EmployerClaim", () => {
     });
 
     it("returns undefined when there are no ManagedRequirements with a responded_at", () => {
-      const claim = new EmployerClaim({
+      const claim = new EmployerClaimReview({
         absence_periods: [],
         managed_requirements: [
           createMockManagedRequirement({
@@ -111,7 +111,7 @@ describe("EmployerClaim", () => {
 
   describe("wasPreviouslyReviewed", () => {
     it("returns true if any ManagedRequirement has a status of Complete", () => {
-      const claim = new EmployerClaim({
+      const claim = new EmployerClaimReview({
         absence_periods: [],
         managed_requirements: [
           createMockManagedRequirement({
@@ -127,7 +127,7 @@ describe("EmployerClaim", () => {
     });
 
     it("returns false if no ManagedRequirement has a status of Complete", () => {
-      const claim = new EmployerClaim({
+      const claim = new EmployerClaimReview({
         absence_periods: [],
         managed_requirements: [
           createMockManagedRequirement({
@@ -143,7 +143,7 @@ describe("EmployerClaim", () => {
     });
 
     it("returns false if there are no ManagedRequirements", () => {
-      const claim = new EmployerClaim({
+      const claim = new EmployerClaimReview({
         absence_periods: [],
         managed_requirements: [],
       });
@@ -158,7 +158,7 @@ describe("EmployerClaim", () => {
     });
 
     it("returns null if no absence period", () => {
-      const claim = new EmployerClaim({
+      const claim = new EmployerClaimReview({
         absence_periods: [],
       });
 
@@ -172,11 +172,96 @@ describe("EmployerClaim", () => {
     });
 
     it("returns null if no absence period", () => {
-      const claim = new EmployerClaim({
+      const claim = new EmployerClaimReview({
         absence_periods: [],
       });
 
       expect(claim.leaveEndDate).toBeNull();
+    });
+  });
+
+  describe("#fullName", () => {
+    it("returns formatted full name", () => {
+      const claim = new EmployerClaimReview({
+        absence_periods: [],
+        first_name: "Michael",
+        middle_name: "",
+        last_name: "Scott",
+      });
+      expect(claim.fullName).toEqual("Michael Scott");
+    });
+
+    it("returns formatted name with middle name", () => {
+      const claim = new EmployerClaimReview({
+        absence_periods: [],
+        first_name: "Michael",
+        middle_name: "Gary",
+        last_name: "Scott",
+      });
+      expect(claim.fullName).toEqual("Michael Gary Scott");
+    });
+  });
+
+  describe("#hasIntermittentPeriod", () => {
+    it("returns false when there is no intermittent absence period", () => {
+      const claim = new EmployerClaimReview({
+        absence_periods: [
+          createAbsencePeriod({
+            period_type: "Continuous",
+          }),
+          createAbsencePeriod({
+            period_type: "Reduced Schedule",
+          }),
+        ],
+      });
+      expect(claim.hasIntermittentPeriod).toBe(false);
+    });
+
+    it("returns true when there is one intermittent absence period", () => {
+      const claim = new EmployerClaimReview({
+        absence_periods: [
+          createAbsencePeriod({
+            period_type: "Continuous",
+          }),
+          createAbsencePeriod({
+            period_type: "Reduced Schedule",
+          }),
+          createAbsencePeriod({
+            period_type: "Intermittent",
+          }),
+        ],
+      });
+      expect(claim.hasIntermittentPeriod).toBe(true);
+    });
+  });
+
+  describe("#hasCaringLeavePeriod", () => {
+    it("returns false when there is no caring leave absence period", () => {
+      const claim = new EmployerClaimReview({
+        absence_periods: [
+          createAbsencePeriod({
+            reason: "Child Bonding",
+          }),
+          createAbsencePeriod({
+            reason: "Pregnancy/Maternity",
+          }),
+        ],
+      });
+      expect(claim.hasCaringLeavePeriod).toBe(false);
+    });
+
+    it("returns true when there is one caring leave absence period", () => {
+      const claim = new EmployerClaimReview({
+        absence_periods: [
+          createAbsencePeriod({
+            reason: "Child Bonding",
+          }),
+          createAbsencePeriod({
+            reason: "Care for a Family Member",
+          }),
+        ],
+      });
+      expect(claim.hasCaringLeavePeriod).toBe(true);
     });
   });
 });

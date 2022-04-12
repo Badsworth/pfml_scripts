@@ -3399,7 +3399,49 @@ components:
         transaction_date_could_change:
           type: boolean
           example: false
-  
+        payment_details:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaymentDetailsResponse"
+    
+    PaymentDetailsResponse:
+      type: object
+      properties:
+        payment_detail_id:
+          type: string
+          format: uuid
+          example: "fabd09ed-0ea9-4091-843e-2e37d2c61482"
+        period_start_date:
+          type: string
+          format: date
+          example: "2022-05-01"
+        period_end_date:
+          type: string
+          format: date
+          example: "2022-06-01"
+        amount:
+          type: number
+          example: 750.25
+        payment_lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaymentLineResponse"
+    
+    PaymentLineResponse:
+      type: object
+      properties:
+        payment_line_id:
+          type: string
+          format: uuid
+          example: "fabd09ed-0ea9-4091-843e-2e37d2c61482"
+        amount:
+          type: number
+          example: 750.25
+        line_type:
+          type: string
+          example: "Auto Gross Entitlement"
+          description: "A description of why this line was added or subtracted to the overall payment"
+
     ChangeRequestsResponse:
       type: array
       items:

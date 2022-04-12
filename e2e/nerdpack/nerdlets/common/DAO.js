@@ -241,6 +241,10 @@ export class DAO {
   static RunDetails() {
     return new DAORunDetails(this.ACCOUNT_ID);
   }
+
+  static DeploymentsTimeline() {
+    return new DAODeploymentsTimeline(this.ACCOUNT_ID);
+  }
 }
 
 export class BaseDAOV2 {
@@ -337,10 +341,13 @@ export class DAORunIndicators extends BaseDAOV2 {
     }
     const q_1 = GROUPS.map(queryGroup).join("");
     return `SELECT MAX(timestamp) as time
+    , MAX(timestamp) as timestamp
     , min(timestamp) as start
     , count (pass) as total
     ${q_1}
     , latest(tag) as tag
+    , latest(tagGroup) as tagGroup
+    , latest(runId) as runId
     , latest(branch) as branch
 FROM TestResult FACET environment, runId
     WHERE durationMs != 0 AND
@@ -450,5 +457,21 @@ export class DAORunDetails extends BaseDAOV2 {
       `ORDER BY timestamp ASC`,
       ...this.buildQueryParts(),
     ].join(`\n`);
+  }
+}
+
+export class DAODeploymentsTimeline extends BaseDAOV2 {
+  constructor(accountId) {
+    super(accountId);
+    this.queryParts.since = "1 month ago UNTIL now";
+    this.queryParts.limit = "25";
+  }
+
+  query() {
+    return `SELECT version, component, timestamp
+            FROM CustomDeploymentMarker
+            ${this.queryParts.where ? `WHERE ${this.queryParts.where}` : ""}
+            SINCE ${this.queryParts.since}
+            LIMIT ${this.queryParts.limit}`;
   }
 }

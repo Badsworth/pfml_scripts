@@ -1416,7 +1416,7 @@ def set_employment_status_and_occupations(
         return
 
     if fineos_work_patterns.workPatternType != WorkPatternType.FIXED.work_pattern_type_description:
-        newrelic_util.log_and_capture_exception(
+        logger.warning(
             f"Application work pattern type is not {WorkPatternType.FIXED.work_pattern_type_description}",
             extra={"fineos_work_pattern_type": fineos_work_patterns.workPatternType},
         )

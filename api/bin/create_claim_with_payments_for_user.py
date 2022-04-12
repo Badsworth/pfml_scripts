@@ -109,6 +109,10 @@ def main(total_payments: int, scenarios: List[str]) -> None:
 
         click.secho(f"Created Payment {format_payment(payment, scenario)}", fg="cyan")
 
+        if scenario == "paid":
+            payment_detail = factory.create_payment_detail()
+            factory.create_payment_line(payment_detail=payment_detail)
+
         # Scenarios that add additional information
         if scenario == "posted":
             # Create a paid writeback status set to the prior day

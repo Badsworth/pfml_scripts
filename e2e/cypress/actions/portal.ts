@@ -1150,19 +1150,6 @@ export function assertZeroWithholdings(): void {
     { timeout: 30000 }
   );
 }
-export type ClaimantStatus =
-  | "Approved"
-  | "Denied"
-  | "Closed"
-  | "Withdrawn"
-  | "Pending"
-  | "Cancelled";
-
-export type DashboardClaimStatus =
-  | ClaimantStatus
-  | "--"
-  | "No action required"
-  | "Review by";
 
 export function selectClaimFromEmployerDashboard(
   fineosAbsenceId: string
@@ -1892,24 +1879,73 @@ export type LeaveType =
 export function assertLeaveType(leaveType: LeaveType): void {
   cy.findByText(leaveType, { selector: "h3" });
 }
-export type FilterOptionsFlags = {
-  [key in DashboardClaimStatus]?: true | false;
-};
-type FilterOptions = {
-  status?: FilterOptionsFlags;
-  // employerId | employerName | option index
-  organization?: string | number;
-};
+
+export type ClaimantStatusFilters =
+  | "Approved"
+  | "Denied"
+  | "Withdrawn"
+  | "Pending"
+  | "Cancelled";
+
+export type ReviewStatusOptions =
+  | "Yes, review requested"
+  | "No, review not needed";
+
+export type OrgFilter = Record<"organization", string | number>;
+
 /**Filter claims by given parameters
- * @example
- * portal.filterLADashboardBy({
- *   status: {
- *     Closed: true,
- *     Denied: true,
- *   },
- * }); //Shows claims with status of 'Closed' & 'Denied'
+ * @param reviewOption Choice of review option [string].
+ * @param claimStatusFilters Array of claim status options
  */
-export function filterLADashboardBy(filters: FilterOptions): void {
+export function filterLADashboardBy(
+  reviewOption: ReviewStatusOptions,
+  claimStatusFilters: ClaimantStatusFilters[]
+): void {
+  for (const status_filter of claimStatusFilters) {
+    cy.findByLabelText(status_filter).click({ force: true });
+    clickApplyFilters();
+    checkDashboardIsEmpty().then((hasNoClaims) => {
+      if (hasNoClaims) {
+        clickShowFilterButton();
+        return;
+      }
+      assertClaimsHaveStatus(status_filter);
+      if (reviewOption == "Yes, review requested")
+        assertClaimsNeedsReview("Review Application");
+      clickShowFilterButton();
+      return;
+    });
+  }
+  clearFilters();
+}
+
+export function selectOrgFilter(filter: OrgFilter): void {
+  const { organization } = filter;
+  if (typeof organization === "string") {
+    cy.get(`select[name="employer_id"] > option`).select(organization);
+  } else {
+    cy.get(`select[name="employer_id"] > option`)
+      .eq(organization)
+      .then((element) =>
+        cy
+          .get(`select[name="employer_id"]`)
+          .select(element.val() as string, { force: true })
+      );
+  }
+}
+
+/**Looks if dashboard is empty */
+function checkDashboardIsEmpty(): Cypress.Chainable<boolean> {
+  return cy
+    .contains("table", "Employee (Application ID)")
+    .find("tbody tr")
+    .then(($tr) => {
+      return $tr.text() === "No applications on file";
+    });
+}
+
+/**Clicks Show Filter Button */
+export function clickShowFilterButton(): void {
   cy.get('button[aria-controls="filters"]')
     .invoke("text")
     .then((text) => {
@@ -1917,58 +1953,32 @@ export function filterLADashboardBy(filters: FilterOptions): void {
         cy.findByText("Show filters", { exact: false }).click();
     });
   cy.findByText("Hide filters").should("be.visible");
-  const { status, organization } = filters;
-  if (status)
-    cy.get("#filters fieldset").within(() => {
-      for (const [k, v] of Object.entries(status)) {
-        if (v) cy.findByLabelText(k).click({ force: true });
-      }
-    });
+}
 
-  if (organization) {
-    if (typeof organization === "string") {
-      cy.get(`select[name="employer_id"] > option`).select(organization);
-    } else {
-      cy.get(`select[name="employer_id"] > option`)
-        .eq(organization)
-        .then((element) =>
-          cy
-            .get(`select[name="employer_id"]`)
-            .select(element.val() as string, { force: true })
-        );
-    }
-  }
-
+/**Clicks Apply Filter Button */
+export function clickApplyFilters(): void {
   cy.findByText("Apply filters").should("not.be.disabled").click();
   cy.get('span[role="progressbar"]').should("be.visible");
   cy.wait("@dashboardClaimQueries");
-  // @BC: Table columns have been updated
-  // previous: "Employer ID number" (portal/v59.0-rc1 and below)
-  // updated: "Organization (FEIN)" (portal/v59.0-rc2)
-  cy.contains("table", /(Employer ID number)|(Organization \(FEIN\))/).should(
-    "be.visible"
-  );
+  cy.contains("table", "Employee (Application ID)").should("be.visible");
 }
-/**Looks if dashboard is empty */
-function checkDashboardIsEmpty() {
-  return cy
-    .contains("table", "Employer ID number")
-    .find("tbody tr")
-    .then(($tr) => {
-      return $tr.text() === "No applications on file";
+
+/**Asserts that all claims visible on the page need review */
+function assertClaimsNeedsReview(status: string): void {
+  cy.contains("table", "Employee (Application ID)")
+    .find('tbody tr td[data-label="Review due date"] a')
+    .each((el) => {
+      expect(el).to.contain.text(status);
     });
 }
+
 /**Asserts that all claims visible on the page have a status */
-export function assertClaimsHaveStatus(status: DashboardClaimStatus): void {
-  checkDashboardIsEmpty().then((hasNoClaims) => {
-    // Make sure it passes if there are no claims with that status.
-    if (hasNoClaims) return;
-    cy.contains("table", "Employer ID number")
-      .find('tbody tr td[data-label="Status"]')
-      .each((el) => {
-        expect(el).to.contain.text(status);
-      });
-  });
+export function assertClaimsHaveStatus(status: ClaimantStatusFilters): void {
+  cy.contains("table", "Employee (Application ID)")
+    .find('tbody tr td[data-label="Leave details"]')
+    .each((el) => {
+      expect(el).to.contain.text(status);
+    });
 }
 
 export function clearFilters(): void {
@@ -1980,7 +1990,7 @@ export function clearFilters(): void {
       cy.findByText("Reset all filters").click();
       cy.get('span[role="progressbar"]').should("be.visible");
       cy.wait("@dashboardClaimQueries");
-      cy.contains("table", "Employer ID number").should("be.visible");
+      cy.contains("table", "Employee (Application ID)").should("be.visible");
     });
 }
 
@@ -1993,13 +2003,13 @@ export function sortClaims(
   const sortValuesMap = {
     new: {
       // Value of the <option> tag for the sort select
-      value: "created_at,descending",
+      value: "latest_follow_up_date,ascending",
       // Query associated with it
-      query: "order_by=created_at&order_direction=descending",
+      query: "order_by=latest_follow_up_date&order_direction=descending",
     },
     old: {
-      value: "created_at,ascending",
-      query: "order_by=created_at&order_direction=ascending",
+      value: "latest_follow_up_date,ascending",
+      query: "latest_follow_up_date&order_direction=ascending",
     },
     name_asc: {
       value: "employee,ascending",
@@ -2057,7 +2067,7 @@ const leaveReasonHeadings: Readonly<
 
 type LeaveStatus = {
   leave: keyof typeof leaveReasonHeadings;
-  status: ClaimantStatus;
+  status: ClaimantStatusFilters;
   leavePeriods?: [string, string];
   leavePeriodType?: "Continuous" | "Intermittent" | "Reduced";
 };

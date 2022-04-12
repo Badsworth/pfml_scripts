@@ -15,11 +15,10 @@ import {
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { AppLogic } from "../../../../src/hooks/useAppLogic";
 import ConcurrentLeave from "../../../../src/models/ConcurrentLeave";
-import EmployerClaim from "../../../../src/models/EmployerClaim";
+import EmployerClaimReview from "../../../../src/models/EmployerClaimReview";
 import LeaveReason from "../../../../src/models/LeaveReason";
 import MockDate from "mockdate";
 import Review from "../../../../src/pages/employers/applications/review";
-import { clone } from "lodash";
 import { createMockManagedRequirement } from "../../../../lib/mock-helpers/createMockManagedRequirement";
 import userEvent from "@testing-library/user-event";
 
@@ -73,14 +72,14 @@ const goTo = jest.fn(() => {
 const loadDocuments = jest.fn();
 
 const setup = (
-  employerClaimAttrs: Partial<EmployerClaim> = claimWithV2Eform,
+  employerClaimAttrs: Partial<EmployerClaimReview> = claimWithV2Eform,
   cb?: (appLogic: AppLogic) => void
 ) => {
   return renderPage(
     Review,
     {
       addCustomSetup: (appLogic) => {
-        appLogic.employers.claim = new EmployerClaim(employerClaimAttrs);
+        appLogic.employers.claim = new EmployerClaimReview(employerClaimAttrs);
         appLogic.employers.claimDocumentsMap = new Map();
         appLogic.employers.submitClaimReview = submitClaimReview;
         appLogic.portalFlow.goTo = goTo;
@@ -208,7 +207,6 @@ describe("Review", () => {
         previous_leaves: expect.any(Array),
         concurrent_leave: null,
         has_amendments: false,
-        leave_reason: "Serious Health Condition - Employee",
         uses_second_eform_version: true,
       });
     });
@@ -839,8 +837,17 @@ describe("Review", () => {
 
     describe("when the claim is a caring leave", () => {
       function render() {
-        const caringLeaveClaim = clone(claimWithV2Eform);
-        caringLeaveClaim.leave_details.reason = "Care for a Family Member";
+        const caringLeaveClaim = {
+          ...claimWithV2Eform,
+          absence_periods: [
+            createAbsencePeriod({
+              absence_period_start_date: "2020-01-01",
+              absence_period_end_date: "2020-01-30",
+              reason: LeaveReason.care,
+            }),
+          ],
+        };
+
         const cb = (appLogic: AppLogic) => {
           appLogic.employers.claimDocumentsMap = CLAIMDOCUMENTSMAP;
         };
@@ -861,11 +868,19 @@ describe("Review", () => {
       const caringLeaveClaim = new MockEmployerClaimBuilder()
         .eformsV2()
         .completed()
-        .caringLeaveReason()
         .reviewable()
         .create();
 
-      setup(caringLeaveClaim);
+      setup({
+        ...caringLeaveClaim,
+        absence_periods: [
+          createAbsencePeriod({
+            absence_period_start_date: "2020-01-01",
+            absence_period_end_date: "2020-01-30",
+            reason: LeaveReason.care,
+          }),
+        ],
+      });
     });
 
     it("renders the caring leave relationship question", () => {
@@ -891,7 +906,6 @@ describe("Review", () => {
           has_amendments: false,
           uses_second_eform_version: true,
           relationship_inaccurate_reason: expect.any(String),
-          leave_reason: "Care for a Family Member",
         });
       });
     });

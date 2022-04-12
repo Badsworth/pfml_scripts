@@ -2,7 +2,7 @@ import { ClaimDocument, DocumentType } from "src/models/Document";
 import LeaveReason, { LeaveReasonType } from "src/models/LeaveReason";
 import { AbsencePeriod } from "src/models/AbsencePeriod";
 import ApiResourceCollection from "src/models/ApiResourceCollection";
-import EmployerClaim from "src/models/EmployerClaim";
+import EmployerClaimReview from "src/models/EmployerClaimReview";
 import { ManagedRequirement } from "src/models/ManagedRequirement";
 import { MockEmployerClaimBuilder } from "lib/mock-helpers/mock-model-builder";
 import { Props } from "types/common";
@@ -162,7 +162,7 @@ function createEmployerClaimFromArgs(args: {
   "Claimant EForm Version": string;
   "Number of absence periods for each leave reason": number;
   "Managed Requirements": ManagedRequirement[];
-}): EmployerClaim {
+}): EmployerClaimReview {
   // Generate one absence period for each selected leave reason
   const absence_periods: AbsencePeriod[] = [];
   args["Absence period reasons"].forEach((reason: LeaveReasonType) => {
@@ -190,36 +190,6 @@ function createEmployerClaimFromArgs(args: {
 
   const claim = claimBuilder.create();
   claim.absence_periods = absence_periods;
-
-  // TODO (PORTAL-1117): leave_details will be removed in the future
-  claim.leave_details = {
-    ...claim.leave_details,
-    reason: absence_periods[0].reason,
-    continuous_leave_periods: absence_periods
-      .filter((period) => period.period_type === "Continuous")
-      .map((period) => ({
-        start_date: period.absence_period_start_date,
-        end_date: period.absence_period_end_date,
-      })),
-    reduced_schedule_leave_periods: absence_periods
-      .filter((period) => period.period_type === "Reduced Schedule")
-      .map((period) => ({
-        start_date: period.absence_period_start_date,
-        end_date: period.absence_period_end_date,
-      })),
-    intermittent_leave_periods: absence_periods
-      .filter((period) => period.period_type === "Intermittent")
-      .map((period) => ({
-        leave_period_id: period.fineos_leave_request_id,
-        start_date: period.absence_period_start_date,
-        end_date: period.absence_period_end_date,
-        duration: 1,
-        duration_basis: "Days",
-        frequency: 1,
-        frequency_interval: null,
-        frequency_interval_basis: "Weeks",
-      })),
-  };
 
   claim.managed_requirements = args["Managed Requirements"];
   return claim;
