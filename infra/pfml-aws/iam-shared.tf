@@ -204,5 +204,5 @@ resource "aws_iam_policy" "developers_and_ci_iam_policy" {
 resource "aws_iam_policy" "ci_route53_iam_policy" {
   name        = "ci-route53-iam-policy"
   description = "Route53 IAM access policies for Github Actions"
-  policy      = data.aws_iam_policy_document.ci_route53_iam_policy.json
+  policy      = data.aws_iam_policy_document.ci_route_53_policy.json
 }
