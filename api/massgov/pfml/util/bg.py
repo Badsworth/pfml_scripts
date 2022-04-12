@@ -40,9 +40,7 @@ def background_task(name):
 
     global CURRENT_TASK_NAME
     if CURRENT_TASK_NAME is None:
-        CURRENT_TASK_NAME = "name"
-
-    CURRENT_TASK_NAME = name
+        CURRENT_TASK_NAME = name
 
     with newrelic.agent.BackgroundTask(application, name=name, group="Python/ECSTask"):
         yield
