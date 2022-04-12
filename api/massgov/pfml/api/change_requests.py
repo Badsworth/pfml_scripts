@@ -81,6 +81,7 @@ def get_change_requests(fineos_absence_id: str) -> flask.Response:
     change_requests_dict = []
     for request in change_requests:
         change_request = ChangeRequestResponse(
+            change_request_id=request.change_request_id,
             fineos_absence_id=fineos_absence_id,
             change_request_type=request.type,  # type: ignore
             start_date=request.start_date,

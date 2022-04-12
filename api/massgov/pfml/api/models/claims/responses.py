@@ -212,6 +212,7 @@ class DocumentResponse(PydanticBaseModel):
 
 
 class ChangeRequestResponse(PydanticBaseModel):
+    change_request_id: UUID4
     fineos_absence_id: str
     change_request_type: ChangeRequestType
     start_date: Optional[date]
@@ -224,6 +225,7 @@ class ChangeRequestResponse(PydanticBaseModel):
             raise ValueError("Claim is missing fineos_absence_id value")
 
         return cls(
+            change_request_id=change_request.change_request_id,
             fineos_absence_id=change_request.claim.fineos_absence_id,
             change_request_type=change_request.change_request_type_instance.change_request_type_description,  # type: ignore
             start_date=change_request.start_date,

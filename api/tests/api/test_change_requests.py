@@ -54,6 +54,7 @@ class TestPostChangeRequest:
         )
         response_body = response.get_json().get("data")
         assert response.status_code == 201
+        assert response_body.get("change_request_id") is not None
         assert response_body.get("change_request_type") == request_body["change_request_type"]
         assert response_body.get("fineos_absence_id") == claim.fineos_absence_id
         assert response_body.get("start_date") == request_body["start_date"]
@@ -90,6 +91,7 @@ class TestGetChangeRequests:
         assert response.status_code == 200
         response_body = response.get_json()
         assert len(response_body["data"]["change_requests"]) == 1
+        assert response_body["data"]["change_requests"][0]["change_request_id"] is not None
         assert response_body["data"]["change_requests"][0]["change_request_type"] == "Modification"
         assert response_body["message"] == "Successfully retrieved change requests"
 
