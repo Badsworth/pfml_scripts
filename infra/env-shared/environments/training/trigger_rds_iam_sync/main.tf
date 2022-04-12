@@ -1,15 +1,15 @@
 
-provider "aws" {
-  region = "us-east-1"
-}
-terraform {
-  required_providers {
-    aws     = "3.74.1"
+data "archive_file" "iam_refresh" {
+  type        = "zip"
+  output_path = "./.zip/trigger_rds_iam_sync.zip"
+
+  source {
+    filename = ".py"
+    content  = file("../lambda_functions/trigger_rds_iam_sync.py")
   }
 }
-
 resource "aws_lambda_function" "iam_refresh" {
-  description      = "RDS IAM AUTO REFRESH"
+  description      = "Trigger RDS IAM Auto Refresh GitHub Action"
   filename         = data.archive_file.iam_refresh.output_path
   source_code_hash = data.archive_file.iam_refresh.output_base64sha256
   function_name    = "rds-iam-refresh"
@@ -20,15 +20,5 @@ resource "aws_lambda_function" "iam_refresh" {
   publish          = "false"
   timeout          = 10
 
- 
 }
 
-data "archive_file" "iam_refresh" {
-  type        = "zip"
-  output_path = "./.zip/trigger_rds_iam_sync.zip"
-
-  source {
-    filename = ".py"
-    content  = file("./trigger_rds_iam_sync.py")
-  }
-}
