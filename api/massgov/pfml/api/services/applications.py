@@ -1176,6 +1176,13 @@ def _parse_reduced_leave_period(
     )
 
 
+OPEN_STATUSES = [
+    LeaveRequestDecision.PENDING.leave_request_decision_description,
+    LeaveRequestDecision.IN_REVIEW.leave_request_decision_description,
+    LeaveRequestDecision.PROJECTED.leave_request_decision_description,
+]
+
+
 def _set_continuous_leave_periods(
     application: Application, absence_details: AbsenceDetails, only_import_open: bool
 ) -> None:
@@ -1189,11 +1196,7 @@ def _set_continuous_leave_periods(
                 == AbsencePeriodType.CONTINUOUS.absence_period_type_description
             ):
                 perform_import = not only_import_open
-                if (
-                    only_import_open
-                    and absence_period.requestStatus
-                    == LeaveRequestDecision.PENDING.leave_request_decision_description
-                ):
+                if only_import_open and absence_period.requestStatus in OPEN_STATUSES:
                     perform_import = True
                 if perform_import:
                     continuous_leave = _parse_continuous_leave_period(
@@ -1219,11 +1222,7 @@ def _set_intermittent_leave_periods(
                 == AbsencePeriodType.EPISODIC.absence_period_type_description
             ):
                 perform_import = not only_import_open
-                if (
-                    only_import_open
-                    and absence_period.requestStatus
-                    == LeaveRequestDecision.PENDING.leave_request_decision_description
-                ):
+                if only_import_open and absence_period.requestStatus in OPEN_STATUSES:
                     perform_import = True
                 if perform_import:
                     intermittent_leave = _parse_intermittent_leave_period(
@@ -1248,11 +1247,7 @@ def _set_reduced_leave_periods(
                 and absence_details.absenceDays
             ):
                 perform_import = not only_import_open
-                if (
-                    only_import_open
-                    and absence_period.requestStatus
-                    == LeaveRequestDecision.PENDING.leave_request_decision_description
-                ):
+                if only_import_open and absence_period.requestStatus in OPEN_STATUSES:
                     perform_import = True
                 if perform_import:
                     reduced_leave = _parse_reduced_leave_period(
@@ -1374,13 +1369,11 @@ def set_application_absence_and_leave_period(
         _set_has_future_child_date(application, absence_period)
 
     # When a claim has multiple leaves with different reasons and a mix of open and completed leaves,
-    # we only need to set the Continuous, Reduced, Intermittent leave related to the open leaves.
+    # we only need to set the Continuous, Reduced, Intermittent leave related to the open leaves,
+    # which includes PENDING, IN_REVIEW, and PROJECTED leave request decisions.
+    # See https://lwd.atlassian.net/wiki/spaces/DD/pages/2211512350/Claim+status+mappings for more details.
     # Check the absence period selected above to see if it is open, and set flag accordingly.
-    only_import_open = (
-        absence_period is not None
-        and absence_period.requestStatus
-        == LeaveRequestDecision.PENDING.leave_request_decision_description
-    )
+    only_import_open = absence_period is not None and absence_period.requestStatus in OPEN_STATUSES
     _set_continuous_leave_periods(application, absence_details, only_import_open)
     _set_intermittent_leave_periods(application, absence_details, only_import_open)
     _set_reduced_leave_periods(application, absence_details, only_import_open)
