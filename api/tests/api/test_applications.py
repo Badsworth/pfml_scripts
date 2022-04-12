@@ -4138,314 +4138,203 @@ def test_application_post_submit_app_split_across_by_both_sumbittable(
     capture = massgov.pfml.fineos.mock_client.get_capture()
     # This is generated randomly and changes each time.
     fineos_user_id = capture[2][1]
-    assert capture == [
-        ("read_employer", None, {"employer_fein": application.employer_fein}),
-        (
-            "register_api_user",
-            None,
-            {
-                "employee_registration": massgov.pfml.fineos.models.EmployeeRegistration(
-                    user_id=fineos_user_id,
-                    employer_id=str(
-                        massgov.pfml.fineos.mock.field.fake_customer_no(application.employer_fein)
+    assert len([call for call in capture if call[0] == "read_employer"]) == 2
+    assert ("read_employer", None, {"employer_fein": application.employer_fein}) in capture
+    assert (
+        "register_api_user",
+        None,
+        {
+            "employee_registration": massgov.pfml.fineos.models.EmployeeRegistration(
+                user_id=fineos_user_id,
+                employer_id=str(
+                    massgov.pfml.fineos.mock.field.fake_customer_no(application.employer_fein)
+                ),
+                date_of_birth=date(1753, 1, 1),
+                national_insurance_no=application.tax_identifier.tax_identifier,
+            )
+        },
+    ) in capture
+    assert (
+        len([call for call in capture if call[0] == "get_customer_occupations_customer_api"]) == 2
+    )
+    assert (
+        "get_customer_occupations_customer_api",
+        fineos_user_id,
+        {"customer_id": application.tax_identifier.tax_identifier},
+    ) in capture
+    assert len([call for call in capture if call[0] == "update_customer_details"]) == 2
+    assert (
+        "update_customer_details",
+        fineos_user_id,
+        {
+            "customer": massgov.pfml.fineos.models.customer_api.Customer(
+                firstName="First",
+                lastName="Last",
+                secondName="Middle",
+                dateOfBirth=date(1997, 6, 6),
+                idNumber=application.tax_identifier.tax_identifier,
+                customerAddress=massgov.pfml.fineos.models.customer_api.CustomerAddress(
+                    address=massgov.pfml.fineos.models.customer_api.Address(
+                        addressLine1=application.residential_address.address_line_one,
+                        addressLine2=application.residential_address.address_line_two,
+                        addressLine4=application.residential_address.city,
+                        addressLine6=application.residential_address.geo_state.geo_state_description,
+                        postCode=application.residential_address.zip_code,
+                        country="USA",
+                    )
+                ),
+                gender="Female",
+                classExtensionInformation=[
+                    massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
+                        name="MassachusettsID", stringValue=application.mass_id
                     ),
-                    date_of_birth=date(1753, 1, 1),
-                    national_insurance_no=application.tax_identifier.tax_identifier,
-                )
-            },
-        ),
-        (
-            "update_customer_details",
-            fineos_user_id,
-            {
-                "customer": massgov.pfml.fineos.models.customer_api.Customer(
-                    firstName="First",
-                    lastName="Last",
-                    secondName="Middle",
-                    dateOfBirth=date(1997, 6, 6),
-                    idNumber=application.tax_identifier.tax_identifier,
-                    customerAddress=massgov.pfml.fineos.models.customer_api.CustomerAddress(
-                        address=massgov.pfml.fineos.models.customer_api.Address(
-                            addressLine1=application.residential_address.address_line_one,
-                            addressLine2=application.residential_address.address_line_two,
-                            addressLine4=application.residential_address.city,
-                            addressLine6=application.residential_address.geo_state.geo_state_description,
-                            postCode=application.residential_address.zip_code,
-                            country="USA",
-                        )
+                    massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
+                        name="Confirmed", booleanValue=True
                     ),
-                    gender="Female",
-                    classExtensionInformation=[
-                        massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
-                            name="MassachusettsID", stringValue=application.mass_id
-                        ),
-                        massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
-                            name="Confirmed", booleanValue=True
-                        ),
-                        massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
-                            name="ConsenttoShareData", booleanValue=False
-                        ),
-                    ],
-                )
-            },
-        ),
-        (
-            "get_customer_occupations_customer_api",
-            fineos_user_id,
-            {"customer_id": application.tax_identifier.tax_identifier},
-        ),
-        (
-            "update_customer_contact_details",
-            fineos_user_id,
-            {
-                "contact_details": massgov.pfml.fineos.models.customer_api.ContactDetails(
-                    phoneNumbers=[
-                        massgov.pfml.fineos.models.customer_api.PhoneNumber(
-                            id=1,
-                            preferred=None,
-                            phoneNumberType="Cell",
-                            intCode="1",
-                            areaCode="240",
-                            telephoneNo="4879945",
-                            classExtensionInformation=None,
-                        )
-                    ],
-                    emailAddresses=[
-                        massgov.pfml.fineos.models.customer_api.EmailAddressV20(
-                            emailAddress=application.user.email_address
-                        )
-                    ],
-                )
-            },
-        ),
-        (
-            "add_week_based_work_pattern",
-            fineos_user_id,
-            {
-                "week_based_work_pattern": massgov.pfml.fineos.models.customer_api.WeekBasedWorkPattern(
-                    workPatternType="Fixed",
-                    workWeekStarts="Sunday",
-                    patternStartDate=None,
-                    patternStatus=None,
-                    workPatternDays=[
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Sunday", weekNumber=1, hours=8, minutes=15
-                        ),
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Monday", weekNumber=1, hours=8, minutes=15
-                        ),
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Tuesday", weekNumber=1, hours=8, minutes=15
-                        ),
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Wednesday", weekNumber=1, hours=8, minutes=15
-                        ),
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Thursday", weekNumber=1, hours=8, minutes=15
-                        ),
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Friday", weekNumber=1, hours=8, minutes=15
-                        ),
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Saturday", weekNumber=1, hours=8, minutes=15
-                        ),
-                    ],
-                )
-            },
-        ),
-        (
-            "update_occupation",
-            None,
-            {
-                "employment_status": "Terminated",
-                "fineos_org_unit_id": None,
-                "hours_worked_per_week": 70,
-                "occupation_id": 12345,
-                "worksite_id": None,
-            },
-        ),
-        (
-            "start_absence",
-            fineos_user_id,
-            {
-                "absence_case": massgov.pfml.fineos.models.customer_api.AbsenceCase(
-                    additionalComments="PFML API " + str(application.application_id),
-                    intakeSource="Self-Service",
-                    notifiedBy="Employee",
-                    reason="Serious Health Condition - Employee",
-                    reasonQualifier1="Not Work Related",
-                    reasonQualifier2="Sickness",
-                    notificationReason="Accident or treatment required for an injury",
-                    primaryRelationship=None,
-                    primaryRelQualifier1=None,
-                    primaryRelQualifier2=None,
-                    timeOffLeavePeriods=[
-                        massgov.pfml.fineos.models.customer_api.TimeOffLeavePeriod(
-                            startDate=date(2022, 2, 2),
-                            endDate=date(2022, 2, 6),
-                            startDateFullDay=True,
-                            endDateFullDay=True,
-                            status="known",
-                        )
-                    ],
-                    employerNotified=False,
-                    employerNotificationDate=None,
-                    employerNotificationMethod=None,
-                )
-            },
-        ),
-        ("complete_intake", fineos_user_id, {"notification_case_id": "NTN-259"}),
-        ("read_employer", None, {"employer_fein": application.employer_fein}),
-        (
-            "update_customer_details",
-            fineos_user_id,
-            {
-                "customer": massgov.pfml.fineos.models.customer_api.Customer(
-                    firstName="First",
-                    lastName="Last",
-                    secondName="Middle",
-                    dateOfBirth=date(1997, 6, 6),
-                    idNumber=application.tax_identifier.tax_identifier,
-                    customerAddress=massgov.pfml.fineos.models.customer_api.CustomerAddress(
-                        address=massgov.pfml.fineos.models.customer_api.Address(
-                            addressLine1=application.residential_address.address_line_one,
-                            addressLine2=application.residential_address.address_line_two,
-                            addressLine4=application.residential_address.city,
-                            addressLine6=application.residential_address.geo_state.geo_state_description,
-                            postCode=application.residential_address.zip_code,
-                            country="USA",
-                        )
+                    massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
+                        name="ConsenttoShareData", booleanValue=False
                     ),
-                    gender="Female",
-                    classExtensionInformation=[
-                        massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
-                            name="MassachusettsID", stringValue=application.mass_id
-                        ),
-                        massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
-                            name="Confirmed", booleanValue=True
-                        ),
-                        massgov.pfml.fineos.models.customer_api.ExtensionAttribute(
-                            name="ConsenttoShareData", booleanValue=False
-                        ),
-                    ],
-                )
-            },
-        ),
-        (
-            "get_customer_occupations_customer_api",
-            fineos_user_id,
-            {"customer_id": application.tax_identifier.tax_identifier},
-        ),
-        (
-            "add_week_based_work_pattern",
-            fineos_user_id,
-            {
-                "week_based_work_pattern": massgov.pfml.fineos.models.customer_api.WeekBasedWorkPattern(
-                    workPatternType="Fixed",
-                    workWeekStarts="Sunday",
-                    patternStartDate=None,
-                    patternStatus=None,
-                    workPatternDays=[
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Sunday", weekNumber=1, hours=8, minutes=15
-                        ),
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Monday", weekNumber=1, hours=8, minutes=15
-                        ),
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Tuesday", weekNumber=1, hours=8, minutes=15
-                        ),
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Wednesday", weekNumber=1, hours=8, minutes=15
-                        ),
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Thursday", weekNumber=1, hours=8, minutes=15
-                        ),
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Friday", weekNumber=1, hours=8, minutes=15
-                        ),
-                        massgov.pfml.fineos.models.customer_api.WorkPatternDay(
-                            dayOfWeek="Saturday", weekNumber=1, hours=8, minutes=15
-                        ),
-                    ],
-                )
-            },
-        ),
-        (
-            "update_occupation",
-            None,
-            {
-                "employment_status": "Terminated",
-                "fineos_org_unit_id": None,
-                "hours_worked_per_week": 70,
-                "occupation_id": 12345,
-                "worksite_id": None,
-            },
-        ),
-        (
-            "update_customer_contact_details",
-            fineos_user_id,
-            {
-                "contact_details": massgov.pfml.fineos.models.customer_api.ContactDetails(
-                    phoneNumbers=[
-                        massgov.pfml.fineos.models.customer_api.PhoneNumber(
-                            id=1,
-                            preferred=None,
-                            phoneNumberType="Cell",
-                            intCode="1",
-                            areaCode="240",
-                            telephoneNo="4879945",
-                            classExtensionInformation=None,
-                        )
-                    ],
-                    emailAddresses=[
-                        massgov.pfml.fineos.models.customer_api.EmailAddressV20(
-                            emailAddress=application.user.email_address
-                        )
-                    ],
-                )
-            },
-        ),
-        (
-            "start_absence",
-            fineos_user_id,
-            {
-                "absence_case": massgov.pfml.fineos.models.customer_api.AbsenceCase(
-                    additionalComments="PFML API " + split_application_id,
-                    intakeSource="Self-Service",
-                    notifiedBy="Employee",
-                    reason="Serious Health Condition - Employee",
-                    reasonQualifier1="Not Work Related",
-                    reasonQualifier2="Sickness",
-                    notificationReason="Accident or treatment required for an injury",
-                    primaryRelationship=None,
-                    primaryRelQualifier1=None,
-                    primaryRelQualifier2=None,
-                    timeOffLeavePeriods=[
-                        massgov.pfml.fineos.models.customer_api.TimeOffLeavePeriod(
-                            startDate=date(2022, 2, 7),
-                            endDate=date(2022, 2, 10),
-                            startDateFullDay=True,
-                            endDateFullDay=True,
-                            status="known",
-                        )
-                    ],
-                    employerNotified=False,
-                    employerNotificationDate=None,
-                    employerNotificationMethod=None,
-                )
-            },
-        ),
-        ("complete_intake", fineos_user_id, {"notification_case_id": "NTN-260"}),
-    ]
-    # This is the submit call.  The full fineos API calls are asserted against in a different test
-    # This asserts that the app was not split (and the split app submitted)
-    submit_calls = [
-        capture
-        for capture in massgov.pfml.fineos.mock_client.get_capture()
-        if capture[0] == "start_absence"
-    ]
-    assert len(submit_calls) == 2
+                ],
+            )
+        },
+    ) in capture
+    assert len([call for call in capture if call[0] == "update_customer_contact_details"]) == 2
+    assert (
+        "update_customer_contact_details",
+        fineos_user_id,
+        {
+            "contact_details": massgov.pfml.fineos.models.customer_api.ContactDetails(
+                phoneNumbers=[
+                    massgov.pfml.fineos.models.customer_api.PhoneNumber(
+                        id=1,
+                        preferred=None,
+                        phoneNumberType="Cell",
+                        intCode="1",
+                        areaCode="240",
+                        telephoneNo="4879945",
+                        classExtensionInformation=None,
+                    )
+                ],
+                emailAddresses=[
+                    massgov.pfml.fineos.models.customer_api.EmailAddressV20(
+                        emailAddress=application.user.email_address
+                    )
+                ],
+            )
+        },
+    ) in capture
+    assert len([call for call in capture if call[0] == "add_week_based_work_pattern"]) == 2
+    assert (
+        "add_week_based_work_pattern",
+        fineos_user_id,
+        {
+            "week_based_work_pattern": massgov.pfml.fineos.models.customer_api.WeekBasedWorkPattern(
+                workPatternType="Fixed",
+                workWeekStarts="Sunday",
+                patternStartDate=None,
+                patternStatus=None,
+                workPatternDays=[
+                    massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                        dayOfWeek="Sunday", weekNumber=1, hours=8, minutes=15
+                    ),
+                    massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                        dayOfWeek="Monday", weekNumber=1, hours=8, minutes=15
+                    ),
+                    massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                        dayOfWeek="Tuesday", weekNumber=1, hours=8, minutes=15
+                    ),
+                    massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                        dayOfWeek="Wednesday", weekNumber=1, hours=8, minutes=15
+                    ),
+                    massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                        dayOfWeek="Thursday", weekNumber=1, hours=8, minutes=15
+                    ),
+                    massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                        dayOfWeek="Friday", weekNumber=1, hours=8, minutes=15
+                    ),
+                    massgov.pfml.fineos.models.customer_api.WorkPatternDay(
+                        dayOfWeek="Saturday", weekNumber=1, hours=8, minutes=15
+                    ),
+                ],
+            )
+        },
+    ) in capture
+    assert len([call for call in capture if call[0] == "update_occupation"]) == 2
+    assert (
+        "update_occupation",
+        None,
+        {
+            "employment_status": "Terminated",
+            "fineos_org_unit_id": None,
+            "hours_worked_per_week": 70,
+            "occupation_id": 12345,
+            "worksite_id": None,
+        },
+    ) in capture
+    assert len([call for call in capture if call[0] == "start_absence"]) == 2
+    assert (
+        "start_absence",
+        fineos_user_id,
+        {
+            "absence_case": massgov.pfml.fineos.models.customer_api.AbsenceCase(
+                additionalComments="PFML API " + str(application.application_id),
+                intakeSource="Self-Service",
+                notifiedBy="Employee",
+                reason="Serious Health Condition - Employee",
+                reasonQualifier1="Not Work Related",
+                reasonQualifier2="Sickness",
+                notificationReason="Accident or treatment required for an injury",
+                primaryRelationship=None,
+                primaryRelQualifier1=None,
+                primaryRelQualifier2=None,
+                timeOffLeavePeriods=[
+                    massgov.pfml.fineos.models.customer_api.TimeOffLeavePeriod(
+                        startDate=date(2022, 2, 2),
+                        endDate=date(2022, 2, 6),
+                        startDateFullDay=True,
+                        endDateFullDay=True,
+                        status="known",
+                    )
+                ],
+                employerNotified=False,
+                employerNotificationDate=None,
+                employerNotificationMethod=None,
+            )
+        },
+    ) in capture
+    assert (
+        "start_absence",
+        fineos_user_id,
+        {
+            "absence_case": massgov.pfml.fineos.models.customer_api.AbsenceCase(
+                additionalComments="PFML API " + split_application_id,
+                intakeSource="Self-Service",
+                notifiedBy="Employee",
+                reason="Serious Health Condition - Employee",
+                reasonQualifier1="Not Work Related",
+                reasonQualifier2="Sickness",
+                notificationReason="Accident or treatment required for an injury",
+                primaryRelationship=None,
+                primaryRelQualifier1=None,
+                primaryRelQualifier2=None,
+                timeOffLeavePeriods=[
+                    massgov.pfml.fineos.models.customer_api.TimeOffLeavePeriod(
+                        startDate=date(2022, 2, 7),
+                        endDate=date(2022, 2, 10),
+                        startDateFullDay=True,
+                        endDateFullDay=True,
+                        status="known",
+                    )
+                ],
+                employerNotified=False,
+                employerNotificationDate=None,
+                employerNotificationMethod=None,
+            )
+        },
+    ) in capture
+    assert len([call for call in capture if call[0] == "complete_intake"]) == 2
+    assert ("complete_intake", fineos_user_id, {"notification_case_id": "NTN-259"}) in capture
+    assert ("complete_intake", fineos_user_id, {"notification_case_id": "NTN-260"}) in capture
 
 
 @freeze_time("2022-02-01")
