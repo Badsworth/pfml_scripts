@@ -3,10 +3,11 @@ from collections import defaultdict
 from datetime import date
 from typing import Any, Dict, List, Optional, Tuple
 
+from pydantic import parse_obj_as
 from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.expression import desc
 
-from massgov.pfml.api.models.payments.responses import PaymentResponse
+from massgov.pfml.api.models.payments.responses import PaymentDetailsResponse, PaymentResponse
 from massgov.pfml.api.services.payments_services_util import (
     FrontendPaymentStatus,
     PaymentContainer,
@@ -261,7 +262,7 @@ def to_response_dict(payment_data: List[PaymentContainer], absence_case_id: Opti
                 writeback_transaction_status=scenario_data.writeback_transaction_status,
                 transaction_date=scenario_data.transaction_date,
                 transaction_date_could_change=scenario_data.transaction_date_could_change,
-                payment_details=payment.payment_details,  # type: ignore
+                payment_details=parse_obj_as(List[PaymentDetailsResponse], payment.payment_details),
             ).dict()
         )
 

@@ -1133,7 +1133,10 @@ class Payment(Base, TimestampMixin):
     reference_files = relationship("PaymentReferenceFile", back_populates="payment")
     state_logs = relationship("StateLog", back_populates="payment")
     payment_details = cast(
-        List["PaymentDetails"], relationship("PaymentDetails", back_populates="payment")
+        List["PaymentDetails"],
+        relationship(
+            "PaymentDetails", back_populates="payment", order_by="PaymentDetails.period_start_date"
+        ),
     )
     leave_request = relationship(AbsencePeriod)
 

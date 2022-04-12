@@ -3422,6 +3422,11 @@ components:
         amount:
           type: number
           example: 750.25
+          description: "Amount after reductions and split payments are taken out."
+        business_net_amount:
+          type: number
+          example: 750.25
+          description: "Amount after reductions are taken out, but prior to split payments. Used in max weekly benefits logic."
         payment_lines:
           type: array
           items:
@@ -3440,7 +3445,7 @@ components:
         line_type:
           type: string
           example: "Auto Gross Entitlement"
-          description: "A description of why this line was added or subtracted to the overall payment"
+          description: "Category of the line, e.g., Auto Gross Entitlement, State Income Tax, etc."
 
     ChangeRequestsResponse:
       type: array

@@ -18,6 +18,7 @@ class PaymentDetailsResponse(PydanticBaseModel):
     period_start_date: date
     period_end_date: date
     amount: Decimal
+    business_net_amount: Decimal
     payment_lines: list[PaymentLineResponse]
 
 
