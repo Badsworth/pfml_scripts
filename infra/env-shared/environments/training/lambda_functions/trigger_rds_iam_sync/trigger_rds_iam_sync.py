@@ -9,7 +9,7 @@ def get_github_token():
         WithDecryption=True
     )['Parameter']['Value']
 
-def lambda_handler(event, context=None):
+def handler(event, context=None):
     github_client = github.Github(
         login_or_token=get_github_token()
     )
@@ -22,7 +22,7 @@ def lambda_handler(event, context=None):
         print('Triggering API RDS IAM Sync for Training Database')
 
 if __name__ == "__main__":
-    lambda_handler(None)
+    handler(None)
 
 # to do
 # connect event bridge to lambda
