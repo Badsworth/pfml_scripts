@@ -24,6 +24,7 @@
             <tr>
                 <th>Id</th>
                 <th>Start</th>
+                <th>Task Name</th>
                 <th>Name</th>
                 <th>Type</th>
                 <th>Status</th>
@@ -36,7 +37,8 @@
                 <tr>
                     <td><a href="{{ url_for('dashboard_batch', key=key)}}/{{ entry.import_log_id }}">{{ entry.import_log_id }}</a></td>
                     <td>{{ entry.start.strftime("%Y-%m-%d %H:%M:%S") if entry.start }}</td>
-                    <td><a href="{{ url_for('dashboard_batch', key=key)}}/{{ entry.source }}">{{ entry.source }}</a><br /><span style="font-family: monospace;">{{ entry.source_context }} </span></td>
+                    <td>{{ entry.source_context }}</td>
+                    <td><a href="{{ url_for('dashboard_batch', key=key)}}/{{ entry.source }}">{{ entry.source }}</a></td>
                     <td><a href="{{ url_for('dashboard_batch_type', key=key, batch_type=entry.import_type) }}">{{ entry.import_type }}</a></td>
                     <td>{{ entry.status }}</td>
                     <td title="{{ entry.end.strftime('%Y-%m-%d %H:%M:%S') if entry.end }}">{{
