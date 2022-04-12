@@ -25,10 +25,7 @@ if __name__ == "__main__":
     lambda_handler(None)
 
 # to do
-# Add repo dispatch to rds_iam_sync github action
-# - My branch  
-# - Main
-# Test repo dispatch to rds_iam_sync github action 
-# - My branch  
-# - Main
+# connect event bridge to lambda
+# setup pattern for event bridge to trigger lambda
+# RDS - EventBridge - Lambda - GitHub Action
 
