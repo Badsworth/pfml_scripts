@@ -1,4 +1,4 @@
-import EmployerClaim from "../../models/EmployerClaim";
+import EmployerClaimReview from "../../models/EmployerClaimReview";
 import React from "react";
 import ReviewHeading from "../../components/ReviewHeading";
 import ReviewRow from "../../components/ReviewRow";
@@ -6,7 +6,7 @@ import formatDateRange from "../../utils/formatDateRange";
 import { useTranslation } from "../../locales/i18n";
 
 interface EmployeeInformationProps {
-  claim: EmployerClaim;
+  claim: EmployerClaimReview;
 }
 
 /**

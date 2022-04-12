@@ -1641,14 +1641,19 @@ const pages: {
     title: "$t(shared.claimsLeaveSpansBenefitYears.title)",
   },
   claimsModifyCancel: {
-    sectionLabel: "Are you sure you want to cancel your leave?",
+    cancelBody:
+      "Once your application has been canceled, you cannot make any changes to your application.",
+    cancelButton: "Yes, cancel my leave",
+    overpaymentsWarning:
+      "If you have received payments for the leave dates you are cancelling, you will need to return the money to the Department. Read more about$t(chars.nbsp)<overpayments-link>overpayments</overpayments-link>.",
+    sectionLabel: "Are you sure you want to cancel your entire PFML leave?",
     title: "$t(shared.claimsModifyTitle)",
   },
   claimsModifyChecklist: {
     backButtonLabel: "$t(shared.backToYourApplicationsLink)",
     title: "Welcome back to your in-progress change request",
   },
-  claimsModifyGetReady: {
+  claimsModifyIndex: {
     backButtonLabel: "$t(shared.backToYourApplicationsLink)",
     button: "Continue",
     title: "Request a change to your application",

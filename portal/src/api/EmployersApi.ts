@@ -7,7 +7,7 @@ import BaseApi, {
 import User, { UserLeaveAdministrator } from "../models/User";
 import ApiResourceCollection from "../models/ApiResourceCollection";
 import { ClaimDocument } from "../models/Document";
-import EmployerClaim from "../models/EmployerClaim";
+import EmployerClaimReview from "../models/EmployerClaimReview";
 import Withholding from "../models/Withholding";
 import routes from "../routes";
 
@@ -33,13 +33,13 @@ export default class EmployersApi extends BaseApi {
   };
 
   getClaim = async (absenceId: string) => {
-    const { data } = await this.request<EmployerClaim>(
+    const { data } = await this.request<EmployerClaimReview>(
       "GET",
       `claims/${absenceId}/review`
     );
 
     return {
-      claim: new EmployerClaim(data),
+      claim: new EmployerClaimReview(data),
     };
   };
 

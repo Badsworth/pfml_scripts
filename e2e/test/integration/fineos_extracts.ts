@@ -5,7 +5,7 @@ import { ListObjectsV2CommandOutput } from "@aws-sdk/client-s3";
 import { describe, beforeAll, expect, it } from "@jest/globals";
 
 /**
- * @group stable
+ * @group morning
  */
 describe("FINEOS extracts", () => {
   let infraClient: InfraClient;

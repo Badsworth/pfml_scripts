@@ -7,7 +7,7 @@ import ApiResourceCollection from "../../models/ApiResourceCollection";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import Claim from "../../models/Claim";
 import ClaimDetail from "../../models/ClaimDetail";
-import EmployerClaim from "../../models/EmployerClaim";
+import EmployerClaimReview from "../../models/EmployerClaimReview";
 import Flag from "../../models/Flag";
 import { Payment } from "src/models/Payment";
 import { uniqueId } from "lodash";
@@ -78,7 +78,7 @@ export default jest.fn(() => ({
     downloadDocument: jest.fn(() => new Blob()),
     loadClaim: jest.fn(
       () =>
-        new EmployerClaim({
+        new EmployerClaimReview({
           absence_periods: [],
           fineos_absence_id: "NTN-111-ABS-01",
         })
