@@ -1,4 +1,4 @@
-from concurrent.futures import ThreadPoolExecutor, as_completed, wait
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from typing import Dict, Optional, Tuple
 from uuid import UUID
@@ -235,11 +235,9 @@ def _update_customer_contact_details(
 
 
 def _update_reflexive_questions(
-    ssn_fein_pair: SsnFeinPair,
     fineos_web_id: str,
     fineos_absence_id: str,
     reflexive_question: AdditionalInformation,
-    application_id: str,
 ) -> None:
     fineos_client = fineos.create_client()
     fineos_client.update_reflexive_questions(fineos_web_id, fineos_absence_id, reflexive_question)
@@ -267,7 +265,7 @@ def submit(
     calls required based on the data conditions of the passed applications and make the calls to the FINEOS API
     concurrently when possible.
 
-    Flow of API calls (per application):
+    Flow of API calls (per application); each line break represents calls that have to occur sequentially:
     register_api_user ->
     (update_customer_details, get_customer_occupations_customer_api -> get_customer_occupation -> (update_week_based_work_pattern, update_occupation), update_customer_contact_details) ->
     start_absence ->
@@ -464,11 +462,9 @@ def submit(
                     update_reflexive_questions_futures.append(
                         executor.submit(
                             _update_reflexive_questions,
-                            container.ssn_fein_pair,
                             container.fineos_web_id,
                             application.claim.fineos_absence_id,
                             reflexive_question,
-                            application.application_id,
                         )
                     )
 
@@ -480,11 +476,9 @@ def submit(
                     update_reflexive_questions_futures.append(
                         executor.submit(
                             _update_reflexive_questions,
-                            container.ssn_fein_pair,
                             container.fineos_web_id,
                             application.claim.fineos_absence_id,
                             reflexive_question,
-                            application.application_id,
                         )
                     )
     complete_intake_futures = []
