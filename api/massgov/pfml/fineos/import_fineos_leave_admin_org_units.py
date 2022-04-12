@@ -23,7 +23,7 @@ from massgov.pfml.db.models.employees import (
     UserLeaveAdministrator,
     UserLeaveAdministratorOrgUnit,
 )
-from massgov.pfml.util.bg import background_task
+from massgov.pfml.util.bg import background_task, get_current_task_name
 from massgov.pfml.util.csv import CSVSourceWrapper
 from massgov.pfml.util.datetime import utcnow
 from massgov.pfml.util.logging import log_every
@@ -99,7 +99,7 @@ def handler():
 
     try:
         with massgov.pfml.util.batch.log.LogEntry(
-            db_session_raw, "FINEOS Organization Unit Update", ""
+            db_session_raw, get_current_task_name(), "FINEOS Organization Unit Update", ""
         ) as log_entry, db.session_scope(db_session_raw) as db_session:
             report = process_fineos_updates(
                 db_session, config.fineos_folder_path, fineos_boto_session

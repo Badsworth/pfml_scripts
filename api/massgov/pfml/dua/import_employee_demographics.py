@@ -13,7 +13,7 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import ReferenceFile
 from massgov.pfml.dua.config import get_moveit_config, get_transfer_config
 from massgov.pfml.util.batch.log import LogEntry
-from massgov.pfml.util.bg import background_task
+from massgov.pfml.util.bg import background_task, get_current_task_name
 
 logger = logging.get_logger(__name__)
 
@@ -95,7 +95,9 @@ def main():
     with db.session_scope(db.init(), close=True) as db_session, db.session_scope(
         db.init(), close=True
     ) as log_entry_db_session:
-        with LogEntry(log_entry_db_session, __name__, "DUA import_demographics_file") as log_entry:
+        with LogEntry(
+            log_entry_db_session, get_current_task_name(), "DUA import_demographics_file"
+        ) as log_entry:
 
             if config.import_demographics_file:
                 transfer_config = get_transfer_config()

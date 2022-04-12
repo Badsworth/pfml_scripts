@@ -27,7 +27,7 @@ from massgov.pfml.db.models.employees import (
     OrganizationUnit,
     TaxIdentifier,
 )
-from massgov.pfml.util.bg import background_task
+from massgov.pfml.util.bg import background_task, get_current_task_name
 from massgov.pfml.util.csv import CSVSourceWrapper
 from massgov.pfml.util.datetime import utcnow
 from massgov.pfml.util.logging import log_every
@@ -122,7 +122,7 @@ def handler():
 
     try:
         with massgov.pfml.util.batch.log.log_entry(
-            db_session_raw, __name__, "FINEOS Employee Update", ""
+            db_session_raw, get_current_task_name(), "FINEOS Employee Update", ""
         ) as log_entry, db.session_scope(db_session_raw) as db_session:
             report = process_fineos_updates(
                 db_session, config.fineos_folder_path, fineos_boto_session

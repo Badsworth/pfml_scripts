@@ -10,7 +10,7 @@ import massgov.pfml.util.batch.log
 import massgov.pfml.util.logging as logging
 import massgov.pfml.util.pydantic
 from massgov.pfml import db, fineos
-from massgov.pfml.util.bg import background_task
+from massgov.pfml.util.bg import background_task, get_current_task_name
 
 logger = logging.get_logger(__name__)
 
@@ -52,7 +52,7 @@ def handler():
 
     with db.session_scope(db_session_raw, close=True) as db_session:
         report_log_entry = massgov.pfml.util.batch.log.create_log_entry(
-            db_session, __name__, "Employer load", config.mode.name.lower()
+            db_session, get_current_task_name(), "Employer load", config.mode.name.lower()
         )
 
         if config.mode is EmployerLoadMode.UPDATES:

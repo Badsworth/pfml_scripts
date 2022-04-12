@@ -9,7 +9,7 @@ import massgov.pfml.db as db
 from massgov.pfml.db.models.employees import Employee, EmployeePushToFineosQueue, Gender
 from massgov.pfml.util import logging
 from massgov.pfml.util.batch.log import LogEntry
-from massgov.pfml.util.bg import background_task
+from massgov.pfml.util.bg import background_task, get_current_task_name
 from massgov.pfml.util.csv import CSVSourceWrapper
 
 logger = logging.get_logger(__name__)
@@ -55,7 +55,9 @@ def main():
     with db.session_scope(db.init(), close=True) as db_session, db.session_scope(
         db.init(), close=True
     ) as log_entry_db_session:
-        with LogEntry(log_entry_db_session, __name__, "DUA gender_backfill") as log_entry:
+        with LogEntry(
+            log_entry_db_session, get_current_task_name(), "DUA gender_backfill"
+        ) as log_entry:
             logger.info(
                 "Processing DUA employee demographics file",
                 extra={"employee_demographic_filename": config.source_file_path},

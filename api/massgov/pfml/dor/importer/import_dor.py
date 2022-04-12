@@ -45,7 +45,7 @@ from massgov.pfml.dor.importer.dor_file_formats import (
     WageKey,
 )
 from massgov.pfml.dor.importer.paths import ImportBatch, get_files_to_process
-from massgov.pfml.util.bg import background_task
+from massgov.pfml.util.bg import background_task, get_current_task_name
 from massgov.pfml.util.config import get_secret_from_env
 from massgov.pfml.util.encryption import Crypt, GpgCrypt, Utf8Crypt
 
@@ -114,10 +114,15 @@ class ImportRunReport:
     message: str = ""
 
 
+print(f"after dec: {get_current_task_name()}")
+
+
 @background_task("dor-import")
 def handler() -> None:
     """ECS task main method."""
     logger.addFilter(filter_add_memory_usage)
+
+    print(f"in bgtask handler: {get_current_task_name()}")
 
     report = ImportRunReport(start=datetime.now().isoformat())
 
@@ -468,7 +473,7 @@ def process_daily_import(
     report.invalid_employer_addresses_by_account_key = {}
 
     report_log_entry = massgov.pfml.util.batch.log.create_log_entry(
-        db_session, __name__, "DOR", "Initial", report
+        db_session, get_current_task_name(), "DOR", "Initial", report
     )
 
     db_session.refresh(report_log_entry)

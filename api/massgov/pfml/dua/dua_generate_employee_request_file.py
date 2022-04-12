@@ -18,7 +18,7 @@ from massgov.pfml.db.models.employees import (
 )
 from massgov.pfml.dua.config import get_moveit_config, get_transfer_config
 from massgov.pfml.util.batch.log import LogEntry
-from massgov.pfml.util.bg import background_task
+from massgov.pfml.util.bg import background_task, get_current_task_name
 from massgov.pfml.util.sftp_s3_transfer import (
     SftpS3TransferConfig,
     copy_to_sftp_and_archive_s3_files,
@@ -160,7 +160,9 @@ def main():
         db.init(), close=True
     ) as log_entry_db_session:
         with LogEntry(
-            log_entry_db_session, __name__, "DUA generate-and-send-employee-request-file"
+            log_entry_db_session,
+            get_current_task_name(),
+            "DUA generate-and-send-employee-request-file",
         ) as log_entry:
             generate_and_upload_dua_employee_update_file(db_session, log_entry)
             copy_dua_files_from_s3_to_moveit(db_session, log_entry)

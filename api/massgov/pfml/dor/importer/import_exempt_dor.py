@@ -54,7 +54,7 @@ from massgov.pfml.dor.pending_filing.pending_filing_response import (
     is_valid_employer_fein,
     move_file_to_processed,
 )
-from massgov.pfml.util.bg import background_task
+from massgov.pfml.util.bg import background_task, get_current_task_name
 from massgov.pfml.util.encryption import Crypt
 
 logger = logging.get_logger("massgov.pfml.dor.importer.import_exempt_dor")
@@ -215,7 +215,7 @@ def process_exempt_employer_import(
     report.parsed_employers_exception_line_nums = []
 
     report_log_entry = massgov.pfml.util.batch.log.create_log_entry(
-        db_session, __name__, "DOR_EXEMPT", "Exempt Employers", report
+        db_session, get_current_task_name(), "DOR_EXEMPT", "Exempt Employers", report
     )
 
     db_session.refresh(report_log_entry)

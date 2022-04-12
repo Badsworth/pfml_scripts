@@ -10,7 +10,7 @@ import massgov.pfml.util.aws.sts as aws_sts
 import massgov.pfml.util.batch.log
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db, fineos
-from massgov.pfml.util.bg import background_task
+from massgov.pfml.util.bg import background_task, get_current_task_name
 
 logger = logging.get_logger(__name__)
 
@@ -50,7 +50,7 @@ def main_with_return():
 
     with db.session_scope(make_db_session(), close=True) as db_session:
         report_log_entry = massgov.pfml.util.batch.log.create_log_entry(
-            db_session, __name__, "Eligibility export", config.mode.name.lower()
+            db_session, get_current_task_name(), "Eligibility export", config.mode.name.lower()
         )
 
     output_transport_params = None

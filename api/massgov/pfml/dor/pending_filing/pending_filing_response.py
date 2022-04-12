@@ -54,7 +54,7 @@ from massgov.pfml.dor.importer.paths import (
     get_exemption_file_to_process,
     get_pending_filing_files_to_process,
 )
-from massgov.pfml.util.bg import background_task
+from massgov.pfml.util.bg import background_task, get_current_task_name
 from massgov.pfml.util.config import get_secret_from_env
 from massgov.pfml.util.csv import CSVSourceWrapper
 from massgov.pfml.util.encryption import Crypt, GpgCrypt, Utf8Crypt
@@ -290,7 +290,7 @@ def process_pending_filing_employer_import(
     report.parsed_employers_exception_line_nums = []
 
     report_log_entry = massgov.pfml.util.batch.log.create_log_entry(
-        db_session, __name__, "DOR", "Pending Filing Response", report
+        db_session, get_current_task_name(), "DOR", "Pending Filing Response", report
     )
 
     db_session.refresh(report_log_entry)

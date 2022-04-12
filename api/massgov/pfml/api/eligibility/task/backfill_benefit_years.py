@@ -5,7 +5,7 @@ from massgov.pfml import db
 from massgov.pfml.api.eligibility import benefit_year
 from massgov.pfml.db.models.employees import BenefitYear, Claim, Employee
 from massgov.pfml.util.batch import log
-from massgov.pfml.util.bg import background_task
+from massgov.pfml.util.bg import background_task, get_current_task_name
 
 logger = logging.get_logger(__name__)
 
@@ -23,7 +23,9 @@ def main():
     with db.session_scope(db.init(), close=True) as db_session, db.session_scope(
         db.init(), close=True
     ) as log_entry_db_session:
-        with log.LogEntry(log_entry_db_session, __name__, "BackfillBenefitYears") as log_entry:
+        with log.LogEntry(
+            log_entry_db_session, get_current_task_name(), "BackfillBenefitYears"
+        ) as log_entry:
             logger.info("Getting claimants to backfill")
             claimants_to_backfill = get_claimants_to_backfill(db_session)
             logger.info("Starting benefit year backfill")

@@ -6,6 +6,14 @@ import massgov.pfml.util.logging
 import massgov.pfml.util.logging.audit
 from massgov.pfml.util.newrelic import init_newrelic
 
+# This will only be set if the current context is a running background_task
+CURRENT_TASK_NAME = None
+
+
+# Accesses the set task name if it has happened, for use with ImportLogs
+def get_current_task_name():
+    return CURRENT_TASK_NAME
+
 
 @contextlib.contextmanager
 def background_task(name):
@@ -29,6 +37,12 @@ def background_task(name):
     massgov.pfml.util.logging.audit.init_security_logging()
 
     application = newrelic.agent.register_application(timeout=10.0)
+
+    global CURRENT_TASK_NAME
+    if CURRENT_TASK_NAME is None:
+        CURRENT_TASK_NAME = "name"
+
+    CURRENT_TASK_NAME = name
 
     with newrelic.agent.BackgroundTask(application, name=name, group="Python/ECSTask"):
         yield
