@@ -2042,6 +2042,8 @@ def split_application_by_date(
         len(application_before_split_date.other_incomes) != 0
     )
 
+    # TODO??? maybe additional_user_not_found_info is missing after copy/split
+
     return (application_before_split_date, application_after_split_date)
 
 

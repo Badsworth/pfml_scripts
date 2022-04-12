@@ -530,13 +530,8 @@ def applications_submit(application_id):
                 **{"split_claims_across_by_enabled": split_claims_across_by_enabled},
             },
         )
-        # submit_function = submit_application_to_fineos
 
-        # if employer_issue:
-        #     # TODO create PDF, send to Fineos. Return success..?
-        #     submit_function = upload_user_not_found_document
-
-        if application_split is not None and split_claims_across_by_enabled:
+        if not employer_issue and application_split is not None and split_claims_across_by_enabled:
             application_before_split, application_after_split = split_application_by_date(
                 db_session, existing_application, application_split.crossed_benefit_year.end_date
             )
@@ -585,12 +580,13 @@ def applications_submit(application_id):
                     return get_fineos_submit_issues_response(e, existing_application)
                 raise e
         else:
-            try:
-                submit_application_to_fineos(existing_application, db_session, current_user)
-            except Exception as e:
-                if isinstance(e, FINEOSClientError):
-                    return get_fineos_submit_issues_response(e, existing_application)
-                raise e
+            if error_response := attempt_application_submission(
+                db_session,
+                current_user,
+                existing_application,
+                bool(employer_issue),
+            ):
+                return error_response
 
     logger.info("applications_submit success", extra=log_attributes)
     db_session.refresh(existing_application)
@@ -601,6 +597,29 @@ def applications_submit(application_id):
         data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
         status_code=201,
     ).to_api_response()
+
+
+def attempt_application_submission(
+    db_session: db.Session,
+    current_user: User,
+    application: Application,
+    has_employer_issue: bool,
+) -> Optional[Response]:
+    try:
+        if has_employer_issue:
+            return upload_additional_user_not_found_info_to_fineos(db_session, application)
+        else:
+            return submit_application_to_fineos(application, db_session, current_user)
+    except Exception as e:
+        if isinstance(e, FINEOSClientError):
+            return get_fineos_submit_issues_response(e, application)
+        raise e
+
+
+def upload_additional_user_not_found_info_to_fineos(
+    db_session: db.Session, application: Application
+) -> None:
+    return None
 
 
 def applications_complete(application_id):
