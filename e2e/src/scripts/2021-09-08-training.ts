@@ -16,7 +16,7 @@ import path from "path";
 const pipelineP = promisify(pipeline);
 
 (async () => {
-  const storage = dataDirectory("2022-05-10-training");
+  const storage = dataDirectory("2022-05-XX-training");
   await storage.prepare();
 
   const employerPool = await EmployerPool.load(
@@ -25,7 +25,7 @@ const pipelineP = promisify(pipeline);
   await DOR.writeEmployersFile(employerPool, storage.dorFile("DORDFMLEMP"));
   await EmployerIndex.write(
     employerPool,
-    path.join(storage.dir, "employees.csv")
+    path.join(storage.dir, "employers.csv")
   );
 
   const employeePool = await EmployeePool.load(
@@ -46,7 +46,7 @@ const pipelineP = promisify(pipeline);
   );
   await EmployeeIndex.write(
     employeePool,
-    path.join(storage.dir, "employers.csv")
+    path.join(storage.dir, "employees.csv")
   );
 
   const generateClaims = (spec: ScenarioSpecification, count: number) =>
@@ -69,7 +69,7 @@ const pipelineP = promisify(pipeline);
 
   // used to generate fresh employees and employers for training
   const claimantsOnlyStorage = dataDirectory(
-    "2022-05-10-training-claimants-only"
+    "2022-05-XX-training-claimants-only"
   );
   await claimantsOnlyStorage.prepare();
 
@@ -92,7 +92,7 @@ const pipelineP = promisify(pipeline);
   );
   await EmployerIndex.write(
     claimantsOnlyEmployerPool,
-    path.join(claimantsOnlyStorage.dir, "employees.csv")
+    path.join(claimantsOnlyStorage.dir, "employers.csv")
   );
 
   // Generate a pool of employees.
@@ -112,7 +112,7 @@ const pipelineP = promisify(pipeline);
   );
   await EmployeeIndex.write(
     claimantsOnlyEmployeePool,
-    path.join(claimantsOnlyStorage.dir, "employers.csv")
+    path.join(claimantsOnlyStorage.dir, "employees.csv")
   );
 
   const used = process.memoryUsage().heapUsed / 1024 / 1024;

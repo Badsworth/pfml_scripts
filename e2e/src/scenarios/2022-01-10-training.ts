@@ -1,3 +1,6 @@
+// This file contains the scenarios used to generate claims used for training and trn refreshes
+// These scenarios remain the same for the most part with the exception being the leave dates.
+
 import { ScenarioSpecification } from "../generation/Scenario";
 import { parseISO, addWeeks, subDays, addDays } from "date-fns";
 import faker from "faker";
@@ -270,30 +273,6 @@ export const TRNO: ScenarioSpecification = {
     leave_dates: () => generateRandomLeave(),
   },
 };
-
-// See if it's possible to do intermittent w/ rotating schedule. If it's not possible, we could switch this to continuous leave.
-// export const TRNP: ScenarioSpecification = {
-//   employee: { mass_id: true, wages: "eligible" },
-//   claim: {
-//     label: "TRNP",
-//     reason: "Serious Health Condition - Employee",
-//     has_continuous_leave_periods: true,
-//     docs: {
-//       MASSID: {},
-//       HCP: {},
-//     },
-//     employerResponse: {
-//       hours_worked_per_week: 40,
-//       employer_decision: "Approve",
-//     },
-//     leave_dates: () => generateLeaveDates(),
-//     metadata: {
-//       leaveDescription: GENERATE_LEAVE_DATES_DESCRIPTION,
-//       postSubmit: "APPROVEDOCSEROPEN",
-//       quantity: 100,
-//     },
-//   },
-// };
 
 // See if it's possible to do intermittent w/ rotating schedule. If it's not possible, we could switch this to continuous leave.
 export const TRNQ: ScenarioSpecification = {
@@ -786,7 +765,7 @@ export const TRNOI1: ScenarioSpecification = {
     label: "TRNOI1",
     reason: "Serious Health Condition - Employee",
     work_pattern_spec: "standard",
-    leave_dates: [parseISO("2022-01-03"), parseISO("2022-03-04")],
+    leave_dates: [parseISO("2022-05-03"), parseISO("2022-07-04")],
     docs: {
       MASSID: {},
       HCP: {},
@@ -819,7 +798,7 @@ export const TRNOI2: ScenarioSpecification = {
     label: "TRNOI2",
     reason: "Serious Health Condition - Employee",
     work_pattern_spec: "standard",
-    leave_dates: [parseISO("2022-01-15"), parseISO("2022-02-14")],
+    leave_dates: [parseISO("2022-05-15"), parseISO("2022-06-14")],
     is_withholding_tax: true,
     docs: {
       MASSID: {},
@@ -855,7 +834,7 @@ export const TRNOI3: ScenarioSpecification = {
     reason: "Pregnancy/Maternity",
     work_pattern_spec: "standard",
     is_withholding_tax: true,
-    leave_dates: [parseISO("2022-02-14"), parseISO("2022-04-15")],
+    leave_dates: [parseISO("2022-06-14"), parseISO("2022-08-15")],
     docs: {
       MASSID: {},
       PREGNANCY_MATERNITY_FORM: {},
@@ -888,7 +867,7 @@ export const TRNOI4: ScenarioSpecification = {
     label: "TRNOI4",
     reason: "Pregnancy/Maternity",
     work_pattern_spec: "standard",
-    leave_dates: [parseISO("2022-01-03"), parseISO("2022-03-04")],
+    leave_dates: [parseISO("2022-05-03"), parseISO("2022-07-04")],
     docs: {
       MASSID: {},
       PREGNANCY_MATERNITY_FORM: {},
@@ -923,7 +902,7 @@ export const TRNOL1: ScenarioSpecification = {
     label: "TRNOL1",
     reason: "Serious Health Condition - Employee",
     work_pattern_spec: "standard",
-    leave_dates: [parseISO("2022-01-15"), parseISO("2022-02-14")],
+    leave_dates: [parseISO("2022-05-15"), parseISO("2022-06-14")],
     docs: {
       MASSID: {},
       HCP: {},
@@ -959,7 +938,7 @@ export const TRNOL2: ScenarioSpecification = {
     label: "TRNOL2",
     reason: "Serious Health Condition - Employee",
     work_pattern_spec: "standard",
-    leave_dates: [parseISO("2022-02-14"), parseISO("2022-04-15")],
+    leave_dates: [parseISO("2022-06-14"), parseISO("2022-08-15")],
     docs: {
       MASSID: {},
       HCP: {},
@@ -992,7 +971,7 @@ export const TRNOL3: ScenarioSpecification = {
     is_withholding_tax: true,
     bondingDate: "future",
     work_pattern_spec: "standard",
-    leave_dates: [parseISO("2022-01-24"), parseISO("2022-03-25")],
+    leave_dates: [parseISO("2022-05-24"), parseISO("2022-07-25")],
     docs: {
       MASSID: {},
       BIRTHCERTIFICATE: {},
@@ -1027,7 +1006,7 @@ export const TRNOL4: ScenarioSpecification = {
     label: "TRNOL4",
     reason: "Pregnancy/Maternity",
     work_pattern_spec: "standard",
-    leave_dates: [parseISO("2022-01-15"), parseISO("2022-02-14")],
+    leave_dates: [parseISO("2022-05-15"), parseISO("2022-06-14")],
     docs: {
       MASSID: {},
       PREGNANCY_MATERNITY_FORM: {},
@@ -1057,7 +1036,7 @@ export const TRNER1: ScenarioSpecification = {
     reason: "Serious Health Condition - Employee",
     work_pattern_spec: "standard",
     is_withholding_tax: true,
-    leave_dates: [parseISO("2022-02-14"), parseISO("2022-04-15")],
+    leave_dates: [parseISO("2022-06-14"), parseISO("2022-08-15")],
     docs: {
       MASSID: {},
       HCP: {},
@@ -1090,7 +1069,7 @@ export const TRNER1B: ScenarioSpecification = {
     label: "TRNER1B",
     reason: "Serious Health Condition - Employee",
     work_pattern_spec: "standard",
-    leave_dates: [parseISO("2022-01-03"), parseISO("2022-03-04")],
+    leave_dates: [parseISO("2022-05-03"), parseISO("2022-07-04")],
     docs: {
       MASSID: {},
       HCP: {},
@@ -1124,7 +1103,7 @@ export const TRNER2: ScenarioSpecification = {
     is_withholding_tax: true,
     reason: "Care for a Family Member",
     work_pattern_spec: "standard",
-    leave_dates: [parseISO("2022-01-15"), parseISO("2022-02-14")],
+    leave_dates: [parseISO("2022-05-15"), parseISO("2022-06-14")],
     docs: {
       MASSID: {},
       CARING: {},
@@ -1159,7 +1138,7 @@ export const TRNER2B: ScenarioSpecification = {
     label: "TRNER2B",
     reason: "Care for a Family Member",
     work_pattern_spec: "standard",
-    leave_dates: [parseISO("2022-02-14"), parseISO("2022-04-15")],
+    leave_dates: [parseISO("2022-06-14"), parseISO("2022-08-15")],
     docs: {
       MASSID: {},
       CARING: {},
@@ -1196,7 +1175,7 @@ export const TRNER3: ScenarioSpecification = {
     reason_qualifier: "Newborn",
     bondingDate: "past",
     work_pattern_spec: "standard",
-    leave_dates: [parseISO("2022-01-03"), parseISO("2022-03-04")],
+    leave_dates: [parseISO("2022-05-03"), parseISO("2022-07-04")],
     docs: {
       MASSID: {},
       BIRTHCERTIFICATE: {},
@@ -1229,7 +1208,7 @@ export const TRNER3B: ScenarioSpecification = {
     reason_qualifier: "Newborn",
     bondingDate: "past",
     work_pattern_spec: "standard",
-    leave_dates: [parseISO("2022-01-15"), parseISO("2022-02-14")],
+    leave_dates: [parseISO("2022-05-15"), parseISO("2022-06-14")],
     docs: {
       MASSID: {},
       BIRTHCERTIFICATE: {},
@@ -1252,6 +1231,8 @@ export const TRNER3B: ScenarioSpecification = {
     },
   },
 };
+
+// Historical scenarios, not going to be used for the latest data load
 
 // export const TRNER4: ScenarioSpecification = {
 //   employee: { mass_id: true, wages: "eligible" },
