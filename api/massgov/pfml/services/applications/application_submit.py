@@ -47,6 +47,7 @@ class SsnFeinPair:
 class ApplicationsContainer:
     ssn_fein_pair: SsnFeinPair
     applications: list[Application]
+    fineos_employer: models.OCOrganisation
     fineos_web_id: Optional[str] = None
     customer: Optional[models.customer_api.Customer] = None
     customer_contact_details: Optional[models.customer_api.ContactDetails] = None
@@ -68,22 +69,37 @@ class ApplicationsContainer:
         return True in (application.claim is not None for application in self.applications)
 
 
-def _thread_safe_read_employer(fein: str) -> Dict[str, models.OCOrganisation]:
-    fineos_client = fineos.create_client()
-    fineos_employer = fineos_client.read_employer(fein)
-    return {fein: fineos_employer}
+def _get_container_by_ssn_fein_pair(
+    containers: list[ApplicationsContainer], ssn_fein_pair: SsnFeinPair
+) -> ApplicationsContainer:
+    return next(container for container in containers if container.ssn_fein_pair == ssn_fein_pair)
 
 
-def _get_fineos_employers(
-    employer_feins: list[str], executor: ThreadPoolExecutor
-) -> Dict[str, models.OCOrganisation]:
-    employers: Dict[str, models.OCOrganisation] = {}
-    employer_futures = list(
-        map(lambda fein: executor.submit(_thread_safe_read_employer, fein), employer_feins)
+def _get_fineos_web_ids(
+    db_session: db.Session, ssn_fein_pairs: set[SsnFeinPair]
+) -> Dict[SsnFeinPair, str]:
+    feins = [pair.employer_fein for pair in ssn_fein_pairs]
+    ssns = [pair.employee_ssn for pair in ssn_fein_pairs]
+    web_ids = (
+        db_session.query(FINEOSWebIdExt)
+        .filter(
+            FINEOSWebIdExt.employee_tax_identifier.in_(ssns),
+            FINEOSWebIdExt.employer_fein.in_(feins),
+        )
+        .all()
     )
-    for future in as_completed(employer_futures):
-        employers = employers | future.result()
-    return employers
+    ssn_fein_pair_to_web_id = {}
+    for pair in ssn_fein_pairs:
+        for web_id in web_ids:
+            if (
+                pair.employee_ssn == web_id.employee_tax_identifier
+                and pair.employer_fein == web_id.employer_fein
+            ):
+                assert web_id.fineos_web_id
+                ssn_fein_pair_to_web_id[pair] = web_id.fineos_web_id
+                break
+
+    return ssn_fein_pair_to_web_id
 
 
 def _build_fineos_customers(
@@ -104,28 +120,6 @@ def _build_absence_cases(
             container.absence_cases[application.application_id] = build_absence_case(application)
 
 
-def _build_applications_containers(
-    applications: list[Application],
-    user: User,
-) -> list[ApplicationsContainer]:
-    containers: list[ApplicationsContainer] = []
-    pairs: Dict[SsnFeinPair, list[Application]] = {}
-    for application in applications:
-        if application.employer_fein is None:
-            raise ValueError("application.employer_fein is None")
-        pair = SsnFeinPair(application.tax_identifier.tax_identifier, application.employer_fein)
-        if pair in pairs.keys():
-            pairs[pair].append(application)
-        else:
-            pairs[pair] = [application]
-    for (ssn_fein_pair, applications) in pairs.items():
-        containers.append(ApplicationsContainer(ssn_fein_pair, applications))
-    _build_fineos_customers(containers, user)
-    _build_absence_cases(containers)
-    _build_contact_details(containers)
-    return containers
-
-
 def _build_contact_details(
     containers: list[ApplicationsContainer],
 ) -> None:
@@ -137,19 +131,57 @@ def _build_contact_details(
             container.customer_contact_details = build_contact_details(application)
 
 
-# Questions
-# Is it accurate that only one customer needs to be created per ssn/fein pair?
-# Is it accurate that contact details only need to be updated once per ssn/fein pair?
-# Is this fineos API sequence accurate?  Paren indicate calls can occur concurrently
-# register_api_user ->
-# update_customer_details ->
-# (get_customer_occupations_customer_api -> get_customer_occupation -> (update_week_based_work_pattern, update_occupation), update_customer_contact_details) ->
-# start_absence ->
-# update_reflexive_questions ->
-# complete_intake
+def _build_applications_containers(
+    applications: list[Application],
+    user: User,
+    fineos_web_ids: Dict[SsnFeinPair, str],
+    all_fineos_employers: Dict[str, OCOrganisation],
+) -> list["ApplicationsContainer"]:
+    containers: list[ApplicationsContainer] = []
+    pairs: Dict[SsnFeinPair, list[Application]] = {}
+    for application in applications:
+        if application.employer_fein is None:
+            raise ValueError("application.employer_fein is None")
+        pair = SsnFeinPair(application.tax_identifier.tax_identifier, application.employer_fein)
+        if pair in pairs.keys():
+            pairs[pair].append(application)
+        else:
+            pairs[pair] = [application]
+    for (ssn_fein_pair, applications) in pairs.items():
+        assert application.employer_fein
+        containers.append(
+            ApplicationsContainer(
+                ssn_fein_pair,
+                applications,
+                all_fineos_employers[application.employer_fein],
+                fineos_web_ids[ssn_fein_pair] if ssn_fein_pair in fineos_web_ids else None,
+            )
+        )
+    _build_fineos_customers(containers, user)
+    _build_absence_cases(containers)
+    _build_contact_details(containers)
+    return containers
 
 
-def _update_occupation(
+def _thread_safe_read_employer(fein: str) -> Dict[str, models.OCOrganisation]:
+    fineos_client = fineos.create_client()
+    fineos_employer = fineos_client.read_employer(fein)
+    return {fein: fineos_employer}
+
+
+def _get_fineos_employers(
+    employer_feins: set[str], executor: ThreadPoolExecutor
+) -> Dict[str, models.OCOrganisation]:
+    employers: Dict[str, models.OCOrganisation] = {}
+    employer_futures = list(
+        map(lambda fein: executor.submit(_thread_safe_read_employer, fein), employer_feins)
+    )
+    for future in as_completed(employer_futures):
+        employers = employers | future.result()
+    return employers
+
+
+def _thread_safe_update_occupation(
     fineos_web_id: str,
     fineos_customer: Customer,
     fineos_employer: models.OCOrganisation,
@@ -174,33 +206,6 @@ def _update_occupation(
         if application.organization_unit_id:
             worksite_id = fineos_employer.get_worksite_id()
         update_occupation_details(fineos_client, application, occupation.occupationId, worksite_id)
-
-
-def _get_fineos_web_ids(
-    db_session: db.Session, ssn_fein_pairs: list[SsnFeinPair]
-) -> Dict[SsnFeinPair, str]:
-    feins = [pair.employer_fein for pair in ssn_fein_pairs]
-    ssns = [pair.employee_ssn for pair in ssn_fein_pairs]
-    web_ids = (
-        db_session.query(FINEOSWebIdExt)
-        .filter(
-            FINEOSWebIdExt.employee_tax_identifier.in_(ssns),
-            FINEOSWebIdExt.employer_fein.in_(feins),
-        )
-        .all()
-    )
-    ssn_fein_pair_to_web_id = {}
-    for pair in ssn_fein_pairs:
-        for web_id in web_ids:
-            if (
-                pair.employee_ssn == web_id.employee_tax_identifier
-                and pair.employer_fein == web_id.employer_fein
-            ):
-                assert web_id.fineos_web_id
-                ssn_fein_pair_to_web_id[pair] = web_id.fineos_web_id
-                break
-
-    return ssn_fein_pair_to_web_id
 
 
 def _update_customer_details(fineos_web_id: str, fineos_customer: Customer) -> None:
@@ -257,18 +262,35 @@ def submit(
     user: User,
     executor: ThreadPoolExecutor,
 ) -> None:
+    """
+    This methods accepts a list of applications and submits them all to FINEOS.  It will make the minimum number of
+    calls required based on the data conditions of the passed applications and make the calls to the FINEOS API
+    concurrently when possible.
 
-    # Build the applications containers
-    applications_containers = _build_applications_containers(applications, user)
+    Flow of API calls (per application):
+    register_api_user ->
+    (update_customer_details, get_customer_occupations_customer_api -> get_customer_occupation -> (update_week_based_work_pattern, update_occupation), update_customer_contact_details) ->
+    start_absence ->
+    update_reflexive_questions ->
+    complete_intake
 
+    """
     # Collect all the data required for the calls
-    all_fineos_employers: Dict[str, OCOrganisation] = _get_fineos_employers(
-        [application.employer_fein for application in applications if application.employer_fein],
-        executor,
-    )
     fineos_web_ids: Dict[SsnFeinPair, str] = _get_fineos_web_ids(
         db_session,
-        [container.ssn_fein_pair for container in applications_containers],
+        {
+            SsnFeinPair(application.tax_identifier.tax_identifier, application.employer_fein)
+            for application in applications
+            if application.employer_fein
+        },
+    )
+    all_fineos_employers: Dict[str, OCOrganisation] = _get_fineos_employers(
+        {application.employer_fein for application in applications if application.employer_fein},
+        executor,
+    )
+    # Build the applications containers
+    applications_containers = _build_applications_containers(
+        applications, user, fineos_web_ids, all_fineos_employers
     )
 
     # Create the FINEOS client.
@@ -278,12 +300,9 @@ def submit(
             # If there is already a web id, do not attempt to register the employee/employer again
             container.fineos_web_id = fineos_web_ids[container.ssn_fein_pair]
             continue
-        fineos_employer_id = all_fineos_employers[
-            container.ssn_fein_pair.employer_fein
-        ].get_customer_number()
-        # TODO this method needs to be refactored in order to be parallelized as it modifies the DB
-        # in addition to making fineos calls
-        # register_api_user
+        fineos_employer_id = container.fineos_employer.get_customer_number()
+        # TODO this method needs to be refactored to extract the fineos api calls
+        # so they can be executed concurrently
         fineos_web_id = register_employee(
             fineos_client,
             container.ssn_fein_pair.employee_ssn,
@@ -304,7 +323,6 @@ def submit(
                     _update_customer_details, container.fineos_web_id, container.customer
                 )
             )
-    wait(update_customer_details_futures)
 
     update_occupation_futures = []
     for container in applications_containers:
@@ -314,7 +332,7 @@ def submit(
 
             update_occupation_futures.append(
                 executor.submit(
-                    _update_occupation,  # TODO this should be concurrently done for the applications
+                    _thread_safe_update_occupation,
                     container.fineos_web_id,
                     container.customer,
                     fineos_employer,
@@ -322,12 +340,10 @@ def submit(
                 )
             )
 
-    wait(update_occupation_futures)
-
     updated_customer_contact_details_futures = []
     for container in applications_containers:
         if not container.does_claim_exist_for_any_application():
-            for application in applications:
+            for application in container.applications:
                 updated_customer_contact_details_futures.append(
                     executor.submit(
                         _update_customer_contact_details,
@@ -337,6 +353,15 @@ def submit(
                         application.application_id,
                     )
                 )
+    for update_customer_details in as_completed(update_customer_details_futures):
+        # Don't care about the result, but if an exception occurred
+        # that should bubble up
+        update_customer_details.result()
+
+    for update_occupation_future in as_completed(update_occupation_futures):
+        # Don't care about the result, but if an exception occurred
+        # that should bubble up
+        update_occupation_future.result()
 
     for update_customer_contact_details_future in as_completed(
         updated_customer_contact_details_futures
@@ -346,11 +371,7 @@ def submit(
             application_id,
             updated_contact_details,
         ) = update_customer_contact_details_future.result()
-        container = next(
-            container
-            for container in applications_containers
-            if container.ssn_fein_pair == ssn_fein_pair
-        )
+        container = _get_container_by_ssn_fein_pair(applications_containers, ssn_fein_pair)
         application = container.get_application(application_id)
         phone_numbers = updated_contact_details.phoneNumbers
         if phone_numbers is not None and len(phone_numbers) > 0:
@@ -358,7 +379,7 @@ def submit(
 
     create_absence_futures = []
     for container in applications_containers:
-        for application in applications:
+        for application in container.applications:
             absence_case = container.get_absence_case_for_application(application.application_id)
             if not application.claim:
                 create_absence_futures.append(
@@ -373,11 +394,7 @@ def submit(
 
     for start_absence_future in as_completed(create_absence_futures):
         (ssn_fein_pair, application_id, new_case) = start_absence_future.result()
-        container = next(
-            container
-            for container in applications_containers
-            if container.ssn_fein_pair == ssn_fein_pair
-        )
+        container = _get_container_by_ssn_fein_pair(applications_containers, ssn_fein_pair)
         application = container.get_application(application_id)
         employee = (
             db_session.query(Employee)
@@ -434,38 +451,42 @@ def submit(
     update_reflexive_questions_futures = []
     for container in applications_containers:
         for application in container.applications:
-            # Reflexive questions for bonding and caring leave
-            # "The reflexive questions allows to update additional information of an absence case leave request."
-            # Source - https://documentation.fineos.com/support/documentation/customer-swagger-21.1.html#operation/createReflexiveQuestions
-            if application.leave_reason_qualifier_id in [
-                LeaveReasonQualifier.NEWBORN.leave_reason_qualifier_id,
-                LeaveReasonQualifier.ADOPTION.leave_reason_qualifier_id,
-                LeaveReasonQualifier.FOSTER_CARE.leave_reason_qualifier_id,
-            ]:
-                reflexive_question = build_bonding_date_reflexive_question(application)
-                update_reflexive_questions_futures.append(
-                    executor.submit(
-                        _update_reflexive_questions,
-                        container.ssn_fein_pair,
-                        container.fineos_web_id,
-                        application.claim.fineos_absence_id,
-                        reflexive_question,
-                        application.application_id,
+            if not application.claim:
+                # Reflexive questions for bonding and caring leave
+                # "The reflexive questions allows to update additional information of an absence case leave request."
+                # Source - https://documentation.fineos.com/support/documentation/customer-swagger-21.1.html#operation/createReflexiveQuestions
+                if application.leave_reason_qualifier_id in [
+                    LeaveReasonQualifier.NEWBORN.leave_reason_qualifier_id,
+                    LeaveReasonQualifier.ADOPTION.leave_reason_qualifier_id,
+                    LeaveReasonQualifier.FOSTER_CARE.leave_reason_qualifier_id,
+                ]:
+                    reflexive_question = build_bonding_date_reflexive_question(application)
+                    update_reflexive_questions_futures.append(
+                        executor.submit(
+                            _update_reflexive_questions,
+                            container.ssn_fein_pair,
+                            container.fineos_web_id,
+                            application.claim.fineos_absence_id,
+                            reflexive_question,
+                            application.application_id,
+                        )
                     )
-                )
 
-            if application.leave_reason_id == LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id:
-                reflexive_question = build_caring_leave_reflexive_question(application)
-                update_reflexive_questions_futures.append(
-                    executor.submit(
-                        _update_reflexive_questions,
-                        container.ssn_fein_pair,
-                        container.fineos_web_id,
-                        application.claim.fineos_absence_id,
-                        reflexive_question,
-                        application.application_id,
+                if (
+                    application.leave_reason_id
+                    == LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id
+                ):
+                    reflexive_question = build_caring_leave_reflexive_question(application)
+                    update_reflexive_questions_futures.append(
+                        executor.submit(
+                            _update_reflexive_questions,
+                            container.ssn_fein_pair,
+                            container.fineos_web_id,
+                            application.claim.fineos_absence_id,
+                            reflexive_question,
+                            application.application_id,
+                        )
                     )
-                )
     complete_intake_futures = []
     for container in applications_containers:
         for application in container.applications:
@@ -480,11 +501,7 @@ def submit(
             )
     for complete_intake_future in as_completed(complete_intake_futures):
         (ssn_fein_pair, application_id) = complete_intake_future.result()
-        container = next(
-            container
-            for container in applications_containers
-            if container.ssn_fein_pair == ssn_fein_pair
-        )
+        container = _get_container_by_ssn_fein_pair(applications_containers, ssn_fein_pair)
         application = container.get_application(application_id)
         application.submitted_time = datetime_util.utcnow()
         # Send previous leaves, employer benefits, and other incomes as eforms to FINEOS
