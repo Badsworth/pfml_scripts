@@ -5248,7 +5248,7 @@ def test_application_post_submit_existing_work_pattern(
 
     capture = massgov.pfml.fineos.mock_client.get_capture()
 
-    assert capture[2] == (
+    assert (
         "update_week_based_work_pattern",
         fineos_user_id,
         {
@@ -5282,7 +5282,7 @@ def test_application_post_submit_existing_work_pattern(
                 ],
             )
         },
-    )
+    ) in capture
 
     assert capture[-1] == (
         "complete_intake",
