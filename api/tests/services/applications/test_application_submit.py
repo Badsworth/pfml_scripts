@@ -618,6 +618,30 @@ def test_submit_one_application(user, test_db_session):
             {"customer_id": application.tax_identifier.tax_identifier},
         ),
         (
+            "update_customer_contact_details",
+            fineos_user_id,
+            {
+                "contact_details": massgov.pfml.fineos.models.customer_api.ContactDetails(
+                    phoneNumbers=[
+                        massgov.pfml.fineos.models.customer_api.PhoneNumber(
+                            id=111,
+                            preferred=None,
+                            phoneNumberType="Cell",
+                            intCode="1",
+                            areaCode="240",
+                            telephoneNo="4879945",
+                            classExtensionInformation=None,
+                        )
+                    ],
+                    emailAddresses=[
+                        massgov.pfml.fineos.models.customer_api.EmailAddressV20(
+                            emailAddress=application.user.email_address
+                        )
+                    ],
+                )
+            },
+        ),
+        (
             "add_week_based_work_pattern",
             fineos_user_id,
             {
@@ -661,30 +685,6 @@ def test_submit_one_application(user, test_db_session):
                 "hours_worked_per_week": 70,
                 "occupation_id": 12345,
                 "worksite_id": None,
-            },
-        ),
-        (
-            "update_customer_contact_details",
-            fineos_user_id,
-            {
-                "contact_details": massgov.pfml.fineos.models.customer_api.ContactDetails(
-                    phoneNumbers=[
-                        massgov.pfml.fineos.models.customer_api.PhoneNumber(
-                            id=111,
-                            preferred=None,
-                            phoneNumberType="Cell",
-                            intCode="1",
-                            areaCode="240",
-                            telephoneNo="4879945",
-                            classExtensionInformation=None,
-                        )
-                    ],
-                    emailAddresses=[
-                        massgov.pfml.fineos.models.customer_api.EmailAddressV20(
-                            emailAddress=application.user.email_address
-                        )
-                    ],
-                )
             },
         ),
         (
