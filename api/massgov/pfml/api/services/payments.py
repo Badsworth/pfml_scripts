@@ -7,14 +7,18 @@ from pydantic import parse_obj_as
 from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.expression import desc
 
-from massgov.pfml.api.models.payments.responses import PaymentDetailsResponse, PaymentResponse
+from massgov.pfml.api.models.payments.responses import (
+    PaymentDetailsResponse,
+    PaymentLineResponse,
+    PaymentResponse,
+)
 from massgov.pfml.api.services.payments_services_util import (
     FrontendPaymentStatus,
     PaymentContainer,
     PaymentFilterReason,
 )
 from massgov.pfml.db import Session
-from massgov.pfml.db.models.employees import Claim, Payment, PaymentTransactionType
+from massgov.pfml.db.models.employees import Claim, Payment, PaymentDetails, PaymentTransactionType
 from massgov.pfml.util import logging
 
 logger = logging.get_logger(__name__)
@@ -262,11 +266,51 @@ def to_response_dict(payment_data: List[PaymentContainer], absence_case_id: Opti
                 writeback_transaction_status=scenario_data.writeback_transaction_status,
                 transaction_date=scenario_data.transaction_date,
                 transaction_date_could_change=scenario_data.transaction_date_could_change,
-                payment_details=parse_obj_as(List[PaymentDetailsResponse], payment.payment_details),
+                payment_details=get_payment_details_response(payment.payment_details),
             ).dict()
         )
 
     return {"payments": payments, "absence_case_id": absence_case_id}
+
+
+def get_payment_details_response(
+    payment_details: List[PaymentDetails],
+) -> List[PaymentDetailsResponse]:
+    payment_details_response_list = parse_obj_as(List[PaymentDetailsResponse], payment_details)
+
+    for payment_details_response in payment_details_response_list:
+        adjust_payment_lines_response(payment_details_response.payment_lines)
+
+    return payment_details_response_list
+
+
+def adjust_payment_lines_response(payment_lines: List[PaymentLineResponse]) -> None:
+    """
+    Add Maximum Threshold Adjustment (if present) into Auto Gross Entitlement, and
+    sort by sign and then magnitude in descending order of amount.
+    """
+
+    # find indices for these payment lines (if present)
+    maximum_threshold_adjustment_idx = None
+    auto_gross_entitlement_idx = None
+    for idx, payment_line in enumerate(payment_lines):
+        if payment_line.line_type == "Maximum Threshold Adjustment":
+            maximum_threshold_adjustment_idx = idx
+        elif payment_line.line_type == "Auto Gross Entitlement":
+            auto_gross_entitlement_idx = idx
+
+    # if present, add max threshold adjustment to auto gross entitlement and remove it from list
+    if maximum_threshold_adjustment_idx is not None and auto_gross_entitlement_idx is not None:
+        payment_lines[auto_gross_entitlement_idx].amount += payment_lines[
+            maximum_threshold_adjustment_idx
+        ].amount
+        payment_lines.pop(maximum_threshold_adjustment_idx)
+
+    # e.g., 3, 2, 1, 0, -3, -2, -1
+    def sort_amount_by_sign_then_magnitude(x):
+        return x.amount if x.amount >= 0 else 1 / x.amount
+
+    payment_lines.sort(key=sort_amount_by_sign_then_magnitude, reverse=True)
 
 
 def log_payment_status(claim: Claim, payment_containers: List[PaymentContainer]) -> None:
