@@ -1,9 +1,9 @@
-import { portal } from "../../actions";
-import { assertValidClaim } from "../../../src/util/typeUtils";
+import { portal } from "../../../actions";
+import { assertValidClaim } from "../../../../src/util/typeUtils";
 import {
   ReviewStatusOptions,
   ClaimantStatusFilters,
-} from "../../actions/portal";
+} from "../../../actions/portal";
 
 describe("Employer dashboard", () => {
   after(() => {

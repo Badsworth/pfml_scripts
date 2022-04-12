@@ -53,10 +53,8 @@ function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
     claimantShowPayments: false,
     claimantShowOrganizationUnits: false,
     claimantShowPaymentsPhaseTwo: true,
-    claimantShowMFA: config("MFA_ENABLED") === "true",
+    claimantShowMFA: true,
     employerShowMultiLeave: true,
-    channelSwitching: config("HAS_CHANNEL_SWITCHING") === "true",
-    employerShowMultiLeaveDashboard: true,
   };
   cy.setCookie("_ff", JSON.stringify({ ...defaults, ...flags }), { log: true });
 }

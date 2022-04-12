@@ -18,11 +18,9 @@ export type FeatureFlags = {
   claimantShowStatusPage?: boolean;
   claimantShowPayments: boolean;
   claimantShowOrganizationUnits: boolean;
-  claimantShowMFA?: boolean;
   employerShowMultiLeave: boolean;
+  claimantShowMFA: boolean;
   claimantShowPaymentsPhaseTwo: boolean;
-  channelSwitching: boolean;
-  employerShowMultiLeaveDashboard: boolean;
 };
 
 export type Credentials = {
