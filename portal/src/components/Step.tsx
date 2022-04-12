@@ -202,6 +202,7 @@ const Step = (props: StepProps) => {
           </Heading>
           {showChildren && <div className="usa-prose">{props.children}</div>}
           {completed && !props.editable && props.submittedContent}
+          {completed && props.editable && props.completedContent}
         </div>
         <div className={actionColumnClasses}>
           {disabled && disabledStartButton}
@@ -209,7 +210,6 @@ const Step = (props: StepProps) => {
           {inProgress && resumeButton}
           {completed && props.editable && editCompletedStep}
         </div>
-        {completed && props.editable && props.completedContent}
       </div>
     </div>
   );
