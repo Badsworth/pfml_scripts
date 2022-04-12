@@ -366,6 +366,14 @@ def applications_update(application_id):
     ).to_api_response()
 
 
+def logDocumentAlreadyReceivedError(application):
+    log_attributes = get_application_log_attributes(application)
+    logger.info(
+        "applications_submit - FINEOS upload_document error ignored",
+        extra=log_attributes,
+    )
+
+
 def isDocumentAlreadyReceivedError(err):
     if isinstance(err, FINEOSUnprocessableEntity) and err.method_name == "upload_document":
         if err.message.startswith("A document of type") and err.message.endswith(
@@ -559,6 +567,7 @@ def applications_submit(application_id):
                 submit_application_to_fineos(application_before_split, db_session, current_user)
             except Exception as e:
                 if isDocumentAlreadyReceivedError(e):
+                    logDocumentAlreadyReceivedError(application_before_split)
                     return
                 if isinstance(e, FINEOSClientError):
                     return get_fineos_submit_issues_response(e, existing_application)
@@ -591,6 +600,7 @@ def applications_submit(application_id):
                     )
             except Exception as e:
                 if isDocumentAlreadyReceivedError(e):
+                    logDocumentAlreadyReceivedError(application_after_split)
                     return
                 if isinstance(e, FINEOSClientError):
                     return get_fineos_submit_issues_response(e, existing_application)
@@ -600,6 +610,7 @@ def applications_submit(application_id):
                 submit_application_to_fineos(existing_application, db_session, current_user)
             except Exception as e:
                 if isDocumentAlreadyReceivedError(e):
+                    logDocumentAlreadyReceivedError(existing_application)
                     return
                 if isinstance(e, FINEOSClientError):
                     return get_fineos_submit_issues_response(e, existing_application)
