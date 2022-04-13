@@ -1,5 +1,6 @@
 import { ValuesOf } from "../../types/common";
 import { merge } from "lodash";
+import dayjs from "dayjs";
 
 export const ChangeRequestType = {
   modification: "Modification",
@@ -13,9 +14,30 @@ export default class ChangeRequest {
   change_request_type: ValuesOf<typeof ChangeRequestType> | null = null;
   start_date: string | null = null;
   end_date: string | null = null;
+  document_submitted_at: string | null = null;
   submitted_time: string | null = null;
 
   constructor(attrs: Partial<ChangeRequest>) {
     merge(this, attrs);
+  }
+
+  isExtension(claimEndDate: string) {
+    if (
+      !this.end_date ||
+      this.change_request_type !== ChangeRequestType.modification
+    )
+      return false;
+
+    return dayjs(this.end_date).isAfter(claimEndDate);
+  }
+
+  isEndingEarly(claimEndDate: string) {
+    if (
+      !this.end_date ||
+      this.change_request_type !== ChangeRequestType.modification
+    )
+      return false;
+
+    return !this.isExtension(claimEndDate);
   }
 }

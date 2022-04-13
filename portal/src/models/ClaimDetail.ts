@@ -37,6 +37,23 @@ class ClaimDetail {
     );
   }
 
+  get startDate() {
+    const startDates = this.absence_periods
+      .map((period) => period.absence_period_start_date)
+      .sort();
+
+    return startDates[0];
+  }
+
+  get endDate() {
+    const endDates = this.absence_periods
+      .map((period) => period.absence_period_start_date)
+      .sort()
+      .reverse();
+
+    return endDates[0];
+  }
+
   /**
    * Determine if claim is a continuous leave claim
    */
