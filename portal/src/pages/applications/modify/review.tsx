@@ -1,7 +1,10 @@
 import ChangeRequest, {
   ChangeRequestType,
 } from "../../../models/ChangeRequest";
-import withUser, { WithUserProps } from "../../../hoc/withUser";
+
+import withChangeRequest, {
+  WithChangeRequestProps,
+} from "src/hoc/withChangeRequest";
 import Alert from "../../../components/core/Alert";
 import ClaimDetail from "../../../models/ClaimDetail";
 import Heading from "src/components/core/Heading";
@@ -21,7 +24,6 @@ interface ChangeRequestTypeReviewProps {
   change_request?: ChangeRequest;
   claim_detail?: ClaimDetail;
 }
-interface ReviewProps extends WithUserProps, ChangeRequestTypeReviewProps {}
 
 const CancelationReview = () => {
   const { t } = useTranslation();
@@ -155,9 +157,11 @@ const MedicalToBondingReview = (props: ChangeRequestTypeReviewProps) => {
   );
 };
 
-export const Review = (props: ReviewProps) => {
+export const Review = (
+  props: WithChangeRequestProps & { claim_detail?: ClaimDetail }
+) => {
   // TODO (PORTAL-2031): Remove when attached to HOC
-  const change_request = props.change_request || new ChangeRequest({});
+  const change_request = props.change_request;
   const claim_detail = props.claim_detail || new ClaimDetail({});
 
   const { t } = useTranslation();
@@ -205,4 +209,4 @@ export const Review = (props: ReviewProps) => {
   );
 };
 
-export default withUser(Review);
+export default withChangeRequest(Review);
