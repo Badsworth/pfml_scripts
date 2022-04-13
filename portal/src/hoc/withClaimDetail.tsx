@@ -5,7 +5,7 @@ import PageNotFound from "src/components/PageNotFound";
 import Spinner from "../components/core/Spinner";
 import { useTranslation } from "../locales/i18n";
 
-interface WithClaimDetailProps extends WithUserProps {
+export interface WithClaimDetailProps extends WithUserProps {
   claim_detail: ClaimDetail;
 }
 
@@ -37,7 +37,8 @@ function withClaimDetail<T extends WithClaimDetailProps>(
 
     if (!absenceId) return <PageNotFound />;
 
-    if (isLoadingClaimDetail) {
+    // Check both because claimDetail could be cached from a different status page.
+    if (isLoadingClaimDetail || !claimDetail) {
       return (
         <div className="margin-top-8 text-center">
           <Spinner aria-label={t("components.withClaims.loadingLabel")} />
