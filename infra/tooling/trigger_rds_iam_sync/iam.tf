@@ -1,6 +1,3 @@
-data "aws_ssm_parameter" "trigger_rds_iam_sync_token" {
-  name = "/service/pfml-api/github/trigger-rds-iam-sync-token"
-}
 resource "aws_iam_policy_document" "trigger_rds_iam_sync_trust_policy" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -24,7 +21,7 @@ resource "aws_iam_role" "trigger_rds_iam_sync" {
         {
           Action   = "ssm:GetParameter"
           Effect   = "Allow"
-          Resource = data.aws_ssm_parameter.trigger_rds_iam_sync_token.arn
+          Resource = var.secret_token_arn
         },
       ]
     })

@@ -16,6 +16,9 @@ module "constants" {
 
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
+data "aws_ssm_parameter" "trigger_rds_iam_sync_token" {
+  name = "/service/pfml-api/github/trigger-rds-iam-sync-token"
+}
 
 module "aws_auditor" {
   source           = "./aws_auditor"
@@ -28,4 +31,14 @@ module "aws_auditor" {
   // schedule       = "cron(0 6 * * ? *​)"
 }
 
-# testing 123
+module "trigger_rds_iam_sync" {
+  source = "./trigger_rds_iam_sync"
+  secret_token_arn = data.aws_ssm_parameter.trigger_rds_iam_sync_token.arn
+  prefix           = module.constants.prefix
+}
+
+
+
+
+
+  
