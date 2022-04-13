@@ -23,7 +23,12 @@ resource "aws_lambda_function" "trigger_rds_iam_sync" {
 resource "aws_cloudwatch_event_rule" "trigger_rds_iam_sync" {
   name                = "${var.prefix}_${local.name}"
   description         = "Invoke Lambda Function: ${var.prefix}_${local.name}"
-  schedule_expression = ""
+  event_pattern = <<EOF
+{
+  "source": ["aws.rds"],
+  "detail-type": ["RDS DB Snapshot Event", "RDS DB Cluster Snapshot Event"]
+}
+EOF
 }
 
 resource "aws_cloudwatch_event_target" "trigger_rds_iam_sync" {
