@@ -104,16 +104,15 @@ def get_latest_version(app, branch_name):
     """Return the latest semantic version on a particular branch"""
     tag_list = collect_tags(app,branch_name)
     logger.info(f"tag: {tag_list}")
-    # tags = []
-    # for item in tag_list:
-    #     # check if it matches regex then append to list
-    #     if re.match(RELEASE_VERSION_REGEX, item):
-    #         tags.append(to_semver(item))
+    tags = []
+    for item in tag_list:
+        # check if it matches regex then append to list
+        if re.match(RELEASE_VERSION_REGEX, item):
+            tags.append(to_semver(item))
 
     # returns the highest semver from list, which should be the most recent
-    # latest_tag = max(tags)
-    latest_tag = max(tag_list)
-  
+    latest_tag = max(tags)
+
     # convert back to str
     tag = from_semver(latest_tag, app)
     sha = get_sha(tag)
