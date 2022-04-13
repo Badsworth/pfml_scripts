@@ -701,7 +701,16 @@ def test_submit_one_application(user, test_db_session):
 
     assert ("read_employer", None, {"employer_fein": application.employer_fein}) in capture
     _assert_customer_fineos_calls(capture, application, fineos_user_id)
-    _assert_claim_fineos_call(capture, application, fineos_user_id, "NTN-259")
+    _assert_claim_fineos_call(
+        capture,
+        application,
+        fineos_user_id,
+        "NTN-259",
+        "Sickness",
+        "Accident or treatment required for an injury",
+        None,
+        None,
+    )
     _assert_fineos_call_count(
         capture,
         [
