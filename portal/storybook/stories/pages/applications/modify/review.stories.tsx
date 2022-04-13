@@ -88,6 +88,9 @@ export const Default = (
 
   return (
     <Review
+      change_requests={
+        new ApiResourceCollection<ChangeRequest>("change_request_id", [])
+      }
       claim_detail={claimDetail}
       change_request={changeRequest}
       appLogic={appLogic}
