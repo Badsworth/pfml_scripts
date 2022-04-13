@@ -60,11 +60,16 @@ class ApplicationsContainer:
     absence_cases: Dict[UUID, models.customer_api.AbsenceCase] = field(default_factory=dict)
 
     def get_application(self, application_id: UUID) -> Application:
-        return next(
-            application
-            for application in self.applications
-            if application.application_id == application_id
-        )
+        try:
+            return next(
+                application
+                for application in self.applications
+                if application.application_id == application_id
+            )
+        except StopIteration:
+            raise Exception(
+                f"Application ID {application_id} was not found in the applications container"
+            )
 
     def get_absence_case_for_application(
         self, application_id: UUID
@@ -78,7 +83,12 @@ class ApplicationsContainer:
 def _get_container_by_ssn_fein_pair(
     containers: list[ApplicationsContainer], ssn_fein_pair: SsnFeinPair
 ) -> ApplicationsContainer:
-    return next(container for container in containers if container.ssn_fein_pair == ssn_fein_pair)
+    try:
+        return next(
+            container for container in containers if container.ssn_fein_pair == ssn_fein_pair
+        )
+    except StopIteration:
+        raise Exception("No applications container was found with that ssn fein pair")
 
 
 def _get_fineos_web_ids(
