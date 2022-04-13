@@ -53,6 +53,8 @@ jobs:
         if: steps.get-failed.outputs.failed_specs_count > 10
 
       - name: Trigger E2E Workflow
+        run: |
+          echo "Trigger E2E WorkFlow"
         # This workflow intentionally doesn't use workflow_call because at the moment, it doesn't support matrix builds.
         # Also, since we don't wait for results or care about having an accurate run URL, the benefit is small.
         # uses: aurelien-baudet/workflow-dispatch@v2.1.1
