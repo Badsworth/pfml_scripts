@@ -57,6 +57,13 @@ jobs:
       - name: Trigger E2E Workflow
         run: |
           echo "Trigger E2E WorkFlow"
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with: { node-version: "14.x" }
+      - name: "Install Node Modules"
+        uses: bahmutov/npm-install@v1
+        with:
+          working-directory: e2e
         # This workflow intentionally doesn't use workflow_call because at the moment, it doesn't support matrix builds.
         # Also, since we don't wait for results or care about having an accurate run URL, the benefit is small.
         # uses: aurelien-baudet/workflow-dispatch@v2.1.1
