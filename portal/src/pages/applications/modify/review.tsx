@@ -71,7 +71,7 @@ const ModificationReview = (props: ChangeRequestTypeReviewProps) => {
 
   // TODO (PORTAL-2031): Remove when attached to HOC
   if (!change_request || !claim_detail) return null;
-
+  console.log(claim_detail.endDate);
   const context = change_request.isExtension(claim_detail.endDate)
     ? "extension"
     : "endingEarly";
@@ -83,6 +83,7 @@ const ModificationReview = (props: ChangeRequestTypeReviewProps) => {
       </Heading>
       <p>{t("pages.claimsModifyReview.modificationBody", { context })}</p>
       <ReviewRow
+        noBorder
         level="3"
         label={t("pages.claimsModifyReview.modificationReviewRowLabel")}
       >
@@ -125,22 +126,30 @@ const MedicalToBondingReview = (props: ChangeRequestTypeReviewProps) => {
       <p>{t("pages.claimsModifyReview.medicalToBondingBody1")}</p>
       <p>{t("pages.claimsModifyReview.medicalToBondingBody2", { context })}</p>
       <ReviewRow
+        noBorder
         level="3"
         label={t("pages.claimsModifyReview.medicalReviewRowLabel")}
       >
-        {t("pages.claimsModifyReview.medicalReviewRowValue", {
-          startDate: formatDate(pregnancyOnlyClaimDetail.startDate).short(),
-          endDate: formatDate(pregnancyOnlyClaimDetail.endDate).short(),
-        })}
+        <Trans
+          i18nKey="pages.claimsModifyReview.medicalReviewRowValue"
+          values={{
+            startDate: formatDate(pregnancyOnlyClaimDetail.startDate).short(),
+            endDate: formatDate(pregnancyOnlyClaimDetail.endDate).short(),
+          }}
+        />
       </ReviewRow>
       <ReviewRow
+        noBorder
         level="3"
-        label={t("pages.claimsModifyReview.bondingRequestReviewRowLabel")}
+        label={t("pages.claimsModifyReview.bondingReviewRowLabel")}
       >
-        {t("pages.claimsModifyReview.bondingRequestReviewRowValue", {
-          startDate: formatDate(change_request?.start_date).short(),
-          endDate: formatDate(change_request?.end_date).short(),
-        })}
+        <Trans
+          i18nKey="pages.claimsModifyReview.bondingReviewRowValue"
+          values={{
+            startDate: formatDate(change_request?.start_date).short(),
+            endDate: formatDate(change_request?.end_date).short(),
+          }}
+        />
       </ReviewRow>
     </React.Fragment>
   );
@@ -181,9 +190,9 @@ export const Review = (props: ReviewProps) => {
           change_request={change_request}
         />
       )}
-      {changeRequestTypeContext === "withdrawl" &&
+      {changeRequestTypeContext === "withdrawal" &&
         claim_detail.hasApprovedStatus && <CancelationReview />}
-      {changeRequestTypeContext === "withdrawl" &&
+      {changeRequestTypeContext === "withdrawal" &&
         !claim_detail.hasApprovedStatus &&
         claim_detail.hasPendingStatus && <WithdrawalReview />}
       {changeRequestTypeContext === "modification" && (

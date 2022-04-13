@@ -47,7 +47,7 @@ class ClaimDetail {
 
   get endDate() {
     const endDates = this.absence_periods
-      .map((period) => period.absence_period_start_date)
+      .map((period) => period.absence_period_end_date)
       .sort()
       .reverse();
 

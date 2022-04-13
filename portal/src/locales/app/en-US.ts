@@ -1659,9 +1659,12 @@ const pages: {
     title: "Request a change to your application",
   },
   claimsModifyReview: {
+    bondingReviewRowLabel: "Leave to bond with a child",
+    bondingReviewRowValue:
+      "<strong>Start</strong><br/>{{startDate}}<br/><strong>End</strong><br/>{{endDate}}",
     buttonText_cancelation: "Yes, cancel my leave",
     buttonText_medicalToBonding: "Submit your request",
-    buttonText_modificatiion: "Submit",
+    buttonText_modification: "Submit",
     buttonText_withdrawal: "Yes, withdraw my application",
     cancelationAlert:
       "If you have received payments for the leave dates you are cancelling, you will need to return the money to the Department. Read more about <overpayments-link>overpayments</overpayments-link>.",
@@ -1686,7 +1689,7 @@ const pages: {
     modificationHeading: "Review and submit your requested change",
     modificationReviewRowLabel: "Updated leave dates",
     modificationReviewRowValue: "{{startDate}} to {{endDate}}",
-    pregnancyReviewRowLabel: "Leave to bond with a child",
+    pregnancyReviewRowLabel: "Medical leave due to pregnancy",
     pregnancyReviewRowValue:
       "<strong>Start</strong><br/>{{startDate}}<br/><strong>End</strong><br/>{{endDate}}",
     title: "$t(shared.claimsModifyTitle)",

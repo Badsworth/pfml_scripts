@@ -1,10 +1,10 @@
 import { ValuesOf } from "../../types/common";
-import { merge } from "lodash";
 import dayjs from "dayjs";
+import { merge } from "lodash";
 
 export const ChangeRequestType = {
   modification: "Modification",
-  withdrawl: "Withdrawal",
+  withdrawal: "Withdrawal",
   medicalToBonding: "Medical To Bonding Transition",
 } as const;
 
