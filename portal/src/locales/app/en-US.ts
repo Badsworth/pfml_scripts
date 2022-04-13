@@ -3414,6 +3414,9 @@ const components: {
   withBenefitsApplications: {
     loadingLabel: "Loading applications",
   },
+  withChangeRequests: {
+    loadingLabel: "Loading requests",
+  },
   withClaimDocuments: {
     loadingLabel: "$t(shared.loadingDocumentsLabel)",
   },
