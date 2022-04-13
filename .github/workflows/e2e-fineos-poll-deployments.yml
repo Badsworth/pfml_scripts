@@ -18,7 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         environment:
-          [ "test", "stage", "performance", "cps-preview", "training", "long", "trn2" ]
+          [ "test" ]
     env:
       NEW_RELIC_ACCOUNT_ID: 2837112
     steps:
@@ -48,8 +48,10 @@ jobs:
           echo "Count of failed specs: ${{ steps.get-failed.outputs.failed_specs_count }}"
 
       - name: More than 10 specs detected (ABORT RE-RUN)
-        run: |
-          echo "exit 1"
+        uses: actions/github-script@v3
+        with:
+          script: |
+            core.setFailed('More than 10 specs failed - aborting auto re-run!!')
         if: steps.get-failed.outputs.failed_specs_count > 10
 
       - name: Trigger E2E Workflow
