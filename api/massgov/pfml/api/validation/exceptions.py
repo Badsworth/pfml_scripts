@@ -188,6 +188,7 @@ class ValidationErrorDetail:
     message: str = ""
     rule: Optional[Union[IssueRule, str]] = None
     field: Optional[str] = None
+    value: Optional[str] = None
 
 
 class ValidationException(Exception):
