@@ -71,7 +71,7 @@ const ModificationReview = (props: ChangeRequestTypeReviewProps) => {
 
   // TODO (PORTAL-2031): Remove when attached to HOC
   if (!change_request || !claim_detail) return null;
-  console.log(claim_detail.endDate);
+
   const context = change_request.isExtension(claim_detail.endDate)
     ? "extension"
     : "endingEarly";
