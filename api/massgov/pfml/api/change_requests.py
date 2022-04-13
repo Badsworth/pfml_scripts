@@ -87,6 +87,7 @@ def get_change_requests(fineos_absence_id: str) -> flask.Response:
             start_date=request.start_date,
             end_date=request.end_date,
             submitted_time=request.submitted_time,
+            documents_submitted_at=request.documents_submitted_at,
         )
         change_requests_dict.append(change_request.dict())
 

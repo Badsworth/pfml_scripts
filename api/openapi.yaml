@@ -4684,3 +4684,8 @@ components:
           format: date-time
           example: "2020-06-26T01:02:03.967736+00:00"
           nullable: true
+        documents_submitted_at:
+          type: string
+          format: date-time
+          example: "2020-06-26T01:02:03.967736+00:00"
+          nullable: true

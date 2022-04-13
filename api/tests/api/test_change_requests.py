@@ -305,3 +305,26 @@ class TestUploadDocument:
         assert response_data["name"] == "passport.png"
         assert response_data["user_id"] == str(consented_user.user_id)
         assert response_data["created_at"] is not None
+
+    def test_document_submitted_at(
+        self, application, change_request, client, consented_user, consented_user_token
+    ):
+        form_data = {"document_type": "Passport", "name": "passport.png", "description": "Passport"}
+        form_data["file"] = (io.BytesIO(b"abcdef"), "test.png")
+
+        application.user = consented_user
+
+        client.post(
+            "/v1/change-request/{}/documents".format(change_request.change_request_id),
+            headers={"Authorization": f"Bearer {consented_user_token}"},
+            content_type="multipart/form-data",
+            data=form_data,
+        )
+
+        response = client.get(
+            "/v1/change-request?fineos_absence_id={}".format(change_request.claim.fineos_absence_id),
+            headers={"Authorization": f"Bearer {consented_user_token}"},
+        )
+        response_body = response.get_json()
+    
+        assert response_body["data"]["change_requests"][0]["documents_submitted_at"] is not None 

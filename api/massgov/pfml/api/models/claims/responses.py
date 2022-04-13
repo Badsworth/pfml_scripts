@@ -218,6 +218,7 @@ class ChangeRequestResponse(PydanticBaseModel):
     start_date: Optional[date]
     end_date: Optional[date]
     submitted_time: Optional[datetime]
+    documents_submitted_at: Optional[datetime]
 
     @classmethod
     def from_orm(cls, change_request: ChangeRequest) -> "ChangeRequestResponse":
@@ -231,4 +232,5 @@ class ChangeRequestResponse(PydanticBaseModel):
             start_date=change_request.start_date,
             end_date=change_request.end_date,
             submitted_time=change_request.submitted_time,
+            documents_submitted_at=change_request.documents_submitted_at,
         )
