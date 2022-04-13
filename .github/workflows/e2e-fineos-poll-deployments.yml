@@ -38,7 +38,7 @@ jobs:
       # - run: ./bin/ci/publish-fineos-deployment-events.sh ${{ matrix.environment }}
       #   id: publish-deployments
       - name: Query NR to get list of failed specs
-        run: sh ./bin/ci/get-list-failed-specs.sh trn2 EOLWD/pfml-2162862872-1
+        run: sh ./bin/ci/get-list-failed-specs.sh long EOLWD/pfml-2163480326-1
         id: get-failed
 
       - name: Print string of failed specs for auto trigger
@@ -63,7 +63,7 @@ jobs:
         uses: bahmutov/npm-install@v1
         with:
           working-directory: e2e
-          
+
       - name: Cypress Tests (Auto Re-run - failed specs)
         run: |
           echo "Trigger E2E WorkFlow"
@@ -72,6 +72,7 @@ jobs:
         run: |
           echo "Getting List of failed specs post auto"
         id: get-failed-auto
+        if: failure()
 
       - name: Print String of persistent failed specs
         run: |
@@ -79,7 +80,6 @@ jobs:
 
       - name: "Archive screenshots"
         # uses: actions/upload-artifact@v2
-        if: always() && steps.get-failed-auto.outcome == 'success'
         run: | 
           echo "Archive any screenshots"
         # This workflow intentionally doesn't use workflow_call because at the moment, it doesn't support matrix builds.
