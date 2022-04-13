@@ -21,7 +21,7 @@ import routes from "src/routes";
 import { useTranslation } from "../../../locales/i18n";
 
 interface ChangeRequestTypeReviewProps {
-  change_request?: ChangeRequest;
+  change_request: ChangeRequest;
   claim_detail?: ClaimDetail;
 }
 
@@ -72,7 +72,7 @@ const ModificationReview = (props: ChangeRequestTypeReviewProps) => {
   const { change_request, claim_detail } = props;
 
   // TODO (PORTAL-2031): Remove when attached to HOC
-  if (!change_request || !claim_detail) return null;
+  if (!claim_detail) return null;
 
   const context = change_request.isExtension(claim_detail.endDate)
     ? "extension"
@@ -102,7 +102,7 @@ const MedicalToBondingReview = (props: ChangeRequestTypeReviewProps) => {
   const { t } = useTranslation();
   const { change_request, claim_detail } = props;
   // TODO (PORTAL-2031): Remove when attached to HOC
-  if (!change_request || !claim_detail) return null;
+  if (!claim_detail) return null;
 
   const pregnancyOnlyClaimDetail = new ClaimDetail({
     ...claim_detail,
@@ -160,8 +160,8 @@ const MedicalToBondingReview = (props: ChangeRequestTypeReviewProps) => {
 export const Review = (
   props: WithChangeRequestProps & { claim_detail?: ClaimDetail }
 ) => {
-  // TODO (PORTAL-2031): Remove when attached to HOC
   const change_request = props.change_request;
+  // TODO (PORTAL-2031): Remove when attached to HOC
   const claim_detail = props.claim_detail || new ClaimDetail({});
 
   const { t } = useTranslation();
