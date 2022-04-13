@@ -83,10 +83,10 @@ const Template: Story<StoryProps> = (args) => {
     false,
     transactionDate
   );
-
+  const claimDetail = new ClaimDetail(defaultClaimDetailAttributes);
   const appLogic = useMockableAppLogic({
     claims: {
-      claimDetail: new ClaimDetail(defaultClaimDetailAttributes),
+      claimDetail,
       isLoadingClaimDetail: false,
     },
     documents: {
@@ -125,6 +125,7 @@ const Template: Story<StoryProps> = (args) => {
 
   return (
     <Payments
+      claim_detail={claimDetail}
       appLogic={appLogic}
       query={{ absence_id: absenceId }}
       user={new User({})}
