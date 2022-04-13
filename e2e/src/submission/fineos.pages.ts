@@ -12,6 +12,7 @@ import {
 } from "../types";
 import { format, isAfter, isToday } from "date-fns";
 import { FineosCorrespondanceType } from "../../cypress/actions/fineos.enums";
+import config from "../config";
 export type FineosBrowserOptions = {
   credentials?: Credentials;
   debug: boolean;
@@ -164,7 +165,13 @@ export class Claim extends FineosPage {
   }
 
   async approve(leaveEndDate: Date): Promise<void> {
-    await this.page.click("a[title='Approve the Pending Leaving Request']", {
+    let selector: string;
+    if (config("HAS_APRIL_UPGRADE") == "true") {
+      selector = 'a[title="Approve the pending/in review leave request"]';
+    } else {
+      selector = 'a[title="Approve the Pending Leaving Request"]';
+    }
+    await this.page.click(selector, {
       // This sometimes takes a while. Wait for it to complete.
       timeout: 60000,
     });
@@ -184,7 +191,11 @@ export class Claim extends FineosPage {
   }
 
   async deny(): Promise<void> {
-    await this.page.click("div[title='Deny the Pending Leave Request']");
+    const selector =
+      config("HAS_APRIL_UPGRADE") == "true"
+        ? 'a[title="Deny the pending/in review leave request"]'
+        : 'a[title="Deny the Pending Leave Request"]';
+    await this.page.click(selector);
     await this.page.selectOption("label:text-is('Denial Reason')", "5");
     await this.page.click('input[type="submit"][value="OK"]', {
       // This sometimes takes a while. Wait for it to complete.

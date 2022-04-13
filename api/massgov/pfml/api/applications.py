@@ -27,6 +27,7 @@ from massgov.pfml.api.models.applications.requests import (
 )
 from massgov.pfml.api.models.applications.responses import ApplicationResponse
 from massgov.pfml.api.models.common import OrderDirection
+from massgov.pfml.api.services.application_import import ApplicationImportService
 from massgov.pfml.api.services.applications import (
     get_application_split,
     get_document_by_id,
@@ -177,60 +178,16 @@ def application_imports():
 
         db_session.add(application)
         fineos = massgov.pfml.fineos.create_client()
+
         # we have already check that the claim is not None in
         # claim_is_valid_for_application_import
-        applications_service.set_application_fields_from_db_claim(
-            fineos, application, claim, db_session  # type: ignore
-        )
         fineos_web_id = register_employee(
-            fineos, claim.employee_tax_identifier, application.employer_fein, db_session  # type: ignore
+            fineos, claim.employee_tax_identifier, claim.employer_fein, db_session  # type: ignore
         )
-        applications_service.set_application_absence_and_leave_period(
-            fineos, fineos_web_id, application, application_import_request.absence_case_id
-        )
-        applications_service.set_customer_detail_fields(
-            fineos, fineos_web_id, application, db_session
-        )
-        applications_service.set_customer_contact_detail_fields(
-            fineos, fineos_web_id, application, db_session
-        )
-        applications_service.set_employment_status_and_occupations(
-            fineos, fineos_web_id, application
-        )
-        applications_service.set_payment_preference_fields(
-            fineos, fineos_web_id, application, db_session
-        )
-        eform_cache: applications_service.EFORM_CACHE = {}
-        eform_summaries = fineos.customer_get_eform_summary(
-            fineos_web_id, application_import_request.absence_case_id
-        )
-        applications_service.set_other_leaves(
-            fineos,
-            fineos_web_id,
-            application,
-            db_session,
-            application_import_request.absence_case_id,
-            eform_summaries,
-            eform_cache,
-        )
-        applications_service.set_employer_benefits_from_fineos(
-            fineos,
-            fineos_web_id,
-            application,
-            db_session,
-            application_import_request.absence_case_id,
-            eform_summaries,
-            eform_cache,
-        )
-        applications_service.set_other_incomes_from_fineos(
-            fineos,
-            fineos_web_id,
-            application,
-            db_session,
-            application_import_request.absence_case_id,
-            eform_summaries,
-            eform_cache,
-        )
+
+        import_service = ApplicationImportService(fineos, fineos_web_id, application, db_session, claim, application_import_request.absence_case_id)  # type: ignore
+        import_service.import_data()
+
         db_session.refresh(application)
         db_session.commit()
 
