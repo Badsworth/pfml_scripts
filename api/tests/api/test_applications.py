@@ -3857,6 +3857,7 @@ def test_application_patch_invalid_values(client, user, auth_token):
                 "message": "{} is not of type 'array'",
                 "rule": "array",
                 "type": "type",
+                "value": "dict",
             },
             {
                 "field": "phone.phone_number",
