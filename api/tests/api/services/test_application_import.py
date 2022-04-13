@@ -474,6 +474,79 @@ class TestApplicationImportService:
         with pytest.raises(KeyError):
             import_service._set_application_absence_and_leave_period()
 
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")
+    def test_set_application_absence_with_open_and_completed_absence_periods(
+        self,
+        mock_get_absence,
+        application,
+        import_service,
+    ):
+        absence_details = AbsenceDetails(
+            absencePeriods=[
+                AbsencePeriod(
+                    id="PL-14449-0000002238",
+                    reason="Serious Health Condition - Employee",
+                    reasonQualifier1="",
+                    reasonQualifier2="",
+                    startDate=date(2022, 2, 1),
+                    endDate=date(2022, 2, 28),
+                    absenceType="Continuous",
+                    requestStatus="Approved",
+                ),
+                AbsencePeriod(
+                    id="PL-14449-0000002239",
+                    reason="Serious Health Condition - Employee",
+                    reasonQualifier1="",
+                    reasonQualifier2="",
+                    startDate=date(2022, 1, 1),
+                    endDate=date(2022, 1, 31),
+                    absenceType="Reduced Schedule",
+                    requestStatus="Approved",
+                ),
+                AbsencePeriod(
+                    id="PL-14449-0000002238",
+                    reason="Child Bonding",
+                    reasonQualifier1="Not Work Related",
+                    reasonQualifier2="",
+                    startDate=date(2022, 3, 1),
+                    endDate=date(2022, 3, 31),
+                    absenceType="Continuous",
+                    requestStatus="Pending",
+                ),
+                AbsencePeriod(
+                    id="PL-14449-0000002239",
+                    reason="Child Bonding",
+                    reasonQualifier1="Not Work Related",
+                    reasonQualifier2="",
+                    startDate=date(2022, 4, 1),
+                    endDate=date(2022, 4, 15),
+                    absenceType="Reduced Schedule",
+                    requestStatus="Pending",
+                ),
+            ],
+            absenceDays=[
+                AbsenceDay(date=datetime(2022, 4, 4), timeRequested="4.25"),
+                AbsenceDay(date=datetime(2022, 4, 5), timeRequested="3.00"),
+            ],
+        )
+        mock_get_absence.return_value = absence_details
+        import_service._set_application_absence_and_leave_period()
+        # When a claim has multiple leaves with different reasons and a mix of open and completed leaves,
+        # we only need to set the Continuous, Reduced, Intermittent leave related to the open leaves.
+        # In the mock data above, we should only set the leave date for the two Pending absence periods.
+        assert len(application.continuous_leave_periods) == 1
+        assert application.has_continuous_leave_periods
+        assert application.continuous_leave_periods[0].start_date == date(2022, 3, 1)
+        assert application.continuous_leave_periods[0].end_date == date(2022, 3, 31)
+
+        assert len(application.reduced_schedule_leave_periods) == 1
+        assert application.has_reduced_schedule_leave_periods
+        assert application.reduced_schedule_leave_periods[0].start_date == date(2022, 4, 1)
+        assert application.reduced_schedule_leave_periods[0].end_date == date(2022, 4, 15)
+
+        assert application.leave_reason_id == LeaveReason.get_id("Child Bonding")
+        assert application.completed_time is None
+
     @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.read_customer_contact_details")
     def test_set_customer_contact_detail_fields(
         self, mock_read_customer_contact_details, import_service, application, test_db_session
