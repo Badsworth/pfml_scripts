@@ -43,6 +43,7 @@ output "environment_tags" {
     "training"    = "train"
     "trn2"        = "trn2"
     "uat"         = "uat"
+    "dev"         = "dev"
   }
 }
 
@@ -64,6 +65,7 @@ output "environment_shorthand" {
     "training"    = "train"
     "trn2"        = "trn2"
     "uat"         = "uat"
+    "dev"         = "dev"
   }
 }
 
@@ -86,6 +88,7 @@ output "smartronix_environment_tags" {
     "training"    = "Sandbox"
     "uat"         = "UAT"
     "trn2"        = "TRN2"
+    "dev"         = "Dev"
   }
 }
 
