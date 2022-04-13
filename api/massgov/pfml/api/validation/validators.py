@@ -157,8 +157,8 @@ def log_validation_error(
         "error.type": error.type,
         "error.rule": error.rule,
         "error.field": error.field,
-        "enum value": field_value if error.type == "enum" else None,
-        "value type": type(field_value).__name__ if error.type == "type" else None,
+        "enum_value": field_value if error.type == "enum" else None,
+        "value_type": type(field_value).__name__ if error.type == "type" else None,
     }
     if unexpected_error_check_func and not unexpected_error_check_func(error):
         logger.info(message, extra=log_attributes)
