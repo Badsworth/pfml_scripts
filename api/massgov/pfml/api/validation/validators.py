@@ -141,25 +141,11 @@ def log_validation_error(
         error.rule,
     )
 
-    if error.field is not None and (error.type == "type" or error.type == "enum"):
-        field_value = {"data": validation_exception.data}
-        for field in error.field.split("."):
-            index = None
-            try:
-                index = int(field)
-                field_value = field_value[index] if index else field_value[field]  # type: ignore
-            except Exception:
-                pass  # field was not convertible to int or field was not found in field_value
-            if not field_value:
-                break
-
     log_attributes = {
         "error.class": "ValidationException",
         "error.type": error.type,
         "error.rule": error.rule,
         "error.field": error.field,
-        "enum_value": field_value if error.type == "enum" else None,
-        "value_type": type(field_value).__name__ if error.type == "type" else None,
     }
     if unexpected_error_check_func and not unexpected_error_check_func(error):
         logger.info(message, extra=log_attributes)
