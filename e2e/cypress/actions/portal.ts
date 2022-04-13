@@ -593,7 +593,7 @@ export function enterEmployerInfo(
   }
   cy.contains("button", "Save and continue").click();
   if (useOrgUnitFlow === true) {
-    cy.findByLabelText("Select a department")
+    cy.findByLabelText("Select your department")
       .get("select")
       .select("Division of Administrative Law Appeals", { force: true });
     cy.contains("button", "Save and continue").click();
