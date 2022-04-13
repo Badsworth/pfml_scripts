@@ -64,8 +64,10 @@ jobs:
           echo "Install Node Modules"
 
       - name: Cypress Tests (Auto Re-run - failed specs)
-        run: |
-          echo "Trigger E2E WorkFlow"
+        uses: actions/github-script@v3
+        with:
+          script: |
+            core.setFailed('Encountered E2E failure')
 
       - name: Get list of failed specs from auto re-trigger
         run: |
