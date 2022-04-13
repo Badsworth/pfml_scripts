@@ -60,9 +60,8 @@ jobs:
         with: { node-version: "14.x" }
 
       - name: "Install Node Modules"
-        uses: bahmutov/npm-install@v1
-        with:
-          working-directory: e2e
+        run: |
+          echo "Install Node Modules"
 
       - name: Cypress Tests (Auto Re-run - failed specs)
         run: |
@@ -77,13 +76,13 @@ jobs:
       - name: Print String of persistent failed specs
         run: |
           echo "Failed auto run had failure[s] w/the following runId:"
-        if: success()
+        if: always() && steps.get-failed-auto.outcome == 'success'
 
       - name: "Archive screenshots"
         # uses: actions/upload-artifact@v2
         run: | 
           echo "Archive any screenshots"
-        if: success()
+        if: always() && steps.get-failed-auto.outcome == 'success'
         # This workflow intentionally doesn't use workflow_call because at the moment, it doesn't support matrix builds.
         # Also, since we don't wait for results or care about having an accurate run URL, the benefit is small.
         # uses: aurelien-baudet/workflow-dispatch@v2.1.1
