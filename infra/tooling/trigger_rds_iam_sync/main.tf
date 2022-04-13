@@ -11,7 +11,7 @@ resource "aws_lambda_function" "trigger_rds_iam_sync" {
   description      = "Trigger RDS IAM Sync GitHub Action"
   filename         = data.archive_file.trigger_rds_iam_sync.output_path
   source_code_hash = data.archive_file.trigger_rds_iam_sync.output_base64sha256
-  function_name    = "${var.prefix}_${local.name}"
+  function_name    = "${var.prefix}${local.name}"
   handler          = "${local.name}.handler"
   role             = aws_iam_role.trigger_rds_iam_sync.arn
   runtime          = "python3.8"
@@ -21,8 +21,8 @@ resource "aws_lambda_function" "trigger_rds_iam_sync" {
 }
 
 resource "aws_cloudwatch_event_rule" "trigger_rds_iam_sync" {
-  name                = "${var.prefix}_${local.name}"
-  description         = "Invoke Lambda Function: ${var.prefix}_${local.name}"
+  name                = "${var.prefix}${local.name}"
+  description         = "Invoke Lambda Function: ${var.prefix}${local.name}"
   event_pattern = <<EOF
 {
   "source": ["aws.rds"],
@@ -33,12 +33,12 @@ EOF
 
 resource "aws_cloudwatch_event_target" "trigger_rds_iam_sync" {
   rule      = aws_cloudwatch_event_rule.trigger_rds_iam_sync.name
-  target_id = "${var.prefix}_${local.name}"
+  target_id = "${var.prefix}${local.name}"
   arn       = aws_lambda_function.trigger_rds_iam_sync.arn
 }
 
 resource "aws_lambda_permission" "trigger_rds_iam_sync" {
-  statement_id  = "invoke_${var.prefix}_${local.name}"
+  statement_id  = "invoke_${var.prefix}${local.name}"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.trigger_rds_iam_sync.function_name
   principal     = "events.amazonaws.com"
