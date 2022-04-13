@@ -51,7 +51,9 @@ def validate_schema_util(validator_decorator, data, error_message):
         for error in errors:
             # Fix an error where items in error.path are ints. Convert to strings.
             field_path = list(map(lambda x: str(x), list(error.path)))
-            error_value = error.instance if error.validator == "type" or error.validator == "enum" else None
+            error_value = (
+                error.instance if error.validator == "type" or error.validator == "enum" else None
+            )
             error_list.append(
                 ValidationErrorDetail(
                     message=error.message,
