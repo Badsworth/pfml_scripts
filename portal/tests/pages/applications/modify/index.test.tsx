@@ -21,18 +21,7 @@ beforeEach(() => {
 
 describe("Claim Modification Index", () => {
   it("renders page content", () => {
-    const { container } = renderPage(
-      Index,
-      {
-        addCustomSetup: (appLogicHook) => {
-          appLogicHook.benefitsApplications.benefitsApplications =
-            new ApiResourceCollection<BenefitsApplication>("application_id", [
-              new MockBenefitsApplicationBuilder().create(),
-            ]);
-        },
-      },
-      props
-    );
+    const { container } = renderPage(Index, {}, props);
     expect(container.firstChild).toMatchSnapshot();
   });
 
@@ -40,18 +29,7 @@ describe("Claim Modification Index", () => {
     process.env.featureFlags = JSON.stringify({
       claimantShowModification: false,
     });
-    renderPage(
-      Index,
-      {
-        addCustomSetup: (appLogicHook) => {
-          appLogicHook.benefitsApplications.benefitsApplications =
-            new ApiResourceCollection<BenefitsApplication>("application_id", [
-              new MockBenefitsApplicationBuilder().create(),
-            ]);
-        },
-      },
-      props
-    );
+    renderPage(Index, {}, props);
 
     const pageNotFoundHeading = screen.getByRole("heading", {
       name: /Page not found/,

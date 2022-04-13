@@ -1656,7 +1656,16 @@ const pages: {
   claimsModifyIndex: {
     backButtonLabel: "$t(shared.backToYourApplicationsLink)",
     button: "Continue",
-    title: "Request a change to your application",
+    heading: "Request a change to your application",
+    instructions:
+      "<p>Make sure you've notified your employer of any changes to your leave. You will also need to upload updated documentation that covers your new leave dates if applicable.</p><p>Your change request activity will be saved automatically. You may exit the application and return to where you left off at a later time. The original, previously submitted, application will not be altered until all steps of the change request are complete and the request is submitted.</p>",
+    online:
+      "<p>You can make the following changes online:</p><ul><li>Change your leave end date</li><li>Cancel your entire leave</li><li>Transition your medical leave due to pregnancy to bonding leave to care for your child</li></ul>",
+    onlineHeading: "Make your change online",
+    phone:
+      "<p>Apply by calling the Department of Family and Medical Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> if any of the following are true:</p><ul><li>You need to change your leave start date</li><li>Your work schedule has changed</li><li>You need to change your leave schedule (ie from continuous to reduced leave)</li><li>You need to report additional other leaves or benefits you will be receiving during your leave.</li></ul>",
+    phoneHeading: "Make your change by phone",
+    title: "Only some changes can be made online for now",
   },
   claimsModifyReview: {
     sectionLabel: "Review and submit your requested change",
