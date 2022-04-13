@@ -18,6 +18,27 @@ resource "aws_lambda_function" "trigger_rds_iam_sync" {
   timeout          = 10
 }
 
+resource "aws_cloudwatch_event_rule" "trigger_rds_iam_sync" {
+  name                = "${var.prefix}_trigger_rds_iam_sync"
+  description         = "Invoke Lambda Function: ${var.prefix}_trigger_rds_iam_sync"
+  schedule_expression = ""
+}
+
+resource "aws_cloudwatch_event_target" "trigger_rds_iam_sync" {
+  rule      = aws_cloudwatch_event_rule.trigger_rds_iam_sync.name
+  target_id = "${var.prefix}_trigger_rds_iam_sync"
+  arn       = aws_lambda_function.trigger_rds_iam_sync.arn
+}
+
+resource "aws_lambda_permission" "trigger_rds_iam_sync" {
+  statement_id  = "invoke_${var.prefix}_trigger_rds_iam_sync"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.trigger_rds_iam_sync.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.trigger_rds_iam_sync.arn
+}
+
+
 variable "secret_token_arn" {
   type = string
   description = "arn for ssm parameter that contains github token"
