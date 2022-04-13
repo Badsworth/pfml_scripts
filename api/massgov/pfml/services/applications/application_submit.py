@@ -45,6 +45,12 @@ class SsnFeinPair:
 
 @dataclass
 class ApplicationsContainer:
+    """
+    This is a container class to hold the list of applications
+    that the same claimant/employer pair is submitting.  It also contains
+    relevant FINEOS data models
+    """
+
     ssn_fein_pair: SsnFeinPair
     applications: list[Application]
     fineos_employer: models.OCOrganisation
@@ -66,7 +72,7 @@ class ApplicationsContainer:
         return self.absence_cases[application_id]
 
     def does_claim_exist_for_any_application(self):
-        return True in (application.claim is not None for application in self.applications)
+        return True in [application.claim is not None for application in self.applications]
 
 
 def _get_container_by_ssn_fein_pair(
@@ -106,10 +112,11 @@ def _build_fineos_customers(
     applications_containers: list[ApplicationsContainer], user: User
 ) -> None:
     for container in applications_containers:
-        container.customer = build_customer_model(
-            container.applications[0], user
-        )  # TODO: is this right? Is it possible for the same employee ssn/employer fein pair to need multiple customers
-        # Main use of application appears to grab applicant details as well mass id?
+        # The update_customer_details will get invoked once per SsnFeinPair (via fineos_web_id)
+        # so use the first application to build the customer
+        # see https://github.com/EOLWD/pfml/blob/d2d1674c168f9d8e9c07cb221778b21f0eb714d1/api/massgov/pfml/fineos/fineos_client.py#L488
+        application = container.applications[0]
+        container.customer = build_customer_model(application, user)
 
 
 def _build_absence_cases(
@@ -124,11 +131,15 @@ def _build_contact_details(
     containers: list[ApplicationsContainer],
 ) -> None:
     for container in containers:
-        for application in container.applications:
-            assert application.user.email_address
-            if container.customer_contact_details:
-                continue
-            container.customer_contact_details = build_contact_details(application)
+        # update_customer_contact_details will only get exectued once per SsnFeinPar
+        # so we just take the email associated with the first application being
+        # submitted by the same claimant for the same employer
+        # see: https://github.com/EOLWD/pfml/blob/d2d1674c168f9d8e9c07cb221778b21f0eb714d1/api/massgov/pfml/fineos/fineos_client.py#L506
+        application = container.applications[0]
+        assert application.user.email_address
+        if container.customer_contact_details:
+            continue
+        container.customer_contact_details = build_contact_details(application)
 
 
 def _build_applications_containers(
@@ -153,7 +164,7 @@ def _build_applications_containers(
             ApplicationsContainer(
                 ssn_fein_pair,
                 applications,
-                all_fineos_employers[application.employer_fein],
+                all_fineos_employers[ssn_fein_pair.employer_fein],
                 fineos_web_ids[ssn_fein_pair] if ssn_fein_pair in fineos_web_ids else None,
             )
         )
@@ -208,12 +219,12 @@ def _thread_safe_update_occupation(
         update_occupation_details(fineos_client, application, occupation.occupationId, worksite_id)
 
 
-def _update_customer_details(fineos_web_id: str, fineos_customer: Customer) -> None:
+def _thread_safe_update_customer_details(fineos_web_id: str, fineos_customer: Customer) -> None:
     fineos_client = fineos.create_client()
     fineos_client.update_customer_details(fineos_web_id, fineos_customer)
 
 
-def _start_absence(
+def _thread_safe_start_absence(
     ssn_fein_pair: SsnFeinPair, fineos_web_id: str, absence_case: AbsenceCase, application_id: UUID
 ) -> Tuple[SsnFeinPair, UUID, AbsenceCaseSummary]:
     fineos_client = fineos.create_client()
@@ -221,20 +232,19 @@ def _start_absence(
     return (ssn_fein_pair, application_id, new_case)
 
 
-def _update_customer_contact_details(
+def _thread_safe_update_customer_contact_details(
     ssn_fein_pair: SsnFeinPair,
     fineos_web_id: str,
     contact_detail: ContactDetails,
-    application_id: UUID,
-) -> Tuple[SsnFeinPair, UUID, ContactDetails]:
+) -> Tuple[SsnFeinPair, ContactDetails]:
     fineos_client = fineos.create_client()
     updated_contact_details = fineos_client.update_customer_contact_details(
         fineos_web_id, contact_detail
     )
-    return (ssn_fein_pair, application_id, updated_contact_details)
+    return (ssn_fein_pair, updated_contact_details)
 
 
-def _update_reflexive_questions(
+def _thread_safe_update_reflexive_questions(
     fineos_web_id: str,
     fineos_absence_id: str,
     reflexive_question: AdditionalInformation,
@@ -243,7 +253,7 @@ def _update_reflexive_questions(
     fineos_client.update_reflexive_questions(fineos_web_id, fineos_absence_id, reflexive_question)
 
 
-def _complete_intake(
+def _thread_safe_complete_intake(
     ssn_fein_pair: SsnFeinPair,
     fineos_web_id: str,
     fineos_notification_id: str,
@@ -273,7 +283,7 @@ def submit(
     complete_intake
 
     """
-    # Collect all the data required for the calls
+    # Collect created fineos web ids and read all the employers that the applications reference
     fineos_web_ids: Dict[SsnFeinPair, str] = _get_fineos_web_ids(
         db_session,
         {
@@ -286,12 +296,15 @@ def submit(
         {application.employer_fein for application in applications if application.employer_fein},
         executor,
     )
+
     # Build the applications containers
     applications_containers = _build_applications_containers(
         applications, user, fineos_web_ids, all_fineos_employers
     )
 
-    # Create the FINEOS client.
+    # Create the FINEOS client for the `register_employee`
+    # Other thread safe FINEOS calls will create their own client
+    # See the todo below
     fineos_client = fineos.create_client()
     for container in applications_containers:
         if container.ssn_fein_pair in fineos_web_ids.keys():
@@ -300,7 +313,7 @@ def submit(
             continue
         fineos_employer_id = container.fineos_employer.get_customer_number()
         # TODO this method needs to be refactored to extract the fineos api calls
-        # so they can be executed concurrently
+        # from the synchronous code.
         fineos_web_id = register_employee(
             fineos_client,
             container.ssn_fein_pair.employee_ssn,
@@ -312,18 +325,24 @@ def submit(
 
     update_customer_details_futures = []
     for container in applications_containers:
+        # If any claim has been associated with an application
+        # all the User-centric FINEOS calls (just requiring fineos_web_id)
+        # have already been made
         if not container.does_claim_exist_for_any_application():
             assert container.customer
-            fineos_employer = all_fineos_employers[container.ssn_fein_pair.employer_fein]
-
             update_customer_details_futures.append(
                 executor.submit(
-                    _update_customer_details, container.fineos_web_id, container.customer
+                    _thread_safe_update_customer_details,
+                    container.fineos_web_id,
+                    container.customer,
                 )
             )
 
     update_occupation_futures = []
     for container in applications_containers:
+        # If any claim has been associated with an application
+        # all the User-centric FINEOS calls (just requiring fineos_web_id)
+        # have already been made
         if not container.does_claim_exist_for_any_application():
             assert container.customer
             fineos_employer = all_fineos_employers[container.ssn_fein_pair.employer_fein]
@@ -340,17 +359,18 @@ def submit(
 
     updated_customer_contact_details_futures = []
     for container in applications_containers:
+        # If any claim has been associated with an application
+        # all the User-centric FINEOS calls (just requiring fineos_web_id)
+        # have already been made
         if not container.does_claim_exist_for_any_application():
-            for application in container.applications:
-                updated_customer_contact_details_futures.append(
-                    executor.submit(
-                        _update_customer_contact_details,
-                        container.ssn_fein_pair,
-                        container.fineos_web_id,
-                        container.customer_contact_details,
-                        application.application_id,
-                    )
+            updated_customer_contact_details_futures.append(
+                executor.submit(
+                    _thread_safe_update_customer_contact_details,
+                    container.ssn_fein_pair,
+                    container.fineos_web_id,
+                    container.customer_contact_details,
                 )
+            )
     for update_customer_details in as_completed(update_customer_details_futures):
         # Don't care about the result, but if an exception occurred
         # that should bubble up
@@ -366,23 +386,23 @@ def submit(
     ):
         (
             ssn_fein_pair,
-            application_id,
             updated_contact_details,
         ) = update_customer_contact_details_future.result()
         container = _get_container_by_ssn_fein_pair(applications_containers, ssn_fein_pair)
-        application = container.get_application(application_id)
         phone_numbers = updated_contact_details.phoneNumbers
         if phone_numbers is not None and len(phone_numbers) > 0:
-            application.phone.fineos_phone_id = phone_numbers[0].id
+            for application in container.applications:
+                application.phone.fineos_phone_id = phone_numbers[0].id
 
     create_absence_futures = []
     for container in applications_containers:
         for application in container.applications:
             absence_case = container.get_absence_case_for_application(application.application_id)
+            # Do not create the claim if it already exists
             if not application.claim:
                 create_absence_futures.append(
                     executor.submit(
-                        _start_absence,
+                        _thread_safe_start_absence,
                         container.ssn_fein_pair,
                         container.fineos_web_id,
                         absence_case,
@@ -390,6 +410,7 @@ def submit(
                     )
                 )
 
+    update_reflexive_questions_futures = []
     for start_absence_future in as_completed(create_absence_futures):
         (ssn_fein_pair, application_id, new_case) = start_absence_future.result()
         container = _get_container_by_ssn_fein_pair(applications_containers, ssn_fein_pair)
@@ -446,47 +467,46 @@ def submit(
             new_claim.organization_unit_id = application.organization_unit_id
         application.claim = new_claim
 
-    update_reflexive_questions_futures = []
-    for container in applications_containers:
-        for application in container.applications:
-            if not application.claim:
-                # Reflexive questions for bonding and caring leave
-                # "The reflexive questions allows to update additional information of an absence case leave request."
-                # Source - https://documentation.fineos.com/support/documentation/customer-swagger-21.1.html#operation/createReflexiveQuestions
-                if application.leave_reason_qualifier_id in [
-                    LeaveReasonQualifier.NEWBORN.leave_reason_qualifier_id,
-                    LeaveReasonQualifier.ADOPTION.leave_reason_qualifier_id,
-                    LeaveReasonQualifier.FOSTER_CARE.leave_reason_qualifier_id,
-                ]:
-                    reflexive_question = build_bonding_date_reflexive_question(application)
-                    update_reflexive_questions_futures.append(
-                        executor.submit(
-                            _update_reflexive_questions,
-                            container.fineos_web_id,
-                            application.claim.fineos_absence_id,
-                            reflexive_question,
-                        )
-                    )
+        # Reflexive questions for bonding and caring leave
+        # "The reflexive questions allows to update additional information of an absence case leave request."
+        # Source - https://documentation.fineos.com/support/documentation/customer-swagger-21.1.html#operation/createReflexiveQuestions
+        if application.leave_reason_qualifier_id in [
+            LeaveReasonQualifier.NEWBORN.leave_reason_qualifier_id,
+            LeaveReasonQualifier.ADOPTION.leave_reason_qualifier_id,
+            LeaveReasonQualifier.FOSTER_CARE.leave_reason_qualifier_id,
+        ]:
+            reflexive_question = build_bonding_date_reflexive_question(application)
+            update_reflexive_questions_futures.append(
+                executor.submit(
+                    _thread_safe_update_reflexive_questions,
+                    container.fineos_web_id,
+                    application.claim.fineos_absence_id,
+                    reflexive_question,
+                )
+            )
 
-                if (
-                    application.leave_reason_id
-                    == LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id
-                ):
-                    reflexive_question = build_caring_leave_reflexive_question(application)
-                    update_reflexive_questions_futures.append(
-                        executor.submit(
-                            _update_reflexive_questions,
-                            container.fineos_web_id,
-                            application.claim.fineos_absence_id,
-                            reflexive_question,
-                        )
-                    )
+        if application.leave_reason_id == LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id:
+            reflexive_question = build_caring_leave_reflexive_question(application)
+            update_reflexive_questions_futures.append(
+                executor.submit(
+                    _thread_safe_update_reflexive_questions,
+                    container.fineos_web_id,
+                    application.claim.fineos_absence_id,
+                    reflexive_question,
+                )
+            )
+
+    for update_reflexive_questions_future in as_completed(update_reflexive_questions_futures):
+        # Don't care about the result, but if an exception occurred
+        # that should bubble up
+        update_reflexive_questions_future.result()
+
     complete_intake_futures = []
     for container in applications_containers:
         for application in container.applications:
             complete_intake_futures.append(
                 executor.submit(
-                    _complete_intake,
+                    _thread_safe_complete_intake,
                     container.ssn_fein_pair,
                     container.fineos_web_id,
                     str(application.claim.fineos_notification_id),
@@ -499,4 +519,5 @@ def submit(
         application = container.get_application(application_id)
         application.submitted_time = datetime_util.utcnow()
         # Send previous leaves, employer benefits, and other incomes as eforms to FINEOS
+        # TODO this should be refactored so that FIENOS call can be made concurrentlys
         create_other_leaves_and_other_incomes_eforms(application, db_session)
