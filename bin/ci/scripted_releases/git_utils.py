@@ -17,8 +17,8 @@ repo = Repo(os.path.join(os.path.dirname(__file__), "../../.."))
 gitcmd = repo.git
 
 # regex to enforce pattern matching in tags
-PROD_RELEASE_VERSION_REGEX = re.compile(r"(api|portal|foobar)\/v([0-9]+)\.([0-9]+)(\.{0,1}([0-9]+){0,1})$")
-RELEASE_VERSION_REGEX = r"(api|portal|foobar)\/v([0-9]+)\.([0-9]+)(\.{0,1}([0-9]+){0,1})(\-rc\d+)?"
+PROD_RELEASE_VERSION_REGEX = re.compile(r"(admin-portal|api|portal|foobar)\/v([0-9]+)\.([0-9]+)(\.{0,1}([0-9]+){0,1})$")
+RELEASE_VERSION_REGEX = r"(admin-portal|api|portal|foobar)\/v([0-9]+)\.([0-9]+)(\.{0,1}([0-9]+){0,1})(\-rc\d+)?"
 
 @contextmanager
 def rollback(old_head=None) -> Generator:
