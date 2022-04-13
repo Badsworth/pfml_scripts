@@ -14,7 +14,7 @@ exports[`Claim Modification Review renders page content 1`] = `
   <label
     class="usa-label text-bold font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
   >
-    Are you sure you want to cancel your leave?
+    Review and submit your requested change
   </label>
   <p>
     7180eae0-0ad8-46a9-b140-5076863330d2

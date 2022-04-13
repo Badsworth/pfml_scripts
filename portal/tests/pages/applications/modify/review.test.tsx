@@ -1,6 +1,6 @@
 import ApiResourceCollection from "src/models/ApiResourceCollection";
 import BenefitsApplication from "src/models/BenefitsApplication";
-import Review from "src/pages/applications/modify/cancel";
+import Review from "src/pages/applications/modify/review";
 import { renderPage } from "../../../test-utils";
 import { screen } from "@testing-library/react";
 

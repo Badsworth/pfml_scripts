@@ -1,4 +1,3 @@
-import LeaveReason, { LeaveReasonType } from "../../../models/LeaveReason";
 import PreviousLeave, {
   PreviousLeaveType,
 } from "../../../models/PreviousLeave";
@@ -161,7 +160,7 @@ export const Review = (props: WithEmployerClaimProps) => {
     (isCommentRequired && !formState.comment) ||
     (formState.believeRelationshipAccurate === "No" &&
       formState.relationshipInaccurateReason === "");
-  const isCaringLeave = get(claim, "leave_details.reason") === LeaveReason.care;
+  const isCaringLeave = claim.hasCaringLeavePeriod;
 
   // TODO (PORTAL-1234): Move documents loading and state
   useEffect(() => {
@@ -172,7 +171,6 @@ export const Review = (props: WithEmployerClaimProps) => {
   // only cert forms should be shown
   const allDocuments = claimDocumentsMap.get(absenceId)?.items || [];
 
-  const leaveReason = claim.leave_details?.reason as LeaveReasonType;
   const certificationDocuments = getLeaveCertificationDocs(allDocuments);
 
   const handleBenefitInputAdd = () => {
@@ -256,7 +254,8 @@ export const Review = (props: WithEmployerClaimProps) => {
 
     if (updatedLeave.type === PreviousLeaveType.sameReason) {
       updatedLeave.leave_reason = leaveReasonToPreviousLeaveReason(
-        claim.leave_details.reason
+        // TODO (PORTAL-2121): which period reason we should use
+        claim.absence_periods[0].reason
       );
     } else if (
       updatedLeave.type === PreviousLeaveType.otherReason &&
@@ -347,7 +346,6 @@ export const Review = (props: WithEmployerClaimProps) => {
         !isEqual(allPreviousLeaves, formState.previousLeaves) ||
         !isEqual(concurrent_leave, formState.concurrentLeave) ||
         !isEqual(claim.hours_worked_per_week, hours_worked_per_week),
-      leave_reason: leaveReason,
       relationship_inaccurate_reason: undefined,
       uses_second_eform_version: !!claim.uses_second_eform_version,
     };

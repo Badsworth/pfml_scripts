@@ -34,6 +34,9 @@ on:
         required: false
         type: string
 
+env: 
+  GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
+
 jobs:
   run-scripted-releases:
     runs-on: ubuntu-latest
@@ -43,12 +46,15 @@ jobs:
           echo "Application: ${{ github.event.inputs.application }}"
           echo "Scripted Release Task: ${{ github.event.inputs.scripted-release-task }}"
           echo "Arguments: ${{ github.event.inputs.arguments }}"
+      
+      - name: Configure git
+        run: |
+          git config --global user.email "pfmldevops@mass.gov"
+          git config --global user.name "PFMLDevOps" 
 
       - name: Checkout PMFL repo
         uses: actions/checkout@v3
         with:
-          # Token now required as actions/checkout is requesting git config
-          token: ${{ secrets.PFML_DEVOPS_TOKEN }}
           fetch-depth: 0
 
       - name: Install Poetry
@@ -89,9 +95,6 @@ jobs:
       - name: Create release and notes
         if: steps.version.outcome == 'success'
         working-directory: ./${{ github.event.inputs.application }}
-        env:
-        # Use DevOps token so job will have enough permissions to create final release
-          GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
         # If there's "-rc" in the tag, then label the release as a pre-release 
         # If the tag is production ready, title the release accordingly i.e: api/v1.2.3 -> API v1.2.3
         run: |
