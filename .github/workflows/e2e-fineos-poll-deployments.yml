@@ -54,9 +54,6 @@ jobs:
             core.setFailed('More than 10 specs failed - aborting auto re-run!!')
         if: steps.get-failed.outputs.failed_specs_count > 10
 
-      - name: Trigger E2E Workflow
-        run: |
-          echo "Trigger E2E WorkFlow"
       - name: Setup Node
         uses: actions/setup-node@v2
         with: { node-version: "14.x" }
@@ -64,6 +61,26 @@ jobs:
         uses: bahmutov/npm-install@v1
         with:
           working-directory: e2e
+      - name: Cypress Tests (Auto Re-run - failed specs)
+        run: |
+          echo "Trigger E2E WorkFlow"
+
+      - name: Get list of failed specs from auto re-trigger
+        if: failure()
+        run: |
+          echo "Getting List of failed specs post auto"
+        id: get-failed-auto
+
+      - name: Print String of persistent failed specs
+        if: always() && steps.get-failed-auto.outcome == 'success'
+        run: |
+          echo "Failed auto run had failure[s] w/the following runId: 
+
+      - name: "Archive screenshots"
+        # uses: actions/upload-artifact@v2
+        if: always() && steps.get-failed-auto.outcome == 'success'
+        run: | 
+          echo "Archive any screenshots"
         # This workflow intentionally doesn't use workflow_call because at the moment, it doesn't support matrix builds.
         # Also, since we don't wait for results or care about having an accurate run URL, the benefit is small.
         # uses: aurelien-baudet/workflow-dispatch@v2.1.1
