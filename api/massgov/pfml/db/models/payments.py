@@ -1761,9 +1761,9 @@ AUDIT_REJECT_DETAIL_GROUPS = [
         audit_report_type=None,
     ),
     AuditReportDetailGroup(
-        reject_notes_str="Waiting Week",
+        reject_notes_str=PaymentAuditReportType.WAITING_WEEK.payment_audit_report_type_description,
         writeback_transaction_status=FineosWritebackTransactionStatus.WAITING_WEEK,
-        audit_report_type=None,
+        audit_report_type=PaymentAuditReportType.WAITING_WEEK,
     ),
     AuditReportDetailGroup(
         reject_notes_str="InvalidPayment PaidDate",
