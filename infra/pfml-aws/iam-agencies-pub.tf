@@ -75,8 +75,8 @@ data "aws_iam_policy_document" "pub_s3_access_policy" {
     ]
 
     resources = flatten([for bucket_arn in local.bucket_arns[each.key] : [
-      "${bucket_arn}/pub/outbound",
-      "${bucket_arn}/pub/outbound/*",
+      "${bucket_arn}/pub/inbound",
+      "${bucket_arn}/pub/inbound/*",
     ]])
 
     effect = "Allow"
