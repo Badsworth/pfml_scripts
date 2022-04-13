@@ -120,12 +120,23 @@ import { config } from "../../actions/common";
             claimPage.tasks((task) => {
               task.close("Employer Reimbursement Adjustment");
             });
-            cy.get("[id^=MENUBAR\\.CaseSubjectMenu]")
-              .findByText("Correspondence")
-              .click({ force: true })
-              .parents("li")
-              .findByText("Employer Reimbursement Approval Notice")
-              .click({ force: true });
+            // Force in the click at the end of the chainable is causing
+            // issue in cps-preview and stage environments.
+            if (config("HAS_APRIL_UPGRADE") === "true") {
+              cy.get("[id^=MENUBAR\\.CaseSubjectMenu]")
+                .findByText("Correspondence")
+                .click({ force: true })
+                .parents("li")
+                .findByText("Employer Reimbursement Approval Notice")
+                .click({ force: true });
+            } else {
+              cy.get("[id^=MENUBAR\\.CaseSubjectMenu]")
+                .findByText("Correspondence")
+                .click({ force: true })
+                .parents("li")
+                .findByText("Employer Reimbursement Approval Notice")
+                .click();
+            }
             fineos.clickBottomWidgetButton("Next");
             claimPage.documents((document) => {
               document.setDocumentComplete(
