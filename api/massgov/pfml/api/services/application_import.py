@@ -596,7 +596,7 @@ class ApplicationImportService:
 
         # Take the one with isDefault=True, otherwise take first one
         preference = next(
-            (pref for pref in preferences if pref.isDefault and pref.paymentMethod != ""),
+            (pref for pref in preferences if pref.isDefault and pref.paymentMethod),
             preferences[0],
         )
 
@@ -635,7 +635,7 @@ class ApplicationImportService:
             )
             has_mailing_address = True
 
-        if preference.paymentMethod is None:
+        if not preference.paymentMethod:
             self.application.has_submitted_payment_preference = False
 
         self.application.has_mailing_address = has_mailing_address
