@@ -1275,12 +1275,17 @@ def _set_has_future_child_date(
 
 
 def _get_open_absence_period(absence_details: AbsenceDetails) -> Optional[AbsencePeriod]:
+    # First try to retrieve an absence period with a PENDING leave request decision.
+    # If none are found, look for any with IN_REVIEW or PROJECTED leave request decisions.
     if absence_details.absencePeriods:
         for absence_period in absence_details.absencePeriods:
             if (
                 absence_period.requestStatus
                 == LeaveRequestDecision.PENDING.leave_request_decision_description
             ):
+                return absence_period
+        for absence_period in absence_details.absencePeriods:
+            if absence_period.requestStatus in OPEN_STATUSES:
                 return absence_period
     return None
 
