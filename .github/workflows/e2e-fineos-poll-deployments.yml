@@ -49,6 +49,7 @@ jobs:
 
       - name: More than 10 specs detected (ABORT RE-RUN)
         uses: actions/github-script@v3
+        id: high-failure
         with:
           script: |
             core.setFailed('More than 10 specs failed - aborting auto re-run!!')
@@ -57,24 +58,24 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v2
         with: { node-version: "14.x" }
+
       - name: "Install Node Modules"
         uses: bahmutov/npm-install@v1
         with:
           working-directory: e2e
+          
       - name: Cypress Tests (Auto Re-run - failed specs)
         run: |
           echo "Trigger E2E WorkFlow"
 
       - name: Get list of failed specs from auto re-trigger
-        if: failure()
         run: |
           echo "Getting List of failed specs post auto"
         id: get-failed-auto
 
       - name: Print String of persistent failed specs
-        if: always() && steps.get-failed-auto.outcome == 'success'
         run: |
-          echo "Failed auto run had failure[s] w/the following runId: 
+          echo "Failed auto run had failure[s] w/the following runId:" 
 
       - name: "Archive screenshots"
         # uses: actions/upload-artifact@v2
