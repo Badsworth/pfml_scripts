@@ -14,7 +14,7 @@ export default class ChangeRequest {
   change_request_type: ValuesOf<typeof ChangeRequestType> | null = null;
   start_date: string | null = null;
   end_date: string | null = null;
-  document_submitted_at: string | null = null;
+  documents_submitted_at: string | null = null;
   submitted_time: string | null = null;
 
   constructor(attrs: Partial<ChangeRequest>) {

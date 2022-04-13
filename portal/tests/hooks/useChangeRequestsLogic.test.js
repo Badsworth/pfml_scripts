@@ -205,6 +205,7 @@ describe(useChangeRequestsLogic, () => {
         ChangeRequest {
           "change_request_id": "change-request-id",
           "change_request_type": null,
+          "documents_submitted_at": null,
           "end_date": null,
           "fineos_absence_id": undefined,
           "startDate": "2022-12-31",
@@ -260,6 +261,7 @@ describe(useChangeRequestsLogic, () => {
         ChangeRequest {
           "change_request_id": "change-request-id",
           "change_request_type": null,
+          "documents_submitted_at": null,
           "end_date": null,
           "fineos_absence_id": undefined,
           "start_date": null,

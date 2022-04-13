@@ -116,7 +116,7 @@ const MedicalToBondingReview = (props: ChangeRequestTypeReviewProps) => {
       );
     }),
   });
-  const context = !!change_request.document_submitted_at
+  const context = !!change_request.documents_submitted_at
     ? "hasProof"
     : "doesNotHaveProof";
 

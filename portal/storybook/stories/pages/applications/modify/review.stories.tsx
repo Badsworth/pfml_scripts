@@ -67,7 +67,7 @@ export const Default = (
     change_request_type: args["Change request type"],
     fineos_absence_id: "absence-id",
     change_request_id: "change-request-id",
-    document_submitted_at: args["Uploaded proof of birth"]
+    documents_submitted_at: args["Uploaded proof of birth"]
       ? "2022-01-01"
       : null,
     start_date: claimDetail.absence_periods[0].absence_period_start_date,

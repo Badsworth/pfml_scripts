@@ -27,7 +27,7 @@ const setup = (
               change_request_id,
               fineos_absence_id: absence_id,
               change_request_type: ChangeRequestType.modification,
-              document_submitted_at: "2022-01-01",
+              documents_submitted_at: "2022-01-01",
               start_date: "2022-01-01",
               end_date: "2022-05-01",
               ...changeRequestAttrs,
@@ -89,7 +89,7 @@ describe("Claim Modification Review", () => {
   it("it shows medical to bonding review with proof of birth text when change request is medical to bonding and a document was submitted", () => {
     const { container } = setup({
       change_request_type: ChangeRequestType.medicalToBonding,
-      document_submitted_at: "2022-01-01",
+      documents_submitted_at: "2022-01-01",
     });
     expect(container.firstChild).toMatchSnapshot();
     expect(
@@ -102,7 +102,7 @@ describe("Claim Modification Review", () => {
   it("it shows medical to bonding review without proof of birth text when change request is medical to bonding and a document was not submitted", () => {
     const { container } = setup({
       change_request_type: ChangeRequestType.medicalToBonding,
-      document_submitted_at: null,
+      documents_submitted_at: null,
     });
     expect(container.firstChild).toMatchSnapshot();
     expect(
