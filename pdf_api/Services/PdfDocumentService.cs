@@ -87,18 +87,7 @@ namespace PfmlPdfApi.Services
             try
             {
                 var template = await _amazonS3Service.GetFileAsync(bucket.Template);
-                string document = "";
-                switch (dto.Type) {
-                    case "1099":
-                        ReplaceValues1099(new StreamReader(template).ReadToEnd(), dto);
-                        break;
-                    case "UserNotFound":
-                        ReplaceValuesUserNotFound(new StreamReader(template).ReadToEnd(), dto);
-                        break;
-                    default:
-                        break;
-                }
-                
+                string document = dto.ReplaceValuesInTemplate(new StreamReader(template).ReadToEnd());
                 var stream = new MemoryStream();
                 HtmlConverter.ConvertToPdf(document, stream);
                 var folderCreated = await _amazonS3Service.CreateFolderAsync(folderName);
@@ -182,51 +171,5 @@ namespace PfmlPdfApi.Services
             return response;
         }
 
-        private string ReplaceValues1099(string template, AnyDocument dto)
-        {
-            Document1099 newDto = (Document1099) dto;
-            template = template.Replace("[CORRECTED]", newDto.Corrected ? "checked" : string.Empty);
-            template = template.Replace("[PAY_AMOUNT]", newDto.PaymentAmount.ToString());
-            template = template.Replace("[YEAR]", newDto.Year.ToString());
-            template = template.Replace("[SSN]", newDto.SocialNumber);
-            template = template.Replace("[FED_TAX_WITHHELD]", newDto.FederalTaxesWithheld.ToString());
-            template = template.Replace("[NAME]", newDto.Name.Split("/")[1]);
-            template = template.Replace("[ADDRESS]", newDto.Address);
-            template = template.Replace("[ADDRESS2]", newDto.Address2);
-            template = template.Replace("[CITY]", newDto.City);
-            template = template.Replace("[STATE]", newDto.State);
-            template = template.Replace("[ZIP]", newDto.ZipCode);
-            template = template.Replace("[ACCOUNT]", newDto.AccountNumber.HasValue ? newDto.AccountNumber.ToString() : string.Empty);
-            template = template.Replace("[STATE_TAX_WITHHELD]", newDto.StateTaxesWithheld.ToString());
-            template = template.Replace("[REPAYMENTS]", newDto.Repayments.ToString());
-            template = template.Replace("[VERSION]", "1.0");
-
-            return template;
-        }
-
-        private string ReplaceValuesUserNotFound(string template, AnyDocument dto)
-        {
-            DocumentClaimantInfo newDto = JsonConvert.SerializeObject(JsonConvert.DeserializeObject<DocumentClaimantInfo>(dto));
-            template = template.Replace("[FILENAME]", newDto.Id);
-            template = template.Replace("[APPLICATIONID]", newDto.ApplicationId);
-            template = template.Replace("[SUBMISSIONTIME]", newDto.SubmissionTime);
-            template = template.Replace("[NAME]", newDto.Name);
-            template = template.Replace("[ADDRESS]", newDto.Address);
-            template = template.Replace("[DATEOFBIRTH]", newDto.DateOfBirth);
-            template = template.Replace("[GENDER]", newDto.Gender);
-            template = template.Replace("[EMAIL]", newDto.Email);
-            template = template.Replace("[PHONE]", newDto.Phone);
-            template = template.Replace("[IDNUMBER]", newDto.IdNumber);
-            template = template.Replace("[SSN]", newDto.SSN);
-            template = template.Replace("[DATEOFHIRE]", newDto.DateOfHire);
-            template = template.Replace("[HOURSWORKEDPERWEEK]", newDto.HoursWorkedPerWeek);
-            template = template.Replace("[FEIN]", newDto.FEIN);
-            template = template.Replace("[EMPLOYERNAME]", newDto.EmployerName);
-            template = template.Replace("[STILLWORKSFOREMPLOYER]", newDto.StillWorksForEmployer);
-            template = template.Replace("[REQUESTEDLEAVEREASON]", newDto.RequestedLeaveReason);
-            template = template.Replace("[REQUESTEDLEAVESTARTDATE]", newDto.RequestedLeaveStartDate);
-            
-            return template;
-        }
     }
 }

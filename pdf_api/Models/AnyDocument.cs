@@ -3,16 +3,23 @@ using System.ComponentModel.DataAnnotations;
 
 namespace PfmlPdfApi.Models
 {
-    public class AnyDocument
+    public abstract class AnyDocument
     {
         [Required]
-        public string Id { get; set; }
-        // [Required]
-        public string BatchId { get; set; }
-        public string Type { get; set; }
+        public abstract string Id { get; set; }
+        public abstract string BatchId { get; set; }
+        public abstract string Type { get; set; }
+
+        public abstract string ReplaceValuesInTemplate(string template);
     }
 
-    public class Document1099 : AnyDocument {
+    public class Document1099 : AnyDocument 
+    {
+        [Required]
+        public override string Id { get; set; }
+        public override string BatchId { get; set; }
+        public override string Type { get; set; }
+
         [Required]
         public int Year { get; set; }
 
@@ -52,10 +59,36 @@ namespace PfmlPdfApi.Models
         public string ZipCode { get; set; }
 
         public int? AccountNumber { get; set; }
+
+        public override string ReplaceValuesInTemplate(string template)
+        {
+            template = template.Replace("[CORRECTED]", this.Corrected ? "checked" : string.Empty);
+            template = template.Replace("[PAY_AMOUNT]", this.PaymentAmount.ToString());
+            template = template.Replace("[YEAR]", this.Year.ToString());
+            template = template.Replace("[SSN]", this.SocialNumber);
+            template = template.Replace("[FED_TAX_WITHHELD]", this.FederalTaxesWithheld.ToString());
+            template = template.Replace("[NAME]", this.Name.Split("/")[1]);
+            template = template.Replace("[ADDRESS]", this.Address);
+            template = template.Replace("[ADDRESS2]", this.Address2);
+            template = template.Replace("[CITY]", this.City);
+            template = template.Replace("[STATE]", this.State);
+            template = template.Replace("[ZIP]", this.ZipCode);
+            template = template.Replace("[ACCOUNT]", this.AccountNumber.HasValue ? this.AccountNumber.ToString() : string.Empty);
+            template = template.Replace("[STATE_TAX_WITHHELD]", this.StateTaxesWithheld.ToString());
+            template = template.Replace("[REPAYMENTS]", this.Repayments.ToString());
+            template = template.Replace("[VERSION]", "1.0");
+
+            return template;
+        }
     }
     
     public class DocumentClaimantInfo : AnyDocument
     {
+        [Required]
+        public override string Id { get; set; }
+        public override string BatchId { get; set; }
+        public override string Type { get; set; }
+
         public string ApplicationId { get; set; }
         public string SubmissionTime { get; set; }
         // claimant data
@@ -82,5 +115,28 @@ namespace PfmlPdfApi.Models
         // public string State { get; set; }
         public string RequestedLeaveReason { get; set; }
         public string RequestedLeaveStartDate { get; set; }
+
+        public override string ReplaceValuesInTemplate(string template)
+        {
+            template = template.Replace("[FILENAME]", this.Id);
+            template = template.Replace("[APPLICATIONID]", this.ApplicationId);
+            template = template.Replace("[SUBMISSIONTIME]", this.SubmissionTime);
+            template = template.Replace("[NAME]", this.Name);
+            template = template.Replace("[ADDRESS]", this.Address);
+            template = template.Replace("[DATEOFBIRTH]", this.DateOfBirth);
+            template = template.Replace("[GENDER]", this.Gender);
+            template = template.Replace("[EMAIL]", this.Email);
+            template = template.Replace("[PHONE]", this.Phone);
+            template = template.Replace("[IDNUMBER]", this.IdNumber);
+            template = template.Replace("[SSN]", this.SSN);
+            template = template.Replace("[DATEOFHIRE]", this.DateOfHire);
+            template = template.Replace("[HOURSWORKEDPERWEEK]", this.HoursWorkedPerWeek);
+            template = template.Replace("[FEIN]", this.FEIN);
+            template = template.Replace("[EMPLOYERNAME]", this.EmployerName);
+            template = template.Replace("[STILLWORKSFOREMPLOYER]", this.StillWorksForEmployer);
+            template = template.Replace("[REQUESTEDLEAVEREASON]", this.RequestedLeaveReason);
+            template = template.Replace("[REQUESTEDLEAVESTARTDATE]", this.RequestedLeaveStartDate);
+            return template;
+        }
     }
 }
