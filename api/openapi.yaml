@@ -3421,7 +3421,7 @@ components:
           format: date
           example: "2022-06-01"
           nullable: true
-        amount:
+        net_amount:
           type: number
           example: 750.25
           description: "Amount after reductions and split payments are taken out."

@@ -579,8 +579,8 @@ class TestGetPaymentDetailsAndLines:
         assert len(claim_response["payments"][0]["payment_details"][1]["payment_lines"]) == 1
 
         # Confirm the PaymentDetails are in the expected order
-        assert claim_response["payments"][0]["payment_details"][0]["amount"] == 75
-        assert claim_response["payments"][0]["payment_details"][1]["amount"] == 25
+        assert claim_response["payments"][0]["payment_details"][0]["net_amount"] == 75
+        assert claim_response["payments"][0]["payment_details"][1]["net_amount"] == 25
 
         # Confirm the PaymentDetails return a gross_amount field
         assert claim_response["payments"][0]["payment_details"][0]["gross_amount"] == 80

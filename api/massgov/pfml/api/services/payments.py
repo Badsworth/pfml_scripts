@@ -283,7 +283,7 @@ def get_payment_details_response(
             payment_details_id=payment_details.payment_details_id,
             period_start_date=payment_details.period_start_date,
             period_end_date=payment_details.period_end_date,
-            amount=payment_details.amount,
+            net_amount=payment_details.amount,
             gross_amount=payment_details.business_net_amount,
             # PaymentDetails.payment_lines is defined as a backfill relationship on PaymentLine
             payment_lines=parse_obj_as(List[PaymentLineResponse], payment_details.payment_lines),  # type: ignore
