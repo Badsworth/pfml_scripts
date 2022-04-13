@@ -3,33 +3,11 @@ from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.factories import ClaimFactory, EmployeeFactory
 
 
-def test_get_claims_for_outbound(test_db_session, initialize_factories_session):
-    claims_included = [
-        ClaimFactory.create(fineos_absence_status_id=AbsenceStatus.ADJUDICATION.absence_status_id),
-        ClaimFactory.create(fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id),
-        ClaimFactory.create(fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id),
-        ClaimFactory.create(fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id),
-        ClaimFactory.create(fineos_absence_status_id=AbsenceStatus.CLOSED.absence_status_id),
-        ClaimFactory.create(fineos_absence_status_id=AbsenceStatus.COMPLETED.absence_status_id),
-        ClaimFactory.create(fineos_absence_status_id=AbsenceStatus.IN_REVIEW.absence_status_id),
-        ClaimFactory.create(fineos_absence_status_id=AbsenceStatus.IN_REVIEW.absence_status_id),
-    ]
-
-    # claims that should not be included
-    [
-        ClaimFactory.create(
-            fineos_absence_status_id=AbsenceStatus.INTAKE_IN_PROGRESS.absence_status_id
-        ),
-        ClaimFactory.create(fineos_absence_status_id=AbsenceStatus.DECLINED.absence_status_id),
-    ]
-
-    assert reductions_common.get_claims_for_outbound(test_db_session) == claims_included
-
-
 def test_get_claimants_for_outbound(test_db_session, initialize_factories_session):
     employee1 = EmployeeFactory.create()
     employee2 = EmployeeFactory.create()
     employee3 = EmployeeFactory.create()
+    employee4 = EmployeeFactory.create()
 
     # existing employee without any claims should not be included
     EmployeeFactory.create()
@@ -52,6 +30,13 @@ def test_get_claimants_for_outbound(test_db_session, initialize_factories_sessio
     ClaimFactory.create(
         fineos_absence_status_id=AbsenceStatus.IN_REVIEW.absence_status_id, employee=employee3
     ),
+
+    # employee4 has a historical absence case
+    ClaimFactory.create(
+        fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
+        employee=employee4,
+        fineos_absence_id="H-00-ABS-00",
+    )
 
     # we should only see the unique employees
     assert reductions_common.get_claimants_for_outbound(test_db_session) == [
