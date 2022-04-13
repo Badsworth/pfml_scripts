@@ -22,8 +22,8 @@ locals {
   prod_bucket_arns    = [aws_s3_bucket.agency_transfer["prod"].arn]
 
   bucket_arns = {
-    "nonprod" = nonprod_bucket_arns,
-    "prod"    = prod_bucket_arns
+    "nonprod" = local.nonprod_bucket_arns,
+    "prod"    = local.prod_bucket_arns
   }
 }
 
