@@ -98,13 +98,13 @@ data "aws_iam_policy_document" "pub_s3_access_policy" {
   }
 }
 
-# Create a policy for lower environments
+# Create a policy for nonprod
 resource "aws_iam_policy" "pub_s3_access_policy_nonprod" {
   name   = "pub-s3-access-policy-nonprod"
   policy = data.aws_iam_policy_document.pub_s3_access_policy["nonprod"].json
 }
 
-# Attach all the lower environment policies to the nonprod user.
+# Attach the nonprod policy to the nonprod user.
 resource "aws_iam_user_policy_attachment" "pub_policy_attachment_nonprod" {
   user       = aws_iam_user.agency_pub["nonprod"].name
   policy_arn = aws_iam_policy.pub_s3_access_policy_nonprod.arn
