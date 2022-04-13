@@ -527,10 +527,12 @@ class TestGetPaymentDetailsAndLines:
         payment_factory.get_or_create_payment()
 
         payment_details_1 = payment_factory.create_payment_detail(
-            amount=25, period_start_date=date(2021, 3, 1)
+            amount=25, period_start_date=date(2021, 3, 1), business_net_amount=30
         )
         payment_factory.create_payment_line(payment_detail=payment_details_1, amount=25)
-        payment_factory.create_payment_detail(amount=75, period_start_date=date(2021, 1, 1))
+        payment_factory.create_payment_detail(
+            amount=75, period_start_date=date(2021, 1, 1), business_net_amount=80
+        )
 
         return claim
 
@@ -579,6 +581,10 @@ class TestGetPaymentDetailsAndLines:
         # Confirm the PaymentDetails are in the expected order
         assert claim_response["payments"][0]["payment_details"][0]["amount"] == 75
         assert claim_response["payments"][0]["payment_details"][1]["amount"] == 25
+
+        # Confirm the PaymentDetails return a gross_amount field
+        assert claim_response["payments"][0]["payment_details"][0]["gross_amount"] == 80
+        assert claim_response["payments"][0]["payment_details"][1]["gross_amount"] == 30
 
         # Confirm the PaymentLine is associated with the correct PaymentDetails
         assert (
