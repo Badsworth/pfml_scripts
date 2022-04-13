@@ -58,7 +58,7 @@ data "aws_iam_policy_document" "pub_s3_access_policy" {
       "s3:DeleteObject"
     ]
 
-    resources = flatten([for bucket_arn in local.bucket_arns : [
+    resources = flatten([for bucket_arn in local.bucket_arns[each.key] : [
       "${bucket_arn}/pub/outbound",
       "${bucket_arn}/pub/outbound/*",
     ]])
@@ -74,7 +74,7 @@ data "aws_iam_policy_document" "pub_s3_access_policy" {
       "s3:AbortMultipartUpload"
     ]
 
-    resources = flatten([for bucket_arn in local.bucket_arns : [
+    resources = flatten([for bucket_arn in local.bucket_arns[each.key] : [
       "${bucket_arn}/pub/outbound",
       "${bucket_arn}/pub/outbound/*",
     ]])
@@ -88,7 +88,7 @@ data "aws_iam_policy_document" "pub_s3_access_policy" {
       "s3:*"
     ]
 
-    resources = flatten([for bucket_arn in local.bucket_arns : [
+    resources = flatten([for bucket_arn in local.bucket_arns[each.key] : [
       bucket_arn,
       "${bucket_arn}/pub",
       "${bucket_arn}/pub/*",
