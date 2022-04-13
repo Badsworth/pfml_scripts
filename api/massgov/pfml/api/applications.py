@@ -468,7 +468,7 @@ def applications_submit(application_id):
                 **{"split_claims_across_by_enabled": split_claims_across_by_enabled},
             },
         )
-        with ThreadPoolExecutor() as executor:
+        with ThreadPoolExecutor(max_workers=8) as executor:
             if application_split is not None and split_claims_across_by_enabled:
                 application_before_split, application_after_split = split_application_by_date(
                     db_session,
