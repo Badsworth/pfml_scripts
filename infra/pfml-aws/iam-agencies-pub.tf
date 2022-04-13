@@ -15,8 +15,20 @@ resource "aws_iam_user" "agency_pub" {
 
 # Create an access policy for each environment.
 # All of the lower environments will be attached to the nonprod user.
+locals {
+  # Define the list of S3 buckets accessible by the pub user for nonprod and prod
+  nonprod_envs        = setsubtract(toset(local.environments), ["prod", "infra-test"])
+  nonprod_bucket_arns = [for env in local.nonprod_envs : aws_s3_bucket.agency_transfer[env].arn]
+  prod_bucket_arns    = [aws_s3_bucket.agency_transfer["prod"].arn]
+
+  bucket_arns = {
+    "nonprod" = nonprod_bucket_arns,
+    "prod"    = prod_bucket_arns
+  }
+}
+
 data "aws_iam_policy_document" "pub_s3_access_policy" {
-  for_each = toset(local.environments)
+  for_each = toset(["nonprod", "prod"])
 
   statement {
     sid = "AllowPubListingOfBucket"
@@ -24,9 +36,7 @@ data "aws_iam_policy_document" "pub_s3_access_policy" {
       "s3:ListBucket"
     ]
 
-    resources = [
-      aws_s3_bucket.agency_transfer[each.key].arn
-    ]
+    resources = local.bucket_arns[each.key]
 
     condition {
       test     = "StringLike"
@@ -48,10 +58,10 @@ data "aws_iam_policy_document" "pub_s3_access_policy" {
       "s3:DeleteObject"
     ]
 
-    resources = [
-      "${aws_s3_bucket.agency_transfer[each.key].arn}/pub/outbound",
-      "${aws_s3_bucket.agency_transfer[each.key].arn}/pub/outbound/*",
-    ]
+    resources = flatten([for bucket_arn in local.bucket_arns : [
+      "${bucket_arn}/pub/outbound",
+      "${bucket_arn}/pub/outbound/*",
+    ]])
 
     effect = "Allow"
   }
@@ -64,10 +74,10 @@ data "aws_iam_policy_document" "pub_s3_access_policy" {
       "s3:AbortMultipartUpload"
     ]
 
-    resources = [
-      "${aws_s3_bucket.agency_transfer[each.key].arn}/pub/inbound",
-      "${aws_s3_bucket.agency_transfer[each.key].arn}/pub/inbound/*",
-    ]
+    resources = flatten([for bucket_arn in local.bucket_arns : [
+      "${bucket_arn}/pub/outbound",
+      "${bucket_arn}/pub/outbound/*",
+    ]])
 
     effect = "Allow"
   }
@@ -78,28 +88,26 @@ data "aws_iam_policy_document" "pub_s3_access_policy" {
       "s3:*"
     ]
 
-    resources = [
-      aws_s3_bucket.agency_transfer[each.key].arn,
-      "${aws_s3_bucket.agency_transfer[each.key].arn}/pub",
-      "${aws_s3_bucket.agency_transfer[each.key].arn}/pub/*",
-    ]
+    resources = flatten([for bucket_arn in local.bucket_arns : [
+      bucket_arn,
+      "${bucket_arn}/pub",
+      "${bucket_arn}/pub/*",
+    ]])
 
     effect = "Deny"
   }
 }
 
-# Create a policy for each lower environment
+# Create a policy for lower environments
 resource "aws_iam_policy" "pub_s3_access_policy_nonprod" {
-  for_each = setsubtract(toset(local.environments), ["prod"])
-  name     = "pub-s3-access-policy-${each.key}"
-  policy   = data.aws_iam_policy_document.pub_s3_access_policy[each.key].json
+  name   = "pub-s3-access-policy-nonprod"
+  policy = data.aws_iam_policy_document.pub_s3_access_policy["nonprod"].json
 }
 
 # Attach all the lower environment policies to the nonprod user.
 resource "aws_iam_user_policy_attachment" "pub_policy_attachment_nonprod" {
-  for_each   = setsubtract(toset(local.environments), ["prod", "infra-test"])
   user       = aws_iam_user.agency_pub["nonprod"].name
-  policy_arn = aws_iam_policy.pub_s3_access_policy_nonprod[each.key].arn
+  policy_arn = aws_iam_policy.pub_s3_access_policy_nonprod.arn
 }
 
 # Create a prod policy
