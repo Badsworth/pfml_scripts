@@ -34,28 +34,42 @@ jobs:
 
       - name: Setup & Configure New Relic CLI
         uses: ./.github/actions/setup-nr-cli
+        
+      # - run: ./bin/ci/publish-fineos-deployment-events.sh ${{ matrix.environment }}
+      #   id: publish-deployments
+      - name: Query NR to get list of failed specs
+        run: sh ./bin/ci/get-list-failed-specs.sh trn2 EOLWD/pfml-2162862872-1
+        id: get-failed
 
-      - run: ./bin/ci/publish-fineos-deployment-events.sh ${{ matrix.environment }}
-        id: publish-deployments
+      - name: Print string of failed specs for auto trigger
+        run: |
+          echo "Previous run had failure[s] w/the following runId: EOLWD/pfml-2162862872-1"
+          echo "List of failed specs: ${{ steps.get-failed.outputs.failed_specs }}"
+          echo "Count of failed specs: ${{ steps.get-failed.outputs.failed_specs_count }}"
+
+      - name: More than 10 specs detected (ABORT RE-RUN)
+        run: |
+          echo "exit 1"
+        if: steps.get-failed.outputs.failed_specs_count > 10
 
       - name: Trigger E2E Workflow
         # This workflow intentionally doesn't use workflow_call because at the moment, it doesn't support matrix builds.
         # Also, since we don't wait for results or care about having an accurate run URL, the benefit is small.
-        uses: aurelien-baudet/workflow-dispatch@v2.1.1
-        if: steps.publish-deployments.outputs.was_deployed == 'true'
-        with:
-          workflow: e2e-cypress.yml
-          token: ${{ secrets.PFML_DEVOPS_TOKEN }}
-          wait-for-completion: false
-          display-workflow-run-url-interval: 30s
-          inputs: |
-            {
-              "target_environment": "${{ matrix.environment }}",
-              "cypress_tags": "Deploy,Deploy-Fineos",
-              "run_stable": "true",
-              "run_unstable": "false",
-              "run_morning": "false",
-              "run_targeted": "false",
-              "targeted_pattern": "cypress/specs/stable/feature/**",
-              "title_override": "${{ format('Fineos Deploy: {0} to {1}', steps.publish-deployments.outputs.version, matrix.environment) }}"
-            }
+        # uses: aurelien-baudet/workflow-dispatch@v2.1.1
+        # if: steps.publish-deployments.outputs.was_deployed == 'true'
+        # with:
+        #   workflow: e2e-cypress.yml
+        #   token: ${{ secrets.PFML_DEVOPS_TOKEN }}
+        #   wait-for-completion: false
+        #   display-workflow-run-url-interval: 30s
+        #   inputs: |
+        #     {
+        #       "target_environment": "${{ matrix.environment }}",
+        #       "cypress_tags": "Deploy,Deploy-Fineos",
+        #       "run_stable": "true",
+        #       "run_unstable": "false",
+        #       "run_morning": "false",
+        #       "run_targeted": "false",
+        #       "targeted_pattern": "cypress/specs/stable/feature/**",
+        #       "title_override": "${{ format('Fineos Deploy: {0} to {1}', steps.publish-deployments.outputs.version, matrix.environment) }}"
+        #     }
