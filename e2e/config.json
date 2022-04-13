@@ -78,7 +78,7 @@
     "PORTAL_BASEURL": "https://paidleave-trn2.dfml.eol.mass.gov",
     "API_BASEURL": "https://paidleave-api-trn2.dfml.eol.mass.gov/api/v1",
     "FINEOS_BASEURL": "https://trn2-claims-webapp.masspfml.fineos.com/",
-    "PORTAL_USERNAME": "zanson+pfml+default@lastcallmedia.com",
+    "PORTAL_USERNAME": "armando+pfml+default@lastcallmedia.com",
     "FINEOS_USERNAME": "CONTENT",
     "COGNITO_POOL": "us-east-1_oxOGrdAe8",
     "COGNITO_CLIENTID": "3dgp7vtcdt7bo0utlp2tqit1ee",
