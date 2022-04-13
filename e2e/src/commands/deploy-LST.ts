@@ -145,7 +145,7 @@ const cmd: CommandModule<SystemWideArgs, PresetArgs> = {
         instances: containers,
         environment,
       },
-        {
+      {
         name: "artillery-crm",
         image: remote_tag,
         command: [
@@ -160,7 +160,7 @@ const cmd: CommandModule<SystemWideArgs, PresetArgs> = {
       },
     ]);
     logger.info(
-      `LST has been triggered...\n\nCluster:\n------\n${result.cluster}\n\nInflux Dashboard:\n------\n${result.influx}\n\nLogs:\n-----\n${result.cloudwatch}\n\nNew Relic APM:\n-----\n${result.newrelic}\n\n\n`
+      `LST has been triggered...\n\nContainers:${result.containerCount} of ${result.runCount}\n\nCluster:\n------\n${result.cluster}\n\nInflux Dashboard:\n------\n${result.influx}\n\nLogs:\n-----\n${result.cloudwatch}\n\nNew Relic APM:\n-----\n${result.newrelic}\n\n\n`
     );
   },
 };

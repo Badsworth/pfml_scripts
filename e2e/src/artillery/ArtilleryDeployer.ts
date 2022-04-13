@@ -84,12 +84,15 @@ export default class ArtilleryDeployer {
     runId: string,
     containers: ContainerConfig[]
   ): Promise<{
+    containerCount: number;
+    runCount: number;
     cluster: string;
     cloudwatch: string;
     influx: string;
     newrelic: string;
   }> {
     const configsWithDefinition: ContainerConfigWithDefinition[] = [];
+    let runCount = 0;
     for (const container of containers) {
       const taskDefinitionArn = await this.createTaskDefinition(
         container.name,
@@ -115,11 +118,14 @@ export default class ArtilleryDeployer {
         },
       };
       await this.runTask(containerWithEnvironment);
+      runCount++;
     }
     const clusterName = parseARN(this.config.cluster).resource.split("/").pop();
     const start = new Date();
     const end = add(new Date(), { hours: 1.5 });
     return {
+      containerCount: containers.length,
+      runCount: runCount,
       cluster: `https://console.aws.amazon.com/ecs/home?region=us-east-1#/clusters/${clusterName}/tasks`,
       cloudwatch: this.buildCloudwatchURL(runId, start, end),
       influx: this.buildInfluxURL(runId, start, end),
