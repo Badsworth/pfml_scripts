@@ -15,7 +15,8 @@ namespace PfmlPdfApi.Services
     public interface IPdfDocumentService
     {
         Task<ResponseMessage<CreatedDocumentDto>> UpdateTemplate();
-        Task<ResponseMessage<CreatedDocumentDto>> Generate(DocumentDto dto);
+        Task<ResponseMessage<CreatedDocumentDto>> Generate(Document1099 dto);
+        Task<ResponseMessage<CreatedDocumentDto>> Generate(AnyDocument dto);
         Task<ResponseMessage<IList<CreatedDocumentDto>>> Merge(MergeDto dto);
     }
 
@@ -32,7 +33,9 @@ namespace PfmlPdfApi.Services
         }
 
         private void switchToBucket(string key) {
-          bucket = _amazonS3Service.PickBucket(key);
+            bucket = _amazonS3Service.PickBucket(key);
+          
+            Console.WriteLine("Selected bucket: " + bucket.Key);
         }
 
         public async Task<ResponseMessage<CreatedDocumentDto>> UpdateTemplate()
@@ -55,50 +58,47 @@ namespace PfmlPdfApi.Services
             return response;
         }
 
-        public async Task<ResponseMessage<CreatedDocumentDto>> Generate(DocumentDto dto)
+        public async Task<ResponseMessage<CreatedDocumentDto>> Generate(Document1099 dto)
         {
             switchToBucket("1099");
-            var response = new ResponseMessage<CreatedDocumentDto>(null);
             string folderName = $"Batch-{dto.BatchId}";
             string formsFolderName = $"{folderName}/Forms";
             string subBatchFolderName = $"{formsFolderName}/{dto.Name.Split("/")[0]}";
             string fileName = $"{subBatchFolderName}/{dto.Id}.pdf";
-
-            try
-            {
-                var template = await _amazonS3Service.GetFileAsync(bucket.Template);
-                string document = ReplaceValuesInTemplate(new StreamReader(template).ReadToEnd(), dto);
-                var stream = new MemoryStream();
-                HtmlConverter.ConvertToPdf(document, stream);
-                var folderCreated = await _amazonS3Service.CreateFolderAsync(folderName);
-                var fileCreated = await _amazonS3Service.CreateFileAsync(fileName, stream);
-
-                var createdDocumentDto = new CreatedDocumentDto
-                {
-                    Name = fileName
-                };
-                response.Payload = createdDocumentDto;
-            }
-            catch (Exception ex)
-            {
-                response.Status = MessageConstants.MsgStatusFailed;
-                response.ErrorMessage = ex.Message;
-            }
-
+            
+            var response = await GenerateFile(dto, folderName, fileName);
+            return response;
+        }
+ 
+        public async Task<ResponseMessage<CreatedDocumentDto>> Generate(AnyDocument dto)
+        {
+            // bucket and folder name needs to be dynamic
+            Console.WriteLine(dto.Type);
+            switchToBucket(dto.Type);
+            string folderName = $"placeholderhere";
+            string fileName = $"{folderName}/{dto.Id}.pdf";
+            
+            var response = await GenerateFile(dto, folderName, fileName);
             return response;
         }
 
-        public async Task<ResponseMessage<CreatedDocumentDto>> Generate(DocumentClaimantInfo dto)
-        {
-            switchToBucket("UserNotFound");
+        private async Task<ResponseMessage<CreatedDocumentDto>> GenerateFile(AnyDocument dto, string folderName, string fileName) {
             var response = new ResponseMessage<CreatedDocumentDto>(null);
-            string folderName = $"placeholderhere";
-            string fileName = $"{folderName}/{dto.Id}.pdf";
-
             try
             {
                 var template = await _amazonS3Service.GetFileAsync(bucket.Template);
-                string document = ReplaceValuesInTemplate(new StreamReader(template).ReadToEnd(), dto);
+                string document = "";
+                switch (dto.Type) {
+                    case "1099":
+                        ReplaceValues1099(new StreamReader(template).ReadToEnd(), dto);
+                        break;
+                    case "UserNotFound":
+                        ReplaceValuesUserNotFound(new StreamReader(template).ReadToEnd(), dto);
+                        break;
+                    default:
+                        break;
+                }
+                
                 var stream = new MemoryStream();
                 HtmlConverter.ConvertToPdf(document, stream);
                 var folderCreated = await _amazonS3Service.CreateFolderAsync(folderName);
@@ -115,7 +115,6 @@ namespace PfmlPdfApi.Services
                 response.Status = MessageConstants.MsgStatusFailed;
                 response.ErrorMessage = ex.Message;
             }
-
             return response;
         }
 
@@ -183,32 +182,50 @@ namespace PfmlPdfApi.Services
             return response;
         }
 
-        private string ReplaceValuesInTemplate(string template, DocumentDto dto)
+        private string ReplaceValues1099(string template, AnyDocument dto)
         {
-            template = template.Replace("[CORRECTED]", dto.Corrected ? "checked" : string.Empty);
-            template = template.Replace("[PAY_AMOUNT]", dto.PaymentAmount.ToString());
-            template = template.Replace("[YEAR]", dto.Year.ToString());
-            template = template.Replace("[SSN]", dto.SocialNumber);
-            template = template.Replace("[FED_TAX_WITHHELD]", dto.FederalTaxesWithheld.ToString());
-            template = template.Replace("[NAME]", dto.Name.Split("/")[1]);
-            template = template.Replace("[ADDRESS]", dto.Address);
-            template = template.Replace("[ADDRESS2]", dto.Address2);
-            template = template.Replace("[CITY]", dto.City);
-            template = template.Replace("[STATE]", dto.State);
-            template = template.Replace("[ZIP]", dto.ZipCode);
-            template = template.Replace("[ACCOUNT]", dto.AccountNumber.HasValue ? dto.AccountNumber.ToString() : string.Empty);
-            template = template.Replace("[STATE_TAX_WITHHELD]", dto.StateTaxesWithheld.ToString());
-            template = template.Replace("[REPAYMENTS]", dto.Repayments.ToString());
+            Document1099 newDto = (Document1099) dto;
+            template = template.Replace("[CORRECTED]", newDto.Corrected ? "checked" : string.Empty);
+            template = template.Replace("[PAY_AMOUNT]", newDto.PaymentAmount.ToString());
+            template = template.Replace("[YEAR]", newDto.Year.ToString());
+            template = template.Replace("[SSN]", newDto.SocialNumber);
+            template = template.Replace("[FED_TAX_WITHHELD]", newDto.FederalTaxesWithheld.ToString());
+            template = template.Replace("[NAME]", newDto.Name.Split("/")[1]);
+            template = template.Replace("[ADDRESS]", newDto.Address);
+            template = template.Replace("[ADDRESS2]", newDto.Address2);
+            template = template.Replace("[CITY]", newDto.City);
+            template = template.Replace("[STATE]", newDto.State);
+            template = template.Replace("[ZIP]", newDto.ZipCode);
+            template = template.Replace("[ACCOUNT]", newDto.AccountNumber.HasValue ? newDto.AccountNumber.ToString() : string.Empty);
+            template = template.Replace("[STATE_TAX_WITHHELD]", newDto.StateTaxesWithheld.ToString());
+            template = template.Replace("[REPAYMENTS]", newDto.Repayments.ToString());
             template = template.Replace("[VERSION]", "1.0");
 
             return template;
         }
 
-
-        private string ReplaceValuesInTemplate(string template, DocumentClaimantInfo dto)
+        private string ReplaceValuesUserNotFound(string template, AnyDocument dto)
         {
-            template = template.Replace("[PAGE]", "YEP it works");
-
+            DocumentClaimantInfo newDto = JsonConvert.SerializeObject(JsonConvert.DeserializeObject<DocumentClaimantInfo>(dto));
+            template = template.Replace("[FILENAME]", newDto.Id);
+            template = template.Replace("[APPLICATIONID]", newDto.ApplicationId);
+            template = template.Replace("[SUBMISSIONTIME]", newDto.SubmissionTime);
+            template = template.Replace("[NAME]", newDto.Name);
+            template = template.Replace("[ADDRESS]", newDto.Address);
+            template = template.Replace("[DATEOFBIRTH]", newDto.DateOfBirth);
+            template = template.Replace("[GENDER]", newDto.Gender);
+            template = template.Replace("[EMAIL]", newDto.Email);
+            template = template.Replace("[PHONE]", newDto.Phone);
+            template = template.Replace("[IDNUMBER]", newDto.IdNumber);
+            template = template.Replace("[SSN]", newDto.SSN);
+            template = template.Replace("[DATEOFHIRE]", newDto.DateOfHire);
+            template = template.Replace("[HOURSWORKEDPERWEEK]", newDto.HoursWorkedPerWeek);
+            template = template.Replace("[FEIN]", newDto.FEIN);
+            template = template.Replace("[EMPLOYERNAME]", newDto.EmployerName);
+            template = template.Replace("[STILLWORKSFOREMPLOYER]", newDto.StillWorksForEmployer);
+            template = template.Replace("[REQUESTEDLEAVEREASON]", newDto.RequestedLeaveReason);
+            template = template.Replace("[REQUESTEDLEAVESTARTDATE]", newDto.RequestedLeaveStartDate);
+            
             return template;
         }
     }

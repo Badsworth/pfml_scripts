@@ -41,9 +41,13 @@ namespace PfmlPdfApi.Controllers
         }
 
         [HttpPost]
-        [Route("generate")]
-        public async Task<ActionResult> Generate(DocumentDto dto)
+        [Route("generate/{docType}")]
+        public async Task<ActionResult> Generate(string docType, AnyDocument dto)
         {
+            dto.Type = docType;
+            if (docType == "") {
+              dto.Type = "1099";
+            }
             var response = await _pdfDocumentService.Generate(dto);
 
             if (response.Status == MessageConstants.MsgStatusSuccess)
