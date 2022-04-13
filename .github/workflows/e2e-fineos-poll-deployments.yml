@@ -76,12 +76,14 @@ jobs:
 
       - name: Print String of persistent failed specs
         run: |
-          echo "Failed auto run had failure[s] w/the following runId:" 
+          echo "Failed auto run had failure[s] w/the following runId:"
+        if: success()
 
       - name: "Archive screenshots"
         # uses: actions/upload-artifact@v2
         run: | 
           echo "Archive any screenshots"
+        if: success()
         # This workflow intentionally doesn't use workflow_call because at the moment, it doesn't support matrix builds.
         # Also, since we don't wait for results or care about having an accurate run URL, the benefit is small.
         # uses: aurelien-baudet/workflow-dispatch@v2.1.1
