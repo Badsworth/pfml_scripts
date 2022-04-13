@@ -28,7 +28,7 @@ locals {
 }
 
 data "aws_iam_policy_document" "pub_s3_access_policy" {
-  for_each = toset(["nonprod", "prod"])
+  for_each = toset(local.vpcs)
 
   statement {
     sid = "AllowPubListingOfBucket"
