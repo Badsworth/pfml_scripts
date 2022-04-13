@@ -147,9 +147,9 @@ def log_validation_error(
             index = None
             try:
                 index = int(field)
+                field_value = field_value[index] if index else field_value[field]  # type: ignore
             except Exception:
-                pass  # field was not convertible to int
-            field_value = field_value[index] if index else field_value[field]  # type: ignore
+                pass  # field was not convertible to int or field was not found in field_value
             if not field_value:
                 break
 
