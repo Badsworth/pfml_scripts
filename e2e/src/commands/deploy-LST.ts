@@ -145,6 +145,19 @@ const cmd: CommandModule<SystemWideArgs, PresetArgs> = {
         instances: containers,
         environment,
       },
+        {
+        name: "artillery-crm",
+        image: remote_tag,
+        command: [
+          "node_modules/.bin/artillery",
+          "run",
+          "-e",
+          deploy_type,
+          "dist/cloud.crm.yml",
+        ],
+        instances: containers,
+        environment,
+      },
     ]);
     logger.info(
       `LST has been triggered...\n\nCluster:\n------\n${result.cluster}\n\nInflux Dashboard:\n------\n${result.influx}\n\nLogs:\n-----\n${result.cloudwatch}\n\nNew Relic APM:\n-----\n${result.newrelic}\n\n\n`
