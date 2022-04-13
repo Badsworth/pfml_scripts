@@ -1347,6 +1347,9 @@ class PaymentAuditReportType(LookupTable):
         AuditReportAction.INFORMATIONAL,
         "exceeds_26_weeks_total_leave_details",
     )
+    WAITING_WEEK = LkPaymentAuditReportType(
+        9, "Waiting Week", AuditReportAction.INFORMATIONAL, None
+    )
 
 
 class PaymentAuditReportDetails(Base, TimestampMixin):
