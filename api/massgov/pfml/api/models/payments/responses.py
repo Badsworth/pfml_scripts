@@ -15,10 +15,10 @@ class PaymentLineResponse(PydanticBaseModel):
 
 class PaymentDetailsResponse(PydanticBaseModel):
     payment_details_id: UUID4
-    period_start_date: date
-    period_end_date: date
+    period_start_date: Optional[date]
+    period_end_date: Optional[date]
     amount: Decimal
-    business_net_amount: Decimal
+    gross_amount: Decimal
     payment_lines: list[PaymentLineResponse]
 
 

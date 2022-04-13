@@ -3415,15 +3415,17 @@ components:
           type: string
           format: date
           example: "2022-05-01"
+          nullable: true
         period_end_date:
           type: string
           format: date
           example: "2022-06-01"
+          nullable: true
         amount:
           type: number
           example: 750.25
           description: "Amount after reductions and split payments are taken out."
-        business_net_amount:
+        gross_amount:
           type: number
           example: 750.25
           description: "Amount after reductions are taken out, but prior to split payments. Used in max weekly benefits logic."

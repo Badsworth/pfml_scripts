@@ -274,12 +274,24 @@ def to_response_dict(payment_data: List[PaymentContainer], absence_case_id: Opti
 
 
 def get_payment_details_response(
-    payment_details: List[PaymentDetails],
+    payment_details_list: List[PaymentDetails],
 ) -> List[PaymentDetailsResponse]:
-    payment_details_response_list = parse_obj_as(List[PaymentDetailsResponse], payment_details)
+    payment_details_response_list = []
 
-    for payment_details_response in payment_details_response_list:
+    for payment_details in payment_details_list:
+        payment_details_response = PaymentDetailsResponse(
+            payment_details_id=payment_details.payment_details_id,
+            period_start_date=payment_details.period_start_date,
+            period_end_date=payment_details.period_end_date,
+            amount=payment_details.amount,
+            gross_amount=payment_details.business_net_amount,
+            # PaymentDetails.payment_lines is defined as a backfill relationship on PaymentLine
+            payment_lines=parse_obj_as(List[PaymentLineResponse], payment_details.payment_lines),  # type: ignore
+        )
+
         adjust_payment_lines_response(payment_details_response.payment_lines)
+
+        payment_details_response_list.append(payment_details_response)
 
     return payment_details_response_list
 
