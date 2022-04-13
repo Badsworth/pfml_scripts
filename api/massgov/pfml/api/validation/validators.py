@@ -144,6 +144,7 @@ def log_validation_error(
     if error.field is not None and (error.type == "type" or error.type == "enum"):
         field_value = {"data": validation_exception.data}
         for field in error.field.split("."):
+            index = None
             try:
                 index = int(field)
             except Exception:
