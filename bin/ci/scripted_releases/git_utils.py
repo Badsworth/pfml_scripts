@@ -103,6 +103,7 @@ def get_sha(tag):
 def get_latest_version(app, branch_name):
     """Return the latest semantic version on a particular branch"""
     tag_list = collect_tags(app,branch_name)
+    logger.info(f"tag: {tag_list}")
     tags = []
     for item in tag_list:
         # check if it matches regex then append to list
