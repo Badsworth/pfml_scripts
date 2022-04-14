@@ -1,9 +1,9 @@
 import { ClaimEmployee, ClaimEmployer } from "./Claim";
 import { AbsencePeriod } from "./AbsencePeriod";
+import LeaveReason from "./LeaveReason";
 import { ManagedRequirement } from "./ManagedRequirement";
 import dayjs from "dayjs";
 import { orderBy } from "lodash";
-import LeaveReason from "./LeaveReason";
 
 class ClaimDetail {
   absence_periods: AbsencePeriod[] = [];
