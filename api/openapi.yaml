@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Paid Leave API
   description: An API for managing leave within Massachusetts Paid Family and Medical Leave.
-  version: "2022-04-06"
+  version: "2022-04-14"
 
 servers:
   - url: /v1
@@ -2547,10 +2547,9 @@ components:
           type: number
         last_name:
           type: string
-        leave_details:
-          $ref: "#/components/schemas/EmployerLeaveDetails"
         status:
           type: string
+          nullable: true
         middle_name:
           type: string
           nullable: true
@@ -2581,10 +2580,8 @@ components:
         - employer_fein
         - employer_id
         - fineos_absence_id
-        - leave_details
         - previous_leaves
         - residential_address
-        - status
         - uses_second_eform_version
         - absence_periods
 
