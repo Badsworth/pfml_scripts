@@ -28,14 +28,12 @@ namespace PfmlPdfApi.Controllers
             await Task.Delay(0);
             return Ok(string.Format("{0} - Pfml Pdf Api is running.", Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT").Substring(0, 3)));
         }
-        
 
         // TODO: Delete endpoint after related PFML API changes are deployed
         [HttpGet]
         [Route("updateTemplate")]
-        public async Task<ActionResult> UpdateTemplate()
+        public ActionResult UpdateTemplate()
         {
-            await Task.Delay(0);
             return Ok();
         }
 
