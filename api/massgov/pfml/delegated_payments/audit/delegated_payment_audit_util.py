@@ -367,7 +367,7 @@ def get_payment_audit_report_details(
 
 
 def get_payment_in_waiting_week_status(payment: Payment, db_session: db.Session) -> str:
-    waiting_week_status = ""
+
     claim: Claim = payment.claim
 
     if not claim or not claim.absence_period_start_date or not payment.period_start_date:
@@ -376,23 +376,23 @@ def get_payment_in_waiting_week_status(payment: Payment, db_session: db.Session)
     assert payment.period_start_date
     assert claim.absence_period_start_date
     waiting_week_end_date = claim.absence_period_start_date + timedelta(days=6)
-    if not payment.period_start_date <= waiting_week_end_date:
-        return waiting_week_status
-
-    waiting_week_status = "1"
-    possible_extension_claim = (
-        db_session.query(Claim)
-        .join(Employer)
-        .filter(
-            Claim.employee_id == payment.claim.employee_id,
-            Employer.employer_fein == payment.claim.employer_fein,
-            Claim.absence_period_end_date
-            == (payment.claim.absence_period_start_date - timedelta(days=1)),  # type: ignore
+    if claim.absence_period_start_date <= payment.period_start_date <= waiting_week_end_date:
+        waiting_week_status = "1"
+        possible_extension_claim = (
+            db_session.query(Claim)
+            .join(Employer)
+            .filter(
+                Claim.employee_id == payment.claim.employee_id,
+                Employer.employer_fein == payment.claim.employer_fein,
+                Claim.absence_period_end_date
+                == (payment.claim.absence_period_start_date - timedelta(days=1)),  # type: ignore
+            )
+            .one_or_none()
         )
-        .one_or_none()
-    )
 
-    if possible_extension_claim is not None:
-        waiting_week_status = "Potential Extension"
+        if possible_extension_claim is not None:
+            waiting_week_status = "Potential Extension"
 
-    return waiting_week_status
+        return waiting_week_status
+    else:
+        return ""
