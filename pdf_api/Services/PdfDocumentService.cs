@@ -15,9 +15,9 @@ namespace PfmlPdfApi.Services
     public interface IPdfDocumentService
     {
         Task<ResponseMessage<CreatedDocumentDto>> UpdateTemplate();
-        Task<ResponseMessage<CreatedDocumentDto>> Generate(Document1099 dto);
         Task<ResponseMessage<CreatedDocumentDto>> Generate(AnyDocument dto);
         Task<ResponseMessage<IList<CreatedDocumentDto>>> Merge(MergeDto dto);
+        void switchToBucket(string key);
     }
 
     public class PdfDocumentService : IPdfDocumentService
@@ -32,7 +32,7 @@ namespace PfmlPdfApi.Services
             switchToBucket(defaultBucket);
         }
 
-        private void switchToBucket(string key) {
+        public void switchToBucket(string key) {
             bucket = _amazonS3Service.PickBucket(key);
           
             Console.WriteLine("Selected bucket: " + bucket.Key);
@@ -57,52 +57,24 @@ namespace PfmlPdfApi.Services
 
             return response;
         }
-
-        public async Task<ResponseMessage<CreatedDocumentDto>> Generate(Document1099 dto)
-        {
-            switchToBucket("1099");
-            string folderName = $"Batch-{dto.BatchId}";
-            string formsFolderName = $"{folderName}/Forms";
-            string subBatchFolderName = $"{formsFolderName}/{dto.Name.Split("/")[0]}";
-            string fileName = $"{subBatchFolderName}/{dto.Id}.pdf";
-            
-            var response = await GenerateFile(dto, folderName, fileName);
-            return response;
-        }
- 
+        
         public async Task<ResponseMessage<CreatedDocumentDto>> Generate(AnyDocument dto)
         {
-            // bucket and folder name needs to be dynamic
-            Console.WriteLine(dto.Type);
-            switchToBucket(dto.Type);
-            string folderName = $"placeholderhere";
-            string fileName = $"{folderName}/{dto.Id}.pdf";
-            
-            var response = await GenerateFile(dto, folderName, fileName);
-            return response;
-        }
-
-        private async Task<ResponseMessage<CreatedDocumentDto>> GenerateFile(AnyDocument dto, string folderName, string fileName) {
             var response = new ResponseMessage<CreatedDocumentDto>(null);
             try
             {
                 var template = await _amazonS3Service.GetFileAsync(bucket.Template);
                 string document = dto.ReplaceValuesInTemplate(new StreamReader(template).ReadToEnd());
-                if (document != "") {
-                    var stream = new MemoryStream();
-                    HtmlConverter.ConvertToPdf(document, stream);
-                    var folderCreated = await _amazonS3Service.CreateFolderAsync(folderName);
-                    var fileCreated = await _amazonS3Service.CreateFileAsync(fileName, stream);
+                var stream = new MemoryStream();
+                HtmlConverter.ConvertToPdf(document, stream);
+                var folderCreated = await _amazonS3Service.CreateFolderAsync(dto.FolderName);
+                var fileCreated = await _amazonS3Service.CreateFileAsync(dto.FileName, stream);
 
-                    var createdDocumentDto = new CreatedDocumentDto
-                    {
-                        Name = fileName
-                    };
-                    response.Payload = createdDocumentDto;
-                } else {
-                    response.Status = MessageConstants.MsgStatusFailed;
-                    response.ErrorMessage = "Unknown document type!";
-                }
+                var createdDocumentDto = new CreatedDocumentDto
+                {
+                    Name = dto.FileName
+                };
+                response.Payload = createdDocumentDto;
             }
             catch (Exception ex)
             {

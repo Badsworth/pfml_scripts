@@ -25,6 +25,7 @@ namespace PfmlPdfApi.Controllers
         [HttpGet]
         public async Task<ActionResult> Get()
         {
+            await Task.Delay(0);
             return Ok(string.Format("{0} - Pfml Pdf Api is running.", Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT").Substring(0, 3)));
         }
 
@@ -45,7 +46,8 @@ namespace PfmlPdfApi.Controllers
         [Route("generate/1099")]
         public async Task<ActionResult> Generate(Document1099 dto)
         {
-            dto.Type = "1099";
+            _pdfDocumentService.switchToBucket(dto.Type);
+            await Task.Delay(60000);
             var response = await _pdfDocumentService.Generate(dto);
 
             if (response.Status == MessageConstants.MsgStatusSuccess)
@@ -58,7 +60,7 @@ namespace PfmlPdfApi.Controllers
         [Route("generate/UserNotFound")]
         public async Task<ActionResult> Generate(DocumentClaimantInfo dto)
         {
-            dto.Type = "UserNotFound";
+            _pdfDocumentService.switchToBucket(dto.Type);
             var response = await _pdfDocumentService.Generate(dto);
 
             if (response.Status == MessageConstants.MsgStatusSuccess)

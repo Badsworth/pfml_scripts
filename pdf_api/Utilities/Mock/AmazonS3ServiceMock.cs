@@ -25,6 +25,7 @@ namespace PfmlPdfApi.Utilities.Mock
         {
             Directory.CreateDirectory($"{BASEFOLDER}//{_amazonS3Setting.Key}//{folderName}");
 
+            await Task.Delay(0);
             return true;
         }
 
@@ -52,11 +53,13 @@ namespace PfmlPdfApi.Utilities.Mock
             lstream.CopyTo(fileStream);
             fileStream.Close();
 
+            await Task.Delay(0);
             return true;
         }
 
         public async Task<Stream> GetFileAsync(string fileName)
         {
+            await Task.Delay(0);
             return File.OpenRead($"{BASEFOLDER}//{_amazonS3Setting.Key}//{fileName}");
         }
 
@@ -70,13 +73,14 @@ namespace PfmlPdfApi.Utilities.Mock
                 streamList.Add(File.OpenRead(file));
             }
 
+            await Task.Delay(0);
             return streamList;
         }
 
         public async Task<IList<string>> GetFoldersAsync(string folderName)
         {
             string[] files = Directory.GetDirectories($"{BASEFOLDER}/{_amazonS3Setting.Key}/{folderName}");
-
+            await Task.Delay(0);
             return files.ToList();
         }
     }

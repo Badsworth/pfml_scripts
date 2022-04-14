@@ -7,13 +7,36 @@ namespace PfmlPdfApi.Models
     {
         public string Id { get; set; }
         public string BatchId { get; set; }
-        public string Type { get; set; }
+
+        public abstract string Type { get; }
+        public abstract string FolderName { get; }
+        public abstract string FileName { get; }
 
         public abstract string ReplaceValuesInTemplate(string template);
     }
 
     public class Document1099 : AnyDocument 
     {
+        public override string Type { 
+            get {
+                return "1099";
+            }
+        }
+
+        public override string FolderName { 
+            get {
+                return $"Batch-{this.BatchId}";
+            }
+        }
+        
+        public override string FileName {
+            get {
+                string formsFolderName = $"{this.FolderName}/Forms";
+                string subBatchFolderName = $"{formsFolderName}/{this.Name.Split("/")[0]}";
+                return $"{subBatchFolderName}/{this.Id}.pdf";
+            }
+        }
+
         [Required]
         public int Year { get; set; }
 
@@ -78,6 +101,24 @@ namespace PfmlPdfApi.Models
     
     public class DocumentClaimantInfo : AnyDocument
     {
+        public override string Type {
+            get {
+                return "UserNotFound";
+            }
+        }
+
+        public override string FolderName {
+            get {
+                return $"Batch-{this.BatchId}";
+            }
+        }
+        
+        public override string FileName {
+            get {
+                return $"{this.FolderName}/{this.Id}.pdf";
+            }
+        }
+
         public string ApplicationId { get; set; }
         public string SubmissionTime { get; set; }
         // claimant data
