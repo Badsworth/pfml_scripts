@@ -6,9 +6,21 @@ export function processRawNRQLDataAsTable(data) {
     ret = data?.facets.map((facet) => {
       let buildObj = {};
       if (data.metadata?.facet && facet?.name) {
-        facet.name.map((val, i) => {
-          buildObj = updateNestedObject(buildObj, data.metadata.facet[i], val);
-        });
+        if (typeof facet.name === "string") {
+          buildObj = updateNestedObject(
+            buildObj,
+            data.metadata.facet,
+            facet.name
+          );
+        } else {
+          facet.name.map((val, i) => {
+            buildObj = updateNestedObject(
+              buildObj,
+              data.metadata.facet[i],
+              val
+            );
+          });
+        }
       }
       if (data.metadata?.contents?.contents && facet?.results) {
         facet.results.map((val, i) => {
@@ -25,6 +37,17 @@ export function processRawNRQLDataAsTable(data) {
   } else if (data?.results) {
     if (data.results.length === 1) {
       return data.results[0].events;
+    } else {
+      if (data.metadata?.contents) {
+        let buildObj = {};
+        data?.results.map((result, i) => {
+          const value = result[Object.keys(result)[0]];
+          if (data.metadata?.contents[i]) {
+            buildObj[getKeyFromContents(data.metadata?.contents[i])] = value;
+          }
+        });
+        ret.push(buildObj);
+      }
     }
   }
 

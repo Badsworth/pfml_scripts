@@ -5,6 +5,7 @@ import { format as dateFormat } from "date-fns";
 import { DAO } from "../common/DAO";
 import { FilterByEnv, FilterByTagGroup } from "../common/components/Filters";
 import { EnvironmentsOverviewTable } from "../common/components/EnvironmentsOverviewTable";
+import { MorningReport } from "../common/components/MorningReport";
 
 export default class ViewDailyOverviewNerdlet extends React.Component {
   state = {
@@ -84,6 +85,11 @@ export default class ViewDailyOverviewNerdlet extends React.Component {
               envs={this.state.env}
               limitRuns={"max"}
               simpleView={false}
+            />,
+            <MorningReport
+              since={since}
+              where={this.state.tagWhere}
+              envs={this.state.env}
             />,
           ];
         }}

@@ -1,5 +1,5 @@
 import { NrqlQuery } from "nr1";
-import { GROUPS } from "./index";
+import { ENVS, GROUPS } from "./index";
 
 export class DAO {
   static ACCOUNT_ID = "";
@@ -22,6 +22,14 @@ export class DAO {
 
   static DeploymentsTimeline() {
     return new DAODeploymentsTimeline(this.ACCOUNT_ID);
+  }
+
+  static LastRunIdPerEnv() {
+    return new DAOLastRunIdPerEnv(this.ACCOUNT_ID);
+  }
+
+  static MorningRun() {
+    return new DAOMorningRun(this.ACCOUNT_ID);
   }
 }
 
@@ -251,5 +259,136 @@ export class DAODeploymentsTimeline extends BaseDAO {
             ${this.queryParts.where ? `WHERE ${this.queryParts.where}` : ""}
             SINCE ${this.queryParts.since}
             LIMIT ${this.queryParts.limit}`;
+  }
+}
+
+export class DAOLastRunIdPerEnv extends BaseDAO {
+  constructor(accountId) {
+    super(accountId);
+    this.queryParts.since = "1 month ago";
+    this.queryParts.limit = "1";
+    this.queryParts.envs = ENVS;
+  }
+
+  envs(envsArray) {
+    this.queryParts.envs = envsArray;
+    return this;
+  }
+
+  query() {
+    function queryEnvs(env) {
+      return `filter(latest (runId), WHERE environment = '${env}' ${
+        this.queryParts.where ? `AND (${this.queryParts.where})` : ``
+      }) as '${env}'`;
+    }
+    const q_1 = this.queryParts.envs.map(queryEnvs.bind(this)).join(",");
+    const q = `SELECT ${q_1}
+FROM TestResult
+    WHERE durationMs != 0
+          ${this.queryParts.where ? `AND (${this.queryParts.where})` : ``}
+    SINCE ${this.queryParts.since} limit ${this.queryParts.limit}`;
+    return q;
+  }
+}
+
+export class DAOMorningRun extends BaseDAO {
+  constructor(accountId) {
+    super(accountId);
+    this.queryParts.since = "1 month ago";
+    this.queryParts.runids = [];
+  }
+
+  runIds(envsArray) {
+    this.queryParts.runids = envsArray;
+    return this;
+  }
+
+  query() {
+    function queryGroup(group) {
+      let groupAlias = group;
+      if (group === "Stable") {
+        group = "Commit Stable";
+      }
+      return `, filter(count (pass), WHERE group = '${group}' AND duration != 0) as ${groupAlias}_total
+    , filter(count (pass), WHERE pass is true and group = '${group}' AND duration != 0) as ${groupAlias}_passCount
+    , filter(count (pass), WHERE fail is true and group = '${group}' AND duration != 0) as ${groupAlias}_failCount
+    ${
+      group !== "Integration"
+        ? `, filter(latest(runUrl), WHERE group = '${group}') as ${groupAlias}_runUrl`
+        : ``
+    }
+    `;
+    }
+    const q_1 = GROUPS.map(queryGroup).join("");
+    return `SELECT MAX(timestamp) as time
+    , MAX(timestamp) as timestamp
+    , min(timestamp) as start
+    , count (pass) as total
+    ${q_1}
+    , latest(tag) as tag
+    , latest(tagGroup) as tagGroup
+    , latest(runId) as runId
+    , latest(branch) as branch
+    , latest(environment) as environment
+FROM TestResult FACET runId
+    WHERE durationMs != 0 AND
+          runId in ('${this.queryParts.runids.join("','")}')
+    SINCE ${this.queryParts.since}
+    LIMIT MAX`;
+  }
+
+  postProcessor(data) {
+    const obj = {
+      stable: { clean: [], cleanRerun: [], failed: [] },
+      integration: { clean: [], cleanRerun: [], failed: [] },
+      morning: { clean: [], cleanRerun: [], failed: [] },
+    };
+    data
+      .filter((itm) => itm.runId.includes("-failed-specs"))
+      .forEach((run) => {
+        if (run.targeted.failCount > 0) {
+          obj.stable.failed.push(run.environment);
+        } else {
+          obj.stable.cleanRerun.push(run.environment);
+        }
+      });
+
+    data
+      .filter((itm) => !itm.runId.includes("-failed-specs"))
+      .forEach((run) => {
+        if (run.stable.total) {
+          if (
+            !obj.stable.cleanRerun.includes(run.environment) &&
+            !obj.stable.failed.includes(run.environment)
+          ) {
+            if (run.stable.failCount > 0) {
+              obj.stable.failed.push(run.environment);
+            } else {
+              obj.stable.clean.push(run.environment);
+            }
+          }
+        } else if (run.targeted.total) {
+          if (run.targeted.failCount > 0) {
+            obj.stable.failed.push(run.environment);
+          } else {
+            obj.stable.cleanRerun.push(run.environment);
+          }
+        }
+        if (run.morning.total) {
+          if (run.morning.failCount > 0) {
+            obj.morning.failed.push(run.environment);
+          } else {
+            obj.morning.clean.push(run.environment);
+          }
+        }
+        if (run.integration.total) {
+          if (run.integration.failCount > 0) {
+            obj.integration.failed.push(run.environment);
+          } else {
+            obj.integration.clean.push(run.environment);
+          }
+        }
+      });
+    return obj;
   }
 }
