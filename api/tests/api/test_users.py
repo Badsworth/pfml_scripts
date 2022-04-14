@@ -131,6 +131,7 @@ def test_users_post_openapi_validation(
         "message": "'Dog' is not one of ['Claimant', 'Employer']",
         "rule": ["Claimant", "Employer"],
         "type": "enum",
+        "value": "Dog",
     } in errors
     assert {
         "field": "user_leave_administrator.employer_fein",

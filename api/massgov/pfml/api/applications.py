@@ -525,7 +525,7 @@ def applications_submit(application_id):
                         },
                     )
                     logger.info(
-                        "split_application was not submitted - split application failed validation",
+                        "split_application was submitted: False",
                         extra=split_application_log_attributes,
                     )
                 else:
@@ -533,6 +533,10 @@ def applications_submit(application_id):
                         application_after_split,
                         db_session,
                         current_user,
+                    )
+                    logger.info(
+                        "split_application was submitted: True",
+                        extra=split_application_log_attributes,
                     )
             except Exception as e:
                 if isinstance(e, FINEOSClientError):

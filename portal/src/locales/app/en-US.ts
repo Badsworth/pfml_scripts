@@ -1656,7 +1656,16 @@ const pages: {
   claimsModifyIndex: {
     backButtonLabel: "$t(shared.backToYourApplicationsLink)",
     button: "Continue",
-    title: "Request a change to your application",
+    heading: "Request a change to your application",
+    instructions:
+      "<p>Make sure you've notified your employer of any changes to your leave. You will also need to upload updated documentation that covers your new leave dates if applicable.</p><p>Your change request activity will be saved automatically. You may exit the application and return to where you left off at a later time. The original, previously submitted, application will not be altered until all steps of the change request are complete and the request is submitted.</p>",
+    onlineBody:
+      "<p>You can make the following changes online:</p><ul><li>Change your leave end date</li><li>Cancel your entire leave</li><li>Transition your medical leave due to pregnancy to bonding leave to care for your child</li></ul>",
+    onlineHeading: "Make your change online",
+    phoneBody:
+      "<p>Apply by calling the Department of Family and Medical Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> if any of the following are true:</p><ul><li>You need to change your leave start date</li><li>Your work schedule has changed</li><li>You need to change your leave schedule (ie from continuous to reduced leave)</li><li>You need to report additional other leaves or benefits you will be receiving during your leave.</li></ul>",
+    phoneHeading: "Make your change by phone",
+    title: "Only some changes can be made online for now",
   },
   claimsModifyReview: {
     sectionLabel: "Review and submit your requested change",
@@ -1673,8 +1682,20 @@ const pages: {
     viewStatus: "View status and details for your application",
   },
   claimsModifyType: {
-    sectionLabel: "How do you want to change your application?",
+    choiceHint:
+      "We will ask some questions about your desired change. You may be asked to upload updated documentation. Your employer will be notified of any changes you make.",
+    choiceLabel: "How do you want to change your application?",
+    currentLeaveDatesLabel: "Current leave dates",
+    currentLeaveDatesValue: "{{startDate}} to {{endDate}}",
+    endDateLabel: "Requested last day of leave",
+    modificationChoiceHint: "I need to end my leave early or extend my leave",
+    modificationChoiceLabel: "Change my leave end date",
+    modificationLegend: "Enter your new leave end date",
+    modificationLegendHint:
+      "<p>If you are requesting more time, you will need an updated certification form which covers your new leave dates.</p><p>If you are ending your leave early and have received payments for the leave dates you are canceling, you will need to return the money to the Department. <overpayments-link>Read more about overpayments</overpayments-link>.</p>",
     title: "$t(shared.claimsModifyTitle)",
+    withdrawalChoiceHint: "I no longer need to take this leave through PFML",
+    withdrawalChoiceText: "Cancel my entire leave application",
   },
   claimsName: {
     firstNameLabel: "First name",
@@ -3401,6 +3422,9 @@ const components: {
   },
   withBenefitsApplications: {
     loadingLabel: "Loading applications",
+  },
+  withChangeRequests: {
+    loadingLabel: "Loading requests",
   },
   withClaimDocuments: {
     loadingLabel: "$t(shared.loadingDocumentsLabel)",

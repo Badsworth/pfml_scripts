@@ -130,6 +130,30 @@ data "aws_iam_policy_document" "developers_and_ci_deploy_access_policy" {
   }
 }
 
+# Allow Route53 management for dev (preview) environments
+data "aws_iam_policy_document" "ci_route_53_policy" {
+  statement {
+    actions = [
+      "route53:Get*",
+      "route53:List*",
+    ]
+
+    resources = [
+      "*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "route53:ChangeResourceRecordSets",
+    ]
+    resources = [
+      # ARN for the pfml.eol.comacloud.net public hosted zone
+      "arn:aws:route53:::hostedzone/Z007387325AK6465VIDEH"
+    ]
+  }
+}
+
 data "aws_iam_policy_document" "developers_and_ci_iam_policy" {
   # Allow access to create, update, and delete any IAM roles that weren't created by EOTSS.
   #
@@ -171,4 +195,10 @@ resource "aws_iam_policy" "developers_and_ci_iam_policy" {
   name        = "infrastructure-admin-and-ci-iam-policy"
   description = "IAM access policies for infrastructure admins and Github Actions"
   policy      = data.aws_iam_policy_document.developers_and_ci_iam_policy.json
+}
+
+resource "aws_iam_policy" "ci_route53_iam_policy" {
+  name        = "ci-route53-iam-policy"
+  description = "Route53 IAM access policies for Github Actions"
+  policy      = data.aws_iam_policy_document.ci_route_53_policy.json
 }
