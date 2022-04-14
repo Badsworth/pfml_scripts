@@ -69,9 +69,7 @@ def get_change_requests(fineos_absence_id: str) -> flask.Response:
             extra={"absence_case_id": fineos_absence_id},
         )
         error = response_util.error_response(
-            NotFound,
-            "Claim does not exist for given absence ID",
-            errors=[],
+            NotFound, "Claim does not exist for given absence ID", errors=[],
         )
         return error.to_api_response()
 
@@ -104,10 +102,7 @@ def submit_change_request(change_request_id: str) -> flask.Response:
 
         if issues := claim_rules.get_change_request_issues(change_request, change_request.claim):
             return response_util.error_response(
-                status_code=BadRequest,
-                message="Invalid change request",
-                errors=issues,
-                data={},
+                status_code=BadRequest, message="Invalid change request", errors=issues, data={},
             ).to_api_response()
 
         cr_response = submit_change_request_to_fineos(
@@ -129,19 +124,14 @@ def delete_change_request(change_request_id: str) -> flask.Response:
 
         if change_request.submitted_time is not None:
             error = response_util.error_response(
-                BadRequest,
-                "Cannot delete a submitted request",
-                data={},
-                errors=[],
+                BadRequest, "Cannot delete a submitted request", data={}, errors=[],
             )
             return error.to_api_response()
 
         db_session.delete(change_request)
 
     return response_util.success_response(
-        message="Successfully deleted change request",
-        data={},
-        status_code=200,
+        message="Successfully deleted change request", data={}, status_code=200,
     ).to_api_response()
 
 
