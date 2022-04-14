@@ -369,6 +369,10 @@ def get_payment_audit_report_details(
 def get_payment_in_waiting_week_status(payment: Payment, db_session: db.Session) -> str:
     waiting_week_status = ""
     claim: Claim = payment.claim
+
+    if not claim or not claim.absence_period_start_date or not payment.period_start_date:
+        return ""
+
     assert payment.period_start_date
     assert claim.absence_period_start_date
     waiting_week_end_date = claim.absence_period_start_date + timedelta(days=6)
@@ -376,7 +380,6 @@ def get_payment_in_waiting_week_status(payment: Payment, db_session: db.Session)
         return waiting_week_status
 
     waiting_week_status = "1"
-    assert payment.claim
     possible_extension_claim = (
         db_session.query(Claim)
         .join(Employer)
