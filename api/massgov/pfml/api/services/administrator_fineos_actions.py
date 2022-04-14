@@ -14,10 +14,7 @@ from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
 from massgov.pfml.api.exceptions import ClaimWithdrawn, ObjectNotFound
 from massgov.pfml.api.models.claims.common import (
     Address,
-    IntermittentLeavePeriod,
-    LeaveDetails,
     PreviousLeave,
-    StandardLeavePeriod,
 )
 from massgov.pfml.api.models.claims.responses import ClaimReviewResponse, DocumentResponse
 from massgov.pfml.api.models.common import (
@@ -95,68 +92,6 @@ class EmployerInfoForReview(PydanticBaseModel):
     employer_fein: FEINFormattedStr
     employer_dba: Optional[str]
     employer_id: UUID4
-
-
-def _get_leave_details(absence_periods: Dict[str, Dict]) -> LeaveDetails:
-    """Extracts absence data based on a PeriodDecisions dict and returns a LeaveDetails"""
-    leave_details = {}
-    leave_details["reason"] = absence_periods["decisions"][0]["period"]["leaveRequest"][
-        "reasonName"
-    ]
-    reduced_start_date: Optional[date] = None
-    reduced_end_date: Optional[date] = None
-    continuous_start_date: Optional[date] = None
-    continuous_end_date: Optional[date] = None
-    intermittent_start_date: Optional[date] = None
-    intermittent_end_date: Optional[date] = None
-
-    for decision in absence_periods["decisions"]:
-        start_date = decision["period"]["startDate"]
-        end_date = decision["period"]["endDate"]
-
-        # Note: Fineos gives us a wider range of period types than what's
-        # accounted for below. We'll be removing leave_details in the future
-        # though (PORTAL-1118), so this is being left as is.
-        # More context: https://lwd.atlassian.net/browse/PORTAL-1296
-        if decision["period"]["type"] == "Time off period":
-            if continuous_start_date is None or start_date < continuous_start_date:
-                continuous_start_date = start_date
-
-            if continuous_end_date is None or end_date > continuous_end_date:
-                continuous_end_date = end_date
-
-        elif decision["period"]["type"] == "Reduced Schedule":
-            if reduced_start_date is None or start_date < reduced_start_date:
-                reduced_start_date = start_date
-
-            if reduced_end_date is None or end_date > reduced_end_date:
-                reduced_end_date = end_date
-
-        elif decision["period"]["type"] == "Episodic":
-            if intermittent_start_date is None or start_date < intermittent_start_date:
-                intermittent_start_date = start_date
-
-            if intermittent_end_date is None or end_date > intermittent_end_date:
-                intermittent_end_date = end_date
-
-    if continuous_start_date is not None and continuous_end_date is not None:
-        leave_details["continuous_leave_periods"] = [
-            StandardLeavePeriod(start_date=continuous_start_date, end_date=continuous_end_date)
-        ]
-
-    if reduced_start_date is not None and reduced_end_date is not None:
-        leave_details["reduced_schedule_leave_periods"] = [
-            StandardLeavePeriod(start_date=reduced_start_date, end_date=reduced_end_date)
-        ]
-
-    if intermittent_start_date is not None and intermittent_end_date is not None:
-        leave_details["intermittent_leave_periods"] = [
-            IntermittentLeavePeriod(
-                start_date=intermittent_start_date, end_date=intermittent_end_date
-            )
-        ]
-
-    return LeaveDetails.parse_obj(leave_details)
 
 
 def _get_computed_start_dates(absence_periods: Dict[str, Dict]) -> ComputedStartDates:
@@ -425,16 +360,6 @@ def get_claim_as_leave_admin(
         str(employer.fineos_employer_id),
     )
 
-    # TODO (PORTAL-1118):
-    #   The status gets overwritten in the review endpoint by DB claim status in order to match the status shown to claimants.
-    #   Once the status page is surfacing absence periods, we can remove this.
-    first_period = absence_period_decisions.decisions[0].period
-    status = (first_period.status if first_period else None) or "Unknown"
-
-    # TODO (PORTAL-1118):
-    #   This field is deprecated. Once the review page is surfacing absence periods, we can remove this.
-    leave_details = _get_leave_details(absence_period_decisions.dict())
-
     # Calculate the claimant's hours_worked_per_week.
     customer_occupations = fineos_client.get_customer_occupations(
         fineos_user_id, fineos_employee.id
@@ -475,8 +400,6 @@ def get_claim_as_leave_admin(
             fineos_absence_id=absence_id,
             hours_worked_per_week=hours_worked_per_week,  # type: ignore
             residential_address=claimant_address,
-            leave_details=leave_details,
-            status=status,
             absence_periods=[
                 convert_fineos_absence_period_to_claim_response_absence_period(
                     absence_period, log_attributes
