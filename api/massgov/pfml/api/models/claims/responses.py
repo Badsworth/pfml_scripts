@@ -9,7 +9,6 @@ from massgov.pfml.api.models.claims.common import (
     Address,
     ChangeRequestType,
     EmployerBenefit,
-    LeaveDetails,
     PreviousLeave,
 )
 from massgov.pfml.api.models.common import ComputedStartDates, ConcurrentLeave
@@ -189,13 +188,12 @@ class ClaimReviewResponse(PydanticBaseModel):
     first_name: Optional[str]
     hours_worked_per_week: Optional[Decimal]
     last_name: Optional[str]
-    leave_details: LeaveDetails
     middle_name: Optional[str]
     previous_leaves: List[PreviousLeave]
     concurrent_leave: Optional[ConcurrentLeave]
     residential_address: Address
     tax_identifier: Optional[MaskedTaxIdFormattedStr]
-    status: str
+    status: Optional[str]
     uses_second_eform_version: bool
     absence_periods: List[AbsencePeriodResponse] = []
     managed_requirements: List[ManagedRequirementResponse] = []
