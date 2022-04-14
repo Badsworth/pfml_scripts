@@ -29,7 +29,7 @@ fi
 
 ENVIRONMENT=$1
 TEST_RUN_ID=$2
-QUERY="SELECT uniques(file) AS 'filename' FROM TestResult WHERE runId = '$TEST_RUN_ID' AND status = 'failed' AND environment = '$ENVIRONMENT' SINCE 1 day AGO UNTIL NOW"
+QUERY="SELECT uniques(file) AS 'filename' FROM TestResult WHERE runId = '$TEST_RUN_ID' AND status = 'failed' AND environment = '$ENVIRONMENT' SINCE 30 minutes AGO UNTIL NOW"
 
 failed_specs_raw=$(newrelic nrql query --query "$QUERY")
 # Get list of failed specs from stable group only
