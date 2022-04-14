@@ -168,9 +168,7 @@ class TestSubmitChangeRequest:
         mock_get_or_404.return_value = change_request
         mock_get_issues.return_value = [
             ValidationErrorDetail(
-                message="start_date required",
-                type="required",
-                field="start_date",
+                message="start_date required", type="required", field="start_date",
             )
         ]
         response = client.post(
@@ -322,9 +320,11 @@ class TestUploadDocument:
         )
 
         response = client.get(
-            "/v1/change-request?fineos_absence_id={}".format(change_request.claim.fineos_absence_id),
+            "/v1/change-request?fineos_absence_id={}".format(
+                change_request.claim.fineos_absence_id
+            ),
             headers={"Authorization": f"Bearer {consented_user_token}"},
         )
         response_body = response.get_json()
-    
-        assert response_body["data"]["change_requests"][0]["documents_submitted_at"] is not None 
+
+        assert response_body["data"]["change_requests"][0]["documents_submitted_at"] is not None
