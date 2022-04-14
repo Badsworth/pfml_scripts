@@ -44,12 +44,15 @@ export function RunIndicator({ run, simpleView = true }) {
     }
   });
 
+  const runIds = run.runId.includes("-failed-specs")
+    ? [run.runId, run.runId.replace("-failed-specs", "")]
+    : [run.runId];
   /**
    * Generate Nerdlet link for testgrid view.
    */
   const link = navigation.getOpenStackedNerdletLocation({
     id: "panel-testgrid",
-    urlState: { runIds: [run.runId] },
+    urlState: { runIds: runIds },
   });
   return (
     <Popover openOnHover={true}>

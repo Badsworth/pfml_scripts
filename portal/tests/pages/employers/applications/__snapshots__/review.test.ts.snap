@@ -268,6 +268,32 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
                 data-label="Date range"
                 scope="row"
               >
+                2/1/2022 to 7/1/2022
+              </th>
+              <td
+                class="tablet:width-card-lg"
+                data-label="Leave frequency"
+              >
+                Continuous leave
+              </td>
+              <td
+                data-label="Status"
+              >
+                <span
+                  class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-base-darkest bg-warning-lighter"
+                >
+                  Pending
+                </span>
+              </td>
+            </tr>
+            <tr
+              data-testid="1-2"
+            >
+              <th
+                class="tablet:width-card-lg"
+                data-label="Date range"
+                scope="row"
+              >
                 1/1/2022 to 4/1/2022
               </th>
               <td
@@ -351,7 +377,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
         Previous leave
       </h3>
       <p>
-        Verify the accuracy of your employee’s qualified leave dates. Any qualifying reason should only be reported if it was taken after January 1, 2021.
+        Verify the accuracy of your employee’s qualified leave dates. Any qualifying reason should only be reported if it was taken after February 1, 2021.
       </p>
       <p>
         This includes both paid leave (for example: paid vacation or sick days) and unpaid leave (for example: FMLA leave).

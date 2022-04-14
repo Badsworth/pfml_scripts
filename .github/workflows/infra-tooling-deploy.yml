@@ -1,0 +1,136 @@
+# This workflow automatically deploys changes to the infra/tooling module whenever the main branch is updated
+#
+
+name: Infrastructure Tooling Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - jacobitegboje/INFRA-1356-audit-s3-buckets
+    paths:
+      - infra/tooling/**
+  workflow_dispatch:
+    inputs:
+      version:
+        required: true
+        default: "main"
+        description: |
+          --------------------------------------
+          ⬇️ Tag or branch to be deployed.
+
+env:
+  workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+jobs:
+  infra-tooling-deploy:
+    runs-on: ubuntu-latest
+    env:
+      TF_CLI_ARGS: '-lock-timeout=120s'
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: check users
+        id: get_teams
+        env:
+          GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
+        uses: octokit/graphql-action@v2.x
+        with:
+          query: |
+            query {
+              organization(login:"EOLWD"){
+                team(slug:"pfml-infra"){
+                  members(membership: ALL, query:"${{ github.actor }}"){
+                    nodes {
+                      login
+                    }
+                  }
+                }
+              }
+            }
+
+      - name: fail if not a member
+        if: contains('', fromJSON(steps.get_teams.outputs.data).organization.team.members.nodes[0])
+        run: |
+          echo "Not part of pfml-devops, cancelling workflow"
+          exit 1
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - uses: hashicorp/setup-terraform@v1.2.1
+        with:
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        id: terraform_init
+        run: terraform init
+        working-directory: infra/tooling
+
+      - name: Terraform Plan with new docker image
+        id: terraform_plan
+        run: terraform plan -out=plan.tfplan
+        working-directory: infra/tooling
+
+      - name: Terraform Apply from execution plan
+        id: terraform_apply
+        run: terraform apply plan.tfplan
+        working-directory: infra/tooling
+
+  get-deploy-state:
+    name: Finalize deployment state
+    needs: [infra-tooling-deploy]
+    if: always()
+    runs-on: ubuntu-latest
+    outputs:
+      deploy-state: ${{ steps.deploy-state.outputs.deploy-state }}
+    steps:
+        # https://github.com/technote-space/workflow-conclusion-action
+        # this action takes the "conclusion" status from jobs and compiles them together into an env variable with a rolled up status
+      - uses: technote-space/workflow-conclusion-action@v2
+      - name: Set deploy-state value
+        id: deploy-state
+        run: echo "::set-output name=deploy-state::${{ env.WORKFLOW_CONCLUSION }}"
+
+  post-to-teams:
+    name: post failures to teams
+    needs: [get-deploy-state]
+    if: always() && (needs.get-deploy-state.outputs.deploy-state == 'failure' || needs.get-deploy-state.outputs.deploy-state == 'timed_out')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Pull teams uri from SSM
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/admin/common/teams-deploy-uri"
+          env_variable_name: "teams_uri"
+
+      - name: Post to Teams
+        run: |
+          RESPONSE=$(curl -fsLS -X POST ${{ env.TEAMS_URI }} \
+          --header 'Content-Type: application/json' \
+          --data '{
+            "@type": "MessageCard",
+            "themeColor": "FF0000",
+            "title": "Failed to deploy Infrastructure Tooling",
+            "text": "${{ env.workflow_self_link }}",
+            "sections": [{}]
+            }'
+          )

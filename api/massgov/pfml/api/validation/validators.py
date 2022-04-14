@@ -120,6 +120,7 @@ def log_validation_error(
     validation_exception: ValidationException,
     error: ValidationErrorDetail,
     unexpected_error_check_func: Optional[Callable[[ValidationErrorDetail], bool]] = None,
+    only_warn: bool = False,
 ) -> None:
     # Create a readable message for the individual error.
     # Do not use the error's actual message since it may include PII.
@@ -151,7 +152,7 @@ def log_validation_error(
         logger.info(message, extra=log_attributes)
     else:
         # Log explicit errors in the case of unexpected validation errors.
-        newrelic_util.log_and_capture_exception(message, extra=log_attributes)
+        newrelic_util.log_and_capture_exception(message, extra=log_attributes, only_warn=only_warn)
 
 
 class CustomResponseValidator(ResponseValidator):
@@ -186,5 +187,6 @@ class CustomResponseValidator(ResponseValidator):
             if CustomResponseValidator.response_validation:
                 raise validation_exception
             for error in validation_exception.errors:
-                log_validation_error(validation_exception, error)
+                # For Response Validation exceptions, we want to log as warnings rather than errors
+                log_validation_error(validation_exception, error, only_warn=True)
             return True

@@ -88,7 +88,6 @@ describe("withClaims", () => {
     let spy;
     const apiParams = {
       page_offset: "2",
-      claim_status: "Approved,Pending",
       employer_id: "mock-employer-id",
       is_reviewable: "yes",
       order_by: "employee",
@@ -108,13 +107,33 @@ describe("withClaims", () => {
 
     expect(spy).toHaveBeenLastCalledWith({
       page_offset: "2",
-      claim_status: "Approved,Pending",
       employer_id: "mock-employer-id",
       is_reviewable: "yes",
       order_by: "employee",
       order_direction: "descending",
       request_decision: "approved",
       search: "foo",
+    });
+  });
+
+  it("makes request without the invalid order_by value", () => {
+    let spy;
+    const apiParams = {
+      page_offset: "1",
+      order_by: "invalid_param",
+    };
+
+    setup(
+      {
+        addCustomSetup: (appLogic) => {
+          spy = jest.spyOn(appLogic.claims, "loadPage");
+        },
+      },
+      apiParams
+    );
+
+    expect(spy).toHaveBeenLastCalledWith({
+      page_offset: "1",
     });
   });
 });

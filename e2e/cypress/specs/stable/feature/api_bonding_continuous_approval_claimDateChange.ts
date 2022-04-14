@@ -4,54 +4,72 @@ import { extractLeavePeriod } from "../../../../src/util/claims";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { format, addDays } from "date-fns";
 import { config } from "../../../actions/common";
+import { waitForAjaxComplete } from "../../../actions/fineos";
 
 describe("Claim date change", () => {
   after(() => {
     portal.deleteDownloadsFolder();
   });
-  const submit = it("Given a fully approved claim", () => {
-    fineos.before();
-    // Submit a claim via the API, including Employer Response.
+  it("Given a submitted claim", () => {
     cy.task("generateClaim", "BHAP1ER").then((claim) => {
       cy.stash("claim", claim);
       cy.task("submitClaimToAPI", claim).then((res) => {
-        const [startDate, endDate] = extractLeavePeriod(claim.claim);
         cy.stash("submission", {
           application_id: res.application_id,
           fineos_absence_id: res.fineos_absence_id,
           timestamp_from: Date.now(),
         });
-        const newStartDate = format(
-          addDays(new Date(startDate), 1),
-          "MM/dd/yyyy"
-        );
-        const newEndDate = format(addDays(new Date(endDate), 8), "MM/dd/yyyy");
-        cy.stash("changedLeaveDates", [newStartDate, newEndDate]);
-        const claimPage = fineosPages.ClaimPage.visit(res.fineos_absence_id);
-        claimPage.adjudicate((adjudication) => {
-          adjudication.evidence((evidence) => {
-            for (const document of claim.documents) {
-              evidence.receive(document.document_type);
-            }
-          });
-          cy.wait("@ajaxRender");
-          cy.wait(200);
-          adjudication.certificationPeriods((certificationPeriods) =>
-            certificationPeriods.prefill()
+      });
+    });
+  });
+  it("Given a fully approved claim", () => {
+    cy.dependsOnPreviousPass();
+    fineos.before();
+    // Submit a claim via the API, including Employer Response.
+    cy.unstash<DehydratedClaim>("claim").then((claim) => {
+      cy.unstash<Submission>("submission").then((submission) => {
+        cy.tryCount().then((tryCount) => {
+          if (tryCount > 0) {
+            fineos.assertClaimStatus("Approved");
+            return;
+          }
+          const [startDate, endDate] = extractLeavePeriod(claim.claim);
+          const newStartDate = format(
+            addDays(new Date(startDate), 1),
+            "MM/dd/yyyy"
           );
-          adjudication.acceptLeavePlan();
+          const newEndDate = format(
+            addDays(new Date(endDate), 8),
+            "MM/dd/yyyy"
+          );
+          cy.stash("changedLeaveDates", [newStartDate, newEndDate]);
+          const claimPage = fineosPages.ClaimPage.visit(
+            submission.fineos_absence_id
+          );
+          claimPage.adjudicate((adjudication) => {
+            adjudication.evidence((evidence) => {
+              for (const document of claim.documents) {
+                evidence.receive(document.document_type);
+              }
+            });
+            waitForAjaxComplete();
+            adjudication.certificationPeriods((certificationPeriods) =>
+              certificationPeriods.prefill()
+            );
+            adjudication.acceptLeavePlan();
+          });
+          claimPage.tasks((task) => {
+            task.close("Bonding Certification Review");
+            task.close("ID Review");
+          });
+          claimPage.approve("Approved", config("HAS_APRIL_UPGRADE") === "true");
         });
-        claimPage.tasks((task) => {
-          task.close("Bonding Certification Review");
-          task.close("ID Review");
-        });
-        claimPage.approve("Approved", config("HAS_APRIL_UPGRADE") === "true");
       });
     });
   });
 
   const dateChange = it("CSR rep can update the leave dates", () => {
-    cy.dependsOnPreviousPass([submit]);
+    cy.dependsOnPreviousPass();
     cy.unstash<DehydratedClaim>("claim").then((_claim) => {
       cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
         cy.unstash<[string, string]>("changedLeaveDates").then(
@@ -123,7 +141,7 @@ describe("Claim date change", () => {
   });
 
   it("Should show the changed dates in Portal.", { retries: 0 }, () => {
-    cy.dependsOnPreviousPass([submit, dateChange]);
+    cy.dependsOnPreviousPass([dateChange]);
     portal.before();
     cy.unstash<DehydratedClaim>("claim").then(({ claim }) => {
       cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {

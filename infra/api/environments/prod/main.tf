@@ -94,6 +94,7 @@ module "api" {
   use_claim_status_url      = true
 
   enable_document_multipart_upload = "1"
+  enable_employee_endpoints        = "1"
 
   azure_ad_authority_domain = "login.microsoftonline.com"
   azure_ad_client_id        = "c87412f7-a62f-48dd-8971-c753c063574b"

@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Paid Leave API
   description: An API for managing leave within Massachusetts Paid Family and Medical Leave.
-  version: "2022-03-21"
+  version: "2022-04-06"
 
 servers:
   - url: /v1
@@ -72,7 +72,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Flag"
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Flag"
         "503":
           $ref: "#/components/responses/ServiceUnavailableError"
   /users:
@@ -421,16 +423,6 @@ paths:
           description: ID(s) of Employee to query claims for
           required: false
           explode: false
-        - name: claim_status
-          in: query
-          schema:
-            type: string
-            pattern: '[a-zA-Z0-9 ,]+'
-          description: >
-            claim status used to filter the request,
-            single claim status or a comma seperated list of claim status (i.e claim_status="Approved,Closed"),
-            the valid status are "Approved", "Closed", "Completed", "Declined", "Open requirement" and "Pending - no action".
-          required: false
         - name: search
           in: query
           schema:
@@ -736,7 +728,7 @@ paths:
   /employers/claims/{fineos_absence_id}/documents/{fineos_document_id}:
     get:
       summary: Retrieve a FINEOS documents for a specified absence ID and document ID
-      operationId: massgov.pfml.api.claims.employer_document_download
+      operationId: massgov.pfml.api.employer_claim.employer_document_download
       tags:
         - Claims
       parameters:
@@ -772,7 +764,7 @@ paths:
   /employers/claims/{fineos_absence_id}/documents:
     get:
       summary: Retrieve a list of FINEOS documents for a specified absence ID
-      operationId: massgov.pfml.api.claims.employer_get_claim_documents
+      operationId: massgov.pfml.api.employer_claim.employer_get_claim_documents
       tags:
         - Claims
       parameters:
@@ -806,7 +798,7 @@ paths:
   /employers/claims/{fineos_absence_id}/review:
     get:
       summary: Retrieve FINEOS claim review data for a specified absence ID
-      operationId: massgov.pfml.api.claims.employer_get_claim_review
+      operationId: massgov.pfml.api.employer_claim.employer_get_claim_review
       tags:
         - Claims
       parameters:
@@ -840,7 +832,7 @@ paths:
       tags:
         - Claims
       summary: Save review claim from leave admin
-      operationId: massgov.pfml.api.claims.employer_update_claim_review
+      operationId: massgov.pfml.api.employer_claim.employer_update_claim_review
       parameters:
         - name: fineos_absence_id
           in: path
@@ -1703,7 +1695,7 @@ components:
       schema:
         type: string
         default: "created_at"
-        enum: ["fineos_absence_status", "created_at", "employee", "latest_follow_up_date"]
+        enum: ["created_at", "employee", "latest_follow_up_date"]
     orderDirection:
       name: "order_direction"
       in: query
@@ -3018,6 +3010,7 @@ components:
           example: "Started"
         phone:
           $ref: "#/components/schemas/MaskedPhone"
+          nullable: true
         has_previous_leaves_other_reason:
           type: boolean
           nullable: true
@@ -3406,7 +3399,49 @@ components:
         transaction_date_could_change:
           type: boolean
           example: false
-  
+        payment_details:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaymentDetailsResponse"
+    
+    PaymentDetailsResponse:
+      type: object
+      properties:
+        payment_detail_id:
+          type: string
+          format: uuid
+          example: "fabd09ed-0ea9-4091-843e-2e37d2c61482"
+        period_start_date:
+          type: string
+          format: date
+          example: "2022-05-01"
+        period_end_date:
+          type: string
+          format: date
+          example: "2022-06-01"
+        amount:
+          type: number
+          example: 750.25
+        payment_lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaymentLineResponse"
+    
+    PaymentLineResponse:
+      type: object
+      properties:
+        payment_line_id:
+          type: string
+          format: uuid
+          example: "fabd09ed-0ea9-4091-843e-2e37d2c61482"
+        amount:
+          type: number
+          example: 750.25
+        line_type:
+          type: string
+          example: "Auto Gross Entitlement"
+          description: "A description of why this line was added or subtracted to the overall payment"
+
     ChangeRequestsResponse:
       type: array
       items:
@@ -4504,12 +4539,6 @@ components:
             type: string
             format: uuid
           description: Employee IDs to query claims for
-        claim_status:
-          type: string
-          description: >
-            claim status used to filter the request,
-            single claim status or a comma seperated list of claim status (i.e claim_status="Approved,Closed"),
-            the valid status are "Approved", "Closed", "Completed", "Declined", "Open requirement" and "Pending - no action".
         search:
           type: string
           description: >

@@ -6,6 +6,8 @@ import {
   ScenarioSpecification,
 } from "../generation/Scenario";
 import { addWeeks, subWeeks, startOfWeek, addDays, subDays } from "date-fns";
+const mostRecentSunday = startOfWeek(new Date());
+const midweek = addDays(mostRecentSunday, 3);
 
 /**
  * Cypress Testing Scenarios.
@@ -60,6 +62,15 @@ export const REDUCED_ER: ScenarioSpecification = {
   },
 };
 
+export const REDUCED_ER_MIDWEEK: ScenarioSpecification = {
+  ...REDUCED_ER,
+  claim: {
+    ...REDUCED_ER.claim,
+    label: "REDUCED_ER_MIDWEEK",
+    shortClaim: false,
+    leave_dates: [addWeeks(midweek, 1), addWeeks(midweek, 4)],
+  },
+};
 export const MIL_RED: ScenarioSpecification<MilitaryCaregiverClaim> = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
@@ -131,7 +142,6 @@ export const MHAP4: ScenarioSpecification = {
   },
 };
 
-const mostRecentSunday = startOfWeek(new Date());
 export const MRAP30: ScenarioSpecification = {
   employee: {
     wages: 30000,
@@ -479,7 +489,6 @@ export const MHAP1_OLB_ER: ScenarioSpecification = {
   },
 };
 
-const midweek = addDays(mostRecentSunday, 3);
 export const CPS_MID_WK: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {

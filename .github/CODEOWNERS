@@ -10,9 +10,12 @@
 /.github/actions/ @EOLWD/pfml-infra
 /.github/CODEOWNERS @EOLWD/pfml-infra
 
-/bin/ @EOLWD/pfml-infra
+/bin/ @EOLWD/pfml-infra @EOLWD/pfml-e2e
 /docs/portal/ @EOLWD/pfml-portal
 /e2e/ @EOLWD/pfml-e2e
+/.github/actions/e2e* @EOLWD/pfml-e2e
+/.github/workflows/e2e* @EOLWD/pfml-e2e
+/.github/actions/setup-nr-cli/ @EOLWD/pfml-e2e
 /infra/portal/ @EOLWD/pfml-portal @EOLWD/pfml-infra
 /infra/admin-portal/ @EOLWD/pfml-infra @EOLWD/pfml-admin-portal
 /infra/bi/ @EOLWD/pfml-infra @EOLWD/pfml-business-intel

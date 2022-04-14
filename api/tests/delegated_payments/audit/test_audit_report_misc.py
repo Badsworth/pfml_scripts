@@ -39,21 +39,13 @@ help guide the developer to what they need to correct.
 
 
 @pytest.fixture
-def payment_audit_report_step(
-    local_initialize_factories_session, local_test_db_session, local_test_db_other_session
-):
-    return PaymentAuditReportStep(
-        db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
-    )
+def payment_audit_report_step(initialize_factories_session, test_db_session):
+    return PaymentAuditReportStep(db_session=test_db_session, log_entry_db_session=test_db_session)
 
 
 @pytest.fixture
-def payment_rejects_step(
-    local_initialize_factories_session, local_test_db_session, local_test_db_other_session
-):
-    return PaymentRejectsStep(
-        db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
-    )
+def payment_rejects_step(initialize_factories_session, test_db_session):
+    return PaymentRejectsStep(db_session=test_db_session, log_entry_db_session=test_db_session)
 
 
 def test_audit_report_types_configured():
@@ -134,14 +126,12 @@ def run_steps(payment_audit_report_step, payment_rejects_step):
 
 
 def test_writeback_scenarios_for_audit_details(
-    local_test_db_session, payment_audit_report_step, payment_rejects_step
+    test_db_session, payment_audit_report_step, payment_rejects_step
 ):
     audit_detail_payment_pairs = []
     for audit_detail_group in AUDIT_REJECT_DETAIL_GROUPS + AUDIT_SKIPPED_DETAIL_GROUPS:
         if audit_detail_group.audit_report_type:
-            payment = DelegatedPaymentFactory(
-                local_test_db_session
-            ).get_or_create_payment_with_state(
+            payment = DelegatedPaymentFactory(test_db_session).get_or_create_payment_with_state(
                 State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
             )
 
@@ -150,7 +140,7 @@ def test_writeback_scenarios_for_audit_details(
                 audit_detail_group.audit_report_type,
                 "Example message",
                 None,
-                local_test_db_session,
+                test_db_session,
             )
             audit_detail_payment_pairs.append((audit_detail_group, payment))
 
@@ -158,7 +148,7 @@ def test_writeback_scenarios_for_audit_details(
 
     for audit_detail_group, payment in audit_detail_payment_pairs:
         latest_writeback_detail = (
-            local_test_db_session.query(FineosWritebackDetails)
+            test_db_session.query(FineosWritebackDetails)
             .filter(FineosWritebackDetails.payment_id == payment.payment_id)
             .order_by(FineosWritebackDetails.created_at.desc())
             .first()

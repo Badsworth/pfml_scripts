@@ -27,6 +27,16 @@ function withClaims<T extends WithClaimsProps>(
 
     const { isLoadingClaims } = appLogic.claims;
 
+    let order_by;
+    const validOrderByParams: Array<GetClaimsParams["order_by"]> = [
+      "created_at",
+      "employee",
+      "latest_follow_up_date",
+    ];
+
+    if (validOrderByParams.includes(apiParams.order_by)) {
+      order_by = apiParams.order_by;
+    }
     // Exclude null or undefined values since we don't want to
     // send those into the API request's query string, and our
     // UI components won't need to filter them out when determining
@@ -34,9 +44,8 @@ function withClaims<T extends WithClaimsProps>(
     const params = omitBy(
       {
         page_offset: apiParams.page_offset,
-        order_by: apiParams.order_by,
+        order_by,
         order_direction: apiParams.order_direction,
-        claim_status: apiParams.claim_status,
         is_reviewable: apiParams.is_reviewable,
         request_decision: apiParams.request_decision,
         employer_id: apiParams.employer_id,

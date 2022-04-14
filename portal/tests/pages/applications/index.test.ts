@@ -3,7 +3,7 @@ import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { AppLogic } from "../../../src/hooks/useAppLogic";
 import BenefitsApplication from "src/models/BenefitsApplication";
 import Index from "../../../src/pages/applications/index";
-import dayjs from "dayjs";
+import { createBenefitYearStartEndDates } from "lib/mock-helpers/createMockApplicationSplit";
 import formatDate from "src/utils/formatDate";
 import routes from "../../../src/routes";
 import { screen } from "@testing-library/react";
@@ -50,8 +50,7 @@ describe("Applications", () => {
       splitClaimsAcrossBY: true,
     });
 
-    const startDate = new Date();
-    const endDate = dayjs(startDate).add(1, "year");
+    const { startDate, endDate } = createBenefitYearStartEndDates();
 
     renderPage(Index, {
       pathname: routes.applications.index,
@@ -61,8 +60,8 @@ describe("Applications", () => {
         appLogicHook.benefitYears.getCurrentBenefitYear = jest
           .fn()
           .mockReturnValue({
-            benefit_year_start_date: startDate.toUTCString(),
-            benefit_year_end_date: endDate.toDate().toUTCString(),
+            benefit_year_start_date: startDate,
+            benefit_year_end_date: endDate,
             employee_id: "2a340cf8-6d2a-4f82-a075-73588d003f8f",
             current_benefit_year: true,
           });
@@ -70,14 +69,14 @@ describe("Applications", () => {
     });
 
     const byText = new RegExp(
-      `is ${formatDate(startDate.toISOString()).short()} to ${formatDate(
-        endDate.toISOString()
+      `is ${formatDate(startDate).short()} to ${formatDate(
+        endDate
       ).short()}. Most Massachusetts employees are eligible for up to 26 weeks of combined family and medical leave per benefit year.`
     );
     expect(screen.getByText(byText)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "benefit year" })).toHaveAttribute(
       "href",
-      "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-overview-and-benefits#getting-paid-and-taxes-on-benefits-"
+      "https://www.mass.gov/info-details/types-of-paid-family-and-medical-leave#important-terms-to-know-"
     );
 
     expect(
@@ -93,10 +92,179 @@ describe("Applications", () => {
     ).toHaveAttribute("href", "https://mass.gov/pfml/application-timeline");
   });
 
-  it("displays prompt for channel switching when feature flag is enabled", () => {
-    const detailsLabel = "Did you start an application by phone?";
-    process.env.featureFlags = JSON.stringify({ channelSwitching: false });
+  it("shows the split application alert when the query parameter is set and the first application is submitted", () => {
+    const originalApplication = new MockBenefitsApplicationBuilder()
+      .id("1")
+      .splitIntoApplicationId("2")
+      .continuous()
+      .submitted()
+      .create();
+    const splitApplication = new MockBenefitsApplicationBuilder()
+      .id("2")
+      .splitFromApplicationId("1")
+      .continuous({
+        leave_period_id: "mock-leave-period-id-2",
+        start_date: "2022-06-02",
+        end_date: "2022-08-01",
+      })
+      .computedEarliestSubmissionDate("2022-06-02")
+      .create();
+    renderPage(
+      Index,
+      {
+        pathname: routes.applications.index,
+        addCustomSetup: (appLogicHook) => {
+          setUpHelper(appLogicHook);
+          appLogicHook.documents.loadAll = jest.fn();
+          appLogicHook.benefitsApplications.isLoadingClaims = false;
+          appLogicHook.benefitsApplications.benefitsApplications =
+            new ApiResourceCollection<BenefitsApplication>("application_id", [
+              originalApplication,
+              splitApplication,
+            ]);
+        },
+      },
+      { query: { applicationWasSplitInto: "2" } }
+    );
 
+    const successPartOne = screen.queryByText(
+      /You successfully submitted Part 1. Submit Parts 2 and 3 so that we can review your application./
+    );
+    const partOneLeaveDates = screen.queryByText(
+      /leave dates from 1\/1\/2022 to 6\/1\/2022/
+    );
+
+    const submitPartTwo = screen.queryByText(
+      /You will be able to submit Part 1 of your new benefit year application on/
+    );
+    const partTwoLeaveDates = screen.queryByText(
+      /leave dates from 6\/2\/2022 to 8\/1\/2022/
+    );
+
+    const submitPartTwoDate = screen.queryAllByText("6/2/2022");
+
+    expect(successPartOne).toBeInTheDocument();
+    expect(partOneLeaveDates).toBeInTheDocument();
+    expect(submitPartTwo).toBeInTheDocument();
+    // Also displayed in the application card
+    expect(submitPartTwoDate).toHaveLength(2);
+    expect(partTwoLeaveDates).toBeInTheDocument();
+  });
+
+  it("shows the split application alert when the query parameter is set and both applications are submitted", () => {
+    const originalApplication = new MockBenefitsApplicationBuilder()
+      .id("1")
+      .splitIntoApplicationId("2")
+      .continuous()
+      .submitted()
+      .create();
+    const splitApplication = new MockBenefitsApplicationBuilder()
+      .id("2")
+      .splitFromApplicationId("1")
+      .continuous({
+        leave_period_id: "mock-leave-period-id-2",
+        start_date: "2022-06-02",
+        end_date: "2022-08-01",
+      })
+      .submitted()
+      .create();
+    renderPage(
+      Index,
+      {
+        pathname: routes.applications.index,
+        addCustomSetup: (appLogicHook) => {
+          setUpHelper(appLogicHook);
+          appLogicHook.documents.loadAll = jest.fn();
+          appLogicHook.benefitsApplications.isLoadingClaims = false;
+          appLogicHook.benefitsApplications.benefitsApplications =
+            new ApiResourceCollection<BenefitsApplication>("application_id", [
+              originalApplication,
+              splitApplication,
+            ]);
+        },
+      },
+      { query: { applicationWasSplitInto: "2" } }
+    );
+
+    const successPartOneAndTwo = screen.queryByText(
+      "You successfully submitted Part 1. Your application was split into two, one for each benefit year. Submit Parts 2 and 3 so that we can review your applications."
+    );
+
+    expect(successPartOneAndTwo).toBeInTheDocument();
+  });
+
+  it("does not display the split application alert if the relevant applications are not found", () => {
+    const originalApplication = new MockBenefitsApplicationBuilder()
+      .id("1")
+      .splitIntoApplicationId("2")
+      .continuous()
+      .submitted()
+      .create();
+    const splitApplication = new MockBenefitsApplicationBuilder()
+      .id("2")
+      .splitFromApplicationId("1")
+      .continuous({
+        leave_period_id: "mock-leave-period-id-2",
+        start_date: "2022-06-02",
+        end_date: "2022-08-01",
+      })
+      .submitted()
+      .create();
+    renderPage(
+      Index,
+      {
+        pathname: routes.applications.index,
+        addCustomSetup: (appLogicHook) => {
+          setUpHelper(appLogicHook);
+          appLogicHook.documents.loadAll = jest.fn();
+          appLogicHook.benefitsApplications.isLoadingClaims = false;
+          appLogicHook.benefitsApplications.benefitsApplications =
+            new ApiResourceCollection<BenefitsApplication>("application_id", [
+              originalApplication,
+              splitApplication,
+            ]);
+        },
+      },
+      { query: { applicationWasSplitInto: "400" } }
+    );
+
+    const successPartOne = screen.queryByText(
+      /You successfully submitted Part 1. Submit Parts 2 and 3 so that we can review your application./
+    );
+    const successPartOneAndTwo = screen.queryByText(
+      "You successfully submitted Part 1. Your application was split into two, one for each benefit year. Submit Parts 2 and 3 so that we can review your applications."
+    );
+
+    expect(successPartOneAndTwo).not.toBeInTheDocument();
+    expect(successPartOne).not.toBeInTheDocument();
+  });
+
+  it("does not display the split application alert if the applications are not loaded", () => {
+    renderPage(
+      Index,
+      {
+        pathname: routes.applications.index,
+        addCustomSetup: (appLogicHook) => {
+          setUpHelper(appLogicHook);
+          appLogicHook.documents.loadAll = jest.fn();
+          appLogicHook.benefitsApplications.isLoadingClaims = undefined;
+        },
+      },
+      { query: { applicationWasSplitInto: "400" } }
+    );
+
+    const successPartOne = screen.queryByText(
+      /You successfully submitted Part 1. Submit Parts 2 and 3 so that we can review your application./
+    );
+    const successPartOneAndTwo = screen.queryByText(
+      "You successfully submitted Part 1. Your application was split into two, one for each benefit year. Submit Parts 2 and 3 so that we can review your applications."
+    );
+
+    expect(successPartOneAndTwo).not.toBeInTheDocument();
+    expect(successPartOne).not.toBeInTheDocument();
+  });
+
+  it("displays prompt for channel switching", () => {
     renderPage(Index, {
       pathname: routes.applications.index,
       addCustomSetup: (appLogicHook) => {
@@ -104,19 +272,9 @@ describe("Applications", () => {
       },
     });
 
-    const detailsText = screen.queryByText(detailsLabel);
-    expect(detailsText).not.toBeInTheDocument();
-
-    process.env.featureFlags = JSON.stringify({ channelSwitching: true });
-
-    renderPage(Index, {
-      pathname: routes.applications.index,
-      addCustomSetup: (appLogicHook) => {
-        setUpHelper(appLogicHook);
-      },
-    });
-
-    expect(screen.getByText(detailsLabel)).toBeInTheDocument();
+    expect(
+      screen.getByText("Did you start an application by phone?")
+    ).toBeInTheDocument();
   });
 
   it("passes mfaSetupSuccess value when it redirects to getReady", () => {

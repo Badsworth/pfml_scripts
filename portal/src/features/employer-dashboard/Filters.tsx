@@ -1,6 +1,4 @@
 import React, { FormEvent, useCallback, useEffect, useState } from "react";
-import { camelCase, get, isEqual, startCase } from "lodash";
-import { AbsenceCaseStatus } from "../../models/Claim";
 import Button from "../../components/core/Button";
 import Dropdown from "../../components/core/Dropdown";
 import { GetClaimsParams } from "../../api/ClaimsApi";
@@ -8,7 +6,7 @@ import Icon from "../../components/core/Icon";
 import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import { PageQueryParam } from "../../features/employer-dashboard/SortDropdown";
 import { UserLeaveAdministrator } from "../../models/User";
-import { isFeatureEnabled } from "../../services/featureFlags";
+import { isEqual } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
@@ -22,9 +20,6 @@ interface FiltersProps {
 const Filters = (props: FiltersProps) => {
   const { updatePageQuery, verifiedEmployers } = props;
   const { t } = useTranslation();
-  const showDashboardV2Filters = isFeatureEnabled(
-    "employerShowMultiLeaveDashboard"
-  );
 
   /**
    * Returns all filter fields with their values set based on
@@ -32,7 +27,6 @@ const Filters = (props: FiltersProps) => {
    */
   const getFormStateFromQuery = useCallback(() => {
     const {
-      claim_status,
       employer_id,
       // Empty strings represent the default "Show all" option.
       // We use empty strings to avoid passing a param to the API
@@ -44,8 +38,6 @@ const Filters = (props: FiltersProps) => {
     return {
       is_reviewable,
       employer_id,
-      // Convert checkbox field query param into array, to conform to how we manage checkbox form state
-      claim_status: claim_status ? claim_status.split(",") : [],
       request_decision,
     };
   }, [props.params]);
@@ -78,7 +70,7 @@ const Filters = (props: FiltersProps) => {
    */
   const filtersContainerId = "filters";
 
-  let activeFiltersCount = activeFilters.claim_status.length;
+  let activeFiltersCount = 0;
   if (activeFilters.employer_id) activeFiltersCount++;
   if (activeFilters.is_reviewable) activeFiltersCount++;
   if (activeFilters.request_decision) activeFiltersCount++;
@@ -180,28 +172,6 @@ const Filters = (props: FiltersProps) => {
           className="bg-primary-lighter padding-x-3 padding-top-1px padding-bottom-3 usa-form maxw-none"
           onSubmit={handleSubmit}
         >
-          {!showDashboardV2Filters && (
-            <InputChoiceGroup
-              {...getFunctionalInputProps("claim_status")}
-              smallLabel
-              choices={[
-                AbsenceCaseStatus.approved,
-                AbsenceCaseStatus.closed,
-                AbsenceCaseStatus.declined,
-                "Pending - no action",
-                "Open requirement",
-              ].map((value) => ({
-                checked: get(formState, "claim_status", []).includes(value),
-                label: t("pages.employersDashboard.filterStatusChoice", {
-                  context: startCase(camelCase(value)).replace(/[-\s]/g, ""),
-                }),
-                value,
-              }))}
-              label={t("pages.employersDashboard.filterStatusLabel")}
-              type="checkbox"
-            />
-          )}
-
           {verifiedEmployers.length > 1 && (
             <Dropdown
               autocomplete
@@ -217,14 +187,10 @@ const Filters = (props: FiltersProps) => {
             />
           )}
 
-          {showDashboardV2Filters && (
-            <React.Fragment>
-              <ReviewableFilter {...getFunctionalInputProps("is_reviewable")} />
-              <RequestDecisionFilter
-                {...getFunctionalInputProps("request_decision")}
-              />
-            </React.Fragment>
-          )}
+          <ReviewableFilter {...getFunctionalInputProps("is_reviewable")} />
+          <RequestDecisionFilter
+            {...getFunctionalInputProps("request_decision")}
+          />
 
           <Button type="submit" disabled={isEqual(formState, activeFilters)}>
             {t("pages.employersDashboard.filtersApply")}
@@ -277,23 +243,6 @@ const Filters = (props: FiltersProps) => {
               })}
             </FilterMenuButton>
           )}
-
-          {activeFilters.claim_status.length > 0 &&
-            activeFilters.claim_status.map((status) => (
-              <FilterMenuButton
-                key={status}
-                onClick={() =>
-                  handleRemoveFilterClick(
-                    "claim_status",
-                    activeFilters.claim_status.filter((s) => s !== status)
-                  )
-                }
-              >
-                {t("pages.employersDashboard.filterStatusChoice", {
-                  context: startCase(camelCase(status)).replace(/[-\s]/g, ""),
-                })}
-              </FilterMenuButton>
-            ))}
         </div>
       )}
     </React.Fragment>

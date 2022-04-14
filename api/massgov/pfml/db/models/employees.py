@@ -312,6 +312,26 @@ class AbsencePeriod(Base, TimestampMixin):
     absence_reason_qualifier_two = relationship(LkAbsenceReasonQualifierTwo)
     leave_request_decision = relationship(LkLeaveRequestDecision)
 
+    @typed_hybrid_property
+    def has_final_decision(self):
+        return self.leave_request_decision_id not in [
+            LeaveRequestDecision.PENDING.leave_request_decision_id,
+            LeaveRequestDecision.IN_REVIEW.leave_request_decision_id,
+            LeaveRequestDecision.PROJECTED.leave_request_decision_id,
+            None,
+        ]
+
+    @has_final_decision.expression
+    def has_final_decision(cls):  # noqa: B902
+        return ~cls.leave_request_decision_id.in_(  # type: ignore[union-attr]
+            [
+                LeaveRequestDecision.PENDING.leave_request_decision_id,
+                LeaveRequestDecision.IN_REVIEW.leave_request_decision_id,
+                LeaveRequestDecision.PROJECTED.leave_request_decision_id,
+                None,
+            ]
+        )
+
 
 class AuthorizedRepresentative(Base, TimestampMixin):
     __tablename__ = "authorized_representative"
@@ -647,6 +667,8 @@ class Employee(Base, TimestampMixin):
     ctr_address_pair_id = Column(
         PostgreSQLUUID, ForeignKey("link_ctr_address_pair.fineos_address_id"), index=True
     )
+    mass_id_number = Column(Text)
+    out_of_state_id_number = Column(Text)
 
     fineos_employee_first_name = Column(Text, index=True)
     fineos_employee_middle_name = Column(Text, index=True)
@@ -696,7 +718,7 @@ class Employee(Base, TimestampMixin):
     )
 
     @property
-    def mass_id_number(self) -> Optional[str]:
+    def latest_mass_id_number_from_id_proofed_applications(self) -> Optional[str]:
         # This is imported here to prevent circular import error
         from massgov.pfml.db.models.applications import Application
 
@@ -881,7 +903,7 @@ class Claim(Base, TimestampMixin):
         return (
             select([func.min(aliasManagedRequirement.follow_up_date)])
             .where(filters)
-            .label("follow_up_date")
+            .label("soonest_open_requirement_date")
         )
 
     @typed_hybrid_property
@@ -931,7 +953,7 @@ class Claim(Base, TimestampMixin):
         return (
             select([func.max(aliasManagedRequirement.follow_up_date)])
             .where(filters)
-            .label("follow_up_date")
+            .label("latest_follow_up_date")
         )
 
     @typed_hybrid_property
@@ -990,6 +1012,8 @@ class BenefitYear(Base, TimestampMixin):
     base_period_end_date = Column(Date)
 
     total_wages = Column(Numeric(asdecimal=True))
+
+    Index("uix_employee_id_start_date", employee_id, start_date, unique=True)
 
     @typed_hybrid_property
     def current_benefit_year(self) -> bool:
@@ -1255,6 +1279,9 @@ class User(Base, TimestampMixin):
         Integer,
         ForeignKey("lk_mfa_delivery_preference_updated_by.mfa_delivery_preference_updated_by_id"),
     )
+    first_name = Column(Text)
+    last_name = Column(Text)
+    phone_number = Column(Text)  # Formatted in E.164 + maybe an extension e.g. "+18056103889x123"
 
     roles = relationship("LkRole", secondary="link_user_role", uselist=True)
     user_leave_administrators = relationship(
@@ -1478,6 +1505,13 @@ class ManagedRequirement(Base, TimestampMixin):
 
     claim = relationship("Claim", back_populates="managed_requirements")
     respondent_user = relationship(User)
+
+    @property
+    def is_open(self):
+        return (
+            self.managed_requirement_status_id
+            == ManagedRequirementStatus.OPEN.managed_requirement_status_id
+        )
 
 
 class WagesAndContributions(Base, TimestampMixin):

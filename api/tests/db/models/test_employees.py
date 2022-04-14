@@ -6,13 +6,16 @@ from freezegun import freeze_time
 
 from massgov.pfml.db.models.absences import AbsenceStatus
 from massgov.pfml.db.models.employees import (
+    AbsencePeriod,
     Claim,
+    LeaveRequestDecision,
     ManagedRequirementStatus,
     ManagedRequirementType,
     State,
     UserLeaveAdministrator,
 )
 from massgov.pfml.db.models.factories import (
+    AbsencePeriodFactory,
     ClaimFactory,
     EmployerFactory,
     EmployerQuarterlyContributionFactory,
@@ -44,6 +47,15 @@ def claim_with_completed_managed_requirements(employer, employee):
         follow_up_date="2022-02-02",
     )
     return claim
+
+
+@pytest.fixture()
+def absence_period_with_final_decision(claim):
+    absence_period = AbsencePeriodFactory.create(
+        claim=claim,
+        leave_request_decision_id=LeaveRequestDecision.CANCELLED.leave_request_decision_id,
+    )
+    return absence_period
 
 
 def test_user_leave_admin_has_fineos_registration():
@@ -176,3 +188,21 @@ def test_latest_follow_up_date(
         .one_or_none()
     )
     assert not test_claim_nomatch_filter
+
+
+def test_has_final_decision(
+    test_db_session, initialize_factories_session, absence_period_with_final_decision
+):
+    absence_period = test_db_session.query(AbsencePeriod).first()
+    assert (
+        absence_period.leave_request_decision_id
+        == LeaveRequestDecision.CANCELLED.leave_request_decision_id
+    )
+
+    assert absence_period.has_final_decision is True
+
+    absence_period.leave_request_decision_id = (
+        LeaveRequestDecision.PENDING.leave_request_decision_id
+    )
+    test_db_session.commit()
+    assert absence_period.has_final_decision is False

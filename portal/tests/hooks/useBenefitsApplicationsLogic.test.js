@@ -722,6 +722,80 @@ describe("useBenefitsApplicationsLogic", () => {
         expect(errorsLogic.errors[0].name).toEqual("BadRequestError");
         expect(mockRouter.push).not.toHaveBeenCalled();
       });
+
+      it("routes to the application index page when the submitted application was split and FF is enabled", async () => {
+        process.env.featureFlags = JSON.stringify({
+          splitClaimsAcrossBY: true,
+        });
+        const splitClaim = new BenefitsApplication({
+          application_id: applicationId,
+          split_into_application_id: "split_application_id",
+          status: BenefitsApplicationStatus.submitted,
+        });
+        createClaimMock.mockResolvedValueOnce({
+          claim: splitClaim,
+          success: true,
+        });
+
+        submitClaimMock.mockResolvedValueOnce({
+          success: true,
+          status: 201,
+          claim: splitClaim,
+          warnings: [],
+        });
+
+        await act(async () => {
+          await claimsLogic.create();
+        });
+
+        await act(async () => {
+          await claimsLogic.submit(applicationId);
+        });
+
+        expect(mockRouter.push).toHaveBeenCalledWith(
+          expect.stringContaining(
+            `${routes.applications.index}?claim_id=${applicationId}&part-one-submitted=true&applicationWasSplitInto=split_application_id`
+          )
+        );
+      });
+
+      it("invalidates the applications cache when the submitted application was split and FF is enabled", async () => {
+        process.env.featureFlags = JSON.stringify({
+          splitClaimsAcrossBY: true,
+        });
+        const splitClaim = new BenefitsApplication({
+          application_id: applicationId,
+          split_into_application_id: "split_application_id",
+          status: BenefitsApplicationStatus.submitted,
+        });
+        createClaimMock.mockResolvedValueOnce({
+          claim: splitClaim,
+          success: true,
+        });
+
+        submitClaimMock.mockResolvedValueOnce({
+          success: true,
+          status: 201,
+          claim: splitClaim,
+          warnings: [],
+        });
+
+        await act(async () => {
+          await claimsLogic.create();
+        });
+
+        await act(async () => {
+          await claimsLogic.submit(applicationId);
+        });
+
+        expect(claimsLogic.isLoadingClaims).toBeUndefined();
+
+        await act(async () => {
+          await claimsLogic.loadPage();
+        });
+
+        expect(getClaimsMock).toHaveBeenCalledTimes(1);
+      });
     });
 
     describe("submitPaymentPreference", () => {

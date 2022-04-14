@@ -34,6 +34,11 @@ interface StepProps {
    */
   submittedContent?: React.ReactNode;
   /**
+   * Content to display if step is completed (completed && editable)
+   * TODO (PORTAL-62) Remove this once there are no submitted claims with null Other Leave data
+   */
+  completedContent?: React.ReactNode;
+  /**
    * Whether or not the step is editable by the user
    */
   editable: boolean;
@@ -197,6 +202,7 @@ const Step = (props: StepProps) => {
           </Heading>
           {showChildren && <div className="usa-prose">{props.children}</div>}
           {completed && !props.editable && props.submittedContent}
+          {completed && props.editable && props.completedContent}
         </div>
         <div className={actionColumnClasses}>
           {disabled && disabledStartButton}

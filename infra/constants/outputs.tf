@@ -10,6 +10,10 @@ output "common_tags" {
   }
 }
 
+output "prefix" {
+  value = "massgov_pfml_"
+}
+
 # The ARN for the lambda function which forwards logs from Cloudwatch to New Relic.
 # This lambda function was manually set up in the AWS console and services all environments.
 output "newrelic_log_ingestion_arn" {
@@ -39,6 +43,7 @@ output "environment_tags" {
     "training"    = "train"
     "trn2"        = "trn2"
     "uat"         = "uat"
+    "dev"         = "dev"
   }
 }
 
@@ -60,6 +65,7 @@ output "environment_shorthand" {
     "training"    = "train"
     "trn2"        = "trn2"
     "uat"         = "uat"
+    "dev"         = "dev"
   }
 }
 
@@ -82,6 +88,7 @@ output "smartronix_environment_tags" {
     "training"    = "Sandbox"
     "uat"         = "UAT"
     "trn2"        = "TRN2"
+    "dev"         = "Dev"
   }
 }
 
@@ -278,7 +285,7 @@ output "high_risk_country_codes" {
     "ML", # Mali
     "MR", # Mauritania
     "MX", # Mexico
-    "MM", # Myanmar 
+    "MM", # Myanmar
     "NE", # Niger
     "NG", # Nigeria
     "PK", # Pakistan
@@ -292,7 +299,7 @@ output "high_risk_country_codes" {
     "UA", # Ukraine
     "VE", # Venezuela
     "YE", # Yemen
-    "ZW", # Zimbabwe 
+    "ZW", # Zimbabwe
   ]
 }
 

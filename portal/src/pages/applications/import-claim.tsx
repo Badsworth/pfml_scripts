@@ -7,10 +7,8 @@ import InputAbsenceCaseId from "../../components/InputAbsenceCaseId";
 import InputText from "../../components/core/InputText";
 import Lead from "../../components/core/Lead";
 import Link from "next/link";
-import PageNotFound from "../../components/PageNotFound";
 import QuestionPage from "../../components/QuestionPage";
 import { Trans } from "react-i18next";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
@@ -92,8 +90,6 @@ export const ImportClaim = (props: WithUserProps) => {
   /**
    * Render
    */
-  if (!isFeatureEnabled("channelSwitching")) return <PageNotFound />;
-
   return (
     <QuestionPage
       buttonLoadingMessage={t("pages.claimsImport.uploadingMessage")}

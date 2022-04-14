@@ -1,0 +1,6 @@
+{
+  "schemaType": "NERDLET",
+  "id": "panel-deployments",
+  "displayName": "Deployments",
+  "description": "Displays deployment events for a given environment/component."
+}

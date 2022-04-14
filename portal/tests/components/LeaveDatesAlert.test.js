@@ -4,6 +4,24 @@ import React from "react";
 
 jest.mock("../../src/hooks/useUniqueId");
 
+const testApplicationSplit = {
+  crossed_benefit_year: {
+    benefit_year_end_date: "2021-02-01",
+    benefit_year_start_date: "2020-02-03",
+    current_benefit_year: true,
+    employee_id: "2a340cf8-6d2a-4f82-a075-73588d003f8f",
+  },
+  application_dates_in_benefit_year: {
+    start_date: "2021-01-01",
+    end_date: "2021-02-01",
+  },
+  application_dates_outside_benefit_year: {
+    start_date: "2021-02-02",
+    end_date: "2021-03-31",
+  },
+  application_outside_benefit_year_submittable_on: "2020-12-02",
+};
+
 describe("LeaveDatesAlert", () => {
   it("renders Alert with given dates", () => {
     const { container } = render(
@@ -63,5 +81,28 @@ describe("LeaveDatesAlert", () => {
     expect(
       screen.getByText("Your 7-day waiting period dates").parentElement
     ).toMatchSnapshot();
+  });
+
+  it("renders two leave dates and waiting periods when applicationSplit is passed in and the feature flag is on", () => {
+    process.env.featureFlags = JSON.stringify({
+      splitClaimsAcrossBY: true,
+    });
+
+    render(
+      <LeaveDatesAlert
+        startDate="2021-01-01"
+        endDate="2021-03-31"
+        showWaitingDayPeriod
+        applicationSplit={testApplicationSplit}
+      />
+    );
+
+    expect(screen.getAllByRole("heading")).toHaveLength(2);
+    // two leave dates + two waiting periods = four total list items
+    expect(screen.getAllByRole("listitem")).toHaveLength(4);
+    expect(screen.getByText("1/1/2021 to 2/1/2021")).toBeInTheDocument();
+    expect(screen.getByText("2/2/2021 to 3/31/2021")).toBeInTheDocument();
+    expect(screen.getByText("1/1/2021 to 1/7/2021")).toBeInTheDocument();
+    expect(screen.getByText("2/2/2021 to 2/8/2021")).toBeInTheDocument();
   });
 });

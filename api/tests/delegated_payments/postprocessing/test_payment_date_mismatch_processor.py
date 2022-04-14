@@ -21,13 +21,11 @@ from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_step
 
 @pytest.fixture
 def payment_post_processing_step(
-    local_initialize_factories_session,
-    local_test_db_session,
-    local_test_db_other_session,
-    monkeypatch,
+    initialize_factories_session,
+    test_db_session,
 ):
     return PaymentPostProcessingStep(
-        db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
+        db_session=test_db_session, log_entry_db_session=test_db_session
     )
 
 
@@ -37,7 +35,7 @@ def payment_date_mismatch_processor(payment_post_processing_step):
 
 
 @pytest.fixture
-def payment_missing_absence_periods(local_test_db_session, local_initialize_factories_session):
+def payment_missing_absence_periods(test_db_session, initialize_factories_session):
     absence_period_start_date = date(2020, 1, 5)
     absence_period_end_date = date(2020, 1, 30)
     period_start_date = date(2020, 1, 6)
@@ -45,7 +43,7 @@ def payment_missing_absence_periods(local_test_db_session, local_initialize_fact
     fineos_leave_request_id = 1234
 
     payment_factory = DelegatedPaymentFactory(
-        local_test_db_session,
+        test_db_session,
         absence_period_start_date=absence_period_start_date,
         absence_period_end_date=absence_period_end_date,
         period_start_date=period_start_date,
@@ -58,9 +56,7 @@ def payment_missing_absence_periods(local_test_db_session, local_initialize_fact
 
 
 @pytest.fixture
-def payment_period_outside_of_absence_period(
-    local_test_db_session, local_initialize_factories_session
-):
+def payment_period_outside_of_absence_period(test_db_session, initialize_factories_session):
     # Payment absence period does not contain the payment period
     absence_period_start_date = date(2020, 1, 5)
     absence_period_end_date = date(2020, 1, 30)
@@ -69,7 +65,7 @@ def payment_period_outside_of_absence_period(
     fineos_leave_request_id = 5678
 
     payment_factory = DelegatedPaymentFactory(
-        local_test_db_session,
+        test_db_session,
         absence_period_start_date=absence_period_start_date,
         absence_period_end_date=absence_period_end_date,
         period_start_date=period_start_date,
@@ -90,7 +86,7 @@ def payment_period_outside_of_absence_period(
 
 @pytest.fixture
 def payment_period_outside_of_multiple_absence_periods(
-    local_test_db_session, local_initialize_factories_session
+    test_db_session, initialize_factories_session
 ):
     # Multiple absence periods that do not contain the payment period
     absence_period_start_date = date(2020, 1, 5)
@@ -100,7 +96,7 @@ def payment_period_outside_of_multiple_absence_periods(
     fineos_leave_request_id = 91011
 
     payment_factory = DelegatedPaymentFactory(
-        local_test_db_session,
+        test_db_session,
         absence_period_start_date=absence_period_start_date,
         absence_period_end_date=absence_period_end_date,
         period_start_date=period_start_date,
@@ -132,9 +128,7 @@ def payment_period_outside_of_multiple_absence_periods(
 
 
 @pytest.fixture
-def payment_period_overlaps_absence_periods(
-    local_test_db_session, local_initialize_factories_session
-):
+def payment_period_overlaps_absence_periods(test_db_session, initialize_factories_session):
     # Multiple absence periods overlap on the front or back of the period
     absence_period_start_date = date(2020, 1, 5)
     absence_period_end_date = date(2020, 1, 30)
@@ -165,7 +159,7 @@ def payment_period_overlaps_absence_periods(
     )
 
     payment_factory = DelegatedPaymentFactory(
-        local_test_db_session,
+        test_db_session,
         employee=employee,
         employer=employer,
         claim=claim,
@@ -179,7 +173,7 @@ def payment_period_overlaps_absence_periods(
 
 @pytest.fixture
 def payment_period_overlaps_absence_periods_but_is_valid(
-    local_test_db_session, local_initialize_factories_session
+    test_db_session, initialize_factories_session
 ):
     # Payment from 2/1 -> 2/8
     period_start_date = date(2020, 2, 1)
@@ -206,7 +200,7 @@ def payment_period_overlaps_absence_periods_but_is_valid(
     )
 
     payment_factory = DelegatedPaymentFactory(
-        local_test_db_session,
+        test_db_session,
         employee=employee,
         claim=claim,
         period_start_date=period_start_date,
@@ -219,8 +213,8 @@ def payment_period_overlaps_absence_periods_but_is_valid(
 
 def test_processor_happy_path(
     payment_date_mismatch_processor: PaymentDateMismatchProcessor,
-    local_test_db_session,
-    local_initialize_factories_session,
+    test_db_session,
+    initialize_factories_session,
 ):
 
     absence_period_start_date = date(2020, 1, 5)
@@ -244,7 +238,7 @@ def test_processor_happy_path(
         fineos_leave_request_id=fineos_leave_request_id,
     )
     payment_factory = DelegatedPaymentFactory(
-        local_test_db_session,
+        test_db_session,
         employee=employee,
         employer=employer,
         claim=claim,
@@ -257,7 +251,7 @@ def test_processor_happy_path(
     payment_date_mismatch_processor.process(payment)
 
     audit_report = (
-        local_test_db_session.query(PaymentAuditReportDetails)
+        test_db_session.query(PaymentAuditReportDetails)
         .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
         .one_or_none()
     )
@@ -266,15 +260,15 @@ def test_processor_happy_path(
 
 def test_processor_no_absence_periods_should_flag_payment(
     payment_date_mismatch_processor: PaymentDateMismatchProcessor,
-    local_test_db_session,
-    local_initialize_factories_session,
+    test_db_session,
+    initialize_factories_session,
     payment_missing_absence_periods: Payment,
 ):
 
     payment_date_mismatch_processor.process(payment_missing_absence_periods)
 
     audit_report = (
-        local_test_db_session.query(PaymentAuditReportDetails)
+        test_db_session.query(PaymentAuditReportDetails)
         .filter(PaymentAuditReportDetails.payment_id == payment_missing_absence_periods.payment_id)
         .one_or_none()
     )
@@ -287,14 +281,14 @@ def test_processor_no_absence_periods_should_flag_payment(
 
 def test_processor_invalid_absence_periods_should_flag_payment(
     payment_date_mismatch_processor: PaymentDateMismatchProcessor,
-    local_test_db_session,
-    local_initialize_factories_session,
+    test_db_session,
+    initialize_factories_session,
     payment_period_outside_of_absence_period: Payment,
 ):
     payment_date_mismatch_processor.process(payment_period_outside_of_absence_period)
 
     audit_report = (
-        local_test_db_session.query(PaymentAuditReportDetails)
+        test_db_session.query(PaymentAuditReportDetails)
         .filter(
             PaymentAuditReportDetails.payment_id
             == payment_period_outside_of_absence_period.payment_id
@@ -310,15 +304,15 @@ def test_processor_invalid_absence_periods_should_flag_payment(
 
 def test_processor_multiple_invalid_absence_periods_should_flag_payment(
     payment_date_mismatch_processor: PaymentDateMismatchProcessor,
-    local_test_db_session,
-    local_initialize_factories_session,
+    test_db_session,
+    initialize_factories_session,
     payment_period_outside_of_multiple_absence_periods: Payment,
 ):
 
     payment_date_mismatch_processor.process(payment_period_outside_of_multiple_absence_periods)
 
     audit_report = (
-        local_test_db_session.query(PaymentAuditReportDetails)
+        test_db_session.query(PaymentAuditReportDetails)
         .filter(
             PaymentAuditReportDetails.payment_id
             == payment_period_outside_of_multiple_absence_periods.payment_id
@@ -334,15 +328,15 @@ def test_processor_multiple_invalid_absence_periods_should_flag_payment(
 
 def test_processor_multiple_overlapping_absence_periods_should_flag_payment(
     payment_date_mismatch_processor: PaymentDateMismatchProcessor,
-    local_test_db_session,
-    local_initialize_factories_session,
+    test_db_session,
+    initialize_factories_session,
     payment_period_overlaps_absence_periods: Payment,
 ):
 
     payment_date_mismatch_processor.process(payment_period_overlaps_absence_periods)
 
     audit_report = (
-        local_test_db_session.query(PaymentAuditReportDetails)
+        test_db_session.query(PaymentAuditReportDetails)
         .filter(
             PaymentAuditReportDetails.payment_id
             == payment_period_overlaps_absence_periods.payment_id
@@ -358,14 +352,14 @@ def test_processor_multiple_overlapping_absence_periods_should_flag_payment(
 
 def test_processor_multiple_overlapping_absence_periods_but_payment_is_valid(
     payment_date_mismatch_processor: PaymentDateMismatchProcessor,
-    local_test_db_session,
-    local_initialize_factories_session,
+    test_db_session,
+    initialize_factories_session,
     payment_period_overlaps_absence_periods_but_is_valid: Payment,
 ):
     payment_date_mismatch_processor.process(payment_period_overlaps_absence_periods_but_is_valid)
 
     audit_report = (
-        local_test_db_session.query(PaymentAuditReportDetails)
+        test_db_session.query(PaymentAuditReportDetails)
         .filter(
             PaymentAuditReportDetails.payment_id
             == payment_period_overlaps_absence_periods_but_is_valid.payment_id
@@ -377,8 +371,8 @@ def test_processor_multiple_overlapping_absence_periods_but_payment_is_valid(
 
 def test_processor_adhoc_payments_should_not_flag(
     payment_date_mismatch_processor: PaymentDateMismatchProcessor,
-    local_test_db_session,
-    local_initialize_factories_session,
+    test_db_session,
+    initialize_factories_session,
     payment_missing_absence_periods: Payment,
     payment_period_outside_of_absence_period: Payment,
     payment_period_outside_of_multiple_absence_periods: Payment,
@@ -397,16 +391,16 @@ def test_processor_adhoc_payments_should_not_flag(
         payment_date_mismatch_processor.process(payment)
 
         assert (
-            local_test_db_session.query(PaymentAuditReportDetails)
+            test_db_session.query(PaymentAuditReportDetails)
             .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
             .one_or_none()
         ) is None, f"Unexpected AuditReport for payments_with_date_mismatches[{p}]"
 
 
 def test_group_absence_periods(
-    payment_date_mismatch_processor, local_test_db_session, local_initialize_factories_session
+    payment_date_mismatch_processor, test_db_session, initialize_factories_session
 ):
-    payment = DelegatedPaymentFactory(local_test_db_session).get_or_create_payment()
+    payment = DelegatedPaymentFactory(test_db_session).get_or_create_payment()
 
     # Create a few absence periods
     all_jan_period = AbsencePeriodFactory.create(
@@ -513,9 +507,9 @@ def test_group_absence_periods(
 
 
 def test_group_absence_periods_missing_values(
-    payment_date_mismatch_processor, local_test_db_session, local_initialize_factories_session
+    payment_date_mismatch_processor, test_db_session, initialize_factories_session
 ):
-    payment = DelegatedPaymentFactory(local_test_db_session).get_or_create_payment()
+    payment = DelegatedPaymentFactory(test_db_session).get_or_create_payment()
 
     # Create a few absence periods
     missing_start_date_period = AbsencePeriodFactory.create(

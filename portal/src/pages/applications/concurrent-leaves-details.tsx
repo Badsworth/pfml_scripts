@@ -78,6 +78,7 @@ export const ConcurrentLeavesDetails = (
               startDate={claim.leaveStartDate}
               endDate={claim.leaveEndDate}
               showWaitingDayPeriod={!isIntermittent}
+              applicationSplit={claim.computed_application_split}
             />
             <p>{t("pages.claimsConcurrentLeavesDetails.hintHeader")}</p>
             <Details

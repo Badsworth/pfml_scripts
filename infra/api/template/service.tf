@@ -92,6 +92,7 @@ resource "aws_ecs_task_definition" "app" {
       use_claim_status_url                       = var.use_claim_status_url
       enable_document_multipart_upload           = var.enable_document_multipart_upload
       enable_employee_endpoints                  = var.enable_employee_endpoints
+      limit_ssn_fein_max_attempts                = var.limit_ssn_fein_max_attempts
     }
   )
 

@@ -8,6 +8,7 @@ const routes = {
     applicationImports: "/application-imports",
     applications: "/applications",
     benefitYears: "/benefit-years",
+    changeRequest: "/change-request",
     claims: "/claims",
     employers: "/employers",
     holidays: "/holidays",
@@ -42,6 +43,12 @@ const routes = {
     leavePeriodIntermittent: "/applications/leave-period-intermittent",
     leavePeriodReducedSchedule: "/applications/leave-period-reduced-schedule",
     leaveReason: "/applications/leave-reason",
+    leaveSpansBenefitYearsContinuous:
+      "/applications/leave-spans-benefit-years/continuous",
+    leaveSpansBenefitYearsIntermittent:
+      "/applications/leave-spans-benefit-years/intermittent",
+    leaveSpansBenefitYearsReduced:
+      "/applications/leave-spans-benefit-years/reduced",
     name: "/applications/name",
     notifiedEmployer: "/applications/notified-employer",
     otherIncomes: "/applications/other-incomes",
@@ -129,10 +136,10 @@ const routes = {
       benefitsCalculator: "https://mass.gov/pfml/benefits-calculator",
       benefitsGuide_aboutBondingLeave:
         "https://www.mass.gov/family-leave-bonding",
-      benefitsGuide_benefitYears:
-        "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-overview-and-benefits#getting-paid-and-taxes-on-benefits-",
       benefitsGuide_benefitsAmountDetails:
         "https://www.mass.gov/how-much-will-i-get-paid",
+      benefitsGuide_howBenefitsAmountsAreCalculated:
+        "https://www.mass.gov/info-details/how-pfml-weekly-benefit-amounts-are-calculated",
       benefitsGuide_seriousHealthCondition:
         "https://www.mass.gov/pfml-serious-health-condition",
       calculateHours: "https://www.mass.gov/pfml-calculate-hours",
@@ -152,6 +159,8 @@ const routes = {
       feedbackEmployer: "https://www.mass.gov/paidleave-employer-feedback",
       healthcareProviderForm: "https://www.mass.gov/medical-leave-form",
       identityProof: "https://mass.gov/pfmlsubmitinfo",
+      importantTermsToKnow:
+        "https://www.mass.gov/info-details/types-of-paid-family-and-medical-leave#important-terms-to-know-",
       informedConsent: "https://www.mass.gov/paidleave-informedconsent",
       intermittentLeaveGuide:
         "https://www.mass.gov/intermittent-leave-instructions",
@@ -160,6 +169,7 @@ const routes = {
       medicalBonding: "https://www.mass.gov/pfml-medical-bonding",
       multipleBirths: "https://www.mass.gov/pfml-multiple-births",
       onlineAppealsForm: "https://mass.gov/PaidLeaveDecisionAppeal",
+      overpayments: "https://mass.gov/this-is-not-a-real-link",
       paidLeave: "https://mass.gov/PaidLeave",
       pfml: "https://www.mass.gov/pfml",
       privacyPolicy: "https://www.mass.gov/privacypolicy",

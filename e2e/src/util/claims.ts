@@ -138,10 +138,9 @@ export function extractLatestLeaveDate(
 }
 
 export function extractLeavePeriodType(
-  leaveDetails:
-    | ApplicationLeaveDetails
-    | NonNullable<ApplicationResponse["leave_details"]>
+  leaveDetails: ApplicationLeaveDetails | ApplicationResponse["leave_details"]
 ): NonNullable<AbsencePeriodResponse["period_type"]> {
+  if (!leaveDetails) throw Error("Generated claim missing leave details");
   const leavePeriodTypes = {
     intermittent_leave_periods: "Intermittent",
     continuous_leave_periods: "Continuous",

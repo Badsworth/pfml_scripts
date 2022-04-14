@@ -27,6 +27,7 @@ from massgov.pfml.api.models.applications.requests import (
 )
 from massgov.pfml.api.models.applications.responses import ApplicationResponse
 from massgov.pfml.api.models.common import OrderDirection
+from massgov.pfml.api.services.application_import import ApplicationImportService
 from massgov.pfml.api.services.applications import (
     get_application_split,
     get_document_by_id,
@@ -49,6 +50,7 @@ from massgov.pfml.api.validation.employment_validator import (
     get_contributing_employer_or_employee_issue,
 )
 from massgov.pfml.api.validation.exceptions import (
+    IssueRule,
     IssueType,
     ValidationErrorDetail,
     ValidationException,
@@ -134,14 +136,23 @@ def application_imports():
     user = app.current_user()
     application.user = user
 
+    body = connexion.request.json
+    application_import_request = ApplicationImportRequestBody.parse_obj(body)
+
+    logger.info(
+        "beginning import for application",
+        extra={
+            "absence_case_id": application_import_request.absence_case_id,
+            "application_id": application.application_id,
+        },
+    )
+
     is_cognito_user_mfa_verified = cognito.is_mfa_phone_verified(application.user.email_address, app.get_app_config().cognito_user_pool_id)  # type: ignore
     if not is_cognito_user_mfa_verified:
         logger.info(
             "application import failure - mfa not verified",
             extra={
-                "absence_case_id": application.claim.fineos_absence_id
-                if application.claim
-                else None,
+                "absence_case_id": application_import_request.absence_case_id,
                 "user_id": application.user.user_id,
             },
         )
@@ -155,9 +166,6 @@ def application_imports():
             ]
         )
 
-    body = connexion.request.json
-    application_import_request = ApplicationImportRequestBody.parse_obj(body)
-
     claim = get_claim_from_db(application_import_request.absence_case_id)
 
     application_rules.validate_application_import_request_for_claim(
@@ -166,66 +174,20 @@ def application_imports():
     assert application_import_request.absence_case_id is not None
 
     with app.db_session() as db_session:
-        error = applications_service.claim_is_valid_for_application_import(db_session, user, claim)
-        if error is not None:
-            return error.to_api_response()
+        applications_service.claim_is_valid_for_application_import(db_session, user, claim)
 
         db_session.add(application)
         fineos = massgov.pfml.fineos.create_client()
+
         # we have already check that the claim is not None in
         # claim_is_valid_for_application_import
-        applications_service.set_application_fields_from_db_claim(
-            fineos, application, claim, db_session  # type: ignore
-        )
         fineos_web_id = register_employee(
-            fineos, claim.employee_tax_identifier, application.employer_fein, db_session  # type: ignore
+            fineos, claim.employee_tax_identifier, claim.employer_fein, db_session  # type: ignore
         )
-        applications_service.set_application_absence_and_leave_period(
-            fineos, fineos_web_id, application, application_import_request.absence_case_id
-        )
-        applications_service.set_customer_detail_fields(
-            fineos, fineos_web_id, application, db_session
-        )
-        applications_service.set_customer_contact_detail_fields(
-            fineos, fineos_web_id, application, db_session
-        )
-        applications_service.set_employment_status_and_occupations(
-            fineos, fineos_web_id, application
-        )
-        applications_service.set_payment_preference_fields(
-            fineos, fineos_web_id, application, db_session
-        )
-        eform_cache: applications_service.EFORM_CACHE = {}
-        eform_summaries = fineos.customer_get_eform_summary(
-            fineos_web_id, application_import_request.absence_case_id
-        )
-        applications_service.set_other_leaves(
-            fineos,
-            fineos_web_id,
-            application,
-            db_session,
-            application_import_request.absence_case_id,
-            eform_summaries,
-            eform_cache,
-        )
-        applications_service.set_employer_benefits_from_fineos(
-            fineos,
-            fineos_web_id,
-            application,
-            db_session,
-            application_import_request.absence_case_id,
-            eform_summaries,
-            eform_cache,
-        )
-        applications_service.set_other_incomes_from_fineos(
-            fineos,
-            fineos_web_id,
-            application,
-            db_session,
-            application_import_request.absence_case_id,
-            eform_summaries,
-            eform_cache,
-        )
+
+        import_service = ApplicationImportService(fineos, fineos_web_id, application, db_session, claim, application_import_request.absence_case_id)  # type: ignore
+        import_service.import_data()
+
         db_session.refresh(application)
         db_session.commit()
 
@@ -289,11 +251,33 @@ def applications_update(application_id):
             data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
         ).to_api_response()
 
+    if existing_application.nbr_of_retries >= app.get_config().limit_ssn_fein_max_attempts:
+        message = "Application {} could not be updated. Maximum number of attempts reached.".format(
+            existing_application.application_id
+        )
+        return response_util.error_response(
+            status_code=BadRequest,
+            message=message,
+            errors=[
+                ValidationErrorDetail(
+                    type=IssueType.maximum,
+                    rule=IssueRule.max_ssn_fein_update_attempts,
+                    message=message,
+                )
+            ],
+            data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
+        ).to_api_response()
+
     updated_body = applications_service.remove_masked_fields_from_request(
         body, existing_application
     )
 
     application_request = ApplicationRequestBody.parse_obj(updated_body)
+
+    previous_fein = existing_application.employer_fein
+    previous_tax_identifier = None
+    if existing_application.tax_identifier:
+        previous_tax_identifier = existing_application.tax_identifier.tax_identifier
 
     with app.db_session() as db_session:
         applications_service.update_from_request(
@@ -305,13 +289,30 @@ def applications_update(application_id):
         db_session, existing_application.employer_fein, existing_application.tax_identifier
     )
 
-    if employer_issue:
-        issues.append(employer_issue)
-
     # Set log attributes to the updated attributes rather than the previous attributes
     # Also, calling get_application_log_attributes too early causes the application not to update properly for some reason
     # See https://github.com/EOLWD/pfml/pull/2601
     log_attributes = get_application_log_attributes(existing_application)
+
+    if employer_issue:
+        issues.append(employer_issue)
+
+        # If either SSN or FEIN have been recently updated
+        # and an "employer_issue" occurred, it counts as an attempt
+        if (
+            application_request.tax_identifier is not None
+            and previous_tax_identifier != application_request.tax_identifier
+        ) or (
+            application_request.employer_fein is not None
+            and previous_fein != application_request.employer_fein
+        ):
+            existing_application.nbr_of_retries += 1
+            with app.db_session() as db_session:
+                db_session.add(existing_application)
+                db_session.commit()
+                db_session.refresh(existing_application)
+            logger.info("User attempted new combination of SSN/FEIN", extra=log_attributes)
+
     logger.info("applications_update success", extra=log_attributes)
 
     return response_util.success_response(
