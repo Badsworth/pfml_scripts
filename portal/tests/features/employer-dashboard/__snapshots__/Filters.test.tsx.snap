@@ -17,14 +17,14 @@ exports[`Filters renders leave details and is_reviewable filters 1`] = `
     >
       <input
         class="usa-radio__input"
-        id="InputChoice87"
+        id="InputChoice135"
         name="request_decision"
         type="radio"
         value="approved"
       />
       <label
         class="usa-radio__label"
-        for="InputChoice87"
+        for="InputChoice135"
       >
         Approved
       </label>
@@ -34,14 +34,14 @@ exports[`Filters renders leave details and is_reviewable filters 1`] = `
     >
       <input
         class="usa-radio__input"
-        id="InputChoice88"
+        id="InputChoice136"
         name="request_decision"
         type="radio"
         value="cancelled"
       />
       <label
         class="usa-radio__label"
-        for="InputChoice88"
+        for="InputChoice136"
       >
         Cancelled
       </label>
@@ -51,14 +51,14 @@ exports[`Filters renders leave details and is_reviewable filters 1`] = `
     >
       <input
         class="usa-radio__input"
-        id="InputChoice89"
+        id="InputChoice137"
         name="request_decision"
         type="radio"
         value="denied"
       />
       <label
         class="usa-radio__label"
-        for="InputChoice89"
+        for="InputChoice137"
       >
         Denied
       </label>
@@ -68,14 +68,14 @@ exports[`Filters renders leave details and is_reviewable filters 1`] = `
     >
       <input
         class="usa-radio__input"
-        id="InputChoice90"
+        id="InputChoice138"
         name="request_decision"
         type="radio"
         value="pending"
       />
       <label
         class="usa-radio__label"
-        for="InputChoice90"
+        for="InputChoice138"
       >
         Pending
       </label>
@@ -85,14 +85,14 @@ exports[`Filters renders leave details and is_reviewable filters 1`] = `
     >
       <input
         class="usa-radio__input"
-        id="InputChoice91"
+        id="InputChoice139"
         name="request_decision"
         type="radio"
         value="withdrawn"
       />
       <label
         class="usa-radio__label"
-        for="InputChoice91"
+        for="InputChoice139"
       >
         Withdrawn
       </label>
@@ -103,14 +103,14 @@ exports[`Filters renders leave details and is_reviewable filters 1`] = `
       <input
         checked=""
         class="usa-radio__input"
-        id="InputChoice92"
+        id="InputChoice140"
         name="request_decision"
         type="radio"
         value=""
       />
       <label
         class="usa-radio__label"
-        for="InputChoice92"
+        for="InputChoice140"
       >
         Show all
       </label>
@@ -136,14 +136,14 @@ exports[`Filters renders leave details and is_reviewable filters 2`] = `
     >
       <input
         class="usa-radio__input"
-        id="InputChoice84"
+        id="InputChoice132"
         name="is_reviewable"
         type="radio"
         value="yes"
       />
       <label
         class="usa-radio__label"
-        for="InputChoice84"
+        for="InputChoice132"
       >
         Yes, review requested
       </label>
@@ -153,14 +153,14 @@ exports[`Filters renders leave details and is_reviewable filters 2`] = `
     >
       <input
         class="usa-radio__input"
-        id="InputChoice85"
+        id="InputChoice133"
         name="is_reviewable"
         type="radio"
         value="no"
       />
       <label
         class="usa-radio__label"
-        for="InputChoice85"
+        for="InputChoice133"
       >
         No, review not needed
       </label>
@@ -171,14 +171,14 @@ exports[`Filters renders leave details and is_reviewable filters 2`] = `
       <input
         checked=""
         class="usa-radio__input"
-        id="InputChoice86"
+        id="InputChoice134"
         name="is_reviewable"
         type="radio"
         value=""
       />
       <label
         class="usa-radio__label"
-        for="InputChoice86"
+        for="InputChoice134"
       >
         Show all
       </label>

@@ -1,36 +1,41 @@
+from dataclasses import dataclass
+from datetime import date, timedelta
 from decimal import Decimal
 from re import Pattern
-from typing import Any, Dict, List, Literal, Optional, Type, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Type, Union
 from uuid import UUID
 
 import phonenumbers
 from phonenumbers.phonenumberutil import region_code_for_number
 from sqlalchemy.orm.exc import NoResultFound
-from werkzeug.exceptions import BadRequest, Conflict, Forbidden
+from werkzeug.exceptions import BadRequest, Forbidden
 
 import massgov.pfml.api.models.applications.common as apps_common_io
 import massgov.pfml.api.models.common as common_io
-import massgov.pfml.api.util.response as response_util
 import massgov.pfml.db as db
 import massgov.pfml.db.lookups as db_lookups
 import massgov.pfml.util.logging
-import massgov.pfml.util.newrelic.events as newrelic_util
 import massgov.pfml.util.pydantic.mask as mask
 from massgov.pfml.api.models.applications.common import Address as ApiAddress
-from massgov.pfml.api.models.applications.common import LeaveReason, PaymentPreference
+from massgov.pfml.api.models.applications.common import (
+    DocumentResponse,
+    LeaveReason,
+    PaymentPreference,
+)
 from massgov.pfml.api.models.applications.requests import ApplicationRequestBody
-from massgov.pfml.api.models.applications.responses import DocumentResponse
-from massgov.pfml.api.models.common import LookupEnum
-from massgov.pfml.api.services.administrator_fineos_actions import EformTypes
+from massgov.pfml.api.models.common import (
+    LookupEnum,
+    get_earliest_start_date,
+    get_earliest_submission_date,
+    get_latest_end_date,
+)
 from massgov.pfml.api.services.fineos_actions import get_documents
-from massgov.pfml.api.util.response import Response
 from massgov.pfml.api.validation.exceptions import (
     IssueRule,
     IssueType,
     ValidationErrorDetail,
     ValidationException,
 )
-from massgov.pfml.db.models.absences import AbsencePeriodType
 from massgov.pfml.db.models.applications import (
     AmountFrequency,
     Application,
@@ -42,13 +47,8 @@ from massgov.pfml.db.models.applications import (
     Document,
     EmployerBenefit,
     EmployerBenefitType,
-    EmploymentStatus,
     IntermittentLeavePeriod,
-)
-from massgov.pfml.db.models.applications import LeaveReason as DBLeaveReason
-from massgov.pfml.db.models.applications import (
-    LeaveReasonQualifier,
-    LkPhoneType,
+    LkAmountFrequency,
     OtherIncome,
     OtherIncomeType,
     Phone,
@@ -66,37 +66,14 @@ from massgov.pfml.db.models.applications import (
 from massgov.pfml.db.models.employees import (
     Address,
     AddressType,
+    BenefitYear,
     Claim,
-    LeaveRequestDecision,
     LkAddressType,
-    LkGender,
-    MFADeliveryPreference,
-    PaymentMethod,
     User,
 )
 from massgov.pfml.db.models.geo import GeoState
-from massgov.pfml.fineos import AbstractFINEOSClient
-from massgov.pfml.fineos.models.customer_api import AbsencePeriodStatus, PhoneNumber
-from massgov.pfml.fineos.models.customer_api.spec import (
-    AbsenceDetails,
-    AbsencePeriod,
-    EForm,
-    EFormSummary,
-    ReportedReducedScheduleLeavePeriod,
-    ReportedTimeOffLeavePeriod,
-)
-from massgov.pfml.fineos.transforms.from_fineos.eforms import (
-    TransformConcurrentLeaveFromOtherLeaveEform,
-    TransformEmployerBenefitsFromOtherIncomeEform,
-    TransformOtherIncomeEform,
-    TransformOtherIncomeNonEmployerEform,
-    TransformPreviousLeaveFromOtherLeaveEform,
-)
-from massgov.pfml.util.datetime import utcnow
-from massgov.pfml.util.logging.applications import (
-    get_absence_period_log_attributes,
-    get_application_log_attributes,
-)
+from massgov.pfml.fineos.models.customer_api.spec import EForm
+from massgov.pfml.util.logging.applications import get_application_log_attributes
 from massgov.pfml.util.pydantic.types import Regexes
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -423,9 +400,6 @@ def update_from_request(
             )
             continue
 
-        if key == "application_nickname":
-            key = "nickname"
-
         if key == "phone":
             add_or_update_phone(db_session, body.phone, application)
             continue
@@ -606,35 +580,6 @@ def update_leave_schedule(
         return leave_period
 
     return update_leave_period(leave_schedule_item, leave_cls)
-
-
-def add_or_update_payment_preference(
-    db_session: db.Session,
-    payment_preference_json: Optional[PaymentPreference],
-    application: Application,
-) -> None:
-    if payment_preference_json is None:
-        db_session.delete(application.payment_preference)
-        db_session.commit()
-        del application.payment_preference
-        return None
-
-    if application.payment_preference_id is None:
-        payment_preference = ApplicationPaymentPreference()
-    else:
-        payment_preference = application.payment_preference
-
-    for key in payment_preference_json.__fields_set__:
-        value = getattr(payment_preference_json, key)
-
-        if isinstance(value, LookupEnum):
-            lookup_model = db_lookups.by_value(db_session, value.get_lookup_model(), value)
-            value = lookup_model
-
-        setattr(payment_preference, key, value)
-
-    application.payment_preference = payment_preference
-    return None
 
 
 def add_or_update_address(
@@ -978,12 +923,23 @@ def get_document_by_id(
 
 def claim_is_valid_for_application_import(
     db_session: db.Session, user: User, claim: Optional[Claim]
-) -> Optional[Response]:
+) -> None:
     if claim is not None and (claim.employee_tax_identifier is None or claim.employer_fein is None):
-        message = "Claim data incomplete for application import."
-        validation_error = ValidationErrorDetail(message=message, type=IssueType.conflicting)
-        error = response_util.error_response(Conflict, message=message, errors=[validation_error])
-        return error
+        logger.info(
+            "applications_import failure - Claim missing tax id or FEIN",
+            extra={
+                "absence_case_id": claim.fineos_absence_id,
+            },
+        )
+        raise ValidationException(
+            errors=[
+                ValidationErrorDetail(
+                    message="Claim data incomplete for application import.",
+                    type=IssueType.conflicting,
+                )
+            ]
+        )
+
     if claim:
         existing_application = (
             db_session.query(Application)
@@ -991,667 +947,439 @@ def claim_is_valid_for_application_import(
             .one_or_none()
         )
         if existing_application and existing_application.user_id != user.user_id:
-            message = "An application linked to a different account already exists for this claim."
             validation_error = ValidationErrorDetail(
-                message=message, type=IssueType.exists, field="absence_case_id"
+                message="An application linked to a different account already exists for this claim.",
+                type=IssueType.exists,
+                field="absence_case_id",
             )
             logger.info(
                 "applications_import failure - exists_different_account",
                 extra=get_application_log_attributes(existing_application),
             )
-            return response_util.error_response(
-                Forbidden, message=message, errors=[validation_error]
-            )
+            raise ValidationException(errors=[validation_error])
 
         if existing_application:
-            message = "An application already exists for this claim."
             validation_error = ValidationErrorDetail(
-                message=message, type=IssueType.duplicate, field="absence_case_id"
+                message="An application already exists for this claim.",
+                type=IssueType.duplicate,
+                field="absence_case_id",
             )
             logger.info(
                 "applications_import failure - exists_same_account",
                 extra=get_application_log_attributes(existing_application),
             )
-            return response_util.error_response(
-                Forbidden, message=message, errors=[validation_error]
-            )
+            raise ValidationException(errors=[validation_error])
     return None
 
 
-def set_application_fields_from_db_claim(
-    fineos: AbstractFINEOSClient, application: Application, claim: Claim, db_session: db.Session
-) -> None:
-    """
-    Set Application core fields using Claim
-    """
-    application.claim_id = claim.claim_id
-    application.tax_identifier_id = claim.employee.tax_identifier_id
-    application.tax_identifier = claim.employee.tax_identifier  # type: ignore
-    application.employer_fein = claim.employer_fein
-    application.imported_from_fineos_at = utcnow()
+LeavePeriod = Union[
+    ContinuousLeavePeriod, IntermittentLeavePeriod, ReducedScheduleLeavePeriod, ConcurrentLeave
+]
 
 
-def set_customer_detail_fields(
-    fineos: AbstractFINEOSClient,
-    fineos_web_id: str,
-    application: Application,
-    db_session: db.Session,
-) -> None:
-    """
-    Retrieve customer details from FINEOS and set for application fields
-    """
-    details = fineos.read_customer_details(fineos_web_id)
+def _split_leave_period(
+    leave_period: LeavePeriod, split_date: date, new_application: Application
+) -> Tuple[Optional[LeavePeriod], Optional[LeavePeriod]]:
+    start_date: Optional[date]
+    end_date: Optional[date]
 
-    application.first_name = details.firstName
-    application.middle_name = details.secondName
-    application.last_name = details.lastName
-    application.date_of_birth = details.dateOfBirth
-
-    if details.gender is not None:
-        db_gender = (
-            db_session.query(LkGender)
-            .filter(LkGender.fineos_gender_description == details.gender)
-            .one_or_none()
-        )
-        if db_gender is not None:
-            application.gender_id = db_gender.gender_id
-
-    has_state_id = False
-    if details.classExtensionInformation is not None:
-        mass_id = next(
-            (info for info in details.classExtensionInformation if info.name == "MassachusettsID"),
-            None,
-        )
-        if mass_id is not None and mass_id.stringValue != "":
-            application.mass_id = str(mass_id.stringValue).upper()
-            has_state_id = True
-    application.has_state_id = has_state_id
-
-    if isinstance(details.customerAddress, massgov.pfml.fineos.models.customer_api.CustomerAddress):
-        # Convert CustomerAddress to ApiAddress, in order to use add_or_update_address
-        address_to_create = ApiAddress(
-            line_1=details.customerAddress.address.addressLine1,
-            line_2=details.customerAddress.address.addressLine2,
-            city=details.customerAddress.address.addressLine4,
-            state=details.customerAddress.address.addressLine6,
-            zip=details.customerAddress.address.postCode,
-        )
-        add_or_update_address(db_session, address_to_create, AddressType.RESIDENTIAL, application)
-
-
-def _parse_continuous_leave_period(
-    application_id: UUID, time_off: ReportedTimeOffLeavePeriod
-) -> ContinuousLeavePeriod:
-    return ContinuousLeavePeriod(
-        application_id=application_id,
-        start_date=time_off.startDate,
-        end_date=time_off.endDate,
-        start_date_full_day=time_off.startDateFullDay,
-        start_date_off_hours=time_off.startDateOffHours,
-        start_date_off_minutes=time_off.startDateOffMinutes,
-        end_date_full_day=time_off.endDateFullDay,
-        end_date_off_hours=time_off.endDateOffHours,
-        end_date_off_minutes=time_off.endDateOffMinutes,
-    )
-
-
-def _parse_intermittent_leave_period(
-    application_id: UUID, absence_period: AbsencePeriod
-) -> IntermittentLeavePeriod:
-    leave_period = IntermittentLeavePeriod()
-    if absence_period.episodicLeavePeriodDetail is None:
-        error = ValueError("Episodic absence period is missing episodicLeavePeriodDetail")
-        raise error
-    leave_period.application_id = application_id
-    leave_period.start_date = absence_period.startDate
-    leave_period.end_date = absence_period.endDate
-
-    episodic_detail = absence_period.episodicLeavePeriodDetail
-    leave_period.frequency = episodic_detail.frequency
-    leave_period.frequency_interval = episodic_detail.frequencyInterval
-    leave_period.frequency_interval_basis = episodic_detail.frequencyIntervalBasis
-    leave_period.duration = episodic_detail.duration
-    leave_period.duration_basis = episodic_detail.durationBasis
-
-    return leave_period
-
-
-def _parse_reduced_leave_period(
-    application_id: UUID, reduced_period: ReportedReducedScheduleLeavePeriod
-) -> ReducedScheduleLeavePeriod:
-    return ReducedScheduleLeavePeriod(
-        application_id=application_id,
-        start_date=reduced_period.startDate,
-        end_date=reduced_period.endDate,
-        sunday_off_minutes=reduced_period.sundayOffMinutes,
-        monday_off_minutes=reduced_period.mondayOffMinutes,
-        tuesday_off_minutes=reduced_period.tuesdayOffMinutes,
-        wednesday_off_minutes=reduced_period.wednesdayOffMinutes,
-        thursday_off_minutes=reduced_period.thursdayOffMinutes,
-        friday_off_minutes=reduced_period.fridayOffMinutes,
-        saturday_off_minutes=reduced_period.saturdayOffMinutes,
-    )
-
-
-def _set_continuous_leave_periods(
-    application: Application, absence_details: AbsenceDetails
-) -> None:
-
-    continuous_leave_periods: List[ContinuousLeavePeriod] = []
-    if absence_details.reportedTimeOff:
-        for time_off in absence_details.reportedTimeOff:
-            time_off_leave = _parse_continuous_leave_period(application.application_id, time_off)
-            continuous_leave_periods.append(time_off_leave)
-
-    application.continuous_leave_periods = continuous_leave_periods
-    application.has_continuous_leave_periods = len(continuous_leave_periods) > 0
-
-
-def _set_intermittent_leave_periods(
-    application: Application, absence_details: AbsenceDetails
-) -> None:
-    intermittent_leave_periods: List[IntermittentLeavePeriod] = []
-
-    if absence_details.absencePeriods:
-        for absence_period in absence_details.absencePeriods:
-            if (
-                absence_period.absenceType
-                == AbsencePeriodType.EPISODIC.absence_period_type_description
-            ):
-
-                intermittent_leave = _parse_intermittent_leave_period(
-                    application.application_id, absence_period
-                )
-                intermittent_leave_periods.append(intermittent_leave)
-
-    application.intermittent_leave_periods = intermittent_leave_periods
-    application.has_intermittent_leave_periods = len(intermittent_leave_periods) > 0
-
-
-def _set_reduced_leave_periods(application: Application, absence_details: AbsenceDetails) -> None:
-    reduced_schedule_leave_periods: List[ReducedScheduleLeavePeriod] = []
-
-    if absence_details.reportedReducedSchedule:
-        for reduced_period in absence_details.reportedReducedSchedule:
-            reduced_leave = _parse_reduced_leave_period(application.application_id, reduced_period)
-            reduced_schedule_leave_periods.append(reduced_leave)
-
-    application.has_reduced_schedule_leave_periods = len(reduced_schedule_leave_periods) > 0
-    application.reduced_schedule_leave_periods = reduced_schedule_leave_periods
-
-
-def _set_has_future_child_date(
-    application: Application, imported_absence_period: AbsencePeriod
-) -> None:
-    if (
-        application.leave_reason_id == DBLeaveReason.CHILD_BONDING.leave_reason_id
-        and imported_absence_period.status == AbsencePeriodStatus.ESTIMATED.value
-    ):
-        application.has_future_child_date = True
+    if isinstance(leave_period, ConcurrentLeave):
+        start_date = leave_period.leave_start_date
+        end_date = leave_period.leave_end_date
     else:
-        application.has_future_child_date = False
+        start_date = leave_period.start_date
+        end_date = leave_period.end_date
 
+    if not start_date or not end_date:
+        # This case should not be encountered in reality, but columns are technically nullable
+        # If any values are missing, the leave period cannot be split
+        raise Exception("Leave period cannot be split as it does not have start and end dates")
 
-def _get_open_absence_period(absence_details: AbsenceDetails) -> Optional[AbsencePeriod]:
-    if absence_details.absencePeriods:
-        for absence_period in absence_details.absencePeriods:
-            if (
-                absence_period.requestStatus
-                == LeaveRequestDecision.PENDING.leave_request_decision_description
-            ):
-                return absence_period
-    return None
-
-
-def _get_latest_absence_period(absence_details: AbsenceDetails) -> Optional[AbsencePeriod]:
-    if absence_details.absencePeriods is None:
-        return None
-    absence_periods = sorted(absence_details.absencePeriods, key=lambda x: x.startDate)  # type: ignore
-    if len(absence_periods) > 0:
-        return absence_periods[-1]
-    return None
-
-
-def _get_absence_period_from_absence_details(
-    absence_details: AbsenceDetails, application: Application
-) -> Optional[AbsencePeriod]:
-    """
-    return Open Absence Period if there is one
-    if there isn't an open absence period the application is considered
-    completed and the function returns the latest closed absence period
-    if there is one
-    """
-    if absence_details.absencePeriods is None:
-        return None
-    absence_period = _get_open_absence_period(absence_details)
-    if absence_period is None:
-        application.completed_time = utcnow()
-        absence_period = _get_latest_absence_period(absence_details)
-
-    if len(absence_details.absencePeriods) > 1:
-        logger.info(
-            "multiple absence periods found during application import",
-            extra={
-                "application_id": application.application_id,
-                "absence_case_id": (
-                    application.claim.fineos_absence_id if application.claim else None
-                ),
-                "absence_period_attributes": get_absence_period_log_attributes(
-                    absence_details.absencePeriods, absence_period
-                ),
-            },
-        )
-
-    return absence_period
-
-
-def set_application_absence_and_leave_period(
-    fineos: AbstractFINEOSClient, fineos_web_id: str, application: Application, absence_id: str
-) -> None:
-    absence_details = fineos.get_absence(fineos_web_id, absence_id)
-
-    _set_continuous_leave_periods(application, absence_details)
-    _set_intermittent_leave_periods(application, absence_details)
-    _set_reduced_leave_periods(application, absence_details)
-    absence_period = _get_absence_period_from_absence_details(absence_details, application)
-    if absence_period is not None:
-        if absence_period.reason is not None:
-            try:
-                leave_reason_id = DBLeaveReason.get_id(absence_period.reason)
-            except KeyError:
-                logger.warning(
-                    "Unsupported leave reason on absence period from FINEOS",
-                    extra={
-                        "fineos_web_id": fineos_web_id,
-                        "reason": absence_period.reason,
-                        "absence_case_id": (
-                            application.claim.fineos_absence_id if application.claim else None
-                        ),
-                    },
-                    exc_info=True,
-                )
-                raise ValidationException(
-                    errors=[
-                        ValidationErrorDetail(
-                            type=IssueType.invalid,
-                            message="Absence period reason is not supported.",
-                            field="leave_details.reason",
-                        )
-                    ]
-                )
-            application.leave_reason_id = leave_reason_id
-        if absence_period.reasonQualifier1 is not None:
-            application.leave_reason_qualifier_id = LeaveReasonQualifier.get_id(
-                absence_period.reasonQualifier1
-            )
-        application.pregnant_or_recent_birth = (
-            application.leave_reason_id == DBLeaveReason.PREGNANCY_MATERNITY.leave_reason_id
-        )
-        _set_has_future_child_date(application, absence_period)
-    application.submitted_time = absence_details.creationDate
-    application.employer_notification_date = absence_details.notificationDate
-    application.employer_notified = application.employer_notification_date is not None
-
-    return
-
-
-def minutes_from_hours_minutes(hours: int, minutes: int) -> int:
-    return hours * 60 + minutes
-
-
-def set_employment_status_and_occupations(
-    fineos_client: AbstractFINEOSClient, fineos_web_id: str, application: Application
-) -> None:
-    occupations = fineos_client.get_customer_occupations_customer_api(
-        fineos_web_id, application.tax_identifier.tax_identifier
+    (start_end_dates_before_split, start_end_dates_after_split) = split_start_end_dates(
+        start_date, end_date, split_date
     )
-    if len(occupations) == 0:
-        return
-    occupation = occupations[0]
-    if occupation.employmentStatus is not None:
-        if occupation.employmentStatus != EmploymentStatus.EMPLOYED.fineos_label:
-            logger.info(
-                "Did not import unsupported employment status from FINEOS",
-                extra={
-                    "fineos_web_id": fineos_web_id,
-                    "status": occupation.employmentStatus,
-                    "absence_case_id": (
-                        application.claim.fineos_absence_id if application.claim else None
-                    ),
-                },
+
+    if not start_end_dates_after_split:
+        return (leave_period, None)
+
+    new_leave_period: LeavePeriod
+    if isinstance(leave_period, ConcurrentLeave):
+        new_leave_period = leave_period.copy(
+            leave_start_date=start_end_dates_after_split.start_date,
+            leave_end_date=start_end_dates_after_split.end_date,
+            application_id=new_application.application_id,
+        )
+    else:
+        new_leave_period = leave_period.copy(
+            start_date=start_end_dates_after_split.start_date,
+            end_date=start_end_dates_after_split.end_date,
+            application_id=new_application.application_id,
+        )
+
+    if not start_end_dates_before_split:
+        return (None, new_leave_period)
+
+    if isinstance(leave_period, ConcurrentLeave):
+        leave_period.leave_start_date = start_end_dates_before_split.start_date
+        leave_period.leave_end_date = start_end_dates_before_split.end_date
+    else:
+        leave_period.start_date = start_end_dates_before_split.start_date
+        leave_period.end_date = start_end_dates_before_split.end_date
+    return (leave_period, new_leave_period)
+
+
+def _split_benefit(
+    benefit: Union[EmployerBenefit, OtherIncome], split_date: date, new_application: Application
+) -> Tuple[
+    Optional[Union[EmployerBenefit, OtherIncome]], Optional[Union[EmployerBenefit, OtherIncome]]
+]:
+    start_date: Optional[date]
+    end_date: Optional[date]
+    amount: Optional[Decimal]
+    frequency: LkAmountFrequency
+    if isinstance(benefit, EmployerBenefit):
+        start_date = benefit.benefit_start_date
+        end_date = benefit.benefit_end_date
+        amount = benefit.benefit_amount_dollars
+        frequency = benefit.benefit_amount_frequency
+    else:
+        start_date = benefit.income_start_date
+        end_date = benefit.income_end_date
+        amount = benefit.income_amount_dollars
+        frequency = benefit.income_amount_frequency
+
+    if not start_date or not end_date or not amount or not frequency:
+        # This case should not be encountered in reality, but columns are technically nullable
+        # If any values are missing, the benefit cannot be split
+        raise Exception("Unable to split benefit or income as it was missing the required fields")
+
+    (start_end_dates_before_split, start_end_dates_after_split) = split_start_end_dates(
+        start_date, end_date, split_date
+    )
+
+    if not start_end_dates_after_split:
+        return (benefit, None)
+
+    new_benefit: Union[EmployerBenefit, OtherIncome]
+    if isinstance(benefit, EmployerBenefit):
+        new_benefit = benefit.copy(
+            benefit_start_date=start_end_dates_after_split.start_date,
+            benefit_end_date=start_end_dates_after_split.end_date,
+            application_id=new_application.application_id,
+        )
+    else:
+        new_benefit = benefit.copy(
+            income_start_date=start_end_dates_after_split.start_date,
+            income_end_date=start_end_dates_after_split.end_date,
+            application_id=new_application.application_id,
+        )
+
+    if not start_end_dates_before_split:
+        return (None, new_benefit)
+
+    before_split_amount: Optional[Decimal] = None
+    after_split_amount: Optional[Decimal] = None
+    if frequency.amount_frequency_id == AmountFrequency.ALL_AT_ONCE.amount_frequency_id:
+        totals_days_in_benefit = (end_date - start_date).days + 1
+        days_before_split = (
+            start_end_dates_before_split.end_date - start_end_dates_before_split.start_date
+        ).days + 1
+        days_after_split = days_after_split = (
+            start_end_dates_after_split.end_date - start_end_dates_after_split.start_date
+        ).days + 1
+        before_split_amount = round(amount * Decimal(days_before_split / totals_days_in_benefit), 2)
+        after_split_amount = round(amount * Decimal(days_after_split / totals_days_in_benefit), 2)
+
+    if isinstance(benefit, EmployerBenefit) and isinstance(new_benefit, EmployerBenefit):
+        benefit.benefit_start_date = start_end_dates_before_split.start_date
+        benefit.benefit_end_date = start_end_dates_before_split.end_date
+        if before_split_amount and after_split_amount:
+            benefit.benefit_amount_dollars = before_split_amount
+            new_benefit.benefit_amount_dollars = after_split_amount
+    elif isinstance(benefit, OtherIncome) and isinstance(new_benefit, OtherIncome):
+        benefit.income_start_date = start_end_dates_before_split.start_date
+        benefit.income_end_date = start_end_dates_before_split.end_date
+        if before_split_amount and after_split_amount:
+            benefit.income_amount_dollars = before_split_amount
+            new_benefit.income_amount_dollars = after_split_amount
+
+    return (benefit, new_benefit)
+
+
+def split_application_by_date(
+    db_session: db.Session, application: Application, date_to_split_on: date
+) -> Tuple[Application, Application]:
+    application_after_split_date = application.copy()
+    db_session.add(application_after_split_date)
+    # Flush the new application to the database so it has an id
+    db_session.flush()
+    application_before_split_date = application
+
+    # Set the split by
+    application_after_split_date.split_from_application_id = (
+        application_before_split_date.application_id
+    )
+
+    continuous_leave_periods_after_split_date = []
+    intermittent_leave_periods_after_split_date = []
+    reduced_schedule_leave_periods_after_split_date = []
+    for leave_period in application_before_split_date.all_leave_periods:
+        try:
+            (leave_period_before_split_date, leave_period_after_split_date) = _split_leave_period(
+                leave_period, date_to_split_on, application_after_split_date
             )
-            raise ValidationException(
-                errors=[
-                    ValidationErrorDetail(
-                        type=IssueType.invalid,
-                        message="Employment Status must be Active",
-                        field="employment_status",
-                    )
-                ]
+        except Exception:
+            logger.exception("Unable to split leave period")
+            continue
+        if isinstance(leave_period, ContinuousLeavePeriod):
+            if leave_period_after_split_date:
+                continuous_leave_periods_after_split_date.append(leave_period_after_split_date)
+            if not leave_period_before_split_date:
+                db_session.delete(leave_period)
+                application_before_split_date.continuous_leave_periods.remove(leave_period)
+        elif isinstance(leave_period, IntermittentLeavePeriod):
+            if leave_period_after_split_date:
+                intermittent_leave_periods_after_split_date.append(leave_period_after_split_date)
+            if not leave_period_before_split_date:
+                db_session.delete(leave_period)
+                application_before_split_date.intermittent_leave_periods.remove(leave_period)
+        elif isinstance(leave_period, ReducedScheduleLeavePeriod):
+            if leave_period_after_split_date:
+                reduced_schedule_leave_periods_after_split_date.append(
+                    leave_period_after_split_date
+                )
+            if not leave_period_before_split_date:
+                db_session.delete(leave_period)
+                application_before_split_date.reduced_schedule_leave_periods.remove(leave_period)
+    application_after_split_date.continuous_leave_periods = (
+        continuous_leave_periods_after_split_date
+    )
+    application_after_split_date.intermittent_leave_periods = (
+        intermittent_leave_periods_after_split_date
+    )
+    application_after_split_date.reduced_schedule_leave_periods = (
+        reduced_schedule_leave_periods_after_split_date
+    )
+
+    # Re-calcuate the boolean values after splitting the leave periods
+    application_after_split_date.has_continuous_leave_periods = (
+        len(application_after_split_date.continuous_leave_periods) != 0
+    )
+    application_after_split_date.has_intermittent_leave_periods = (
+        len(application_after_split_date.intermittent_leave_periods) != 0
+    )
+    application_after_split_date.has_reduced_schedule_leave_periods = (
+        len(application_after_split_date.reduced_schedule_leave_periods) != 0
+    )
+
+    application_before_split_date.has_continuous_leave_periods = (
+        len(application_before_split_date.continuous_leave_periods) != 0
+    )
+    application_before_split_date.has_intermittent_leave_periods = (
+        len(application_before_split_date.intermittent_leave_periods) != 0
+    )
+    application_before_split_date.has_reduced_schedule_leave_periods = (
+        len(application_before_split_date.reduced_schedule_leave_periods) != 0
+    )
+
+    # an application can only have a single concurrent leave
+    # and is not returned by Application.all_leave_periods
+    if application_before_split_date.has_concurrent_leave:
+        try:
+            (leave_period_before_split_date, leave_period_after_split_date) = _split_leave_period(
+                application_before_split_date.concurrent_leave,
+                date_to_split_on,
+                application_after_split_date,
             )
+        except Exception:
+            logger.exception("Unable to split concurrent leave")
+        if leave_period_after_split_date:
+            application_after_split_date.concurrent_leave = leave_period_after_split_date
+            application_after_split_date.has_concurrent_leave = True
         else:
-            application.employment_status_id = EmploymentStatus.EMPLOYED.employment_status_id
-    if occupation.hoursWorkedPerWeek is not None:
-        application.hours_worked_per_week = Decimal(occupation.hoursWorkedPerWeek)
-    if occupation.occupationId is None:
-        return
+            application_after_split_date.has_concurrent_leave = False
 
-    fineos_work_patterns = fineos_client.get_week_based_work_pattern(
-        fineos_web_id, occupation.occupationId
-    )
-    if fineos_work_patterns.workPatternType != WorkPatternType.FIXED.work_pattern_type_description:
-        newrelic_util.log_and_capture_exception(
-            f"Application work pattern type is not {WorkPatternType.FIXED.work_pattern_type_description}",
-            extra={"fineos_work_pattern_type": fineos_work_patterns.workPatternType},
-        )
-        return
-    db_work_pattern_days = []
-    work_pattern = WorkPattern(work_pattern_type_id=WorkPatternType.FIXED.work_pattern_type_id)
-    for pattern in fineos_work_patterns.workPatternDays:
-        db_work_pattern_days.append(
-            WorkPatternDay(
-                day_of_week_id=DayOfWeek.get_id(pattern.dayOfWeek),
-                minutes=minutes_from_hours_minutes(pattern.hours, pattern.minutes),
+        if not leave_period_before_split_date:
+            db_session.delete(application_before_split_date.concurrent_leave)
+            application_before_split_date.concurrent_leave = None  # type: ignore
+            application_before_split_date.has_concurrent_leave = False
+
+    for benefit in application_before_split_date.employer_benefits:
+        try:
+            (benefit_before_split_date, benefit_after_split_date) = _split_benefit(
+                benefit, date_to_split_on, application_after_split_date
             )
+        except Exception:
+            logger.exception("Unable to split employer benefit")
+            continue
+        if benefit_after_split_date and isinstance(benefit_after_split_date, EmployerBenefit):
+            application_after_split_date.employer_benefits.append(benefit_after_split_date)
+        if not benefit_before_split_date:
+            db_session.delete(benefit)
+            application_before_split_date.employer_benefits.remove(benefit)
+
+    # Re-calculate the has_employer benefits boolean
+    application_after_split_date.has_employer_benefits = (
+        len(application_after_split_date.employer_benefits) != 0
+    )
+    application_before_split_date.has_employer_benefits = (
+        len(application_before_split_date.employer_benefits) != 0
+    )
+
+    for income in application_before_split_date.other_incomes:
+        try:
+            (income_before_split_date, income_after_split_date) = _split_benefit(
+                income, date_to_split_on, application_after_split_date
+            )
+        except Exception:
+            logger.exception("Unable to split other income")
+            continue
+        if income_after_split_date and isinstance(income_after_split_date, OtherIncome):
+            application_after_split_date.other_incomes.append(income_after_split_date)
+        if not income_before_split_date:
+            db_session.delete(income)
+            application_before_split_date.other_incomes.remove(income)
+
+    application_after_split_date.has_other_incomes = (
+        len(application_after_split_date.other_incomes) != 0
+    )
+    application_before_split_date.has_other_incomes = (
+        len(application_before_split_date.other_incomes) != 0
+    )
+
+    return (application_before_split_date, application_after_split_date)
+
+
+@dataclass
+class StartEndDates:
+    start_date: date
+    end_date: date
+
+
+SplitLeaveResults = Tuple[Optional[StartEndDates], Optional[StartEndDates]]
+
+
+def split_start_end_dates(start_date: date, end_date: date, split_date: date) -> SplitLeaveResults:
+    """
+    Splits a start and end date into two separate date ranges around the past in split_date.
+    If the start date comes after the end date the dates cannot be split.
+    """
+    if start_date > end_date:
+        return (None, None)
+
+    if start_date > split_date and end_date > split_date:
+        return (None, StartEndDates(start_date, end_date))
+    elif start_date <= split_date and end_date <= split_date:
+        return (StartEndDates(start_date, end_date), None)
+    elif start_date == split_date:
+        return (
+            StartEndDates(start_date, start_date),
+            StartEndDates(start_date + timedelta(days=1), end_date),
         )
-    work_pattern.work_pattern_days = db_work_pattern_days
-    application.work_pattern = work_pattern
+    else:
+        return (
+            StartEndDates(start_date, split_date),
+            StartEndDates(split_date + timedelta(days=1), end_date),
+        )
 
 
-def set_payment_preference_fields(
-    fineos: massgov.pfml.fineos.AbstractFINEOSClient,
-    fineos_web_id: str,
+@dataclass
+class ApplicationSplit:
+    crossed_benefit_year: BenefitYear
+    application_dates_in_benefit_year: StartEndDates
+    application_dates_outside_benefit_year: StartEndDates
+    application_outside_benefit_year_submittable_on: date
+
+
+def get_application_split(
     application: Application,
     db_session: db.Session,
-) -> None:
+) -> Optional[ApplicationSplit]:
     """
-    Retrieve payment preferences from FINEOS and set for imported application fields
+    If a leave period spans a benefit year, the application needs to be broken up into
+    separate ones that will each get submitted.
     """
-    preferences = fineos.get_payment_preferences(fineos_web_id)
+    if (
+        application.split_from_application_id is not None
+        or application.split_into_application_id is not None
+    ):
+        return None
 
-    if not preferences:
-        application.has_submitted_payment_preference = False
-        return
+    latest_end_date = get_latest_end_date(application)
+    earliest_start_date = get_earliest_start_date(application)
+    if earliest_start_date is None or latest_end_date is None:
+        return None
 
-    # Take the one with isDefault=True, otherwise take first one
-    preference = next(
-        (pref for pref in preferences if pref.isDefault and pref.paymentMethod != ""),
-        preferences[0],
+    if not application.employee:
+        return None
+
+    crossed_benefit_year = get_crossed_benefit_year(
+        application.employee.employee_id, earliest_start_date, latest_end_date, db_session
     )
 
-    payment_preference = None
-    has_submitted_payment_preference = False
-    if preference.accountDetails is not None:
-        payment_preference = PaymentPreference(
-            account_number=preference.accountDetails.accountNo,
-            routing_number=preference.accountDetails.routingNumber,
-            bank_account_type=preference.accountDetails.accountType,
-            payment_method=preference.paymentMethod,
-        )
-    elif preference.paymentMethod == PaymentMethod.CHECK.payment_method_description:
-        payment_preference = PaymentPreference(
-            payment_method=preference.paymentMethod,
-        )
-    if payment_preference is not None:
-        add_or_update_payment_preference(db_session, payment_preference, application)
-        has_submitted_payment_preference = True
-    application.has_submitted_payment_preference = has_submitted_payment_preference
+    if crossed_benefit_year is None:
+        return None
 
-    has_mailing_address = False
-    if isinstance(
-        preference.customerAddress, massgov.pfml.fineos.models.customer_api.CustomerAddress
-    ):
-        # Convert CustomerAddress to ApiAddress, in order to use add_or_update_address
-        address_to_create = ApiAddress(
-            line_1=preference.customerAddress.address.addressLine1,
-            line_2=preference.customerAddress.address.addressLine2,
-            city=preference.customerAddress.address.addressLine4,
-            state=preference.customerAddress.address.addressLine6,
-            zip=preference.customerAddress.address.postCode,
-        )
-        add_or_update_address(db_session, address_to_create, AddressType.MAILING, application)
-        has_mailing_address = True
-    application.has_mailing_address = has_mailing_address
+    [dates_in_benefit_year, dates_outside_benefit_year] = split_start_end_dates(
+        earliest_start_date, latest_end_date, crossed_benefit_year.end_date
+    )
+    if dates_in_benefit_year is None or dates_outside_benefit_year is None:
+        return None
+
+    return ApplicationSplit(
+        crossed_benefit_year=crossed_benefit_year,
+        application_dates_in_benefit_year=dates_in_benefit_year,
+        application_dates_outside_benefit_year=dates_outside_benefit_year,
+        application_outside_benefit_year_submittable_on=get_earliest_submission_date(
+            dates_outside_benefit_year.start_date
+        ),
+    )
 
 
-def create_common_io_phone_from_fineos(
-    phone: PhoneNumber, db_session: db.Session
-) -> Optional[common_io.Phone]:
-    """
-    Creates common.io Phone object from FINEOS PhoneNumber object
-    """
-    db_phone = (
-        db_session.query(LkPhoneType)
-        .filter(LkPhoneType.phone_type_description == phone.phoneNumberType)
+def get_crossed_benefit_year(
+    employee_id: UUID, start_date: date, end_date: date, db_session: db.Session
+) -> Optional[BenefitYear]:
+
+    # Find any benefit year for the employee where the end_date falls between
+    # the leave start and end dates, excluding a benefit year end_date equals
+    # the leave end_date since benefit years are inclusive
+    by = (
+        db_session.query(BenefitYear)
+        .filter(
+            BenefitYear.employee_id == employee_id,
+            BenefitYear.end_date.between(start_date, end_date),
+            BenefitYear.end_date != end_date,
+        )
         .one_or_none()
     )
 
-    if not db_phone:
-        newrelic_util.log_and_capture_exception(
-            f"Unable to find phone_type: {phone.phoneNumberType}",
-            extra={"phone_type": phone.phoneNumberType},
-        )
+    return by
+
+
+def add_or_update_payment_preference(
+    db_session: db.Session,
+    payment_preference_json: Optional[PaymentPreference],
+    application: Application,
+) -> None:
+    if payment_preference_json is None:
+        db_session.delete(application.payment_preference)
+        db_session.commit()
+        del application.payment_preference
         return None
 
-    phone_to_create = common_io.Phone(
-        int_code=phone.intCode,
-        phone_number=f"{phone.areaCode}{phone.telephoneNo}",
-        phone_type=db_phone.phone_type_description,
-        fineos_phone_id=phone.id,
-    )
-    return phone_to_create
+    if application.payment_preference_id is None:
+        payment_preference = ApplicationPaymentPreference()
+    else:
+        payment_preference = application.payment_preference
 
+    for key in payment_preference_json.__fields_set__:
+        value = getattr(payment_preference_json, key)
 
-def set_customer_contact_detail_fields(
-    fineos: massgov.pfml.fineos.AbstractFINEOSClient,
-    fineos_web_id: str,
-    application: Application,
-    db_session: db.Session,
-) -> None:
-    """
-    Retrieves customer contact details from FINEOS, creates a new phone record,
-    and associates the phone record with the application being imported
-    """
-    contact_details = fineos.read_customer_contact_details(fineos_web_id)
+        if isinstance(value, LookupEnum):
+            lookup_model = db_lookups.by_value(db_session, value.get_lookup_model(), value)
+            value = lookup_model
 
-    if not contact_details or not contact_details.phoneNumbers:
-        logger.info("No contact details returned from FINEOS")
-        return
+        setattr(payment_preference, key, value)
 
-    mfa_phone_number = None
-    for phone_num in contact_details.phoneNumbers:
-        country_code = phone_num.intCode if phone_num.intCode else "1"
-        fineos_phone = f"+{country_code}{phone_num.areaCode}{phone_num.telephoneNo}"
-        if application.user.mfa_phone_number == fineos_phone:
-            mfa_phone_number = fineos_phone
-
-    preferred_phone_number = next(
-        (phone_num for phone_num in contact_details.phoneNumbers if phone_num.preferred),
-        contact_details.phoneNumbers[0],
-    )
-
-    if (
-        mfa_phone_number is None
-        or application.user.mfa_delivery_preference_id
-        != MFADeliveryPreference.SMS.mfa_delivery_preference_id
-    ):
-        logger.info(
-            "application import failure - phone number mismatch / no SMS phone available ",
-            extra={
-                "absence_case_id": application.claim.fineos_absence_id
-                if application.claim
-                else None,
-                "mfa_delivery_preference_id": application.user.mfa_delivery_preference_id,
-            },
-        )
-        raise ValidationException(
-            errors=[
-                ValidationErrorDetail(
-                    type=IssueType.incorrect,
-                    message="Code 3: An issue occurred while trying to import the application.",
-                )
-            ]
-        )
-
-    # Handles the potential case of a phone number list existing, but phone fields are null
-    if not (
-        preferred_phone_number.intCode
-        or preferred_phone_number.areaCode
-        or preferred_phone_number.telephoneNo
-    ):
-        logger.info(
-            "Field missing from FINEOS phoneNumber list",
-            extra={"phoneNumbers": str(preferred_phone_number)},
-        )
-        return
-
-    phone_to_create = create_common_io_phone_from_fineos(preferred_phone_number, db_session)
-    add_or_update_phone(db_session, phone_to_create, application)
-
-
-def customer_get_eform(
-    fineos: AbstractFINEOSClient,
-    fineos_web_id: str,
-    absence_id: str,
-    eform_id: int,
-    eform_cache: EFORM_CACHE,
-) -> EForm:
-    if eform_id in eform_cache:
-        return eform_cache[eform_id]
-    eform = fineos.customer_get_eform(fineos_web_id, absence_id, eform_id)
-    eform_cache[eform_id] = eform
-    return eform
-
-
-def set_other_leaves(
-    fineos: AbstractFINEOSClient,
-    fineos_web_id: str,
-    application: Application,
-    db_session: db.Session,
-    absence_id: str,
-    eform_summaries: Optional[List[EFormSummary]] = None,
-    eform_cache: Optional[EFORM_CACHE] = None,
-) -> None:
-    """
-    Retrieve other leaves from FINEOS and set for imported application fields
-    """
-    if eform_summaries is None:
-        eform_summaries = fineos.customer_get_eform_summary(fineos_web_id, absence_id)
-
-    if eform_cache is None:
-        eform_cache = {}
-
-    for summary in eform_summaries:
-        if summary.eformType != EformTypes.OTHER_LEAVES:
-            continue
-
-        previous_leaves: List[common_io.PreviousLeave] = []
-        concurrent_leave: Optional[common_io.ConcurrentLeave] = None
-
-        eform = customer_get_eform(fineos, fineos_web_id, absence_id, summary.eformId, eform_cache)
-
-        concurrent_leave = TransformConcurrentLeaveFromOtherLeaveEform.from_fineos(eform)
-        application.has_concurrent_leave = concurrent_leave is not None
-        set_concurrent_leave(db_session, concurrent_leave, application)
-
-        previous_leaves = TransformPreviousLeaveFromOtherLeaveEform.from_fineos(eform)
-        # Separate previous leaves according to type
-        other_leaves: List[common_io.PreviousLeave] = []
-        same_leaves: List[common_io.PreviousLeave] = []
-        for previous_leave in previous_leaves:
-            if previous_leave.type == "other_reason":
-                other_leaves.append(previous_leave)
-            elif previous_leave.type == "same_reason":
-                same_leaves.append(previous_leave)
-
-        application.has_previous_leaves_other_reason = len(other_leaves) > 0
-        application.has_previous_leaves_same_reason = len(same_leaves) > 0
-        set_previous_leaves(
-            db_session,
-            other_leaves,
-            application,
-            "other_reason",
-        )
-        set_previous_leaves(
-            db_session,
-            same_leaves,
-            application,
-            "same_reason",
-        )
-
-
-BENEFITS_EFORM_TYPES = [EformTypes.OTHER_INCOME, EformTypes.OTHER_INCOME_V2]
-
-
-def set_employer_benefits_from_fineos(
-    fineos: AbstractFINEOSClient,
-    fineos_web_id: str,
-    application: Application,
-    db_session: db.Session,
-    absence_id: str,
-    eform_summaries: Optional[List[EFormSummary]] = None,
-    eform_cache: Optional[EFORM_CACHE] = None,
-) -> None:
-    employer_benefits: List[common_io.EmployerBenefit] = []
-    if eform_summaries is None:
-        eform_summaries = fineos.customer_get_eform_summary(fineos_web_id, absence_id)
-
-    if eform_cache is None:
-        eform_cache = {}
-
-    for eform_summary in eform_summaries:
-        if eform_summary.eformType not in BENEFITS_EFORM_TYPES:
-            continue
-
-        eform = customer_get_eform(
-            fineos, fineos_web_id, absence_id, eform_summary.eformId, eform_cache
-        )
-
-        if eform_summary.eformType == EformTypes.OTHER_INCOME:
-            employer_benefits.extend(
-                other_income
-                for other_income in TransformOtherIncomeEform.from_fineos(eform)
-                if other_income.program_type == "Employer"
-            )
-
-        elif eform_summary.eformType == EformTypes.OTHER_INCOME_V2:
-            employer_benefits.extend(
-                TransformEmployerBenefitsFromOtherIncomeEform.from_fineos(eform)
-            )
-    application.has_employer_benefits = len(employer_benefits) > 0
-    set_employer_benefits(db_session, employer_benefits, application)
-
-
-def set_other_incomes_from_fineos(
-    fineos: AbstractFINEOSClient,
-    fineos_web_id: str,
-    application: Application,
-    db_session: db.Session,
-    absence_id: str,
-    eform_summaries: Optional[List[EFormSummary]] = None,
-    eform_cache: Optional[EFORM_CACHE] = None,
-) -> None:
-    other_incomes: List[apps_common_io.OtherIncome] = []
-    if eform_summaries is None:
-        eform_summaries = fineos.customer_get_eform_summary(fineos_web_id, absence_id)
-
-    if eform_cache is None:
-        eform_cache = {}
-
-    for eform_summary in eform_summaries:
-        if eform_summary.eformType != EformTypes.OTHER_INCOME_V2:
-            continue
-
-        eform = customer_get_eform(
-            fineos, fineos_web_id, absence_id, eform_summary.eformId, eform_cache
-        )
-        other_incomes.extend(
-            [
-                income
-                for income in TransformOtherIncomeNonEmployerEform.from_fineos(eform)
-                if income.income_type == apps_common_io.OtherIncomeType.other_employer
-            ]
-        )
-
-    application.has_other_incomes = len(other_incomes) > 0
-    set_other_incomes(db_session, other_incomes, application)
+    application.payment_preference = payment_preference
+    return None

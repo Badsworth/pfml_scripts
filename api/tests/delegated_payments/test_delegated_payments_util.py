@@ -1,5 +1,6 @@
 import logging  # noqa: B1
 import os
+import uuid
 from datetime import date, datetime
 
 import boto3
@@ -18,6 +19,7 @@ from massgov.pfml.db.models.employees import (
     PaymentCheck,
     PrenoteState,
     PubEft,
+    ReferenceFile,
     ReferenceFileType,
 )
 from massgov.pfml.db.models.factories import (
@@ -33,7 +35,11 @@ from massgov.pfml.db.models.factories import (
     ReferenceFileFactory,
 )
 from massgov.pfml.db.models.geo import Country, GeoState
-from massgov.pfml.db.models.payments import FineosExtractVpei, PaymentLog
+from massgov.pfml.db.models.payments import (
+    FineosExtractVbiTaskReportSom,
+    FineosExtractVpei,
+    PaymentLog,
+)
 from massgov.pfml.delegated_payments.delegated_payments_util import (
     find_existing_address_pair,
     find_existing_eft,
@@ -799,30 +805,30 @@ def test_find_existing_address_pair(test_db_session, initialize_factories_sessio
     assert not find_existing_address_pair(employee2, experian_lookup_address, test_db_session)
 
 
-def test_find_existing_eft():
-    eft1 = PubEftFactory.build(prenote_state_id=PrenoteState.PENDING_PRE_PUB.prenote_state_id)
+def test_find_existing_eft(initialize_factories_session):
+    eft1 = PubEftFactory.create(prenote_state_id=PrenoteState.PENDING_PRE_PUB.prenote_state_id)
 
-    employee = EmployeeFactory.build()
+    employee = EmployeeFactory.create()
 
     # Employee has no EFT info
     assert len(employee.pub_efts.all()) == 0
     assert not find_existing_eft(employee, eft1)
 
     # Add a few associated EFT objects
-    EmployeePubEftPairFactory.build(employee=employee)
-    EmployeePubEftPairFactory.build(employee=employee)
+    EmployeePubEftPairFactory.create(employee=employee)
+    EmployeePubEftPairFactory.create(employee=employee)
     assert len(employee.pub_efts.all()) == 2
     assert not find_existing_eft(employee, eft1)
 
     # Add another EFT info with the same account info
     # but currently in a different state
-    EmployeePubEftPairFactory.build(
+    EmployeePubEftPairFactory.create(
         employee=employee,
-        pub_eft=PubEftFactory.build(
+        pub_eft=PubEftFactory.create(
             routing_nbr=eft1.routing_nbr,
             account_nbr=eft1.account_nbr,
             bank_account_type_id=eft1.bank_account_type_id,
-            prenote_state_id=PrenoteState.REJECTED,
+            prenote_state_id=PrenoteState.REJECTED.prenote_state_id,
         ),
     )
     assert len(employee.pub_efts.all()) == 3
@@ -1445,3 +1451,73 @@ def test_get_unconfigured_fineos_columns():
     )
 
     assert unconfigured_columns == ["addressline8", "addressline9"]
+
+
+def test_get_open_tasks(test_db_session):
+    reference_file_id = uuid.uuid4()
+    reference_file = ReferenceFile(
+        file_location="fake_file_location",
+        reference_file_type_id=ReferenceFileType.FINEOS_VBI_TASKREPORT_SOM_EXTRACT.reference_file_type_id,
+        reference_file_id=reference_file_id,
+    )
+    test_db_session.add(reference_file)
+
+    mock_task_1 = FineosExtractVbiTaskReportSom(
+        status="928000",
+        casenumber="mock_casenum_1",
+        tasktypename="Employee Reported Other Income",
+        reference_file_id=reference_file_id,
+    )
+    mock_task_2 = FineosExtractVbiTaskReportSom(
+        status="928001",
+        casenumber="mock_casenum_1",
+        tasktypename="Employee Reported Other Income",
+        reference_file_id=reference_file_id,
+    )
+    mock_task_3 = FineosExtractVbiTaskReportSom(
+        status="928000",
+        casenumber="mock_casenum_1",
+        tasktypename="Adjudicate Absence",
+        reference_file_id=reference_file_id,
+    )
+    mock_task_4 = FineosExtractVbiTaskReportSom(
+        status="928000",
+        casenumber="mock_casenum_2",
+        tasktypename="Employee Reported Other Income",
+        reference_file_id=reference_file_id,
+    )
+    mock_task_5 = FineosExtractVbiTaskReportSom(
+        status="928001",
+        casenumber="mock_casenum_3",
+        tasktypename="Employee Reported Other Income",
+        reference_file_id=reference_file_id,
+    )
+    test_db_session.add(mock_task_1)
+    test_db_session.add(mock_task_2)
+    test_db_session.add(mock_task_3)
+    test_db_session.add(mock_task_4)
+    test_db_session.add(mock_task_5)
+
+    # Check that we only return open tasks from the correct absence case
+    tasks = payments_util.get_open_tasks(
+        test_db_session, "mock_casenum_1", ["Employee Reported Other Income"]
+    )
+    assert len(tasks) == 1
+    assert tasks[0].casenumber == "mock_casenum_1"
+    assert tasks[0].tasktypename == "Employee Reported Other Income"
+
+    # Check that we return all open tasks with matching task names
+    tasks = payments_util.get_open_tasks(
+        test_db_session, "mock_casenum_1", ["Employee Reported Other Income", "Adjudicate Absence"]
+    )
+    assert len(tasks) == 2
+    assert tasks[0].casenumber == "mock_casenum_1"
+    assert tasks[0].tasktypename in ("Employee Reported Other Income", "Adjudicate Absence")
+    assert tasks[1].casenumber == "mock_casenum_1"
+    assert tasks[1].tasktypename in ("Employee Reported Other Income", "Adjudicate Absence")
+
+    # Check that if there are no open tasks, we return an empty list
+    tasks = payments_util.get_open_tasks(
+        test_db_session, "mock_casenum_3", ["Employee Reported Other Income"]
+    )
+    assert len(tasks) == 0

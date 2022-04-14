@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+  <!-- Email sent for MFA-required sign-ins (risk detected and MFA required) -->
+  <!-- This template must be copy/pasted into the Cognito console when it's updated. It doesn't get updated as part of our normal deployment process -->
+  <head>
+    <title>HTML email context</title>
+    <meta charset="utf-8" />
+  </head>
+  <body>
+    <table
+      width="100%"
+      style="
+        font-family: Open Sans, Helvetica Neue, Helvetica, Arial, sans-serif;
+        font-size: 16px;
+        text-align: left;
+      "
+      cellpadding="0"
+      cellspacing="0"
+    >
+      <tbody>
+        <tr>
+          <td style="background: #14558f; height: 24px"></td>
+        </tr>
+        <tr>
+          <td style="background: #be5817; padding: 16px 32px">
+            <table
+              align="center"
+              cellspacing="0"
+              style="max-width: 600px"
+              width="100%"
+            >
+              <tbody>
+                <tr>
+                  <td>
+                    <img
+                      alt="Massachusetts Paid Family and Medical Leave"
+                      src="https://mcusercontent.com/0757f7959581770082e8f2fd9/images/4665cf36-af48-4bce-9032-33a7786052de.png"
+                      width="264"
+                      style="
+                        padding-bottom: 0;
+                        max-width: 100%;
+                        vertical-align: bottom;
+                      "
+                    />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <table
+              align="center"
+              style="
+                line-height: 150%;
+                text-align: left;
+                max-width: 600px;
+                color: #535353;
+                padding-bottom: 32px;
+              "
+              width="100%"
+            >
+              <tbody>
+                <tr>
+                  <td style="padding: 18px">
+                    <p>
+                      We observed an unrecognized sign-in to your account with
+                      this&nbsp;information:
+                    </p>
+                    <ul>
+                      <li>Time: {login-time}</li>
+                      <li>Device: {device-name}</li>
+                      <li>Location: {city}, {country}</li>
+                    </ul>
+                    <p>
+                      If this sign-in was not by you, you should
+                      <a href="https://paidleave.mass.gov/forgot-password"
+                        >change your password</a
+                      >.
+                    </p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="background: #fafafa; border-top: 3px solid #eaeaea">
+            <table align="center" style="max-width: 600px" width="100%">
+              <tbody>
+                <tr>
+                  <td style="padding: 0 18px">
+                    <img
+                      align="center"
+                      alt="Department of Family and Medical Leave"
+                      src="https://mcusercontent.com/0757f7959581770082e8f2fd9/images/a163a15d-9150-4959-9b02-998caa00bca4.png"
+                      width="564"
+                      style="
+                        max-width: 100%;
+                        display: inline;
+                        vertical-align: bottom;
+                      "
+                    />
+                  </td>
+                </tr>
+
+                <tr>
+                  <td
+                    style="
+                      padding: 0px 18px 9px;
+                      text-align: left;
+                      color: #656565;
+                      font-size: 12px;
+                    "
+                  >
+                    <div>
+                      <a
+                        href="https://www.mass.gov/orgs/department-of-family-and-medical-leave"
+                        rel="noopener"
+                        target="_blank"
+                        data-saferedirecturl="https://www.google.com/url?hl=en&amp;q=https://www.mass.gov/orgs/department-of-family-and-medical-leave&amp;source=gmail&amp;ust=1607720450081000&amp;usg=AFQjCNF21ULm-5y7N8G5cZXEVu-uHldNPg"
+                      >
+                        Department of Family &amp; Medical Leave
+                      </a>
+                    </div>
+                    <div>P.O. Box 838, Lawrence, MA 01842</div>
+                    <div>(833) 344-7365 from 8am–5pm ET</div>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td
+                    style="font-size: 12px; font-style: italic; padding: 18px"
+                  >
+                    This e-mail message is for the sole use of the intended
+                    recipient and may contain confidential and privileged
+                    information. Any unauthorized review, use, disclosure, or
+                    distribution is strictly prohibited. If you are not the
+                    intended recipient, please contact us at (833) 344-7365 from
+                    8am–5pm ET and then destroy all copies of the original
+                    message.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>

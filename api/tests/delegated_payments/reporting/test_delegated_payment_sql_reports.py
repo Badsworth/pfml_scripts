@@ -10,8 +10,14 @@ from freezegun import freeze_time
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.util.files as file_util
-from massgov.pfml.db.models.employees import ImportLog, ReferenceFile, ReferenceFileType, State
-from massgov.pfml.db.models.factories import EmployeeFactory
+from massgov.pfml.db.models.employees import (
+    ImportLog,
+    ImportLogReportQueue,
+    ReferenceFile,
+    ReferenceFileType,
+    State,
+)
+from massgov.pfml.db.models.factories import EmployeeFactory, ImportLogFactory
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_report_step import ReportStep
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports import (
     REPORTS,
@@ -43,7 +49,6 @@ def init_step(db_session, db_other_session, report_names):
 @freeze_time("2021-01-15 12:00:00", tz_offset=5)  # payments_util.get_now returns EST time
 def test_report_generation(
     test_db_session,
-    test_db_other_session,
     initialize_factories_session,
     outbound_report_path,
     report_archive_path,
@@ -51,9 +56,14 @@ def test_report_generation(
     def create_employee_with_pre_note_state(first_name, last_name, pre_note_state):
         employee = EmployeeFactory.create(first_name=first_name, last_name=last_name)
 
-        state_log_util.create_finished_state_log(
-            employee, pre_note_state, state_log_util.build_outcome("test"), test_db_session
+        state_log = state_log_util.create_finished_state_log(
+            employee,
+            pre_note_state,
+            state_log_util.build_outcome("test"),
+            test_db_session,
+            import_log_id=ImportLogFactory.create().import_log_id,
         )
+        test_db_session.add(ImportLogReportQueue(import_log_id=state_log.import_log_id))
 
         return employee
 
@@ -68,7 +78,7 @@ def test_report_generation(
 
     test_db_session.commit()
 
-    step = ReportStep(test_db_session, test_db_other_session, [])
+    step = ReportStep(test_db_session, test_db_session, [])
     step.generate_report(
         outbound_report_path,
         report_archive_path,
@@ -106,12 +116,11 @@ def test_report_generation(
 
 def test_report_generation_query_exception(
     test_db_session,
-    test_db_other_session,
     initialize_factories_session,
     outbound_report_path,
     report_archive_path,
 ):
-    step = ReportStep(test_db_session, test_db_other_session, [])
+    step = ReportStep(test_db_session, test_db_session, [])
     with pytest.raises(sqlalchemy.exc.ProgrammingError):
         step.generate_report(
             outbound_report_path,
@@ -124,7 +133,6 @@ def test_report_generation_query_exception(
 @freeze_time("2021-01-15 12:00:00", tz_offset=5)  # payments_util.get_now returns EST time
 def test_all_reports(
     test_db_session,
-    test_db_other_session,
     initialize_factories_session,
     outbound_report_path,
     report_archive_path,
@@ -135,7 +143,7 @@ def test_all_reports(
     for report_name in report_names:
         assert REPORTS_BY_NAME.get(report_name) is not None
 
-    step = init_step(test_db_session, test_db_other_session, report_names)
+    step = init_step(test_db_session, test_db_session, report_names)
     step.run()
 
     # validate expected report counts
@@ -164,7 +172,6 @@ def test_all_reports(
 @freeze_time("2021-01-15 12:00:00", tz_offset=5)  # payments_util.get_now returns EST time
 def test_invalid_and_missing_report_in_step_execution(
     test_db_session,
-    test_db_other_session,
     initialize_factories_session,
     outbound_report_path,
     report_archive_path,

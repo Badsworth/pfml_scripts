@@ -2,6 +2,7 @@ import {
   ApplicationLeaveDetails,
   ApplicationRequestBody,
   AbsencePeriodResponse,
+  ApplicationResponse,
 } from "../_api";
 import {
   ApplicationSubmissionResponse,
@@ -12,7 +13,7 @@ import { isNotNull } from "./typeUtils";
 import { parseISO, format, min } from "date-fns";
 
 export function extractLeavePeriod(
-  { leave_details }: ApplicationRequestBody,
+  { leave_details }: ApplicationRequestBody | NonNullable<ApplicationResponse>,
   leaveType: keyof LeavePeriods = "continuous_leave_periods"
 ): [Date, Date] {
   if (isNotNull(leave_details)) {
@@ -137,8 +138,9 @@ export function extractLatestLeaveDate(
 }
 
 export function extractLeavePeriodType(
-  leaveDetails: ApplicationLeaveDetails
+  leaveDetails: ApplicationLeaveDetails | ApplicationResponse["leave_details"]
 ): NonNullable<AbsencePeriodResponse["period_type"]> {
+  if (!leaveDetails) throw Error("Generated claim missing leave details");
   const leavePeriodTypes = {
     intermittent_leave_periods: "Intermittent",
     continuous_leave_periods: "Continuous",

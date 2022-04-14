@@ -86,7 +86,7 @@ services:
       # Disable this variable and set the following three variables to use a real Service Now API instead of a mock:
       - ENABLE_MOCK_SERVICE_NOW_CLIENT=1
       - ENABLE_RESPONSE_VALIDATION=1
-      - ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS=0
+      - ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS=1
       # - SERVICE_NOW_BASE_URL=...
       # - SERVICE_NOW_USERNAME=...
       # - SERVICE_NOW_PASSWORD=...
@@ -121,7 +121,6 @@ services:
       - GENERATE_1099_MAX_FILES=1000
       - ENABLE_MERGE_1099_PDF=1
       - ENABLE_UPLOAD_1099_PDF=1
-      - ENABLE_APPLICATION_IMPORT=1
       - UPLOAD_MAX_FILES_TO_FINEOS=10
       - TEST_FILE_GENERATION_1099=0
       - IRS_1099_CORRECTION_IND=0

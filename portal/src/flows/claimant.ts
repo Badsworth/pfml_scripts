@@ -35,6 +35,8 @@ import { fields as familyMemberRelationshipFields } from "../pages/applications/
 import { fields as genderFields } from "../pages/applications/gender";
 import { get } from "lodash";
 import { fields as intermittentFrequencyFields } from "../pages/applications/intermittent-frequency";
+import isBlank from "src/utils/isBlank";
+import { isFeatureEnabled } from "../services/featureFlags";
 import { fields as leavePeriodContinuousFields } from "../pages/applications/leave-period-continuous";
 import { fields as leavePeriodIntermittentFields } from "../pages/applications/leave-period-intermittent";
 import { fields as leavePeriodReducedScheduleFields } from "../pages/applications/leave-period-reduced-schedule";
@@ -103,6 +105,12 @@ export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.fixed,
   isVariableWorkPattern: ({ claim }) =>
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.variable,
+  doLeaveDatesCrossBenefitYears: ({ claim }) =>
+    isFeatureEnabled("splitClaimsAcrossBY") &&
+    claim !== undefined &&
+    claim.computed_application_split !== null,
+  isSubmittedApplicationSplit: ({ claim }) =>
+    !isBlank(claim?.split_into_application_id),
 };
 
 /**
@@ -339,7 +347,15 @@ const claimantFlow: {
         fields: reducedLeaveScheduleFields,
       },
       on: {
-        CONTINUE: routes.applications.leavePeriodIntermittent,
+        CONTINUE: [
+          {
+            target: routes.applications.leaveSpansBenefitYearsReduced,
+            cond: "doLeaveDatesCrossBenefitYears",
+          },
+          {
+            target: routes.applications.leavePeriodIntermittent,
+          },
+        ],
       },
     },
     [routes.applications.reasonPregnancy]: {
@@ -424,7 +440,15 @@ const claimantFlow: {
         fields: leavePeriodContinuousFields,
       },
       on: {
-        CONTINUE: routes.applications.leavePeriodReducedSchedule,
+        CONTINUE: [
+          {
+            target: routes.applications.leaveSpansBenefitYearsContinuous,
+            cond: "doLeaveDatesCrossBenefitYears",
+          },
+          {
+            target: routes.applications.leavePeriodReducedSchedule,
+          },
+        ],
       },
     },
     [routes.applications.leavePeriodReducedSchedule]: {
@@ -480,7 +504,39 @@ const claimantFlow: {
         fields: intermittentFrequencyFields,
       },
       on: {
+        CONTINUE: [
+          {
+            target: routes.applications.leaveSpansBenefitYearsIntermittent,
+            cond: "doLeaveDatesCrossBenefitYears",
+          },
+          {
+            target: routes.applications.checklist,
+          },
+        ],
+      },
+    },
+    [routes.applications.leaveSpansBenefitYearsContinuous]: {
+      meta: {
+        step: ClaimSteps.leaveDetails,
+      },
+      on: {
+        CONTINUE: routes.applications.leavePeriodReducedSchedule,
+      },
+    },
+    [routes.applications.leaveSpansBenefitYearsIntermittent]: {
+      meta: {
+        step: ClaimSteps.leaveDetails,
+      },
+      on: {
         CONTINUE: routes.applications.checklist,
+      },
+    },
+    [routes.applications.leaveSpansBenefitYearsReduced]: {
+      meta: {
+        step: ClaimSteps.leaveDetails,
+      },
+      on: {
+        CONTINUE: routes.applications.leavePeriodIntermittent,
       },
     },
     [routes.applications.previousLeavesIntro]: {
@@ -721,6 +777,10 @@ const claimantFlow: {
           {
             target: routes.applications.success,
             cond: "isCompleted",
+          },
+          {
+            target: routes.applications.index,
+            cond: "isSubmittedApplicationSplit",
           },
           {
             target: routes.applications.checklist,

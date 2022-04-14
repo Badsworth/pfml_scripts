@@ -27,13 +27,18 @@ describe("Report of intermittent leave hours notification", () => {
   const approval =
     it("Given a fully approved claim and leave hours correctly recorded by CSR rep", () => {
       cy.dependsOnPreviousPass([submit]);
+      fineos.before();
       cy.unstash<DehydratedClaim>("claim").then((claim) => {
         cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
-          fineos.before();
-          const claimPage = fineosPages.ClaimPage.visit(fineos_absence_id);
-          // This check safeguards us against failure cases where we try to approve an already approved claim.
-          fineos.getClaimStatus().then((status) => {
-            if (status === "Approved") return;
+          cy.tryCount().then((tryCount) => {
+            const claimPage = fineosPages.ClaimPage.visit(fineos_absence_id);
+            // This check safeguards us against failure cases where we try to approve an already approved claim.
+            if (tryCount > 0) {
+              fineos.assertClaimStatus("Approved");
+              claimPage.triggerNotice("Designation Notice");
+              waitForAjaxComplete();
+              return;
+            }
             claimPage.shouldHaveStatus("Eligibility", "Met");
             claimPage.adjudicate((adjudication) => {
               adjudication
@@ -45,11 +50,10 @@ describe("Report of intermittent leave hours notification", () => {
                 .certificationPeriods((certPeriods) => certPeriods.prefill())
                 .acceptLeavePlan();
             });
-            if (config("HAS_APRIL_UPGRADE") === "true") {
-              claimPage.approve("Completed", true);
-            } else {
-              claimPage.approve("Completed", false);
-            }
+            claimPage.approve(
+              "Completed",
+              config("HAS_APRIL_UPGRADE") === "true"
+            );
             claimPage.triggerNotice("Designation Notice");
             waitForAjaxComplete();
           });
@@ -87,6 +91,8 @@ describe("Report of intermittent leave hours notification", () => {
                   // Just casting to string instead of asserting here.
                   timeSpanHoursStart: claim.metadata.spanHoursStart + "",
                   timeSpanHoursEnd: claim.metadata.spanHoursEnd + "",
+                  upgrade:
+                    config("HAS_APRIL_UPGRADE") === "true" ? true : false,
                 });
               return recordActualTime.nextStep((additionalReporting) => {
                 additionalReporting
@@ -94,6 +100,8 @@ describe("Report of intermittent leave hours notification", () => {
                     reported_by: "Employee",
                     received_via: "Phone",
                     accepted: "Yes",
+                    upgrade:
+                      config("HAS_APRIL_UPGRADE") === "true" ? true : false,
                   })
                   .finishRecordingActualLeave();
               });

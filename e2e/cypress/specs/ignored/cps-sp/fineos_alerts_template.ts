@@ -1,4 +1,11 @@
-import { extractLeavePeriodType } from "../../../../src/util/claims";
+// Disable linting of unused vars & imports in this file due to the way this template is expected to be used.
+/* eslint-disable unused-imports/no-unused-vars */
+/* eslint-disable unused-imports/no-unused-imports */
+
+import {
+  extractLeavePeriodType,
+  getLeavePeriod,
+} from "../../../../src/util/claims";
 import { fineos } from "../../../actions";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import {
@@ -10,9 +17,6 @@ import {
 import { addDays, formatISO, startOfWeek, subWeeks } from "date-fns";
 import { config } from "../../../actions/common";
 import { DehydratedClaim } from "generation/Claim";
-
-// Disable linting of unused vars in this file due to the way this template is expected to be used.
-/* eslint-disable unused-imports/no-unused-vars */
 
 /**
  * Because each scenario needs to have a specific amount of days and employment status. These will be separated as blocks so make sure to comment in and out.
@@ -83,7 +87,7 @@ const _relationshipDescription: PrimaryRelationshipDescription = {
 //                     if (claim.claim.has_continuous_leave_periods)
 //                       // @TODO adjust leave period/status as needed
 //                       datesOfAbsence
-//                         .toggleLeaveScheduleSlider("continuos")
+//                         .toggleLeaveScheduleSlider("Continuous")
 //                         .addFixedTimeOffPeriod({
 //                           status: "Known",
 //                           start: startDate,
@@ -94,6 +98,9 @@ const _relationshipDescription: PrimaryRelationshipDescription = {
 //                         .selectWorkPatternType("Fixed")
 //                         .applyStandardWorkWeek()
 //                         .nextStep((wrapUp) => {
+//                           wrapUp.selectWithholdingPreference(
+//                             claim.is_withholding_tax
+//                           );
 //                           wrapUp.clickNext();
 //                           // Bubble up Leave Case id number to outside scope
 //                           return wrapUp.finishNotificationCreation();
@@ -176,18 +183,21 @@ const _relationshipDescription: PrimaryRelationshipDescription = {
 //                     if (claim.claim.has_continuous_leave_periods)
 //                       // @TODO adjust leave period/status as needed
 //                       datesOfAbsence
-//                         .toggleLeaveScheduleSlider("continuos")
+//                         .toggleLeaveScheduleSlider("Continuous")
 //                         .addFixedTimeOffPeriod({
 //                           status: "Known",
 //                           start: startDate,
 //                           end: endDate,
 //                         });
-//                     datesOfAbsence.toggleLeaveScheduleSlider("continuos");
+//                     datesOfAbsence.toggleLeaveScheduleSlider("Continuous");
 //                     return datesOfAbsence.nextStep((workAbsenceDetails) =>
 //                       workAbsenceDetails
 //                         .selectWorkPatternType("Fixed")
 //                         .applyStandardWorkWeek()
 //                         .nextStep((wrapUp) => {
+//                           wrapUp.selectWithholdingPreference(
+//                             claim.is_withholding_tax
+//                           );
 //                           wrapUp.clickNext();
 //                           // Bubble up Leave Case id number to outside scope
 //                           return wrapUp.finishNotificationCreation();

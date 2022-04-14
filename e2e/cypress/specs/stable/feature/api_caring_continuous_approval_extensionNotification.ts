@@ -7,48 +7,48 @@ import { format, addDays, parse } from "date-fns";
 import { config } from "../../../actions/common";
 
 describe("Post-approval (notifications/notices)", () => {
-  const credentials: Credentials = {
-    username: Cypress.env("E2E_PORTAL_USERNAME"),
-    password: Cypress.env("E2E_PORTAL_PASSWORD"),
-  };
-
-  const submit = it("Given a fully approved claim", () => {
-    fineos.before();
-    // Submit a claim via the API, including Employer Response.
+  it("Submits a claim via the API", () => {
     cy.task("generateClaim", "CHAP_ER").then((claim) => {
-      cy.task("submitClaimToAPI", {
-        ...claim,
-        credentials,
-      }).then((response) => {
-        cy.stash("claim", claim);
+      cy.stash("claim", claim);
+      cy.task("submitClaimToAPI", claim).then((res) => {
         cy.stash("submission", {
-          application_id: response.application_id,
-          fineos_absence_id: response.fineos_absence_id,
+          application_id: res.application_id,
+          fineos_absence_id: res.fineos_absence_id,
           timestamp_from: Date.now(),
         });
+      });
+    });
+  });
 
-        const claimPage = fineosPages.ClaimPage.visit(
-          response.fineos_absence_id
-        );
-        claimPage.triggerNotice("Preliminary Designation");
-        fineos.onTab("Absence Hub");
-        claimPage.adjudicate((adjudication) => {
-          adjudication.evidence((evidence) => {
-            // Receive and approve all of the documentation for the claim.
-            claim.documents.forEach((document) => {
-              evidence.receive(document.document_type);
-            });
-          });
-          adjudication.certificationPeriods((certificationPeriods) =>
-            certificationPeriods.prefill()
+  const submit = it("Given a fully approved claim", () => {
+    cy.dependsOnPreviousPass();
+    fineos.before();
+    cy.unstash<DehydratedClaim>("claim").then((claim) => {
+      cy.unstash<Submission>("submission").then((response) => {
+        cy.tryCount().then((tryCount) => {
+          const claimPage = fineosPages.ClaimPage.visit(
+            response.fineos_absence_id
           );
-          adjudication.acceptLeavePlan();
+          if (tryCount > 0) {
+            fineos.assertClaimStatus("Approved");
+            return;
+          }
+          claimPage.triggerNotice("Preliminary Designation");
+          fineos.onTab("Absence Hub");
+          claimPage.adjudicate((adjudication) => {
+            adjudication.evidence((evidence) => {
+              // Receive and approve all of the documentation for the claim.
+              claim.documents.forEach((document) => {
+                evidence.receive(document.document_type);
+              });
+            });
+            adjudication.certificationPeriods((certificationPeriods) =>
+              certificationPeriods.prefill()
+            );
+            adjudication.acceptLeavePlan();
+          });
+          claimPage.approve("Approved", config("HAS_APRIL_UPGRADE") === "true");
         });
-        if (config("HAS_APRIL_UPGRADE") === "true") {
-          claimPage.approve("Approved", true);
-        } else {
-          claimPage.approve("Approved", false);
-        }
       });
     });
   });
@@ -86,31 +86,35 @@ describe("Post-approval (notifications/notices)", () => {
       fineos.before();
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<DehydratedClaim>("claim").then((claim) => {
-          const claimPage = fineosPages.ClaimPage.visit(
-            submission.fineos_absence_id
-          );
-          claimPage.adjudicate((adjudication) => {
-            adjudication.evidence((evidence) => {
-              // Receive all of the claim documentation.
-              claim.documents.forEach((document) => {
-                evidence.receive(document.document_type);
+          cy.tryCount().then((tryCount) => {
+            const claimPage = fineosPages.ClaimPage.visit(
+              submission.fineos_absence_id
+            );
+            if (tryCount > 0) {
+              fineos.assertClaimStatus("Approved");
+            }
+            claimPage.adjudicate((adjudication) => {
+              adjudication.evidence((evidence) => {
+                // Receive all of the claim documentation.
+                claim.documents.forEach((document) => {
+                  evidence.receive(document.document_type);
+                });
               });
+              adjudication.certificationPeriods((cert) => cert.prefill());
+              adjudication.acceptLeavePlan();
             });
-            adjudication.certificationPeriods((cert) => cert.prefill());
-            adjudication.acceptLeavePlan();
-          });
-          claimPage.outstandingRequirements((outstandingRequirements) => {
-            outstandingRequirements.complete(
-              "Received",
-              "Complete Employer Confirmation",
-              true
+            claimPage.outstandingRequirements((outstandingRequirements) => {
+              outstandingRequirements.complete(
+                "Received",
+                "Complete Employer Confirmation",
+                true
+              );
+            });
+            claimPage.approve(
+              "Approved",
+              config("HAS_APRIL_UPGRADE") === "true"
             );
           });
-          if (config("HAS_APRIL_UPGRADE") === "true") {
-            claimPage.approve("Approved", true);
-          } else {
-            claimPage.approve("Approved", false);
-          }
         });
       });
     }
@@ -132,7 +136,7 @@ describe("Post-approval (notifications/notices)", () => {
               parse(endDate, "MM/dd/yyyy", new Date(endDate)),
               "MMMM d, yyyy"
             );
-            portal.login(credentials);
+            portal.loginClaimant();
             portal.claimantGoToClaimStatus(submission.fineos_absence_id);
             portal.claimantAssertClaimStatus([
               {

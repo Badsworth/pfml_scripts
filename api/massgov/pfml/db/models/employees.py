@@ -249,6 +249,10 @@ class LkMFADeliveryPreference(Base):
         self.mfa_delivery_preference_id = mfa_delivery_preference_id
         self.mfa_delivery_preference_description = mfa_delivery_preference_description
 
+    @typed_hybrid_property
+    def description(self) -> str:
+        return self.mfa_delivery_preference_description
+
 
 class LkMFADeliveryPreferenceUpdatedBy(Base):
     __tablename__ = "lk_mfa_delivery_preference_updated_by"
@@ -262,6 +266,10 @@ class LkMFADeliveryPreferenceUpdatedBy(Base):
         self.mfa_delivery_preference_updated_by_description = (
             mfa_delivery_preference_updated_by_description
         )
+
+    @typed_hybrid_property
+    def description(self) -> str:
+        return self.mfa_delivery_preference_updated_by_description
 
 
 class AbsencePeriod(Base, TimestampMixin):
@@ -303,6 +311,26 @@ class AbsencePeriod(Base, TimestampMixin):
     absence_reason_qualifier_one = relationship(LkAbsenceReasonQualifierOne)
     absence_reason_qualifier_two = relationship(LkAbsenceReasonQualifierTwo)
     leave_request_decision = relationship(LkLeaveRequestDecision)
+
+    @typed_hybrid_property
+    def has_final_decision(self):
+        return self.leave_request_decision_id not in [
+            LeaveRequestDecision.PENDING.leave_request_decision_id,
+            LeaveRequestDecision.IN_REVIEW.leave_request_decision_id,
+            LeaveRequestDecision.PROJECTED.leave_request_decision_id,
+            None,
+        ]
+
+    @has_final_decision.expression
+    def has_final_decision(cls):  # noqa: B902
+        return ~cls.leave_request_decision_id.in_(  # type: ignore[union-attr]
+            [
+                LeaveRequestDecision.PENDING.leave_request_decision_id,
+                LeaveRequestDecision.IN_REVIEW.leave_request_decision_id,
+                LeaveRequestDecision.PROJECTED.leave_request_decision_id,
+                None,
+            ]
+        )
 
 
 class AuthorizedRepresentative(Base, TimestampMixin):
@@ -480,9 +508,11 @@ class Employer(Base, TimestampMixin):
 
 class DuaReportingUnit(Base, TimestampMixin):
     __tablename__ = "dua_reporting_unit"
+    __table_args__ = (UniqueConstraint("dua_id", "employer_id"),)
     dua_reporting_unit_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
-    dua_id = Column(Text, unique=True, nullable=False)  # The Reporting Unit Number from DUA
+    dua_id = Column(Text, nullable=False)  # The Reporting Unit Number from DUA
     dba = Column(Text, nullable=True)
+    employer_id = Column(PostgreSQLUUID, ForeignKey("employer.employer_id"), nullable=False)
     organization_unit_id = Column(
         PostgreSQLUUID,
         ForeignKey("organization_unit.organization_unit_id"),
@@ -490,6 +520,7 @@ class DuaReportingUnit(Base, TimestampMixin):
         index=True,
     )
 
+    employer = relationship(Employer)
     organization_unit = relationship("OrganizationUnit", back_populates="dua_reporting_units")
 
 
@@ -636,6 +667,8 @@ class Employee(Base, TimestampMixin):
     ctr_address_pair_id = Column(
         PostgreSQLUUID, ForeignKey("link_ctr_address_pair.fineos_address_id"), index=True
     )
+    mass_id_number = Column(Text)
+    out_of_state_id_number = Column(Text)
 
     fineos_employee_first_name = Column(Text, index=True)
     fineos_employee_middle_name = Column(Text, index=True)
@@ -685,7 +718,7 @@ class Employee(Base, TimestampMixin):
     )
 
     @property
-    def mass_id_number(self) -> Optional[str]:
+    def latest_mass_id_number_from_id_proofed_applications(self) -> Optional[str]:
         # This is imported here to prevent circular import error
         from massgov.pfml.db.models.applications import Application
 
@@ -714,7 +747,11 @@ class Employee(Base, TimestampMixin):
             .join(DuaReportingUnit)
             .join(
                 DuaEmployeeDemographics,
-                DuaReportingUnit.dua_id == DuaEmployeeDemographics.employer_reporting_unit_number,
+                and_(
+                    DuaReportingUnit.dua_id
+                    == DuaEmployeeDemographics.employer_reporting_unit_number,
+                    DuaReportingUnit.employer_id == EmployeeOccupation.employer_id,
+                ),
             )
             .filter(DuaEmployeeDemographics.fineos_customer_number == self.fineos_customer_number)
             .filter(
@@ -781,6 +818,13 @@ class ChangeRequest(Base, TimestampMixin):
     @typed_hybrid_property
     def type(self) -> str:
         return self.change_request_type_instance.description
+
+    @typed_hybrid_property
+    def application(self):
+        if not self.claim:
+            return None
+
+        return self.claim.application  # type: ignore
 
 
 class Claim(Base, TimestampMixin):
@@ -859,7 +903,7 @@ class Claim(Base, TimestampMixin):
         return (
             select([func.min(aliasManagedRequirement.follow_up_date)])
             .where(filters)
-            .label("follow_up_date")
+            .label("soonest_open_requirement_date")
         )
 
     @typed_hybrid_property
@@ -909,7 +953,7 @@ class Claim(Base, TimestampMixin):
         return (
             select([func.max(aliasManagedRequirement.follow_up_date)])
             .where(filters)
-            .label("follow_up_date")
+            .label("latest_follow_up_date")
         )
 
     @typed_hybrid_property
@@ -968,6 +1012,8 @@ class BenefitYear(Base, TimestampMixin):
     base_period_end_date = Column(Date)
 
     total_wages = Column(Numeric(asdecimal=True))
+
+    Index("uix_employee_id_start_date", employee_id, start_date, unique=True)
 
     @typed_hybrid_property
     def current_benefit_year(self) -> bool:
@@ -1072,6 +1118,8 @@ class Payment(Base, TimestampMixin):
     fineos_employee_first_name = Column(Text)
     fineos_employee_middle_name = Column(Text)
     fineos_employee_last_name = Column(Text)
+
+    payee_name = Column(Text)
 
     claim = relationship("Claim", back_populates="payments")
     employee = relationship("Employee")
@@ -1231,6 +1279,10 @@ class User(Base, TimestampMixin):
         Integer,
         ForeignKey("lk_mfa_delivery_preference_updated_by.mfa_delivery_preference_updated_by_id"),
     )
+    first_name = Column(Text)
+    last_name = Column(Text)
+    phone_number = Column(Text)  # Formatted in E.164
+    phone_extension = Column(Text)
 
     roles = relationship("LkRole", secondary="link_user_role", uselist=True)
     user_leave_administrators = relationship(
@@ -1303,7 +1355,7 @@ class User(Base, TimestampMixin):
         if mfa_preference is None:
             return None
 
-        return mfa_preference.mfa_delivery_preference_description
+        return mfa_preference.description
 
     @hybrid_method
     def mfa_phone_number_last_four(self) -> Optional[str]:
@@ -1455,6 +1507,13 @@ class ManagedRequirement(Base, TimestampMixin):
     claim = relationship("Claim", back_populates="managed_requirements")
     respondent_user = relationship(User)
 
+    @property
+    def is_open(self):
+        return (
+            self.managed_requirement_status_id
+            == ManagedRequirementStatus.OPEN.managed_requirement_status_id
+        )
+
 
 class WagesAndContributions(Base, TimestampMixin):
     __tablename__ = "wages_and_contributions"
@@ -1547,6 +1606,25 @@ class ImportLog(Base, TimestampMixin):
     report = Column(Text)
     start = Column(TIMESTAMP(timezone=True), index=True)
     end = Column(TIMESTAMP(timezone=True))
+    report_queue_item = relationship(
+        "ImportLogReportQueue",
+        back_populates="import_log",
+        uselist=False,
+        passive_deletes=True,
+        cascade="all, delete-orphan",
+    )
+
+
+class ImportLogReportQueue(Base, TimestampMixin):
+    __tablename__ = "import_log_report_queue"
+    import_log_report_queue_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    import_log_id = Column(
+        Integer,
+        ForeignKey("import_log.import_log_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    import_log = cast(ImportLog, relationship("ImportLog", back_populates="report_queue_item"))
 
 
 class ReferenceFile(Base, TimestampMixin):
@@ -2068,7 +2146,9 @@ class ReferenceFileType(LookupTable):
     DUA_EMPLOYER_FILE = LkReferenceFileType(39, "DUA employer", 1)
     DUA_EMPLOYER_UNIT_FILE = LkReferenceFileType(40, "DUA employer unit", 1)
 
-    MANUAL_PUB_REJECT_FILE = LkReferenceFileType(41, "Manual PUB Reject File", 1)
+    FINEOS_VBI_TASKREPORT_SOM_EXTRACT = LkReferenceFileType(41, "VBI TaskReport Som extract", 1)
+
+    MANUAL_PUB_REJECT_FILE = LkReferenceFileType(42, "Manual PUB Reject File", 1)
 
 
 class Title(LookupTable):

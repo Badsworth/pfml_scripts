@@ -7,45 +7,52 @@ describe("Appeal Hearing Notification & Notice Confirmation", () => {
   after(() => {
     portal.deleteDownloadsFolder();
   });
-
-  const submit = it("Given a fully approved claim", () => {
-    fineos.before();
-    // Submit a claim via the API, including Employer Response.
+  it("Submits a claim via the API", () => {
     cy.task("generateClaim", "CDENY2ER").then((claim) => {
-      cy.stash("claim", claim.claim);
-      cy.task("submitClaimToAPI", claim).then((response) => {
+      cy.task("submitClaimToAPI", claim).then((res) => {
+        cy.stash("claim", claim);
         cy.stash("submission", {
-          application_id: response.application_id,
-          fineos_absence_id: response.fineos_absence_id,
+          application_id: res.application_id,
+          fineos_absence_id: res.fineos_absence_id,
           timestamp_from: Date.now(),
         });
+      });
+    });
+  });
 
-        const claimPage = fineosPages.ClaimPage.visit(
-          response.fineos_absence_id
-        );
-        claimPage.adjudicate((adjudicate) => {
-          adjudicate.evidence((evidence) => {
-            claim.documents.forEach((document) => {
-              evidence.receive(document.document_type);
+  const submit = it("Given a fully approved claim", () => {
+    cy.dependsOnPreviousPass();
+    fineos.before();
+    cy.unstash<DehydratedClaim>("claim").then((claim) => {
+      cy.unstash<Submission>("submission").then((response) => {
+        cy.tryCount().then((tryCount) => {
+          const claimPage = fineosPages.ClaimPage.visit(
+            response.fineos_absence_id
+          );
+          if (tryCount > 0) {
+            fineos.assertClaimStatus("Approved");
+            return;
+          }
+          claimPage.adjudicate((adjudicate) => {
+            adjudicate.evidence((evidence) => {
+              claim.documents.forEach((document) => {
+                evidence.receive(document.document_type);
+              });
             });
+            adjudicate.certificationPeriods((cert) => cert.prefill());
+            adjudicate.acceptLeavePlan();
           });
-          adjudicate.certificationPeriods((cert) => cert.prefill());
-          adjudicate.acceptLeavePlan();
+          claimPage.approve("Approved", config("HAS_APRIL_UPGRADE") === "true");
         });
-        if (config("HAS_APRIL_UPGRADE") === "true") {
-          claimPage.approve("Approved", true);
-        } else {
-          claimPage.approve("Approved", false);
-        }
       });
     });
   });
 
   const csrAppeal =
     it("CSR will process an appeal and schedule a hearing", () => {
-      cy.dependsOnPreviousPass([submit]);
+      cy.dependsOnPreviousPass();
       fineos.before();
-      cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
+      cy.unstash<DehydratedClaim>("claim").then(({ claim }) => {
         cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
           const claimPage = fineosPages.ClaimPage.visit(fineos_absence_id);
           claimPage.addAppeal(true);
@@ -79,7 +86,7 @@ describe("Appeal Hearing Notification & Notice Confirmation", () => {
       portal.before();
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<string>("appeal_case_id").then((appeal_case_id) => {
-          cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
+          cy.unstash<DehydratedClaim>("claim").then(({ claim }) => {
             if (!claim.employer_fein) {
               throw new Error("Claim must include employer FEIN");
             }

@@ -29,7 +29,10 @@ class ReportName(str, Enum):
     FEDERAL_WITHHOLDING_PROCESSED_REPORT = "federal-withholding-processed-report"
     STATE_WITHHOLDING_PROCESSED_REPORT = "state-withholding-processed-report"
     TAX_WITHHOLDING_CUMULATIVE_REPORT = "tax-withholding-cumulative-report"
+    WEEKLY_PAYMENT_SUMMARY_REPORT = "weekly-payment-summary-report"
 
+
+REPORT_NAMES = [x for x in ReportName]
 
 # Reports grouped by processing tasks
 PROCESS_FINEOS_EXTRACT_REPORTS: List[ReportName] = [
@@ -51,6 +54,7 @@ CREATE_PUB_FILES_REPORTS: List[ReportName] = [
     ReportName.FEDERAL_WITHHOLDING_PROCESSED_REPORT,
     ReportName.STATE_WITHHOLDING_PROCESSED_REPORT,
     ReportName.TAX_WITHHOLDING_CUMULATIVE_REPORT,
+    ReportName.WEEKLY_PAYMENT_SUMMARY_REPORT,
 ]
 PROCESS_PUB_RESPONSES_REPORTS: List[ReportName] = [ReportName.PUB_ERROR_REPORT]
 PROCESS_FINEOS_RECONCILIATION_REPORTS: List[ReportName] = [
@@ -167,6 +171,10 @@ REPORTS: List[Report] = [
     Report(
         sql_command=_get_report_sql_command_from_file(ReportName.TAX_WITHHOLDING_CUMULATIVE_REPORT),
         report_name=ReportName.TAX_WITHHOLDING_CUMULATIVE_REPORT,
+    ),
+    Report(
+        sql_command=_get_report_sql_command_from_file(ReportName.WEEKLY_PAYMENT_SUMMARY_REPORT),
+        report_name=ReportName.WEEKLY_PAYMENT_SUMMARY_REPORT,
     ),
 ]
 

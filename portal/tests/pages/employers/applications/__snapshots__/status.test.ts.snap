@@ -2,6 +2,11 @@
 
 exports[`Status renders the page for a claim without documents or a status 1`] = `
 <div>
+  <span
+    class="display-block font-heading-2xs margin-bottom-2 text-base-dark text-bold"
+  >
+    Application ID: NTN-111-ABS-01
+  </span>
   <h1
     class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
     tabindex="-1"
@@ -11,101 +16,9 @@ exports[`Status renders the page for a claim without documents or a status 1`] =
   <p
     class="usa-intro"
   >
-    No action is required of you.
-    <br />
-    <br />
-    When the application progresses you'll receive an email with a direct link for more details.
-  </p>
-  <h2
-    class="font-heading-md text-bold"
-  >
-    Leave details
-  </h2>
-  <div
-    class="margin-bottom-2 padding-bottom-2"
-  >
-    <h3
-      class="margin-bottom-1 font-heading-xs text-bold"
-    >
-      Application ID
-    </h3>
-    NTN-111-ABS-01
-  </div>
-  <div
-    class="margin-bottom-2 padding-bottom-2"
-  >
-    <h3
-      class="margin-bottom-1 font-heading-xs text-bold"
-    >
-      Status
-    </h3>
-    <div
-      class="margin-0"
-    >
-      <span
-        class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-base-darker bg-base-lightest"
-      >
-        No action required
-      </span>
-    </div>
-  </div>
-  <div
-    class="margin-bottom-2 padding-bottom-2"
-  >
-    <h3
-      class="margin-bottom-1 font-heading-xs text-bold"
-    >
-      Leave type
-    </h3>
-    Medical leave
-  </div>
-  <div
-    class="margin-bottom-2 padding-bottom-2"
-  >
-    <h3
-      class="margin-bottom-1 font-heading-xs text-bold"
-    >
-      Leave duration
-    </h3>
-    1/1/2022 to 7/1/2022
-  </div>
-  <div
-    class="margin-bottom-2 padding-bottom-2"
-  >
-    <h3
-      class="margin-bottom-1 font-heading-xs text-bold"
-    >
-      Continuous leave
-    </h3>
-    1/1/2022 to 6/1/2022
-  </div>
-  <div
-    class="margin-bottom-2 padding-bottom-2"
-  >
-    <h3
-      class="margin-bottom-1 font-heading-xs text-bold"
-    >
-      Reduced leave schedule
-    </h3>
-    2/1/2022 to 7/1/2022
-  </div>
-</div>
-`;
-
-exports[`Status renders the page for a completed claim 1`] = `
-<div>
-  <h1
-    class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
-    tabindex="-1"
-  >
-    Application status for Jane Doe
-  </h1>
-  <p
-    class="usa-intro"
-  >
-    A decision has been made for this application. No action is required of you, but you can download a copy of the decision notice for details. Your employee has the right to appeal this decision under Massachusetts regulations (
+    No action is required of you. You can view this page at any time to download notices, see decisions, or access the leave details for this application. Your employee has the right to appeal decisions under Massachusetts regulations (
     <a
-      href="https://www.mass.gov/regulations/458-CMR-200-family-and-medical-leave"
+      href="https://mass.gov/pfml/regulations"
       rel="noopener"
       target="_blank"
     >
@@ -113,81 +26,465 @@ exports[`Status renders the page for a completed claim 1`] = `
     </a>
     ).
   </p>
-  <h2
-    class="font-heading-md text-bold"
-  >
-    Leave details
-  </h2>
   <div
-    class="margin-bottom-2 padding-bottom-2"
+    class="display-flex flex-align-end margin-top-6 margin-bottom-3"
   >
-    <h3
-      class="margin-bottom-1 font-heading-xs text-bold"
+    <h2
+      class="flex-fill margin-right-1 font-heading-md text-bold"
     >
-      Application ID
-    </h3>
-    NTN-111-ABS-01
+      Employee information
+    </h2>
   </div>
   <div
-    class="margin-bottom-2 padding-bottom-2"
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
   >
-    <h3
-      class="margin-bottom-1 font-heading-xs text-bold"
-    >
-      Status
-    </h3>
     <div
-      class="margin-0"
+      class="margin-right-2"
     >
-      <span
-        class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-success-dark bg-success-lighter"
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
       >
-        Approved
+        Employee name
+      </h3>
+      Jane Doe
+    </div>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Organization
+      </h3>
+      Work Inc.
+    </div>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Employer ID number (EIN)
+      </h3>
+      12-3456789
+    </div>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Mailing address
+      </h3>
+      <span
+        class="residential-address"
+        data-testid="residential-address"
+      >
+        1234 My St.
+        <br />
+        Boston
+        , 
+        MA
+         
+        00000
       </span>
     </div>
   </div>
   <div
-    class="margin-bottom-2 padding-bottom-2"
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
   >
-    <h3
-      class="margin-bottom-1 font-heading-xs text-bold"
+    <div
+      class="margin-right-2"
     >
-      Leave type
-    </h3>
-    Medical leave
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Social Security Number or Individual Taxpayer Identification Number
+      </h3>
+      ***-**-1234
+    </div>
   </div>
   <div
-    class="margin-bottom-2 padding-bottom-2"
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
   >
-    <h3
-      class="margin-bottom-1 font-heading-xs text-bold"
+    <div
+      class="margin-right-2"
     >
-      Leave duration
-    </h3>
-    1/1/2022 to 7/1/2022
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Date of birth
+      </h3>
+      7/17/****
+    </div>
   </div>
   <div
-    class="margin-bottom-2 padding-bottom-2"
+    class="display-flex flex-align-end margin-top-6 margin-bottom-3"
   >
-    <h3
-      class="margin-bottom-1 font-heading-xs text-bold"
+    <h2
+      class="flex-fill margin-right-1 font-heading-md text-bold"
     >
-      Continuous leave
-    </h3>
-    1/1/2022 to 6/1/2022
+      Leave details
+    </h2>
   </div>
   <div
-    class="margin-bottom-2 padding-bottom-2"
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
   >
-    <h3
-      class="margin-bottom-1 font-heading-xs text-bold"
+    <div
+      class="margin-right-2"
     >
-      Reduced leave schedule
-    </h3>
-    2/1/2022 to 7/1/2022
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Leave duration
+      </h3>
+      1/1/2022 to 7/1/2022
+    </div>
   </div>
   <div
-    class="border-top-2px border-base-lighter padding-top-2"
+    class="margin-top-6"
+    data-testid="absence periods"
+  >
+    <h3
+      class="font-heading-sm text-bold"
+    >
+      Medical leave
+    </h3>
+    <table
+      class="usa-table usa-table--borderless width-full usa-table--stacked"
+    >
+      <thead>
+        <tr>
+          <th
+            scope="col"
+          >
+            Date range
+          </th>
+          <th
+            scope="col"
+          >
+            Leave frequency
+          </th>
+          <th
+            scope="col"
+          >
+            Status
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          data-testid="1-0"
+        >
+          <th
+            class="tablet:width-card-lg"
+            data-label="Date range"
+            scope="row"
+          >
+            5/1/2022 to 7/1/2022
+          </th>
+          <td
+            class="tablet:width-card-lg"
+            data-label="Leave frequency"
+          >
+            Reduced leave schedule
+          </td>
+          <td
+            data-label="Status"
+          >
+            <span
+              class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-base-darkest bg-warning-lighter"
+            >
+              Pending
+            </span>
+          </td>
+        </tr>
+        <tr
+          data-testid="1-1"
+        >
+          <th
+            class="tablet:width-card-lg"
+            data-label="Date range"
+            scope="row"
+          >
+            1/1/2022 to 4/1/2022
+          </th>
+          <td
+            class="tablet:width-card-lg"
+            data-label="Leave frequency"
+          >
+            Continuous leave
+          </td>
+          <td
+            data-label="Status"
+          >
+            <span
+              class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-base-darkest bg-warning-lighter"
+            >
+              Pending
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+`;
+
+exports[`Status renders the page for a completed claim 1`] = `
+<div>
+  <span
+    class="display-block font-heading-2xs margin-bottom-2 text-base-dark text-bold"
+  >
+    Application ID: NTN-111-ABS-01
+  </span>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+    tabindex="-1"
+  >
+    Application status for Jane Doe
+  </h1>
+  <p
+    class="usa-intro"
+  >
+    No action is required of you. You can view this page at any time to download notices, see decisions, or access the leave details for this application. Your employee has the right to appeal decisions under Massachusetts regulations (
+    <a
+      href="https://mass.gov/pfml/regulations"
+      rel="noopener"
+      target="_blank"
+    >
+      458 CMR 2.14
+    </a>
+    ).
+  </p>
+  <div
+    class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+  >
+    <h2
+      class="flex-fill margin-right-1 font-heading-md text-bold"
+    >
+      Employee information
+    </h2>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Employee name
+      </h3>
+      Jane Doe
+    </div>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Organization
+      </h3>
+      Work Inc.
+    </div>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Employer ID number (EIN)
+      </h3>
+      12-3456789
+    </div>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Mailing address
+      </h3>
+      <span
+        class="residential-address"
+        data-testid="residential-address"
+      >
+        1234 My St.
+        <br />
+        Boston
+        , 
+        MA
+         
+        00000
+      </span>
+    </div>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Social Security Number or Individual Taxpayer Identification Number
+      </h3>
+      ***-**-1234
+    </div>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Date of birth
+      </h3>
+      7/17/****
+    </div>
+  </div>
+  <div
+    class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+  >
+    <h2
+      class="flex-fill margin-right-1 font-heading-md text-bold"
+    >
+      Leave details
+    </h2>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Leave duration
+      </h3>
+      1/1/2022 to 7/1/2022
+    </div>
+  </div>
+  <div
+    class="margin-top-6"
+    data-testid="absence periods"
+  >
+    <h3
+      class="font-heading-sm text-bold"
+    >
+      Medical leave
+    </h3>
+    <table
+      class="usa-table usa-table--borderless width-full usa-table--stacked"
+    >
+      <thead>
+        <tr>
+          <th
+            scope="col"
+          >
+            Date range
+          </th>
+          <th
+            scope="col"
+          >
+            Leave frequency
+          </th>
+          <th
+            scope="col"
+          >
+            Status
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          data-testid="1-0"
+        >
+          <th
+            class="tablet:width-card-lg"
+            data-label="Date range"
+            scope="row"
+          >
+            5/1/2022 to 7/1/2022
+          </th>
+          <td
+            class="tablet:width-card-lg"
+            data-label="Leave frequency"
+          >
+            Reduced leave schedule
+          </td>
+          <td
+            data-label="Status"
+          >
+            <span
+              class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-base-darkest bg-warning-lighter"
+            >
+              Pending
+            </span>
+          </td>
+        </tr>
+        <tr
+          data-testid="1-1"
+        >
+          <th
+            class="tablet:width-card-lg"
+            data-label="Date range"
+            scope="row"
+          >
+            1/1/2022 to 4/1/2022
+          </th>
+          <td
+            class="tablet:width-card-lg"
+            data-label="Leave frequency"
+          >
+            Continuous leave
+          </td>
+          <td
+            data-label="Status"
+          >
+            <span
+              class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-base-darkest bg-warning-lighter"
+            >
+              Pending
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div
+    class="padding-top-2"
   >
     <h2
       class="font-heading-md text-bold"

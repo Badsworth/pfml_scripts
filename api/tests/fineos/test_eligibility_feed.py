@@ -831,6 +831,35 @@ def test_process_employee_updates_simple(test_db_session, initialize_factories_s
     assert_number_of_data_lines_in_each_file(tmp_path, 1)
 
 
+def test_process_employee_updates_max_limit(
+    test_db_session, initialize_factories_session, tmp_path
+):
+    wage = WagesAndContributionsFactory.create()
+    wage2 = WagesAndContributionsFactory.create()
+    EmployeePushToFineosQueueFactory.create(
+        employee_id=wage.employee_id, employer_id=wage.employer_id
+    )
+    EmployeePushToFineosQueueFactory.create(
+        employee_id=wage2.employee_id, employer_id=wage2.employer_id
+    )
+
+    process_results = ef.process_employee_updates(
+        test_db_session,
+        massgov.pfml.fineos.MockFINEOSClient(),
+        tmp_path,
+        None,  # output_transport_params
+        1,  # limit
+    )
+
+    assert process_results.start
+    assert process_results.end
+    assert process_results.employee_and_employer_pairs_total_count == 1
+    assert process_results.employees_pending_export_total_count == 2
+
+    remaining_queue = test_db_session.query(EmployeePushToFineosQueue).all()
+    assert len(remaining_queue) == 1
+
+
 def test_process_employee_updates_for_single_employee_different_employers(
     test_db_session, initialize_factories_session, tmp_path
 ):

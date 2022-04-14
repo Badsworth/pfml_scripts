@@ -1,3 +1,5 @@
+@import "../scss/variables";
+
 .RunIndicator {
   height: 36px;
   width: 36px;
@@ -11,7 +13,7 @@
   line-height: 24px !important;
   font-weight: bold;
   font-size: 15px !important;
-  filter: brightness(0.9) contrast(0.9) saturate(1.3) hue-rotate(-10deg);
+  @include COLOR_FILTER();
   position: relative;
 
   .visually-hidden {
@@ -24,15 +26,15 @@
   }
 
   &.error {
-    background: red;
+    background: $COLOR_FAIL;
   }
 
   &.warn {
-    background: #d4e500;
+    background: $COLOR_WARN;
   }
 
   &.ok {
-    background: #00c100;
+    background: $COLOR_PASS;
   }
 
   .bubbles {
@@ -44,7 +46,7 @@
     width: 36px;
     display: flex;
     flex: 0 0 12px;
-    border-top: 1px #ccc solid;
+    border-top: 2px #ccc solid;
 
     .bubble {
       box-sizing: border-box;
@@ -63,15 +65,27 @@
       }
 
       &.error {
-        background: red;
+        background: $COLOR_FAIL;
       }
 
       &.warn {
-        background: #d4e500;
+        background: $COLOR_FAIL;
       }
 
       &.ok {
-        background: #00c100;
+        background: $COLOR_PASS;
+      }
+    }
+  }
+
+  &.targeted {
+    border-radius: 30px;
+
+    .bubbles {
+      border-top: 0;
+      justify-content: center;
+      .bubble {
+        border-top: 1px #ccc solid;
       }
     }
   }
@@ -80,22 +94,22 @@
 .runInfo {
   line-height: 22px;
   .tag {
-    background: #fee;
-    color: #e56b00;
-    border: 1px #e56b00 solid;
+    background: $TAG_BG_BRANCH;
+    color: $TAG_COLOR_BRANCH;
+    border: 1px $TAG_COLOR_BRANCH solid;
     border-radius: 4px;
     padding: 2px;
     font-size: 10px;
     line-height: 10px;
   }
 
-  .stable {
+  .group {
     font-weight: bold;
     font-size: 14px;
   }
 
   .errors {
     margin-left: 10px;
-    color: #f00;
+    color: $COLOR_FAIL;
   }
 }

@@ -35,7 +35,7 @@ exports[`Payments Checkback date implementation renders intro text for continous
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 11, 2021 to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, expect to be paid weekly.
+    Check back on November 12, 2021 to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, expect to be paid weekly.
   </p>
 </section>
 `;
@@ -45,7 +45,7 @@ exports[`Payments Checkback date implementation renders intro text for continous
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 9, 2021 to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.
+    Check back on November 10, 2021 to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.
   </p>
 </section>
 `;
@@ -55,7 +55,7 @@ exports[`Payments Checkback date implementation renders intro text for continous
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 9, 2021 to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.
+    Check back on November 10, 2021 to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.
   </p>
 </section>
 `;
@@ -65,7 +65,7 @@ exports[`Payments Checkback date implementation renders intro text for continous
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on January 20, 2022 to see when you can expect your first payment. You’ll receive one payment for your entire leave.
+    Check back on January 21, 2022 to see when you can expect your first payment. You’ll receive one payment for your entire leave.
   </p>
 </section>
 `;
@@ -75,7 +75,7 @@ exports[`Payments Checkback date implementation renders intro text for continuou
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 11, 2021 to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, expect to be paid weekly.
+    Check back on November 12, 2021 to see when you can expect your first payment. Your first payment will include multiple weeks of leave. After your first payment, expect to be paid weekly.
   </p>
 </section>
 `;
@@ -85,7 +85,7 @@ exports[`Payments Checkback date implementation renders intro text for continuou
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 9, 2021 to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.
+    Check back on November 10, 2021 to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.
   </p>
 </section>
 `;
@@ -95,7 +95,7 @@ exports[`Payments Checkback date implementation renders intro text for continuou
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 9, 2021 to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.
+    Check back on November 10, 2021 to see when you can expect your first payment. Your first payment will be scheduled after your second week of leave ends. After your first payment, expect to be paid weekly.
   </p>
 </section>
 `;
@@ -105,7 +105,7 @@ exports[`Payments Checkback date implementation renders intro text for continuou
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on January 20, 2022 to see when you can expect your first payment. You’ll receive one payment for your entire leave.
+    Check back on January 21, 2022 to see when you can expect your first payment. You’ll receive one payment for your entire leave.
   </p>
 </section>
 `;
@@ -115,7 +115,7 @@ exports[`Payments Checkback date implementation renders intro text for reduced s
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 11, 2021 to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.
+    Check back on November 12, 2021 to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.
   </p>
 </section>
 `;
@@ -125,7 +125,7 @@ exports[`Payments Checkback date implementation renders intro text for reduced s
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 9, 2021 to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.
+    Check back on November 10, 2021 to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.
   </p>
 </section>
 `;
@@ -135,7 +135,7 @@ exports[`Payments Checkback date implementation renders intro text for reduced s
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on November 9, 2021 to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.
+    Check back on November 10, 2021 to see when you can expect your first payment. You need to take at least 8 hours of leave or wait until 30 days have passed for a payment to be scheduled.
   </p>
 </section>
 `;
@@ -145,7 +145,61 @@ exports[`Payments Checkback date implementation renders intro text for reduced s
   data-testid="your-payments-intro"
 >
   <p>
-    Check back on January 20, 2022 to see when you can expect your first payment. You’ll receive one payment for your entire leave.
+    Check back on January 21, 2022 to see when you can expect your first payment. You’ll receive one payment for your entire leave.
+  </p>
+</section>
+`;
+
+exports[`Payments Post FINEOS deploy checkback date updates returns monday checkback date approved before claim start date  1`] = `
+<section
+  data-testid="your-payments-intro"
+>
+  <p>
+    Your first payment will be scheduled on 
+    <strong>
+      May 16, 2022
+    </strong>
+    . This payment will include multiple weeks of your leave.
+  </p>
+   
+  <p>
+    Payments are scheduled to be paid after each week of your leave on Mondays, or on Tuesday if Monday is a holiday.
+  </p>
+</section>
+`;
+
+exports[`Payments Post FINEOS deploy checkback date updates returns monday checkback date approved mid week after claim start date  1`] = `
+<section
+  data-testid="your-payments-intro"
+>
+  <p>
+    Your first payment will be scheduled on 
+    <strong>
+      May 23, 2022
+    </strong>
+    . This payment will include multiple weeks of your leave.
+  </p>
+   
+  <p>
+    Payments are scheduled to be paid after each week of your leave on Mondays, or on Tuesday if Monday is a holiday.
+  </p>
+</section>
+`;
+
+exports[`Payments Post FINEOS deploy checkback date updates returns monday checkback date approved on claim start date  1`] = `
+<section
+  data-testid="your-payments-intro"
+>
+  <p>
+    Your first payment will be scheduled on 
+    <strong>
+      May 23, 2022
+    </strong>
+    . This payment will include multiple weeks of your leave.
+  </p>
+   
+  <p>
+    Payments are scheduled to be paid after each week of your leave on Mondays, or on Tuesday if Monday is a holiday.
   </p>
 </section>
 `;
@@ -264,7 +318,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
           <li>
             If you believe we’ve cancelled your payments for an incorrect reason, you can 
             <a
-              href="https://www.mass.gov/forms/request-an-appeal-for-paid-family-and-medical-leave"
+              href="https://mass.gov/PaidLeaveDecisionAppeal"
               rel="noreferrer noopener"
               target="_blank"
             >
@@ -304,7 +358,7 @@ exports[`Payments renders the \`changes to payments\` section 1`] = `
       <p>
         The payment amount you see on this page may be less than the maximum benefit amount due to 
         <a
-          href="https://www.mass.gov/info-details/how-other-leave-and-benefits-can-affect-your-paid-family-and-medical-leave"
+          href="https://mass.gov/pfml-benefit-reductions"
           rel="noopener noreferrer"
           target="_blank"
         >
@@ -463,7 +517,7 @@ exports[`Payments renders the Payments table 1`] = `
       <td
         data-label="Status"
       >
-        Your payment will be sent by check between 11/15/2021 and 11/21/2021.
+        Your payment will be sent by check between 11/17/2021 and 11/22/2021.
       </td>
     </tr>
     <tr>

@@ -345,7 +345,6 @@ class EmployeePushToFineosQueueFactory(BaseFactory):
     employer_id = None
     action = "UPDATE_NEW_EMPLOYER"
     modified_at = Generators.UtcNow
-    process_id = 1
 
 
 class EmployerPushToFineosQueueFactoryFactory(BaseFactory):
@@ -356,7 +355,6 @@ class EmployerPushToFineosQueueFactoryFactory(BaseFactory):
     employer_id = None
     action = "INSERT"
     modified_at = Generators.UtcNow
-    process_id = 1
     family_exemption = None
     medical_exemption = None
     exemption_commence_date = None
@@ -446,6 +444,12 @@ class AbsencePeriodFactory(BaseFactory):
     fineos_absence_period_index_id = factory.Faker("random_int")
 
 
+class PendingAbsencePeriodFactory(AbsencePeriodFactory):
+    leave_request_decision_id = (
+        employee_models.LeaveRequestDecision.PENDING.leave_request_decision_id
+    )
+
+
 class ManagedRequirementFactory(BaseFactory):
     class Meta:
         model = employee_models.ManagedRequirement
@@ -466,6 +470,41 @@ class ManagedRequirementFactory(BaseFactory):
     managed_requirement_type_id = (
         employee_models.ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id
     )
+
+
+class OpenManagedRequirementFactory(ManagedRequirementFactory):
+    managed_requirement_status_id = (
+        employee_models.ManagedRequirementStatus.OPEN.managed_requirement_status_id
+    )
+
+
+class FineosExtractVpeiFactory(BaseFactory):
+    class Meta:
+        model = payment_models.FineosExtractVpei
+
+    c = "7326"
+    i = factory.Sequence(lambda n: "%d" % n)
+    amount_monamt = Generators.Money
+
+
+class FineosExtractVpeiPaymentDetailsFactory(BaseFactory):
+    class Meta:
+        model = payment_models.FineosExtractVpeiPaymentDetails
+
+    c = "7806"
+    i = factory.Sequence(lambda n: "%d" % n)
+    balancingamou_monamt = Generators.Money
+
+
+class FineosExtractVpeiPaymentLineFactory(BaseFactory):
+    class Meta:
+        model = payment_models.FineosExtractVpeiPaymentLine
+
+    c = "7692"
+    i = factory.Sequence(lambda n: "%d" % n)
+
+    amount_monamt = Generators.Money
+    linetype = "Auto Gross Entitlement"
 
 
 class PaymentFactory(BaseFactory):
@@ -500,6 +539,11 @@ class PaymentFactory(BaseFactory):
     fineos_employee_first_name = factory.Faker("first_name")
     fineos_employee_last_name = factory.Faker("last_name")
 
+    payee_name = factory.Faker("company")
+    payment_transaction_type_id = (
+        employee_models.PaymentTransactionType.STANDARD.payment_transaction_type_id
+    )
+
 
 class PaymentDetailsFactory(BaseFactory):
     class Meta:
@@ -517,7 +561,35 @@ class PaymentDetailsFactory(BaseFactory):
         "date_between_dates", date_start=date(2021, 1, 16), date_end=date(2021, 1, 28)
     )
 
+    payment_details_c_value = "7806"
+    payment_details_i_value = factory.Sequence(lambda n: "%d" % n)
+
     amount = Generators.Money
+    business_net_amount = factory.LazyAttribute(lambda a: a.amount)
+
+
+class PaymentLineFactory(BaseFactory):
+    class Meta:
+        model = payment_models.PaymentLine
+
+    payment_line_id = Generators.UuidObj
+
+    payment = factory.SubFactory(PaymentFactory)
+    payment_id = factory.LazyAttribute(lambda a: a.payment.payment_id)
+
+    payment_details = factory.SubFactory(PaymentDetailsFactory)
+    payment_details_id = factory.LazyAttribute(
+        lambda a: a.payment_details.payment_details_id if a.payment_details else None
+    )
+
+    payment_line_c_value = "7692"
+    payment_line_i_value = factory.Sequence(lambda n: "%d" % n)
+
+    amount = Generators.Money
+    line_type = "Auto Gross Entitlement"
+
+    vpei_payment_line = factory.SubFactory(FineosExtractVpeiPaymentLineFactory)
+    vpei_payment_line_id = factory.LazyAttribute(lambda a: a.vpei_payment_line.vpei_payment_line_id)
 
 
 class PaymentReferenceFileFactory(BaseFactory):
@@ -560,7 +632,6 @@ class ApplicationFactory(BaseFactory):
 
     application_id = Generators.UuidObj
 
-    nickname = "My leave application"
     requestor = None
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
@@ -921,7 +992,12 @@ class DuaReductionPaymentFactory(BaseFactory):
     fineos_customer_number = factory.Faker("numerify", text="####")
     employer_fein = Generators.Fein
     payment_date = factory.Faker("date_object")
-    request_week_begin_date = factory.Faker("date_object")
+
+    # Default DUA logic excludes payments where this value is before 12/1/2020.
+    # Since the date_object provider generates a random date between 1970 & now,
+    # using it would cause almost all generated payments to be excluded.
+    request_week_begin_date = factory.Faker("date_this_year")
+
     gross_payment_amount_cents = random.randint(100, 100000)
     payment_amount_cents = random.randint(100, 100000)
     fraud_indicator = None
@@ -1299,6 +1375,9 @@ class DuaReportingUnitFactory(BaseFactory):
     dua_reporting_unit_id = Generators.UuidObj
     dua_id = factory.Sequence(lambda n: n)
     dba = None
+
+    employer = factory.SubFactory(EmployerFactory)
+    employer_id = factory.LazyAttribute(lambda d: d.employer.employer_id)
 
     organization_unit = factory.SubFactory(OrganizationUnitFactory)
     organization_unit_id = factory.LazyAttribute(lambda d: d.organization_unit.organization_unit_id)

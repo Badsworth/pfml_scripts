@@ -237,6 +237,22 @@ def other_leave_eform():
                     "enumValue": {"domainName": "PleaseSelectYesNo", "instanceValue": "No"},
                 },
                 {"name": "V2SecondaryQualifyingReason2", "stringValue": "Military caregiver"},
+                {
+                    "enumValue": {"domainName": "15MinuteIncrements", "instanceValue": "15"},
+                    "name": "V2MinutesWorked1",
+                },
+                {
+                    "enumValue": {"domainName": "15MinuteIncrements", "instanceValue": "30"},
+                    "name": "V2TotalMinutes1",
+                },
+                {
+                    "integerValue": 8,
+                    "name": "V2HoursWorked1",
+                },
+                {
+                    "integerValue": 40,
+                    "name": "V2TotalHours1",
+                },
             ],
         }
     )
@@ -404,6 +420,8 @@ class TestTransformEformBody:
         assert other_leave_1["leave_end_date"] == date(2020, 9, 22)
         assert other_leave_1["leave_reason"] == "Pregnancy"
         assert other_leave_1["type"] == "other_reason"
+        assert other_leave_1["leave_minutes"] == 2430
+        assert other_leave_1["worked_per_week_minutes"] == 495
 
         assert type(other_leaves_list[1]) is PreviousLeave
         other_leave_2 = other_leaves_list[1].dict()
@@ -439,13 +457,13 @@ class TestTransformEformBody:
         other_leave_1 = other_leaves_list[0].dict()
         assert other_leave_1["leave_start_date"] == date(2020, 9, 1)
         assert other_leave_1["leave_end_date"] == date(2020, 9, 22)
-        assert other_leave_1["leave_reason"] == "Unknown"
+        assert other_leave_1["leave_reason"] is None
 
         assert type(other_leaves_list[1]) is PreviousLeave
         other_leave_2 = other_leaves_list[1].dict()
         assert other_leave_2["leave_start_date"] == date(2020, 9, 23)
         assert other_leave_2["leave_end_date"] == date(2020, 12, 15)
-        assert other_leave_2["leave_reason"] == "Unknown"
+        assert other_leave_2["leave_reason"] is None
 
 
 def test_transform_concurrent_leave_from_other_leave_eform():

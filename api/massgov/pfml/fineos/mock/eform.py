@@ -6,6 +6,7 @@ import datetime
 
 from ..models.customer_api import EForm as CustomerEForm
 from ..models.customer_api import EFormAttribute as CustomerEFormAttribute
+from ..models.customer_api.spec import ModelEnum as CustomerModelEnum
 from ..models.group_client_api import EForm, EFormAttribute, ModelEnum
 
 # Retrieved from DT2 using
@@ -195,17 +196,18 @@ MOCK_CUSTOMER_EFORM_OTHER_LEAVES = CustomerEForm(
         CustomerEFormAttribute(name="V2Spacer9", stringValue=""),
         CustomerEFormAttribute(
             name="V2AccruedPLEmployer1",
-            enumValue=ModelEnum(domainName="PleaseSelectYesNo", instanceValue="Yes"),
+            enumValue=CustomerModelEnum(domainName="PleaseSelectYesNo", instanceValue="Yes"),
         ),
         CustomerEFormAttribute(name="V2Spacer8", stringValue=""),
         CustomerEFormAttribute(name="V2TotalHours1", integerValue=40),
         CustomerEFormAttribute(name="V2AccruedEndDate1", dateValue=datetime.date(2021, 12, 19)),
         CustomerEFormAttribute(
-            name="V2Leave1", enumValue=ModelEnum(domainName="PleaseSelectYesNo", instanceValue="No")
+            name="V2Leave1",
+            enumValue=CustomerModelEnum(domainName="PleaseSelectYesNo", instanceValue="No"),
         ),
         CustomerEFormAttribute(
             name="V2MinutesWorked1",
-            enumValue=ModelEnum(domainName="15MinuteIncrements", instanceValue="00"),
+            enumValue=CustomerModelEnum(domainName="15MinuteIncrements", instanceValue="45"),
         ),
         CustomerEFormAttribute(
             name="V2AccruedReasons",
@@ -224,11 +226,11 @@ MOCK_CUSTOMER_EFORM_OTHER_LEAVES = CustomerEForm(
         ),
         CustomerEFormAttribute(
             name="V2AccruedPaidLeave1",
-            enumValue=ModelEnum(domainName="PleaseSelectYesNo", instanceValue="Yes"),
+            enumValue=CustomerModelEnum(domainName="PleaseSelectYesNo", instanceValue="Yes"),
         ),
         CustomerEFormAttribute(
             name="V2LeaveFromEmployer1",
-            enumValue=ModelEnum(domainName="PleaseSelectYesNo", instanceValue="Yes"),
+            enumValue=CustomerModelEnum(domainName="PleaseSelectYesNo", instanceValue="Yes"),
         ),
         CustomerEFormAttribute(name="V2Header1", stringValue="Previous leaves"),
         CustomerEFormAttribute(
@@ -239,22 +241,26 @@ MOCK_CUSTOMER_EFORM_OTHER_LEAVES = CustomerEForm(
         ),
         CustomerEFormAttribute(
             name="V2TotalMinutes1",
-            enumValue=ModelEnum(domainName="15MinuteIncrements", instanceValue="00"),
+            enumValue=CustomerModelEnum(
+                domainName="15MinuteIncrements", instanceValue="Please Select"
+            ),
         ),
         CustomerEFormAttribute(
             name="V2QualifyingReason1",
-            enumValue=ModelEnum(
+            enumValue=CustomerModelEnum(
                 domainName="QualifyingReasons",
                 instanceValue="Bonding with my child after birth or placement",
             ),
         ),
         CustomerEFormAttribute(
             name="V2Applies1",
-            enumValue=ModelEnum(domainName="PleaseSelectYesNo", instanceValue="Yes"),
+            enumValue=CustomerModelEnum(domainName="PleaseSelectYesNo", instanceValue="Yes"),
         ),
         CustomerEFormAttribute(
             name="V2Applies2",
-            enumValue=ModelEnum(domainName="PleaseSelectYesNo", instanceValue="Please Select"),
+            enumValue=CustomerModelEnum(
+                domainName="PleaseSelectYesNo", instanceValue="Please Select"
+            ),
         ),
         CustomerEFormAttribute(
             name="V2OtherLeavesPastLeaveStartDate1", dateValue=datetime.date(2021, 9, 12)

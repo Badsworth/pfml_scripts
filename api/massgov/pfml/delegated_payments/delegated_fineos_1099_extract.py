@@ -3,6 +3,7 @@ import uuid
 from typing import Any, Callable, Dict, Optional, cast
 
 import defusedxml.ElementTree as ET
+from sqlalchemy import and_, func
 
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging as logging
@@ -78,7 +79,9 @@ class Data1099:
             "c", data_1099_record, self.validation_container, False
         )
         if self.validation_container.has_validation_issues():
-            logger.error("Packed Data validation issues for customer %s", self.customer_no)
+            logger.error(
+                "Packed Data validation issues for customer", extra={"customerno": self.customer_no}
+            )
             logger.error(self.validation_container.validation_issues)
 
     def increment(self, metric: str) -> None:
@@ -88,7 +91,6 @@ class Data1099:
     def packed_data_validator(self) -> None:
         valid_values = ["512512001", "512512002", "512512003"]
         value_str = self.request_type
-        logger.info("The request type is %s", value_str)
         if value_str is None or value_str not in valid_values:
             self.validation_container.add_validation_issue(
                 payments_util.ValidationReason.INVALID_VALUE, "packeddata"
@@ -104,7 +106,6 @@ class Data1099:
                 for elem in data_pack.iter("EnumObject"):
                     if elem.findtext("value") is not None:
                         request_reason = elem.findtext("value")
-                        logger.info(elem.findtext("value"))
                         if self.count_incrementer:
                             if request_reason == REQUEST_TYPE_ONE:
                                 self.count_incrementer(Data1099ExtractStep.Metrics.REPRINT_REQUESTS)
@@ -181,19 +182,40 @@ class Data1099ExtractStep(Step):
                 reference_file.processed_import_log_id,
             )
             return
-        records = (
-            self.db_session.query(FineosExtractVbi1099DataSom)
+        # The created_at date is the date when records were added to the table
+        # and not the date the requests were made. There is no request date
+        # in the extract file.
+        vbi_subquery = (
+            self.db_session.query(
+                FineosExtractVbi1099DataSom,
+                func.rank()
+                .over(
+                    order_by=[
+                        FineosExtractVbi1099DataSom.created_at.desc(),
+                    ],
+                    partition_by=FineosExtractVbi1099DataSom.customerno,
+                )
+                .label("R"),
+            )
             .filter(
                 FineosExtractVbi1099DataSom.reference_file_id == reference_file.reference_file_id
             )
-            .order_by(FineosExtractVbi1099DataSom.customerno)
-            .all()
+            .subquery()
         )
+
+        records = list(self.db_session.query(vbi_subquery).filter(vbi_subquery.c.R == 1))
+        if records is not None:
+            logger.info(
+                "Total number of requests for the latest date is ",
+                extra={"total records": len(records)},
+            )
+
+        # For each record, check the customer number for a valid employee id
+        # If no employee record found, log error and skip the request.
+        # If there is an employee record, continue validation for any other errors
+        # and process the request
+
         record_iter = iter(records)
-        # For each record, check if there is a employee id for customer number,
-        # process the xml data.
-        # Do validation and then check existing requests for each employee id
-        # and sort of
         for record in record_iter:
             self.increment(self.Metrics.VBI_1099_DATA_SOM_RECORD_COUNT)
             customerno = record.customerno
@@ -204,12 +226,16 @@ class Data1099ExtractStep(Step):
             )
             if not employee_record:
                 logger.warning(
-                    "There is no employee record for the customer number, %s", customerno
+                    "There is no employee record for the customer number",
+                    extra={"customerno": customerno},
                 )
+
                 self.increment(self.Metrics.SKIPPED_REQUESTS_ERRORED)
                 continue
             else:
-                logger.info("Found a employee record for customer number %s", customerno)
+                logger.info(
+                    "Found a employee record for customer number", extra={"customerno": customerno}
+                )
                 vbi_1099_data_som_id = cast(str, record.vbi_1099_data_som_id)
                 if record.packeddata is not None:
                     packed_data_str = cast(ET, record.packeddata)
@@ -232,7 +258,7 @@ class Data1099ExtractStep(Step):
                 else:
                     self.process_1099_data_record(vbi_1099_data, reference_file)
                     logger.info(
-                        "After consuming extracts and performing initial validation, payment %s added to state [%s]",
+                        "After consuming extracts and performing initial validation, 1099 requests %s added to table[%s]",
                         vbi_1099_data.get_1099_data_message_str(),
                         "Successfully processed 1099 extract records",
                         extra=vbi_1099_data.get_traceable_details(),
@@ -242,39 +268,45 @@ class Data1099ExtractStep(Step):
         self, vbi_1099_data: Data1099, reference_file: ReferenceFile
     ) -> None:
 
+        is_none = None
         if not vbi_1099_data.validation_container.has_validation_issues():
+
+            correction_ind = self.map_request_type(vbi_1099_data.request_type)
+
             # Check if there is an existing record in db for the employee id
             # if so, get the record, if there is still a open request, overwrite
             # if no record exists, createthe new record
-            logger.info("Checking to see if this request is duplicate ")
-            existing_requests = (
-                self.db_session.query(Pfml1099Request)
-                .filter(Pfml1099Request.employee_id == vbi_1099_data.employee_id)
-                .all()
+            logger.info(
+                "Checking to see if there is an open request for this employees",
+                extra={"employee id": vbi_1099_data.employee_id},
             )
-            correction_ind = self.map_request_type(vbi_1099_data.request_type)
 
-            if len(existing_requests) > 0:
-                existing_requests_list = iter(existing_requests)
-                for existing_record in existing_requests_list:
-                    if existing_record.pfml_1099_batch_id:
-                        logger.info("Previous request now closed, so create a new one")
-                        self.create_update_record(vbi_1099_data.employee_id, correction_ind, None)
-                    else:
-                        logger.info("There is a open request, overwrite")
-                        self.create_update_record(
-                            vbi_1099_data.employee_id,
-                            correction_ind,
-                            existing_record.pfml_1099_request_id,
-                        )
+            existing_open_request = (
+                self.db_session.query(Pfml1099Request)
+                .filter(
+                    and_(
+                        Pfml1099Request.employee_id == vbi_1099_data.employee_id,
+                        Pfml1099Request.pfml_1099_batch_id == is_none,
+                    )
+                )
+                .order_by(Pfml1099Request.updated_at.desc())
+                .first()
+            )
+            if existing_open_request:
+
+                self.create_update_record(
+                    vbi_1099_data.employee_id,
+                    correction_ind,
+                    existing_open_request.pfml_1099_request_id,
+                )
             else:
-                logger.info("This is a new request")
+
                 self.create_update_record(vbi_1099_data.employee_id, correction_ind, None)
+
             reference_file.processed_import_log_id = self.get_import_log_id()
 
     def map_request_type(self, reqType: str) -> bool:
 
-        logger.info("Request type is %s", reqType)
         if reqType == REQUEST_TYPE_TWO or reqType == REQUEST_TYPE_THREE:
             logger.info("Regenerate request type", extra={"reason_type": reqType})
             return True
@@ -286,7 +318,14 @@ class Data1099ExtractStep(Step):
         self, emp_id: uuid.UUID, correction_ind: bool, existing_id: Optional[uuid.UUID]
     ) -> int:
         self.increment(self.Metrics.PROCESSED_REQUESTS)
-        if not existing_id:
+        if existing_id:
+            logger.info("There is a open request, updating", extra={"existing_id": existing_id})
+            self.increment(self.Metrics.DUPLICATE_REQUESTS)
+            self.db_session.query(Pfml1099Request).filter(
+                Pfml1099Request.pfml_1099_batch_id == existing_id
+            ).update({Pfml1099Request.correction_ind: correction_ind})
+            return 2
+        else:
             logger.info("Request is new", extra={"existing_id": "None"})
             self.increment(self.Metrics.NEW_REQUESTS)
             pfmlRequest = Pfml1099Request(pfml_1099_request_id=uuid.uuid4())
@@ -294,11 +333,3 @@ class Data1099ExtractStep(Step):
             pfmlRequest.correction_ind = correction_ind
             self.db_session.add(pfmlRequest)
             return 1
-
-        else:
-            logger.info("There is a open request, updating", extra={"existing_id": existing_id})
-            self.increment(self.Metrics.DUPLICATE_REQUESTS)
-            self.db_session.query(Pfml1099Request).filter(
-                Pfml1099Request.pfml_1099_batch_id == existing_id
-            ).update({Pfml1099Request.correction_ind: correction_ind})
-            return 2

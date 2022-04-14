@@ -10,11 +10,9 @@ from massgov.pfml.delegated_payments.mock.delegated_payments_factory import Dele
 
 
 @pytest.fixture
-def related_withholding_payment_step(
-    initialize_factories_session, test_db_session, test_db_other_session
-):
+def related_withholding_payment_step(initialize_factories_session, test_db_session):
     return withholding_payments_process.RelatedPaymentsProcessingStep(
-        db_session=test_db_session, log_entry_db_session=test_db_other_session
+        db_session=test_db_session, log_entry_db_session=test_db_session
     )
 
 
@@ -501,6 +499,17 @@ def test_sync_primary_to_related_payments(
         payment_date=datetime.date(2021, 3, 25),
     ).get_or_create_payment_with_state(State.PAYMENT_FAILED_ADDRESS_VALIDATION)
 
+    DelegatedPaymentFactory(
+        test_db_session,
+        claim=claim,
+        import_log=import_log,
+        payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
+        amount=350,
+        period_start_date=datetime.date(2021, 3, 17),
+        period_end_date=datetime.date(2021, 3, 24),
+        payment_date=datetime.date(2021, 3, 25),
+    ).get_or_create_payment_with_state(State.EMPLOYER_REIMBURSEMENT_READY_FOR_PROCESSING)
+
     test_db_session.commit()
 
     # Get the counts before running
@@ -513,11 +522,17 @@ def test_sync_primary_to_related_payments(
     )
 
     assert state_log_counts[State.PAYMENT_FAILED_ADDRESS_VALIDATION.state_description] == 1
+
+    assert (
+        state_log_counts[State.EMPLOYER_REIMBURSEMENT_READY_FOR_PROCESSING.state_description] == 1
+    )
+
     # Run the step
     related_withholding_payment_step.run()
 
     # Get the counts after running
     state_log_counts = state_log_util.get_state_counts(test_db_session)
-    assert state_log_counts[State.DELEGATED_PAYMENT_CASCADED_ERROR.state_description] == 1
+
+    assert state_log_counts[State.DELEGATED_PAYMENT_CASCADED_ERROR.state_description] == 2
 
     assert state_log_counts[State.PAYMENT_FAILED_ADDRESS_VALIDATION.state_description] == 1

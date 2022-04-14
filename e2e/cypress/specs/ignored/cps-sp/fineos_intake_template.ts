@@ -14,7 +14,6 @@ import {
 } from "../../../../src/util/claims";
 import { waitForAjaxComplete } from "../../../actions/fineos";
 import { LeaveReason } from "../../../../src/generation/Claim";
-import { config } from "../../../actions/common";
 
 const getLeaveType = (leaveReason: NonNullable<LeaveReason>): LeaveType => {
   const mapping: {
@@ -139,9 +138,6 @@ describe("Submit a claim through Fineos intake process, verify the Absence Case"
             // Comment out everything after this to end the test.
             // occupationDetails.enterHoursWorkedPerWeek(0);
             // occupationDetails.clickNext();
-            if (config("HAS_APRIL_UPGRADE") === "true") {
-              occupationDetails.verifyOccupation();
-            }
             // fineos.assertErrorMessage("Hours worked per week must be entered");
             // @TODO end of testing CPS-906-P (CPS-1650)
             // Adjust as needed
@@ -252,35 +248,43 @@ describe("Submit a claim through Fineos intake process, verify the Absence Case"
 
             const claimPage = ClaimPage.visit(fineos_absence_id);
             // @TODO  testing CPS-906-D (CPS-794)/notes character limit
-            // claimPage.notes((notes) => {
-            //   cy.findByText("Create New").click();
-            //   cy.findByText("Leave Request Review", {
-            //     selector: "span",
-            //   }).click();
-            //   waitForAjaxComplete();
-            //   // Can't seem to be able to get inspect the alert properly here
-            //   // So just checking that the limit works.
-            //   cy.get(`#CaseNotesPopupWidgetAdd_PopupWidgetWrapper`)
-            //     .should("be.visible")
-            //     .within(() => {
-            //       // Input 4000 chars
-            //       cy.findByLabelText("Review note")
-            //         .type("aaaa".repeat(1000))
-            //         .should((el) =>
-            //           expect(el.val()).to.eq("aaaa".repeat(1000))
-            //         );
+            claimPage.notes((notes) => {
+              cy.get("#widgetListMenu")
+                .findByText("Create New")
+                .click({ force: true });
+              const selector =
+                "#widgetListMenu .right-side-drop li:nth-child(2)";
+              cy.get(selector)
+                .findByText("Leave Request Review", {
+                  selector: "span",
+                })
+                .click();
+              waitForAjaxComplete();
+              // Can't seem to be able to get inspect the alert properly here
+              // So just checking that the limit works.
+              cy.get(`#CaseNotesPopupWidgetAdd_PopupWidgetWrapper`)
+                .should("be.visible")
+                .within(() => {
+                  // Input 4000 chars
+                  cy.findByLabelText("Review note")
+                    .type("aaaa".repeat(1000))
+                    .should((el) =>
+                      expect(el.val()).to.eq("aaaa".repeat(1000))
+                    );
 
-            //       // Input few more chars, should still be at 4000.
-            //       cy.findByLabelText("Review note").type("a", { delay: 10 });
-            //       cy.findByLabelText("Review note").type("a", { delay: 10 });
-            //       cy.findByLabelText("Review note")
-            //         .type("a", { delay: 10 })
-            //         .should((el) => expect(el.val()).to.eq("aaaa".repeat(1000)));
-            //       cy.findByText("OK").click();
-            //       waitForAjaxComplete();
-            //     });
-            //   notes.assertHasNote("Leave Request Review", "a".repeat(4000));
-            // });
+                  // Input few more chars, should still be at 4000.
+                  cy.findByLabelText("Review note").type("a", { delay: 10 });
+                  cy.findByLabelText("Review note").type("a", { delay: 10 });
+                  cy.findByLabelText("Review note")
+                    .type("a", { delay: 10 })
+                    .should((el) =>
+                      expect(el.val()).to.eq("aaaa".repeat(1000))
+                    );
+                  cy.findByText("OK").click();
+                  waitForAjaxComplete();
+                });
+              notes.assertHasNote("Leave Request Review", "a".repeat(4000));
+            });
             // @TODO  End of testing CPS-906-D (CPS-794)
 
             claimPage.adjudicate((adjudication) => {

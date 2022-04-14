@@ -1,5 +1,6 @@
 import {
   ApiResponse,
+  DetailedClaimResponse,
   GETClaimsByFineosAbsenceIdResponse,
 } from "./../../src/_api";
 /// <reference types="cypress" />
@@ -49,7 +50,7 @@ import { chooseRolePreset } from "../../src/util/fineosRoleSwitching";
 import { FineosSecurityGroups } from "../../src/submission/fineos.pages";
 import { Fineos } from "../../src/submission/fineos.pages";
 import { beforeRunCollectMetadata } from "../reporters/new-relic-collect-metadata";
-import { getClaimsByFineos_absence_id } from "_api";
+import { getClaimsByFineos_absence_id } from "../../src/_api";
 import EmployeePool from "../../src/generation/Employee";
 
 export default function (
@@ -280,6 +281,69 @@ export default function (
           return applications[i];
       }
       return 0;
+    },
+    async findClaim({
+      applications,
+      credentials,
+      spec,
+      limit = 1,
+    }: {
+      applications: ApplicationResponse[];
+      credentials: Credentials;
+      spec: {
+        hasPaidPayments: boolean;
+        status: "Pending" | "Approved" | "Denied" | "Withdrawn";
+      };
+      limit: number;
+    }) {
+      const authManager = getAuthManager();
+      const session = await authManager.authenticate(
+        credentials.username,
+        credentials.password
+      );
+      const results: DetailedClaimResponse[] = [];
+      for (let i = 0; i < applications.length && i < 20; i++) {
+        if (results.length === limit) return results;
+        let response: ApiResponse<GETClaimsByFineosAbsenceIdResponse>;
+        try {
+          response = await getClaimsByFineos_absence_id(
+            {
+              fineos_absence_id: applications[i].fineos_absence_id as string,
+            },
+            {
+              baseUrl: authManager.apiBaseUrl,
+              headers: {
+                Authorization: `Bearer ${session
+                  .getAccessToken()
+                  .getJwtToken()}`,
+                "User-Agent": "PFML Business Simulation Bot",
+              },
+            }
+          );
+        } catch (e) {
+          if (!new RegExp(/withdrawn/i).test(e.message)) throw e;
+          else continue;
+        }
+        const { data } = response.data;
+        if (data) {
+          const filterBySpec = () => {
+            if (spec.hasPaidPayments !== data.has_paid_payments) {
+              return false;
+            }
+            if (
+              data.absence_periods &&
+              spec.status !== data?.absence_periods[0].request_decision
+            ) {
+              return false;
+            }
+            return true;
+          };
+          if (filterBySpec() === true) {
+            results.push(data);
+          }
+        }
+      }
+      return results;
     },
   });
 

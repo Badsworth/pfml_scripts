@@ -10,6 +10,7 @@ TASKS_TO_IGNORE = [
     # DOR Fineos ETL tasks.
     # The pfml-api-<environment>-dor-fineos-etl step function handles retries and failure notifications
     ".*dor-import",
+    ".*dor-import-exempt",
     ".*dor-pending-filing-response-import",
     ".*load-employers-to-fineos",
     ".*fineos-eligibility-feed-export",

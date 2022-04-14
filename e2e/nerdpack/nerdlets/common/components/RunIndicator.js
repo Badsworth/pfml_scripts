@@ -36,7 +36,7 @@ export function RunIndicator({ run, simpleView = true }) {
       run[key].percent = getPercent(run[key]);
       if (run[key].percent === 100) {
         status[key] = "ok";
-      } else if (run[key].percent >= 85) {
+      } else if (key !== "integration" && run[key].percent >= 85) {
         status[key] = "warn";
       } else {
         status[key] = "error";
@@ -44,29 +44,49 @@ export function RunIndicator({ run, simpleView = true }) {
     }
   });
 
+  const runIds = run.runId.includes("-failed-specs")
+    ? [run.runId, run.runId.replace("-failed-specs", "")]
+    : [run.runId];
   /**
    * Generate Nerdlet link for testgrid view.
    */
   const link = navigation.getOpenStackedNerdletLocation({
     id: "panel-testgrid",
-    urlState: { runIds: [run.runId] },
+    urlState: { runIds: runIds },
   });
   return (
     <Popover openOnHover={true}>
       <PopoverTrigger>
-        <Link to={link} className={`RunIndicator ${status.stable}`}>
-          <span className={"visually-hidden"}>{status.stable}</span>
-          {run.stable.percent}
-          {simpleView === false && (
-            <span className={"bubbles"}>
-              <span
-                className={`bubble integration ${status.integration}`}
-              ></span>
-              <span className={`bubble morning ${status.morning}`}></span>
-              <span className={`bubble unstable ${status.unstable}`}></span>
-            </span>
-          )}
-        </Link>
+        {status?.targeted != "none" ? (
+          <Link
+            to={link}
+            className={`RunIndicator ${status.targeted} targeted`}
+          >
+            <span className={"visually-hidden"}>{status.targeted}</span>
+            {run.targeted.percent}
+            {simpleView === false && (
+              <span className={"bubbles"}>
+                <span
+                  className={`bubble integration ${status.integration}`}
+                ></span>
+              </span>
+            )}
+          </Link>
+        ) : (
+          <Link to={link} className={`RunIndicator ${status.stable}`}>
+            <span className={"visually-hidden"}>{status.stable}</span>
+            {run.stable.percent}
+            {simpleView === false && (
+              <span className={"bubbles"}>
+                <span
+                  className={`bubble integration ${status.integration}`}
+                ></span>
+                <span className={`bubble morning ${status.morning}`}></span>
+                <span className={`bubble unstable ${status.unstable}`}></span>
+              </span>
+            )}
+          </Link>
+        )}
       </PopoverTrigger>
       <PopoverBody>
         <Card style={{ width: "250px" }}>
@@ -82,8 +102,8 @@ export function RunIndicator({ run, simpleView = true }) {
                 {Object.keys(status).map((key) => {
                   if (run[key].total > 0) {
                     return (
-                      <div className={"stable"}>
-                        Stable: {run[key].passCount} / {run[key].total} (
+                      <div className={"group"}>
+                        {key}: {run[key].passCount} / {run[key].total} (
                         {run[key].percent}
                         %)
                         {run.failCount > 0 && (

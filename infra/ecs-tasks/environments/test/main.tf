@@ -53,6 +53,8 @@ module "tasks" {
   fineos_aws_iam_role_arn         = "arn:aws:iam::666444232783:role/somdev-IAMRoles-CustomerAccountAccessRole-BF05IBJSG74B"
   fineos_aws_iam_role_external_id = "12345"
 
+  fineos_is_running_v21 = "true"
+
   fineos_eligibility_feed_output_directory_path       = "s3://fin-somdev-data-import/DT2"
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/DT2/dataexports"
   logging_level                                       = "massgov.pfml.fineos.fineos_client=DEBUG"
@@ -80,10 +82,11 @@ module "tasks" {
 
   enable_register_admins_job = true
 
-  enable_pub_automation_fineos           = true
-  enable_pub_automation_create_pub_files = true
-  enable_pub_automation_process_returns  = false
-  enable_fineos_import_iaww              = true
+  enable_pub_automation_fineos                     = true
+  enable_pub_automation_create_pub_files           = true
+  enable_pub_automation_process_returns            = false
+  enable_fineos_import_iaww                        = true
+  enable_standalone_fineos_import_employee_updates = false
 
   rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-test/rmv_client_certificate-zWimpc"
@@ -104,7 +107,7 @@ module "tasks" {
   enable_1099_testfile_generation = "0"
   irs_1099_correction_ind         = "0"
 
-  enable_employer_reimbursement_payments = "0"
+  enable_employer_reimbursement_payments = "1"
 
-  enable_pub_payments_copy_audit_report_schedule = true
+  enable_pub_payments_copy_audit_report_schedule = false
 }

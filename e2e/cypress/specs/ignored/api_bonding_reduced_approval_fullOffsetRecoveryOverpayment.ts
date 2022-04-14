@@ -44,8 +44,10 @@ describe("Other benefits are reported for a claim after payments have been has b
         );
       })
       .paidLeave((paidLeave) => {
-        const recoveryPlanPage =
-          paidLeave.createOffsetRecoveryPlan(OTHER_BENEFIT_AMOUNT);
+        const recoveryPlanPage = paidLeave.createRecoveryPlan(
+          OTHER_BENEFIT_AMOUNT,
+          "OffsetRecovery"
+        );
         recoveryPlanPage
           .addDocument(
             "OP-Full Balance Recovery",

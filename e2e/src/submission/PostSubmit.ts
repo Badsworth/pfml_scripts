@@ -1,9 +1,13 @@
+import { LeavePeriodTypes } from "./../types";
+import { extractLeavePeriodType } from "../util/claims";
 import { Page } from "playwright-chromium";
 import { GeneratedClaim } from "../generation/Claim";
 import { getDocumentReviewTaskName } from "../util/documents";
-import { Claim } from "./fineos.pages";
+import { Claim, PaidLeave } from "./fineos.pages";
 import winston from "winston";
 import { extractLeavePeriod } from "../util/claims";
+import { addDays, parseISO } from "date-fns";
+import path from "path";
 
 export async function approveClaim(
   page: Page,
@@ -56,7 +60,9 @@ export async function approveClaim(
   logger?.debug("Attempting to approve claim ...", {
     fineos_absence_id,
   });
-  const [, endDate] = extractLeavePeriod(claim.claim);
+  const leavePeriodType =
+    LeavePeriodTypes[extractLeavePeriodType(claim.claim.leave_details)];
+  const [, endDate] = extractLeavePeriod(claim.claim, leavePeriodType);
   await claimPage.approve(endDate);
   logger?.debug("Claim was approved in Fineos", {
     fineos_absence_id,
@@ -131,4 +137,50 @@ export async function closeDocumentsErOpen(
       await tasks.close(getDocumentReviewTaskName(document_type));
     }
   });
+}
+
+export async function addERReimbursment(
+  page: Page,
+  claim: GeneratedClaim,
+  fineos_absence_id: string
+): Promise<void> {
+  const { leave_details } = claim.claim;
+  if (
+    !leave_details?.continuous_leave_periods ||
+    !leave_details?.continuous_leave_periods.length
+  )
+    throw new Error("Scenario must use continuous leave periods");
+  const [leavePeriod] = leave_details.continuous_leave_periods;
+  if (!leavePeriod.start_date || !leavePeriod.end_date)
+    throw Error("Missing start and end date");
+  const claimPage = await Claim.visit(page, fineos_absence_id);
+  await claimPage.addActivity("Employer Reimbursement Process");
+  await claimPage.addCorrespondence(
+    "Employer Reimbursement Formstack",
+    path.join(process.cwd(), "forms", "cat-pic.pdf")
+  );
+  await claimPage.addCorrespondence(
+    "Employer Reimbursement Policy",
+    path.join(process.cwd(), "forms", "cat-pic.pdf")
+  );
+  await approveClaim(page, claim, fineos_absence_id);
+  await claimPage.tasks((tasks) =>
+    tasks.closeWithAdditionalSelection(
+      "Employer Reimbursement",
+      "Reimbursement Approved"
+    )
+  );
+  const paidLeavePage = await PaidLeave.visit(page, fineos_absence_id);
+  await paidLeavePage.addErReimbursment({
+    leavePeriod: [
+      new Date(leavePeriod.start_date),
+      new Date(leavePeriod.end_date),
+    ],
+    amount: claim?.metadata?.employerReAmount as number,
+  });
+  await paidLeavePage.changeAutoPayStatus(true);
+  await paidLeavePage.approveCertPeriods();
+  await paidLeavePage.editProcessingDates(
+    addDays(parseISO(leavePeriod.start_date), 7)
+  );
 }

@@ -81,10 +81,11 @@ module "tasks" {
 
   enable_register_admins_job = true
 
-  enable_pub_automation_fineos           = true
-  enable_pub_automation_create_pub_files = true
-  enable_pub_automation_process_returns  = false
-  enable_fineos_import_iaww              = true
+  enable_pub_automation_fineos                     = true
+  enable_pub_automation_create_pub_files           = true
+  enable_pub_automation_process_returns            = false
+  enable_fineos_import_iaww                        = true
+  enable_standalone_fineos_import_employee_updates = false
 
   rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-cps-preview/rmv_client_certificate-alAlg3"
@@ -105,7 +106,7 @@ module "tasks" {
   enable_1099_testfile_generation = "0"
   irs_1099_correction_ind         = "0"
 
-  enable_employer_reimbursement_payments = "0"
+  enable_employer_reimbursement_payments = "1"
 
   enable_pub_payments_copy_audit_report_schedule = true
 }

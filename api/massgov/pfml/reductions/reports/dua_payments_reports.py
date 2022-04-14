@@ -34,7 +34,13 @@ def send_dua_reductions_report(db_session: db.Session) -> None:
         reductions_ref_file = reductions_ref_files[0]
 
     try:
-        _send_dua_payments_email(reductions_ref_file, db_session, reductions_ref_file.file_location)
+        # Temporarily stop sending the DUA payments email, as it is redundant with a separate
+        # process set up in https://lwd.atlassian.net/browse/OPSS-120 to separately send a zipped
+        # version of this file.
+        # See https://lwd.atlassian.net/browse/API-2587 for more details.
+        # TODO (API-1858) turn this back on once we add support for compressing attachments
+        # _send_dua_payments_email(reductions_ref_file, db_session, reductions_ref_file.file_location)
+
         _update_ref_file(reductions_ref_file, db_session)
         _update_state_log(reductions_ref_file, db_session)
 

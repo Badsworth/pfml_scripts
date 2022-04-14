@@ -53,15 +53,6 @@ describe("ClaimsApi", () => {
         claim_status: "Approved,Pending",
       });
 
-      // TODO (PORTAL-1560): Remove this assertion, once the deprecated filters are removed
-      expect(global.fetch).toHaveBeenLastCalledWith(
-        `${process.env.apiUrl}/claims?page_offset=2&order_by=employee&order_direction=descending&employer_id=mock-employer-id&claim_status=Approved%2CPending`,
-        expect.objectContaining({
-          headers: expect.any(Object),
-          method: "GET",
-        })
-      );
-
       mockFetch();
       await claimsApi.getClaims({
         page_offset: 2,
@@ -80,52 +71,6 @@ describe("ClaimsApi", () => {
           method: "GET",
         })
       );
-    });
-
-    it("includes Completed status filter when Closed status filter is included", async () => {
-      mockFetch();
-
-      const filters = {
-        employer_id: "mock-employer-id",
-        claim_status: "Closed",
-      };
-      const originalFilters = { ...filters };
-      const claimsApi = new ClaimsApi();
-      await claimsApi.getClaims({ page_offset: 2, ...filters });
-
-      expect(global.fetch).toHaveBeenCalledWith(
-        `${process.env.apiUrl}/claims?page_offset=2&employer_id=mock-employer-id&claim_status=Closed%2CCompleted`,
-        expect.objectContaining({
-          headers: expect.any(Object),
-          method: "GET",
-        })
-      );
-      // Doesn't mutate original object, so that our claimsLogic caches what it is aware of, rather
-      // than what is sent to the API
-      expect(filters).toEqual(originalFilters);
-    });
-
-    it("uses fineos_absence_status as order_by value when passed in as just absence_status", async () => {
-      mockFetch();
-
-      const order = {
-        order_by: "absence_status",
-        order_direction: "ascending",
-      };
-      const originalOrder = { ...order };
-      const claimsApi = new ClaimsApi();
-      await claimsApi.getClaims({ page_offset: 2, ...order });
-
-      expect(global.fetch).toHaveBeenCalledWith(
-        `${process.env.apiUrl}/claims?page_offset=2&order_by=fineos_absence_status&order_direction=ascending`,
-        expect.objectContaining({
-          headers: expect.any(Object),
-          method: "GET",
-        })
-      );
-      // Doesn't mutate original object, so that our claimsLogic caches what it is aware of, rather
-      // than what is sent to the API
-      expect(order).toEqual(originalOrder);
     });
 
     it("returns response as instances of ApiResourceCollection and PaginationMeta", async () => {

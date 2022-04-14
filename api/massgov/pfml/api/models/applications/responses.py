@@ -5,6 +5,8 @@ from typing import List, Optional
 
 from pydantic import UUID4
 
+import massgov.pfml.api.app as app
+from massgov.pfml.api.eligibility.handler import BenefitYearsResponse
 from massgov.pfml.api.models.applications.common import (
     EmploymentStatus,
     Gender,
@@ -24,11 +26,17 @@ from massgov.pfml.api.models.common import (
     ConcurrentLeave,
     EmployerBenefit,
     MaskedPhoneResponse,
+    get_application_earliest_submission_date,
     get_computed_start_dates,
     get_earliest_start_date,
     get_leave_reason,
 )
-from massgov.pfml.db.models.applications import Application, ApplicationPaymentPreference, Document
+from massgov.pfml.api.services.applications import (
+    ApplicationSplit,
+    StartEndDates,
+    get_application_split,
+)
+from massgov.pfml.db.models.applications import Application, ApplicationPaymentPreference
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import (
     FEINFormattedStr,
@@ -44,12 +52,30 @@ class ApplicationStatus(str, Enum):
     Submitted = "Submitted"
 
 
+class ApplicationSplitResponse(PydanticBaseModel):
+    crossed_benefit_year: BenefitYearsResponse
+    application_dates_in_benefit_year: StartEndDates
+    application_dates_outside_benefit_year: StartEndDates
+    application_outside_benefit_year_submittable_on: date
+
+    @classmethod
+    def from_orm(cls, application_split: ApplicationSplit) -> "ApplicationSplitResponse":
+        return ApplicationSplitResponse(
+            crossed_benefit_year=BenefitYearsResponse.from_orm(
+                application_split.crossed_benefit_year
+            ),
+            application_dates_in_benefit_year=application_split.application_dates_in_benefit_year,
+            application_dates_outside_benefit_year=application_split.application_dates_outside_benefit_year,
+            application_outside_benefit_year_submittable_on=application_split.application_outside_benefit_year_submittable_on,
+        )
+
+
 class ApplicationResponse(PydanticBaseModel):
     application_id: UUID4
     organization_unit_id: Optional[UUID4]
     organization_unit_selection: Optional[OrganizationUnitSelection]
-    application_nickname: Optional[str]
     tax_identifier: Optional[MaskedTaxIdFormattedStr]
+    employee_id: Optional[UUID4]
     employer_fein: Optional[FEINFormattedStr]
     fineos_absence_id: Optional[str]
     first_name: Optional[str]
@@ -95,11 +121,12 @@ class ApplicationResponse(PydanticBaseModel):
     computed_start_dates: Optional[ComputedStartDates]
     split_from_application_id: Optional[UUID4]
     split_into_application_id: Optional[UUID4]
+    computed_earliest_submission_date: Optional[date]
+    computed_application_split: Optional[ApplicationSplitResponse]
 
     @classmethod
     def from_orm(cls, application: Application) -> "ApplicationResponse":
         application_response = super().from_orm(application)
-        application_response.application_nickname = application.nickname
         if application.mailing_address is not None:
             application_response.mailing_address = MaskedAddress.from_orm(
                 application.mailing_address
@@ -127,8 +154,17 @@ class ApplicationResponse(PydanticBaseModel):
         if application.claim is not None:
             application_response.fineos_absence_id = application.claim.fineos_absence_id
 
+        if application.employee is not None:
+            application_response.employee_id = application.employee.employee_id
+            application_response.computed_application_split = _get_application_split_response(
+                application
+            )
+
         application_response.updated_time = application_response.updated_at
         application_response.computed_start_dates = _get_computed_start_dates(application)
+        application_response.computed_earliest_submission_date = (
+            get_application_earliest_submission_date(application)
+        )
 
         return application_response
 
@@ -137,6 +173,16 @@ def _get_computed_start_dates(application: Application) -> ComputedStartDates:
     earliest_start_date = get_earliest_start_date(application)
     leave_reason = get_leave_reason(application)
     return get_computed_start_dates(earliest_start_date, leave_reason)
+
+
+def _get_application_split_response(application: Application) -> Optional[ApplicationSplitResponse]:
+    with app.db_session() as db_session:
+        split = get_application_split(application, db_session)
+
+    if split is None:
+        return None
+    else:
+        return ApplicationSplitResponse.from_orm(split)
 
 
 def build_payment_preference(
@@ -150,21 +196,3 @@ def build_payment_preference(
         )
 
     return payment_preference
-
-
-class DocumentResponse(PydanticBaseModel):
-    user_id: UUID4
-    application_id: UUID4
-    created_at: Optional[date]
-    document_type: Optional[str]
-    content_type: Optional[str]
-    fineos_document_id: Optional[str]
-    name: str
-    description: str
-
-    @classmethod
-    def from_orm(cls, document: Document) -> "DocumentResponse":
-        document_response = super().from_orm(document)
-        document_response.fineos_document_id = str(document.fineos_id)
-        document_response.document_type = document.document_type_instance.document_type_description
-        return document_response

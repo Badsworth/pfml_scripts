@@ -10,14 +10,67 @@ import {
   RequestOptions,
   getClaimsByFineos_absence_id,
   getApplicationsByApplication_idDocuments,
+  EmployeeSearchRequest,
+  EmployeeSearchRequestTermsMetadata,
+  postEmployeesSearch,
+  ApiResponse,
+  POSTEmployeesSearchResponse,
+  ClaimRequest,
+  postClaimsSearch,
+  POSTClaimsSearchResponse,
+  ClaimsSearchRequest,
 } from "../api";
 import assert from "assert";
 
 class ArtilleryClaimSubmitter extends PortalSubmitter {
   constructor(authenticator: AuthenticationManager, apiBaseUrl: string) {
-    console.log(AuthenticationManager, apiBaseUrl);
     super(authenticator, apiBaseUrl);
   }
+
+  async lstSearch(
+    searchFirst: string,
+    searchLast: string,
+    token: string
+  ): Promise<ApiResponse<POSTEmployeesSearchResponse>> {
+    const options = {
+      baseUrl: config("API_BASEURL"),
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "User-Agent": `PFML Business Simulation Bot`,
+        "Mass-PFML-Agent-ID": "lst-test",
+      },
+    };
+    const terms: EmployeeSearchRequestTermsMetadata = {
+      first_name: searchFirst,
+      last_name: searchLast,
+    };
+    const request: EmployeeSearchRequest = {
+      terms: terms,
+    };
+    return postEmployeesSearch(request, options);
+  }
+
+  async claimSearch(
+    employeeId: string,
+    token: string
+  ): Promise<ApiResponse<POSTClaimsSearchResponse>> {
+    const options = {
+      baseUrl: config("API_BASEURL"),
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "User-Agent": `PFML Business Simulation Bot`,
+        "Mass-PFML-Agent-ID": "lst-test",
+      },
+    };
+    const terms: ClaimRequest = {
+      employee_id: [employeeId],
+    };
+    const request: ClaimsSearchRequest = {
+      terms: terms,
+    };
+    return postClaimsSearch(request, options);
+  }
+
   /**
    * Splits the usual claim submission process to mimic real-life load.
    * Don't use outside LST.

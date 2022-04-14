@@ -2,6 +2,10 @@ import {
   BenefitsApplicationDocument,
   DocumentType,
 } from "../../../../src/models/Document";
+import {
+  PROCESSING_DAYS_PER_DELAY,
+  Payment,
+} from "../../../../src/models/Payment";
 // TODO (PORTAL-1148) Update to use createMockClaim when ready
 import { createAbsencePeriod, renderPage } from "../../../test-utils";
 import { AbsencePeriod } from "../../../../src/models/AbsencePeriod";
@@ -11,7 +15,6 @@ import ClaimDetail from "../../../../src/models/ClaimDetail";
 import { Holiday } from "../../../../src/models/Holiday";
 import LeaveReason from "../../../../src/models/LeaveReason";
 import { NotFoundError } from "../../../../src/errors";
-import { Payment } from "../../../../src/models/Payment";
 import { Payments } from "../../../../src/pages/applications/status/payments";
 import { createMockBenefitsApplicationDocument } from "../../../../lib/mock-helpers/createMockDocument";
 import { createMockPayment } from "lib/mock-helpers/createMockPayment";
@@ -41,6 +44,7 @@ interface SetupOptions {
   approvalDate?: string;
   includeApprovalNotice?: boolean;
   holidays?: Holiday[];
+  useDefaultClaim?: boolean;
 }
 
 const setupHelper =
@@ -51,12 +55,15 @@ const setupHelper =
     approvalDate = defaultApprovalDate.format("YYYY-MM-DD"),
     includeApprovalNotice = false,
     holidays = defaultHolidays,
+    useDefaultClaim = true,
   }: SetupOptions) =>
   (appLogicHook: AppLogic) => {
-    appLogicHook.claims.claimDetail = new ClaimDetail({
-      ...defaultClaimDetailAttributes,
-      absence_periods,
-    });
+    appLogicHook.claims.claimDetail = useDefaultClaim
+      ? new ClaimDetail({
+          ...defaultClaimDetailAttributes,
+          absence_periods,
+        })
+      : undefined;
     appLogicHook.claims.loadClaimDetail = jest.fn();
     appLogicHook.errors = [];
     appLogicHook.documents.loadAll = jest.fn();
@@ -392,11 +399,24 @@ describe("Payments", () => {
     expect(table).toMatchSnapshot();
   });
 
+  it("shows a spinner if there is no claim detail", () => {
+    renderPage(
+      Payments,
+      {
+        addCustomSetup: setupHelper({
+          useDefaultClaim: false,
+        }),
+      },
+      props
+    );
+    expect(screen.getByRole("progressbar")).toBeInTheDocument();
+  });
+
   it("displays page not found alert if there's no absence case ID", () => {
     renderPage(
       Payments,
       {
-        addCustomSetup: setupHelper({}),
+        addCustomSetup: setupHelper({ useDefaultClaim: false }),
       },
       { query: {} }
     );
@@ -735,6 +755,7 @@ describe("Payments", () => {
     );
 
     it("default render for status not in PROCESSING_DAYS_PER_DELAY ('DUA Additional Income') displays 'Delayed' status if transaction date after 3 business days", () => {
+      const transactionStatus = "DUA Additional Income";
       renderPage(
         Payments,
         {
@@ -746,7 +767,7 @@ describe("Payments", () => {
                   {
                     status: "Delayed",
                     sent_to_bank_date: null,
-                    writeback_transaction_status: "DUA Additional Income",
+                    writeback_transaction_status: transactionStatus,
                     transaction_date: transactionDate[beforeFourDays],
                   },
                   true
@@ -759,6 +780,7 @@ describe("Payments", () => {
       );
       const defaultDelayReasonText =
         "Most delays are resolved within 3 to 5 business days. The Contact Center will contact you if they require more information.";
+      expect(PROCESSING_DAYS_PER_DELAY).not.toHaveProperty(transactionStatus);
       expect(
         screen.queryByText(defaultDelayReasonText, { exact: false })
       ).toBeInTheDocument();
@@ -767,6 +789,7 @@ describe("Payments", () => {
     });
 
     it("default render for status not in PROCESSING_DAYS_PER_DELAY ('DUA Additional Income') will display 'Processing' status if transaction date before 2 business days", () => {
+      const transactionStatus = "DUA Additional Income";
       renderPage(
         Payments,
         {
@@ -778,7 +801,7 @@ describe("Payments", () => {
                   {
                     status: "Delayed",
                     sent_to_bank_date: null,
-                    writeback_transaction_status: "DUA Additional Income",
+                    writeback_transaction_status: transactionStatus,
                     transaction_date: transactionDate[beforeThreeDays],
                   },
                   true
@@ -791,9 +814,47 @@ describe("Payments", () => {
       );
       const defaultDelayReasonText =
         "Most delays are resolved within 3 to 5 business days. The Contact Center will contact you if they require more information.";
+      expect(PROCESSING_DAYS_PER_DELAY).not.toHaveProperty(transactionStatus);
       expect(
         screen.queryByText(defaultDelayReasonText, { exact: false })
       ).not.toBeInTheDocument();
+      expect(screen.queryByText("Delayed")).not.toBeInTheDocument();
+      expect(screen.queryByText("Processing")).toBeInTheDocument();
+    });
+
+    it("renders generic processing text if transaction_date_could_change is true and expected_send_start_date/expected_send_end_date are null", () => {
+      const transactionStatus = "Pending Payment Audit";
+      renderPage(
+        Payments,
+        {
+          addCustomSetup: setupHelper({
+            payments: {
+              absence_case_id: "NTN-12345-ABS-01",
+              payments: [
+                createMockPayment(
+                  {
+                    status: "Delayed",
+                    sent_to_bank_date: null,
+                    writeback_transaction_status: "Pending Payment Audit",
+                    transaction_date: transactionDate[sameDay],
+                    transaction_date_could_change: true,
+                  },
+                  true
+                ),
+              ],
+            },
+          }),
+        },
+        props
+      );
+      const transactionDateCouldChangeDelayReasonText =
+        "dates will be available in a few days. No action is required from you at this time";
+      expect(PROCESSING_DAYS_PER_DELAY).not.toHaveProperty(transactionStatus);
+      expect(
+        screen.queryByText(transactionDateCouldChangeDelayReasonText, {
+          exact: false,
+        })
+      ).toBeInTheDocument();
       expect(screen.queryByText("Delayed")).not.toBeInTheDocument();
       expect(screen.queryByText("Processing")).toBeInTheDocument();
     });
@@ -832,5 +893,66 @@ describe("Payments", () => {
         screen.queryByText(rejectedDelayReasonText, { exact: false })
       ).not.toBeInTheDocument();
     });
+  });
+
+  describe("Post FINEOS deploy checkback date updates", () => {
+    beforeEach(() => {
+      process.env.featureFlags = JSON.stringify({
+        claimantShowPaymentsPhaseThree: false,
+        claimantUseFineosNewPaymentSchedule: true,
+      });
+    });
+    const postDeployStartDate = "2022-05-17";
+    const approvalDate = {
+      "approved mid week after claim start date": dayjs(postDeployStartDate)
+        .add(1, "day")
+        .weekday(2)
+        .format("YYYY-MM-DD"),
+      "approved before claim start date": dayjs(postDeployStartDate)
+        .add(-7, "day")
+        .format("YYYY-MM-DD"),
+      "approved on claim start date":
+        dayjs(postDeployStartDate).format("YYYY-MM-DD"),
+    };
+    const approvalDateScenarios = Object.keys(approvalDate) as Array<
+      keyof typeof approvalDate
+    >;
+
+    it.each(approvalDateScenarios)(
+      "returns monday checkback date %s ",
+      (state) => {
+        renderPage(
+          Payments,
+          {
+            addCustomSetup: setupHelper({
+              absence_periods: [
+                defaultAbsencePeriod,
+                createAbsencePeriod({
+                  period_type: "Reduced Schedule",
+                  absence_period_start_date: dayjs(postDeployStartDate)
+                    .add(2, "weeks")
+                    .format("YYYY-MM-DD"),
+                  absence_period_end_date: dayjs(postDeployStartDate)
+                    .add(2, "weeks")
+                    .add(4, "months")
+                    .format("YYYY-MM-DD"),
+                  reason: "Child Bonding",
+                }),
+              ],
+              approvalDate: approvalDate[state],
+              includeApprovalNotice: true,
+            }),
+          },
+          props
+        );
+
+        const date = screen.getByText("will be scheduled on", { exact: false });
+        const dayOfWeekCheckbackDate = dayjs(
+          date.textContent?.match(/(?<=on )[^.]+/)?.[0]
+        );
+        expect(dayOfWeekCheckbackDate.day()).toBe(1);
+        expect(screen.getByTestId("your-payments-intro")).toMatchSnapshot();
+      }
+    );
   });
 });

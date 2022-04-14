@@ -217,6 +217,9 @@ pub-payments-process-snapshot:
 pub-payments-mock-generate:
 	$(PY_RUN_CMD)  pub-payments-mock-generate $(DECODE_LOG)
 
+pub-payments-backfill-data:
+	$(PY_RUN_CMD)  pub-payments-backfill-data --steps run-pay-period-lines-backfill $(DECODE_LOG)
+
 pub-payments-process-1099-documents:
 	$(PY_RUN_CMD) pub-payments-process-1099-documents --steps ALL $(DECODE_LOG)
 
@@ -323,7 +326,7 @@ lint-flake: ## Run flake8
 	$(PY_RUN_CMD) flake8 --format=$(FLAKE8_FORMAT) massgov tests bin
 
 lint-mypy: ## Run mypy
-	$(PY_RUN_CMD) mypy $(MYPY_FLAGS) massgov bin $(MYPY_POSTPROC)
+	$(PY_RUN_CMD) mypy --show-error-codes $(MYPY_FLAGS) massgov bin $(MYPY_POSTPROC)
 
 lint-security: ## Run security linting
 	$(PY_RUN_CMD) bandit -r . --number 3 --skip B101 -ll

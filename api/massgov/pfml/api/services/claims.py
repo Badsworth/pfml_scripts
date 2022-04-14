@@ -1,16 +1,12 @@
-from typing import Dict, List
-from uuid import UUID
+from typing import Dict, Optional
 
 import newrelic.agent
-from sqlalchemy.orm.session import Session
 
 import massgov
 import massgov.pfml.api.app as app
-import massgov.pfml.api.models.claims.common as api_models
-import massgov.pfml.db.lookups as db_lookups
-import massgov.pfml.db.models.employees as db_models
 from massgov.pfml.api.models.claims.responses import DetailedClaimResponse
-from massgov.pfml.api.services.fineos_actions import get_absence_periods
+from massgov.pfml.api.services.fineos_actions import get_absence_periods_from_claim
+from massgov.pfml.db.models.employees import Claim, Employee, TaxIdentifier
 from massgov.pfml.db.queries.absence_periods import (
     convert_fineos_absence_period_to_claim_response_absence_period,
     sync_customer_api_absence_periods_to_db,
@@ -24,12 +20,12 @@ class ClaimWithdrawnError(Exception):
     ...
 
 
-def get_claim_detail(claim: db_models.Claim, log_attributes: Dict) -> DetailedClaimResponse:
+def get_claim_detail(claim: Claim, log_attributes: Dict) -> DetailedClaimResponse:
     absence_periods = []
 
     with app.db_session() as db_session:
         try:
-            absence_periods = get_absence_periods(claim, db_session)
+            absence_periods = get_absence_periods_from_claim(claim, db_session)
         except exception.FINEOSForbidden as error:
             if _is_withdrawn_claim_error(error):
                 raise ClaimWithdrawnError
@@ -68,28 +64,56 @@ def _is_withdrawn_claim_error(error: exception.FINEOSForbidden) -> bool:
     return withdrawn_msg in error.message
 
 
-def get_change_requests_from_db(
-    claim_id: UUID, db_session: Session
-) -> List[db_models.ChangeRequest]:
+def get_claim_from_db(fineos_absence_id: Optional[str]) -> Optional[Claim]:
+    if fineos_absence_id is None:
+        return None
 
-    change_requests = (
-        db_session.query(db_models.ChangeRequest)
-        .filter(db_models.ChangeRequest.claim_id == claim_id)
-        .all()
-    )
-
-    return change_requests
-
-
-def add_change_request_to_db(
-    change_request: api_models.ChangeRequest, claim_id: UUID
-) -> db_models.ChangeRequest:
     with app.db_session() as db_session:
-        change_request_type = db_lookups.by_value(
-            db_session, db_models.LkChangeRequestType, change_request.change_request_type
+        claim = (
+            db_session.query(Claim)
+            .filter(Claim.fineos_absence_id == fineos_absence_id)
+            .one_or_none()
         )
-        # needed for linter
-        assert isinstance(change_request_type, db_models.LkChangeRequestType)
-        db_request = change_request.to_db_model(change_request_type, claim_id)
-        db_session.add(db_request)
-        return db_request
+
+    return claim
+
+
+def maybe_update_employee_relationship(fineos_absence_id: str, tax_identifier: str) -> None:
+    """
+    Helper to add employee relationship to the claim if it is missing.
+
+    The association could be missing for claims created via the contact center directly in FINEOS
+    the notification endpoint fails to set the association, and if the leave admin visits the review page
+    prior to the nightly extract.
+    """
+
+    with app.db_session() as db_session:
+        claim = claim = (
+            db_session.query(Claim)
+            .filter(Claim.fineos_absence_id == fineos_absence_id)
+            .one_or_none()
+        )
+
+        if not claim:
+            return
+        if claim.employee_id:
+            return
+
+        try:
+            employee = (
+                db_session.query(Employee)
+                .join(TaxIdentifier)
+                .filter(TaxIdentifier.tax_identifier == tax_identifier)
+                .one_or_none()
+            )
+            if employee:
+                claim.employee_id = employee.employee_id
+        except Exception:
+            logger.warning(
+                "Failed to update employee relationship for claim",
+                extra={"absence_case_id": claim.fineos_absence_id, "claim_id": claim.claim_id},
+                exc_info=True,
+            )
+
+        db_session.commit()
+        return

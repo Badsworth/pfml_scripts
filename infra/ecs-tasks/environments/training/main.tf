@@ -54,8 +54,8 @@ module "tasks" {
   rmv_client_certificate_binary_arn = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-training/rmv_client_certificate-uUtNEp"
   rmv_api_behavior                  = "partially_mocked"
 
-  enable_register_admins_job = true
-
+  enable_register_admins_job                       = true
+  enable_standalone_fineos_import_employee_updates = false
 
 
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com"]
@@ -73,5 +73,5 @@ module "tasks" {
   enable_1099_testfile_generation = "0"
   irs_1099_correction_ind         = "0"
 
-  enable_employer_reimbursement_payments = "0"
+  enable_employer_reimbursement_payments = "1"
 }

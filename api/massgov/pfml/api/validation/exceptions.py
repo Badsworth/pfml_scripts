@@ -67,6 +67,8 @@ class IssueRule(str, Enum):
     # Disallow suspicious attempts for potential fraud cases.
     # Intentionally vague to avoid leaking this is for fraud prevention
     disallow_attempts = "disallow_attempts"
+    # Restrict claimants from trying several SSN/FEIN combinations
+    max_ssn_fein_update_attempts = "max_ssn_fein_update_attempts"
     # Employee must have wages from the Employer
     require_employee = "require_employee"
 
@@ -152,16 +154,16 @@ class IssueType(str, Enum):
     require_employer = "require_employer"
     # Employer record must exist in the API and FINEOS
     require_contributing_employer = "require_contributing_employer"
+    # Employer must not be fully exempt.
+    require_non_exempt_employer = "require_non_exempt_employer"
     # Data failed a checksum test e.g. Routing number
     checksum = "checksum"
     # Employer can't be verified because there's nothing to verify against
     employer_requires_verification_data = "employer_requires_verification_data"
     # Leave admin user attempting to view data for an organization they don't have access to
     unauthorized_leave_admin = "unauthorized_leave_admin"
-    # User is trying to submit a modification on an unapproved claim
-    must_be_approved_claim = "must_be_approved_claim"
-    # User is trying to submit a withdrawal on an claim without either a pending or approved absence period
-    must_be_approved_or_pending_claim = "must_be_approved_or_pending_claim"
+    # User is trying to submit a change request without an absence period in a valid state
+    must_have_valid_decision_status = "must_have_valid_decision_status"
     # User is trying to add start and end dates to a claim withdrawal
     withdrawal_dates_must_be_null = "withdrawal_dates_must_be_null"
     # User is trying to make an unsupported modification
@@ -186,6 +188,7 @@ class ValidationErrorDetail:
     message: str = ""
     rule: Optional[Union[IssueRule, str]] = None
     field: Optional[str] = None
+    value: Optional[str] = None  # Do not store PII data here, as it gets logged in some cases
 
 
 class ValidationException(Exception):

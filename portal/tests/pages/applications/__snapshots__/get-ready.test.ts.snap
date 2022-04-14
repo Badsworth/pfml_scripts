@@ -253,7 +253,7 @@ exports[`GetReady renders get ready content 1`] = `
         rel="noopener"
         target="_blank"
       >
-        easily added to your claim
+        easily added to your application
       </a>
        by calling our Contact Center at 
       <a
@@ -283,7 +283,7 @@ exports[`GetReady renders get ready content 1`] = `
     <p>
       PFML benefits are subject to reporting for tax purposes and may be subject to taxation. Your decision to have taxes withheld from your benefit may affect your personal tax liability. If you’re unsure whether you want to withhold taxes, we recommend speaking with a 
       <a
-        href="https://www.mass.gov/service-details/find-a-tax-professional-to-help-with-your-taxes"
+        href="https://mass.gov/taxassistance"
         rel="noopener"
         target="_blank"
       >
@@ -315,6 +315,28 @@ exports[`GetReady renders get ready content 1`] = `
     >
       Create an application
     </a>
+    <details
+      class="c-details"
+    >
+      <summary
+        class="margin-bottom-2 text-primary text-underline font-ui-xs"
+      >
+        Did you start an application by phone?
+      </summary>
+      <div
+        class="margin-bottom-2"
+      >
+        <p>
+          Some applications started on the phone can be added to this website. Once added, you can upload documents and see your application’s status and payments online.
+        </p>
+        <a
+          class="display-inline-block margin-bottom-5"
+          href="/applications/import-claim"
+        >
+          Add an existing application
+        </a>
+      </div>
+    </details>
   </div>
 </div>
 `;

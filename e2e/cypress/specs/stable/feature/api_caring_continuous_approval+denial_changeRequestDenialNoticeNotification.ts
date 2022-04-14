@@ -2,36 +2,44 @@ import { fineos, fineosPages, portal, email } from "../../../actions";
 import { Submission } from "../../../../src/types";
 import { getClaimantCredentials } from "../../../config";
 import { config } from "../../../actions/common";
-import { itIf } from "../../../util";
-
-// @TODO parts of this test is only available in certain environments with the FINEOS
-// @TODO January release and the email template updates.
 
 describe("Post-approval (notifications/notices)", () => {
+  const APRIL_UPGRADE: boolean = config("HAS_APRIL_UPGRADE") === "true";
   after(() => {
     portal.deleteDownloadsFolder();
   });
-  const approval =
-    it("Submit a Care for a Family member claim for approval", () => {
-      fineos.before();
-      //Submit a claim via the API, including Employer Response.
-      cy.task("generateClaim", "CHAP_ER").then((claim) => {
+
+  it("Submits a claim via the API", () => {
+    cy.task("generateClaim", "CHAP_ER").then((claim) => {
+      cy.task("submitClaimToAPI", claim).then((res) => {
         cy.stash("claim", claim);
-        cy.task("submitClaimToAPI", claim).then((response) => {
+        cy.stash("submission", {
+          application_id: res.application_id,
+          fineos_absence_id: res.fineos_absence_id,
+          timestamp_from: Date.now(),
+        });
+      });
+    });
+  });
+
+  const approval = it("CSR rep approves caring leave claim", () => {
+    cy.dependsOnPreviousPass();
+    fineos.before();
+    cy.unstash<DehydratedClaim>("claim").then((claim) => {
+      cy.unstash<Submission>("submission").then((response) => {
+        cy.tryCount().then((tryCount) => {
           if (!response.fineos_absence_id) {
             throw new Error("Response contained no fineos_absence_id property");
           }
-          const submission: Submission = {
-            application_id: response.application_id,
-            fineos_absence_id: response.fineos_absence_id,
-            timestamp_from: Date.now(),
-          };
-
-          cy.stash("submission", submission);
           // Approve the claim
           const claimPage = fineosPages.ClaimPage.visit(
             response.fineos_absence_id
           );
+          if (tryCount > 0) {
+            fineos.assertClaimStatus("Approved");
+            claimPage.triggerNotice("Designation Notice");
+            return;
+          }
           claimPage.triggerNotice("Preliminary Designation");
           fineos.onTab("Absence Hub");
           claimPage.adjudicate((adjudication) => {
@@ -46,15 +54,12 @@ describe("Post-approval (notifications/notices)", () => {
           });
           // Skip checking tasks. We do that in other tests.
           // Also skip checking claim status for the same reason.
-          if (config("HAS_APRIL_UPGRADE") === "true") {
-            claimPage.approve("Approved", true);
-          } else {
-            claimPage.approve("Approved", false);
-          }
+          claimPage.approve("Approved", config("HAS_APRIL_UPGRADE") === "true");
           claimPage.triggerNotice("Designation Notice");
         });
       });
     });
+  });
 
   const denyModification =
     it('Generates a "Change Request Denial" document when deny an approved claim in review', () => {
@@ -65,11 +70,15 @@ describe("Post-approval (notifications/notices)", () => {
         const claimPage = fineosPages.ClaimPage.visit(
           submission.fineos_absence_id
         );
-        claimPage.leaveDetails((leaveDetails) => {
-          leaveDetails.inReview();
-        });
         claimPage
-          .denyExtendedTime("Claimant/Family member deceased")
+          .leaveDetails((leaveDetails) => {
+            const adjudication = leaveDetails.inReview(APRIL_UPGRADE);
+            if (APRIL_UPGRADE) {
+              adjudication.rejectLeavePlan().clickOK();
+            }
+            adjudication.doNothing();
+          })
+          .denyExtendedTime("Claimant/Family member deceased", APRIL_UPGRADE)
           .triggerNotice("Review Denial Notice")
           .documents((docPage) =>
             docPage.assertDocumentExists("Change Request Denied")
@@ -103,27 +112,16 @@ describe("Post-approval (notifications/notices)", () => {
             status: "Denied",
           },
         ]);
-        //@TODO this will need to be adjusted for the January release for FINEOS version
-        // If the environment has the January release add to the if statement
-        if (config("HAS_FINEOS_JANUARY_RELEASE") === "true") {
-          cy.findByText("Change Request Denied (PDF)")
-            .should("be.visible")
-            .click({ force: true });
-          portal.downloadLegalNotice(submission.fineos_absence_id);
-        } else {
-          // Any other FINEOS version from Dec or before will need to use the else statement
-          cy.findByText("Approval notice (PDF)")
-            .should("be.visible")
-            .click({ force: true });
-          portal.downloadLegalNotice(submission.fineos_absence_id);
-        }
+        // Any other FINEOS version from Dec or before will need to use the else statement
+        cy.findByText("Approval notice (PDF)")
+          .should("be.visible")
+          .click({ force: true });
+        portal.downloadLegalNotice(submission.fineos_absence_id);
       });
     }
   );
 
-  const hasJanuaryRelease = config("HAS_FINEOS_JANUARY_RELEASE") === "true";
-  itIf(
-    hasJanuaryRelease,
+  it(
     "Check the Leave Admin Portal for the Change Request Denied notice",
     { retries: 0 },
     () => {
@@ -148,8 +146,7 @@ describe("Post-approval (notifications/notices)", () => {
     }
   );
 
-  itIf(
-    hasJanuaryRelease,
+  it(
     "Check the Claimant email for the Change Request Denial notification.",
     { retries: 0 },
     () => {
@@ -188,8 +185,7 @@ describe("Post-approval (notifications/notices)", () => {
     }
   );
 
-  itIf(
-    hasJanuaryRelease,
+  it(
     "Check the Leave Admin email for the Change Request Denial notification.",
     { retries: 0 },
     () => {

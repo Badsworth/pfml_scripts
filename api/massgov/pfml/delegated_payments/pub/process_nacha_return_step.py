@@ -58,17 +58,25 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         PAYMENT_ALREADY_REJECTED_COUNT = "payment_already_rejected_count"
         PAYMENT_NOTIFICATION_UNEXPECTED_STATE_COUNT = "payment_notification_unexpected_state_count"
         PAYMENT_REJECTED_COUNT = "payment_rejected_count"
+        PAYMENT_REJECTED_PRIOR_CHANGE_NOTIFICATION_COUNT = (
+            "payment_rejected_prior_change_notification_count"
+        )
         PAYMENT_UNEXPECTED_STATE_COUNT = "payment_unexpected_state_count"
         UNKNOWN_ID_FORMAT_COUNT = "unknown_id_format_count"
         WARNING_COUNT = "warning_count"
         PROCESSED_ACH_FILE = "processed_ach_file"
 
     def __init__(
-        self, db_session: massgov.pfml.db.Session, log_entry_db_session: massgov.pfml.db.Session
+        self,
+        db_session: massgov.pfml.db.Session,
+        log_entry_db_session: massgov.pfml.db.Session,
+        should_add_to_report_queue: bool = False,
     ) -> None:
         """Constructor."""
         pub_ach_inbound_path = delegated_config.get_s3_config().pfml_pub_ach_archive_path
-        super().__init__(db_session, log_entry_db_session, pub_ach_inbound_path)
+        super().__init__(
+            db_session, log_entry_db_session, pub_ach_inbound_path, should_add_to_report_queue
+        )
 
     def process_file(self, path: str) -> None:
         """Parse an ACH return file and process each record."""
@@ -282,8 +290,23 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
             end_state_id = payment_state_log.end_state_id
             end_state = payment_state_log.end_state
 
-        if end_state_id == State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT.state_id:
-            # Expected normal state for an ACH returned payment.
+        log_details = {
+            **ach_return.get_details_for_log(),
+            **delegated_payments_util.get_traceable_payment_details(payment, end_state),
+        }
+
+        # update the state if the EFT payment was sent to PUB
+        # or had a change notification.
+        if end_state_id in [
+            State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT.state_id,
+            State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION.state_id,
+        ]:
+
+            # If it's a change notification, update a metric
+            # specifically for that as it's an unlikely scenario
+            if end_state_id == State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION.state_id:
+                self.increment(self.Metrics.PAYMENT_REJECTED_PRIOR_CHANGE_NOTIFICATION_COUNT)
+
             create_payment_finished_state_log_with_writeback(
                 payment=payment,
                 payment_end_state=State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
@@ -297,12 +320,9 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
                 import_log_id=self.get_import_log_id(),
             )
 
-            logger.warning(
+            logger.info(
                 "ACH Return: Payment bank processing error",
-                extra={
-                    **ach_return.get_details_for_log(),
-                    **delegated_payments_util.get_traceable_payment_details(payment, end_state),
-                },
+                extra=log_details,
             )
             self.increment(self.Metrics.PAYMENT_REJECTED_COUNT)
 
@@ -312,27 +332,21 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
                 line_number=ach_return.line_number,
                 raw_data=ach_return.raw_record.data,
                 type_code=ach_return.raw_record.type_code.value,
-                details=ach_return.get_details_for_error(),
+                details=log_details,
                 payment=payment,
             )
         elif end_state_id == State.DELEGATED_PAYMENT_ERROR_FROM_BANK.state_id:
             # Already processed an ACH return for this payment.
             logger.info(
                 "payment already in a bank processing error state",
-                extra={
-                    **ach_return.get_details_for_log(),
-                    **delegated_payments_util.get_traceable_payment_details(payment, end_state),
-                },
+                extra=log_details,
             )
             self.increment(self.Metrics.PAYMENT_ALREADY_REJECTED_COUNT)
+
         else:
             # The latest state for this payment is not compatible with receiving an ACH return.
-            details = {
-                **ach_return.get_details_for_log(),
-                **delegated_payments_util.get_traceable_payment_details(payment, end_state),
-            }
 
-            logger.error("ACH Return: unexpected state for payment", extra=details)
+            logger.error("ACH Return: unexpected state for payment", extra=log_details)
             self.increment(self.Metrics.PAYMENT_UNEXPECTED_STATE_COUNT)
 
             self.add_pub_error(
@@ -341,7 +355,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
                 line_number=ach_return.line_number,
                 raw_data=ach_return.raw_record.data,
                 type_code=ach_return.raw_record.type_code.value,
-                details=details,
+                details=log_details,
                 payment=payment,
             )
 

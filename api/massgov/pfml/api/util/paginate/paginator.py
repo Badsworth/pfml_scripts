@@ -1,9 +1,9 @@
 import math
-from dataclasses import asdict, dataclass
-from typing import Any, Dict, List, Union
+from typing import Any, List, Union
 
 import flask
-from sqlalchemy import func
+from sqlalchemy import distinct, func
+from sqlalchemy.inspection import inspect
 from sqlalchemy.orm import Query
 from werkzeug.exceptions import BadRequest
 
@@ -14,23 +14,11 @@ DEFAULT_PAGE_OFFSET = 1
 DEFAULT_PAGE_SIZE = 25
 
 
-@dataclass
-class PagingMetaData:
-    total_records: int
-    total_pages: int
-    page_offset: int
-    page_size: int
-    order_by: str
-    order_direction: str
-
-    def to_dict(self) -> Dict[str, Union[int, str]]:
-        return asdict(self)
-
-
 class PaginationAPIContext:
     def __init__(self, entity: Any, request: Union[flask.Request, SearchEnvelope]):
         pagination_params = make_pagination_params(request)
 
+        self.entity = entity
         self.page_size = pagination_params.paging.size
         self.page_offset = pagination_params.paging.offset
         self.order_by = pagination_params.order.by
@@ -72,7 +60,14 @@ class Page:
 
 
 class Paginator:
-    def __init__(self, query_set: Query, page_size: int = DEFAULT_PAGE_SIZE, page_offset: int = 1):
+    def __init__(
+        self,
+        entity: Any,
+        query_set: Query,
+        page_size: int = DEFAULT_PAGE_SIZE,
+        page_offset: int = 1,
+    ):
+        self.entity = entity
         self.query_set = query_set
 
         if page_size <= 0:
@@ -110,8 +105,10 @@ class Paginator:
         if self._total_records >= 0:
             return self._total_records
 
+        primary_key = inspect(self.entity).primary_key[0]
+
         total_records_query = self.query_set.order_by(None).statement.with_only_columns(
-            [func.count()]
+            [func.count(distinct(primary_key))]
         )
         self._total_records = self.query_set.session.execute(total_records_query).scalar()
         return self._total_records
@@ -122,7 +119,7 @@ class Paginator:
 
 
 def page_for_api_context(context: PaginationAPIContext, query: Query) -> Page:
-    paginator = Paginator(query, page_size=context.page_size)
+    paginator = Paginator(context.entity, query, page_size=context.page_size)
     return paginator.page_at(page_offset=context.page_offset)
 
 
@@ -147,18 +144,5 @@ def make_pagination_params(request: Union[flask.Request, SearchEnvelope]) -> Sea
         order_data["direction"] = OrderDirection(order_direction)
 
     return SearchEnvelope[None](  # type: ignore
-        terms=None, order=OrderData(**order_data), paging=PagingData(**page_data)
-    )
-
-
-def make_paging_meta_data_from_paginator(
-    context: PaginationAPIContext, page: Page
-) -> PagingMetaData:
-    return PagingMetaData(
-        total_records=page.total_records,
-        total_pages=page.total_pages,
-        page_offset=context.page_offset,
-        page_size=context.page_size,
-        order_by=context.order_by,
-        order_direction=context.order_direction,
+        terms=None, order=OrderData(**order_data), paging=PagingData(**page_data)  # type: ignore
     )

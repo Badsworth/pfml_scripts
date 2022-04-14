@@ -56,10 +56,17 @@ REQUEST_1099_EXTRACT_CONFIG = ExtractConfig(
     "fineos_data_export_path",
 )
 
+VBI_TASKREPORT_SOM_EXTRACT_CONFIG = ExtractConfig(
+    payments_util.VBI_TASKREPORT_SOM_EXTRACT_FILES,
+    ReferenceFileType.FINEOS_VBI_TASKREPORT_SOM_EXTRACT,
+    "fineos_data_export_path",
+)
+
 
 class ExtractData:
+    s3_locations: List[str]
     date_str: str
-
+    extract_config: ExtractConfig
     extract_path_mapping: Dict[str, payments_util.FineosExtract]
 
     reference_file: ReferenceFile
@@ -69,20 +76,16 @@ class ExtractData:
         s3_locations: List[str],
         date_str: str,
         extract_config: ExtractConfig,
-        validate_all_files: bool = True,
     ):
+        self.s3_locations = s3_locations
         self.date_str = date_str
+        self.extract_config = extract_config
         self.extract_path_mapping = {}
 
         for s3_location in s3_locations:
             for extract in extract_config.extracts:
                 if s3_location.endswith(extract.file_name):
                     self.extract_path_mapping[s3_location] = extract
-
-        if validate_all_files and len(extract_config.extracts) != len(self.extract_path_mapping):
-            expected_file_names = [extract.file_name for extract in extract_config.extracts]
-            error_msg = f"Expected to find files {expected_file_names}, but found {s3_locations}"
-            raise Exception(error_msg)
 
         self.reference_file = ReferenceFile(
             file_location=os.path.join(
@@ -95,6 +98,16 @@ class ExtractData:
         )
         logger.info("Intialized extract data: %s", self.reference_file.file_location)
 
+    def validate(self, validate_all_files: bool = True) -> None:
+        if validate_all_files and len(self.extract_config.extracts) != len(
+            self.extract_path_mapping
+        ):
+            expected_file_names = [extract.file_name for extract in self.extract_config.extracts]
+            error_msg = (
+                f"Expected to find files {expected_file_names}, but found {self.s3_locations}"
+            )
+            raise Exception(error_msg)
+
 
 class FineosExtractStep(Step):
     extract_config: ExtractConfig
@@ -106,6 +119,7 @@ class FineosExtractStep(Step):
         ARCHIVE_PATH = "archive_path"
         FILE_TYPE = "file_type"
         RECORDS_PROCESSED_COUNT = "records_processed_count"
+        RECORDS_FILTERED_OUT_COUNT = "records_filtered_out_count"
 
     def __init__(
         self,
@@ -149,10 +163,15 @@ class FineosExtractStep(Step):
             extra={"date_group": self.active_extract_data_date_str},
         )
         if self.active_extract_data:
+            # Move the files to the error directory
+            # Note we don't create the reference file
+            # because if it errors again, we don't want to hit
+            # an issue with the reference file location unique key
             self.move_files_from_received_to_out_dir(
-                self.active_extract_data, payments_util.Constants.S3_INBOUND_ERROR_DIR
+                self.active_extract_data,
+                payments_util.Constants.S3_INBOUND_ERROR_DIR,
+                create_reference_file=False,
             )
-            self.db_session.commit()
             self.active_extract_data = None
 
     def process_extracts(self, download_directory: pathlib.Path) -> None:
@@ -170,16 +189,17 @@ class FineosExtractStep(Step):
             )
             is_latest_extract = date_str == latest_date_str
 
-            # We'll only validate all files present for the latest
-            # extract that we're going to actually store to the DB
             extract_data = ExtractData(
                 s3_file_locations,
                 date_str,
                 self.extract_config,
-                validate_all_files=is_latest_extract,
             )
             self.active_extract_data = extract_data
             self.active_extract_data_date_str = date_str
+
+            # We'll only validate all files present for the latest
+            # extract that we're going to actually store to the DB
+            extract_data.validate(validate_all_files=is_latest_extract)
 
             if not is_latest_extract:
                 self.move_files_from_received_to_out_dir(
@@ -237,7 +257,7 @@ class FineosExtractStep(Step):
         return data_by_date
 
     def move_files_from_received_to_out_dir(
-        self, extract_data: ExtractData, directory_name: str
+        self, extract_data: ExtractData, directory_name: str, create_reference_file: bool = True
     ) -> None:
         # Effectively, this method will move a file of path:
         # s3://bucket/path/to/received/2020-01-01-11-30-00-file.csv
@@ -266,7 +286,8 @@ class FineosExtractStep(Step):
             new_file_location,
         )
         extract_data.reference_file.file_location = new_file_location
-        self.db_session.add(extract_data.reference_file)
+        if create_reference_file:
+            self.db_session.add(extract_data.reference_file)
 
         logger.info("Successfully moved files to %s folder", directory_name)
         self.set_metrics({self.Metrics.ARCHIVE_PATH: new_file_location})
@@ -306,14 +327,17 @@ class FineosExtractStep(Step):
                             },
                         )
 
-                staging_table_instance = payments_util.create_staging_table_instance(
-                    lower_key_record,
-                    extract.table,
-                    extract_data.reference_file,
-                    self.get_import_log_id(),
-                    # These were already logged when we checked the first record earlier,
-                    # so we don't need to log them again.
-                    ignore_properties=unconfigured_columns,
-                )
-                self.db_session.add(staging_table_instance)
-                self.increment(self.Metrics.RECORDS_PROCESSED_COUNT)
+                if payments_util.matches_all_filters(lower_key_record, extract):
+                    staging_table_instance = payments_util.create_staging_table_instance(
+                        lower_key_record,
+                        extract.table,
+                        extract_data.reference_file,
+                        self.get_import_log_id(),
+                        # These were already logged when we checked the first record earlier,
+                        # so we don't need to log them again.
+                        ignore_properties=unconfigured_columns,
+                    )
+                    self.db_session.add(staging_table_instance)
+                    self.increment(self.Metrics.RECORDS_PROCESSED_COUNT)
+                else:
+                    self.increment(self.Metrics.RECORDS_FILTERED_OUT_COUNT)

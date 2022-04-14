@@ -20,20 +20,23 @@ a {
 .pill {
   padding: 2px 6px;
   border-radius: 5px;
-  border: 1px #fff solid;
+  border: 1px $PILL_DEFAULT_COLOR solid;
   font-weight: bold;
   font-size: 9px;
   margin-right: 5px;
-  //filter: brightness(0.9) contrast(.9) saturate(1.3) hue-rotate(-10deg);
+  background: $PILL_DEFAULT_FILL;
+  color: $PILL_DEFAULT_COLOR;
 
   &.PASS {
-    background: #ffeffd;
+    background: $COLOR_PASS_LITE;
     color: $COLOR_PASS;
     border-color: $COLOR_PASS;
   }
 
-  &.SKIPPED {
+  &.SKIPPED,
+  &.SKIP {
     background: $COLOR_WARN;
+    color: #000;
   }
 
   &.EDM {
@@ -43,21 +46,80 @@ a {
   }
 
   &.HIGH,
+  &.FAIL,
   &.connection {
-    background: #fee;
+    background: $COLOR_FAIL_LITE;
     color: $COLOR_FAIL;
     border-color: $COLOR_FAIL;
   }
 
   &.MEDIUM {
-    background: #fee;
+    background: $COLOR_WARN_MEDIUM_LITE;
     color: $COLOR_WARN_MEDIUM;
     border-color: $COLOR_WARN_MEDIUM;
   }
 
   &.LOW {
-    background: #f0f8ff;
+    background: $COLOR_WARN_LOW_LITE;
     color: $COLOR_WARN_LOW;
     border-color: $COLOR_WARN_LOW;
   }
+}
+
+.runProgress {
+  background: $PROGRESS_DEFAULT_FILL;
+  width: 100%;
+  position: relative;
+  border-radius: 15px;
+  height: 30px;
+  min-width: 50px;
+  margin: 3px;
+
+  &.fail {
+    background: $PROGRESS_ERROR_FILL;
+  }
+
+  &.clickable {
+    cursor: pointer;
+
+    &:hover {
+      outline: 1px dotted #000;
+      outline-offset: 4px;
+    }
+  }
+
+  .progress {
+    left: 0;
+    position: absolute;
+    height: 30px;
+    border-radius: 15px;
+    text-align: center;
+    color: #000 !important;
+    line-height: 30px !important;
+    font-weight: bold;
+
+    &.fail {
+      @include COLOR_FILTER();
+      background: $COLOR_FAIL;
+    }
+
+    &.skip,
+    &.warning {
+      background: $COLOR_WARN;
+    }
+
+    &.flake {
+      @include COLOR_FILTER();
+      background: $COLOR_FLAKE;
+    }
+
+    &.pass {
+      @include COLOR_FILTER();
+      background: $COLOR_PASS;
+    }
+  }
+}
+
+[role="tooltip"] {
+  color: #fff;
 }

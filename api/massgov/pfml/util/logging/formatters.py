@@ -29,10 +29,32 @@ EXCLUDE_ATTRIBUTES = {
 }
 
 # Attributes of LogRecord to allow through without masking suspected PII.
-ALLOW_NO_MASK = {"count", "created", "process", "thread", "account_key"}
+ALLOW_NO_MASK = {
+    "account_key",
+    "count",
+    "created",
+    "fineos_employer_id",
+    "hostname",
+    "process",
+    "thread",
+}
 
 # Regular expression to match a tax identifier, 9 digits with optional dashes.
-TIN_RE = re.compile(r"\b(\d-?){8}\d\b", re.ASCII)
+# Matches between word boundaries (\b), except when:
+#  - Preceded by word character and dash (e.g. "ip-10-11-12-134")
+#  - Followed by a dot and digit, for decimal numbers (e.g. 999000000.5)
+# See https://docs.python.org/3/library/re.html#regular-expression-syntax
+TIN_RE = re.compile(
+    r"""
+        \b          # word boundary
+        (?<!\w-)    # not preceded by word character and dash
+        (\d-?){8}   # digit then optional dash, 8 times
+        \d          # last digit
+        \b          # word boundary
+        (?!\.\d)    # not followed by decimal point and digit (for decimal numbers)
+    """,
+    re.ASCII | re.VERBOSE,
+)
 
 MOST_COMPACT_JSON_SEPARATORS = (",", ":")
 
@@ -44,8 +66,16 @@ class JsonFormatter(logging.Formatter):  # noqa: B1
         # Inject Flask request information. See
         # https://flask.palletsprojects.com/en/1.1.x/logging/#injecting-request-information
         if flask.has_request_context():
+            # legacy keys
             record.method = flask.request.method
             record.path = flask.request.path
+
+            # keys corresponding to New Relic Flask attributes
+            record.__dict__["request.method"] = flask.request.method
+            record.__dict__["request.path"] = flask.request.path
+            record.__dict__["request.url_rule"] = flask.request.url_rule
+
+            # custom features
             record.request_id = flask.request.headers.get("x-amzn-requestid", "")
             record.mass_pfml_agent_id = flask.request.headers.get("Mass-PFML-Agent-ID", "")
 

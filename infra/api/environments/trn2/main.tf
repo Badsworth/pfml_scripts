@@ -90,6 +90,8 @@ module "api" {
 
   fineos_client_oauth2_client_id = "2e9vsuq808h3tu4rf9tr1efuh5"
 
+  fineos_is_running_v21 = "true"
+
   admin_portal_base_url               = "https://paidleave-admin-trn2.dfml.eol.mass.gov"
   pfml_email_address                  = "PFML_DoNotReply@eol.mass.gov"
   bounce_forwarding_email_address     = "PFML_DoNotReply@eol.mass.gov"
@@ -106,6 +108,6 @@ module "api" {
   azure_ad_tenant_id        = "3e861d16-48b7-4a0e-9806-8c04d81b7b2a"
 
   enable_document_multipart_upload = "1"
-  enable_application_import        = "1"
   enable_employee_endpoints        = "1"
+  limit_ssn_fein_max_attempts      = "5"
 }

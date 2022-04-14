@@ -1,0 +1,71 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Claim Modification Cancel renders page content 1`] = `
+<div>
+  <a
+    class="usa-button margin-bottom-5 usa-button--unstyled"
+    href="/applications"
+  >
+    <svg
+      class="margin-right-05"
+      height="12"
+      viewBox="0 0 448 512"
+      width="12"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"
+        fill="currentColor"
+      />
+    </svg>
+    Back to your applications
+  </a>
+  <form
+    class="usa-form"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Change your application
+    </h1>
+    <div
+      class="usa-alert usa-alert--warning maxw-tablet"
+      role="region"
+      tabindex="-1"
+    >
+      <div
+        class="usa-alert__body"
+      >
+        <div
+          class="usa-alert__text"
+        >
+          If you have received payments for the leave dates you are cancelling, you will need to return the money to the Department. Read more about 
+          <a
+            href="https://mass.gov/this-is-not-a-real-link"
+            rel="noopener"
+            target="_blank"
+          >
+            overpayments
+          </a>
+          .
+        </div>
+      </div>
+    </div>
+    <label
+      class="usa-label text-bold font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+    >
+      Are you sure you want to cancel your entire PFML leave?
+    </label>
+    <p>
+      Once your application has been canceled, you cannot make any changes to your application.
+    </p>
+    <button
+      class="usa-button position-relative"
+      type="button"
+    >
+      Yes, cancel my leave
+    </button>
+  </form>
+</div>
+`;

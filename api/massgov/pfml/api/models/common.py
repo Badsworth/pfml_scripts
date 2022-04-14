@@ -1,7 +1,8 @@
+import datetime
 from datetime import date, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, Generic, Optional, TypeVar, Union
+from typing import Generic, Optional, TypeVar, Union
 
 import phonenumbers
 from pydantic import UUID4, Field, validator
@@ -14,6 +15,7 @@ import massgov.pfml.db.models.verifications as db_verification_models
 import massgov.pfml.util.pydantic.mask as mask
 from massgov.pfml.api.constants.application import (
     CARING_LEAVE_EARLIEST_START_DATE,
+    MAX_DAYS_IN_ADVANCE_TO_SUBMIT,
     PFML_PROGRAM_LAUNCH_DATE,
 )
 from massgov.pfml.api.validation.exceptions import (
@@ -336,6 +338,9 @@ def get_computed_start_dates(
     return computed_start_dates
 
 
+# TODO API-2558
+# https://lwd.atlassian.net/browse/API-2558
+# Move this and get_earliest_submission_date into Application DB model
 def get_earliest_start_date(application: db_application_models.Application) -> Optional[date]:
     all_leave_periods = application.all_leave_periods
     leave_period_start_dates = [
@@ -344,12 +349,38 @@ def get_earliest_start_date(application: db_application_models.Application) -> O
     return min(leave_period_start_dates, default=None)
 
 
+def get_latest_end_date(application: db_application_models.Application) -> Optional[date]:
+    leave_period_end_dates = [
+        leave_period.end_date
+        for leave_period in application.all_leave_periods
+        if leave_period.end_date
+    ]
+
+    return max(leave_period_end_dates, default=None)
+
+
 def get_leave_reason(application: db_application_models.Application) -> Optional[str]:
     return (
         db_application_models.LeaveReason.get_description(application.leave_reason_id)
         if application.leave_reason_id
         else None
     )
+
+
+# returns None if there is no leave start date, or the application has already been submitted
+def get_application_earliest_submission_date(
+    application: db_application_models.Application,
+) -> Optional[date]:
+    earliest_start_date = get_earliest_start_date(application)
+
+    if earliest_start_date is None or application.submitted_time is not None:
+        return None
+
+    return get_earliest_submission_date(earliest_start_date)
+
+
+def get_earliest_submission_date(start_date: date) -> date:
+    return start_date - datetime.timedelta(days=MAX_DAYS_IN_ADVANCE_TO_SUBMIT)
 
 
 # search stuff
@@ -376,14 +407,3 @@ class SearchEnvelope(GenericModel, Generic[SearchTermsT]):
     terms: SearchTermsT
     order: OrderData = Field(default_factory=OrderData)
     paging: PagingData = Field(default_factory=PagingData)
-
-
-def search_request_log_info(request: SearchEnvelope[SearchTermsT]) -> Dict[str, Any]:
-    USER_PROVIDED_FIELDS = request.terms.__fields_set__
-    log_info = {}
-    for key, value in request.terms.dict().items():
-        if isinstance(value, str):
-            log_info.update({f"terms.{key}_length": len(value)})
-        log_info.update({f"terms.{key}_provided": (key in USER_PROVIDED_FIELDS)})
-
-    return log_info

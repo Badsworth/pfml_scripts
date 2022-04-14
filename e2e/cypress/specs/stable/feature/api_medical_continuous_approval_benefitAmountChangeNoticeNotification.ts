@@ -1,11 +1,9 @@
 import { email, fineos, fineosPages, portal } from "../../../actions";
 import { Submission } from "../../../../src/types";
 import { getClaimantCredentials } from "../../../config";
-import { describeIf } from "../../../util";
 import { config } from "../../../actions/common";
 
-describeIf(
-  config("HAS_FINEOS_JANUARY_RELEASE") === "true",
+describe(
   "Create a Benefit Amount Change Notice in FINEOS and check delivery to the LA/Claimant portal",
   {},
   () => {
@@ -31,29 +29,35 @@ describeIf(
     });
 
     const approval = it("Approves the child bonding claim", () => {
+      cy.dependsOnPreviousPass();
       fineos.before();
       cy.unstash<DehydratedClaim>("claim").then((claim) => {
         cy.unstash<Submission>("submission").then((submission) => {
-          const claimPage = fineosPages.ClaimPage.visit(
-            submission.fineos_absence_id
-          ).adjudicate((adjudication) => {
-            adjudication
-              .evidence((evidence) => {
-                for (const document of claim.documents) {
-                  evidence.receive(document.document_type);
-                }
+          cy.tryCount().then((tryCount) => {
+            const claimPage = fineosPages.ClaimPage.visit(
+              submission.fineos_absence_id
+            );
+            if (tryCount > 0) {
+              fineos.assertClaimStatus("Approved");
+              claimPage.triggerNotice("Designation Notice");
+              return;
+            }
+            claimPage
+              .adjudicate((adjudication) => {
+                adjudication
+                  .evidence((evidence) => {
+                    for (const document of claim.documents) {
+                      evidence.receive(document.document_type);
+                    }
+                  })
+                  .certificationPeriods((certificationPeriods) =>
+                    certificationPeriods.prefill()
+                  )
+                  .acceptLeavePlan();
               })
-              .certificationPeriods((certificationPeriods) =>
-                certificationPeriods.prefill()
-              )
-              .acceptLeavePlan();
+              .approve("Approved", config("HAS_APRIL_UPGRADE") === "true")
+              .triggerNotice("Designation Notice");
           });
-          if (config("HAS_APRIL_UPGRADE") === "true") {
-            claimPage.approve("Approved", true);
-          } else {
-            claimPage.approve("Approved", false);
-          }
-          claimPage.triggerNotice("Designation Notice");
         });
       });
     });

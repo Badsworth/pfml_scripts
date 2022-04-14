@@ -54,13 +54,11 @@ def mock_ach_reader():
 
 
 @pytest.fixture
-def process_return_step(
-    local_test_db_session, local_test_db_other_session, local_initialize_factories_session
-):
+def process_return_step(test_db_session, initialize_factories_session):
     process_return_step = process_nacha_return_step.ProcessNachaReturnFileStep(
-        db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
+        db_session=test_db_session, log_entry_db_session=test_db_session
     )
-    process_return_step.log_entry = LogEntry(local_test_db_other_session, "Test")
+    process_return_step.log_entry = LogEntry(test_db_session, "Test")
     process_return_step.reference_file = ReferenceFileFactory.create(
         reference_file_type_id=ReferenceFileType.PUB_ACH_RETURN.reference_file_type_id
     )
@@ -144,13 +142,11 @@ def payment_sent_to_pub_factory(pub_individual_id, test_db_session):
 # == Tests ==
 
 
-def test_add_pub_error(
-    test_db_session, monkeypatch, tmp_path, initialize_factories_session, test_db_other_session
-):
+def test_add_pub_error(test_db_session, monkeypatch, tmp_path, initialize_factories_session):
     monkeypatch.setenv("PFML_PUB_ACH_ARCHIVE_PATH", str(tmp_path))
 
     step = process_nacha_return_step.ProcessNachaReturnFileStep(
-        db_session=test_db_session, log_entry_db_session=test_db_other_session
+        db_session=test_db_session, log_entry_db_session=test_db_session
     )
 
     # error if log entry has not been set (i.e. process has not been run)
@@ -213,19 +209,19 @@ def test_add_pub_error(
     assert pub_error.pub_eft_id == pub_eft.pub_eft_id
 
 
-def test_ach_warnings(local_test_db_session, process_return_step, mock_ach_reader):
+def test_ach_warnings(test_db_session, process_return_step, mock_ach_reader):
     raw_record_1 = RawRecord(type_code=TypeCode.ENTRY_DETAIL, line_number=1, data="Test Data")
     mock_ach_reader.add_warning(raw_record_1, "Test Warning")
 
     process_return_step.process_parsed(mock_ach_reader)
 
-    assert_pub_error(local_test_db_session, PubErrorType.ACH_WARNING, "Test Warning")
+    assert_pub_error(test_db_session, PubErrorType.ACH_WARNING, "Test Warning")
 
     metrics = process_return_step.log_entry.metrics
     assert metrics["warning_count"] == 1
 
 
-def test_unknown_return_id_format(local_test_db_session, process_return_step, mock_ach_reader):
+def test_unknown_return_id_format(test_db_session, process_return_step, mock_ach_reader):
     # Unknown return id format
     ach_return = create_ach_return("X123", TypeCode.ENTRY_DETAIL, "R01")
     mock_ach_reader.ach_returns.append(ach_return)
@@ -233,7 +229,7 @@ def test_unknown_return_id_format(local_test_db_session, process_return_step, mo
     process_return_step.process_parsed(mock_ach_reader)
 
     assert_pub_error(
-        local_test_db_session, PubErrorType.ACH_RETURN, "id number not in known PFML formats"
+        test_db_session, PubErrorType.ACH_RETURN, "id number not in known PFML formats"
     )
 
     metrics = process_return_step.log_entry.metrics
@@ -241,24 +237,22 @@ def test_unknown_return_id_format(local_test_db_session, process_return_step, mo
     assert metrics["unknown_id_format_count"] == 1
 
 
-def test_prenote_eft_not_found(local_test_db_session, process_return_step, mock_ach_reader):
+def test_prenote_eft_not_found(test_db_session, process_return_step, mock_ach_reader):
     ach_return = create_ach_return("E123", TypeCode.ENTRY_DETAIL, "R01")
     mock_ach_reader.ach_returns.append(ach_return)
 
     process_return_step.process_parsed(mock_ach_reader)
 
-    assert_pub_error(
-        local_test_db_session, PubErrorType.ACH_PRENOTE, "id number not in pub_eft table"
-    )
+    assert_pub_error(test_db_session, PubErrorType.ACH_PRENOTE, "id number not in pub_eft table")
 
     metrics = process_return_step.log_entry.metrics
     assert metrics["ach_return_count"] == 1
     assert metrics["eft_prenote_id_not_found_count"] == 1
 
 
-def test_prenote_pending_pre_pub(local_test_db_session, process_return_step, mock_ach_reader):
+def test_prenote_pending_pre_pub(test_db_session, process_return_step, mock_ach_reader):
     DelegatedPaymentFactory(
-        local_test_db_session, pub_individual_id=123, prenote_state=PrenoteState.PENDING_PRE_PUB
+        test_db_session, pub_individual_id=123, prenote_state=PrenoteState.PENDING_PRE_PUB
     ).get_or_create_pub_eft_with_state(State.DELEGATED_EFT_SEND_PRENOTE)
 
     ach_return = create_ach_return("E123", TypeCode.ENTRY_DETAIL, "R01")
@@ -267,7 +261,7 @@ def test_prenote_pending_pre_pub(local_test_db_session, process_return_step, moc
     process_return_step.process_parsed(mock_ach_reader)
 
     assert_pub_error(
-        local_test_db_session,
+        test_db_session,
         PubErrorType.ACH_PRENOTE,
         f"Unexpected existing prenote state: {PrenoteState.PENDING_PRE_PUB.prenote_state_description}",
     )
@@ -277,9 +271,9 @@ def test_prenote_pending_pre_pub(local_test_db_session, process_return_step, moc
     assert metrics["eft_prenote_unexpected_state_count"] == 1
 
 
-def test_prenote_rejected(local_test_db_session, process_return_step, mock_ach_reader):
+def test_prenote_rejected(test_db_session, process_return_step, mock_ach_reader):
     DelegatedPaymentFactory(
-        local_test_db_session, pub_individual_id=123, prenote_state=PrenoteState.REJECTED
+        test_db_session, pub_individual_id=123, prenote_state=PrenoteState.REJECTED
     ).get_or_create_pub_eft_with_state(State.DELEGATED_EFT_PRENOTE_SENT)
 
     ach_return = create_ach_return("E123", TypeCode.ENTRY_DETAIL, "R01")
@@ -288,7 +282,7 @@ def test_prenote_rejected(local_test_db_session, process_return_step, mock_ach_r
     process_return_step.process_parsed(mock_ach_reader)
 
     assert_pub_error(
-        local_test_db_session,
+        test_db_session,
         PubErrorType.ACH_PRENOTE,
         f"Unexpected existing prenote state: {PrenoteState.REJECTED.prenote_state_description}",
     )
@@ -298,11 +292,9 @@ def test_prenote_rejected(local_test_db_session, process_return_step, mock_ach_r
     assert metrics["eft_prenote_already_rejected_count"] == 1
 
 
-def test_prenote_return_pending_with_pub(
-    local_test_db_session, process_return_step, mock_ach_reader
-):
+def test_prenote_return_pending_with_pub(test_db_session, process_return_step, mock_ach_reader):
     pub_eft = DelegatedPaymentFactory(
-        local_test_db_session, pub_individual_id=123, prenote_state=PrenoteState.PENDING_WITH_PUB
+        test_db_session, pub_individual_id=123, prenote_state=PrenoteState.PENDING_WITH_PUB
     ).get_or_create_pub_eft_with_state(State.DELEGATED_EFT_PRENOTE_SENT)
 
     ach_return = create_ach_return("E123", TypeCode.ENTRY_DETAIL, "R01")
@@ -310,10 +302,10 @@ def test_prenote_return_pending_with_pub(
 
     process_return_step.process_parsed(mock_ach_reader)
 
-    assert_pub_eft_prenote_state(local_test_db_session, pub_eft.pub_eft_id, PrenoteState.REJECTED)
+    assert_pub_eft_prenote_state(test_db_session, pub_eft.pub_eft_id, PrenoteState.REJECTED)
 
     assert_pub_error(
-        local_test_db_session,
+        test_db_session,
         PubErrorType.ACH_PRENOTE,
         f"Rejected from existing state: {PrenoteState.PENDING_WITH_PUB.prenote_state_description}.",
     )
@@ -323,9 +315,9 @@ def test_prenote_return_pending_with_pub(
     assert metrics["eft_prenote_rejected_count"] == 1
 
 
-def test_prenote_return_approved(local_test_db_session, process_return_step, mock_ach_reader):
+def test_prenote_return_approved(test_db_session, process_return_step, mock_ach_reader):
     pub_eft = DelegatedPaymentFactory(
-        local_test_db_session, pub_individual_id=123, prenote_state=PrenoteState.APPROVED
+        test_db_session, pub_individual_id=123, prenote_state=PrenoteState.APPROVED
     ).get_or_create_pub_eft_with_state(State.DELEGATED_EFT_PRENOTE_SENT)
 
     ach_return = create_ach_return("E123", TypeCode.ENTRY_DETAIL, "R01")
@@ -333,10 +325,10 @@ def test_prenote_return_approved(local_test_db_session, process_return_step, moc
 
     process_return_step.process_parsed(mock_ach_reader)
 
-    assert_pub_eft_prenote_state(local_test_db_session, pub_eft.pub_eft_id, PrenoteState.REJECTED)
+    assert_pub_eft_prenote_state(test_db_session, pub_eft.pub_eft_id, PrenoteState.REJECTED)
 
     assert_pub_error(
-        local_test_db_session,
+        test_db_session,
         PubErrorType.ACH_PRENOTE,
         f"Rejected from existing state: {PrenoteState.APPROVED.prenote_state_description}.",
     )
@@ -347,10 +339,10 @@ def test_prenote_return_approved(local_test_db_session, process_return_step, moc
 
 
 def test_prenote_change_notification_pending_with_pub(
-    local_test_db_session, process_return_step, mock_ach_reader
+    test_db_session, process_return_step, mock_ach_reader
 ):
     pub_eft = DelegatedPaymentFactory(
-        local_test_db_session, pub_individual_id=123, prenote_state=PrenoteState.PENDING_WITH_PUB
+        test_db_session, pub_individual_id=123, prenote_state=PrenoteState.PENDING_WITH_PUB
     ).get_or_create_pub_eft_with_state(State.DELEGATED_EFT_PRENOTE_SENT)
 
     ach_change_notification = create_ach_change_notification("E123", TypeCode.ENTRY_DETAIL, "C01")
@@ -358,10 +350,10 @@ def test_prenote_change_notification_pending_with_pub(
 
     process_return_step.process_parsed(mock_ach_reader)
 
-    assert_pub_eft_prenote_state(local_test_db_session, pub_eft.pub_eft_id, PrenoteState.APPROVED)
+    assert_pub_eft_prenote_state(test_db_session, pub_eft.pub_eft_id, PrenoteState.APPROVED)
 
     assert_pub_error(
-        local_test_db_session,
+        test_db_session,
         PubErrorType.ACH_PRENOTE,
         f"Approved with change notification from existing state: {PrenoteState.PENDING_WITH_PUB.prenote_state_description}. {ach_change_notification.addenda_information}",
     )
@@ -372,10 +364,10 @@ def test_prenote_change_notification_pending_with_pub(
 
 
 def test_prenote_change_notification_already_approved(
-    local_test_db_session, process_return_step, mock_ach_reader
+    test_db_session, process_return_step, mock_ach_reader
 ):
     pub_eft = DelegatedPaymentFactory(
-        local_test_db_session, pub_individual_id=123, prenote_state=PrenoteState.APPROVED
+        test_db_session, pub_individual_id=123, prenote_state=PrenoteState.APPROVED
     ).get_or_create_pub_eft_with_state(State.DELEGATED_EFT_PRENOTE_SENT)
 
     ach_change_notification = create_ach_change_notification("E123", TypeCode.ENTRY_DETAIL, "C01")
@@ -383,10 +375,10 @@ def test_prenote_change_notification_already_approved(
 
     process_return_step.process_parsed(mock_ach_reader)
 
-    assert_pub_eft_prenote_state(local_test_db_session, pub_eft.pub_eft_id, PrenoteState.APPROVED)
+    assert_pub_eft_prenote_state(test_db_session, pub_eft.pub_eft_id, PrenoteState.APPROVED)
 
     assert_pub_error(
-        local_test_db_session,
+        test_db_session,
         PubErrorType.ACH_PRENOTE,
         f"Approved with change notification from existing state: {PrenoteState.APPROVED.prenote_state_description}. {ach_change_notification.addenda_information}",
     )
@@ -396,15 +388,13 @@ def test_prenote_change_notification_already_approved(
     assert metrics["eft_prenote_change_notification_count"] == 1
 
 
-def test_payment_not_found(local_test_db_session, process_return_step, mock_ach_reader):
+def test_payment_not_found(test_db_session, process_return_step, mock_ach_reader):
     ach_return = create_ach_return("P123", TypeCode.ENTRY_DETAIL, "R01")
     mock_ach_reader.ach_returns.append(ach_return)
 
     process_return_step.process_parsed(mock_ach_reader)
 
-    assert_pub_error(
-        local_test_db_session, PubErrorType.ACH_RETURN, "id number not in payment table"
-    )
+    assert_pub_error(test_db_session, PubErrorType.ACH_RETURN, "id number not in payment table")
 
     metrics = process_return_step.log_entry.metrics
     assert metrics["ach_return_count"] == 1
@@ -412,10 +402,10 @@ def test_payment_not_found(local_test_db_session, process_return_step, mock_ach_
 
 
 def test_payment_change_notification_pub_transaction_sent(
-    local_test_db_session, process_return_step, mock_ach_reader
+    test_db_session, process_return_step, mock_ach_reader
 ):
     payment = payment_with_state_factory(
-        123, State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT, local_test_db_session
+        123, State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT, test_db_session
     )
 
     ach_change_notification = create_ach_change_notification("P123", TypeCode.ENTRY_DETAIL, "C01")
@@ -427,21 +417,21 @@ def test_payment_change_notification_pub_transaction_sent(
         payment,
         Flow.DELEGATED_PAYMENT,
         State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION,
-        local_test_db_session,
+        test_db_session,
     )
     assert_payment_state(
         payment,
         Flow.DELEGATED_PEI_WRITEBACK,
         State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
-        local_test_db_session,
+        test_db_session,
     )
 
     assert_fineos_writeback_status(
-        payment, FineosWritebackTransactionStatus.POSTED, local_test_db_session
+        payment, FineosWritebackTransactionStatus.POSTED, test_db_session
     )
 
     assert_pub_error(
-        local_test_db_session,
+        test_db_session,
         PubErrorType.ACH_SUCCESS_WITH_NOTIFICATION,
         "Payment complete with change notification",
     )
@@ -452,10 +442,10 @@ def test_payment_change_notification_pub_transaction_sent(
 
 
 def test_payment_change_notification_already_complete_with_change_notification(
-    local_test_db_session, process_return_step, mock_ach_reader
+    test_db_session, process_return_step, mock_ach_reader
 ):
     payment = payment_with_state_factory(
-        123, State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION, local_test_db_session
+        123, State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION, test_db_session
     )
 
     ach_change_notification = create_ach_change_notification("P123", TypeCode.ENTRY_DETAIL, "C01")
@@ -468,14 +458,14 @@ def test_payment_change_notification_already_complete_with_change_notification(
         payment,
         Flow.DELEGATED_PAYMENT,
         State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION,
-        local_test_db_session,
+        test_db_session,
     )
 
     # No writeback
-    assert len(local_test_db_session.query(FineosWritebackDetails).all()) == 0
+    assert len(test_db_session.query(FineosWritebackDetails).all()) == 0
 
     # No pub error
-    assert len(local_test_db_session.query(PubError).all()) == 0
+    assert len(test_db_session.query(PubError).all()) == 0
 
     metrics = process_return_step.log_entry.metrics
     assert metrics["change_notification_count"] == 1
@@ -483,11 +473,9 @@ def test_payment_change_notification_already_complete_with_change_notification(
 
 
 def test_payment_change_notification_current_payment_end_state_invalid(
-    local_test_db_session, process_return_step, mock_ach_reader
+    test_db_session, process_return_step, mock_ach_reader
 ):
-    payment = payment_with_state_factory(
-        123, State.DELEGATED_PAYMENT_COMPLETE, local_test_db_session
-    )
+    payment = payment_with_state_factory(123, State.DELEGATED_PAYMENT_COMPLETE, test_db_session)
 
     ach_change_notification = create_ach_change_notification("P123", TypeCode.ENTRY_DETAIL, "C01")
     mock_ach_reader.change_notifications.append(ach_change_notification)
@@ -495,23 +483,19 @@ def test_payment_change_notification_current_payment_end_state_invalid(
     process_return_step.process_parsed(mock_ach_reader)
 
     assert_payment_state(
-        payment, Flow.DELEGATED_PAYMENT, State.DELEGATED_PAYMENT_COMPLETE, local_test_db_session
+        payment, Flow.DELEGATED_PAYMENT, State.DELEGATED_PAYMENT_COMPLETE, test_db_session
     )
 
-    assert_pub_error(
-        local_test_db_session, PubErrorType.ACH_NOTIFICATION, "unexpected state for payment"
-    )
+    assert_pub_error(test_db_session, PubErrorType.ACH_NOTIFICATION, "unexpected state for payment")
 
     metrics = process_return_step.log_entry.metrics
     assert metrics["change_notification_count"] == 1
     assert metrics["payment_notification_unexpected_state_count"] == 1
 
 
-def test_payment_return_pub_transaction_sent(
-    local_test_db_session, process_return_step, mock_ach_reader
-):
+def test_payment_return_pub_transaction_sent(test_db_session, process_return_step, mock_ach_reader):
     payment = payment_with_state_factory(
-        123, State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT, local_test_db_session
+        123, State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT, test_db_session
     )
 
     ach_return = create_ach_return("P123", TypeCode.ENTRY_DETAIL, "R01")
@@ -523,31 +507,66 @@ def test_payment_return_pub_transaction_sent(
         payment,
         Flow.DELEGATED_PAYMENT,
         State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
-        local_test_db_session,
+        test_db_session,
     )
     assert_payment_state(
         payment,
         Flow.DELEGATED_PEI_WRITEBACK,
         State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
-        local_test_db_session,
+        test_db_session,
     )
 
     assert_fineos_writeback_status(
-        payment, FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR, local_test_db_session
+        payment, FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR, test_db_session
     )
 
-    assert_pub_error(local_test_db_session, PubErrorType.ACH_RETURN, "Payment rejected by PUB")
+    assert_pub_error(test_db_session, PubErrorType.ACH_RETURN, "Payment rejected by PUB")
 
     metrics = process_return_step.log_entry.metrics
     assert metrics["ach_return_count"] == 1
     assert metrics["payment_rejected_count"] == 1
 
 
-def test_payment_return_already_errored(
-    local_test_db_session, process_return_step, mock_ach_reader
+def test_payment_return_prior_change_notification(
+    test_db_session, process_return_step, mock_ach_reader
 ):
     payment = payment_with_state_factory(
-        123, State.DELEGATED_PAYMENT_ERROR_FROM_BANK, local_test_db_session
+        123, State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION, test_db_session
+    )
+
+    ach_return = create_ach_return("P123", TypeCode.ENTRY_DETAIL, "R01")
+    mock_ach_reader.ach_returns.append(ach_return)
+
+    process_return_step.process_parsed(mock_ach_reader)
+
+    assert_payment_state(
+        payment,
+        Flow.DELEGATED_PAYMENT,
+        State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
+        test_db_session,
+    )
+    assert_payment_state(
+        payment,
+        Flow.DELEGATED_PEI_WRITEBACK,
+        State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+        test_db_session,
+    )
+
+    assert_fineos_writeback_status(
+        payment, FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR, test_db_session
+    )
+
+    assert_pub_error(test_db_session, PubErrorType.ACH_RETURN, "Payment rejected by PUB")
+
+    metrics = process_return_step.log_entry.metrics
+    assert metrics["ach_return_count"] == 1
+    assert metrics["payment_rejected_count"] == 1
+    assert metrics["payment_rejected_prior_change_notification_count"] == 1
+
+
+def test_payment_return_already_errored(test_db_session, process_return_step, mock_ach_reader):
+    payment = payment_with_state_factory(
+        123, State.DELEGATED_PAYMENT_ERROR_FROM_BANK, test_db_session
     )
 
     ach_return = create_ach_return("P123", TypeCode.ENTRY_DETAIL, "R01")
@@ -560,14 +579,14 @@ def test_payment_return_already_errored(
         payment,
         Flow.DELEGATED_PAYMENT,
         State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
-        local_test_db_session,
+        test_db_session,
     )
 
     # No writeback
-    assert len(local_test_db_session.query(FineosWritebackDetails).all()) == 0
+    assert len(test_db_session.query(FineosWritebackDetails).all()) == 0
 
     # No pub error
-    assert len(local_test_db_session.query(PubError).all()) == 0
+    assert len(test_db_session.query(PubError).all()) == 0
 
     metrics = process_return_step.log_entry.metrics
     assert metrics["ach_return_count"] == 1
@@ -575,11 +594,9 @@ def test_payment_return_already_errored(
 
 
 def test_payment_return_invalid_current_state(
-    local_test_db_session, process_return_step, mock_ach_reader
+    test_db_session, process_return_step, mock_ach_reader
 ):
-    payment = payment_with_state_factory(
-        123, State.DELEGATED_PAYMENT_COMPLETE, local_test_db_session
-    )
+    payment = payment_with_state_factory(123, State.DELEGATED_PAYMENT_COMPLETE, test_db_session)
 
     ach_return = create_ach_return("P123", TypeCode.ENTRY_DETAIL, "R01")
     mock_ach_reader.ach_returns.append(ach_return)
@@ -588,10 +605,10 @@ def test_payment_return_invalid_current_state(
 
     # No state change
     assert_payment_state(
-        payment, Flow.DELEGATED_PAYMENT, State.DELEGATED_PAYMENT_COMPLETE, local_test_db_session
+        payment, Flow.DELEGATED_PAYMENT, State.DELEGATED_PAYMENT_COMPLETE, test_db_session
     )
 
-    assert_pub_error(local_test_db_session, PubErrorType.ACH_RETURN, "unexpected state for payment")
+    assert_pub_error(test_db_session, PubErrorType.ACH_RETURN, "unexpected state for payment")
 
     metrics = process_return_step.log_entry.metrics
     assert metrics["ach_return_count"] == 1
@@ -599,10 +616,10 @@ def test_payment_return_invalid_current_state(
 
 
 def test_payment_return_pub_transaction_sent_duplicate_record(
-    local_test_db_session, process_return_step, mock_ach_reader
+    test_db_session, process_return_step, mock_ach_reader
 ):
     payment = payment_with_state_factory(
-        123, State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT, local_test_db_session
+        123, State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT, test_db_session
     )
 
     # Verify that if we receive duplicate records, the process behaves fine
@@ -617,28 +634,27 @@ def test_payment_return_pub_transaction_sent_duplicate_record(
         payment,
         Flow.DELEGATED_PAYMENT,
         State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
-        local_test_db_session,
+        test_db_session,
     )
     assert_payment_state(
         payment,
         Flow.DELEGATED_PEI_WRITEBACK,
         State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
-        local_test_db_session,
+        test_db_session,
     )
 
     assert_fineos_writeback_status(
-        payment, FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR, local_test_db_session
+        payment, FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR, test_db_session
     )
 
-    assert_pub_error(local_test_db_session, PubErrorType.ACH_RETURN, "Payment rejected by PUB")
+    assert_pub_error(test_db_session, PubErrorType.ACH_RETURN, "Payment rejected by PUB")
 
 
 def test_process_nacha_return_file_step_full(
-    local_test_db_session,
+    test_db_session,
     monkeypatch,
     tmp_path,
-    local_initialize_factories_session,
-    local_test_db_other_session,
+    initialize_factories_session,
 ):
     # Note: see ach_return_small.ach to understand this test. That file contains a mix of prenote
     # and payment returns, with some being ACH Returns (errors) and some Change Notifications.
@@ -657,17 +673,17 @@ def test_process_nacha_return_file_step_full(
     # Add prenotes 0 to 39 to database. These correspond to E0 to E39 ids in return file.
     pub_efts = [
         DelegatedPaymentFactory(
-            local_test_db_session, pub_individual_id=i, prenote_state=PrenoteState.PENDING_WITH_PUB
+            test_db_session, pub_individual_id=i, prenote_state=PrenoteState.PENDING_WITH_PUB
         ).get_or_create_pub_eft_with_state(State.DELEGATED_EFT_PRENOTE_SENT)
         for i in range(40)
     ]
 
     # Add payments 40 to 79 to the database. These correspond to P40 to P79 ids in return file.
-    payments = [payment_sent_to_pub_factory(i, local_test_db_session) for i in range(40, 80)]
+    payments = [payment_sent_to_pub_factory(i, test_db_session) for i in range(40, 80)]
 
     # Run step.
     process_nacha_file_step = process_nacha_return_step.ProcessNachaReturnFileStep(
-        db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
+        db_session=test_db_session, log_entry_db_session=test_db_session
     )
     assert process_nacha_file_step.have_more_files_to_process() is True
     process_nacha_file_step.run()
@@ -690,7 +706,7 @@ def test_process_nacha_return_file_step_full(
             assert pub_eft.prenote_state_id == PrenoteState.PENDING_WITH_PUB.prenote_state_id
 
     # Test updates to reference_file table.
-    reference_file = local_test_db_session.query(ReferenceFile).one()
+    reference_file = test_db_session.query(ReferenceFile).one()
     assert (
         reference_file.reference_file_type_id
         == ReferenceFileType.PUB_ACH_RETURN.reference_file_type_id
@@ -705,7 +721,7 @@ def test_process_nacha_return_file_step_full(
     prenote_sent = massgov.pfml.api.util.state_log_util.get_all_latest_state_logs_in_end_state(
         massgov.pfml.api.util.state_log_util.AssociatedClass.EMPLOYEE,
         State.DELEGATED_EFT_PRENOTE_SENT,
-        local_test_db_session,
+        test_db_session,
     )
     assert len(prenote_sent) == 40
 
@@ -717,9 +733,9 @@ def test_process_nacha_return_file_step_full(
         75: (State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION, "C05", 13, "22"),
     }
     for payment in payments:
-        local_test_db_session.refresh(payment)
+        test_db_session.refresh(payment)
         payment_state_log = massgov.pfml.api.util.state_log_util.get_latest_state_log_in_flow(
-            payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+            payment, Flow.DELEGATED_PAYMENT, test_db_session
         )
         state_id = payment_state_log.end_state.state_id
         if payment.pub_individual_id in expected_states:
@@ -739,7 +755,7 @@ def test_process_nacha_return_file_step_full(
             assert payment.reference_files[0].reference_file == reference_file
 
             writeback_state_log = massgov.pfml.api.util.state_log_util.get_latest_state_log_in_flow(
-                payment, Flow.DELEGATED_PEI_WRITEBACK, local_test_db_session
+                payment, Flow.DELEGATED_PEI_WRITEBACK, test_db_session
             )
             assert (
                 writeback_state_log.end_state.state_id
@@ -747,7 +763,7 @@ def test_process_nacha_return_file_step_full(
             )
 
             writeback_details = (
-                local_test_db_session.query(FineosWritebackDetails)
+                test_db_session.query(FineosWritebackDetails)
                 .filter(FineosWritebackDetails.payment_id == payment.payment_id)
                 .one_or_none()
             )
@@ -786,7 +802,7 @@ def test_process_nacha_return_file_step_full(
     }
     assert expected_metrics.items() <= process_nacha_file_step.log_entry.metrics.items()
 
-    pub_errors = local_test_db_session.query(PubError).all()
+    pub_errors = test_db_session.query(PubError).all()
     pub_error_count = Counter(p.pub_error_type_id for p in pub_errors)
 
     assert pub_error_count.get(PubErrorType.ACH_WARNING.pub_error_type_id) is None

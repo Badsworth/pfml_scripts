@@ -53,6 +53,13 @@ class RunIndicators extends React.Component {
           .limit(this.state.limit)}
       >
         {({ data }) => {
+          //TODO: Remove once integration tests have a tag
+          data = data.reduce((arr, run) => {
+            if (run.stable?.total > 0 || run.targeted?.total) {
+              arr.push(run);
+            }
+            return arr;
+          }, []);
           const link = navigation.getOpenStackedNerdletLocation({
             id: "panel-testgrid",
             urlState: { runIds: data.map((run) => run.runId) },
@@ -134,7 +141,7 @@ export class EnvironmentsOverviewTable extends React.Component {
                       <td className={"env"}>
                         <Link
                           to={navigation.getOpenStackedNerdletLocation({
-                            id: "env-timeline",
+                            id: "panel-env-timeline",
                             urlState: {
                               environment: env,
                             },
@@ -159,7 +166,7 @@ export class EnvironmentsOverviewTable extends React.Component {
                             <td className="version">
                               <Link
                                 to={navigation.getOpenStackedNerdletLocation({
-                                  id: "deployments",
+                                  id: "panel-deployments",
                                   urlState: {
                                     environment: env,
                                     component: component,

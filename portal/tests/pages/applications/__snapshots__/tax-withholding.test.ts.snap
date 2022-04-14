@@ -32,7 +32,7 @@ exports[`TaxWithholding renders the page 1`] = `
         <p>
           If you're unsure whether you want to withhold taxes, we recommend speaking with a 
           <a
-            href="https://www.mass.gov/service-details/find-a-tax-professional-to-help-with-your-taxes"
+            href="https://mass.gov/taxassistance"
             rel="noreferrer noopener"
             target="_blank"
           >

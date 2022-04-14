@@ -8,8 +8,9 @@ on:
   pull_request:
     paths:
       - infra/**
+      - infra/tooling/**
       - .github/workflows/infra-validate.yml
-
+  # triggered for testing
 env:
   working-dir: ./infra
   terraformVersion: 0.14.7
@@ -43,12 +44,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        component: ["portal", "api", "env-shared", "ecs-tasks"]
+        component: ["portal", "api", "env-shared", "ecs-tasks", "bi", "admin-portal"]
         environment: ["test", "stage", "prod", "performance", "training", "uat", "breakfix", "cps-preview", "long", "trn2", "infra-test"]
         include:
         - component: "constants"
         - component: "pfml-aws"
         - component: "monitoring"
+        - component: "tooling"
 
     steps:
       - uses: actions/checkout@v2
@@ -67,6 +69,8 @@ jobs:
           if [ -z "${{ matrix.environment }}" ]; then
             tf_dir=${{ env.working-dir }}/${{ matrix.component }}
             folders=${tf_dir}
+          elif [ ! -z ${{ env.working-dir }}/${{ matrix.component }}/environments/${{ matrix.environment }} ]; then
+            echo " No directory present"
           else
             tf_dir=${{ env.working-dir }}/${{ matrix.component }}/environments/${{ matrix.environment }}
             template_dir=${{ env.working-dir }}/${{ matrix.component }}/template

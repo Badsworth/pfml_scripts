@@ -42,6 +42,22 @@ module "sns_alarms" {
   high_priority_pager_duty_integration_key = pagerduty_service_integration.cloudwatch_high_priority_notification.integration_key
 }
 
+#Create Kinesis to NewRelic log stream with lambda transform to mask phone numbers in sms logs
+# these logs are used by "terraform_sns_alarms" module
+module "sms_kinesis_log_transform" {
+  source                = "../modules/newrelic_kinesis_log_transform"
+  kinesis_firehose_name = "massgov-pfml-sms-newrelic"
+  dlq_bucket_name       = "massgov-pfml-sms-kinesis-to-newrelic-dlq"
+  function_name         = "kinesis_firehose_sms_lambda"
+  function_description  = "Kinesis filter to mask sms destinations before sending to newrelic"
+  source_file_path      = "../modules/newrelic_kinesis_log_transform"
+  nr_log_group_name     = "sns/us-east-1/498823821309/DirectPublishToPhoneNumber"
+  cw_log_group_names = [
+    "sns/us-east-1/498823821309/DirectPublishToPhoneNumber",
+    "sns/us-east-1/498823821309/DirectPublishToPhoneNumber/Failure"
+  ]
+}
+
 module "sns_vpc_changes" {
   source = "../modules/aws_resource_change_alarm"
 
@@ -179,3 +195,7 @@ module "sns_security_group_changes" {
   sns_topic         = aws_sns_topic.sns_resource_changes.arn
 }
 
+module "security_hub_finding" {
+  source                                = "../modules/security_hub_events_alarm"
+  security_hub_finding_notification_arn = aws_sns_topic.sns_security_hub_finding.arn
+}

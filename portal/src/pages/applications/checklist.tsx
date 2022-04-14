@@ -4,8 +4,8 @@ import BenefitsApplication, {
 } from "../../models/BenefitsApplication";
 import {
   DocumentType,
-  findDocumentsByLeaveReason,
   findDocumentsByTypes,
+  getLeaveCertificationDocs,
 } from "../../models/Document";
 import StepModel, { ClaimSteps } from "../../models/Step";
 import { camelCase, get } from "lodash";
@@ -31,6 +31,7 @@ import { Trans } from "react-i18next";
 import claimantConfig from "../../flows/claimant";
 import formatDate from "../../utils/formatDate";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
+import { isFeatureEnabled } from "src/services/featureFlags";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
@@ -76,10 +77,7 @@ export const Checklist = (props: ChecklistProps) => {
     DocumentType.identityVerification,
   ]);
 
-  const certificationDocuments = findDocumentsByLeaveReason(
-    documents,
-    get(claim, "leave_details.reason")
-  );
+  const certificationDocuments = getLeaveCertificationDocs(documents);
 
   const warnings =
     appLogic.benefitsApplications.warningsLists[claim.application_id];
@@ -134,6 +132,48 @@ export const Checklist = (props: ChecklistProps) => {
     const index = allSteps.findIndex((s) => s.name === step.name);
     return index + 1;
   }
+
+  /**
+   * Get the content to show for a completed step
+   */
+  const getStepCompletedContent = (step: StepModel) => {
+    if (
+      isFeatureEnabled("splitClaimsAcrossBY") &&
+      step.name === ClaimSteps.leaveDetails &&
+      claim.computed_application_split
+    ) {
+      return (
+        <Alert className="" state="info" slim noIcon autoWidth>
+          <p>
+            <Trans
+              i18nKey="pages.claimsChecklist.leaveDetailsBenefitYears"
+              values={{
+                startDate: formatDate(
+                  claim.computed_application_split.crossed_benefit_year
+                    .benefit_year_start_date
+                ).short(),
+                endDate: formatDate(
+                  claim.computed_application_split.crossed_benefit_year
+                    .benefit_year_end_date
+                ).short(),
+              }}
+              components={{
+                "benefit-year-guide-link": (
+                  <a
+                    href={routes.external.massgov.importantTermsToKnow}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  />
+                ),
+              }}
+            />
+          </p>
+        </Alert>
+      );
+    }
+
+    return null;
+  };
 
   /**
    * Get the content to show for a submitted step
@@ -213,6 +253,7 @@ export const Checklist = (props: ChecklistProps) => {
           stepHref={stepHref}
           editable={!!step.editable}
           submittedContent={getStepSubmittedContent(step)}
+          completedContent={getStepCompletedContent(step)}
         >
           <Trans
             i18nKey="pages.claimsChecklist.stepHTMLDescription"

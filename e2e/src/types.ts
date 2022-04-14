@@ -1,4 +1,8 @@
-import { ApplicationLeaveDetails, ApplicationRequestBody } from "./api";
+import {
+  ApplicationLeaveDetails,
+  ApplicationRequestBody,
+  ApplicationResponse,
+} from "./api";
 import * as scenarios from "./scenarios";
 import * as lstScenarios from "./scenarios/lst";
 import {
@@ -18,11 +22,9 @@ export type FeatureFlags = {
   claimantShowStatusPage?: boolean;
   claimantShowPayments: boolean;
   claimantShowOrganizationUnits: boolean;
-  claimantShowMFA?: boolean;
   employerShowMultiLeave: boolean;
+  claimantShowMFA: boolean;
   claimantShowPaymentsPhaseTwo: boolean;
-  channelSwitching: boolean;
-  employerShowMultiLeaveDashboard: boolean;
 };
 
 export type Credentials = {
@@ -134,11 +136,13 @@ export type OtherTasks =
   | "Send Decision Notice"
   | "Conduct Hearing"
   | "Employer Reimbursement"
+  | "Autopay After Appeal Reminder"
   | "SOM Autopay After Appeal Reminder"
   | "DO NOT USE Autopay After Appeal Reminder"
   | "Employer Reimbursement Adjustment"
   | "Print and Mail Correspondence"
-  | "Send Overpayment Letter to Claimant (Payee)";
+  | "Send Overpayment Letter to Claimant (Payee)"
+  | "Returned Payment Received";
 /**Tasks avalable in fineos */
 export type FineosTasks = DocumentReviewTasks | ERTasks | OtherTasks;
 
@@ -240,3 +244,10 @@ export type Environment =
   | "long"
   | "trn2"
   | "breakfix";
+
+//String enum used for mapping between AbsencePeriodResponse["period_type"] and ApplicationLeaveDetails types
+export enum LeavePeriodTypes {
+  "Continuous" = "continuous_leave_periods",
+  "Intermittent" = "intermittent_leave_periods",
+  "Reduced Schedule" = "reduced_schedule_leave_periods",
+}

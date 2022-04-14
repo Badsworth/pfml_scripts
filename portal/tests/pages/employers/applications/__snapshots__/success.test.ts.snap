@@ -8,17 +8,31 @@ exports[`Success renders the page 1`] = `
   >
     Thanks for reviewing the application
   </h1>
-  <strong>
-    Application ID:
-  </strong>
-   my-absence-id
+  <p>
+    <strong>
+      Employee name:
+    </strong>
+     Jane Doe
+  </p>
+  <p>
+    <strong>
+      Application ID:
+    </strong>
+     NTN-111-ABS-01
+  </p>
+  <p>
+    <strong>
+      Reviewed on:
+    </strong>
+      2/2/2022
+  </p>
   <p>
     We’ll begin processing this application and your employee should hear from us within 14 calendar days. Once we’ve made a decision, you’ll receive an email with a direct link to details about the decision.
   </p>
   <p>
     If your organization has a paid disability, family, or medical leave policy for employees, you may qualify for 
     <a
-      href="https://www.mass.gov/forms/request-reimbursement-for-your-employees-paid-leave-benefits"
+      href="https://mass.gov/pfml/reimbursement"
       rel="noreferrer noopener"
       target="_blank"
     >

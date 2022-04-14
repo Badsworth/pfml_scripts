@@ -6,6 +6,7 @@ import LeaveReason, { LeaveReasonType } from "./LeaveReason";
 import { compact, get, merge, sum, sumBy, zip } from "lodash";
 
 import Address from "./Address";
+import ApplicationSplit from "./ApplicationSplit";
 import BaseBenefitsApplication from "./BaseBenefitsApplication";
 import ConcurrentLeave from "./ConcurrentLeave";
 import EmployerBenefit from "./EmployerBenefit";
@@ -16,6 +17,7 @@ import PreviousLeave from "./PreviousLeave";
 import { ValuesOf } from "../../types/common";
 import assert from "assert";
 import dayjs from "dayjs";
+import isBlank from "../utils/isBlank";
 import spreadMinutesOverWeek from "../utils/spreadMinutesOverWeek";
 
 class BenefitsApplication extends BaseBenefitsApplication {
@@ -27,9 +29,12 @@ class BenefitsApplication extends BaseBenefitsApplication {
   first_name: string | null = null;
   middle_name: string | null = null;
   last_name: string | null = null;
+  computed_application_split: ApplicationSplit | null = null;
+  computed_earliest_submission_date: string | null = null;
   concurrent_leave: ConcurrentLeave | null = null;
   employer_benefits: EmployerBenefit[] = [];
   date_of_birth: string | null = null;
+  employee_id: string | null = null;
   employer_fein: string | null = null;
   ethnicity: ValuesOf<typeof Ethnicity> | null = null;
   gender: ValuesOf<typeof Gender> | null = null;
@@ -54,6 +59,8 @@ class BenefitsApplication extends BaseBenefitsApplication {
   previous_leaves_same_reason: PreviousLeave[] = [];
   race: ValuesOf<typeof Race> | null = null;
   residential_address: Address = new Address({});
+  split_from_application_id: string | null;
+  split_into_application_id: string | null;
   tax_identifier: string | null = null;
   work_pattern: Partial<WorkPattern> | null = null;
 
@@ -104,6 +111,24 @@ class BenefitsApplication extends BaseBenefitsApplication {
   }
 
   /**
+   * Applications imported from Fineos as part of Channel Switching won't have
+   * any caring leave metadata fields set.
+   */
+  get hasCaringLeaveMetadata(): boolean {
+    return !isBlank(
+      this.leave_details.caring_leave_metadata?.family_member_first_name
+    );
+  }
+
+  /**
+   * Even if an application has intermittent leave, some Applications won't
+   * have the frequency and duration if they were imported from Fineos.
+   */
+  get hasIntermittentLeaveFrequency(): boolean {
+    return !!get(this, "leave_details.intermittent_leave_periods[0].frequency");
+  }
+
+  /**
    * Determine if applicable leave period start date(s) are in the future.
    */
   get isLeaveStartDateInFuture() {
@@ -121,6 +146,18 @@ class BenefitsApplication extends BaseBenefitsApplication {
       // ISO-8601 format, eg "2020-10-13"
       return startDate > now;
     });
+  }
+
+  /**
+   * Determine if the earliest possible application submission date is in the future (i.e., they must wait to submit their application).
+   */
+  get isEarliestSubmissionDateInFuture() {
+    if (this.computed_earliest_submission_date === null) {
+      return false;
+    }
+
+    const now = dayjs().format("YYYY-MM-DD");
+    return this.computed_earliest_submission_date > now;
   }
 
   /**

@@ -339,7 +339,7 @@ def download_from_s3(source, destination):
 
     bucket, path = split_s3_url(source)
 
-    s3 = boto3.client("s3")
+    s3 = get_s3_client(bucket)
     s3.download_file(bucket, path, destination)
 
 
@@ -352,11 +352,11 @@ def upload_to_s3(source, destination):
 
     bucket, path = split_s3_url(destination)
 
-    s3 = boto3.client("s3")
+    s3 = get_s3_client(bucket)
     s3.upload_file(source, bucket, path)
 
 
-def open_stream(path, mode="r"):
+def open_stream(path, mode="r", encoding=None):
     if is_s3_path(path):
         so_config = Config(
             max_pool_connections=10,
@@ -366,9 +366,9 @@ def open_stream(path, mode="r"):
         )
         so_transport_params = {"resource_kwargs": {"config": so_config}}
 
-        return smart_open.open(path, mode, transport_params=so_transport_params)
+        return smart_open.open(path, mode, transport_params=so_transport_params, encoding=encoding)
     else:
-        return smart_open.open(path, mode)
+        return smart_open.open(path, mode, encoding=encoding)
 
 
 def read_file(path, mode="r", encoding=None):

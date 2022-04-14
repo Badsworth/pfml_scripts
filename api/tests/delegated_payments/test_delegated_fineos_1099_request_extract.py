@@ -15,18 +15,9 @@ from massgov.pfml.util.batch.log import LogEntry
 
 
 @pytest.fixture
-def request_1099_extract_step(initialize_factories_session, test_db_session, test_db_other_session):
+def request_1099_extract_step(initialize_factories_session, test_db_session):
     return request_1099_extract.Data1099ExtractStep(
-        db_session=test_db_session, log_entry_db_session=test_db_other_session
-    )
-
-
-@pytest.fixture
-def local_request_1099_extract_step(
-    local_initialize_factories_session, local_test_db_session, local_test_db_other_session
-):
-    return request_1099_extract.Data1099ExtractStep(
-        db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
+        db_session=test_db_session, log_entry_db_session=test_db_session
     )
 
 
@@ -170,26 +161,26 @@ def test_process_1099_records_no_xml_data(request_1099_extract_step, test_db_ses
     assert len(pfml_request_1099) == 0
 
 
-def test_run_step_happy_path(local_request_1099_extract_step, local_test_db_session):
+def test_run_step_happy_path(request_1099_extract_step, test_db_session):
     # create data with reasons to request 1099 data
 
     xml_data_three = get_xml_type_three()
     req_1099_data_3 = FineosPaymentData(packed_data_1099=xml_data_three)
     emp = create_employee_record(req_1099_data_3.customer_number, req_1099_data_3.ssn)
-    stage_data([req_1099_data_3], local_test_db_session)
+    stage_data([req_1099_data_3], test_db_session)
 
-    local_request_1099_extract_step.run()
-    vbi_1099 = local_test_db_session.query(FineosExtractVbi1099DataSom).all()
+    request_1099_extract_step.run()
+    vbi_1099 = test_db_session.query(FineosExtractVbi1099DataSom).all()
     assert len(vbi_1099) == 1
-    pfml_request_1099 = local_test_db_session.query(Pfml1099Request).all()
+    pfml_request_1099 = test_db_session.query(Pfml1099Request).all()
     emp = (
-        local_test_db_session.query(Employee)
+        test_db_session.query(Employee)
         .filter(Employee.fineos_customer_number == req_1099_data_3.customer_number)
         .first()
     )
     assert len(pfml_request_1099) == 1
     pfml_requestn = (
-        local_test_db_session.query(Pfml1099Request)
+        test_db_session.query(Pfml1099Request)
         .filter(Pfml1099Request.employee_id == emp.employee_id)
         .first()
     )

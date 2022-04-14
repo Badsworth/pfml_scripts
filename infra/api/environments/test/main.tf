@@ -106,6 +106,7 @@ module "api" {
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/DT2/dataexports"
   fineos_aws_iam_role_arn                             = "arn:aws:iam::666444232783:role/somdev-IAMRoles-CustomerAccountAccessRole-BF05IBJSG74B"
   fineos_aws_iam_role_external_id                     = "12345"
+  fineos_is_running_v21                               = "true"
   pfml_email_address                                  = "PFML_DoNotReply@eol.mass.gov"
   bounce_forwarding_email_address                     = "PFML_DoNotReply@eol.mass.gov"
   bounce_forwarding_email_address_arn                 = "arn:aws:ses:us-east-1:498823821309:identity/PFML_DoNotReply@eol.mass.gov"
@@ -120,6 +121,6 @@ module "api" {
   release_version                                     = var.release_version
 
   enable_document_multipart_upload = "1"
-  enable_application_import        = "1"
   enable_employee_endpoints        = "1"
+  limit_ssn_fein_max_attempts      = "5"
 }

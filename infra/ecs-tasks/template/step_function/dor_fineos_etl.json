@@ -1,10 +1,11 @@
 {
     "Comment": "DOR FINEOS ETL step function",
-    "StartAt": "${st_states_name}",
+    "StartAt": "${first_step}",
   
     "States": {
-      "${st_states_name}": {
-        "Comment": "${st_states_comment}",
+      %{if first_step == "dor_generate"}
+      "dor_generate": {
+        "Comment": "Generate fake DOR data to S3 (non-prod)",
         "Type": "Task",
         "Resource": "arn:aws:states:::ecs:runTask.sync",
         "TimeoutSeconds": 28800,
@@ -12,8 +13,19 @@
           "LaunchType": "FARGATE",
           "PlatformVersion": "1.4.0",
           "Cluster": "${cluster_arn}",
-          "TaskDefinition": "pfml-api-${environment_name}-${st_task_definition_suffix}",
-          "Overrides": ${st_overrides},
+          "TaskDefinition": "pfml-api-${environment_name}-dor-import",
+          "Overrides": {
+            "ContainerOverrides": [
+              {
+                "Name": "dor-import",
+                "Command": [
+                  "dor-generate",
+                  "--folder=s3://massgov-pfml-test-agency-transfer/dor/received",
+                  "--count=1000"
+                ]
+              }
+            ]
+          },
           "NetworkConfiguration": {
             "AwsvpcConfiguration": {
               "SecurityGroups": ["${security_group}"],
@@ -22,28 +34,81 @@
             }
           }
         },
-        "Retry": [ 
+        "Retry": [
           {
             "ErrorEquals": ["States.TaskFailed"],
             "IntervalSeconds": 1,
             "MaxAttempts": 2,
             "BackoffRate": 2.0
-          } 
+          }
         ],
-        "Catch": [{"ErrorEquals": ["States.ALL"], "Next": "${st_states_name}_notify_failure"}],
-        "Next": "dor_import"
+        "Catch": [{"ErrorEquals": ["States.ALL"], "Next": "dor_generate_notify_failure"}],
+        "Next": "fineos_import_employee_updates"
       },
-  
-      "${st_states_name}_notify_failure": {
+
+      "dor_generate_notify_failure": {
         "Type": "Pass",
         "Result": {
-          "task_name": "${st_states_name}",
-          "subject": "Task ${st_states_name} failed in ${environment_name}"
+          "task_name": "dor-generate",
+          "subject": "Task 'dor-generate' failed in ${environment_name}"
         },
         "ResultPath": "$.task_failure_details",
         "Next": "failure_notification"
       },
-  
+      %{endif}
+
+      "fineos_import_employee_updates": {
+        "Type": "Task",
+        "Comment": "FINEOS employee updates import to RDS",
+        "Resource": "arn:aws:states:::ecs:runTask.sync",
+        "TimeoutSeconds": 28800,
+        "Parameters": {
+          "LaunchType": "FARGATE",
+          "PlatformVersion": "1.4.0",
+          "Cluster": "${cluster_arn}",
+          "TaskDefinition": "pfml-api-${environment_name}-fineos-import-employee-updates",
+          "Overrides": {
+            "ContainerOverrides": [
+              {
+                "Name": "fineos-import-employee-updates",
+                "Environment": [
+                    {
+                      "Name": "SFN_EXECUTION_ID", "Value.$": "$$.Execution.Id"
+                    }
+                  ]
+              }
+            ]
+          },
+          "NetworkConfiguration": {
+            "AwsvpcConfiguration": {
+              "SecurityGroups": ["${security_group}"],
+              "Subnets": ["${subnet_1}", "${subnet_2}"],
+              "AssignPublicIp": "DISABLED"
+            }
+          }
+        },
+        "Retry": [
+          {
+            "ErrorEquals": ["States.TaskFailed"],
+            "IntervalSeconds": 1,
+            "MaxAttempts": 2,
+            "BackoffRate": 2.0
+          }
+        ],
+        "Catch": [{"ErrorEquals": ["States.ALL"], "Next": "fineos_import_employee_updates_notify_failure"}],
+        "Next": "dor_import"
+      },
+
+      "fineos_import_employee_updates_notify_failure": {
+        "Type": "Pass",
+        "Result": {
+          "task_name": "fineos-import-employee-updates",
+          "subject": "Task 'fineos-import-employee-updates' failed in ${environment_name}"
+        },
+        "ResultPath": "$.task_failure_details",
+        "Next": "failure_notification"
+      },
+
       "dor_import": {
         "Comment": "DOR import to RDS",
         "Type": "Task",
@@ -84,7 +149,7 @@
         "Catch": [{"ErrorEquals": ["States.ALL"], "Next": "dor_import_notify_failure"}],
         "Next": "load_employers_to_fineos_init"
       },
-  
+
       "dor_import_notify_failure": {
         "Type": "Pass",
         "Result": {
@@ -190,6 +255,9 @@
                 "Name": "fineos-eligibility-feed-export",
                 "Environment": [
                   { "Name": "ELIGIBILITY_FEED_MODE", "Value": "updates" },
+                  %{if st_employee_export_limit_specified}
+                  { "Name": "ELIGIBILITY_FEED_EXPORT_EMPLOYEE_LIMIT", "Value": "100000" },
+                  %{endif}
                   %{if st_file_limit_specified}
                   { "Name": "ELIGIBILITY_FEED_EXPORT_FILE_NUMBER_LIMIT", "Value": "20000" },
                   %{endif}

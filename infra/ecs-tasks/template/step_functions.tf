@@ -9,62 +9,22 @@ locals {
   # toggle variable between daylight savings and standard time
   is_daylight_savings = true
 
-  # Allow first step to either generate mock data _or_ import employees from FINEOS
-  st_states_details_list = {
-    "fineos_import_employee_updates" = {
-      comment                = "FINEOS employee updates import to RDS",
-      task_definition_suffix = "fineos-import-employee-updates",
-      overrides = jsonencode({
-
-        "ContainerOverrides" : [
-          {
-            "Name" : "fineos-import-employee-updates",
-            "Environment" : [
-              {
-                "Name" : "SFN_EXECUTION_ID",
-                "Value.$" : "$$.Execution.Id"
-              }
-            ]
-          }
-        ]
-        }
-      )
-    },
-    "dor_generate" = {
-      comment                = "Generate fake DOR data to S3 (non-prod)",
-      task_definition_suffix = "dor-import",
-      overrides = jsonencode({
-        "ContainerOverrides" : [
-          {
-            "Name" : "dor-import",
-            "Command" : [
-              "dor-generate",
-              "--folder=s3://massgov-pfml-test-agency-transfer/dor/received",
-              "--count=1000"
-            ]
-          }
-        ]
-      })
-    }
-  }
-
   # Get the right details based on the two variables
   st_decrypt_value = jsonencode({ "Name" : "DECRYPT", "Value" : tostring(var.st_decrypt_dor_data) })
-  st_states_name   = var.st_use_mock_dor_data ? "dor_generate" : "fineos_import_employee_updates"
-  st_state_details = local.st_states_details_list[local.st_states_name]
+
+  # Allow first step to either generate mock data _or_ import employees from FINEOS
+  first_step = var.st_use_mock_dor_data ? "dor_generate" : "fineos_import_employee_updates"
 
   # Pass the details into the step functions definition 
   dor_fineos_etl_definition = templatefile("${path.module}/step_function/dor_fineos_etl.json",
     {
       app_name = "pfml-api"
 
-      st_states_name            = local.st_states_name
-      st_states_comment         = local.st_state_details.comment
-      st_task_definition_suffix = local.st_state_details.task_definition_suffix
-      st_overrides              = local.st_state_details.overrides
-      st_decrypt_value          = local.st_decrypt_value
-      st_file_limit_specified   = var.st_file_limit_specified
-      st_employer_update_limit  = var.st_employer_update_limit
+      first_step                         = local.first_step
+      st_decrypt_value                   = local.st_decrypt_value
+      st_file_limit_specified            = var.st_file_limit_specified
+      st_employee_export_limit_specified = var.st_employee_export_limit_specified
+      st_employer_update_limit           = var.st_employer_update_limit
 
       cluster_arn           = data.aws_ecs_cluster.cluster.arn
       environment_name      = var.environment_name

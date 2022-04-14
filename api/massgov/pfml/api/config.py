@@ -28,6 +28,7 @@ class AppConfig:
     cognito_user_pool_client_id: str
     cognito_user_pool_keys_url: str
     enable_employee_endpoints: bool
+    limit_ssn_fein_max_attempts: int
     rmv_api_behavior: RMVAPIBehavior
     rmv_check_mock_success: bool
     enable_application_fraud_check: bool
@@ -40,7 +41,6 @@ class AppConfig:
     upload_max_files_to_fineos: int
     enable_document_multipart_upload: bool
     enable_1099_testfile_generation: bool
-    enable_application_import: bool
     disable_sending_emails: bool
     enable_response_validation: bool
 
@@ -56,6 +56,7 @@ def get_config() -> AppConfig:
         cognito_user_pool_client_id=os.environ.get("COGNITO_USER_POOL_CLIENT_ID", ""),
         cognito_user_pool_keys_url=os.environ.get("COGNITO_USER_POOL_KEYS_URL", ""),
         enable_employee_endpoints=os.environ.get("ENABLE_EMPLOYEE_ENDPOINTS", "0") == "1",
+        limit_ssn_fein_max_attempts=int(os.environ.get("LIMIT_SSN_FEIN_MAX_ATTEMPTS", 5)),
         rmv_api_behavior=RMVAPIBehavior(
             os.environ.get("RMV_API_BEHAVIOR", RMVAPIBehavior.MOCK.value)
         ),
@@ -74,7 +75,6 @@ def get_config() -> AppConfig:
         enable_document_multipart_upload=os.environ.get("ENABLE_DOCUMENT_MULTIPART_UPLOAD", "0")
         == "1",
         enable_1099_testfile_generation=os.environ.get("TEST_FILE_GENERATION_1099", "0") == "1",
-        enable_application_import=os.environ.get("ENABLE_APPLICATION_IMPORT", "0") == "1",
         # Sending emails is enabled by default. It must be disabled explicitly if
         # desired eg for local development
         disable_sending_emails=os.environ.get("DISABLE_SENDING_EMAILS", "0") == "1",

@@ -1,6 +1,7 @@
 import { fineos, fineosPages, portal } from "../../../actions";
 import { Submission } from "../../../../src/types";
 import { waitForAjaxComplete } from "../../../actions/fineos";
+import { config } from "../../../actions/common";
 
 /**
  * This is a test for the weight days in Fineos. The needs for this test is new claimant with no work pattern,
@@ -56,7 +57,8 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
             cy.findByTitle("Manage time for the selected Leave Plan").click();
             waitForAjaxComplete();
             page.assertDailyWeight(
-              (claim.metadata?.expected_weight as string) + " Weeks"
+              (claim.metadata?.expected_weight as string) + " Weeks",
+              config("HAS_APRIL_UPGRADE") === "true"
             );
           });
         });

@@ -1,5 +1,6 @@
 from enum import Enum
 from typing import Optional, cast
+from uuid import UUID
 
 from sqlalchemy import JSON, TIMESTAMP, Boolean, Column, Date, ForeignKey, Integer, Numeric, Text
 from sqlalchemy.orm import relationship
@@ -7,13 +8,16 @@ from sqlalchemy.sql.schema import Index
 
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import (
+    AbsencePeriod,
     Claim,
     Employee,
     ImportLog,
+    LkClaimType,
     Payment,
     PaymentDetails,
     ReferenceFile,
 )
+from massgov.pfml.util.pydantic import PydanticBaseModel
 
 from ..lookup import LookupTable
 from .base import Base, TimestampMixin, deprecated_column, uuid_gen
@@ -391,6 +395,30 @@ class FineosExtractVbiRequestedAbsenceSom(Base, TimestampMixin):
     reference_file = relationship(ReferenceFile)
 
 
+class MinimizedRequestedAbsenceSom(PydanticBaseModel):
+    """
+    Subset of FineosExtractVbiRequestedAbsenceSom that is used by
+    the ClaimantExtractStep to minimize the number of fields we
+    pull from the DB. Columns specified here are ones actually
+    used from the above table.
+    """
+
+    vbi_requested_absence_som_id: UUID
+    notification_casenumber: Optional[str]
+    absence_casenumber: Optional[str]
+    absence_casestatus: Optional[str]
+    employee_customerno: Optional[str]
+    orgunit_name: Optional[str]
+    employer_customerno: Optional[str]
+    leaverequest_id: Optional[str]
+    leaverequest_evidenceresulttype: Optional[str]
+    absencereason_coverage: Optional[str]
+    absenceperiod_classid: Optional[str]
+    absenceperiod_indexid: Optional[str]
+    absenceperiod_start: Optional[str]
+    absenceperiod_end: Optional[str]
+
+
 class FineosExtractVbiRequestedAbsence(Base, TimestampMixin):
     __tablename__ = "fineos_extract_vbi_requested_absence"
 
@@ -458,6 +486,27 @@ class FineosExtractVbiRequestedAbsence(Base, TimestampMixin):
     )
 
     reference_file = relationship(ReferenceFile)
+
+
+class MinimizedRequestedAbsence(PydanticBaseModel):
+    """
+    Subset of FineosExtractVbiRequestedAbsence that is used by
+    the ClaimantExtractStep to minimize the number of fields we
+    pull from the DB. Columns specified here are ones actually
+    used from the above table.
+    """
+
+    vbi_requested_absence_id: UUID
+    absenceperiod_classid: Optional[str]
+    absenceperiod_indexid: Optional[str]
+    absencereason_coverage: Optional[str]
+    absence_casecreationdate: Optional[str]
+    absenceperiod_type: Optional[str]
+    absencereason_qualifier1: Optional[str]
+    absencereason_qualifier2: Optional[str]
+    absencereason_name: Optional[str]
+    leaverequest_decision: Optional[str]
+    leaverequest_id: Optional[str]
 
 
 class FineosExtractEmployeeFeed(Base, TimestampMixin):
@@ -544,6 +593,32 @@ class FineosExtractEmployeeFeed(Base, TimestampMixin):
     reference_file = relationship(ReferenceFile)
 
 
+class MinimizedEmployeeFeed(PydanticBaseModel):
+    """
+    Subset of FineosExtractEmployeeFeed that is used by
+    the ClaimantExtractStep to minimize the number of fields we
+    pull from the DB. Columns specified here are ones actually
+    used from the above table.
+    """
+
+    employee_feed_id: UUID
+    c: Optional[str]
+    i: Optional[str]
+    defpaymentpref: Optional[str]
+    customerno: Optional[str]
+    natinsno: Optional[str]
+    dateofbirth: Optional[str]
+    paymentmethod: Optional[str]
+    sortcode: Optional[str]
+    accountno: Optional[str]
+    accounttype: Optional[str]
+    firstnames: Optional[str]
+    initials: Optional[str]
+    lastname: Optional[str]
+    extmassid: Optional[str]
+    extoutofstateid: Optional[str]
+
+
 class FineosExtractPaymentFullSnapshot(Base, TimestampMixin):
     __tablename__ = "fineos_extract_payment_full_snapshot"
 
@@ -564,12 +639,12 @@ class FineosExtractPaymentFullSnapshot(Base, TimestampMixin):
     addressline5 = Column(Text)
     addressline6 = Column(Text)
     addressline7 = Column(Text)
-    advicetopay = Column(Text)
+    advicetopay = deprecated_column(Text)  # Being removed in FINEOS' upcoming release
     advicetopayov = Column(Text)
     amalgamationc = Column(Text)
     amount_monamt = Column(Text)
     amount_moncur = Column(Text)
-    checkcutting = Column(Text)
+    checkcutting = deprecated_column(Text)  # Being removed in FINEOS' upcoming release
     confirmedbyus = Column(Text)
     confirmeduid = Column(Text)
     contractref = Column(Text)
@@ -578,7 +653,7 @@ class FineosExtractPaymentFullSnapshot(Base, TimestampMixin):
     dateinterface = Column(Text)
     datelastproce = Column(Text)
     description = Column(Text)
-    employeecontr = Column(Text)
+    employeecontr = deprecated_column(Text)  # Being removed in FINEOS' upcoming release
     eventeffectiv = Column(Text)
     eventreason = Column(Text)
     eventtype = Column(Text)
@@ -943,23 +1018,14 @@ class MmarsPaymentData(Base, TimestampMixin):
     doc_last_modified_by = Column(Text)
     doc_last_modified_on = Column(TIMESTAMP)
     NoFilter = Column(Text)
-    payment_id = deprecated_column(
-        PostgreSQLUUID, ForeignKey("payment.payment_id"), index=True, nullable=True
-    )
 
     claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True, nullable=True)
-    employee_id = Column(
-        PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True, nullable=True
-    )
-    payment_i_value = Column(Text)
-
-    claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True, nullable=True)
-    claim = relationship(Claim)
+    claim = cast(Optional[Claim], relationship(Claim))
 
     employee_id = Column(
         PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True, nullable=True
     )
-    employee = relationship(Employee)
+    employee = cast(Optional[Employee], relationship(Employee))
     payment_i_value = Column(Text)
 
 
@@ -1022,8 +1088,10 @@ class PaymentLine(Base, TimestampMixin):
     amount = Column(Numeric(asdecimal=True), nullable=False)
     line_type = Column(Text, nullable=False)
 
-    payment = relationship(Payment)
-    payment_details = relationship(PaymentDetails)
+    payment = relationship(Payment, back_populates="payment_lines")
+    payment_details = relationship(PaymentDetails, back_populates="payment_lines")
+
+    vpei_payment_line = relationship(FineosExtractVpeiPaymentLine)
 
 
 class FineosWritebackDetails(Base, TimestampMixin):
@@ -1051,6 +1119,9 @@ class FineosWritebackDetails(Base, TimestampMixin):
 Payment.fineos_writeback_details = relationship(  # type: ignore
     FineosWritebackDetails, back_populates="payment", order_by="FineosWritebackDetails.created_at"
 )
+Payment.vpei = relationship(FineosExtractVpei)  # type: ignore
+Payment.payment_lines = relationship(PaymentLine, back_populates="payment")  # type: ignore
+PaymentDetails.payment_lines = relationship(PaymentLine, back_populates="payment_details")  # type: ignore
 
 
 class LkFineosWritebackTransactionStatus(Base):
@@ -1203,7 +1274,11 @@ class FineosWritebackTransactionStatus(LookupTable):
     )
 
     INVALID_ROUTING_NUMBER = LkFineosWritebackTransactionStatus(
-        30, "Invalid Routing Number", PENDING_ACTIVE_WRITEBACK_RECORD_STATUS
+        30, "Invalid Routing Number", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    PUB_PAYMENT_RETURNED = LkFineosWritebackTransactionStatus(
+        31, "PUB Payment Returned", ACTIVE_WRITEBACK_RECORD_STATUS
     )
 
 
@@ -1472,8 +1547,152 @@ class LinkSplitPayment(Base, TimestampMixin):
     related_payment_id = Column(PostgreSQLUUID, ForeignKey("payment.payment_id"), primary_key=True)
 
     payment = relationship(Payment, foreign_keys=[payment_id])
-    related_payment = cast(
-        "Optional[Payment]", relationship(Payment, foreign_keys=[related_payment_id])
+    related_payment = relationship(Payment, foreign_keys=[related_payment_id])
+
+
+class LkPaymentType(Base):
+    __tablename__ = "lk_payment_type"
+    payment_type_id = Column(Integer, primary_key=True, autoincrement=True)
+    payment_type_description = Column(Text, nullable=False)
+
+    def __init__(self, payment_type_id, payment_type_description):
+        self.payment_type_id = payment_type_id
+        self.payment_type_description = payment_type_description
+
+
+class PaymentType(LookupTable):
+    model = LkPaymentType
+    column_names = ("payment_type_id", "payment_type_description")
+
+    CLAIMANT_CHECK = LkPaymentType(1, "Claimant Check")
+    CLAIMANT_ACH = LkPaymentType(2, "Claimant ACH")
+    ZERO_DOLLAR = LkPaymentType(3, "Zero Dollar")
+    EMPLOYER_REIMBURSEMENT = LkPaymentType(4, "Employer Reimbursement")
+    FEDERAL_TAX_WITHHOLDING = LkPaymentType(5, "Federal Tax Withholding")
+    STATE_TAX_WITHHOLDING = LkPaymentType(6, "State Tax Withholding")
+    LEGACY_MMARS = LkPaymentType(7, "Legacy MMARS")
+    CHILD_SUPPORT_WITHHOLDING = LkPaymentType(8, "Child Support Withholding")
+
+
+class LkPaymentEventType(Base):
+    __tablename__ = "lk_payment_event_type"
+    payment_event_type_id = Column(Integer, primary_key=True, autoincrement=True)
+    payment_event_type_description = Column(Text, nullable=False)
+
+    def __init__(self, payment_event_type_id, payment_event_type_description):
+        self.payment_event_type_id = payment_event_type_id
+        self.payment_event_type_description = payment_event_type_description
+
+
+class PaymentEventType(LookupTable):
+    model = LkPaymentEventType
+    column_names = ("payment_event_type_id", "payment_event_type_description")
+
+    PAYMENT_OUT = LkPaymentEventType(1, "PaymentOut")
+    PAYMENT_OUT_CANCELLATIONS = LkPaymentEventType(2, "PaymentOut Cancellation")
+    OVERPAYMENT = LkPaymentEventType(3, "Overpayment")
+    OVERPAYMENT_ADJUSTMENT = LkPaymentEventType(4, "Overpayment Adjustment")
+    OVERPAYMENT_ADJUSTMENT_CANCELLATION = LkPaymentEventType(
+        5, "Overpayment Adjustment Cancellation"
+    )
+    OVERPAYMENT_ACTUAL_RECOVERY = LkPaymentEventType(6, "Overpayment Actual Recovery")
+    OVERPAYMENT_RECOVERY_CANCELLATION = LkPaymentEventType(7, "Overpayment Recovery Cancellation")
+    OVERPAYMENT_ACTUAL_RECOVERY_CANCELLATION = LkPaymentEventType(
+        8, "Overpayment Actual Recovery Cancellation"
+    )
+    OVERPAYMENT_RECOVERY_REVERSE = LkPaymentEventType(9, "Overpayment Recovery Reverse")
+
+
+class LkOverpaymentRecoveryType(Base):
+    __tablename__ = "lk_overpayment_recovery_type"
+    overpayment_recovery_type_id = Column(Integer, primary_key=True, autoincrement=True)
+    overpayment_recovery_type_description = Column(Text, nullable=False)
+
+    def __init__(self, overpayment_recovery_type_id, overpayment_recovery_type_description):
+        self.overpayment_recovery_type_id = overpayment_recovery_type_id
+        self.overpayment_recovery_type_description = overpayment_recovery_type_description
+
+
+class OverpaymentRecoveryType(LookupTable):
+    model = LkOverpaymentRecoveryType
+    column_names = ("overpayment_recovery_type_id", "overpayment_recovery_type_description")
+
+    CHECK = LkOverpaymentRecoveryType(1, "Check")
+    INVOICE_RECOVERY = LkOverpaymentRecoveryType(2, "Invoice Recovery")
+    AUTOMATIC_OFFSET_RECOVERY = LkOverpaymentRecoveryType(3, "Automatic Offset Recovery")
+    INFLIGHT_RECOVERY = LkOverpaymentRecoveryType(4, "Inflight Recovery")
+
+
+class Overpayment(Base, TimestampMixin):
+    __tablename__ = "overpayment"
+    overpayment_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    cancelled_overpayment_id = Column(PostgreSQLUUID, nullable=True)
+
+    claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True, nullable=True)
+    claim = cast(Optional[Claim], relationship(Claim))
+
+    period_start_date = Column(Date, nullable=True)
+    period_end_date = Column(Date, nullable=True)
+    overpayment_date = Column(Date, nullable=True)
+    amount = Column(Numeric(asdecimal=True), nullable=True)
+    fineos_pei_c_value = Column(Text, nullable=True)
+    fineos_pei_i_value = Column(Text, nullable=True)
+    payment_event_type_id = Column(Integer, nullable=True)
+
+    claim_type_id = Column(Integer, ForeignKey("lk_claim_type.claim_type_id"))
+    claim_type = relationship(LkClaimType)
+
+    absence_case_creation_date = Column(Date, nullable=True)
+
+    leave_request_id = Column(PostgreSQLUUID, ForeignKey("absence_period.absence_period_id"))
+    leave_request = relationship(AbsencePeriod)
+
+    fineos_employee_first_name = Column(Text, nullable=True)
+    fineos_employee_last_name = Column(Text, nullable=True)
+    fineos_employee_middle_name = Column(Text, nullable=True)
+
+    employee_id = Column(
+        PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True, nullable=True
+    )
+    employee = cast(Optional[Employee], relationship(Employee))
+
+    vpei_id = Column(PostgreSQLUUID, ForeignKey("fineos_extract_vpei.vpei_id"), nullable=True)
+    fineos_extract_vpei = relationship(FineosExtractVpei)
+
+    fineos_leave_request_id = Column(Integer, nullable=True)
+    fineos_extraction_date = Column(Date, nullable=True)
+
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+
+class OverpaymentRepayment(Base, TimestampMixin):
+    __tablename__ = "overpayment_repayment"
+    overpayment_repayment_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    cancelled_overpayment_repayment_id = Column(PostgreSQLUUID, nullable=True)
+    overpayment_repayment_date = Column(Date, nullable=True)
+    amount = Column(Numeric(asdecimal=True), nullable=True)
+    fineos_pei_c_value = Column(Text, nullable=True)
+    fineos_pei_i_value = Column(Text, nullable=True)
+    payment_event_type_id = Column(Integer, nullable=True)
+    overpayment_recovery_type_id = Column(Integer, nullable=True)
+    fineos_employee_first_name = Column(Text, nullable=True)
+    fineos_employee_last_name = Column(Text, nullable=True)
+    fineos_employee_middle_name = Column(Text, nullable=True)
+
+    employee_id = Column(
+        PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True, nullable=True
+    )
+    employee = cast(Optional[Employee], relationship(Employee))
+
+    vpei_id = Column(PostgreSQLUUID, ForeignKey("fineos_extract_vpei.vpei_id"))
+    fineos_extract_vpei = relationship(FineosExtractVpei)
+
+    fineos_extraction_date = Column(Date, nullable=True)
+
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
     )
 
 
@@ -1611,5 +1830,7 @@ def sync_lookup_tables(db_session):
     FineosWritebackTransactionStatus.sync_to_database(db_session)
     PaymentAuditReportType.sync_to_database(db_session)
     WithholdingType.sync_to_database(db_session)
-
+    OverpaymentRecoveryType.sync_to_database(db_session)
+    PaymentEventType.sync_to_database(db_session)
+    PaymentType.sync_to_database(db_session)
     db_session.commit()

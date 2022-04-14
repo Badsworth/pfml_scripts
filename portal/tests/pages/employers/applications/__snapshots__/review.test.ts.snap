@@ -61,11 +61,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
           >
             Employee name
           </h3>
-          Jane
-           
-          
-           
-          Doe
+          Jane Doe
         </div>
       </div>
       <div
@@ -272,6 +268,32 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
                 data-label="Date range"
                 scope="row"
               >
+                2/1/2022 to 7/1/2022
+              </th>
+              <td
+                class="tablet:width-card-lg"
+                data-label="Leave frequency"
+              >
+                Continuous leave
+              </td>
+              <td
+                data-label="Status"
+              >
+                <span
+                  class="usa-tag display-inline-block text-bold text-middle text-center text-no-wrap text-base-darkest bg-warning-lighter"
+                >
+                  Pending
+                </span>
+              </td>
+            </tr>
+            <tr
+              data-testid="1-2"
+            >
+              <th
+                class="tablet:width-card-lg"
+                data-label="Date range"
+                scope="row"
+              >
                 1/1/2022 to 4/1/2022
               </th>
               <td
@@ -355,7 +377,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
         Previous leave
       </h3>
       <p>
-        Verify the accuracy of your employee’s qualified leave dates. Any qualifying reason should only be reported if it was taken after January 1, 2021.
+        Verify the accuracy of your employee’s qualified leave dates. Any qualifying reason should only be reported if it was taken after February 1, 2021.
       </p>
       <p>
         This includes both paid leave (for example: paid vacation or sick days) and unpaid leave (for example: FMLA leave).
@@ -513,7 +535,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
       <p>
         Your employee is planning to use these benefits during their paid leave under PFML. Employer-sponsored benefits include temporary disability insurance, permanent disability insurance, and family or medical leave benefits such as a parental leave program. For paid time off (PTO) and other accrued paid leave your employee will use, review “Concurrent accrued paid leave” above. 
         <a
-          href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+          href="https://mass.gov/pfml-benefit-reductions"
           rel="noopener"
           target="_blank"
         >
@@ -845,7 +867,7 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
         >
           Answer based on your organization's policies and our 
           <a
-            href="https://www.mass.gov/info-details/employer-paid-leave-application-review-guide"
+            href="https://mass.gov/pmfl-leave-administrators"
             rel="noreferrer noopener"
             target="_blank"
           >
