@@ -356,7 +356,7 @@ jobs:
           CYPRESS_PROJECT_ID: "98snsi"
 
       - name: Get list of failed specs from auto re-trigger
-        if: failure()
+        if: failure() && steps.get-failed.outputs.failed_specs_count < 10
         run: sh ./bin/ci/get-list-failed-specs.sh ${{ env.E2E_ENVIRONMENT }} ${{ env.TEST_RUN_ID }}-failed-specs
         id: get-failed-auto
 

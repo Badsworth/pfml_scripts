@@ -18,7 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         environment:
-          [ "test" ]
+          [ "test", "stage", "performance", "cps-preview", "training", "long", "trn2" ]
     env:
       NEW_RELIC_ACCOUNT_ID: 2837112
     steps:
@@ -34,74 +34,28 @@ jobs:
 
       - name: Setup & Configure New Relic CLI
         uses: ./.github/actions/setup-nr-cli
-        
-      # - run: ./bin/ci/publish-fineos-deployment-events.sh ${{ matrix.environment }}
-      #   id: publish-deployments
-      - name: Query NR to get list of failed specs
-        run: sh ./bin/ci/get-list-failed-specs.sh trn2 EOLWD/pfml-2162862872-1
-        id: get-failed
 
-      - name: Print string of failed specs for auto trigger
-        run: |
-          echo "Previous run had failure[s] w/the following runId: EOLWD/pfml-2162862872-1"
-          echo "List of failed specs: ${{ steps.get-failed.outputs.failed_specs }}"
-          echo "Count of failed specs: ${{ steps.get-failed.outputs.failed_specs_count }}"
+      - run: ./bin/ci/publish-fineos-deployment-events.sh ${{ matrix.environment }}
+        id: publish-deployments
 
-      - name: More than 10 specs detected (ABORT RE-RUN)
-        uses: actions/github-script@v3
-        id: high-failure
-        with:
-          script: |
-            core.setFailed('More than 10 specs failed - aborting auto re-run!!')
-        if: steps.get-failed.outputs.failed_specs_count > 10
-
-      - name: Setup Node
-        uses: actions/setup-node@v2
-        with: { node-version: "14.x" }
-
-      - name: "Install Node Modules"
-        run: |
-          echo "Install Node Modules"
-
-      - name: Cypress Tests (Auto Re-run - failed specs)
-        uses: actions/github-script@v3
-        with:
-          script: |
-            core.setFailed('Encountered E2E failure')
-
-      - name: Get list of failed specs from auto re-trigger
-        run: |
-          echo "Getting List of failed specs post auto"
-        id: get-failed-auto
-        if: failure() && steps.get-failed.outputs.failed_specs_count < 10
-
-      - name: Print String of persistent failed specs
-        run: |
-          echo "Failed auto run had failure[s] w/the following runId:"
-        if: always() && steps.get-failed-auto.outcome == 'success'
-
-      - name: "Archive screenshots"
-        # uses: actions/upload-artifact@v2
-        run: | 
-          echo "Archive any screenshots"
-        if: always() && steps.get-failed-auto.outcome == 'success'
+      - name: Trigger E2E Workflow
         # This workflow intentionally doesn't use workflow_call because at the moment, it doesn't support matrix builds.
         # Also, since we don't wait for results or care about having an accurate run URL, the benefit is small.
-        # uses: aurelien-baudet/workflow-dispatch@v2.1.1
-        # if: steps.publish-deployments.outputs.was_deployed == 'true'
-        # with:
-        #   workflow: e2e-cypress.yml
-        #   token: ${{ secrets.PFML_DEVOPS_TOKEN }}
-        #   wait-for-completion: false
-        #   display-workflow-run-url-interval: 30s
-        #   inputs: |
-        #     {
-        #       "target_environment": "${{ matrix.environment }}",
-        #       "cypress_tags": "Deploy,Deploy-Fineos",
-        #       "run_stable": "true",
-        #       "run_unstable": "false",
-        #       "run_morning": "false",
-        #       "run_targeted": "false",
-        #       "targeted_pattern": "cypress/specs/stable/feature/**",
-        #       "title_override": "${{ format('Fineos Deploy: {0} to {1}', steps.publish-deployments.outputs.version, matrix.environment) }}"
-        #     }
+        uses: aurelien-baudet/workflow-dispatch@v2.1.1
+        if: steps.publish-deployments.outputs.was_deployed == 'true'
+        with:
+          workflow: e2e-cypress.yml
+          token: ${{ secrets.PFML_DEVOPS_TOKEN }}
+          wait-for-completion: false
+          display-workflow-run-url-interval: 30s
+          inputs: |
+            {
+              "target_environment": "${{ matrix.environment }}",
+              "cypress_tags": "Deploy,Deploy-Fineos",
+              "run_stable": "true",
+              "run_unstable": "false",
+              "run_morning": "false",
+              "run_targeted": "false",
+              "targeted_pattern": "cypress/specs/stable/feature/**",
+              "title_override": "${{ format('Fineos Deploy: {0} to {1}', steps.publish-deployments.outputs.version, matrix.environment) }}"
+            }
