@@ -992,7 +992,12 @@ class DuaReductionPaymentFactory(BaseFactory):
     fineos_customer_number = factory.Faker("numerify", text="####")
     employer_fein = Generators.Fein
     payment_date = factory.Faker("date_object")
-    request_week_begin_date = factory.Faker("date_object")
+
+    # Default DUA logic excludes payments where this value is before 12/1/2020.
+    # Since the date_object provider generates a random date between 1970 & now,
+    # using it would cause almost all generated payments to be excluded.
+    request_week_begin_date = factory.Faker("date_this_year")
+
     gross_payment_amount_cents = random.randint(100, 100000)
     payment_amount_cents = random.randint(100, 100000)
     fraud_indicator = None
