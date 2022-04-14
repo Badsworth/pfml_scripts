@@ -28,6 +28,16 @@ export default jest.fn(() => ({
     verifyAccount: jest.fn(),
   },
   catchError: jest.fn(),
+  changeRequests: {
+    isLoadingChangeRequests: false,
+    hasLoadedChangeRequests: false,
+    loadAll: jest.fn(),
+    create: jest.fn(),
+    destroy: jest.fn(),
+    update: jest.fn(),
+    submit: jest.fn(),
+    attachDocuments: jest.fn(),
+  },
   benefitsApplications: {
     benefitsApplications: new ApiResourceCollection<BenefitsApplication>(
       "application_id"

@@ -7,6 +7,7 @@ on:
   push:
     branches:
       - main
+      - jacobitegboje/INFRA-1356-audit-s3-buckets
     paths:
       - infra/tooling/**
   workflow_dispatch:

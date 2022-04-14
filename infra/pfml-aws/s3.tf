@@ -6,7 +6,7 @@ locals {
   #
   # The for_each logic below will automagically define your S3 bucket, so you
   # can go straight to running terraform apply.
-  environments = ["test", "stage", "prod", "performance", "training", "uat", "breakfix", "cps-preview", "long", "infra-test", "trn2"]
+  environments = ["test", "stage", "prod", "performance", "training", "uat", "breakfix", "cps-preview", "long", "infra-test", "trn2", "dev"]
 }
 
 data "aws_iam_role" "replication" {

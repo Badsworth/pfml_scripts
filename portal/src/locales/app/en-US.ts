@@ -1673,8 +1673,20 @@ const pages: {
     viewStatus: "View status and details for your application",
   },
   claimsModifyType: {
-    sectionLabel: "How do you want to change your application?",
+    choiceHint:
+      "We will ask some questions about your desired change. You may be asked to upload updated documentation. Your employer will be notified of any changes you make.",
+    choiceLabel: "How do you want to change your application?",
+    currentLeaveDatesLabel: "Current leave dates",
+    currentLeaveDatesValue: "{{startDate}} to {{endDate}}",
+    endDateLabel: "Requested last day of leave",
+    modificationChoiceHint: "I need to end my leave early or extend my leave",
+    modificationChoiceLabel: "Change my leave end date",
+    modificationLegend: "Enter your new leave end date",
+    modificationLegendHint:
+      "<p>If you are requesting more time, you will need an updated certification form which covers your new leave dates.</p><p>If you are ending your leave early and have received payments for the leave dates you are canceling, you will need to return the money to the Department. <overpayments-link>Read more about overpayments</overpayments-link>.</p>",
     title: "$t(shared.claimsModifyTitle)",
+    withdrawalChoiceHint: "I no longer need to take this leave through PFML",
+    withdrawalChoiceText: "Cancel my entire leave application",
   },
   claimsName: {
     firstNameLabel: "First name",
@@ -3401,6 +3413,9 @@ const components: {
   },
   withBenefitsApplications: {
     loadingLabel: "Loading applications",
+  },
+  withChangeRequests: {
+    loadingLabel: "Loading requests",
   },
   withClaimDocuments: {
     loadingLabel: "$t(shared.loadingDocumentsLabel)",

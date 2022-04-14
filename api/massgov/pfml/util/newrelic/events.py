@@ -135,7 +135,9 @@ def get_task_metadata(url_suffix: str = "") -> dict:
         return {}
 
 
-def log_and_capture_exception(msg: str, extra: Optional[Dict] = None) -> None:
+def log_and_capture_exception(
+    msg: str, extra: Optional[Dict] = None, only_warn: bool = False
+) -> None:
     """
     Sometimes we want to record custom messages that do not match an exception message. For example, when a ValidationError contains
     multiple issues, we want to log and record each one individually in New Relic. Injecting a new exception with a
@@ -155,7 +157,10 @@ def log_and_capture_exception(msg: str, extra: Optional[Dict] = None) -> None:
     else:
         info_with_readable_msg = (info[0], Exception(msg), info[2])
 
-    logger.error(msg, extra=extra, exc_info=info_with_readable_msg)
+    if only_warn:
+        logger.warning(msg, extra=extra, exc_info=info_with_readable_msg)
+    else:
+        logger.error(msg, extra=extra, exc_info=info_with_readable_msg)
 
     newrelic.agent.record_exception(
         exc=info_with_readable_msg[0],
