@@ -458,6 +458,7 @@ def test_e2e_pub_payments(
             ScenarioName.HAPPY_PATH_MAX_LEAVE_DURATION_EXCEEDED,
             ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
             ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED,
+            ScenarioName.HAPPY_PATH_PAYMENT_IN_WAITING_WEEK,
         ]
 
         stage_1_non_standard_payments = [
@@ -703,6 +704,7 @@ def test_e2e_pub_payments(
                 ScenarioName.TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT,
                 ScenarioName.IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION,
                 ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED,
+                ScenarioName.HAPPY_PATH_PAYMENT_IN_WAITING_WEEK,
             ]
         )
 
@@ -763,6 +765,11 @@ def test_e2e_pub_payments(
                 else ""
                 if test_dataset.is_payment_scenario(p, ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED)
                 else "There were less than three previous payments",
+                PAYMENT_AUDIT_CSV_HEADERS.waiting_week: "1"
+                if test_dataset.is_payment_scenario(
+                    p, ScenarioName.HAPPY_PATH_PAYMENT_IN_WAITING_WEEK
+                )
+                else "",
             }
             for p in audit_report_sent_payments
         ]

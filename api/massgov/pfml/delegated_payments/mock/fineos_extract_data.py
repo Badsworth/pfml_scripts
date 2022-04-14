@@ -21,6 +21,7 @@ from massgov.pfml.delegated_payments.mock.scenario_data_generator import (
     NO_MATCH_ADDRESS,
     ScenarioData,
 )
+from massgov.pfml.delegated_payments.mock.scenarios import ScenarioName
 from massgov.pfml.util.datetime import get_now_us_eastern
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -876,8 +877,19 @@ def generate_claimant_data_files(
         absence_case_number = absence_case_number
         absence_case_status = "Approved"
         leave_request_evidence = "Satisfied" if scenario_descriptor.is_id_proofed else "Rejected"
-        leave_request_start = "2021-01-01 12:00:00"
-        leave_request_end = "2021-04-01 12:00:00"
+        scenario_data.scenario_descriptor.scenario_name
+        leave_request_start = (
+            (datetime.today() - timedelta(days=3)).isoformat()
+            if scenario_data.scenario_descriptor.scenario_name
+            == ScenarioName.HAPPY_PATH_PAYMENT_IN_WAITING_WEEK
+            else "2021-01-01 12:00:00"
+        )
+        leave_request_end = (
+            (datetime.today() + timedelta(weeks=10)).isoformat()
+            if scenario_data.scenario_descriptor.scenario_name
+            == ScenarioName.HAPPY_PATH_PAYMENT_IN_WAITING_WEEK
+            else "2021-04-01 12:00:00"
+        )
         notification_number = f"NTN-{absence_case_number}"
         fineos_employer_id = employer.fineos_employer_id
         claim_type = scenario_descriptor.claim_type
