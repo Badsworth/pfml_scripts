@@ -14,7 +14,6 @@ from massgov.pfml.api.models.common import ConcurrentLeave
 from massgov.pfml.api.services.administrator_fineos_actions import (
     EformTypes,
     _get_computed_start_dates,
-    _get_leave_details,
     download_document_as_leave_admin,
     get_claim_as_leave_admin,
     get_documents_as_leave_admin,
@@ -1643,17 +1642,6 @@ def test_register_previously_registered_leave_admin_with_fineos(
     assert created_leave_admin.fineos_web_id.startswith("pfml_leave_admin_")
 
 
-def test_get_leave_details(period_decisions):
-    leave_details = _get_leave_details(period_decisions.dict())
-
-    assert leave_details.continuous_leave_periods[0].start_date == date(2021, 2, 1)
-    assert leave_details.continuous_leave_periods[0].end_date == date(2021, 2, 24)
-    assert leave_details.intermittent_leave_periods[0].start_date == date(2021, 1, 15)
-    assert leave_details.intermittent_leave_periods[0].end_date == date(2021, 1, 20)
-    assert leave_details.reduced_schedule_leave_periods[0].start_date == date(2021, 1, 4)
-    assert leave_details.reduced_schedule_leave_periods[0].end_date == date(2021, 1, 29)
-
-
 def test_computed_start_dates_for_absence_with_no_reason():
     period_decisions = group_client_api.PeriodDecisions.parse_obj(
         {
@@ -1708,33 +1696,14 @@ def test_get_claim_plan(mock_maybe_update, mock_fineos_period_decisions, test_db
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.build()
-    leave_details, _, _ = get_claim_as_leave_admin(
+    claim_review_response, _, _ = get_claim_as_leave_admin(
         fineos_user_id,
         absence_id,
         employer,
         test_db_session,
         fineos_client=mock_fineos_period_decisions,
     )
-    assert leave_details.status == "Known"
-
-
-@mock.patch(
-    "massgov.pfml.api.services.administrator_fineos_actions.maybe_update_employee_relationship"
-)
-def test_get_claim_no_plan(
-    mock_maybe_update, mock_fineos_period_decisions_no_plan, test_db_session
-):
-    fineos_user_id = "Friendly_HR"
-    absence_id = "NTN-001-ABS-001"
-    employer = EmployerFactory.build()
-    leave_details, _, _ = get_claim_as_leave_admin(
-        fineos_user_id,
-        absence_id,
-        employer,
-        test_db_session,
-        fineos_client=mock_fineos_period_decisions_no_plan,
-    )
-    assert leave_details.status == "Known"
+    assert claim_review_response.computed_start_dates is not None
 
 
 @mock.patch(
@@ -1746,14 +1715,14 @@ def test_get_claim_eform_type_contains_neither_version(
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.build()
-    leave_details, _, _ = get_claim_as_leave_admin(
+    claim_review_response, _, _ = get_claim_as_leave_admin(
         fineos_user_id,
         absence_id,
         employer,
         test_db_session,
         fineos_client=mock_fineos_period_decisions,
     )
-    assert leave_details.uses_second_eform_version is True
+    assert claim_review_response.uses_second_eform_version is True
 
 
 @mock.patch(
@@ -1783,7 +1752,7 @@ def test_get_claim_other_leaves_v2_eform(
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.build()
-    leave_details, _, _ = get_claim_as_leave_admin(
+    claim_review_response, _, _ = get_claim_as_leave_admin(
         fineos_user_id,
         absence_id,
         employer,
@@ -1791,8 +1760,8 @@ def test_get_claim_other_leaves_v2_eform(
         fineos_client=mock_fineos_other_leaves_v2_eform,
     )
 
-    assert leave_details.uses_second_eform_version is True
-    assert leave_details.previous_leaves == [
+    assert claim_review_response.uses_second_eform_version is True
+    assert claim_review_response.previous_leaves == [
         PreviousLeave(
             is_for_current_employer=True,
             leave_start_date=date(2021, 1, 1),
@@ -1855,9 +1824,9 @@ def test_get_claim_other_leaves_v2_eform(
             leave_minutes=None,
             type="other_reason",
         )
-        not in leave_details.previous_leaves
+        not in claim_review_response.previous_leaves
     )
-    assert leave_details.concurrent_leave == ConcurrentLeave(
+    assert claim_review_response.concurrent_leave == ConcurrentLeave(
         is_for_current_employer=True,
         leave_start_date=date(2021, 6, 4),
         leave_end_date=date(2021, 6, 18),
@@ -1875,7 +1844,7 @@ def test_get_claim_other_leaves_v2_accrued_leave_different_employer_eform(
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.build()
-    leave_details, _, _ = get_claim_as_leave_admin(
+    claim_review_response, _, _ = get_claim_as_leave_admin(
         fineos_user_id,
         absence_id,
         employer,
@@ -1883,7 +1852,7 @@ def test_get_claim_other_leaves_v2_accrued_leave_different_employer_eform(
         fineos_client=mock_fineos_other_leaves_v2_accrued_leave_different_employer_eform,
     )
 
-    assert leave_details.previous_leaves == [
+    assert claim_review_response.previous_leaves == [
         PreviousLeave(
             is_for_current_employer=True,
             leave_start_date=date(2021, 3, 1),
@@ -1895,7 +1864,7 @@ def test_get_claim_other_leaves_v2_accrued_leave_different_employer_eform(
             type="same_reason",
         )
     ]
-    assert leave_details.concurrent_leave is None
+    assert claim_review_response.concurrent_leave is None
 
 
 @mock.patch(
@@ -1907,38 +1876,38 @@ def test_get_claim_other_income(
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.build()
-    leave_details, _, _ = get_claim_as_leave_admin(
+    claim_review_response, _, _ = get_claim_as_leave_admin(
         fineos_user_id,
         absence_id,
         employer,
         test_db_session,
         fineos_client=mock_fineos_other_income_v1_eform,
     )
-    assert leave_details.date_of_birth == "****-12-25"
-    assert len(leave_details.employer_benefits) == 1
-    assert leave_details.employer_benefits[0].benefit_amount_dollars == 500
-    assert leave_details.employer_benefits[0].benefit_amount_frequency == "Per Week"
-    assert leave_details.employer_benefits[0].benefit_start_date == date(2021, 5, 3)
-    assert leave_details.employer_benefits[0].benefit_end_date == date(2021, 5, 29)
-    assert leave_details.employer_benefits[0].benefit_type == "Permanent disability insurance"
-    assert leave_details.employer_benefits[0].program_type == "Employer"
-    assert leave_details.employer_dba == employer.employer_dba
-    assert leave_details.employer_id == employer.employer_id
-    assert leave_details.fineos_absence_id == absence_id
-    assert leave_details.first_name == "Bud"
-    assert leave_details.middle_name is None
-    assert leave_details.last_name == "Baxter"
-    assert leave_details.hours_worked_per_week == 37.5
-    assert leave_details.leave_details.reason == "Serious Health Condition - Employee"
-    assert leave_details.previous_leaves == []
-    assert leave_details.residential_address.line_1 == "55 Trinity Ave."
-    assert leave_details.residential_address.line_2 == "Suite 3450"
-    assert leave_details.residential_address.city == "Atlanta"
-    assert leave_details.residential_address.state == "GA"
-    assert leave_details.residential_address.zip == "30303"
-    assert leave_details.tax_identifier == "***-**-1234"
-    assert leave_details.status == "Known"
-    assert leave_details.uses_second_eform_version is False
+    assert claim_review_response.date_of_birth == "****-12-25"
+    assert len(claim_review_response.employer_benefits) == 1
+    assert claim_review_response.employer_benefits[0].benefit_amount_dollars == 500
+    assert claim_review_response.employer_benefits[0].benefit_amount_frequency == "Per Week"
+    assert claim_review_response.employer_benefits[0].benefit_start_date == date(2021, 5, 3)
+    assert claim_review_response.employer_benefits[0].benefit_end_date == date(2021, 5, 29)
+    assert (
+        claim_review_response.employer_benefits[0].benefit_type == "Permanent disability insurance"
+    )
+    assert claim_review_response.employer_benefits[0].program_type == "Employer"
+    assert claim_review_response.employer_dba == employer.employer_dba
+    assert claim_review_response.employer_id == employer.employer_id
+    assert claim_review_response.fineos_absence_id == absence_id
+    assert claim_review_response.first_name == "Bud"
+    assert claim_review_response.middle_name is None
+    assert claim_review_response.last_name == "Baxter"
+    assert claim_review_response.hours_worked_per_week == 37.5
+    assert claim_review_response.previous_leaves == []
+    assert claim_review_response.residential_address.line_1 == "55 Trinity Ave."
+    assert claim_review_response.residential_address.line_2 == "Suite 3450"
+    assert claim_review_response.residential_address.city == "Atlanta"
+    assert claim_review_response.residential_address.state == "GA"
+    assert claim_review_response.residential_address.zip == "30303"
+    assert claim_review_response.tax_identifier == "***-**-1234"
+    assert claim_review_response.uses_second_eform_version is False
 
 
 @mock.patch(
@@ -1964,14 +1933,13 @@ def test_get_claim_with_open_managed_requirement(
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.build()
-    leave_details, managed_requirements, _ = get_claim_as_leave_admin(
+    claim_review_response, managed_requirements, _ = get_claim_as_leave_admin(
         fineos_user_id,
         absence_id,
         employer,
         test_db_session,
         fineos_client=mock_fineos_period_decisions,
     )
-    assert leave_details.status == "Known"
     assert len(managed_requirements) == len(mock_managed_requirements)
 
 
@@ -1996,14 +1964,13 @@ def test_get_claim_with_closed_managed_requirement(
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.build()
-    leave_details, managed_requirements, _ = get_claim_as_leave_admin(
+    claim_review_response, managed_requirements, _ = get_claim_as_leave_admin(
         fineos_user_id,
         absence_id,
         employer,
         test_db_session,
         fineos_client=mock_fineos_period_decisions,
     )
-    assert leave_details.status == "Known"
     assert len(managed_requirements) == len(mock_managed_requirements)
 
 
@@ -2028,14 +1995,13 @@ def test_get_claim_with_open_expired_managed_requirement(
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.build()
-    leave_details, managed_requirements, _ = get_claim_as_leave_admin(
+    claim_review_response, managed_requirements, _ = get_claim_as_leave_admin(
         fineos_user_id,
         absence_id,
         employer,
         test_db_session,
         fineos_client=mock_fineos_period_decisions,
     )
-    assert leave_details.status == "Known"
     assert len(managed_requirements) == len(mock_managed_requirements)
 
 
