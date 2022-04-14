@@ -3447,7 +3447,7 @@ components:
         line_type:
           type: string
           example: "Auto Gross Entitlement"
-          description: "Category of the line, e.g., Auto Gross Entitlement, State Income Tax, etc."
+          description: "Category of the line, e.g., Auto Gross Entitlement, State Income Tax, etc. See: https://lwd.atlassian.net/wiki/spaces/DD/pages/2249818349/Tech+Spec+-+Consume+PEI+Line+Items"
 
     ChangeRequestsResponse:
       type: array

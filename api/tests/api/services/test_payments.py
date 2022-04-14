@@ -513,6 +513,25 @@ def test_consolidate_successors_cancelled_and_regular(test_db_session):
     assert original_payment2.payment_id == consolidated_payment_containers[0].payment.payment_id
 
 
+def test_sort_amount_by_sign_then_magnitude():
+
+    # Helper class for clearer testing
+    class Item:
+        def __init__(self, amount):
+            self.amount = amount
+
+        def __eq__(self, other):
+            return self.amount == other.amount
+
+    itemList = [Item(2), Item(1), Item(0), Item(-1), Item(-2)]
+
+    itemList.sort(key=payment_services.sort_amount_by_sign_then_magnitude)
+    assert itemList == [Item(-1), Item(-2), Item(0), Item(1), Item(2)]
+
+    itemList.sort(key=payment_services.sort_amount_by_sign_then_magnitude, reverse=True)
+    assert itemList == [Item(2), Item(1), Item(0), Item(-2), Item(-1)]
+
+
 class TestGetPaymentDetailsAndLines:
     @pytest.fixture
     def claim_with_multiple_details(self, test_db_session):
@@ -571,22 +590,31 @@ class TestGetPaymentDetailsAndLines:
         claim_response = payment_services.get_payments_with_status(
             test_db_session, claim_with_multiple_details
         )
-
-        # Confirm that the expected number of entities is returned
         assert len(claim_response["payments"]) == 1
         assert len(claim_response["payments"][0]["payment_details"]) == 2
         assert len(claim_response["payments"][0]["payment_details"][0]["payment_lines"]) == 0
         assert len(claim_response["payments"][0]["payment_details"][1]["payment_lines"]) == 1
 
-        # Confirm the PaymentDetails are in the expected order
+    def test_multiple_details_sort_order(self, test_db_session, claim_with_multiple_details):
+        claim_response = payment_services.get_payments_with_status(
+            test_db_session, claim_with_multiple_details
+        )
         assert claim_response["payments"][0]["payment_details"][0]["net_amount"] == 75
         assert claim_response["payments"][0]["payment_details"][1]["net_amount"] == 25
 
-        # Confirm the PaymentDetails return a gross_amount field
+    def test_multiple_details_gross_amount(self, test_db_session, claim_with_multiple_details):
+        claim_response = payment_services.get_payments_with_status(
+            test_db_session, claim_with_multiple_details
+        )
         assert claim_response["payments"][0]["payment_details"][0]["gross_amount"] == 80
         assert claim_response["payments"][0]["payment_details"][1]["gross_amount"] == 30
 
-        # Confirm the PaymentLine is associated with the correct PaymentDetails
+    def test_multiple_details_associated_with_correct_payment_lines(
+        self, test_db_session, claim_with_multiple_details
+    ):
+        claim_response = payment_services.get_payments_with_status(
+            test_db_session, claim_with_multiple_details
+        )
         assert (
             claim_response["payments"][0]["payment_details"][1]["payment_lines"][0]["amount"] == 25
         )
@@ -595,22 +623,29 @@ class TestGetPaymentDetailsAndLines:
         claim_response = payment_services.get_payments_with_status(
             test_db_session, claim_with_multiple_lines
         )
-
-        # Confirm that the expected number of entities is returned
         assert len(claim_response["payments"]) == 1
         assert len(claim_response["payments"][0]["payment_details"]) == 1
         assert len(claim_response["payments"][0]["payment_details"][0]["payment_lines"]) == 4
 
+    def test_multiple_lines_sort_order(self, test_db_session, claim_with_multiple_lines):
+        claim_response = payment_services.get_payments_with_status(
+            test_db_session, claim_with_multiple_lines
+        )
+        payment_lines = claim_response["payments"][0]["payment_details"][0]["payment_lines"]
+
+        assert payment_lines[1]["amount"] == 50
+        assert payment_lines[2]["amount"] == -25
+        assert payment_lines[3]["amount"] == -15
+
+    def test_multiple_lines_combined_age_and_mta(self, test_db_session, claim_with_multiple_lines):
+        claim_response = payment_services.get_payments_with_status(
+            test_db_session, claim_with_multiple_lines
+        )
         payment_lines = claim_response["payments"][0]["payment_details"][0]["payment_lines"]
 
         # Confirm that Auto Gross Entitlement and Max Threshold Adjustment are combined
         assert payment_lines[0]["line_type"] == "Auto Gross Entitlement"
         assert payment_lines[0]["amount"] == 125 + -35
-
-        # Confirm that payment lines are in the expected order
-        assert payment_lines[1]["amount"] == 50
-        assert payment_lines[2]["amount"] == -25
-        assert payment_lines[3]["amount"] == -15
 
 
 def test_get_payments_with_status(test_db_session, caplog):

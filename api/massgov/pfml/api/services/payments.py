@@ -3,7 +3,6 @@ from collections import defaultdict
 from datetime import date
 from typing import Any, Dict, List, Optional, Tuple
 
-from pydantic import parse_obj_as
 from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.expression import desc
 
@@ -266,37 +265,29 @@ def to_response_dict(payment_data: List[PaymentContainer], absence_case_id: Opti
                 writeback_transaction_status=scenario_data.writeback_transaction_status,
                 transaction_date=scenario_data.transaction_date,
                 transaction_date_could_change=scenario_data.transaction_date_could_change,
-                payment_details=get_payment_details_response(payment.payment_details),
+                payment_details=_convert_payment_details_list_to_api_response(
+                    payment.payment_details
+                ),
             ).dict()
         )
 
     return {"payments": payments, "absence_case_id": absence_case_id}
 
 
-def get_payment_details_response(
+def _convert_payment_details_list_to_api_response(
     payment_details_list: List[PaymentDetails],
 ) -> List[PaymentDetailsResponse]:
     payment_details_response_list = []
 
     for payment_details in payment_details_list:
-        payment_details_response = PaymentDetailsResponse(
-            payment_details_id=payment_details.payment_details_id,
-            period_start_date=payment_details.period_start_date,
-            period_end_date=payment_details.period_end_date,
-            net_amount=payment_details.amount,
-            gross_amount=payment_details.business_net_amount,
-            # PaymentDetails.payment_lines is defined as a backfill relationship on PaymentLine
-            payment_lines=parse_obj_as(List[PaymentLineResponse], payment_details.payment_lines),  # type: ignore
-        )
-
-        adjust_payment_lines_response(payment_details_response.payment_lines)
-
+        payment_details_response = PaymentDetailsResponse.from_orm(payment_details)
+        _adjust_payment_lines_response(payment_details_response.payment_lines)
         payment_details_response_list.append(payment_details_response)
 
     return payment_details_response_list
 
 
-def adjust_payment_lines_response(payment_lines: List[PaymentLineResponse]) -> None:
+def _adjust_payment_lines_response(payment_lines: List[PaymentLineResponse]) -> None:
     """
     Add Maximum Threshold Adjustment (if present) into Auto Gross Entitlement, and
     sort by sign and then magnitude in descending order of amount.
@@ -318,11 +309,20 @@ def adjust_payment_lines_response(payment_lines: List[PaymentLineResponse]) -> N
         ].amount
         payment_lines.pop(maximum_threshold_adjustment_idx)
 
-    # e.g., 3, 2, 1, 0, -3, -2, -1
-    def sort_amount_by_sign_then_magnitude(x):
-        return x.amount if x.amount >= 0 else 1 / x.amount
-
     payment_lines.sort(key=sort_amount_by_sign_then_magnitude, reverse=True)
+
+
+def sort_amount_by_sign_then_magnitude(x):
+    """
+    Sort from highest to lowest values positive values, then highest (magnitude), to
+    lowest negative numbers, like you might see on a receipt: 3, 2, 1, 0, -3, -2, -1
+    Note that Python's default is to sort in ascending order, which is followed here,
+    so the output will be: -1, -2, -3, 0, 1, 2, 3 unless reverse=True is passed.
+    """
+
+    # We don't need to change the sorting behavior of positive numbers, but we reverse
+    # the sorting behavior for the negative numbers by taking their inverse.
+    return x.amount if x.amount >= 0 else 1 / x.amount
 
 
 def log_payment_status(claim: Claim, payment_containers: List[PaymentContainer]) -> None:

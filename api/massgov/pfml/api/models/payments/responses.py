@@ -1,9 +1,10 @@
 from datetime import date
 from decimal import Decimal
-from typing import Optional
+from typing import List, Optional
 
-from pydantic import UUID4
+from pydantic import UUID4, parse_obj_as
 
+from massgov.pfml.db.models.employees import PaymentDetails
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
 
@@ -20,6 +21,18 @@ class PaymentDetailsResponse(PydanticBaseModel):
     net_amount: Decimal
     gross_amount: Decimal
     payment_lines: list[PaymentLineResponse]
+
+    @classmethod
+    def from_orm(cls, payment_details: PaymentDetails) -> "PaymentDetailsResponse":
+        return PaymentDetailsResponse(
+            payment_details_id=payment_details.payment_details_id,
+            period_start_date=payment_details.period_start_date,
+            period_end_date=payment_details.period_end_date,
+            net_amount=payment_details.amount,
+            gross_amount=payment_details.business_net_amount,
+            # PaymentDetails.payment_lines is defined as a backfill relationship on PaymentLine
+            payment_lines=parse_obj_as(List[PaymentLineResponse], payment_details.payment_lines),  # type: ignore
+        )
 
 
 class PaymentResponse(PydanticBaseModel):
