@@ -5,21 +5,15 @@ namespace PfmlPdfApi.Models
 {
     public abstract class AnyDocument
     {
-        [Required]
-        public abstract string Id { get; set; }
-        public abstract string BatchId { get; set; }
-        public abstract string Type { get; set; }
+        public string Id { get; set; }
+        public string BatchId { get; set; }
+        public string Type { get; set; }
 
         public abstract string ReplaceValuesInTemplate(string template);
     }
 
     public class Document1099 : AnyDocument 
     {
-        [Required]
-        public override string Id { get; set; }
-        public override string BatchId { get; set; }
-        public override string Type { get; set; }
-
         [Required]
         public int Year { get; set; }
 
@@ -84,11 +78,6 @@ namespace PfmlPdfApi.Models
     
     public class DocumentClaimantInfo : AnyDocument
     {
-        [Required]
-        public override string Id { get; set; }
-        public override string BatchId { get; set; }
-        public override string Type { get; set; }
-
         public string ApplicationId { get; set; }
         public string SubmissionTime { get; set; }
         // claimant data

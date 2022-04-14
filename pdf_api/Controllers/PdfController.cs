@@ -41,13 +41,24 @@ namespace PfmlPdfApi.Controllers
         }
 
         [HttpPost]
-        [Route("generate/{docType}")]
-        public async Task<ActionResult> Generate(string docType, AnyDocument dto)
+        [Route("generate")]
+        [Route("generate/1099")]
+        public async Task<ActionResult> Generate(Document1099 dto)
         {
-            dto.Type = docType;
-            if (docType == "") {
-              dto.Type = "1099";
-            }
+            dto.Type = "1099";
+            var response = await _pdfDocumentService.Generate(dto);
+
+            if (response.Status == MessageConstants.MsgStatusSuccess)
+                return Ok();
+
+            return StatusCode((int)HttpStatusCode.InternalServerError, response.ErrorMessage);
+        }
+
+        [HttpPost]
+        [Route("generate/UserNotFound")]
+        public async Task<ActionResult> Generate(DocumentClaimantInfo dto)
+        {
+            dto.Type = "UserNotFound";
             var response = await _pdfDocumentService.Generate(dto);
 
             if (response.Status == MessageConstants.MsgStatusSuccess)

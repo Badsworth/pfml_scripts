@@ -88,16 +88,21 @@ namespace PfmlPdfApi.Services
             {
                 var template = await _amazonS3Service.GetFileAsync(bucket.Template);
                 string document = dto.ReplaceValuesInTemplate(new StreamReader(template).ReadToEnd());
-                var stream = new MemoryStream();
-                HtmlConverter.ConvertToPdf(document, stream);
-                var folderCreated = await _amazonS3Service.CreateFolderAsync(folderName);
-                var fileCreated = await _amazonS3Service.CreateFileAsync(fileName, stream);
+                if (document != "") {
+                    var stream = new MemoryStream();
+                    HtmlConverter.ConvertToPdf(document, stream);
+                    var folderCreated = await _amazonS3Service.CreateFolderAsync(folderName);
+                    var fileCreated = await _amazonS3Service.CreateFileAsync(fileName, stream);
 
-                var createdDocumentDto = new CreatedDocumentDto
-                {
-                    Name = fileName
-                };
-                response.Payload = createdDocumentDto;
+                    var createdDocumentDto = new CreatedDocumentDto
+                    {
+                        Name = fileName
+                    };
+                    response.Payload = createdDocumentDto;
+                } else {
+                    response.Status = MessageConstants.MsgStatusFailed;
+                    response.ErrorMessage = "Unknown document type!";
+                }
             }
             catch (Exception ex)
             {
