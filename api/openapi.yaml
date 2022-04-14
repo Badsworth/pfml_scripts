@@ -3672,28 +3672,6 @@ components:
         - financially_eligible
         - description
 
-    EmployerLeaveDetails:
-      type: object
-      properties:
-        reason:
-          type: string
-          nullable: true
-        continuous_leave_periods:
-          type: array
-          nullable: true
-          items:
-            $ref: "#/components/schemas/EmployerContinuousLeavePeriods"
-        intermittent_leave_periods:
-          type: array
-          nullable: true
-          items:
-            $ref: "#/components/schemas/EmployerIntermittentLeavePeriods"
-        reduced_schedule_leave_periods:
-          type: array
-          nullable: true
-          items:
-            $ref: "#/components/schemas/EmployerReducedScheduleLeavePeriods"
-
     EmployerContinuousLeavePeriods:
       type: object
       properties:
