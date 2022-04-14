@@ -317,16 +317,22 @@ jobs:
           echo "List of failed specs: ${{ steps.get-failed.outputs.failed_specs }}"
           echo "Count of failed specs: ${{ steps.get-failed.outputs.failed_specs_count }}"
 
+      - name: More than 10 failures detected (ABORTING RE-RUN)
+        uses: actions/github-script@v3
+        id: high-failure
+        with:
+          script: |
+            core.setFailed('More than 10 specs failed - aborting auto re-run!!')
+        if: steps.get-failed.outputs.failed_specs_count > 10
+
       # Run Cypress tests (Targeted w/failed Specs).
       - name: Setup Node
         uses: actions/setup-node@v2
         with: { node-version: "14.x" }
-        if: steps.get-failed.outputs.failed_specs_count < 10
       - name: "Install Node Modules"
         uses: bahmutov/npm-install@v1
         with:
           working-directory: e2e
-        if: steps.get-failed.outputs.failed_specs_count < 10
       - name: Cypress Tests (Auto Re-run - failed specs)
         id: run-failed
         uses: cypress-io/github-action@v2
@@ -348,7 +354,6 @@ jobs:
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY_TARGETED }}
           CYPRESS_PROJECT_ID: "98snsi"
-        if: steps.get-failed.outputs.failed_specs_count < 10
 
       - name: Get list of failed specs from auto re-trigger
         if: failure()
