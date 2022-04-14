@@ -411,7 +411,7 @@ class ClaimFactory(BaseFactory):
     employee = factory.SubFactory(EmployeeFactory)
     employee_id = factory.LazyAttribute(lambda w: w.employee.employee_id)
     employer = factory.SubFactory(EmployerFactory)
-    employer_id = factory.LazyAttribute(lambda w: w.employer.employer_id)
+    employer_id = factory.LazyAttribute(lambda w: w.employer.employer_id if w.employer else None)
     organization_unit = None
     organization_unit_id = factory.LazyAttribute(
         lambda w: w.organization_unit.organization_unit_id if w.organization_unit else None

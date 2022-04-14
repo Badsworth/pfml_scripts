@@ -404,7 +404,7 @@ def generate_scenario_data(
     if scenario_descriptor.scenario_name == AuditScenarioName.IN_WAITING_WEEK_EXTENSION:
         payment.period_start_date = claim.absence_period_start_date
         ClaimFactory.create(
-            absence_period_end_date=payment.period_start_date - timedelta(days=1),
+            absence_period_end_date=payment.period_start_date - timedelta(days=1),  # type:ignore
             employee=claim.employee,
             employer=claim.employer,
         )
