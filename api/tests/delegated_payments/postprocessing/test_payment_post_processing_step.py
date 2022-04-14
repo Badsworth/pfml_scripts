@@ -147,7 +147,11 @@ def test_total_leave_duration_post_processing(payment_post_processing_step, test
 
     audit_report_details = (
         test_db_session.query(PaymentAuditReportDetails)
-        .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
+        .filter(
+            PaymentAuditReportDetails.payment_id == payment.payment_id,
+            PaymentAuditReportDetails.audit_report_type_id
+            == PaymentAuditReportType.EXCEEDS_26_WEEKS_TOTAL_LEAVE.payment_audit_report_type_id,
+        )
         .one()
     )
 
