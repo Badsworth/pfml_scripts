@@ -1494,4 +1494,160 @@ describe("Status", () => {
       expect(screen.getByTestId("leaveStatusMessage")).toMatchSnapshot();
     }
   );
+
+  describe("request a change", () => {
+    it("displays request a change section if any of the claim statuses on an application are Approved and feature flag is on", () => {
+      process.env.featureFlags = JSON.stringify({
+        claimantShowModifications: true,
+      });
+
+      const request_decisions = [
+        "Withdrawn",
+        "Cancelled",
+        "Approved",
+        "Denied",
+      ] as const;
+
+      const absence_periods = request_decisions.map(
+        (request_decision, fineos_leave_request_id) =>
+          createAbsencePeriod({
+            fineos_leave_request_id: fineos_leave_request_id.toString(),
+            request_decision,
+            period_type: "Continuous",
+            reason: LeaveReason.medical,
+          })
+      );
+
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper({
+            ...defaultClaimDetail,
+            absence_periods,
+          }),
+        },
+        props
+      );
+
+      const requestChange = screen.getByTestId("requestChange");
+      expect(requestChange).toBeInTheDocument();
+      expect(requestChange).toMatchSnapshot();
+    });
+
+    it("displays withdraw a change section if any of the claim statuses on an application are Pending, none are Approved and feature flag is on", () => {
+      process.env.featureFlags = JSON.stringify({
+        claimantShowModifications: true,
+      });
+
+      const request_decisions = [
+        "Withdrawn",
+        "Cancelled",
+        "Pending",
+        "Denied",
+      ] as const;
+
+      const absence_periods = request_decisions.map(
+        (request_decision, fineos_leave_request_id) =>
+          createAbsencePeriod({
+            fineos_leave_request_id: fineos_leave_request_id.toString(),
+            request_decision,
+            period_type: "Continuous",
+            reason: LeaveReason.medical,
+          })
+      );
+
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper({
+            ...defaultClaimDetail,
+            absence_periods,
+          }),
+        },
+        props
+      );
+
+      const withdrawChange = screen.getByTestId("withdrawChange");
+      expect(withdrawChange).toBeInTheDocument();
+      expect(withdrawChange).toMatchSnapshot();
+    });
+
+    it("displays change request history if feature flag is on", () => {
+      process.env.featureFlags = JSON.stringify({
+        claimantShowModifications: true,
+      });
+
+      const request_decisions = [
+        "Withdrawn",
+        "Cancelled",
+        "Pending",
+        "Denied",
+      ] as const;
+
+      const absence_periods = request_decisions.map(
+        (request_decision, fineos_leave_request_id) =>
+          createAbsencePeriod({
+            fineos_leave_request_id: fineos_leave_request_id.toString(),
+            request_decision,
+            period_type: "Continuous",
+            reason: LeaveReason.medical,
+          })
+      );
+
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper({
+            ...defaultClaimDetail,
+            absence_periods,
+          }),
+        },
+        props
+      );
+
+      const changeRequestHistory = screen.getByTestId("changeRequestHistory");
+      expect(changeRequestHistory).toBeInTheDocument();
+      expect(changeRequestHistory).toMatchSnapshot();
+    });
+
+    it("doesn't display request change request sections if feature flag is off", () => {
+      process.env.featureFlags = JSON.stringify({
+        claimantShowModifications: false,
+      });
+
+      const request_decisions = [
+        "Withdrawn",
+        "Cancelled",
+        "Approved",
+        "Denied",
+      ] as const;
+
+      const absence_periods = request_decisions.map(
+        (request_decision, fineos_leave_request_id) =>
+          createAbsencePeriod({
+            fineos_leave_request_id: fineos_leave_request_id.toString(),
+            request_decision,
+            period_type: "Continuous",
+            reason: LeaveReason.medical,
+          })
+      );
+
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper({
+            ...defaultClaimDetail,
+            absence_periods,
+          }),
+        },
+        props
+      );
+
+      expect(screen.queryByTestId("requestChange")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("withdrawChange")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("changeRequestHistory")
+      ).not.toBeInTheDocument();
+    });
+  });
 });

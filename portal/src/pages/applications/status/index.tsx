@@ -346,6 +346,65 @@ export const Status = ({
           absenceId={claimDetail.fineos_absence_id}
           isPaymentsTab={isPaymentsTab}
         />
+
+        {/* Request a change request section */}
+        {isFeatureEnabled("claimantShowModifications") && hasApprovedStatus && (
+          <div className={containerClassName} data-testid="requestChange">
+            <div>
+              <Heading level="2">
+                {t("pages.claimsStatus.requestChangeHeading")}
+              </Heading>
+              <Trans
+                i18nKey="pages.claimsStatus.requestChangeBody"
+                components={{
+                  ul: <ul className="usa-list" />,
+                  li: <li />,
+                }}
+              />
+            </div>
+            <ButtonLink className="margin-top-3" href="">
+              {t("pages.claimsStatus.requestChangeButton")}
+            </ButtonLink>
+          </div>
+        )}
+
+        {/* Withdraw a request section */}
+        {isFeatureEnabled("claimantShowModifications") &&
+          hasPendingStatus &&
+          !hasApprovedStatus && (
+            <div className={containerClassName} data-testid="withdrawChange">
+              <div>
+                <Heading level="2">
+                  {t("pages.claimsStatus.requestWithdrawHeading")}
+                </Heading>
+              </div>
+              <ButtonLink className="margin-top-3" href="">
+                {t("pages.claimsStatus.requestWithdrawButton")}
+              </ButtonLink>
+            </div>
+          )}
+
+        {/* Change request history section */}
+        {isFeatureEnabled("claimantShowModifications") && (
+          <div
+            className={containerClassName}
+            data-testid="changeRequestHistory"
+          >
+            <div>
+              <Heading level="2">
+                {t("pages.claimsStatus.changeRequestHistoryHeading")}
+              </Heading>
+              <p className="padding-bottom-2">
+                {t("pages.claimsStatus.changeRequestHistoryBody")}
+              </p>
+              <Trans
+                i18nKey="pages.claimsStatus.changeRequestSubmitttedBody"
+                values={{ submittedDate: "submitted change request date" }} // @todo: PORTAL-2143 Only show this section if there has been a change request submitted
+              />
+            </div>
+          </div>
+        )}
+
         {viewYourNotices()}
 
         {/* Upload documents section */}

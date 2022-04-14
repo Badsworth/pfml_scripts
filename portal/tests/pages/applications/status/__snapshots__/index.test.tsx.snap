@@ -1202,6 +1202,90 @@ exports[`Status renders the page with claim detail when there is absence_case_id
 </div>
 `;
 
+exports[`Status request a change displays change request history if feature flag is on 1`] = `
+<div
+  class="border-bottom border-base-lighter padding-y-4"
+  data-testid="changeRequestHistory"
+>
+  <div>
+    <h2
+      class="font-heading-md text-bold"
+    >
+      Change request history
+    </h2>
+    <p
+      class="padding-bottom-2"
+    >
+      When we make a decision about your change request you will receive a notice and your leave details will be updated.
+    </p>
+    <strong>
+      You submitted a change request on submitted change request date
+    </strong>
+  </div>
+</div>
+`;
+
+exports[`Status request a change displays request a change section if any of the claim statuses on an application are Approved and feature flag is on 1`] = `
+<div
+  class="border-bottom border-base-lighter padding-y-4"
+  data-testid="requestChange"
+>
+  <div>
+    <h2
+      class="font-heading-md text-bold"
+    >
+      Request a change to your application
+    </h2>
+    <ul
+      class="usa-list"
+    >
+      <li>
+        End your leave early
+      </li>
+      <li>
+        Extend your leave
+      </li>
+      <li>
+        Cancel your entire leave
+      </li>
+      <li>
+        Transition your medical leave due to pregnancy to bonding leave to care for your child
+      </li>
+      <li>
+        Withdraw a pending request for leave
+      </li>
+    </ul>
+  </div>
+  <a
+    class="usa-button margin-top-3"
+    href=""
+  >
+    Start a change request
+  </a>
+</div>
+`;
+
+exports[`Status request a change displays withdraw a change section if any of the claim statuses on an application are Pending, none are Approved and feature flag is on 1`] = `
+<div
+  class="border-bottom border-base-lighter padding-y-4"
+  data-testid="withdrawChange"
+>
+  <div>
+    <h2
+      class="font-heading-md text-bold"
+    >
+      Withdraw your request for leave
+    </h2>
+  </div>
+  <a
+    class="usa-button margin-top-3"
+    href=""
+  >
+    Start a request
+  </a>
+</div>
+`;
+
 exports[`Status timeline is displayed if there is a pending absence period 1`] = `
 <div
   class="border-bottom border-base-lighter padding-y-4"
