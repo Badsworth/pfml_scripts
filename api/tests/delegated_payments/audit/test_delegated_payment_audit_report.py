@@ -1,7 +1,7 @@
 import csv
 import os
 import tempfile
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import List
 
@@ -38,6 +38,7 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
     bool_to_str,
     get_leave_type,
     get_payment_audit_report_details,
+    get_payment_in_waiting_week_status,
     get_payment_preference,
     stage_payment_audit_report_details,
     write_audit_report,
@@ -50,6 +51,7 @@ from massgov.pfml.delegated_payments.audit.mock.delegated_payment_audit_generato
     AUDIT_SCENARIO_DESCRIPTORS,
     DEFAULT_AUDIT_SCENARIO_DATA_SET,
     AuditScenarioData,
+    AuditScenarioName,
     generate_audit_report_dataset,
 )
 from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
@@ -199,6 +201,58 @@ def test_get_payment_audit_report_details(test_db_session, initialize_factories_
     assert len(audit_report_details) == 5
     for audit_report_detail in audit_report_details:
         assert audit_report_detail.added_to_audit_report_at == audit_report_time
+
+
+class TestGetWaitingWeekStatus:
+    def test_is_in_waiting_week(self, initialize_factories_session, test_db_session):
+        absence_period_start_date = date(2022, 1, 1)
+        claim = ClaimFactory.create(absence_period_start_date=absence_period_start_date)
+        payment = DelegatedPaymentFactory(
+            test_db_session, claim=claim, period_start_date=absence_period_start_date + timedelta(6)
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        assert get_payment_in_waiting_week_status(payment, test_db_session) == "1"
+
+    def test_not_in_waiting_week(self, initialize_factories_session, test_db_session):
+        absence_period_start_date = date(2022, 1, 1)
+        claim = ClaimFactory.create(absence_period_start_date=absence_period_start_date)
+        payment = DelegatedPaymentFactory(
+            test_db_session, claim=claim, period_start_date=absence_period_start_date + timedelta(7)
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        assert get_payment_in_waiting_week_status(payment, test_db_session) == ""
+
+    def test_absence_start_in_waiting_week(self, initialize_factories_session, test_db_session):
+        absence_period_start_date = date(2022, 1, 1)
+        claim = ClaimFactory.create(absence_period_start_date=absence_period_start_date)
+        payment = DelegatedPaymentFactory(
+            test_db_session, claim=claim, period_start_date=absence_period_start_date
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        assert get_payment_in_waiting_week_status(payment, test_db_session) == "1"
+
+    def test_potential_extension(self, initialize_factories_session, test_db_session):
+        absence_period_start_date = date(2022, 1, 1)
+        payment_claim = ClaimFactory.create(absence_period_start_date=absence_period_start_date)
+        ClaimFactory.create(
+            absence_period_end_date=absence_period_start_date - timedelta(days=1),
+            employer=payment_claim.employer,
+            employee=payment_claim.employee,
+        )
+        payment = DelegatedPaymentFactory(
+            test_db_session, claim=payment_claim, period_start_date=absence_period_start_date
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        assert get_payment_in_waiting_week_status(payment, test_db_session) == "Potential Extension"
+
+    def test_not_potential_extension(self, initialize_factories_session, test_db_session):
+        absence_period_start_date = date(2022, 1, 1)
+        payment_claim = ClaimFactory.create(absence_period_start_date=absence_period_start_date)
+        ClaimFactory.create(
+            absence_period_end_date=absence_period_start_date - timedelta(days=2),
+            employer=payment_claim.employer,
+            employee=payment_claim.employee,
+        )
+        payment = DelegatedPaymentFactory(
+            test_db_session, claim=payment_claim, period_start_date=absence_period_start_date
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_COMPLETE)
+        assert get_payment_in_waiting_week_status(payment, test_db_session) == "1"
 
 
 # See: https://lwd.atlassian.net/browse/API-1954 for description of cases
@@ -1337,6 +1391,11 @@ def validate_payment_audit_csv_row_by_payment_audit_data(
     )
     assert (
         row[PAYMENT_AUDIT_CSV_HEADERS.preapproval_issues] == scenario_descriptor.preapproval_issues
+    )
+    assert (
+        row[PAYMENT_AUDIT_CSV_HEADERS.waiting_week] == ""
+        if scenario_descriptor.scenario_name != AuditScenarioName.IN_WAITING_WEEK_EXTENSION
+        else "Potential Extension"
     )
 
 

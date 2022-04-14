@@ -84,6 +84,8 @@ class AuditScenarioName(Enum):
 
     PREAPPROVED_PAYMENT = "PREAPPROVED_PAYMENT"
 
+    IN_WAITING_WEEK_EXTENSION = "IN_WAITING_WEEK_EXTENSION"
+
 
 @dataclass
 class AuditScenarioDescriptor:
@@ -212,6 +214,7 @@ DESCRIPTORS = (
     AuditScenarioDescriptor(
         scenario_name=AuditScenarioName.PREAPPROVED_PAYMENT, preapproval_issues=""
     ),
+    AuditScenarioDescriptor(scenario_name=AuditScenarioName.IN_WAITING_WEEK_EXTENSION),
 )
 
 AUDIT_SCENARIO_DESCRIPTORS: Dict[AuditScenarioName, AuditScenarioDescriptor] = {
@@ -336,8 +339,8 @@ def generate_scenario_data(
         employer=employer,
         claim_type_id=scenario_descriptor.claim_type.claim_type_id,
         fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
-        absence_period_start_date=datetime.today() - timedelta(days=180),
-        absence_period_end_date=datetime.today() - timedelta(days=90),
+        absence_period_start_date=datetime.today().date() - timedelta(days=180),
+        absence_period_end_date=datetime.today().date() - timedelta(days=90),
     )
 
     if not scenario_descriptor.is_first_time_payment:
@@ -397,6 +400,14 @@ def generate_scenario_data(
         db_session,
     )
     payment.employee = employee
+
+    if scenario_descriptor.scenario_name == AuditScenarioName.IN_WAITING_WEEK_EXTENSION:
+        payment.period_start_date = claim.absence_period_start_date
+        ClaimFactory.create(
+            absence_period_end_date=payment.period_start_date - timedelta(days=1),
+            employee=claim.employee,
+            employer=claim.employer,
+        )
 
     if not scenario_descriptor.preapproval_issues:
         DelegatedPaymentFactory(

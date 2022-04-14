@@ -55,6 +55,9 @@ class PostProcessingMetrics(str, enum.Enum):
     PAYMENT_DATE_MISSING_REQUIRED_DATA_COUNT = "payment_date_missing_required_data_count"
     PAYMENT_DATE_MISMATCH_COUNT = "payment_date_mismatch_count"
     PAYMENT_DATE_PASS_COUNT = "payment_date_pass_count"
+    # Payment in waiting week
+    PAYMENT_IN_WAITING_WEEK_COUNT = "payment_in_waiting_week_count"
+    PAYMENT_NOT_IN_WAITING_WEEK_COUNT = "payment_not_in_waiting_week_count"
 
 
 @total_ordering  # Handles supporting sort with just __eq__ and __lt__

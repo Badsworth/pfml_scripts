@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Dict, Iterable, List, Optional, cast
 
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
@@ -167,6 +167,7 @@ def build_audit_report_row(
     preapproval_status = get_payment_preapproval_status(
         payment, audit_report_details.audit_report_details_list, db_session
     )
+    waiting_week_status = get_payment_in_waiting_week_status(payment, db_session)
 
     payment_audit_row = PaymentAuditCSV(
         pfml_payment_id=str(payment.payment_id),
@@ -244,6 +245,7 @@ def build_audit_report_row(
         payment_date_mismatch_details=audit_report_details.payment_date_mismatch_details,
         is_preapproved=bool_to_str[preapproval_status.is_preapproved()],
         preapproval_issues=preapproval_status.get_preapproval_issue_description(),
+        waiting_week=waiting_week_status,
     )
 
     return payment_audit_row
@@ -362,3 +364,32 @@ def get_payment_audit_report_details(
         audit_report_details_list=staged_audit_report_details_list,
         **audit_report_details,
     )
+
+
+def get_payment_in_waiting_week_status(payment: Payment, db_session: db.Session) -> str:
+    waiting_week_status = ""
+    claim: Claim = payment.claim
+    assert payment.period_start_date
+    assert claim.absence_period_start_date
+    waiting_week_end_date = claim.absence_period_start_date + timedelta(days=6)
+    if not payment.period_start_date <= waiting_week_end_date:
+        return waiting_week_status
+
+    waiting_week_status = "1"
+    assert payment.claim
+    possible_extension_claim = (
+        db_session.query(Claim)
+        .join(Employer)
+        .filter(
+            Claim.employee_id == payment.claim.employee_id,
+            Employer.employer_fein == payment.claim.employer_fein,
+            Claim.absence_period_end_date
+            == (payment.claim.absence_period_start_date - timedelta(days=1)),  # type: ignore
+        )
+        .one_or_none()
+    )
+
+    if possible_extension_claim is not None:
+        waiting_week_status = "Potential Extension"
+
+    return waiting_week_status

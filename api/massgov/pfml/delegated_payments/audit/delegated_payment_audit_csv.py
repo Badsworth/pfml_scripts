@@ -70,6 +70,7 @@ class PaymentAuditCSV(AbstractRecord):
     payment_date_mismatch_details: Optional[str] = None
     is_preapproved: Optional[str] = None
     preapproval_issues: Optional[str] = None
+    waiting_week: Optional[str] = None
 
 
 @dataclass
@@ -149,4 +150,5 @@ PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
     payment_date_mismatch_details=PaymentAuditReportType.PAYMENT_DATE_MISMATCH.payment_audit_report_type_description,
     is_preapproved="Is Pre-approved",
     preapproval_issues="Pre-approval Issues",
+    waiting_week="Waiting Week",
 )
