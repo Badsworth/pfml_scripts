@@ -28,27 +28,23 @@ namespace PfmlPdfApi.Controllers
             await Task.Delay(0);
             return Ok(string.Format("{0} - Pfml Pdf Api is running.", Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT").Substring(0, 3)));
         }
+        
 
+        // TODO: Delete endpoint after related PFML API changes are deployed
         [HttpGet]
         [Route("updateTemplate")]
         public async Task<ActionResult> UpdateTemplate()
         {
-            var response = await _pdfDocumentService.UpdateTemplate();
-
-            if (response.Status == MessageConstants.MsgStatusSuccess)
-                return Ok();
-
-            return StatusCode((int)HttpStatusCode.InternalServerError, response.ErrorMessage);
+            await Task.Delay(0);
+            return Ok();
         }
 
         [HttpPost]
         [Route("generate")]
         [Route("generate/1099")]
-        public async Task<ActionResult> Generate(Document1099 dto)
+        public async Task<ActionResult> Generate(Document1099 document)
         {
-            _pdfDocumentService.switchToBucket(dto.Type);
-            await Task.Delay(60000);
-            var response = await _pdfDocumentService.Generate(dto);
+            var response = await _pdfDocumentService.Generate(document);
 
             if (response.Status == MessageConstants.MsgStatusSuccess)
                 return Ok();
@@ -58,10 +54,9 @@ namespace PfmlPdfApi.Controllers
 
         [HttpPost]
         [Route("generate/UserNotFound")]
-        public async Task<ActionResult> Generate(DocumentClaimantInfo dto)
+        public async Task<ActionResult> Generate(DocumentClaimantInfo document)
         {
-            _pdfDocumentService.switchToBucket(dto.Type);
-            var response = await _pdfDocumentService.Generate(dto);
+            var response = await _pdfDocumentService.Generate(document);
 
             if (response.Status == MessageConstants.MsgStatusSuccess)
                 return Ok();
@@ -71,9 +66,9 @@ namespace PfmlPdfApi.Controllers
 
         [HttpPost]
         [Route("merge")]
-        public async Task<ActionResult> Merge(MergeDto dto)
+        public async Task<ActionResult> Merge(MergeDocumentsRequest batch)
         {
-            var response = await _pdfDocumentService.Merge(dto);
+            var response = await _pdfDocumentService.Merge(batch);
 
             if (response.Status == MessageConstants.MsgStatusSuccess)
                 return Ok();

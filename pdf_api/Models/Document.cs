@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace PfmlPdfApi.Models
 {
-    public abstract class AnyDocument
+    public abstract class Document
     {
         public string Id { get; set; }
         public string BatchId { get; set; }
@@ -11,11 +11,12 @@ namespace PfmlPdfApi.Models
         public abstract string Type { get; }
         public abstract string FolderName { get; }
         public abstract string FileName { get; }
+        public abstract string Template { get; }
 
         public abstract string ReplaceValuesInTemplate(string template);
     }
 
-    public class Document1099 : AnyDocument 
+    public class Document1099 : Document 
     {
         public override string Type { 
             get {
@@ -34,6 +35,12 @@ namespace PfmlPdfApi.Models
                 string formsFolderName = $"{this.FolderName}/Forms";
                 string subBatchFolderName = $"{formsFolderName}/{this.Name.Split("/")[0]}";
                 return $"{subBatchFolderName}/{this.Id}.pdf";
+            }
+        }
+
+        public override string Template {
+            get {
+                return $"Assets/{this.Type}/Template/1099G_FORM.html";
             }
         }
 
@@ -99,7 +106,7 @@ namespace PfmlPdfApi.Models
         }
     }
     
-    public class DocumentClaimantInfo : AnyDocument
+    public class DocumentClaimantInfo : Document
     {
         public override string Type {
             get {
@@ -109,13 +116,19 @@ namespace PfmlPdfApi.Models
 
         public override string FolderName {
             get {
-                return $"Batch-{this.BatchId}";
+                return $"Forms";
             }
         }
         
         public override string FileName {
             get {
                 return $"{this.FolderName}/{this.Id}.pdf";
+            }
+        }
+        
+        public override string Template {
+            get {
+                return $"Assets/{this.Type}/Template/UserNotFound.html";
             }
         }
 

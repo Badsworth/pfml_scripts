@@ -14,9 +14,8 @@ namespace PfmlPdfApi.Services
 {
     public interface IPdfDocumentService
     {
-        Task<ResponseMessage<CreatedDocumentDto>> UpdateTemplate();
-        Task<ResponseMessage<CreatedDocumentDto>> Generate(AnyDocument dto);
-        Task<ResponseMessage<IList<CreatedDocumentDto>>> Merge(MergeDto dto);
+        Task<ResponseMessage<CreatedDocumentResponse>> Generate(Document dto);
+        Task<ResponseMessage<IList<CreatedDocumentResponse>>> Merge(MergeDocumentsRequest dto);
         void switchToBucket(string key);
     }
 
@@ -33,44 +32,26 @@ namespace PfmlPdfApi.Services
         }
 
         public void switchToBucket(string key) {
-            bucket = _amazonS3Service.PickBucket(key);
-          
-            Console.WriteLine("Selected bucket: " + bucket.Key);
+            if (bucket == null || bucket.Key != key) {
+                bucket = _amazonS3Service.PickBucket(key);
+                Console.WriteLine("Selected new bucket: " + bucket.Key);
+            }
         }
 
-        public async Task<ResponseMessage<CreatedDocumentDto>> UpdateTemplate()
+        public async Task<ResponseMessage<CreatedDocumentResponse>> Generate(Document dto)
         {
-            var response = new ResponseMessage<CreatedDocumentDto>(null);
-            string srcFileName = $"Assets/{bucket.Key}/{bucket.Template}";
-            string desFileName = bucket.Template;
-
+            switchToBucket(dto.Type);
+            var response = new ResponseMessage<CreatedDocumentResponse>(null);
             try
             {
-                var mStream = new MemoryStream(await File.ReadAllBytesAsync(srcFileName));
-                var fileCreated = await _amazonS3Service.CreateFileAsync(desFileName, mStream, "text/html");
-            }
-            catch (Exception ex)
-            {
-                response.Status = MessageConstants.MsgStatusFailed;
-                response.ErrorMessage = ex.Message;
-            }
-
-            return response;
-        }
-        
-        public async Task<ResponseMessage<CreatedDocumentDto>> Generate(AnyDocument dto)
-        {
-            var response = new ResponseMessage<CreatedDocumentDto>(null);
-            try
-            {
-                var template = await _amazonS3Service.GetFileAsync(bucket.Template);
+                var template = new MemoryStream(await File.ReadAllBytesAsync(dto.Template));
                 string document = dto.ReplaceValuesInTemplate(new StreamReader(template).ReadToEnd());
                 var stream = new MemoryStream();
                 HtmlConverter.ConvertToPdf(document, stream);
                 var folderCreated = await _amazonS3Service.CreateFolderAsync(dto.FolderName);
                 var fileCreated = await _amazonS3Service.CreateFileAsync(dto.FileName, stream);
 
-                var createdDocumentDto = new CreatedDocumentDto
+                var createdDocumentDto = new CreatedDocumentResponse
                 {
                     Name = dto.FileName
                 };
@@ -84,10 +65,11 @@ namespace PfmlPdfApi.Services
             return response;
         }
 
-        public async Task<ResponseMessage<IList<CreatedDocumentDto>>> Merge(MergeDto dto)
+        public async Task<ResponseMessage<IList<CreatedDocumentResponse>>> Merge(MergeDocumentsRequest dto)
         {
-            var response = new ResponseMessage<IList<CreatedDocumentDto>>(null);
-            var createdDocumentDtoList = new List<CreatedDocumentDto>();
+            switchToBucket(dto.Type);
+            var response = new ResponseMessage<IList<CreatedDocumentResponse>>(null);
+            var createdDocumentDtoList = new List<CreatedDocumentResponse>();
             string folderName = $"Batch-{dto.BatchId}";
             string formsFolderName = $"{folderName}/Forms";
             string mergedFolderName = $"{folderName}/Merged";
@@ -130,7 +112,7 @@ namespace PfmlPdfApi.Services
 
                     var fileCreated = await _amazonS3Service.CreateFileAsync(fileName, stream);
 
-                    createdDocumentDtoList.Add(new CreatedDocumentDto
+                    createdDocumentDtoList.Add(new CreatedDocumentResponse
                     {
                         Name = fileName
                     });
