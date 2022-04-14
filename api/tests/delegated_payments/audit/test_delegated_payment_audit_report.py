@@ -19,7 +19,12 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
 )
-from massgov.pfml.db.models.factories import ClaimFactory, LinkSplitPaymentFactory, PaymentFactory
+from massgov.pfml.db.models.factories import (
+    ClaimFactory,
+    EmployerFactory,
+    LinkSplitPaymentFactory,
+    PaymentFactory,
+)
 from massgov.pfml.db.models.payments import (
     FineosWritebackDetails,
     FineosWritebackTransactionStatus,
@@ -230,7 +235,9 @@ class TestGetWaitingWeekStatus:
 
     def test_potential_extension(self, initialize_factories_session, test_db_session):
         absence_period_start_date = date(2022, 1, 1)
-        payment_claim = ClaimFactory.create(absence_period_start_date=absence_period_start_date)
+        payment_claim = ClaimFactory.create(
+            absence_period_start_date=absence_period_start_date, employer=EmployerFactory.create()
+        )
         ClaimFactory.create(
             absence_period_end_date=absence_period_start_date - timedelta(days=1),
             employer=payment_claim.employer,
@@ -243,7 +250,9 @@ class TestGetWaitingWeekStatus:
 
     def test_not_potential_extension(self, initialize_factories_session, test_db_session):
         absence_period_start_date = date(2022, 1, 1)
-        payment_claim = ClaimFactory.create(absence_period_start_date=absence_period_start_date)
+        payment_claim = ClaimFactory.create(
+            absence_period_start_date=absence_period_start_date, employer=EmployerFactory.create()
+        )
         ClaimFactory.create(
             absence_period_end_date=absence_period_start_date - timedelta(days=2),
             employer=payment_claim.employer,
