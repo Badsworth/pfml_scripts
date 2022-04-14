@@ -17,6 +17,8 @@ import BenefitsApplication, {
   WorkPatternType,
 } from "../models/BenefitsApplication";
 
+import ChangeRequest from "../models/ChangeRequest";
+import ClaimDetail from "src/models/ClaimDetail";
 import { ClaimSteps } from "../models/Step";
 import { UploadType } from "../pages/applications/upload/index";
 import { fields as addressFields } from "../pages/applications/address";
@@ -63,20 +65,44 @@ import { fields as workPatternTypeFields } from "../pages/applications/work-patt
 export interface ClaimantFlowContext {
   claim?: BenefitsApplication;
   isAdditionalDoc?: boolean;
+  changeRequest?: ChangeRequest;
+  claimDetail?: ClaimDetail;
 }
 
-type ClaimFlowGuardFn = (context: ClaimantFlowContext) => boolean;
+interface CondMeta {
+  cond: { guardKeys: string[] };
+}
+
+type ClaimFlowGuardFn = (
+  context: ClaimantFlowContext,
+  event: { type: string },
+  condMeta: CondMeta
+) => boolean;
+
+/**
+ *
+ * @see https://xstate.js.org/docs/guides/guards.html#custom-guards
+ * @see https://github.com/statelyai/xstate/issues/414#issuecomment-480664208
+ * Custom guard that requires multiple guards to be true
+ */
+const every = (...guardKeys: string[]) => ({
+  type: "every",
+  guardKeys,
+});
 
 /**
  * @see https://xstate.js.org/docs/guides/guards.html
- *
  */
 export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
   // claimants upload additional docs after the claim is completed.
   // claimants will either be routed to the status page vs. the checklist
   // if they are uploading an additional doc.
   isAdditionalDoc: ({ isAdditionalDoc }) => isAdditionalDoc === true,
-  isCaringLeave: ({ claim }) => claim?.isCaringLeave === true,
+  isCaringLeave: ({ claim, claimDetail }) =>
+    claim?.isCaringLeave === true || claimDetail?.isCaringLeave === true,
+  isNonPregnancyMedicalLeave: ({ claimDetail }) =>
+    claimDetail?.isNonPregnancyMedicalLeave === true,
+  isPregnancyLeave: ({ claimDetail }) => claimDetail?.isPregnancyLeave === true,
   isMedicalOrPregnancyLeave: ({ claim }) =>
     claim?.isMedicalOrPregnancyLeave === true,
   isBondingLeave: ({ claim }) => claim?.isBondingLeave === true,
@@ -109,6 +135,14 @@ export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
     claim.computed_application_split !== null,
   isSubmittedApplicationSplit: ({ claim }) =>
     !isBlank(claim?.split_into_application_id),
+  isExtendingModification: ({ changeRequest, claimDetail }) =>
+    changeRequest?.isExtension(claimDetail?.endDate || "") === true,
+  every: (ctx, event, condMeta) => {
+    const {
+      cond: { guardKeys },
+    } = condMeta;
+    return guardKeys.every((key) => guards[key](ctx, event, condMeta));
+  },
 };
 
 /**
@@ -142,7 +176,7 @@ const uploadDocEvents = {
 
 interface ConditionalEvent {
   target: string;
-  cond?: string;
+  cond?: string | { type: string; guards: string[] };
 }
 
 export interface ClaimantFlowState {
@@ -857,11 +891,75 @@ const claimantFlow: {
           routes.applications.upload.bondingProofOfPlacement,
         UPLOAD_DOC_OPTIONS: routes.applications.upload.index,
         VIEW_PAYMENTS: routes.applications.status.payments,
+        START_MODIFICATION: routes.applications.modify.index,
+        CONTINUE_MODIFICATION: routes.applications.modify.type,
       },
     },
     [routes.applications.status.payments]: {
       on: {
         STATUS: routes.applications.status.claim,
+      },
+    },
+    [routes.applications.modify.index]: {
+      on: {
+        CONTINUE: routes.applications.modify.type,
+      },
+    },
+    [routes.applications.modify.type]: {
+      on: {
+        CONTINUE: [
+          {
+            target: routes.applications.upload.modify.pregnancyCertification,
+            cond: every("isExtendingModification", "isPregnancyLeave"),
+          },
+          {
+            target: routes.applications.upload.modify.caringCertification,
+            cond: every("isExtendingModification", "isCaringLeave"),
+          },
+          {
+            target: routes.applications.upload.modify.medicalCertification,
+            cond: every(
+              "isExtendingModification",
+              "isNonPregnancyMedicalLeave"
+            ),
+          },
+          {
+            target: routes.applications.modify.review,
+          },
+        ],
+      },
+    },
+    [routes.applications.modify.review]: {
+      on: {
+        CONTINUE: [
+          {
+            target: routes.applications.modify.success,
+            cond: "isExtendingModification",
+          },
+          {
+            target: routes.applications.status.claim,
+          },
+        ],
+      },
+    },
+    [routes.applications.modify.success]: {
+      on: {
+        VIEW_STATUS: routes.applications.status.claim,
+      },
+    },
+    [routes.applications.upload.modify.medicalCertification]: {
+      on: {
+        CONTINUE: routes.applications.modify.review,
+      },
+    },
+    [routes.applications.upload.modify.pregnancyCertification]: {
+      on: {
+        CONTINUE: routes.applications.modify.review,
+      },
+    },
+    [routes.applications.upload.modify.caringCertification]: {
+      on: {
+        CONTINUE: routes.applications.modify.review,
       },
     },
   },

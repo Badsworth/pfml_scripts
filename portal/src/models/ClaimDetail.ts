@@ -3,6 +3,7 @@ import { AbsencePeriod } from "./AbsencePeriod";
 import { ManagedRequirement } from "./ManagedRequirement";
 import dayjs from "dayjs";
 import { orderBy } from "lodash";
+import LeaveReason from "./LeaveReason";
 
 class ClaimDetail {
   absence_periods: AbsencePeriod[] = [];
@@ -52,6 +53,35 @@ class ClaimDetail {
       .reverse();
 
     return endDates[0];
+  }
+
+  get isNonPregnancyMedicalLeave(): boolean {
+    return this.absence_periods.some((period) => {
+      return (
+        period.reason === LeaveReason.medical &&
+        !["Prenatal Disability", "Prenatal Care"].includes(
+          period.reason_qualifier_one
+        )
+      );
+    });
+  }
+
+  get isCaringLeave(): boolean {
+    return this.absence_periods.some((period) => {
+      return period.reason === LeaveReason.care;
+    });
+  }
+
+  get isPregnancyLeave(): boolean {
+    return this.absence_periods.some((period) => {
+      return (
+        period.reason === LeaveReason.pregnancy ||
+        (period.reason === LeaveReason.medical &&
+          ["Prenatal Disability", "Prenatal Care"].includes(
+            period.reason_qualifier_one
+          ))
+      );
+    });
   }
 
   /**

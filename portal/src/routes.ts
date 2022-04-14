@@ -49,6 +49,12 @@ const routes = {
       "/applications/leave-spans-benefit-years/intermittent",
     leaveSpansBenefitYearsReduced:
       "/applications/leave-spans-benefit-years/reduced",
+    modify: {
+      index: "/applications/modify",
+      review: "/applications/modify/review",
+      success: "/applications/modify/success",
+      type: "/applications/modify/type",
+    },
     name: "/applications/name",
     notifiedEmployer: "/applications/notified-employer",
     otherIncomes: "/applications/other-incomes",
@@ -91,6 +97,15 @@ const routes = {
         "/applications/upload/family-member-medical-certification",
       index: "/applications/upload",
       medicalCertification: "/applications/upload/medical-certification",
+      modify: {
+        bondingProofOfBirth: "/applications/upload/modify/proof-of-birth",
+        caringCertification:
+          "/applications/upload/modify/family-member-medical-certification",
+        medicalCertification:
+          "/applications/upload/modify/medical-certification",
+        pregnancyCertification:
+          "/applications/upload/modify/pregnancy-medical-certification",
+      },
       otherId: "/applications/upload/other-id",
       pregnancyCertification:
         "/applications/upload/pregnancy-medical-certification",
