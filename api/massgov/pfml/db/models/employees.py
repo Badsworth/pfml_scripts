@@ -1281,7 +1281,8 @@ class User(Base, TimestampMixin):
     )
     first_name = Column(Text)
     last_name = Column(Text)
-    phone_number = Column(Text)  # Formatted in E.164 + maybe an extension e.g. "+18056103889x123"
+    phone_number = Column(Text)  # Formatted in E.164
+    phone_extension = Column(Text)
 
     roles = relationship("LkRole", secondary="link_user_role", uselist=True)
     user_leave_administrators = relationship(
