@@ -12,10 +12,7 @@ import massgov.pfml.fineos.models
 import massgov.pfml.util.logging as logging
 from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
 from massgov.pfml.api.exceptions import ClaimWithdrawn, ObjectNotFound
-from massgov.pfml.api.models.claims.common import (
-    Address,
-    PreviousLeave,
-)
+from massgov.pfml.api.models.claims.common import Address, PreviousLeave
 from massgov.pfml.api.models.claims.responses import ClaimReviewResponse, DocumentResponse
 from massgov.pfml.api.models.common import (
     ComputedStartDates,
