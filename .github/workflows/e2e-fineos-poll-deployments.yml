@@ -73,7 +73,7 @@ jobs:
         run: |
           echo "Getting List of failed specs post auto"
         id: get-failed-auto
-        if: failure()
+        if: failure() && steps.get-failed.outputs.failed_specs_count < 10
 
       - name: Print String of persistent failed specs
         run: |
