@@ -28,6 +28,7 @@ import { fields as departmentFields } from "../pages/applications/department";
 import { fields as employerBenefitsDetailsFields } from "../pages/applications/employer-benefits-details";
 import { fields as employerBenefitsFields } from "../pages/applications/employer-benefits";
 import { fields as employmentStatusFields } from "../pages/applications/employment-status";
+import { fields as ethnicityFields } from "../pages/applications/ethnicity";
 import { fields as familyMemberDateOfBirthFields } from "../pages/applications/family-member-date-of-birth";
 import { fields as familyMemberNameFields } from "../pages/applications/family-member-name";
 import { fields as familyMemberRelationshipFields } from "../pages/applications/family-member-relationship";
@@ -50,6 +51,7 @@ import { fields as previousLeavesOtherReasonDetailsFields } from "../pages/appli
 import { fields as previousLeavesOtherReasonFields } from "../pages/applications/previous-leaves-other-reason";
 import { fields as previousLeavesSameReasonDetailsFields } from "../pages/applications/previous-leaves-same-reason-details";
 import { fields as previousLeavesSameReasonFields } from "../pages/applications/previous-leaves-same-reason";
+import { fields as raceFields } from "../pages/applications/race";
 import { fields as reasonPregnancyFields } from "../pages/applications/reason-pregnancy";
 import { fields as reducedLeaveScheduleFields } from "../pages/applications/reduced-leave-schedule";
 import routes from "../routes";
@@ -226,6 +228,24 @@ const claimantFlow: {
       meta: {
         step: ClaimSteps.verifyId,
         fields: genderFields,
+      },
+      on: {
+        CONTINUE: routes.applications.race,
+      },
+    },
+    [routes.applications.race]: {
+      meta: {
+        step: ClaimSteps.verifyId,
+        fields: raceFields,
+      },
+      on: {
+        CONTINUE: routes.applications.ethnicity,
+      },
+    },
+    [routes.applications.ethnicity]: {
+      meta: {
+        step: ClaimSteps.verifyId,
+        fields: ethnicityFields,
       },
       on: {
         CONTINUE: routes.applications.phoneNumber,

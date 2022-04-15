@@ -31,6 +31,7 @@ const routes = {
     employerBenefitsDetails: "/applications/employer-benefits-details",
     employerBenefitsIntro: "/applications/employer-benefits-intro",
     employmentStatus: "/applications/employment-status",
+    ethnicity: "/applications/ethnicity",
     familyMemberDateOfBirth: "/applications/family-member-date-of-birth",
     familyMemberName: "/applications/family-member-name",
     familyMemberRelationship: "/applications/family-member-relationship",
@@ -62,6 +63,7 @@ const routes = {
     previousLeavesSameReason: "/applications/previous-leaves-same-reason",
     previousLeavesSameReasonDetails:
       "/applications/previous-leaves-same-reason-details",
+    race: "/applications/race",
     reasonPregnancy: "/applications/reason-pregnancy",
     reducedLeaveSchedule: "/applications/reduced-leave-schedule",
     review: "/applications/review",
