@@ -932,6 +932,11 @@ const shared: {
     "If something is incomplete, add a comment at the end of the page.",
   employerInstructions_followUpDate:
     "<strong>Review and respond by:</strong> {{date}} at 11:59 p.m. Eastern time",
+  ethnicity: {
+    hispanicOrLatino: "Hispanic or Latino",
+    notHispanicOrLatino: "Not Hispanic or Latino",
+    preferNotToAnswer: "Prefer not to answer",
+  },
   fileUpload_addAnotherFileButton: "Choose another file",
   fileUpload_addFirstFileButton: "Choose files",
   fileUpload_fileHeadingPrefix: "File",
@@ -1006,6 +1011,16 @@ const shared: {
   pdfNoticeSuffix: "(PDF)",
   previousLeaveEntryPrefix: "Previous leave",
   qualifyingReasonDetailsLabel: "What counts as a qualifying reason?",
+  race: {
+    americanIndianAlaskaNative: "American Indian/Alaska Native",
+    asianAsianAmerican: "Asian/Asian American",
+    blackAfricanAmerican: "Black/African American",
+    nativeHawaiianOtherPacificIslander:
+      "Native Hawaiian/Other Pacific Islander",
+    white: "White",
+    preferNotToAnswer: "Prefer not to answer",
+    anotherRaceNotListedAbove: "Another race not listed above",
+  },
   reducedLeaveScheduleLeadCertGuidanceMedicalOrPregnancy:
     "The total number of hours you enter must match the reduced leave schedule section in the $t(shared.certificationFormMedical).",
   resendVerificationCodeLink: "Resend the code",
@@ -1467,6 +1482,31 @@ const pages: {
     choiceWoman: "$t(shared.genderWoman)",
     genderIdLabel: "Gender selection",
     sectionLabel: "What is your gender identity?",
+    sectionLabelHint:
+      "This data helps us understand who is accessing our program to ensure it is built for everyone.",
+    title: "$t(shared.claimsVerifyIdTitle)",
+  },
+  claimsRace: {
+    choiceAmericanIndianAlaskaNative:
+      "$t(shared.race.americanIndianAlaskaNative)",
+    choiceAsianAsianAmerican: "$t(shared.race.asianAsianAmerican)",
+    choiceBlackAfricanAmerican: "$t(shared.race.blackAfricanAmerican)",
+    choiceNativeHawaiianOtherPacificIslander:
+      "$t(shared.race.nativeHawaiianOtherPacificIslander)",
+    choiceWhite: "$t(shared.race.white)",
+    choicePreferNotToAnswer: "$t(shared.race.preferNotToAnswer)",
+    raceIdLabel: "Race selection",
+    sectionLabel: "What is your race identity?",
+    sectionLabelHint:
+      "This data helps us understand who is accessing our program to ensure it is built for everyone.",
+    title: "$t(shared.claimsVerifyIdTitle)",
+  },
+  claimsEthnicity: {
+    choiceHispanicOrLatino: "$t(shared.ethnicity.hispanicOrLatino)",
+    choiceNotHispanicOrLatino: "$t(shared.ethnicity.notHispanicOrLatino)",
+    choicePreferNotToAnswer: "$t(shared.ethnicity.preferNotToAnswer)",
+    ethnicityIdLabel: "Ethnicity selection",
+    sectionLabel: "What is your ethnicity identity?",
     sectionLabelHint:
       "This data helps us understand who is accessing our program to ensure it is built for everyone.",
     title: "$t(shared.claimsVerifyIdTitle)",
@@ -2024,6 +2064,9 @@ const pages: {
     employmentStatusValue_employed: "Currently employed",
     employmentStatusValue_selfEmployed: "Self-employed",
     employmentStatusValue_unemployed: "Unemployed",
+    ethnicityHispanicOrLatino: "Hispanic or Latino",
+    ethnicityNotHispanicOrLatino: "Not Hispanic or Latino",
+    ethnicityPreferNotToAnswer: "Prefer not to answer",
     familyLeaveTypeLabel: "Family leave type",
     familyLeaveTypeValue_adoption: "Adoption",
     familyLeaveTypeValue_fosterCare: "Foster care",
@@ -2139,6 +2182,15 @@ const pages: {
     previousLeaveWorkedPerWeekMinutesLabel: "Hours worked at time of leave: ",
     previousLeaveWorkedPerWeekMinutes_noMinutes:
       "$t(shared.displayTime_noMinutes)",
+    raceAmericanIndianAlaskaNative:
+      "$t(shared.race.americanIndianAlaskaNative)",
+    raceAsianAsianAmerican: "$t(shared.race.asianAsianAmerican)",
+    raceBlackAfricanAmerican: "$t(shared.race.blackAfricanAmerican)",
+    raceNativeHawaiianOtherPacificIslander:
+      "$t(shared.race.nativeHawaiianOtherPacificIslander)",
+    raceWhite: "$t(shared.race.white)",
+    racePreferNotToAnswer: "$t(shared.race.preferNotToAnswer)",
+    raceAnotherRaceNotListedAbove: "$t(shared.race.anotherRaceNotListedAbove)",
     reducedLeaveScheduleLabel: "Hours off per week",
     reducedLeaveScheduleWeeklyTotal: "$t(shared.displayTime)",
     reducedLeaveScheduleWeeklyTotal_noMinutes:
