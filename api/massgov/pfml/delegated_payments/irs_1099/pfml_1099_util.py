@@ -89,25 +89,6 @@ def is_upload_1099_pdf_enabled() -> bool:
     return app.get_config().enable_upload_1099_pdf
 
 
-def get_pdf_api_generate_endpoint() -> str:
-    return f"{__get_pdf_api_endpoint()}/api/pdf/generate"
-
-
-def get_pdf_api_merge_endpoint() -> str:
-    return f"{__get_pdf_api_endpoint()}/api/pdf/merge"
-
-
-def get_pdf_api_update_template_endpoint() -> str:
-    return f"{__get_pdf_api_endpoint()}/api/pdf/updateTemplate"
-
-
-def __get_pdf_api_endpoint() -> Optional[str]:
-    if os.environ.get("PDF_API_HOST") is None:
-        raise Exception("Env var 'PDF_API_HOST' has not being defined.")
-
-    return os.environ.get("PDF_API_HOST")
-
-
 def get_payments(db_session: db.Session, batch: Pfml1099Batch) -> List[Any]:
 
     year = get_tax_year()

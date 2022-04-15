@@ -88,7 +88,7 @@ class Generate1099DocumentsStep(Step):
         return pfml_1099_util.get_1099_records_to_generate(self.db_session, batchId=batch_id)
 
     def generate_document(
-        self, record: Pfml1099, sub_bacth: str, url: str, s3_location: str
+        self, record: Pfml1099, sub_batch: str, url: str, s3_location: str
     ) -> None:
         ssn: Optional[str] = pfml_1099_util.get_tax_id(
             self.db_session, str(record.tax_identifier_id)
@@ -110,7 +110,7 @@ class Generate1099DocumentsStep(Step):
                 "federalTaxesWithheld": str(record.federal_tax_withholdings),
                 "stateTaxesWithheld": str(record.state_tax_withholdings),
                 "repayments": str(record.overpayment_repayments),
-                "name": f"{sub_bacth}/{record.first_name} {record.last_name}",
+                "name": f"{sub_batch}/{record.first_name} {record.last_name}",
                 "address": record.address_line_1,
                 "address2": record.address_line_2,
                 "city": record.city,
