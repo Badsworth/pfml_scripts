@@ -37,6 +37,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
   employee_id: string | null = null;
   employer_fein: string | null = null;
   gender: ValuesOf<typeof Gender> | null = null;
+  ethnicity: ValuesOf<typeof Ethnicity> | null = null;
   has_concurrent_leave: boolean | null = null;
   has_continuous_leave_periods: boolean | null = null;
   has_employer_benefits: boolean | null = null;
@@ -56,6 +57,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
   payment_preference: PaymentPreference | null = null;
   previous_leaves_other_reason: PreviousLeave[] = [];
   previous_leaves_same_reason: PreviousLeave[] = [];
+  race: ValuesOf<typeof Race> | null = null;
   residential_address: Address = new Address({});
   split_from_application_id: string | null;
   split_into_application_id: string | null;
@@ -505,6 +507,28 @@ export const Gender = {
   nonbinary: "Non-binary",
   preferNotToAnswer: "Prefer not to answer",
   woman: "Woman",
+} as const;
+
+/* Enums for claimant race options
+ * @enum {string}
+ */
+export const Race = {
+  americanIndianAlaskaNative: "American Indian/Alaska Native",
+  asianAsianAmerican: "Asian/Asian American",
+  blackAfricanAmerican: "Black/African American",
+  nativeHawaiianOtherPacificIslander: "Native Hawaiian/Other Pacific Islander",
+  white: "White",
+  preferNotToAnswer: "Prefer not to answer",
+  anotherRaceNotListedAbove: "Another race not listed above",
+} as const;
+
+/* Enums for claimant ethnicity options
+ * @enum {string}
+ */
+export const Ethnicity = {
+  hispanicOrLatino: "Hispanic or Latino",
+  notHispanicOrLatino: "Not Hispanic or Latino",
+  preferNotToAnswer: "Prefer not to answer",
 } as const;
 
 /* Enums for caring leave's relationship to caregiver
