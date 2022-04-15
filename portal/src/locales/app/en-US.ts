@@ -1473,7 +1473,7 @@ const pages: {
   },
   claimsImport: {
     absenceIdHint:
-      "Enter the application ID given to you when you applied by phone. It contains both numbers and letters and looks like NTN-123456-ABS-01.",
+      "Enter the application ID given to you when you applied by phone. It contains both numbers and letters and looks like NTN-123456-ABS-01",
     absenceIdLabel: "Application ID",
     leadIdentify: "We need some information to identify your application.",
     leadIntro:

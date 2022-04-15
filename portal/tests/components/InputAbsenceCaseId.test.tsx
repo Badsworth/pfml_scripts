@@ -37,7 +37,7 @@ describe("InputAbsenceCaseId", () => {
     expect(field).toHaveValue("");
   });
 
-  it("transforms value to uppercase, inserts dashes around digits, and trims whitespace when blurred", () => {
+  it("transforms value to uppercase, inserts dashes around digits, and trims whitespace/periods when blurred", () => {
     setup();
     const field = screen.getByRole("textbox");
 
@@ -52,6 +52,12 @@ describe("InputAbsenceCaseId", () => {
     userEvent.tab();
 
     expect(field).toHaveValue("NTN-123-ABS-01");
+
+    userEvent.clear(field);
+    userEvent.type(field, "NTN-124-ABS-01.");
+    userEvent.tab();
+
+    expect(field).toHaveValue("NTN-124-ABS-01");
   });
 
   it("accepts value in expected format", () => {

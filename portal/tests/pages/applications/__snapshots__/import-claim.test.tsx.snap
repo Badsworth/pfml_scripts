@@ -303,7 +303,7 @@ exports[`ImportClaim renders the page 1`] = `
         class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
         id="InputText3_hint"
       >
-        Enter the application ID given to you when you applied by phone. It contains both numbers and letters and looks like NTN-123456-ABS-01.
+        Enter the application ID given to you when you applied by phone. It contains both numbers and letters and looks like NTN-123456-ABS-01
       </span>
       <input
         aria-labelledby="InputText3_label InputText3_hint InputText3_error"

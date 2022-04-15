@@ -6,11 +6,13 @@ interface InputAbsenceCaseIdProps extends InputTextProps {
 }
 
 const pattern = /^([a-z]+)-?([\d]+)-?([a-z]+)-?([\d]+)$/i;
+const trailingPeriodPattern = /\.$/;
 
 function InputAbsenceCaseId(props: InputAbsenceCaseIdProps) {
   const transformValue = (value: string) => {
     let transformedValue = value.toUpperCase().replace(/\s/g, "");
     transformedValue = transformedValue.replace(pattern, "$1-$2-$3-$4");
+    transformedValue = transformedValue.replace(trailingPeriodPattern, "");
     return transformedValue;
   };
 
