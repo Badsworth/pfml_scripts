@@ -152,6 +152,13 @@ export const Status = ({
     hasProjectedStatus,
   } = helper;
 
+  const hasSubmittedChangeRequest = true;
+  const changeType = "Add";
+  const leaveType = "bonding";
+  const changeRequestSubmittedDate = "March 24, 2022";
+  const changeRequestStartDate = "March 15, 2022";
+  const changeRequestEndDate = "April 1, 2022";
+
   const infoAlertContext = getInfoAlertContext(helper);
 
   const viewYourNotices = () => {
@@ -362,7 +369,7 @@ export const Status = ({
                 }}
               />
             </div>
-            <ButtonLink className="margin-top-3" href="">
+            <ButtonLink className="margin-top-3" href="" variation="outline">
               {t("pages.claimsStatus.requestChangeButton")}
             </ButtonLink>
           </div>
@@ -378,32 +385,48 @@ export const Status = ({
                   {t("pages.claimsStatus.requestWithdrawHeading")}
                 </Heading>
               </div>
-              <ButtonLink className="margin-top-3" href="">
+              <ButtonLink
+                // className="margin-bottom-2"
+                className="margin-top-3"
+                href=""
+                variation="outline"
+              >
                 {t("pages.claimsStatus.requestWithdrawButton")}
               </ButtonLink>
             </div>
           )}
 
         {/* Change request history section */}
-        {isFeatureEnabled("claimantShowModifications") && (
-          <div
-            className={containerClassName}
-            data-testid="changeRequestHistory"
-          >
-            <div>
-              <Heading level="2">
-                {t("pages.claimsStatus.changeRequestHistoryHeading")}
-              </Heading>
-              <p className="padding-bottom-2">
-                {t("pages.claimsStatus.changeRequestHistoryBody")}
-              </p>
-              <Trans
-                i18nKey="pages.claimsStatus.changeRequestSubmitttedBody"
-                values={{ submittedDate: "submitted change request date" }} // @todo: PORTAL-2143 Only show this section if there has been a change request submitted
-              />
+        {isFeatureEnabled("claimantShowModifications") &&
+          hasSubmittedChangeRequest && (
+            <div
+              className={containerClassName}
+              data-testid="changeRequestHistory"
+            >
+              <div>
+                <Heading level="2">
+                  {t("pages.claimsStatus.changeRequestHistoryHeading")}
+                </Heading>
+                <p className="padding-bottom-2">
+                  {t("pages.claimsStatus.changeRequestHistoryBody")}
+                </p>
+                <Trans
+                  i18nKey="pages.claimsStatus.changeRequestSubmitttedBody"
+                  values={{ submittedDate: changeRequestSubmittedDate }} // @todo: PORTAL-2143 Only show this section if there has been a change request submitted
+                />
+                <Trans
+                  i18nKey="pages.claimsStatus.changeRequestSubmitttedDescription"
+                  values={{
+                    submittedDate: changeRequestSubmittedDate,
+                    changeType,
+                    leaveType,
+                    startDate: changeRequestStartDate,
+                    endDate: changeRequestEndDate,
+                  }}
+                />
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
         {viewYourNotices()}
 

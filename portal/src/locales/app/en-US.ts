@@ -2209,7 +2209,9 @@ const pages: {
       "When we make a decision about your change request you will receive a notice and your leave details will be updated.",
     changeRequestHistoryHeading: "Change request history",
     changeRequestSubmitttedBody:
-      "<strong>You submitted a change request on {{submittedDate}}</strong>",
+      "<strong>You submitted a change request on {{submittedDate}}</strong><br></br>",
+    changeRequestSubmitttedDescription:
+      "{{changeType}} {{leaveType}} leave from {{startDate}} to {{endDate}}.",
     employerEIN: "Employer Identification Number (EIN)",
     infoAlertBody_bonding: "$t(shared.infoAlertBody_bonding)",
     infoAlertBody_pregnancy: "$t(shared.infoAlertBody_pregnancy)",

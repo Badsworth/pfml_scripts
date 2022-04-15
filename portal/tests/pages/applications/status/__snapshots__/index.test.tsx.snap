@@ -1219,8 +1219,10 @@ exports[`Status request a change displays change request history if feature flag
       When we make a decision about your change request you will receive a notice and your leave details will be updated.
     </p>
     <strong>
-      You submitted a change request on submitted change request date
+      You submitted a change request on March 24, 2022
     </strong>
+    <br />
+    Add bonding leave from March 15, 2022 to April 1, 2022.
   </div>
 </div>
 `;
@@ -1257,7 +1259,7 @@ exports[`Status request a change displays request a change section if any of the
     </ul>
   </div>
   <a
-    class="usa-button margin-top-3"
+    class="usa-button margin-top-3 usa-button--outline"
     href=""
   >
     Start a change request
@@ -1278,7 +1280,7 @@ exports[`Status request a change displays withdraw a change section if any of th
     </h2>
   </div>
   <a
-    class="usa-button margin-top-3"
+    class="usa-button margin-top-3 usa-button--outline"
     href=""
   >
     Start a request
