@@ -231,14 +231,18 @@ class PaymentData:
 
         self.payment_relevant_party = self.get_relevant_party()
 
-        logger.info("BM in paymentData self.payment_relevant_party %s", self.payment_relevant_party)
+        logger.info(
+            "BM in paymentData self.payment_relevant_party %s",
+            self.payment_relevant_party.payment_relevant_party_description,
+        )
 
         self.payment_identifier_type = ""
 
         self.payment_transaction_type = self.get_payment_transaction_type()
 
         logger.info(
-            "BM in paymentData self.payment_transaction_type %s", self.payment_transaction_type
+            "BM in paymentData self.payment_transaction_type %s",
+            self.payment_transaction_type.payment_transaction_type_description,
         )
 
         # Overpayment recoveries (of several different types) do not
@@ -986,6 +990,9 @@ class PaymentExtractStep(Step):
         employee, claim = None, None
         try:
             payment_identifier_type = self.get_payment_identifier_type(payment_data)
+            logger.info(
+                "BM payment_identifier_type IN get_employee_and_claim %s", payment_identifier_type
+            )
             claim = (
                 self.db_session.query(Claim)
                 .filter_by(fineos_absence_id=payment_data.absence_case_number)
@@ -994,19 +1001,20 @@ class PaymentExtractStep(Step):
             # If the employee is required and should be validated, do so
             # Otherwise, we know we aren't going to find an employee, so don't look
             if payment_data.is_employee_required:
-                if (
-                    payment_data.payment_relevant_party.payment_relevant_party_id
-                    == PaymentRelevantParty.REIMBURSED_EMPLOYER.payment_relevant_party_id
-                ):
-                    if payment_identifier_type == SOCIAL_SECURITY_NUMBER:
-                        employee = claim.employee if claim is not None else None
-                    else:
-                        if payment_identifier_type == TAX_IDENTIFICATION_NUMBER:
-                            tax_identifier = (
-                                self.db_session.query(TaxIdentifier)
-                                .filter_by(tax_identifier=payment_data.tin)
-                                .one_or_none()
-                            )
+                # if (
+                #     payment_data.payment_relevant_party.payment_relevant_party_id
+                #     == PaymentRelevantParty.REIMBURSED_EMPLOYER.payment_relevant_party_id
+                # ):
+                if payment_identifier_type ==TAX_IDENTIFICATION_NUMBER :
+                    employee = claim.employee if claim is not None else None
+                else:
+                    if payment_identifier_type ==SOCIAL_SECURITY_NUMBER: # TAX_IDENTIFICATION_NUMBER:
+                        tax_identifier = (
+                            self.db_session.query(TaxIdentifier)
+                            .filter_by(tax_identifier=payment_data.tin)
+                            .one_or_none()
+                        )
+                        if not tax_identifier:
                             employee = (
                                 self.db_session.query(Employee)
                                 .filter_by(tax_identifier=tax_identifier)
@@ -1438,6 +1446,7 @@ class PaymentExtractStep(Step):
         self, payment_data: PaymentData, reference_file: ReferenceFile
     ) -> Payment:
         employee, claim = self.get_employee_and_claim(payment_data)
+        logger.info("BM employee,claim IN  process_payment_data_record employee  %s claim %s",employee,claim)
         payment = self.add_records_to_db(payment_data, employee, claim, reference_file)
 
         return payment
@@ -1825,17 +1834,19 @@ class PaymentExtractStep(Step):
             # update transaction type in payment_data
             self.payment_identifier_type = self.get_payment_identifier_type(payment_data)
             self.payment_relevant_party = self.get_relevant_party(payment_data)
-            payment = self.process_payment_data_record(payment_data, reference_file)
 
             logger.info(
-                "BM in paymentData self.payment_relevant_party %s", self.payment_relevant_party.payment_relevant_party_description
+                "BM in paymentData in process_payment_record self.payment_relevant_party %s",
+                self.payment_relevant_party.payment_relevant_party_description,
             )
 
             self.payment_transaction_type = self.get_payment_transaction_type(payment_data)
 
             logger.info(
-                "BM in paymentData self.payment_transaction_type %s", self.payment_transaction_type.payment_transaction_type_description
+                "BM in paymentData in process_payment_record self.payment_transaction_type %s",
+                self.payment_transaction_type.payment_transaction_type_description,
             )
+            payment = self.process_payment_data_record(payment_data, reference_file)
 
             # Create and finish the state log. If there were any issues, this'll set the
             # record to an error state which'll send out a report to address it, otherwise
@@ -1942,12 +1953,12 @@ class PaymentExtractStep(Step):
                 .filter_by(tax_identifier=payment_data.tin)
                 .one_or_none()
             )
-            # if not tax_identifier:
-            #     payment_data.validation_container.add_validation_issue(
-            #         payments_util.ValidationReason.MISSING_IN_DB,
-            #         payment_data.tin,
-            #         "tax_identifier",
-            #     )
+            if not tax_identifier:
+                payment_data.validation_container.add_validation_issue(
+                    payments_util.ValidationReason.MISSING_IN_DB,
+                    payment_data.tin,
+                    "tax_identifier",
+                )
             return SOCIAL_SECURITY_NUMBER if tax_identifier else None
         if payment_data.payee_identifier == TAX_IDENTIFICATION_NUMBER:
             # employee = (
@@ -1967,12 +1978,12 @@ class PaymentExtractStep(Step):
                 .filter_by(employer_fein=payment_data.tin)
                 .one_or_none()
             )
-            # if not employer:
-            #     self.validation_container.add_validation_issue(
-            #         payments_util.ValidationReason.MISSING_IN_DB,
-            #         self.tin,
-            #         "employer",
-            #     )
+            if not employer:
+                payment_data.validation_container.add_validation_issue(
+                    payments_util.ValidationReason.MISSING_IN_DB,
+                    payment_data.tin,
+                    "employer",
+                )
             return TAX_IDENTIFICATION_NUMBER if employer else None
         if payment_data.payee_identifier == TAX_ID:
 
@@ -1984,9 +1995,9 @@ class PaymentExtractStep(Step):
                 .one_or_none()
             )
             # if not tax_identifier:
-            #     self.validation_container.add_validation_issue(
+            #     payment_data.validation_container.add_validation_issue(
             #         payments_util.ValidationReason.MISSING_IN_DB,
-            #         self.tin,
+            #         payment_data.tin,
             #         "tax_identifier",
             #     )
             employer = (
@@ -1995,11 +2006,17 @@ class PaymentExtractStep(Step):
                 .one_or_none()
             )
             # if not employer:
-            #     self.validation_container.add_validation_issue(
+            #     payment_data.validation_container.add_validation_issue(
             #         payments_util.ValidationReason.MISSING_IN_DB,
-            #         self.tin,
+            #         payment_data.tin,
             #         "employer",
             #     )
+            if not tax_identifier and not employer:
+                payment_data.validation_container.add_validation_issue(
+                    payments_util.ValidationReason.MISSING_IN_DB,
+                    payment_data.tin,
+                    "employer/tax_identifier",
+                )
 
             if tax_identifier:
                 response = SOCIAL_SECURITY_NUMBER

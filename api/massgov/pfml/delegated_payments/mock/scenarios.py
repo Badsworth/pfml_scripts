@@ -122,17 +122,19 @@ class ScenarioName(Enum):
 
     # Employer Reimbursement Payments
     EMPLOYER_REIMBURSEMENT_PAYMENT = "EMPLOYER_REIMBURSEMENT_PAYMENT"
-    # EMPLOYER_REIMBURSEMENT_WITH_INVALID_ADDRESS = "EMPLOYER_REIMBURSEMENT_WITH_INVALID_ADDRESS"
-    # EMPLOYER_REIMBURSEMENT_WITH_STANDARD_PAYMENT = "EMPLOYER_REIMBURSEMENT_WITH_STANDARD_PAYMENT"
-    # STANDARD_PAYMENT_WITH_TW_AND_ER = "STANDARD_PAYMENT_WITH_TW_AND_ER"
-    # EMPLOYER_REIMBURSEMENT_WITH_STANDARD_PAYMENT_INVALID_ADDRESS = (
-    #     "EMPLOYER_REIMBURSEMENT_WITH_STANDARD_PAYMENT_INVALID_ADDRESS"
-    # )
-    # EMPLOYER_REIMBURSEMENT_INVALID_ADDRESS_WITH_VALID_STANDARD_PAYMENT = (
-    #     "EMPLOYER_REIMBURSEMENT_INVALID_ADDRESS_WITH_VALID_STANDARD_PAYMENT"
-    # )
-    # EMPLOYER_REIMBURSEMENT_PAYMENT_AMOUNT_OVER_CAP =("EMPLOYER_REIMBURSEMENT_PAYMENT_AMOUNT_OVER_CAP")
-    # EMPLOYER_REIMBURSEMENT_PAYMENT_WITH_EFT = "EMPLOYER_REIMBURSEMENT_PAYMENT_WITH_EFT"
+    EMPLOYER_REIMBURSEMENT_WITH_INVALID_ADDRESS = "EMPLOYER_REIMBURSEMENT_WITH_INVALID_ADDRESS"
+    EMPLOYER_REIMBURSEMENT_WITH_STANDARD_PAYMENT = "EMPLOYER_REIMBURSEMENT_WITH_STANDARD_PAYMENT"
+    STANDARD_PAYMENT_WITH_TW_AND_ER = "STANDARD_PAYMENT_WITH_TW_AND_ER"
+    EMPLOYER_REIMBURSEMENT_WITH_STANDARD_PAYMENT_INVALID_ADDRESS = (
+        "EMPLOYER_REIMBURSEMENT_WITH_STANDARD_PAYMENT_INVALID_ADDRESS"
+    )
+    EMPLOYER_REIMBURSEMENT_INVALID_ADDRESS_WITH_VALID_STANDARD_PAYMENT = (
+        "EMPLOYER_REIMBURSEMENT_INVALID_ADDRESS_WITH_VALID_STANDARD_PAYMENT"
+    )
+    EMPLOYER_REIMBURSEMENT_PAYMENT_AMOUNT_OVER_CAP = (
+        "EMPLOYER_REIMBURSEMENT_PAYMENT_AMOUNT_OVER_CAP"
+    )
+    EMPLOYER_REIMBURSEMENT_PAYMENT_WITH_EFT = "EMPLOYER_REIMBURSEMENT_PAYMENT_WITH_EFT"
 
     # Tax withholding payments
     HAPPY_PATH_TAX_WITHHOLDING = "HAPPY_PATH_TAX_WITHHOLDING"
@@ -295,10 +297,6 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         scenario_name=ScenarioName.OVERPAYMENT_MISSING_NON_VPEI_RECORDS,
         payment_transaction_type=PaymentTransactionType.OVERPAYMENT,
         include_claim_details=False,
-    ),
-    ScenarioDescriptor(
-        scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT,
-        payment_transaction_type=PaymentTransactionType.EMPLOYER_REIMBURSEMENT,
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.PRENOTE_WITH_EXISTING_EFT_ACCOUNT,
@@ -521,37 +519,37 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     #     fineos_extract_address_valid=True,
     #     payment_method=PaymentMethod.ACH,
     # ),
-    ScenarioDescriptor(
-        scenario_name=ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
-        is_tax_withholding_records_exists=True,
-    ),
-    ScenarioDescriptor(
-        scenario_name=ScenarioName.TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
-        payment_method=PaymentMethod.CHECK,
-        is_tax_withholding_records_exists=True,
-        fineos_extract_address_valid=False,
-        pub_check_response=False,
-    ),
-    ScenarioDescriptor(
-        scenario_name=ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
-        is_tax_withholding_records_exists=True,
-        payment_method=PaymentMethod.CHECK,
-    ),
-    ScenarioDescriptor(
-        scenario_name=ScenarioName.TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED,
-        is_tax_withholding_records_exists=True,
-        existing_eft_account=False,
-        prenoted=False,
-    ),
-    ScenarioDescriptor(
-        scenario_name=ScenarioName.TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT,
-        is_tax_withholding_record_without_primary_payment=True,
-    ),
-    ScenarioDescriptor(
-        scenario_name=ScenarioName.TAX_WITHHOLDING_CANCELLATION_PAYMENT,
-        is_tax_withholding_records_exists=True,
-        payment_transaction_type=PaymentTransactionType.CANCELLATION,
-    ),
+    # ScenarioDescriptor(
+    #     scenario_name=ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
+    #     is_tax_withholding_records_exists=True,
+    # ),
+    # ScenarioDescriptor(
+    #     scenario_name=ScenarioName.TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+    #     payment_method=PaymentMethod.CHECK,
+    #     is_tax_withholding_records_exists=True,
+    #     fineos_extract_address_valid=False,
+    #     pub_check_response=False,
+    # ),
+    # ScenarioDescriptor(
+    #     scenario_name=ScenarioName.HAPPY_PATH_TAX_WITHHOLDING_PAYMENT_METHOD_CHECK,
+    #     is_tax_withholding_records_exists=True,
+    #     payment_method=PaymentMethod.CHECK,
+    # ),
+    # ScenarioDescriptor(
+    #     scenario_name=ScenarioName.TAX_WITHHOLDING_PRIMARY_PAYMENT_NOT_PRENOTED,
+    #     is_tax_withholding_records_exists=True,
+    #     existing_eft_account=False,
+    #     prenoted=False,
+    # ),
+    # ScenarioDescriptor(
+    #     scenario_name=ScenarioName.TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT,
+    #     is_tax_withholding_record_without_primary_payment=True,
+    # ),
+    # ScenarioDescriptor(
+    #     scenario_name=ScenarioName.TAX_WITHHOLDING_CANCELLATION_PAYMENT,
+    #     is_tax_withholding_records_exists=True,
+    #     payment_transaction_type=PaymentTransactionType.CANCELLATION,
+    # ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.HAPPY_PATH_DOR_FINEOS_NAME_MISMATCH,
         dor_fineos_name_mismatch=True,
