@@ -55,6 +55,24 @@ describe("PaymentsApi", () => {
     );
   });
 
+  it("makes a request without FF header when showEmployerPaymentStatus is false", async () => {
+    mockFetch();
+
+    const paymentsApi = new PaymentsApi();
+    await paymentsApi.getPayments(absenceId);
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      `${process.env.apiUrl}/payments?absence_case_id=${absenceId}`,
+      {
+        body: null,
+        headers: {
+          ...baseRequestHeaders,
+        },
+        method: "GET",
+      }
+    );
+  });
+
   it("returns the payments detail as a Payments instance", async () => {
     const mockResponseData = {
       absence_case_id: absenceId,

@@ -53,7 +53,7 @@ const flagsConfig = {
     pfmlTerriyay: false,
 
     // When the feature flag is enabled, a placeholder is shown in the employer portal
-    // https://lwd.atlassian.net/browse/PFMLPB-4046
+    // TODO (API-2680) Remove flag
     showEmployerPaymentStatus: false,
 
     // TODO (PORTAL-1893) remove feature flag
