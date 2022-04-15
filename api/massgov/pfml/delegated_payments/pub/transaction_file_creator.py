@@ -37,6 +37,7 @@ class TransactionFileCreatorStep(Step):
     check_file: Optional[EzCheckFile] = None
     positive_pay_file: Optional[CheckIssueFile] = None
     ach_file: Optional[NachaFile] = None
+    full_check_file: Optional[FullCheckFile] = None
 
     class Metrics(str, enum.Enum):
         NACHA_ARCHIVE_PATH = "nacha_archive_path"
