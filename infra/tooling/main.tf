@@ -35,7 +35,9 @@ module "trigger_rds_iam_sync" {
   source = "./trigger_rds_iam_sync"
   secret_token_arn = data.aws_ssm_parameter.trigger_rds_iam_sync_token.arn
   prefix           = module.constants.prefix
+  rds_cluster_arn = "arn:aws:rds:us-east-1:498823821309:db:massgov-pfml-training"
 }
+
 
 
 

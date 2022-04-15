@@ -27,10 +27,12 @@ resource "aws_cloudwatch_event_rule" "trigger_rds_iam_sync" {
 {
   "source": ["aws.rds"],
   "detail-type": ["RDS DB Snapshot Event", "RDS DB Cluster Snapshot Event"],
+  "detail": {
     "EventCategories": ["creation"],
     "SourceType": "SNAPSHOT",
-    "SourceArn": "arn:aws:rds:us-east-1:498823821309:db:massgov-pfml-training",
+    "SourceArn": ${var.rds_cluster_arn},
     "Message": "Automated snapshot created"
+  }
 }
 EOF
 }
@@ -49,12 +51,4 @@ resource "aws_lambda_permission" "trigger_rds_iam_sync" {
   source_arn    = aws_cloudwatch_event_rule.trigger_rds_iam_sync.arn
 }
 
-variable "secret_token_arn" {
-  type        = string
-  description = "arn for ssm parameter that contains github token"
-}
 
-variable "prefix" {
-  type        = string
-  description = "naming convention prefix"
-}
