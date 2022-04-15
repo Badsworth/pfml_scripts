@@ -2313,6 +2313,14 @@ components:
           example: "SMS"
         mfa_phone_number:
           $ref: "#/components/schemas/Phone"
+        first_name: 
+          type: string
+          nullable: true
+        last_name: 
+          type: string
+          nullable: true
+        phone_number:
+          $ref: "#/components/schemas/Phone"
 
     ClaimSearchRequest:
       type: object
@@ -4442,6 +4450,9 @@ components:
             - Cell
             - Fax
             - Phone
+        extension:
+          type: string
+          nullable: true
 
     MaskedPhone:
       type: object

@@ -10,6 +10,7 @@ from pydantic.types import UUID4
 import massgov.pfml.db
 import massgov.pfml.fineos.models
 import massgov.pfml.util.logging as logging
+import massgov.pfml.util.newrelic.events as newrelic_util
 from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
 from massgov.pfml.api.exceptions import ClaimWithdrawn, ObjectNotFound
 from massgov.pfml.api.models.claims.common import (
@@ -26,8 +27,10 @@ from massgov.pfml.api.models.common import (
     EmployerBenefit,
     get_computed_start_dates,
 )
+from massgov.pfml.api.models.users.requests import UserUpdateRequest
 from massgov.pfml.api.services.claims import maybe_update_employee_relationship
 from massgov.pfml.api.services.fineos_actions import get_absence_periods
+from massgov.pfml.api.util.phone import get_area_code_and_number
 from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
 from massgov.pfml.db.models.employees import Employer, User, UserLeaveAdministrator
 from massgov.pfml.db.queries.absence_periods import (
@@ -553,6 +556,48 @@ def register_leave_admin_with_fineos(
     db_session.add(leave_admin_record)
     db_session.commit()
     return leave_admin_record
+
+
+def update_leave_admin_with_fineos(
+    user: User, request_body: UserUpdateRequest, user_leave_admin: UserLeaveAdministrator
+) -> None:
+    fineos = massgov.pfml.fineos.create_client()
+    fineos_web_id = user_leave_admin.fineos_web_id
+    fineos_employer_id = user_leave_admin.employer.fineos_employer_id
+    email_address = user.email_address
+    full_name = (
+        f"{request_body.first_name} {request_body.last_name}"
+        if request_body.first_name
+        else "Leave Administrator"
+    )
+    phone_area_code = None
+    phone = None
+    phone_extension = None
+    if request_body.phone_number:
+        phone_area_code, phone = get_area_code_and_number(request_body.phone_number.phone_number)  # type: ignore
+        phone_extension = request_body.phone_number.extension
+    if not fineos_employer_id or not fineos_web_id or not email_address:
+        newrelic_util.log_and_capture_exception(
+            "leave_admin_update - didn't update fineos user_leave_administrator missing a required field",
+            extra={
+                "user_id": user.user_id,
+                "fineos_web_id": fineos_web_id,
+                "fineos_employer_id": fineos_employer_id,
+            },
+            only_warn=True,
+        )
+        return
+
+    leave_admin_create_payload = CreateOrUpdateLeaveAdmin(
+        fineos_web_id=fineos_web_id,
+        fineos_employer_id=fineos_employer_id,
+        admin_full_name=full_name,
+        admin_area_code=phone_area_code,
+        admin_phone_number=phone,
+        admin_phone_extension=phone_extension,
+        admin_email=email_address,
+    )
+    fineos.create_or_update_leave_admin(leave_admin_create_payload)
 
 
 def create_eform(user_id: str, absence_id: str, eform: EFormBody) -> None:

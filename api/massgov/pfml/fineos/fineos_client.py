@@ -1302,6 +1302,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         leave_admin_phone = models.PhoneNumber(
             area_code=leave_admin_create_or_update.admin_area_code,
             contact_number=leave_admin_create_or_update.admin_phone_number,
+            extension_code=leave_admin_create_or_update.admin_phone_extension,
         )
         leave_admin_create_payload = models.CreateOrUpdateLeaveAdminRequest(
             full_name=leave_admin_create_or_update.admin_full_name,

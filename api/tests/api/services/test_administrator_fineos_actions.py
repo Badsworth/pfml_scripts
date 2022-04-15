@@ -11,6 +11,7 @@ from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
 from massgov.pfml.api.exceptions import ObjectNotFound
 from massgov.pfml.api.models.claims.common import PreviousLeave
 from massgov.pfml.api.models.common import ConcurrentLeave
+from massgov.pfml.api.models.users.requests import UserUpdateRequest
 from massgov.pfml.api.services.administrator_fineos_actions import (
     EformTypes,
     _get_computed_start_dates,
@@ -19,10 +20,11 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
     get_claim_as_leave_admin,
     get_documents_as_leave_admin,
     register_leave_admin_with_fineos,
+    update_leave_admin_with_fineos,
 )
 from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
 from massgov.pfml.db.models.absences import AbsencePeriodType
-from massgov.pfml.db.models.employees import UserLeaveAdministrator
+from massgov.pfml.db.models.employees import Role, User, UserLeaveAdministrator
 from massgov.pfml.db.models.factories import EmployerFactory
 from massgov.pfml.fineos import FINEOSClient
 from massgov.pfml.fineos.mock.eform import MOCK_EFORM_OTHER_INCOME_V1, MOCK_EFORM_OTHER_INCOME_V2
@@ -2214,3 +2216,48 @@ class TestDownloadDocumentAsLeaveAdmin:
         expected_msg = "User is not authorized to access documents of type: identification proof"
         error = exc_info.value
         assert error.description == expected_msg
+
+
+class TestUpdateLeaveAdmin:
+    @pytest.fixture
+    def user_leave_admin(self, employer_user, employer):
+        return UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            employer=employer,
+        )
+
+    @pytest.fixture
+    def employer_user(self, user_leave_admin):
+        return User(
+            roles=[Role.EMPLOYER],
+            email_address="slinky@miau.com",
+            user_leave_administrators=[user_leave_admin],
+        )
+
+    @pytest.fixture
+    def user_update_request(self):
+        return UserUpdateRequest(
+            first_name="Slinky",
+            last_name="Glenesk",
+            phone_number={"phone_number": "805-610-3889", "extension": "3333"},
+        )
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.create_or_update_leave_admin")
+    def test_handle_user_patch_fineos_side_effects(
+        self, mock_fineos_update, employer_user, employer, user_leave_admin, user_update_request
+    ):
+
+        update_leave_admin_with_fineos(employer_user, user_update_request, user_leave_admin)
+
+        expected_param = CreateOrUpdateLeaveAdmin(
+            fineos_web_id="fake-fineos-web-id",
+            fineos_employer_id=user_leave_admin.employer.fineos_employer_id,
+            admin_full_name="Slinky Glenesk",
+            admin_area_code="805",
+            admin_phone_number="6103889",
+            admin_phone_extension="3333",
+            admin_email="slinky@miau.com",
+        )
+        mock_fineos_update.assert_called_once_with(expected_param)
