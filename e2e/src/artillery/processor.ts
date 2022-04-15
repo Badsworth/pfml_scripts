@@ -179,13 +179,12 @@ export const adjudicateStored = wrap(
 );
 
 /**
- * Exported handler for submitting (only), followed by pushing the data to SQS.
+ * Exported handler for searching claimaints via PFML CRM endpoints
  */
 export const searchClaimants = wrap(
   async (context: ArtilleryContext, ee: EventEmitter, logger: Logger) => {
     const employee = await interactor.getEmployeeFromPool();
     const token = await interactor.getAPIToken();
-
     const employeeId = await timeRequest(context, ee, () => {
       return interactor.searchEmployee(
         employee,
@@ -204,7 +203,7 @@ export const searchClaimants = wrap(
           ee,
           logger.child({
             employee_name: `${employee.first_name} ${employee.last_name}`,
-            enplopyee_id: employeeId,
+            employee_id: employeeId,
             stage: "searchForClaims",
           }),
           token
@@ -222,6 +221,6 @@ class NoClaimsRemainingError extends Error {
   code: number;
   constructor() {
     super("No claims are waiting for processing.");
-    this.code = 4404;
+    this.code = 404;
   }
 }

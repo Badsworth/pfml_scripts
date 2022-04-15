@@ -1,3 +1,4 @@
+# This file contains the configuration for running searches against the various CRM endpoints
 config:
   processor: ./processor.js
   plugins:

@@ -3,7 +3,9 @@ import { SystemWideArgs } from "../cli";
 import config from "../config";
 import { v4 as uuid } from "uuid";
 import { spawn as _spawn } from "child_process";
-import ArtilleryDeployer from "../artillery/ArtilleryDeployer";
+import ArtilleryDeployer, {
+  ContainerConfig,
+} from "../artillery/ArtilleryDeployer";
 import { format } from "date-fns";
 
 /**
@@ -24,6 +26,7 @@ type PresetArgs = {
   deploy_type: string;
   containers: number;
   debug: boolean;
+  crmTesting: boolean;
 } & SystemWideArgs;
 
 const cmd: CommandModule<SystemWideArgs, PresetArgs> = {
@@ -57,10 +60,16 @@ const cmd: CommandModule<SystemWideArgs, PresetArgs> = {
         default: false,
         alias: ["d", "debug"],
       },
+      crmTesting: {
+        description: "Deploy CRM integration testing",
+        boolean: true,
+        default: true,
+        alias: ["crm"],
+      },
     });
   },
   async handler(args) {
-    const { env, deploy_type, containers, debug, logger } = args;
+    const { env, deploy_type, containers, debug, logger, crmTesting } = args;
     const deployer = await ArtilleryDeployer.createFromConfigParameter(
       "arn:aws:ssm:us-east-1:233259245172:parameter/lst-worker-config",
       {
@@ -120,7 +129,7 @@ const cmd: CommandModule<SystemWideArgs, PresetArgs> = {
       } as Record<string, string>
     );
 
-    const result = await deployer.deploy(run_id, [
+    const containerConfigs: ContainerConfig[] = [
       {
         name: "artillery-agent",
         image: remote_tag,
@@ -129,12 +138,27 @@ const cmd: CommandModule<SystemWideArgs, PresetArgs> = {
           "run",
           "-e",
           deploy_type,
-          "dist/cloud.snow.yml",
+          "dist/cloud.agents.yml",
         ],
         instances: containers,
         environment,
       },
       {
+        name: "artillery-claimant",
+        image: remote_tag,
+        command: [
+          "node_modules/.bin/artillery",
+          "run",
+          "-e",
+          deploy_type,
+          "dist/cloud.claimants.yml",
+        ],
+        instances: containers,
+        environment,
+      },
+    ];
+    if (crmTesting) {
+      containerConfigs.push({
         name: "artillery-crm",
         image: remote_tag,
         command: [
@@ -146,8 +170,9 @@ const cmd: CommandModule<SystemWideArgs, PresetArgs> = {
         ],
         instances: containers,
         environment,
-      },
-    ]);
+      });
+    }
+    const result = await deployer.deploy(run_id, containerConfigs);
     logger.info(
       `LST has been triggered...\n\nContainers:${result.containerCount} of ${result.runCount}\n\nCluster:\n------\n${result.cluster}\n\nInflux Dashboard:\n------\n${result.influx}\n\nLogs:\n-----\n${result.cloudwatch}\n\nNew Relic APM:\n-----\n${result.newrelic}\n\n\n`
     );

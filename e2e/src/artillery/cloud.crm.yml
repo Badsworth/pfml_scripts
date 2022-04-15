@@ -10,7 +10,6 @@ config:
   includeFiles:
     - .env
     - ./employees
-    - ./forms
   environments:
     full_lst:
       phases:
@@ -20,24 +19,20 @@ config:
           name: Warm Up
         - duration: 300 # Run minutes 5-10
           maxVusers: 4
-          arrivalRate: .5
-          name: Steady State (Portal Claims Normal Traffic)
+          arrivalRate: .25
+          name: Steady State
         - duration: 600 # Run minutes 10-20
           maxVusers: 8
-          arrivalRate: 1
+          arrivalRate: .25
           name: Spike One
-        - duration: 600 # Run minutes 25-35
-          maxVusers: 2
-          arrivalRate: 2
+        - duration: 1200 # Run minutes 25-45
+          maxVusers: 16
+          arrivalRate: .25
           name: Spike Two
-        - duration: 600 # Run minutes 35-45
-          maxVusers: 3
-          arrivalRate: 3
-          name: Spike Three
         - duration: 600 # Run minutes 45-55
-          maxVusers: 2
+          maxVusers: 4
           arrivalRate: .5
-          name: Steady State (#2)
+          name: Steady State
         - duration: 300 # Run minutes 55-65
           maxVusers: 2
           arrivalRate: .25
@@ -48,21 +43,17 @@ config:
           arrivalRate: .25 # When starting our load test, we send one user per instance every 4 seconds until we reach maxVusers
           maxVusers: 1
           name: Warm Up
-        - duration: 300 # Run minutes 5-10
+        - duration: 1800 # Run minutes 5-20
           maxVusers: 4
-          arrivalRate: 3
-          name: Steady State (Portal Claims Normal Traffic)
-        - duration: 600 # Run minutes 10-20
-          maxVusers: 2
-          arrivalRate: 2
-          name: Steady State (#2)
+          arrivalRate: .25
+          name: Steady State
         - duration: 300 # Run minutes 20-25
           maxVusers: 2
-          arrivalRate: .5
+          arrivalRate: .25
           name: Cool Down
     basic:
       phases:
-        - duration: 240
+        - duration: 1
           arrivalRate: 1
           maxVusers: 1
           name: Development

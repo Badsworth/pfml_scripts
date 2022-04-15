@@ -62,6 +62,7 @@ module.exports = () => {
             { from: "./src/artillery/cloud.agents.yml", to: "./" },
             { from: "./src/artillery/cloud.claimants.yml", to: "./" },
             { from: "./src/artillery/cloud.snow.yml", to: "./" },
+            { from: "./src/artillery/cloud.crm.yml", to: "./" },
             { from: "./src/artillery/development.yml", to: "./" },
           ],
         }),

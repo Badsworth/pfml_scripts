@@ -27,7 +27,7 @@ type ECSLSTRunnerConfig = {
   sqs_queue: string;
 };
 
-type ContainerConfig = {
+export type ContainerConfig = {
   name: string;
   image: string;
   command: string[];

@@ -21,6 +21,12 @@ on:
           - basic
           - full_lst
           - noSpikes_lst
+      # @todo: temporary option to allow testing without CRM integration for April release testing - can remove after April release testing
+      test_crm_integration:
+        description: "Test CRM integration"
+        required: false
+        default: true
+        type: boolean
       debug:
         description: "Turn on debug logging"
         required: false
@@ -89,7 +95,7 @@ jobs:
         continue-on-error: false
       - name: Run command to deploy LST artillery w/Debug Logging
         if: github.event.inputs.debug == 'true'
-        run: npm run cli -- deploy-lst -e ${{ env.E2E_ENVIRONMENT }} -t ${{ github.event.inputs.deploy_type }} -d
+        run: npm run cli -- deploy-lst -e ${{ env.E2E_ENVIRONMENT }} -t ${{ github.event.inputs.deploy_type }} -d -crm ${{ github.event.inputs.debug == 'true' }}
       - name: Run command to deploy LST artillery
         if: github.event.inputs.debug == 'false'
-        run: npm run cli -- deploy-lst -e ${{ env.E2E_ENVIRONMENT }} -t ${{ github.event.inputs.deploy_type }}
+        run: npm run cli -- deploy-lst -e ${{ env.E2E_ENVIRONMENT }} -t ${{ github.event.inputs.deploy_type }} -crm ${{ github.event.inputs.debug == 'true' }}
