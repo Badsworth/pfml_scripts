@@ -10,6 +10,7 @@ from massgov.pfml.api.eligibility.handler import BenefitYearsResponse
 from massgov.pfml.api.models.applications.common import (
     EmploymentStatus,
     Gender,
+    Ethnicity,
     MaskedAddress,
     MaskedApplicationLeaveDetails,
     MaskedPaymentPreference,
@@ -83,6 +84,8 @@ class ApplicationResponse(PydanticBaseModel):
     last_name: Optional[str]
     date_of_birth: Optional[MaskedDateStr]
     gender: Optional[Gender]
+    ethnicity: Optional[Ethnicity]
+    race: Optional[str]
     has_continuous_leave_periods: Optional[bool]
     has_intermittent_leave_periods: Optional[bool]
     has_reduced_schedule_leave_periods: Optional[bool]

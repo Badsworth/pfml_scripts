@@ -414,6 +414,12 @@ class Gender(str, LookupEnum):
     no_answer = "Prefer not to answer"
 
 
+class Ethnicity(str, LookupEnum):
+    hispanic_or_latino = "Hispanic or Latino"
+    not_hispanic_or_latino = "Not Hispanic or Latino"
+    prefer_not_to_answer = "Prefer not to answer"
+
+
 class DocumentResponse(PydanticBaseModel):
     user_id: UUID4
     application_id: UUID4

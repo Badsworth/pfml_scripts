@@ -2757,6 +2757,17 @@ components:
                 - Non-binary
                 - Gender not listed
                 - Prefer not to answer
+            race:
+              type: string
+              example: "Prefer not to answer"
+              nullable: true
+            ethnicity:
+              type: string
+              nullable: true
+              enum:
+                - Prefer not to answer
+                - Hispanic or Latino
+                - Not Hispanic or Latino
             leave_details:
               $ref: "#/components/schemas/ApplicationLeaveDetails"
             work_pattern:
@@ -2955,6 +2966,17 @@ components:
             - Non-binary
             - Gender not listed
             - Prefer not to answer
+        race:
+          type: string
+          example: "Prefer not to answer"
+          nullable: true
+        ethnicity:
+          type: string
+          nullable: true
+          enum:
+            - Prefer not to answer
+            - Hispanic or Latino
+            - Not Hispanic or Latino
         hours_worked_per_week:
           type: number
           nullable: true
