@@ -4,8 +4,8 @@ locals {
 data "archive_file" "trigger_rds_iam_sync" {
   type        = "zip"
   output_path = "../lambda_functions/${local.name}/${local.name}.zip"
-  source_dir = "../lambda_functions/${local.name}"
-  excludes = ["../lambda_functions/${local.name}/${local.name}.zip"]
+  source_dir  = "../lambda_functions/${local.name}"
+  excludes    = ["../lambda_functions/${local.name}/${local.name}.zip"]
 }
 resource "aws_lambda_function" "trigger_rds_iam_sync" {
   description      = "Trigger RDS IAM Sync GitHub Action"
@@ -21,12 +21,16 @@ resource "aws_lambda_function" "trigger_rds_iam_sync" {
 }
 
 resource "aws_cloudwatch_event_rule" "trigger_rds_iam_sync" {
-  name                = "${var.prefix}${local.name}"
-  description         = "Invoke Lambda Function: ${var.prefix}${local.name}"
+  name          = "${var.prefix}${local.name}"
+  description   = "Invoke Lambda Function: ${var.prefix}${local.name}"
   event_pattern = <<EOF
 {
   "source": ["aws.rds"],
-  "detail-type": ["RDS DB Snapshot Event", "RDS DB Cluster Snapshot Event"]
+  "detail-type": ["RDS DB Snapshot Event", "RDS DB Cluster Snapshot Event"],
+    "EventCategories": ["creation"],
+    "SourceType": "SNAPSHOT",
+    "SourceArn": "arn:aws:rds:us-east-1:498823821309:db:massgov-pfml-training",
+    "Message": "Automated snapshot created"
 }
 EOF
 }
@@ -46,11 +50,11 @@ resource "aws_lambda_permission" "trigger_rds_iam_sync" {
 }
 
 variable "secret_token_arn" {
-  type = string
+  type        = string
   description = "arn for ssm parameter that contains github token"
 }
 
 variable "prefix" {
-  type = string
+  type        = string
   description = "naming convention prefix"
 }
