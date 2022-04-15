@@ -3,7 +3,7 @@ from datetime import date
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from sqlalchemy import case, cast, func, or_
+from sqlalchemy import and_, case, cast, func, or_
 from sqlalchemy.sql import literal_column
 from sqlalchemy.sql.sqltypes import Date
 
@@ -50,6 +50,38 @@ class Constants:
 
     FEDERAL_WITHHOLDING_TYPE = "FEDERAL"
     STATE_WITHHOLDING_TYPE = "STATE"
+
+
+class Corrected1099Data:
+    employee_id: str
+    latest_pfml_1099_id: str
+    pfml_1099_id: str
+    latest_pfml_batch_id: str
+    pfml_1099_batch_id: str
+
+    def __init__(
+        self,
+        employee_id: str,
+        latest_pfml_1099_id: str,
+        pfml_1099_id: str,
+        latest_pfml_batch_id: str,
+        pfml_1099_batch_id: str,
+    ):
+        self.employee_id = employee_id
+        self.latest_pfml_1099_id = latest_pfml_1099_id
+        self.pfml_1099_id = pfml_1099_id
+        self.latest_pfml_batch_id = latest_pfml_batch_id
+        self.pfml_1099_batch_id = pfml_1099_batch_id
+
+    def get_traceable_details(self) -> Dict[str, Optional[Any]]:
+
+        return {
+            "employee_id": self.employee_id,
+            "latest_pfml_1099_id": self.latest_pfml_1099_id,
+            "pfml_1099_id": self.pfml_1099_id,
+            "latest_pfml_batch_id": self.latest_pfml_batch_id,
+            "pfml_1099_batch_id": self.pfml_1099_batch_id,
+        }
 
 
 ACTIVE_STATES = [Constants.CREATED_STATUS, Constants.GENERATED_STATUS, Constants.MERGED_STATUS]
@@ -1864,7 +1896,7 @@ def is_test_file() -> str:
 
 
 def is_correction_batch() -> bool:
-    return os.environ.get("IRS_1099_CORRECTION_IND", "0") == "1"
+    return os.environ.get("`IRS_1099_CORRECTION_IND`", "0") == "1"
 
 
 def get_1099_records_to_file(db_session: db.Session) -> List[Pfml1099]:
@@ -1900,3 +1932,107 @@ def update_submission_date(db_session: db.Session, batch_id: UUID) -> None:
     db_session.query(Pfml1099).filter(
         Pfml1099.pfml_1099_batch_id == batch_id,
     ).update({Pfml1099.irs_submission_date: get_now_us_eastern()})
+
+
+def is_correction_submission() -> bool:
+    # return os.environ.get("IRS_1099_CORRECTION_SUB", "0") == "1"
+    return os.environ.get("`IRS_1099_CORRECTION_IND`", "0") == "1"
+
+
+def get_1099_corrected_records_to_file(db_session: db.Session) -> List[Corrected1099Data]:
+
+    is_none = None
+    is_True = True
+    corrected_data_list = []
+    latest_irs_submission = (
+        db_session.query(
+            Pfml1099,
+            func.rank()
+            .over(
+                order_by=[
+                    Pfml1099.created_at.desc(),
+                ],
+                partition_by=Pfml1099.employee_id,
+            )
+            .label("R"),
+        )
+        .filter(and_(Pfml1099.tax_year == get_tax_year(), Pfml1099.irs_submission_date != is_none))
+        .subquery()
+    )
+    # logger.info("submission %s", latest_irs_submission)
+    latest_irs_generation = (
+        db_session.query(
+            Pfml1099,
+            func.rank()
+            .over(
+                order_by=[
+                    Pfml1099.created_at.desc(),
+                ],
+                partition_by=Pfml1099.employee_id,
+            )
+            .label("R"),
+        )
+        .filter(and_(Pfml1099.tax_year == get_tax_year(), Pfml1099.correction_ind == is_True))
+        .subquery()
+    )
+    # logger.info("latest_irs_generation %s", latest_irs_generation)
+    correction_records = list(
+        db_session.query(latest_irs_submission)
+        .with_entities(
+            latest_irs_generation.c.employee_id,
+            latest_irs_generation.c.pfml_1099_id.label("latest_pfml_1099_id"),
+            latest_irs_submission.c.pfml_1099_id,
+            latest_irs_generation.c.pfml_1099_batch_id.label("latest_pfml_batch_id"),
+            latest_irs_submission.c.pfml_1099_batch_id,
+        )
+        .join(
+            latest_irs_generation,
+            latest_irs_generation.c.employee_id == latest_irs_submission.c.employee_id,
+        )
+        .filter(
+            and_(
+                latest_irs_generation.c.created_at > latest_irs_submission.c.created_at,
+                latest_irs_generation.c.R == 1,
+                latest_irs_submission.c.R == 1,
+            )
+        )
+    )
+    if correction_records is not None:
+        logger.info("Corrected query length %s", len(correction_records))
+        record_iter = iter(correction_records)
+        for record in record_iter:
+            corrected_data = Corrected1099Data(
+                record.employee_id,
+                record.latest_pfml_1099_id,
+                record.pfml_1099_id,
+                record.latest_pfml_batch_id,
+                record.pfml_batch_id,
+            )
+            corrected_data_list.append(corrected_data)
+        logger.info("Number of corrected records %s", len(corrected_data_list))
+
+    return correction_records
+
+
+def get_old_new_1099_record(
+    db_session: db.Session, submitted_pfml_1099_id: str, new_pfml_1099_id: str, employee_id: str
+) -> List[Optional[Pfml1099]]:
+
+    """Get the previously submitted 1099 record to IRS and the newly generated 1099 record"""
+    pfmlRecords = []
+    pfmlRecords.append(
+        db_session.query(Pfml1099)
+        .order_by(Pfml1099.created_at.asc())
+        .filter(Pfml1099.pfml_1099_id == submitted_pfml_1099_id)
+        .filter(Pfml1099.employee_id == employee_id)
+        .first()
+    )
+    pfmlRecords.append(
+        db_session.query(Pfml1099)
+        .order_by(Pfml1099.created_at.asc())
+        .filter(Pfml1099.pfml_1099_id == new_pfml_1099_id)
+        .filter(Pfml1099.employee_id == employee_id)
+        .first()
+    )
+
+    return pfmlRecords

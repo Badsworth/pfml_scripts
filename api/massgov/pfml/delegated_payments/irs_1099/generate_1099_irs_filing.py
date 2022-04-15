@@ -5,14 +5,13 @@ import re
 import uuid
 from typing import Any, List, Tuple
 
-from sqlalchemy.sql.sqltypes import Boolean
-
 import massgov.pfml.delegated_payments.delegated_config as paymentConfig
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.delegated_payments.irs_1099.pfml_1099_util as pfml_1099_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import ReferenceFile, ReferenceFileType
+from massgov.pfml.delegated_payments.irs_1099.pfml_1099_util import Corrected1099Data
 from massgov.pfml.delegated_payments.step import Step
 from massgov.pfml.util.datetime import get_now_us_eastern
 
@@ -74,45 +73,94 @@ class Constants:
 class Generate1099IRSfilingStep(Step):
     class Metrics(str, enum.Enum):
         IRS_FILE_1099_COUNT = "irs_file_1099_count"
+        IRS_FILE_1099_CORRECTED_COUNT = "irs_file_1099_corrected_count"
+        IRS_FILE_1099_C_CORRECTION_COUNT = "irs_file_1099_c_correction_count"
+        IRS_FILE_1099_G_CORRECTION_COUNT = "irs_file_1099_g_correction_count"
 
     total_b_record = 0
-    total_a_record = 1
+    total_a_record = 0
     seq_number = 1
+    total_b_correction_record = 0
 
     def run_step(self) -> None:
         self._generate_1099_irs_filing()
 
     def _generate_1099_irs_filing(self) -> None:
         logger.info("1099 Documents - Generate 1099.org file to be transmitted to IRS")
-        pfml_1099 = pfml_1099_util.get_1099_records_to_file(self.db_session)
 
-        if len(pfml_1099) > 0:
+        t_template = self._create_t_template()
+        t_entries = self._load_t_rec_data(t_template)
+        entries = t_entries
+        if pfml_1099_util.is_correction_submission():
+            pfml_1099_corrected = pfml_1099_util.get_1099_corrected_records_to_file(self.db_session)
+            if len(pfml_1099_corrected) > 0:
+                self.total_b_correction_record = len(pfml_1099_corrected)
+                logger.info("Total b records are, %s", self.total_b_correction_record)
 
-            if pfml_1099_util.is_test_file() == "T":
-                pfml_1099 = pfml_1099[:11]
-            self.total_b_record = len(pfml_1099)
-            logger.info("Total b records are, %s", self.total_b_record)
-            t_template = self._create_t_template()
-            t_entries = self._load_t_rec_data(t_template)
-            a_template = self._create_a_template()
-            a_entries = self._load_a_rec_data(a_template)
-            entries = t_entries + a_entries
-            b_template = self._create_b_template()
-            b_entries = self._load_b_rec_data(b_template, pfml_1099)
-            for b_records in b_entries:
-                entries = entries + b_records
-            c_template = self._create_c_template()
-            ctl_total, st_tax, fed_tax = self._get_totals(pfml_1099)
-            c_entries = self._load_c_rec_data(c_template, ctl_total)
-            k_template = self._create_k_template()
-            k_entries = self._load_k_rec_data(k_template, ctl_total, st_tax, fed_tax)
-            f_template = self._create_f_template()
-            f_entries = self._load_f_rec_data(f_template)
-            entries += c_entries + k_entries + f_entries
-            logger.info("Completed irs file data mapping")
-            self._create_irs_file(entries)
-            pfml_1099_util.update_submission_date(self.db_session, pfml_1099[0].pfml_1099_batch_id)
-            self.db_session.commit()
+                g_corrected_list, c_corrected_list, batch_id = self.process_correction_types(
+                    pfml_1099_corrected
+                )
+
+                if len(g_corrected_list) > 0:
+                    entries = self._create_correction_entries(entries, g_corrected_list, "G")
+                if len(c_corrected_list) > 0:
+                    entries = self._create_correction_entries(entries, c_corrected_list, "C")
+                f_template = self._create_f_template()
+                f_entries = self._load_f_rec_data(f_template)
+                entries += f_entries
+                logger.info("Completed irs file data mapping")
+                self._create_irs_file(entries)
+                pfml_1099_util.update_submission_date(self.db_session, batch_id)
+                self.db_session.commit()
+        else:
+
+            pfml_1099 = pfml_1099_util.get_1099_records_to_file(self.db_session)
+            if len(pfml_1099) > 0:
+                if pfml_1099_util.is_test_file() == "T":
+                    pfml_1099 = pfml_1099[:11]
+                self.total_b_record = len(pfml_1099)
+                logger.info("Total b records are, %s", self.total_b_record)
+                a_template = self._create_a_template()
+                a_entries = self._load_a_rec_data(a_template)
+                entries += a_entries
+                b_template = self._create_b_template()
+                b_entries = self._load_b_rec_data(b_template, pfml_1099)
+                for b_records in b_entries:
+                    entries = entries + b_records
+                c_template = self._create_c_template()
+                ctl_total, st_tax, fed_tax = self._get_totals(pfml_1099)
+                c_entries = self._load_c_rec_data(c_template, ctl_total)
+                k_template = self._create_k_template()
+                k_entries = self._load_k_rec_data(k_template, ctl_total, st_tax, fed_tax)
+                entries += c_entries + k_entries
+
+                f_template = self._create_f_template()
+                f_entries = self._load_f_rec_data(f_template)
+                entries += f_entries
+                logger.info("Completed irs file data mapping")
+                self._create_irs_file(entries)
+                pfml_1099_util.update_submission_date(
+                    self.db_session, pfml_1099[0].pfml_1099_batch_id
+                )
+                self.db_session.commit()
+
+    def _create_correction_entries(
+        self, t_entries: str, corr_list: List[Any], corr_ind: str
+    ) -> str:
+        a_template = self._create_a_template()
+        a_entries = self._load_a_rec_data(a_template)
+        entries = t_entries + a_entries
+        b_template = self._create_b_template()
+        b_entries = self._load_corrected_b_rec_data(b_template, corr_list, corr_ind)
+        for b_records in b_entries:
+            entries = entries + b_records
+        c_template = self._create_c_template()
+        ctl_total, st_tax, fed_tax = self._get_correction_totals(corr_list, corr_ind)
+        c_entries = self._load_c_rec_data(c_template, ctl_total)
+        k_template = self._create_k_template()
+        k_entries = self._load_k_rec_data(k_template, ctl_total, st_tax, fed_tax)
+        entries = entries + c_entries + k_entries
+        return entries
 
     def _create_t_template(self) -> str:
         temp = (
@@ -228,6 +276,7 @@ class Generate1099IRSfilingStep(Step):
 
     def _load_a_rec_data(self, template_str: str) -> str:
         a_seq = self.seq_number + 1
+        self.total_a_record += 1
         a_dict = dict(
             A_REC_TYPE=Constants.A_REC_TYPE,
             TAX_YEAR=pfml_1099_util.get_tax_year(),
@@ -255,6 +304,81 @@ class Generate1099IRSfilingStep(Step):
         self.seq_number = self.seq_number + 1
         return a_record
 
+    def _load_corrected_b_rec_data(
+        self, template_str: str, corrected_tax_list: List[Any], correction_type: str
+    ) -> List[str]:
+        b_dict_list = []
+        b_seq = self.seq_number + 1
+        logger.info("B sequence starts at %s", b_seq)
+        for item in corrected_tax_list:
+            self.increment(self.Metrics.IRS_FILE_1099_CORRECTED_COUNT)
+
+            if correction_type == "G" and item["correction_type"] == "C":
+                amount = decimal.Decimal(0.0)
+            else:
+                amount = item["record"].gross_payments
+            b_dict = dict(
+                B_REC_TYPE=Constants.B_REC_TYPE,
+                TAX_YEAR=item["record"].tax_year,
+                CORRECTION_IND=correction_type,
+                PAYEE_NAME_CTL=self._get_name_ctl(item["record"].last_name),
+                PAYEE_TIN_TYPE=Constants.TIN_TYPE,
+                PAYEE_TIN=pfml_1099_util.get_tax_id(
+                    self.db_session, item["record"].tax_identifier_id
+                ),
+                PAYER_ACCT_NUMBER=Constants.PAYER_ACCT_NUMBER,
+                PAYER_OFFICE_CD=Constants.PAYER_OFFICE_CD,
+                B10=Constants.BLANK_SPACE,
+                AMT_CD_1=self._format_amount_fields(amount),
+                AMT_CD_2=Constants.AMT_CD_1,
+                AMT_CD_3=Constants.AMT_CD_1,
+                AMT_CD_4=Constants.AMT_CD_1,
+                AMT_CD_5=Constants.AMT_CD_1,
+                AMT_CD_6=Constants.AMT_CD_1,
+                AMT_CD_7=Constants.AMT_CD_1,
+                AMT_CD_8=Constants.AMT_CD_1,
+                AMT_CD_9=Constants.AMT_CD_1,
+                AMT_CD_A=Constants.AMT_CD_1,
+                AMT_CD_B=Constants.AMT_CD_1,
+                AMT_CD_C=Constants.AMT_CD_1,
+                AMT_CD_D=Constants.AMT_CD_1,
+                AMT_CD_E=Constants.AMT_CD_1,
+                AMT_CD_F=Constants.AMT_CD_1,
+                AMT_CD_G=Constants.AMT_CD_1,
+                AMT_CD_H=Constants.AMT_CD_1,
+                AMT_CD_J=Constants.AMT_CD_1,
+                B16=Constants.BLANK_SPACE,
+                FE_IND=Constants.BLANK_SPACE,
+                PAYEE_NM1=self._get_full_name(
+                    item["record"].first_name, item["record"].last_name, "PAYEE_NM1"
+                ),
+                PAYEE_NM2=self._get_full_name(
+                    item["record"].first_name, item["record"].last_name, "PAYEE_NM2"
+                ),
+                PAYEE_ADDRESS=item["record"].address_line_1.upper(),
+                B40_1=Constants.BLANK_SPACE,
+                PAYEE_CTY=item["record"].city.upper(),
+                PAYEE_ST=item["record"].state.upper(),
+                PAYEE_ZC=self._get_zip(item["record"].zip),
+                B1=Constants.BLANK_SPACE,
+                SEQ_NO=b_seq,
+                B36=Constants.BLANK_SPACE,
+                SEC_TIN_NOTICE=Constants.BLANK_SPACE,
+                B2=Constants.BLANK_SPACE,
+                TRADE_BUS_IND=Constants.BLANK_SPACE,
+                TAX_YR_OF_REFUND=Constants.BLANK_SPACE,
+                B111=Constants.BLANK_SPACE,
+                SP_DATA_ENTRIES=Constants.BLANK_SPACE,
+                ST_TAX=self._format_amount_fields(item["record"].state_tax_withholdings),
+                LOCAL_TAX=Constants.BLANK_SPACE,
+                CSF_CD=Constants.COMBINED_ST_FED_CD,
+            )
+            b_record = template_str.format_map(b_dict)
+            b_seq = b_seq + 1
+            b_dict_list.append(b_record)
+            self.seq_number = b_seq
+        return b_dict_list
+
     def _load_b_rec_data(self, template_str: str, tax_data: List[Any]) -> List[str]:
         b_dict_list = []
         b_seq = self.seq_number + 1
@@ -264,7 +388,7 @@ class Generate1099IRSfilingStep(Step):
             b_dict = dict(
                 B_REC_TYPE=Constants.B_REC_TYPE,
                 TAX_YEAR=pfml_1099_util.get_tax_year(),
-                CORRECTION_IND=self._get_correction_ind(records.correction_ind),
+                CORRECTION_IND=Constants.BLANK_SPACE,
                 PAYEE_NAME_CTL=self._get_name_ctl(records.last_name),
                 PAYEE_TIN_TYPE=Constants.TIN_TYPE,
                 PAYEE_TIN=pfml_1099_util.get_tax_id(self.db_session, records.tax_identifier_id),
@@ -310,7 +434,7 @@ class Generate1099IRSfilingStep(Step):
                 B111=Constants.BLANK_SPACE,
                 SP_DATA_ENTRIES=Constants.BLANK_SPACE,
                 ST_TAX=self._format_amount_fields(records.state_tax_withholdings),
-                LOCAL_TAX=self._format_amount_fields(records.federal_tax_withholdings),
+                LOCAL_TAX=Constants.BLANK_SPACE,
                 CSF_CD=Constants.COMBINED_ST_FED_CD,
             )
             b_record = template_str.format_map(b_dict)
@@ -376,16 +500,6 @@ class Generate1099IRSfilingStep(Step):
         )
         f_record = template_str.format_map(f_dict)
         return f_record
-
-    def _get_correction_ind(self, correction_ind: Boolean) -> str:
-
-        if not correction_ind:
-            return Constants.BLANK_SPACE
-        else:
-            # TODO find which correction type to send and how to determine
-            # G (1 correction) or C(2 correction)
-            # return Blank until corrections file is sent
-            return Constants.BLANK_SPACE
 
     def _get_full_name(self, fname: str, lname: str, field_name: str) -> str:
 
@@ -459,6 +573,27 @@ class Generate1099IRSfilingStep(Step):
             self._format_amount_fields(fed_tax),
         )
 
+    def _get_correction_totals(self, tax_data: List[Any], correct_type: str) -> Tuple:
+        ctl_total = decimal.Decimal(0.0)
+        st_tax = decimal.Decimal(0.0)
+        fed_tax = decimal.Decimal(0.0)
+
+        for item in tax_data:
+            # Add totals if it is one step correction or if it is
+            # second step of a 2 step correction
+            if (correct_type == "G" and item["correction_type"] != "C") or (
+                correct_type == "C" and item["correction_type"] == "C"
+            ):
+
+                ctl_total += item["record"].gross_payments
+                st_tax += item["record"].state_tax_withholdings
+                fed_tax += item["record"].federal_tax_withholdings
+        return (
+            self._format_amount_fields(ctl_total),
+            self._format_amount_fields(st_tax),
+            self._format_amount_fields(fed_tax),
+        )
+
     def _if_title_name_control(self, name_str: str) -> bool:
 
         titles = ["JR.", "JR", "II", "III", "SR", "SR.", "DR", "DR.", "MRS.", "MRS", "MR", "MR."]
@@ -510,6 +645,58 @@ class Generate1099IRSfilingStep(Step):
         if final_string != name_string:
             logger.info("Removed special characters from name.")
         return final_string
+
+    def process_correction_types(self, corrected_tax_data: List[Corrected1099Data]) -> Tuple:
+
+        g_correction_list = []
+        c_correction_list = []
+        for record in corrected_tax_data:
+
+            last_submitted_pfml_id = record.pfml_1099_id
+            latest_pfml_id = record.latest_pfml_1099_id
+            batch_id = record.latest_pfml_batch_id
+            logger.info("latest_pfml_id, %s", latest_pfml_id)
+            pfml_1099s = pfml_1099_util.get_old_new_1099_record(
+                self.db_session, last_submitted_pfml_id, latest_pfml_id, record.employee_id
+            )
+            """The first record is previously submitted record and second record is the new one"""
+            if pfml_1099s[0] is not None and pfml_1099s[1] is not None:
+
+                """
+                For G correction:
+                b- Only scenario in our case.
+                a is always amt code 1(add amt code 4 for fedtax) for 1099
+                c,d Not applicable
+                a. Incorrect payment amount codes in the
+                Issuer “A” Record.
+                b. Incorrect payment amounts in the Payee
+                c. Incorrect code in the distribution code field in the
+                Payee “B” Record.
+                d. Incorrect payee indicator. (Payee indicators are
+                non-money amount indicator fields found in the
+                specific form record layouts of the Payee “B”
+                Record between field positions544-748). -G correction
+                C- Correction - a,b,c in our case, d is hardcoded as 'F'
+                a. No payee TIN (SSN, EIN, ITIN, QI-EIN, ATIN)
+                b. Incorrect payee TIN
+                c. Incorrect payee name
+                d. Wrong type of return indicator"""
+
+                if pfml_1099s[0].gross_payments != pfml_1099s[1].gross_payments:
+                    g_correction_list.append(dict(record=pfml_1099s[1], correction_type="G"))
+                    self.increment(self.Metrics.IRS_FILE_1099_G_CORRECTION_COUNT)
+
+                if (
+                    pfml_1099s[0].tax_identifier_id != pfml_1099s[1].tax_identifier_id
+                    or pfml_1099s[0].first_name != pfml_1099s[1].first_name
+                    or pfml_1099s[0].last_name != pfml_1099s[1].last_name
+                ):
+
+                    c_correction_list.append(dict(record=pfml_1099s[1], correction_type="C"))
+                    g_correction_list.append(dict(record=pfml_1099s[1], correction_type="C"))
+                    self.increment(self.Metrics.IRS_FILE_1099_C_CORRECTION_COUNT)
+
+        return g_correction_list, c_correction_list, batch_id
 
     def _remove_special_chars_name_control(self, name_string: str) -> str:
 

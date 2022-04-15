@@ -11,6 +11,7 @@ from massgov.pfml.db.models.factories import Pfml1099Factory
 from massgov.pfml.delegated_payments.irs_1099.generate_1099_irs_filing import (
     Generate1099IRSfilingStep,
 )
+from massgov.pfml.delegated_payments.irs_1099.pfml_1099_util import Corrected1099Data
 from massgov.pfml.util.datetime import get_now_us_eastern
 
 fake = faker.Faker()
@@ -31,6 +32,78 @@ def create_pfml_1099():
     for _i in range(20):
         pfml_list.append(Pfml1099Factory.build())
     return pfml_list
+
+
+def create_correction_pfml_1099():
+    pfml_list = []
+    for _i in range(20):
+        pfml_list.append(Pfml1099Factory.build(tax_year=2022, correction_ind=True))
+
+    return pfml_list
+
+
+@pytest.fixture
+def create_g_corrected_record():
+    g_correction = []
+    pfml_corrected = create_correction_pfml_1099()
+    old_record = pfml_corrected[0]
+    new_record = Pfml1099Factory.build(
+        tax_year=2022,
+        employee_id=old_record.employee_id,
+        tax_identifier_id=old_record.tax_identifier_id,
+        first_name=old_record.first_name,
+        last_name=old_record.last_name,
+    )
+    g_correction.append(old_record)
+    g_correction.append(new_record)
+
+    return g_correction
+
+
+@pytest.fixture
+def create_c_corrected_record():
+    c_correction = []
+    pfml_corrected = create_correction_pfml_1099()
+    old_record = pfml_corrected[0]
+    new_record = Pfml1099Factory.build(
+        tax_year=2022,
+        employee_id=old_record.employee_id,
+        tax_identifier_id=old_record.tax_identifier_id,
+        first_name=old_record.first_name,
+        gross_payments=old_record.gross_payments,
+        federal_tax_withholdings=old_record.federal_tax_withholdings,
+    )
+    c_correction.append(old_record)
+    c_correction.append(new_record)
+
+    return c_correction
+
+
+@pytest.fixture
+def create_pfml_1099_corrections():
+    correction_list = []
+    pfml_list = []
+    # batch = Pfml1099BatchFactory.create()
+    # employee = EmployeeFactory.create()
+    pfml_list = create_correction_pfml_1099()
+    # for _i in range(20):
+
+    #     pfml_list.append(Pfml1099Factory.build())
+
+    for _j in range(10):
+
+        k = 0
+        pfml_correction = Corrected1099Data(
+            employee_id=pfml_list[k].employee_id,
+            latest_pfml_1099_id=pfml_list[k + 1].pfml_1099_id,
+            pfml_1099_id=pfml_list[k].pfml_1099_id,
+            latest_pfml_batch_id=pfml_list[k + 1].pfml_1099_batch_id,
+            pfml_1099_batch_id=pfml_list[k].pfml_1099_batch_id,
+        )
+        correction_list.append(pfml_correction)
+        k += 2
+    print(len(correction_list))
+    return correction_list
 
 
 def test_create_irs_file(
@@ -207,11 +280,11 @@ def test_create_b_template(generate_1099_step: Generate1099IRSfilingStep, create
         assert len(b_records) == 750
 
 
-def test_get_correction_ind(generate_1099_step: Generate1099IRSfilingStep):
-    correction = generate_1099_step._get_correction_ind(True)
-    assert correction == ""
-    original = generate_1099_step._get_correction_ind(False)
-    assert original == ""
+# def test_get_correction_ind(generate_1099_step: Generate1099IRSfilingStep):
+#     correction = generate_1099_step._get_correction_ind(True)
+#     assert correction == ""
+#     original = generate_1099_step._get_correction_ind(False)
+#     assert original == ""
 
 
 def test_get_totals(generate_1099_step: Generate1099IRSfilingStep, create_pfml_1099):
@@ -236,11 +309,69 @@ def test_generate_1099_irs_filing(
     local_test_db_session, generate_1099_step: Generate1099IRSfilingStep, create_pfml_1099
 ):
 
-    mock.patch(
-        "massgov.pfml.delegated_payments.irs_1099.pfml_1099_util.get_1099_records_to_file",
-        return_value=create_pfml_1099,
-    )
-    generate_1099_step.run_step()
+    with mock.patch(
+        "massgov.pfml.delegated_payments.irs_1099.pfml_1099_util.is_correction_submission",
+        return_value=False,
+    ):
+        with mock.patch(
+            "massgov.pfml.delegated_payments.irs_1099.pfml_1099_util.get_1099_records_to_file",
+            return_value=create_pfml_1099,
+        ):
+            generate_1099_step.run_step()
+
+
+def test_generate_1099_irs_correction_filing(
+    local_test_db_session,
+    monkeypatch,
+    generate_1099_step: Generate1099IRSfilingStep,
+    create_pfml_1099_corrections,
+):
+
+    monkeypatch.setenv("IRS_1099_CORRECTION_IND", "1")
+
+    with mock.patch(
+        "massgov.pfml.delegated_payments.irs_1099.pfml_1099_util.is_correction_submission",
+        return_value=True,
+    ):
+        with mock.patch(
+            "massgov.pfml.delegated_payments.irs_1099.pfml_1099_util.get_1099_corrected_records_to_file",
+            return_value=create_pfml_1099_corrections,
+        ):
+            generate_1099_step.run_step()
+
+
+def test_create_one_step_correction_process(
+    generate_1099_step: Generate1099IRSfilingStep,
+    create_g_corrected_record,
+    create_pfml_1099_corrections,
+):
+    with mock.patch(
+        "massgov.pfml.delegated_payments.irs_1099.pfml_1099_util.get_old_new_1099_record",
+        return_value=create_g_corrected_record,
+    ):
+
+        g, c, b = generate_1099_step.process_correction_types(create_pfml_1099_corrections)
+        assert len(g) == 10
+        assert len(c) == 0
+        t_template = generate_1099_step._create_t_template()
+        t_entries = generate_1099_step._load_t_rec_data(t_template)
+        entries = generate_1099_step._create_correction_entries(t_entries, g, "G")
+        assert len(entries) > 1500
+
+
+def test_create_two_step_correction_process(
+    generate_1099_step: Generate1099IRSfilingStep,
+    create_c_corrected_record,
+    create_pfml_1099_corrections,
+):
+    with mock.patch(
+        "massgov.pfml.delegated_payments.irs_1099.pfml_1099_util.get_old_new_1099_record",
+        return_value=create_c_corrected_record,
+    ):
+
+        g, c, b = generate_1099_step.process_correction_types(create_pfml_1099_corrections)
+        assert len(g) == 10
+        assert len(c) == 10
 
 
 def test_test_file_generation(
