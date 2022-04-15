@@ -78,7 +78,7 @@ class ChangeRequestType(str, LookupEnum):
 class ChangeRequest(PydanticBaseModel):
     """Defines the ChangeRequest format"""
 
-    change_request_type: ChangeRequestType
+    change_request_type: Optional[ChangeRequestType]
     start_date: Optional[date]
     end_date: Optional[date]
 

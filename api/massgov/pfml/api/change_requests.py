@@ -10,7 +10,6 @@ import massgov.pfml.api.validation.claim_rules as claim_rules
 import massgov.pfml.util.logging
 from massgov.pfml.api.models.applications.requests import DocumentRequestBody
 from massgov.pfml.api.models.claims.common import ChangeRequest
-from massgov.pfml.api.models.claims.requests import ChangeRequestUpdate
 from massgov.pfml.api.models.claims.responses import ChangeRequestResponse
 from massgov.pfml.api.services.change_requests import (
     add_change_request_to_db,
@@ -147,7 +146,7 @@ def delete_change_request(change_request_id: str) -> flask.Response:
 
 def update_change_request(change_request_id: str) -> flask.Response:
     body = connexion.request.json
-    update_request: ChangeRequestUpdate = ChangeRequestUpdate.parse_obj(body)
+    update_request: ChangeRequest = ChangeRequest.parse_obj(body)
 
     with app.db_session() as db_session:
         change_request = get_or_404(db_session, change_request_db_model, UUID(change_request_id))

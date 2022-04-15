@@ -804,7 +804,7 @@ class ChangeRequest(Base, TimestampMixin):
     __tablename__ = "change_request"
     change_request_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     change_request_type_id = Column(
-        Integer, ForeignKey("lk_change_request_type.change_request_type_id"), nullable=False
+        Integer, ForeignKey("lk_change_request_type.change_request_type_id"), nullable=True
     )
     claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True, nullable=False)
     start_date = Column(Date)

@@ -10,7 +10,6 @@ from werkzeug.exceptions import NotFound
 import massgov.pfml.db.models.employees as db_models
 from massgov.pfml.api.models.applications.requests import DocumentRequestBody
 from massgov.pfml.api.models.claims.common import ChangeRequest, ChangeRequestType
-from massgov.pfml.api.models.claims.requests import ChangeRequestUpdate
 from massgov.pfml.api.services.change_requests import (
     add_change_request_to_db,
     get_change_requests_from_db,
@@ -74,7 +73,7 @@ class TestAddChangeRequestToDB:
     def change_request(self, claim) -> ChangeRequest:
         return ChangeRequest(
             claim_id=claim.claim_id,
-            change_request_type=ChangeRequestType.WITHDRAWAL,
+            change_request_type=None,
             start_date=None,
             end_date=None,
         )
@@ -90,10 +89,7 @@ class TestAddChangeRequestToDB:
             assert db_model.claim_id == claim.claim_id
             assert db_model.start_date is None
             assert db_model.end_date is None
-            assert (
-                db_model.change_request_type_instance.change_request_type_description
-                == "Withdrawal"
-            )
+            assert db_model.change_request_type_id is None
             test_db_session.commit()
             db_entry = (
                 test_db_session.query(db_models.ChangeRequest)
@@ -120,7 +116,7 @@ class TestGetChangeRequestsFromDB:
 
 class TestUpdateChangeRequestsDB:
     def test_success(self, initialize_factories_session, test_db_session, change_request):
-        update_request = ChangeRequestUpdate(
+        update_request = ChangeRequest(
             change_request_type="Medical To Bonding Transition", start_date="2022-05-01"
         )
         update_change_request_db(test_db_session, update_request, change_request)

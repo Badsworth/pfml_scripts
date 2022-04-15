@@ -26,9 +26,3 @@ class ClaimSearchTerms(PydanticBaseModel):
 
 
 ClaimSearchRequest = SearchEnvelope[ClaimSearchTerms]
-
-
-class ChangeRequestUpdate(PydanticBaseModel):
-    change_request_type: Optional[ChangeRequestType]
-    start_date: Optional[date]
-    end_date: Optional[date]

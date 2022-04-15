@@ -606,7 +606,7 @@ paths:
           description: ID of the change request to delete
           required: true
       requestBody:
-        $ref: "#/components/requestBodies/ChangeRequestUpdate"
+        $ref: "#/components/requestBodies/ChangeRequest"
       responses:
         "200":
           description: Change Request successfully updated
@@ -1802,11 +1802,6 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ChangeRequest"
-    ChangeRequestUpdate:
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ChangeRequestUpdate"
     HolidaysSearchRequest:
       content:
         application/json:
@@ -4636,22 +4631,6 @@ components:
             - Modification
             - Withdrawal
             - Medical To Bonding Transition
-        start_date:
-          $ref: "#/components/schemas/Date"
-          nullable: true
-        end_date:
-          $ref: "#/components/schemas/Date"
-          nullable: true
-
-    ChangeRequestUpdate:
-      type: object
-      properties:
-        change_request_type:
-          type: string
-          enum:
-            - Modification
-            - Withdrawal
-            - Medical To Bonding Transition
           nullable: true
         start_date:
           $ref: "#/components/schemas/Date"
@@ -4673,6 +4652,7 @@ components:
             - Modification
             - Withdrawal
             - Medical To Bonding Transition
+          nullable: true
         start_date:
           $ref: "#/components/schemas/Date"
           nullable: true
