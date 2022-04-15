@@ -42,6 +42,7 @@ export const Type = (props: TypeProps) => {
   const claim_detail =
     props.claim_detail ||
     new ClaimDetail({
+      application_id: "mock-application-id",
       absence_periods: [
         {
           absence_period_start_date: "2022-01-01",

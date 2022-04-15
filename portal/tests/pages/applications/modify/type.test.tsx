@@ -1,4 +1,7 @@
+import ChangeRequest from "src/models/ChangeRequest";
+import ClaimDetail from "src/models/ClaimDetail";
 import Type from "src/pages/applications/modify/type";
+import { act } from "react-dom/test-utils";
 import { renderPage } from "../../../test-utils";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -6,14 +9,21 @@ import userEvent from "@testing-library/user-event";
 jest.mock("../../../../src/hooks/useAppLogic");
 
 const props = {
-  query: { change_request_id: "7180eae0-0ad8-46a9-b140-5076863330d2" },
+  query: {
+    change_request_id: "7180eae0-0ad8-46a9-b140-5076863330d2",
+    absence_id: "absence-id",
+  },
 };
+
+const goToNextPage = jest.fn();
 
 const setup = () => {
   return renderPage(
     Type,
     {
-      addCustomSetup: (_appLogic) => null,
+      addCustomSetup: (appLogic) => {
+        appLogic.portalFlow.goToNextPage = goToNextPage;
+      },
     },
     props
   );
@@ -64,5 +74,29 @@ describe("Claim Modification Type", () => {
       name: /Page not found/,
     });
     expect(pageNotFoundHeading).toBeInTheDocument();
+  });
+
+  describe("button click", () => {
+    beforeEach(async () => {
+      setup();
+      const submitButton = screen.getByRole("button");
+      await act(async () => {
+        await userEvent.click(submitButton);
+      });
+    });
+
+    it("goes to next page", () => {
+      expect(goToNextPage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          changeRequest: expect.any(ChangeRequest),
+          claimDetail: expect.any(ClaimDetail),
+        }),
+        {
+          absence_id: props.query.absence_id,
+          change_request_id: props.query.change_request_id,
+          claim_id: expect.any(String),
+        }
+      );
+    });
   });
 });
