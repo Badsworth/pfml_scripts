@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, Iterable, List, Optional, cast
 
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
+import massgov.pfml.util.logging
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import (
     Address,
@@ -36,6 +37,8 @@ from massgov.pfml.delegated_payments.reporting.delegated_abstract_reporting impo
     ReportGroup,
 )
 from massgov.pfml.util.datetime import get_now_us_eastern, get_period_in_weeks
+
+logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 class PaymentAuditRowError(Exception):
@@ -368,31 +371,38 @@ def get_payment_audit_report_details(
 
 def get_payment_in_waiting_week_status(payment: Payment, db_session: db.Session) -> str:
 
-    claim: Claim = payment.claim
+    try:
+        claim: Claim = payment.claim
 
-    if not claim or not claim.absence_period_start_date or not payment.period_start_date:
-        return ""
+        if not claim or not claim.absence_period_start_date or not payment.period_start_date:
+            return ""
 
-    assert payment.period_start_date
-    assert claim.absence_period_start_date
-    waiting_week_end_date = claim.absence_period_start_date + timedelta(days=6)
-    if claim.absence_period_start_date <= payment.period_start_date <= waiting_week_end_date:
-        waiting_week_status = "1"
-        possible_extension_claim = (
-            db_session.query(Claim)
-            .join(Employer)
-            .filter(
-                Claim.employee_id == payment.claim.employee_id,
-                Employer.employer_fein == payment.claim.employer_fein,
-                Claim.absence_period_end_date
-                == (payment.claim.absence_period_start_date - timedelta(days=1)),  # type: ignore
+        assert payment.period_start_date
+        assert claim.absence_period_start_date
+        waiting_week_end_date = claim.absence_period_start_date + timedelta(days=6)
+        if claim.absence_period_start_date <= payment.period_start_date <= waiting_week_end_date:
+            waiting_week_status = "1"
+            possible_extension_claim = (
+                db_session.query(Claim)
+                .join(Employer)
+                .filter(
+                    Claim.employee_id == payment.claim.employee_id,
+                    Employer.employer_fein == payment.claim.employer_fein,
+                    Claim.absence_period_end_date
+                    == (payment.claim.absence_period_start_date - timedelta(days=1)),  # type: ignore
+                )
+                .one_or_none()
             )
-            .one_or_none()
+
+            if possible_extension_claim is not None:
+                waiting_week_status = "Potential Extension"
+
+            return waiting_week_status
+        else:
+            return ""
+    except Exception:
+        logger.exception(
+            "Error determining waiting week status",
+            extra=payments_util.get_traceable_payment_details(payment),
         )
-
-        if possible_extension_claim is not None:
-            waiting_week_status = "Potential Extension"
-
-        return waiting_week_status
-    else:
         return ""

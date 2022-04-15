@@ -387,3 +387,37 @@ def test_employer_reimbursement_payment_post_processing(
     assert (
         payment_flow_log.end_state_id == State.EMPLOYER_REIMBURSEMENT_READY_FOR_PROCESSING.state_id
     )
+
+
+def test_waiting_week_post_processing(payment_post_processing_step, test_db_session):
+    employee = EmployeeFactory.create(first_name="Jane", last_name="Smith")
+    claim = ClaimFactory.create(absence_period_start_date=date(2020, 12, 13))
+    payment_container = _create_payment_container(
+        employee, Decimal("600.00"), test_db_session, start_date=date(2020, 12, 16), claim=claim
+    )
+
+    payment_post_processing_step.run()
+
+    payment = payment_container.payment
+    # Check that it is staged for audit
+    payment_flow_log = state_log_util.get_latest_state_log_in_flow(
+        payment, Flow.DELEGATED_PAYMENT, test_db_session
+    )
+    assert (
+        payment_flow_log.end_state_id
+        == State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id
+    )
+
+    audit_report_details = (
+        test_db_session.query(PaymentAuditReportDetails)
+        .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
+        .filter(
+            PaymentAuditReportDetails.audit_report_type_id
+            == PaymentAuditReportType.WAITING_WEEK.payment_audit_report_type_id
+        )
+        .one_or_none()
+    )
+    assert (
+        audit_report_details.details["message"]
+        == f"Payment period start date: {payment.period_start_date}.  Claim start date: {claim.absence_period_start_date}. Payment in waiting week status: 1"
+    )
