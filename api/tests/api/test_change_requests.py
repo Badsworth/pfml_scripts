@@ -54,6 +54,7 @@ class TestPostChangeRequest:
         )
         response_body = response.get_json().get("data")
         assert response.status_code == 201
+        assert response_body.get("change_request_id") is not None
         assert response_body.get("change_request_type") == request_body["change_request_type"]
         assert response_body.get("fineos_absence_id") == claim.fineos_absence_id
         assert response_body.get("start_date") == request_body["start_date"]
@@ -90,6 +91,7 @@ class TestGetChangeRequests:
         assert response.status_code == 200
         response_body = response.get_json()
         assert len(response_body["data"]["change_requests"]) == 1
+        assert response_body["data"]["change_requests"][0]["change_request_id"] is not None
         assert response_body["data"]["change_requests"][0]["change_request_type"] == "Modification"
         assert response_body["message"] == "Successfully retrieved change requests"
 
@@ -303,3 +305,28 @@ class TestUploadDocument:
         assert response_data["name"] == "passport.png"
         assert response_data["user_id"] == str(consented_user.user_id)
         assert response_data["created_at"] is not None
+
+    def test_document_submitted_at(
+        self, application, change_request, client, consented_user, consented_user_token
+    ):
+        form_data = {"document_type": "Passport", "name": "passport.png", "description": "Passport"}
+        form_data["file"] = (io.BytesIO(b"abcdef"), "test.png")
+
+        application.user = consented_user
+
+        client.post(
+            "/v1/change-request/{}/documents".format(change_request.change_request_id),
+            headers={"Authorization": f"Bearer {consented_user_token}"},
+            content_type="multipart/form-data",
+            data=form_data,
+        )
+
+        response = client.get(
+            "/v1/change-request?fineos_absence_id={}".format(
+                change_request.claim.fineos_absence_id
+            ),
+            headers={"Authorization": f"Bearer {consented_user_token}"},
+        )
+        response_body = response.get_json()
+
+        assert response_body["data"]["change_requests"][0]["documents_submitted_at"] is not None

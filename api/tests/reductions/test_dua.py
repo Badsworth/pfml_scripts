@@ -1005,7 +1005,15 @@ def test_create_report_new_dua_payments_to_dfml(
         size=2, created_at=datetime_util.utcnow() - timedelta(days=91)
     )
 
-    reduction_payments = new_reduction_payments + old_reduction_payments
+    # Insert entries with BENEFIT_WEEK_START_DATE before 12/1/2020 to test
+    # if they are ignored.
+    reduction_payments_before_pfml = DuaReductionPaymentFactory.create_batch(
+        size=2, created_at=datetime_util.utcnow(), request_week_begin_date=date(2020, 11, 30)
+    )
+
+    reduction_payments = (
+        new_reduction_payments + old_reduction_payments + reduction_payments_before_pfml
+    )
 
     employees = [
         EmployeeFactory.create(fineos_customer_number=reduction_payment.fineos_customer_number)
@@ -1062,6 +1070,20 @@ def test_create_report_new_dua_payments_to_dfml(
 
     # Payments older than 90 days should be ignored
     for payment in old_reduction_payments:
+        _ref_file = ref_file[0]
+        dua_reduction_ref_file = (
+            test_db_session.query(DuaReductionPaymentReferenceFile)
+            .filter_by(
+                dua_reduction_payment_id=payment.dua_reduction_payment_id,
+                reference_file_id=_ref_file.reference_file_id,
+            )
+            .one_or_none()
+        )
+        assert dua_reduction_ref_file is None
+
+    # Payments with BENEFIT_WEEK_START_DATE before 12/1/2020 should be
+    # ignored
+    for payment in reduction_payments_before_pfml:
         _ref_file = ref_file[0]
         dua_reduction_ref_file = (
             test_db_session.query(DuaReductionPaymentReferenceFile)
