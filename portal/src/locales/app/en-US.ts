@@ -2231,9 +2231,9 @@ const pages: {
     inProgressChangeRequestHeader: "In-progress change request",
     inProgressChangeRequestStarted: "Change request started",
     inProgressChangeRequestType_MedicalToBonding:
-      "Type: Change leave from medical to bonding",
+      "Type: Add family bonding leave",
     inProgressChangeRequestType_Modification: "Type: Change leave end date",
-    inProgressChangeRequestType_Withdrawal: "Type: Withdraw your leave",
+    inProgressChangeRequestType_Withdrawal: "Type: Withdraw application",
     infoAlertBody_bonding: "$t(shared.infoAlertBody_bonding)",
     infoAlertBody_pregnancy: "$t(shared.infoAlertBody_pregnancy)",
     infoAlertHeading_bonding: "$t(shared.infoAlertHeading_bonding)",
