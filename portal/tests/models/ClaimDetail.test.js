@@ -289,7 +289,7 @@ describe("ClaimDetail", () => {
       });
 
       expect(claimDetail.isNonPregnancyMedicalLeave).toBe(false);
-      expect(claimDetail.isNonPregnancyMedicalLeave).toBe(false);
+      expect(claimDetail2.isNonPregnancyMedicalLeave).toBe(false);
     });
 
     it("returns false when a period has no medical leave reason", () => {

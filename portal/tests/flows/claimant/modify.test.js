@@ -2,9 +2,9 @@ import ChangeRequest, {
   ChangeRequestType,
 } from "../../../src/models/ChangeRequest";
 import machineConfigs, { guards } from "../../../src/flows";
-import { createMachine } from "xstate";
 import ClaimDetail from "../../../src/models/ClaimDetail";
 import LeaveReason from "../../../src/models/LeaveReason";
+import { createMachine } from "xstate";
 import routes from "../../../src/routes";
 
 describe("modification flow", () => {

@@ -176,7 +176,7 @@ const uploadDocEvents = {
 
 interface ConditionalEvent {
   target: string;
-  cond?: string | { type: string; guards: string[] };
+  cond?: string | { type: string; guardKeys: string[] };
 }
 
 export interface ClaimantFlowState {
