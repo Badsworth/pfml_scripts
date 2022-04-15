@@ -86,16 +86,6 @@ class LkClaimType(Base):
         self.claim_type_description = claim_type_description
 
 
-class LkRace(Base):
-    __tablename__ = "lk_race"
-    race_id = Column(Integer, primary_key=True)
-    race_description = Column(Text, nullable=False)
-
-    def __init__(self, race_id, race_description):
-        self.race_id = race_id
-        self.race_description = race_description
-
-
 class LkMaritalStatus(Base):
     __tablename__ = "lk_marital_status"
     marital_status_id = Column(Integer, primary_key=True, autoincrement=True)
@@ -429,7 +419,7 @@ class Employer(Base, TimestampMixin):
     lk_industry_code = relationship(LkIndustryCode)
 
     @property
-    def organization_units(self) -> list[OrganizationUnit]:
+    def organization_units(self) -> "list[OrganizationUnit]":
         return (
             object_session(self)
             .query(OrganizationUnit)
@@ -656,7 +646,6 @@ class Employee(Base, TimestampMixin):
     date_of_death = Column(Date)
     # https://lwd.atlassian.net/browse/PORTAL-439 will make this unique
     fineos_customer_number = Column(Text, nullable=True, index=True)
-    race_id = Column(Integer, ForeignKey("lk_race.race_id"))
     marital_status_id = Column(Integer, ForeignKey("lk_marital_status.marital_status_id"))
     gender_id = Column(Integer, ForeignKey("lk_gender.gender_id"))
     occupation_id = Column(Integer, ForeignKey("lk_occupation.occupation_id"))
@@ -675,7 +664,6 @@ class Employee(Base, TimestampMixin):
     fineos_employee_last_name = Column(Text, index=True)
 
     title = relationship(LkTitle)
-    race = relationship(LkRace)
     marital_status = relationship(LkMaritalStatus)
     gender = relationship(LkGender)
     # Note: We should move occupation to new EmployeeOccupation model
@@ -737,7 +725,7 @@ class Employee(Base, TimestampMixin):
             return None
 
     @hybrid_method
-    def get_organization_units(self, employer: Employer) -> list[OrganizationUnit]:
+    def get_organization_units(self, employer: Employer) -> "list[OrganizationUnit]":
         if not self.fineos_customer_number:
             return []
         return (
@@ -1303,7 +1291,7 @@ class User(Base, TimestampMixin):
         return None
 
     @hybrid_method
-    def get_verified_leave_admin_org_units(self) -> list[OrganizationUnit]:
+    def get_verified_leave_admin_org_units(self) -> "list[OrganizationUnit]":
         organization_units: list[OrganizationUnit] = []
         for la in self.user_leave_administrators:
             if not la.verified:
@@ -1312,7 +1300,7 @@ class User(Base, TimestampMixin):
         return organization_units
 
     @hybrid_method
-    def get_leave_admin_notifications(self) -> list[str]:
+    def get_leave_admin_notifications(self) -> "list[str]":
         """
         Check if notifications were sent to this leave admin
         in the last 24 hours, to prevent leave admins
@@ -1419,7 +1407,7 @@ class UserLeaveAdministrator(Base, TimestampMixin):
     verification = relationship(Verification)
 
     @property
-    def organization_units(self) -> list[OrganizationUnit]:
+    def organization_units(self) -> "list[OrganizationUnit]":
         return (
             object_session(self)
             .query(OrganizationUnit)
@@ -1928,15 +1916,6 @@ class ManagedRequirementType(LookupTable):
     EMPLOYER_CONFIRMATION = LkManagedRequirementType(1, "Employer Confirmation of Leave Data")
 
 
-class Race(LookupTable):
-    model = LkRace
-    column_names = ("race_id", "race_description")
-
-    BLACK = LkRace(1, "Black")
-    HISPANIC = LkRace(2, "Hispanic")
-    WHITE = LkRace(3, "White")
-
-
 class MaritalStatus(LookupTable):
     model = LkMaritalStatus
     column_names = ("marital_status_id", "marital_status_description")
@@ -2211,7 +2190,6 @@ def sync_lookup_tables(db_session):
     """Synchronize lookup tables to the database."""
     AddressType.sync_to_database(db_session)
     ClaimType.sync_to_database(db_session)
-    Race.sync_to_database(db_session)
     LeaveRequestDecision.sync_to_database(db_session)
     MaritalStatus.sync_to_database(db_session)
     Gender.sync_to_database(db_session)

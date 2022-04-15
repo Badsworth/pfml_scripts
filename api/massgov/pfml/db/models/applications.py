@@ -219,6 +219,16 @@ class Phone(Base, TimestampMixin):
     phone_type_instance = relationship(LkPhoneType)
 
 
+class LkEthnicity(Base):
+    __tablename__ = "lk_ethnicity"
+    ethnicity_id = Column(Integer, primary_key=True)
+    ethnicity_description = Column(Text, nullable=False)
+
+    def __init__(self, ethnicity_id, ethnicity_description):
+        self.ethnicity_id = ethnicity_id
+        self.ethnicity_description = ethnicity_description
+
+
 class ConcurrentLeave(Base, TimestampMixin):
     __tablename__ = "concurrent_leave"
     concurrent_leave_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
@@ -296,6 +306,8 @@ class Application(Base, TimestampMixin):
     occupation_id = Column(Integer, ForeignKey("lk_occupation.occupation_id"))
     organization_unit_selection = Column(Text)
     gender_id = Column(Integer, ForeignKey("lk_gender.gender_id"))
+    race = Column(Text)
+    ethnicity_id = Column(Integer, ForeignKey("lk_ethnicity.ethnicity_id"))
     hours_worked_per_week = Column(Numeric)
     relationship_to_caregiver_id = Column(
         Integer, ForeignKey("lk_relationship_to_caregiver.relationship_to_caregiver_id")
@@ -340,10 +352,7 @@ class Application(Base, TimestampMixin):
     is_withholding_tax = Column(Boolean, nullable=True)
 
     split_from_application_id = Column(
-        PostgreSQLUUID,
-        ForeignKey("application.application_id"),
-        nullable=True,
-        index=True,
+        PostgreSQLUUID, ForeignKey("application.application_id"), nullable=True, index=True,
     )
 
     nbr_of_retries = Column(Integer, nullable=False, default=0)
@@ -354,6 +363,7 @@ class Application(Base, TimestampMixin):
     occupation = relationship(LkOccupation)
     organization_unit = relationship(OrganizationUnit)
     gender = relationship(LkGender)
+    ethnicity = relationship(LkEthnicity)
     leave_reason = relationship(LkLeaveReason)
     leave_reason_qualifier = relationship(LkLeaveReasonQualifier)
     employment_status = relationship(LkEmploymentStatus)
@@ -428,7 +438,7 @@ class Application(Base, TimestampMixin):
         )
 
     @property
-    def employee_organization_units(self) -> list[OrganizationUnit]:
+    def employee_organization_units(self) -> "list[OrganizationUnit]":
         if not self.employee or not self.employer:
             return []
         units = self.employee.get_organization_units(self.employer)
@@ -444,7 +454,7 @@ class Application(Base, TimestampMixin):
         return units
 
     @property
-    def employer_organization_units(self) -> list[OrganizationUnit]:
+    def employer_organization_units(self) -> "list[OrganizationUnit]":
         if not self.employer:
             return []
         units = self.employer.organization_units
@@ -462,9 +472,7 @@ class Application(Base, TimestampMixin):
     @typed_hybrid_property
     def all_leave_periods(
         self,
-    ) -> list[
-        Union["ContinuousLeavePeriod", "ReducedScheduleLeavePeriod", "IntermittentLeavePeriod"]
-    ]:
+    ) -> "list[Union[ContinuousLeavePeriod, ReducedScheduleLeavePeriod, IntermittentLeavePeriod]]":
         leave_periods = list(
             chain(
                 self.continuous_leave_periods,
@@ -754,6 +762,15 @@ class RelationshipQualifier(LookupTable):
     LEGALLY_MARRIED = LkRelationshipQualifier(7, "Legally Married")
     UNDISCLOSED = LkRelationshipQualifier(8, "Undisclosed")
     PARENT_IN_LAW = LkRelationshipQualifier(9, "Parent-In-Law")
+
+
+class Ethnicity(LookupTable):
+    model = LkEthnicity
+    column_names = ("ethnicity_id", "ethnicity_description")
+
+    PREFER_NOT_TO_ANSWER = LkEthnicity(3, "Prefer not to answer")
+    HISPANIC_OR_LATINO = LkEthnicity(1, "Hispanic or Latino")
+    NOT_HISPANIC_OR_LATINO = LkEthnicity(2, "Not Hispanic or Latino")
 
 
 class NotificationMethod(LookupTable):
@@ -1078,7 +1095,7 @@ class Holiday(Base, TimestampMixin):
     holiday_name = Column(Text, nullable=False)
 
 
-def _are_holidays_valid(holidays: list[Holiday]) -> bool:
+def _are_holidays_valid(holidays: "list[Holiday]") -> bool:
     holiday_ids = [holiday.holiday_id for holiday in holidays]
     if len(holiday_ids) != len(set(holiday_ids)):
         return False
@@ -1133,6 +1150,7 @@ def sync_holidays(db_session):
 
 def sync_lookup_tables(db_session):
     """Synchronize lookup tables to the database."""
+    Ethnicity.sync_to_database(db_session)
     LeaveReason.sync_to_database(db_session)
     LeaveReasonQualifier.sync_to_database(db_session)
     RelationshipToCaregiver.sync_to_database(db_session)
