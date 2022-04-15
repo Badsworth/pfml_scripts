@@ -1,6 +1,7 @@
 import ClaimDetail from "../../src/models/ClaimDetail";
 import { ClaimEmployee } from "../../src/models/Claim";
 import createMockClaimDetail from "../../lib/mock-helpers/createMockClaimDetail";
+import LeaveReason from "../../src/models/LeaveReason";
 
 describe("ClaimDetail", () => {
   const claimDetailCollection = new ClaimDetail({
@@ -251,4 +252,146 @@ describe("ClaimDetail", () => {
       });
     }
   );
+
+  describe("#isNonPregnancyMedicalLeave", () => {
+    it("returns true when a period has medical leave reason and no pregnancy qualifiers", () => {
+      const claimDetail = new ClaimDetail({
+        absence_periods: [
+          {
+            reason: LeaveReason.medical,
+          },
+        ],
+      });
+
+      expect(claimDetail.isNonPregnancyMedicalLeave).toBe(true);
+    });
+
+    it("returns false when a period has medical leave reason and pregnancy qualifiers", () => {
+      const claimDetail = new ClaimDetail({
+        absence_periods: [
+          {
+            reason: LeaveReason.medical,
+            reason_qualifier_one: "Prenatal Disability",
+          },
+        ],
+      });
+
+      const claimDetail2 = new ClaimDetail({
+        absence_periods: [
+          {
+            reason: LeaveReason.bonding,
+          },
+          {
+            reason: LeaveReason.medical,
+            reason_qualifier_one: "Prenatal Care",
+          },
+        ],
+      });
+
+      expect(claimDetail.isNonPregnancyMedicalLeave).toBe(false);
+      expect(claimDetail.isNonPregnancyMedicalLeave).toBe(false);
+    });
+
+    it("returns false when a period has no medical leave reason", () => {
+      const claimDetail = new ClaimDetail({
+        absence_periods: [
+          {
+            reason: LeaveReason.bonding,
+          },
+        ],
+      });
+
+      expect(claimDetail.isNonPregnancyMedicalLeave).toBe(false);
+    });
+  });
+
+  describe("#isPregnancyLeave", () => {
+    it("returns true when period has pregnancy leave", () => {
+      const claimDetail = new ClaimDetail({
+        absence_periods: [
+          {
+            reason: LeaveReason.pregnancy,
+          },
+        ],
+      });
+
+      const claimDetail2 = new ClaimDetail({
+        absence_periods: [
+          {
+            reason: LeaveReason.bonding,
+          },
+          {
+            reason: LeaveReason.pregnancy,
+          },
+        ],
+      });
+
+      expect(claimDetail.isPregnancyLeave).toBe(true);
+      expect(claimDetail2.isPregnancyLeave).toBe(true);
+    });
+
+    it("returns true when period has medical reason and pregnancy qualifier", () => {
+      const claimDetail = new ClaimDetail({
+        absence_periods: [
+          {
+            reason: LeaveReason.medical,
+            reason_qualifier_one: "Prenatal Disability",
+          },
+        ],
+      });
+
+      const claimDetail2 = new ClaimDetail({
+        absence_periods: [
+          {
+            reason: LeaveReason.bonding,
+          },
+          {
+            reason: LeaveReason.medical,
+            reason_qualifier_one: "Prenatal Care",
+          },
+        ],
+      });
+
+      expect(claimDetail.isPregnancyLeave).toBe(true);
+      expect(claimDetail2.isPregnancyLeave).toBe(true);
+    });
+
+    it("returns false when a period has no pregnancy leave reason", () => {
+      const claimDetail = new ClaimDetail({
+        absence_periods: [
+          {
+            reason: LeaveReason.bonding,
+          },
+        ],
+      });
+
+      expect(claimDetail.isPregnancyLeave).toBe(false);
+    });
+  });
+
+  describe("#isCaringLeave", () => {
+    it("returns true when period has caring leave reason", () => {
+      const claimDetail = new ClaimDetail({
+        absence_periods: [
+          {
+            reason: LeaveReason.care,
+          },
+        ],
+      });
+
+      expect(claimDetail.isCaringLeave).toBe(true);
+    });
+
+    it("returns false when periiod does not have caring leave reason", () => {
+      const claimDetail = new ClaimDetail({
+        absence_periods: [
+          {
+            reason: LeaveReason.bonding,
+          },
+        ],
+      });
+
+      expect(claimDetail.isCaringLeave).toBe(false);
+    });
+  });
 });

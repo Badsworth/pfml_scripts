@@ -7,7 +7,7 @@
  * @see docs/portal/development.md
  */
 import claimant, {
-  ClaimantFlowContext,
+  ClaimFlowGuardFn,
   guards as claimantGuards,
 } from "./claimant";
 import auth from "./auth";
@@ -15,10 +15,7 @@ import employer from "./employer";
 import routes from "../routes";
 import user from "./user";
 
-export type FlowContext = ClaimantFlowContext;
-type GuardFn = (context: FlowContext) => boolean;
-
-export const guards: { [guardName: string]: GuardFn } = {
+export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
   ...claimantGuards,
 };
 

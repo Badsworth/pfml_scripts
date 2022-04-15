@@ -73,7 +73,7 @@ interface CondMeta {
   cond: { guardKeys: string[] };
 }
 
-type ClaimFlowGuardFn = (
+export type ClaimFlowGuardFn = (
   context: ClaimantFlowContext,
   event: { type: string },
   condMeta: CondMeta
