@@ -1,7 +1,7 @@
 import ClaimDetail from "../../src/models/ClaimDetail";
 import { ClaimEmployee } from "../../src/models/Claim";
-import createMockClaimDetail from "../../lib/mock-helpers/createMockClaimDetail";
 import LeaveReason from "../../src/models/LeaveReason";
+import createMockClaimDetail from "../../lib/mock-helpers/createMockClaimDetail";
 
 describe("ClaimDetail", () => {
   const claimDetailCollection = new ClaimDetail({
