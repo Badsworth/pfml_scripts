@@ -457,6 +457,28 @@ def test_users_patch_leave_admin_data(client, employer_user, employer_auth_token
     assert employer_user.phone_extension == "123"
 
 
+def test_users_patch_leave_admin_data_rejects_invalid_extension(
+    client, employer_user, employer_auth_token, test_db_session
+):
+    assert employer_user.first_name is None
+    assert employer_user.last_name is None
+    assert employer_user.phone_number is None
+    body = {
+        "first_name": "Slinky",
+        "last_name": "Glenesk",
+        "phone_number": {"phone_number": "805-610-3889", "int_code": "1", "extension": "ext 123"},
+    }
+    response = client.patch(
+        "v1/users/{}".format(employer_user.user_id),
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+        json=body,
+    )
+    response_body = response.get_json()
+    assert response_body["errors"][0]["field"] == "phone_number.extension"
+    assert response_body["errors"][0]["type"] == "pattern"
+    assert response.status_code == 400
+
+
 @mock.patch(
     "massgov.pfml.fineos.mock_client.MockFINEOSClient.create_or_update_leave_admin",
     side_effect=Exception(),

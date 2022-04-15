@@ -4453,6 +4453,7 @@ components:
         extension:
           type: string
           nullable: true
+          pattern: '^[0-9]+$'
 
     MaskedPhone:
       type: object
