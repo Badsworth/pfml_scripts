@@ -52,6 +52,10 @@ const flagsConfig = {
     // https://lwd.atlassian.net/browse/CP-459
     pfmlTerriyay: false,
 
+    // When the feature flag is enabled, a placeholder is shown in the employer portal
+    // https://lwd.atlassian.net/browse/PFMLPB-4046
+    showEmployerPaymentStatus: false,
+
     // TODO (PORTAL-1893) remove feature flag
     // When this flag is enabled the holiday alert will be displayed on the payments pages.
     showHolidayAlert: true,

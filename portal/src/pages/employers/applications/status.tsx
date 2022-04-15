@@ -15,6 +15,7 @@ import HeadingPrefix from "src/components/core/HeadingPrefix";
 import Lead from "../../../components/core/Lead";
 import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
+import { isFeatureEnabled } from "src/services/featureFlags";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
 
@@ -104,6 +105,10 @@ export const Status = (props: WithEmployerClaimProps) => {
             ))}
           </ul>
         </div>
+      )}
+
+      {isFeatureEnabled("showEmployerPaymentStatus") && (
+        <p>Employer Payment Status</p>
       )}
     </React.Fragment>
   );
