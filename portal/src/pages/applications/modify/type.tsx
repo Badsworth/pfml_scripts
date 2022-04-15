@@ -2,6 +2,7 @@ import ChangeRequest, {
   ChangeRequestType,
 } from "../../../models/ChangeRequest";
 import withUser, { WithUserProps } from "../../../hoc/withUser";
+import { AppLogic } from "src/hooks/useAppLogic";
 import ClaimDetail from "src/models/ClaimDetail";
 import ConditionalContent from "src/components/ConditionalContent";
 import Fieldset from "src/components/core/Fieldset";
@@ -29,9 +30,11 @@ export const fields = [
 type TypeProps = WithUserProps & {
   query: {
     change_request_id: string;
+    absence_id: string;
   };
   change_request?: ChangeRequest;
   claim_detail?: ClaimDetail;
+  appLogic: AppLogic;
 };
 
 export const Type = (props: TypeProps) => {
@@ -67,7 +70,20 @@ export const Type = (props: TypeProps) => {
 
   /* eslint-disable require-await */
   const handleSubmit = async () => {
-    // Do nothing for now
+    // TODO (PORTAL-2030): UPDATE change request
+
+    props.appLogic.portalFlow.goToNextPage(
+      {
+        changeRequest: change_request,
+        claimDetail: claim_detail,
+      },
+      {
+        // application id is required on document upload pages
+        claim_id: claim_detail.application_id,
+        absence_id: props.query.absence_id,
+        change_request_id: props.query.change_request_id,
+      }
+    );
   };
 
   // TODO(PORTAL-2064): Remove claimantShowModifications feature flag

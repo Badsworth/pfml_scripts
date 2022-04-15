@@ -190,6 +190,7 @@ export interface DocumentUploadProps extends WithClaimDocumentsProps {
   query: {
     claim_id: string;
     additionalDoc?: string;
+    change_request_id?: string;
     absence_id?: string;
     documentType?:
       | "state-id"
@@ -266,6 +267,7 @@ export const DocumentUpload = (props: DocumentUploadProps) => {
           uploaded_document_type: query.documentType,
           claim_id: query.claim_id,
           absence_id: query.absence_id,
+          change_request_id: query.change_request_id,
         }
       );
     }

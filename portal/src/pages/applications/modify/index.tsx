@@ -1,6 +1,8 @@
 import { IconLaptop, IconPhone } from "@massds/mayflower-react/dist/Icon";
+import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/core/Button";
+import ChangeRequest from "src/models/ChangeRequest";
 import Heading from "../../../components/core/Heading";
 import PageNotFound from "../../../components/PageNotFound";
 import React from "react";
@@ -14,14 +16,27 @@ interface IndexProps {
   query: {
     absence_id: string;
   };
+  appLogic: AppLogic;
 }
 
-export const Index = (_props: IndexProps) => {
+export const Index = (props: IndexProps) => {
   const { t } = useTranslation();
 
   /* eslint-disable require-await */
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    // TODO (PORTAL-2144): POST change request and return it
+    const changeRequest = new ChangeRequest({
+      change_request_id: "change-request-id",
+    });
+
+    props.appLogic.portalFlow.goToNextPage(
+      { changeRequest },
+      {
+        absence_id: props.query.absence_id,
+        change_request_id: changeRequest.change_request_id,
+      }
+    );
     // Do nothing for now
   };
 

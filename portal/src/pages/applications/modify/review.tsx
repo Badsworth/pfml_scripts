@@ -1,4 +1,6 @@
 import withUser, { WithUserProps } from "../../../hoc/withUser";
+import { AppLogic } from "../../../hooks/useAppLogic";
+import ChangeRequest from "../../../models/ChangeRequest";
 import FormLabel from "../../../components/core/FormLabel";
 import PageNotFound from "../../../components/PageNotFound";
 import QuestionPage from "../../../components/QuestionPage";
@@ -9,7 +11,9 @@ import { useTranslation } from "../../../locales/i18n";
 type ReviewProps = WithUserProps & {
   query: {
     change_request_id: string;
+    absence_id: string;
   };
+  appLogic: AppLogic;
 };
 
 export const Review = (props: ReviewProps) => {
@@ -19,6 +23,18 @@ export const Review = (props: ReviewProps) => {
   /* eslint-disable require-await */
   const handleSubmit = async () => {
     // Do nothing for now
+    // TODO (PORTAL-2031): POST to change request submit
+    const changeRequest = new ChangeRequest({});
+
+    props.appLogic.portalFlow.goToNextPage(
+      {
+        changeRequest,
+      },
+      {
+        absence_id: props.query.absence_id,
+        change_request_id: props.query.change_request_id,
+      }
+    );
   };
 
   // TODO(PORTAL-2064): Remove claimantShowModifications feature flag
