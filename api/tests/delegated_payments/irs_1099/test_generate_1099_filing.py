@@ -350,7 +350,7 @@ def test_create_one_step_correction_process(
         return_value=create_g_corrected_record,
     ):
 
-        g, c, b = generate_1099_step.process_correction_types(create_pfml_1099_corrections)
+        g, c = generate_1099_step.process_correction_types(create_pfml_1099_corrections)
         assert len(g) == 10
         assert len(c) == 0
         t_template = generate_1099_step._create_t_template()
@@ -369,7 +369,7 @@ def test_create_two_step_correction_process(
         return_value=create_c_corrected_record,
     ):
 
-        g, c, b = generate_1099_step.process_correction_types(create_pfml_1099_corrections)
+        g, c = generate_1099_step.process_correction_types(create_pfml_1099_corrections)
         assert len(g) == 10
         assert len(c) == 10
 

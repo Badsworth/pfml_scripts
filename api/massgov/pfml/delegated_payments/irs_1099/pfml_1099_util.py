@@ -1927,11 +1927,13 @@ def get_1099_records_to_file(db_session: db.Session) -> List[Pfml1099]:
     return irs_1099_records
 
 
-def update_submission_date(db_session: db.Session, batch_id: UUID) -> None:
+def update_submission_date(db_session: db.Session, tax_data: List[Pfml1099]) -> None:
 
-    db_session.query(Pfml1099).filter(
-        Pfml1099.pfml_1099_batch_id == batch_id,
-    ).update({Pfml1099.irs_submission_date: get_now_us_eastern()})
+    for rec in tax_data:
+
+        db_session.query(Pfml1099).filter(
+            Pfml1099.pfml_1099_batch_id == rec.pfml_1099_batch_id,
+        ).update({Pfml1099.irs_submission_date: get_now_us_eastern()})
 
 
 def is_correction_submission() -> bool:

@@ -97,20 +97,22 @@ class Generate1099IRSfilingStep(Step):
                 self.total_b_correction_record = len(pfml_1099_corrected)
                 logger.info("Total b records are, %s", self.total_b_correction_record)
 
-                g_corrected_list, c_corrected_list, batch_id = self.process_correction_types(
+                g_corrected_list, c_corrected_list = self.process_correction_types(
                     pfml_1099_corrected
                 )
 
                 if len(g_corrected_list) > 0:
                     entries = self._create_correction_entries(entries, g_corrected_list, "G")
+                    pfml_1099_util.update_submission_date(self.db_session, g_corrected_list)
                 if len(c_corrected_list) > 0:
                     entries = self._create_correction_entries(entries, c_corrected_list, "C")
+                    pfml_1099_util.update_submission_date(self.db_session, c_corrected_list)
                 f_template = self._create_f_template()
                 f_entries = self._load_f_rec_data(f_template)
                 entries += f_entries
                 logger.info("Completed irs file data mapping")
                 self._create_irs_file(entries)
-                pfml_1099_util.update_submission_date(self.db_session, batch_id)
+
                 self.db_session.commit()
         else:
 
@@ -139,9 +141,7 @@ class Generate1099IRSfilingStep(Step):
                 entries += f_entries
                 logger.info("Completed irs file data mapping")
                 self._create_irs_file(entries)
-                pfml_1099_util.update_submission_date(
-                    self.db_session, pfml_1099[0].pfml_1099_batch_id
-                )
+                pfml_1099_util.update_submission_date(self.db_session, pfml_1099)
                 self.db_session.commit()
 
     def _create_correction_entries(
@@ -654,7 +654,6 @@ class Generate1099IRSfilingStep(Step):
 
             last_submitted_pfml_id = record.pfml_1099_id
             latest_pfml_id = record.latest_pfml_1099_id
-            batch_id = record.latest_pfml_batch_id
             logger.info("latest_pfml_id, %s", latest_pfml_id)
             pfml_1099s = pfml_1099_util.get_old_new_1099_record(
                 self.db_session, last_submitted_pfml_id, latest_pfml_id, record.employee_id
@@ -696,7 +695,7 @@ class Generate1099IRSfilingStep(Step):
                     g_correction_list.append(dict(record=pfml_1099s[1], correction_type="C"))
                     self.increment(self.Metrics.IRS_FILE_1099_C_CORRECTION_COUNT)
 
-        return g_correction_list, c_correction_list, batch_id
+        return g_correction_list, c_correction_list
 
     def _remove_special_chars_name_control(self, name_string: str) -> str:
 
