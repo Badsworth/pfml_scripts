@@ -60,6 +60,37 @@ class TestPostChangeRequest:
         assert response_body.get("start_date") == request_body["start_date"]
         assert response_body.get("end_date") == request_body["end_date"]
 
+    @freeze_time("2022-02-22")
+    @mock.patch("massgov.pfml.api.services.change_requests.add_change_request_to_db")
+    @mock.patch(
+        "massgov.pfml.api.change_requests.claim_rules.get_change_request_issues", return_value=[]
+    )
+    @mock.patch("massgov.pfml.api.services.claims.get_claim_from_db")
+    def test_empty_payload(
+        self,
+        mock_get_claim,
+        mock_change_request_issues,
+        mock_add_change,
+        auth_token,
+        claim,
+        client,
+    ):
+        submitted_time = datetime_util.utcnow()
+        mock_add_change.return_value = submitted_time
+        mock_get_claim.return_value = claim
+        response = client.post(
+            "/v1/change-request?fineos_absence_id={}".format(claim.fineos_absence_id),
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json={},
+        )
+        response_body = response.get_json().get("data")
+        assert response.status_code == 201
+        assert response_body.get("change_request_id") is not None
+        assert response_body.get("change_request_type") is None
+        assert response_body.get("fineos_absence_id") == claim.fineos_absence_id
+        assert response_body.get("start_date") is None
+        assert response_body.get("end_date") is None
+
     @mock.patch(
         "massgov.pfml.api.change_requests.claim_rules.get_change_request_issues", return_value=[]
     )

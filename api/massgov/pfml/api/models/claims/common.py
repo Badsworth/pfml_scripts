@@ -12,7 +12,7 @@ from massgov.pfml.api.models.common import (
     PreviousLeave,
 )
 from massgov.pfml.db.models.employees import ChangeRequest as change_request_db_model
-from massgov.pfml.db.models.employees import LkChangeRequestType
+from massgov.pfml.db.models.employees import ChangeRequestType as change_request_type_db_model
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
 
@@ -82,12 +82,16 @@ class ChangeRequest(PydanticBaseModel):
     start_date: Optional[date]
     end_date: Optional[date]
 
-    def to_db_model(
-        self, change_type: LkChangeRequestType, claim_id: UUID4
-    ) -> change_request_db_model:
-        return change_request_db_model(
+    def to_db_model(self, claim_id: UUID4) -> change_request_db_model:
+        change_request = change_request_db_model(
             claim_id=claim_id,
-            change_request_type_instance=change_type,
             start_date=self.start_date,
             end_date=self.end_date,
         )
+
+        if self.change_request_type is not None:
+            change_request.change_request_type_id = change_request_type_db_model.get_id(
+                self.change_request_type
+            )
+
+        return change_request

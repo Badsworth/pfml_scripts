@@ -227,7 +227,7 @@ class ChangeRequestResponse(PydanticBaseModel):
 
         change_request_type = (
             change_request.change_request_type_instance.change_request_type_description
-            if change_request.change_request_type is not None
+            if change_request.change_request_type_instance is not None
             else None
         )
 

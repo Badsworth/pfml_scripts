@@ -58,12 +58,7 @@ def add_change_request_to_db(
     change_request: api_models.ChangeRequest, claim_id: UUID
 ) -> ChangeRequest:
     with app.db_session() as db_session:
-        change_request_type = (
-            db_lookups.by_value(db_session, LkChangeRequestType, change_request.change_request_type)
-            if change_request.change_request_type is not None
-            else None
-        )
-        db_request = change_request.to_db_model(change_request_type, claim_id)
+        db_request = change_request.to_db_model(claim_id)
         db_session.add(db_request)
         return db_request
 

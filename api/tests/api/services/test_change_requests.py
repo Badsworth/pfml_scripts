@@ -73,7 +73,7 @@ class TestAddChangeRequestToDB:
     def change_request(self, claim) -> ChangeRequest:
         return ChangeRequest(
             claim_id=claim.claim_id,
-            change_request_type=None,
+            change_request_type=ChangeRequestType.WITHDRAWAL,
             start_date=None,
             end_date=None,
         )
@@ -89,7 +89,10 @@ class TestAddChangeRequestToDB:
             assert db_model.claim_id == claim.claim_id
             assert db_model.start_date is None
             assert db_model.end_date is None
-            assert db_model.change_request_type_id is None
+            assert (
+                db_model.change_request_type_instance.change_request_type_description
+                == "Withdrawal"
+            )
             test_db_session.commit()
             db_entry = (
                 test_db_session.query(db_models.ChangeRequest)
