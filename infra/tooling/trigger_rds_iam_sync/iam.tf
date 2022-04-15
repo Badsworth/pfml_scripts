@@ -10,8 +10,8 @@ data "aws_iam_policy_document" "trigger_rds_iam_sync_trust_policy" {
 }
 
 resource "aws_iam_role" "trigger_rds_iam_sync" {
-  name               = "${local.name}_lambda_role"
-  assume_role_policy = data.aws_iam_policy_document.trigger_rds_iam_sync_trust_policy.json
+  name                = "${local.name}_lambda_role"
+  assume_role_policy  = data.aws_iam_policy_document.trigger_rds_iam_sync_trust_policy.json
   managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"]
   inline_policy {
     name = "get_ssm_parameter"

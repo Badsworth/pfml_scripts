@@ -9,6 +9,6 @@ variable "prefix" {
 }
 
 variable "rds_cluster_arn" {
-  type =  string 
+  type        = string
   description = "source arn for rds cluster"
 }
