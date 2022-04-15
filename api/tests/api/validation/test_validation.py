@@ -191,6 +191,31 @@ def test_log_validation_error_unexpected_exception_handling(caplog):
     ]
 
 
+def test_validation_exceptions_logged_as_warnings_when_only_warn_is_true(caplog):
+    caplog.set_level(logging.INFO)  # noqa: B1
+
+    unexpected_exception = ValidationErrorDetail(
+        rule=IssueRule.conditional,
+        type=IssueType.value_error,
+        field="cents",
+        message="something that might be PII",
+    )
+    errors = [unexpected_exception]
+    exception = ValidationException(errors, "Response Validation Error", {})
+
+    for error in exception.errors:
+        # only_warn is set to True
+        log_validation_error(exception, error, is_unexpected_validation_error, True)
+
+    assert [(r.funcName, r.levelname, r.message) for r in caplog.records] == [
+        (
+            "log_and_capture_exception",
+            "WARNING",
+            "Response Validation Error (field: cents, type: value_error, rule: conditional)",
+        ),
+    ]
+
+
 class TestConvertPydanticErrorToValidationException:
     @pytest.fixture
     def validation_error_first_name(self):

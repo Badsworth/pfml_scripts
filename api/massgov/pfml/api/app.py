@@ -13,7 +13,7 @@ import flask
 import flask_cors
 import newrelic.api.time_trace
 from flask import Flask, current_app, g
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, scoped_session
 from werkzeug.exceptions import Unauthorized
 
 import massgov.pfml.api.authorization.flask
@@ -149,9 +149,9 @@ def get_app_config(app: Optional[Union[connexion.FlaskApp, Flask]] = None) -> Ap
     return app.config["app_config"]
 
 
-def db_session_raw() -> db.Session:
+def db_session_raw() -> scoped_session:
     """Get a plain SQLAlchemy Session."""
-    session = g.get("db")
+    session: scoped_session = g.get("db")
     if session is None:
         raise Exception("No database session available in application context")
 

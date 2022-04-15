@@ -188,6 +188,7 @@ class ValidationErrorDetail:
     message: str = ""
     rule: Optional[Union[IssueRule, str]] = None
     field: Optional[str] = None
+    value: Optional[str] = None  # Do not store PII data here, as it gets logged in some cases
 
 
 class ValidationException(Exception):

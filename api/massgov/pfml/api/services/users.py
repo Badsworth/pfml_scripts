@@ -3,6 +3,7 @@ from typing import Optional, cast
 
 import massgov.pfml.db as db
 import massgov.pfml.db.lookups as db_lookups
+import massgov.pfml.mfa as mfa
 import massgov.pfml.util.logging
 from massgov.pfml.api.models.users.requests import UserUpdateRequest
 from massgov.pfml.db.models.employees import (
@@ -11,7 +12,7 @@ from massgov.pfml.db.models.employees import (
     MFADeliveryPreference,
     User,
 )
-from massgov.pfml.mfa import MFAUpdatedBy, handle_mfa_disabled, handle_mfa_disabled_by_admin
+from massgov.pfml.mfa import MFAUpdatedBy
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -20,12 +21,21 @@ def update_user(
     db_session: db.Session,
     user: User,
     update_request: UserUpdateRequest,
+    # TODO (PORTAL-1828): Remove X-FF-Sync-Cognito-Preferences feature flag header
+    save_mfa_preference_to_cognito: bool,
+    cognito_auth_token: str,
 ) -> User:
     for key in update_request.__fields_set__:
         value = getattr(update_request, key)
 
         if key == "mfa_delivery_preference":
-            _update_mfa_preference(db_session, user, value)
+            _update_mfa_preference(
+                db_session,
+                user,
+                value,
+                save_mfa_preference_to_cognito,
+                cognito_auth_token,
+            )
             continue
 
         if key == "mfa_phone_number":
@@ -41,6 +51,8 @@ def _update_mfa_preference(
     db_session: db.Session,
     user: User,
     value: Optional[str],
+    save_mfa_preference_to_cognito: bool,
+    cognito_auth_token: str,
 ) -> None:
     existing_mfa_preference = user.mfa_preference_description()
     if value == existing_mfa_preference:
@@ -62,11 +74,35 @@ def _update_mfa_preference(
 
     _update_mfa_preference_audit_trail(db_session, user, updated_by)
 
-    log_attributes = {"mfa_preference": value, "updated_by": updated_by.value}
-    logger.info("MFA updated for user", extra=log_attributes)
+    log_attributes = {
+        "mfa_preference": value,
+        "save_mfa_preference_to_cognito": save_mfa_preference_to_cognito,
+    }
+    logger.info("MFA preference updated for user in DB", extra=log_attributes)
+
+    if save_mfa_preference_to_cognito:
+        _update_mfa_in_cognito(value, cognito_auth_token)
 
     if value == "Opt Out" and existing_mfa_preference is not None:
-        handle_mfa_disabled(user, last_updated_at, updated_by)
+        # Try to handle MFA side-effects but don't fail the API request if there is a problem. This allows
+        # the DB changes to be committed even if we fail to send the MFA disabled email so that the DB stays
+        # consistent with Cognito
+        try:
+            mfa.handle_mfa_disabled(user, last_updated_at)
+        except Exception as error:
+            logger.error(
+                "Error handling expected side-effects of disabling MFA. MFA is still disabled, and the API request is still successful.",
+                exc_info=error,
+            )
+
+
+def _update_mfa_in_cognito(value, cognito_auth_token):
+    if value == "SMS":
+        mfa.enable_mfa(cognito_auth_token)
+    elif value == "Opt Out":
+        mfa.disable_mfa(cognito_auth_token)
+    else:
+        logger.error("Unexpected value for MFA option. Should be SMS or Opt Out.")
 
 
 def _update_mfa_preference_audit_trail(
@@ -115,4 +151,4 @@ def admin_disable_mfa(
     }
     logger.info("MFA disabled for user", extra=log_attributes)
 
-    handle_mfa_disabled_by_admin(user, last_updated_at)
+    mfa.handle_mfa_disabled_by_admin(user, last_updated_at)

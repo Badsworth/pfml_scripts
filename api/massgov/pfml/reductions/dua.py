@@ -124,6 +124,8 @@ class Constants:
         BYE_DT_FIELD: "benefit_year_end_date",
     }
 
+    EXCLUDE_PAYMENTS_BEFORE_DATE = date(2020, 12, 1)
+
 
 def copy_claimant_list_to_moveit(db_session: db.Session) -> None:
     s3_config = get_s3_config()
@@ -412,7 +414,8 @@ def _get_non_submitted_reduction_payments(
     db_session: db.Session,
 ) -> List[DuaReductionPaymentAndClaim]:
     """
-    Include only payment records created within the last 90 days
+    Include only payment records created within the last 90 days, and exclude payments
+    that cannot overlap with a PFML payment (were before EXCLUDE_PAYMENTS_BEFORE_DATE)
     """
     ninety_days_ago = utcnow().date() - timedelta(days=90)
     return (
@@ -422,6 +425,9 @@ def _get_non_submitted_reduction_payments(
         )
         .outerjoin(Claim, Claim.employee_id == Employee.employee_id)
         .filter(DuaReductionPayment.created_at >= ninety_days_ago)
+        .filter(
+            DuaReductionPayment.request_week_begin_date >= Constants.EXCLUDE_PAYMENTS_BEFORE_DATE
+        )
         .order_by(DuaReductionPayment.created_at, Claim.created_at)
         .all()
     )
