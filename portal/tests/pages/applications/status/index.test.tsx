@@ -1474,6 +1474,49 @@ describe("Status", () => {
     });
   });
 
+  // @todo: PORTAL-2143 - update tests to actually check for change request
+  describe("has an in progress change request", () => {
+    it("displays a section for in progress change requests if one exists", () => {
+      process.env.featureFlags = JSON.stringify({
+        claimantShowModifications: true,
+      });
+
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper({
+            ...defaultClaimDetail,
+          }),
+        },
+        props
+      );
+
+      expect(
+        screen.queryByTestId("inProgressChangeRequest")
+      ).toBeInTheDocument();
+      expect(screen.queryByTestId("inProgressChangeRequest")).toMatchSnapshot();
+    });
+
+    it("doesn't display in progress change request section if feature flag is off", () => {
+      process.env.featureFlags = JSON.stringify({
+        claimantShowModifications: false,
+      });
+
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper({
+            ...defaultClaimDetail,
+          }),
+        },
+        props
+      );
+      expect(
+        screen.queryByTestId("inProgressChangeRequest")
+      ).not.toBeInTheDocument();
+    });
+  });
+
   it.each(Object.values(AbsencePeriodRequestDecision))(
     "displays a description for the %s request decision",
     (request_decision) => {

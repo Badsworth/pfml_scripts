@@ -152,6 +152,8 @@ export const Status = ({
     hasProjectedStatus,
   } = helper;
 
+  const hasInProgressChangeRequest = true; // @todo: PORTAL-2143 - hook up to real data
+
   const infoAlertContext = getInfoAlertContext(helper);
 
   const viewYourNotices = () => {
@@ -346,6 +348,39 @@ export const Status = ({
           absenceId={claimDetail.fineos_absence_id}
           isPaymentsTab={isPaymentsTab}
         />
+
+        {/* In Progress change Request */}
+        {isFeatureEnabled("claimantShowModifications") &&
+          hasInProgressChangeRequest && (
+            <div
+              className={containerClassName}
+              data-testid="inProgressChangeRequest"
+            >
+              <Heading level="2">
+                {t("pages.claimsStatus.inProgressChangeRequestHeader")}
+              </Heading>
+              <Alert state="warning" className="margin-top-3" noIcon>
+                <Heading level="3">
+                  <Trans i18nKey="pages.claimsStatus.inProgressChangeRequestStarted" />
+                </Heading>
+                <p className="margin-top-1">
+                  <Trans
+                    i18nKey="pages.claimsStatus.inProgressChangeRequestType"
+                    tOptions={{ context: "Modification" }}
+                  />
+                </p>
+                <ButtonLink
+                  className="text-no-underline text-white margin-top-3"
+                  href={routes.applications.index}
+                >
+                  {" "}
+                  {/* @todo: PORTAL-2143 - route to correct link */}
+                  {t("pages.claimsStatus.inProgressChangeRequestButton")}
+                </ButtonLink>
+              </Alert>
+            </div>
+          )}
+
         {viewYourNotices()}
 
         {/* Upload documents section */}

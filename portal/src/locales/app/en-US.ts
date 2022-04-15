@@ -2227,6 +2227,13 @@ const pages: {
     applicationUpdatesHeading: "Application updates",
     backButtonLabel: "$t(shared.backToYourApplicationsLink)",
     employerEIN: "Employer Identification Number (EIN)",
+    inProgressChangeRequestButton: "Continue or delete request",
+    inProgressChangeRequestHeader: "In-progress change request",
+    inProgressChangeRequestStarted: "Change request started",
+    inProgressChangeRequestType_MedicalToBonding:
+      "Type: Change leave from medical to bonding",
+    inProgressChangeRequestType_Modification: "Type: Change leave end date",
+    inProgressChangeRequestType_Withdrawal: "Type: Withdraw your leave",
     infoAlertBody_bonding: "$t(shared.infoAlertBody_bonding)",
     infoAlertBody_pregnancy: "$t(shared.infoAlertBody_pregnancy)",
     infoAlertHeading_bonding: "$t(shared.infoAlertHeading_bonding)",

@@ -316,6 +316,50 @@ exports[`Status displays a description for the Withdrawn request decision 1`] = 
 </div>
 `;
 
+exports[`Status has an in progress change request displays a section for in progress change requests if one exists 1`] = `
+<div
+  class="border-bottom border-base-lighter padding-y-4"
+  data-testid="inProgressChangeRequest"
+>
+  <h2
+    class="font-heading-md text-bold"
+  >
+    In-progress change request
+  </h2>
+  <div
+    class="usa-alert usa-alert--warning usa-alert--no-icon margin-top-3"
+    role="region"
+    tabindex="-1"
+  >
+    <div
+      class="usa-alert__body"
+    >
+      <div
+        class="usa-alert__text"
+      >
+        <h3
+          class="font-heading-sm text-bold"
+        >
+          Change request started
+        </h3>
+        <p
+          class="margin-top-1"
+        >
+          Type: Change leave end date
+        </p>
+        <a
+          class="usa-button text-no-underline text-white margin-top-3"
+          href="/applications"
+        >
+           
+          Continue or delete request
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
 exports[`Status manage your application displays manage approved application link if any of the claim statuses on an application are Approved 1`] = `
 <a
   data-testid="manageApprovedApplicationLink"
