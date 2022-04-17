@@ -1,6 +1,7 @@
 import uuid
 from datetime import date
 from typing import Any, Dict
+from unittest import mock
 
 import botocore.exceptions
 import faker
@@ -424,6 +425,167 @@ def test_users_patch(client, user, auth_token, test_db_session):
 
     # test_db_session.refresh(user)
     assert user.consented_to_data_sharing is True
+
+
+def test_users_patch_leave_admin_data(client, employer_user, employer_auth_token, test_db_session):
+    assert employer_user.first_name is None
+    assert employer_user.last_name is None
+    assert employer_user.phone_number is None
+    body = {
+        "first_name": "Slinky",
+        "last_name": "Glenesk",
+        "phone_number": {"phone_number": "805-610-3889", "int_code": "1", "extension": "123"},
+    }
+    response = client.patch(
+        "v1/users/{}".format(employer_user.user_id),
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+        json=body,
+    )
+    response_body = response.get_json()
+    assert response.status_code == 200
+    assert response_body.get("data")["first_name"] == "Slinky"
+    assert response_body.get("data")["last_name"] == "Glenesk"
+    assert response_body.get("data")["phone_number"] == {
+        "int_code": "1",
+        "phone_number": "***-***-3889",
+        "phone_type": None,
+        "extension": "123",
+    }
+    assert employer_user.first_name == "Slinky"
+    assert employer_user.last_name == "Glenesk"
+    assert employer_user.phone_number == "+18056103889"
+    assert employer_user.phone_extension == "123"
+
+
+@mock.patch(
+    "massgov.pfml.fineos.mock_client.MockFINEOSClient.create_or_update_leave_admin",
+    side_effect=Exception(),
+)
+def test_users_patch_leave_admin_data_fineos_failure_fails_gracefully(
+    mock_fineos_update, client, employer_user, employer_auth_token, test_db_session
+):
+    assert employer_user.first_name is None
+    assert employer_user.last_name is None
+    assert employer_user.phone_number is None
+    body = {
+        "first_name": "Slinky",
+        "last_name": "Glenesk",
+        "phone_number": {"phone_number": "805-610-3889", "int_code": "1", "extension": "123"},
+    }
+    response = client.patch(
+        "v1/users/{}".format(employer_user.user_id),
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+        json=body,
+    )
+    response_body = response.get_json()
+    assert response.status_code == 200
+    assert response_body.get("data")["first_name"] == "Slinky"
+    assert response_body.get("data")["last_name"] == "Glenesk"
+    assert response_body.get("data")["phone_number"] == {
+        "int_code": "1",
+        "phone_number": "***-***-3889",
+        "phone_type": None,
+        "extension": "123",
+    }
+    assert employer_user.first_name == "Slinky"
+    assert employer_user.last_name == "Glenesk"
+    assert employer_user.phone_number == "+18056103889"
+    assert employer_user.phone_extension == "123"
+
+
+@pytest.mark.parametrize(
+    "request_body, error_field",
+    [
+        [
+            {
+                "first_name": "Slinky",
+                "phone_number": {
+                    "phone_number": "805-610-3889",
+                    "int_code": "1",
+                    "extension": "123",
+                },
+            },
+            "last_name",
+        ],
+        [
+            {
+                "last_name": "Glenesk",
+                "phone_number": {
+                    "phone_number": "805-610-3889",
+                    "int_code": "1",
+                    "extension": "123",
+                },
+            },
+            "first_name",
+        ],
+        [
+            {
+                "last_name": "Glenesk",
+                "first_name": "Slinky",
+            },
+            "phone_number",
+        ],
+        [
+            {
+                "last_name": "Glenesk",
+                "first_name": "Slinky",
+                "phone_number": {"phone_number": None},
+            },
+            "phone_number",
+        ],
+    ],
+)
+def test_users_patch_leave_admin_data_validates_requirements(
+    request_body,
+    error_field,
+    client,
+    employer_user,
+    employer_auth_token,
+):
+    response = client.patch(
+        "v1/users/{}".format(employer_user.user_id),
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+        json=request_body,
+    )
+    response_body = response.get_json()
+    assert response.status_code == 400
+    assert response_body["errors"][0]["type"] == "required"
+    assert response_body["errors"][0]["field"] == error_field
+
+
+@pytest.mark.parametrize("phone", ["123", ""])
+def test_users_patch_leave_admin_data_validates_phone(
+    phone, client, employer_user, employer_auth_token
+):
+    body = {"last_name": "Glenesk", "first_name": "Slinky", "phone_number": {"phone_number": phone}}
+    response = client.patch(
+        "v1/users/{}".format(employer_user.user_id),
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+        json=body,
+    )
+    response_body = response.get_json()
+    assert response.status_code == 400
+    assert response_body["errors"][0]["type"] == "pattern"
+    assert response_body["errors"][0]["field"] == "phone_number.phone_number"
+
+
+def test_users_patch_leave_admin_data_prohibits_claimant_user(
+    client,
+    user,
+    auth_token,
+):
+    body = {
+        "first_name": "Slinky",
+        "last_name": "Glenesk",
+        "phone_number": {"phone_number": "805-610-3889", "int_code": "1", "extension": "123"},
+    }
+    response = client.patch(
+        "v1/users/{}".format(user.user_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json=body,
+    )
+    assert response.status_code == 403
+    assert user.first_name is None
 
 
 def test_users_convert_employer(client, user, employer_for_new_user, auth_token, test_db_session):

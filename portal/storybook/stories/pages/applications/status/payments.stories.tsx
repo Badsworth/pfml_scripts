@@ -283,16 +283,19 @@ export const DefaultStory = (
     // Override the reason for the second absence period
     return [defaultAbsencePeriod, bondingAbsencePeriod];
   };
+
+  const claimDetail = createMockClaimDetail({
+    absencePeriods: oneOrMultipleAbsencePeriod(args["Leave scenario"]),
+    hasPaidPayments:
+      args.Payments === PAYMENT_OPTIONS.REGULAR ||
+      args.Payments === PAYMENT_OPTIONS.RETROACTIVE,
+    leaveScenario: args["Leave scenario"],
+    leaveType: args["Leave type"],
+  });
+
   const appLogic = useMockableAppLogic({
     claims: {
-      claimDetail: createMockClaimDetail({
-        absencePeriods: oneOrMultipleAbsencePeriod(args["Leave scenario"]),
-        hasPaidPayments:
-          args.Payments === PAYMENT_OPTIONS.REGULAR ||
-          args.Payments === PAYMENT_OPTIONS.RETROACTIVE,
-        leaveScenario: args["Leave scenario"],
-        leaveType: args["Leave type"],
-      }),
+      claimDetail,
       isLoadingClaimDetail: false,
     },
     documents: {
@@ -330,6 +333,7 @@ export const DefaultStory = (
   });
   return (
     <Payments
+      claim_detail={claimDetail}
       appLogic={appLogic}
       query={{ absence_id: "NTN-12345-ABS-01" }}
       user={new User({})}

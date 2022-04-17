@@ -5,14 +5,18 @@ import massgov.pfml.db as db
 import massgov.pfml.db.lookups as db_lookups
 import massgov.pfml.mfa as mfa
 import massgov.pfml.util.logging
+from massgov.pfml.api.models.common import Phone
 from massgov.pfml.api.models.users.requests import UserUpdateRequest
+from massgov.pfml.api.services.administrator_fineos_actions import update_leave_admin_with_fineos
 from massgov.pfml.db.models.employees import (
     LkMFADeliveryPreference,
     LkMFADeliveryPreferenceUpdatedBy,
     MFADeliveryPreference,
+    Role,
     User,
 )
 from massgov.pfml.mfa import MFAUpdatedBy
+from massgov.pfml.util.users import has_role_in
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -25,6 +29,7 @@ def update_user(
     save_mfa_preference_to_cognito: bool,
     cognito_auth_token: str,
 ) -> User:
+
     for key in update_request.__fields_set__:
         value = getattr(update_request, key)
 
@@ -41,10 +46,18 @@ def update_user(
         if key == "mfa_phone_number":
             if value is not None:
                 value = value.e164
-
+        if key == "phone_number":
+            if value is not None:
+                _maybe_set_extension(user, value)
+                value = value.e164
         setattr(user, key, value)
 
     return user
+
+
+def _maybe_set_extension(user: User, phone: Phone) -> None:
+    if phone and phone.extension:
+        user.phone_extension = phone.extension
 
 
 def _update_mfa_preference(
@@ -152,3 +165,21 @@ def admin_disable_mfa(
     logger.info("MFA disabled for user", extra=log_attributes)
 
     mfa.handle_mfa_disabled_by_admin(user, last_updated_at)
+
+
+def handle_user_patch_fineos_side_effects(user: User, request_body: UserUpdateRequest) -> None:
+    if (
+        has_role_in(user, [Role.EMPLOYER])
+        and request_body.first_name
+        and request_body.last_name
+        and request_body.phone_number
+    ):
+        try:
+            for leave_admin in user.user_leave_administrators:
+                update_leave_admin_with_fineos(user, request_body, leave_admin)
+        except Exception:
+            logger.warning(
+                "leave_admin_update - fineos sync failed",
+                extra={"user_id": user.user_id, "fineos_web_id": leave_admin.fineos_web_id},
+                exc_info=True,
+            )

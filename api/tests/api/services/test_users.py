@@ -2,10 +2,17 @@ from datetime import datetime
 from unittest import mock
 
 import boto3
+import pytest
 
 from massgov.pfml.api.models.common import Phone
 from massgov.pfml.api.models.users.requests import UserUpdateRequest
-from massgov.pfml.api.services.users import admin_disable_mfa, update_user
+from massgov.pfml.api.services.users import (
+    admin_disable_mfa,
+    handle_user_patch_fineos_side_effects,
+    update_user,
+)
+from massgov.pfml.db.models.employees import Role, User, UserLeaveAdministrator
+from massgov.pfml.fineos.models.leave_admin_creation import CreateOrUpdateLeaveAdmin
 from tests.conftest import get_mock_logger
 
 
@@ -207,3 +214,82 @@ class TestAdminDisableMfa:
             user_with_mfa.mfa_delivery_preference_updated_by.mfa_delivery_preference_updated_by_description
             == "Admin"
         )
+
+
+class TestUserPatchSideEffects:
+    @pytest.fixture
+    def user_leave_admin(self, employer_user, employer):
+        return UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            employer=employer,
+        )
+
+    @pytest.fixture
+    def employer_user(self, user_leave_admin):
+        return User(
+            roles=[Role.EMPLOYER],
+            email_address="slinky@miau.com",
+            user_leave_administrators=[user_leave_admin],
+        )
+
+    @pytest.fixture
+    def user_update_request(self):
+        return UserUpdateRequest(
+            first_name="Slinky",
+            last_name="Glenesk",
+            phone_number={"phone_number": "805-610-3889", "extension": "3333"},
+        )
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.create_or_update_leave_admin")
+    def test_handle_user_patch_fineos_side_effects(
+        self,
+        mock_fineos_update,
+        employer_user,
+        employer,
+        user_leave_admin,
+        user_update_request,
+    ):
+        handle_user_patch_fineos_side_effects(employer_user, user_update_request)
+
+        expected_param = CreateOrUpdateLeaveAdmin(
+            fineos_web_id="fake-fineos-web-id",
+            fineos_employer_id=user_leave_admin.employer.fineos_employer_id,
+            admin_full_name="Slinky Glenesk",
+            admin_area_code="805",
+            admin_phone_number="6103889",
+            admin_phone_extension="3333",
+            admin_email="slinky@miau.com",
+        )
+        mock_fineos_update.assert_called_once_with(expected_param)
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.create_or_update_leave_admin")
+    def test_handle_user_patch_fineos_side_effects_not_called_with_worker_user(
+        self, mock_fineos_update, user, user_update_request
+    ):
+        handle_user_patch_fineos_side_effects(user, user_update_request)
+        mock_fineos_update.assert_not_called()
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.create_or_update_leave_admin")
+    def test_handle_user_patch_fineos_side_effects_not_called_with_empty_inputs(
+        self, mock_fineos_update, user, user_update_request
+    ):
+        user_update_request.first_name = None
+        handle_user_patch_fineos_side_effects(user, user_update_request)
+        mock_fineos_update.assert_not_called()
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.create_or_update_leave_admin")
+    def test_handle_user_patch_sends_multiple_fineos_updates_when_indicated(
+        self,
+        mock_fineos_update,
+        employer_user,
+        employer,
+        user_leave_admin,
+        user_update_request,
+        test_db_session,
+    ):
+        employer_user.user_leave_administrators = [user_leave_admin, user_leave_admin]
+        test_db_session.commit()
+        handle_user_patch_fineos_side_effects(employer_user, user_update_request)
+        assert mock_fineos_update.call_count == 2
