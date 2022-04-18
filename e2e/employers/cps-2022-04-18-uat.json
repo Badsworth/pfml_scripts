@@ -1,0 +1,107 @@
+[
+  {
+    "accountKey": "40364513033",
+    "name": "Proactive Harness Technologies Inc",
+    "fein": "59-6114195",
+    "street": "159 Obie Corners",
+    "city": "South Brigitteton",
+    "state": "MA",
+    "zip": "06169-9196",
+    "dba": "Proactive Harness Technologies Inc",
+    "family_exemption": false,
+    "medical_exemption": false,
+    "updated_date": "2022-02-22T12:29:38-05:00",
+    "size": "small",
+    "withholdings": [
+      5961.14,
+      5961.14,
+      5961.14,
+      5961.14
+    ],
+    "metadata": {}
+  },
+  {
+    "accountKey": "08832873146",
+    "name": "Frictionless Enable Web-Readiness LLC",
+    "fein": "70-2879329",
+    "street": "976 Kuvalis Radial",
+    "city": "Waelchichester",
+    "state": "MA",
+    "zip": "65268-4140",
+    "dba": "Frictionless Enable Web-Readiness LLC",
+    "family_exemption": false,
+    "medical_exemption": false,
+    "updated_date": "2022-02-22T12:29:38-05:00",
+    "size": "medium",
+    "withholdings": [
+      7028.79,
+      7028.79,
+      7028.79,
+      7028.79
+    ],
+    "metadata": {}
+  },
+  {
+    "accountKey": "11828685892",
+    "name": "Plug-And-Play Disintermediate Methodologies Group",
+    "fein": "24-5050300",
+    "street": "199 Idella Lights",
+    "city": "Port Cecilia",
+    "state": "MA",
+    "zip": "49274-5487",
+    "dba": "Plug-And-Play Disintermediate Methodologies Group",
+    "family_exemption": false,
+    "medical_exemption": false,
+    "updated_date": "2022-02-22T12:29:38-05:00",
+    "size": "small",
+    "withholdings": [
+      2450.5,
+      2450.5,
+      2450.5,
+      2450.5
+    ],
+    "metadata": {}
+  },
+  {
+    "accountKey": "92142117868",
+    "name": "Value-Added Seize Markets Group",
+    "fein": "68-8005715",
+    "street": "75051 Murphy Valleys",
+    "city": "East Arianeton",
+    "state": "MA",
+    "zip": "15060-5974",
+    "dba": "Value-Added Seize Markets Group",
+    "family_exemption": false,
+    "medical_exemption": false,
+    "updated_date": "2022-02-22T12:29:38-05:00",
+    "size": "small",
+    "withholdings": [
+      6880.05,
+      6880.05,
+      6880.05,
+      6880.05
+    ],
+    "metadata": {}
+  },
+  {
+    "accountKey": "80555782973",
+    "name": "Virtual Enable Users Inc",
+    "fein": "32-3994364",
+    "street": "152 Dominic Skyway",
+    "city": "New Sophiaborough",
+    "state": "MA",
+    "zip": "70526-7532",
+    "dba": "Virtual Enable Users Inc",
+    "family_exemption": false,
+    "medical_exemption": false,
+    "updated_date": "2022-02-22T12:29:38-05:00",
+    "size": "small",
+    "withholdings": [
+      3239.94,
+      3239.94,
+      3239.94,
+      3239.94
+    ],
+    "metadata": {}
+  }
+]
