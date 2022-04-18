@@ -1,7 +1,7 @@
 import {
   isInMaintenanceWindow,
-  isMaintenanceOneDayInFuture,
   isMaintenancePageRoute,
+  isMaintenanceUpcoming,
   maintenanceTime,
 } from "../../src/utils/maintenance";
 import dayjs from "dayjs";
@@ -56,36 +56,30 @@ describe("maintenance helpers", () => {
     });
   });
 
-  describe("isMaintenanceOneDayInFuture", () => {
-    it("returns false when time is not provided", () => {
-      const value = isMaintenanceOneDayInFuture(null);
-
-      expect(value).toBe(false);
-    });
-
+  describe("isMaintenanceUpcoming", () => {
     it("returns true if current time is before a scheduled maintenance window", () => {
       const providedStartTime = dayjs().add(1, "hour"); // Maintenance starts in an hour
-      const value = isMaintenanceOneDayInFuture(
-        providedStartTime.toISOString()
-      );
+      const value = isMaintenanceUpcoming(providedStartTime.toISOString(), 1);
 
       expect(value).toBe(true);
     });
 
     it("returns false if current time is within or after a scheduled maintenance window", () => {
       const providedStartTime = dayjs().subtract(1, "hour"); // Maintenance started an hour ago
-      const value = isMaintenanceOneDayInFuture(
-        providedStartTime.toISOString()
-      );
+      const value = isMaintenanceUpcoming(providedStartTime.toISOString(), 1);
 
       expect(value).toBe(false);
     });
 
-    it("returns false if current time is more than 24 hours before a scheduled maintenance window", () => {
+    it("returns false if maintenance starts in 25 hours and days = 1", () => {
       const providedStartTime = dayjs().subtract(25, "hour"); // Maintenance starts in 25 hours
-      const value = isMaintenanceOneDayInFuture(
-        providedStartTime.toISOString()
-      );
+      const value = isMaintenanceUpcoming(providedStartTime.toISOString(), 1);
+
+      expect(value).toBe(false);
+    });
+    it("returns true if maintenance starts in 25 hours and days = 2", () => {
+      const providedStartTime = dayjs().subtract(25, "hour"); // Maintenance starts in 25 hours
+      const value = isMaintenanceUpcoming(providedStartTime.toISOString(), 2);
 
       expect(value).toBe(false);
     });

@@ -13,7 +13,7 @@ import { useTranslation } from "../locales/i18n";
 interface HeaderProps {
   user?: User;
   onLogout: React.MouseEventHandler<HTMLButtonElement>;
-  showUpcomingMaintenanceAlertBar?: boolean;
+  showUpcomingMaintenanceAlertBar: boolean;
   maintenanceStartTime: string | null;
   maintenanceEndTime: string | null;
 }
