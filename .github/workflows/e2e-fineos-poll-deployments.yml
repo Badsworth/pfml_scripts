@@ -60,7 +60,7 @@ jobs:
         run: |
           echo "Install Node Modules"
       - name: Cypress Tests (Auto Re-run - failed specs)
-        uses: actions/github-script@v3
+        # uses: actions/github-script@v3
         run: |
           echo "Triggering Cypress Specs"
         # with:
