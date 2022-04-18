@@ -38,7 +38,7 @@ jobs:
       # - run: ./bin/ci/publish-fineos-deployment-events.sh ${{ matrix.environment }}
       #   id: publish-deployments
       - name: Query NR to get list of failed specs
-        run: sh ./bin/ci/get-list-failed-specs.sh test EOLWD/pfml-2185315633-1
+        run: sh ./bin/ci/get-list-failed-specs.sh cps-preview EOLWD/pfml-2183613726-1 
         id: get-failed
       - name: Print string of failed specs for auto trigger
         run: |
@@ -59,10 +59,12 @@ jobs:
       - name: "Install Node Modules"
         run: |
           echo "Install Node Modules"
+        if: steps.get-failed.outputs.failed_specs_count != 0
       - name: Cypress Tests (Auto Re-run - failed specs)
         # uses: actions/github-script@v3
         run: |
           echo "Triggering Cypress Specs"
+        if: steps.get-failed.outputs.failed_specs_count != 0
         # with:
         #   script: |
         #     core.setFailed('Encountered E2E failure')
