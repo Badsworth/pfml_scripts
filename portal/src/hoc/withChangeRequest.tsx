@@ -5,7 +5,7 @@ import ChangeRequest from "../models/ChangeRequest";
 import PageNotFound from "../components/PageNotFound";
 import React from "react";
 
-interface WithChangeRequestProps
+export interface WithChangeRequestProps
   extends Omit<WithChangeRequestsProps, "query"> {
   change_request: ChangeRequest;
 }

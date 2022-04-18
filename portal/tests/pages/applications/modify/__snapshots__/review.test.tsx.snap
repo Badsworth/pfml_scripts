@@ -1,5 +1,326 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Claim Modification Review it shows cancellation review when claim is approved and change request is withdrawal 1`] = `
+<form
+  class="usa-form"
+  method="post"
+>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+    tabindex="-1"
+  >
+    Change your application
+  </h1>
+  <div
+    class="usa-alert usa-alert--warning"
+    role="region"
+    tabindex="-1"
+  >
+    <div
+      class="usa-alert__body"
+    >
+      <div
+        class="usa-alert__text"
+      >
+        If you have received payments for the leave dates you are cancelling, you will need to return the money to the Department. Read more about 
+        <a
+          href="https://mass.gov/this-is-not-a-real-link"
+          rel="noreferrer"
+          target="_blank"
+        >
+          overpayments
+        </a>
+        .
+      </div>
+    </div>
+  </div>
+  <h2
+    class="font-heading-md text-bold"
+  >
+    Are you sure you want to cancel your entire PFML leave?
+  </h2>
+  <p>
+    Once your application has been canceled, you cannot make any changes.
+  </p>
+  <button
+    class="usa-button position-relative margin-top-4"
+    type="submit"
+  >
+    Yes, cancel my leave
+  </button>
+</form>
+`;
+
+exports[`Claim Modification Review it shows ending leave early review when change request is modification and end date is before claim start date 1`] = `
+<form
+  class="usa-form"
+  method="post"
+>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+    tabindex="-1"
+  >
+    Change your application
+  </h1>
+  <h2
+    class="font-heading-md text-bold"
+  >
+    Review and submit your requested change
+  </h2>
+  <p>
+    Once you review and submit your leave changes, we will send a copy of your change request to your employer. 
+  </p>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Updated leave dates
+      </h3>
+      1/1/2022 to 4/1/2022
+    </div>
+  </div>
+  <button
+    class="usa-button position-relative margin-top-4"
+    type="submit"
+  >
+    Submit
+  </button>
+</form>
+`;
+
+exports[`Claim Modification Review it shows extension review when change request is modification and end date is after claim start date 1`] = `
+<form
+  class="usa-form"
+  method="post"
+>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+    tabindex="-1"
+  >
+    Change your application
+  </h1>
+  <h2
+    class="font-heading-md text-bold"
+  >
+    Review and submit your requested change
+  </h2>
+  <p>
+    Once you review and submit your leave changes, we will send a copy of your change request to your employer. They will also get a copy of the certification documents.
+  </p>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Updated leave dates
+      </h3>
+      1/1/2022 to 5/1/2022
+    </div>
+  </div>
+  <button
+    class="usa-button position-relative margin-top-4"
+    type="submit"
+  >
+    Submit
+  </button>
+</form>
+`;
+
+exports[`Claim Modification Review it shows medical to bonding review with proof of birth text when change request is medical to bonding and a document was submitted 1`] = `
+<form
+  class="usa-form"
+  method="post"
+>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+    tabindex="-1"
+  >
+    Change your application
+  </h1>
+  <h2
+    class="font-heading-md text-bold"
+  >
+    Review and submit your change
+  </h2>
+  <p>
+    Once you review and submit your leave changes, we will send a copy of your change request to your employer.
+  </p>
+  <p>
+    The addition of bonding leave to your application will not impact your medical leave payment schedule.
+  </p>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Medical leave due to pregnancy
+      </h3>
+      <strong>
+        Start
+      </strong>
+      <br />
+      1/1/2022
+      <br />
+      <strong>
+        End
+      </strong>
+      <br />
+      3/31/2022
+    </div>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Leave to bond with a child
+      </h3>
+      <strong>
+        Start
+      </strong>
+      <br />
+      1/1/2022
+      <br />
+      <strong>
+        End
+      </strong>
+      <br />
+      5/1/2022
+    </div>
+  </div>
+  <button
+    class="usa-button position-relative margin-top-4"
+    type="submit"
+  >
+    Submit your request
+  </button>
+</form>
+`;
+
+exports[`Claim Modification Review it shows medical to bonding review without proof of birth text when change request is medical to bonding and a document was not submitted 1`] = `
+<form
+  class="usa-form"
+  method="post"
+>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+    tabindex="-1"
+  >
+    Change your application
+  </h1>
+  <h2
+    class="font-heading-md text-bold"
+  >
+    Review and submit your change
+  </h2>
+  <p>
+    Once you review and submit your leave changes, we will send a copy of your change request to your employer.
+  </p>
+  <p>
+    Please upload proof of birth within 90 days of submitting this request. The addition of bonding leave to your application will not impact your medical leave payment schedule.
+  </p>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Medical leave due to pregnancy
+      </h3>
+      <strong>
+        Start
+      </strong>
+      <br />
+      1/1/2022
+      <br />
+      <strong>
+        End
+      </strong>
+      <br />
+      3/31/2022
+    </div>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Leave to bond with a child
+      </h3>
+      <strong>
+        Start
+      </strong>
+      <br />
+      1/1/2022
+      <br />
+      <strong>
+        End
+      </strong>
+      <br />
+      5/1/2022
+    </div>
+  </div>
+  <button
+    class="usa-button position-relative margin-top-4"
+    type="submit"
+  >
+    Submit your request
+  </button>
+</form>
+`;
+
+exports[`Claim Modification Review it shows withdrawal review when claim is pending and change request is withdrawal 1`] = `
+<form
+  class="usa-form"
+  method="post"
+>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+    tabindex="-1"
+  >
+    Change your application
+  </h1>
+  <h2
+    class="font-heading-md text-bold"
+  >
+    Are you sure you want to withdraw your application for leave?
+  </h2>
+  <p>
+    Once your application has been withdrawn, you cannot make any changes. You will need to create a new application if you choose take leave.
+  </p>
+  <button
+    class="usa-button position-relative margin-top-4"
+    type="submit"
+  >
+    Yes, withdraw my application
+  </button>
+</form>
+`;
+
 exports[`Claim Modification Review renders page content 1`] = `
 <form
   class="usa-form"
@@ -11,19 +332,33 @@ exports[`Claim Modification Review renders page content 1`] = `
   >
     Change your application
   </h1>
-  <label
-    class="usa-label text-bold font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+  <h2
+    class="font-heading-md text-bold"
   >
     Review and submit your requested change
-  </label>
+  </h2>
   <p>
-    7180eae0-0ad8-46a9-b140-5076863330d2
+    Once you review and submit your leave changes, we will send a copy of your change request to your employer. They will also get a copy of the certification documents.
   </p>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Updated leave dates
+      </h3>
+      1/1/2022 to 5/1/2022
+    </div>
+  </div>
   <button
     class="usa-button position-relative margin-top-4"
     type="submit"
   >
-    Save and continue
+    Submit
   </button>
 </form>
 `;

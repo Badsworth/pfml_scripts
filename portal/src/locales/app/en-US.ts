@@ -1668,8 +1668,44 @@ const pages: {
     title: "Only some changes can be made online for now",
   },
   claimsModifyReview: {
-    sectionLabel: "Review and submit your requested change",
+    bondingReviewRowLabel: "Leave to bond with a child",
+    bondingReviewRowValue:
+      "<strong>Start</strong><br/>{{startDate}}<br/><strong>End</strong><br/>{{endDate}}",
+    buttonText_cancellation: "Yes, cancel my leave",
+    buttonText_medicalToBonding: "Submit your request",
+    buttonText_modification: "Submit",
+    buttonText_withdrawal: "Yes, withdraw my application",
+    cancellationAlert:
+      "If you have received payments for the leave dates you are cancelling, you will need to return the money to the Department. Read more about <overpayments-link>overpayments</overpayments-link>.",
+    cancellationBody:
+      "Once your application has been canceled, you cannot make any changes.",
+    cancellationHeading:
+      "Are you sure you want to cancel your entire PFML leave?",
+    medicalReviewRowLabel: "Medical leave due to pregnancy",
+    medicalReviewRowValue:
+      "<strong>Start</strong><br/>{{startDate}}<br/><strong>End</strong><br/>{{endDate}}",
+    medicalToBondingBody1:
+      "Once you review and submit your leave changes, we will send a copy of your change request to your employer.",
+    medicalToBondingBody2_doesNotHaveProof:
+      "Please upload proof of birth within 90 days of submitting this request. The addition of bonding leave to your application will not impact your medical leave payment schedule.",
+    medicalToBondingBody2_hasProof:
+      "The addition of bonding leave to your application will not impact your medical leave payment schedule.",
+    medicalToBondingHeading: "Review and submit your change",
+    modificationBody_endingEarly:
+      "Once you review and submit your leave changes, we will send a copy of your change request to your employer. ",
+    modificationBody_extension:
+      "Once you review and submit your leave changes, we will send a copy of your change request to your employer. They will also get a copy of the certification documents.",
+    modificationHeading: "Review and submit your requested change",
+    modificationReviewRowLabel: "Updated leave dates",
+    modificationReviewRowValue: "{{startDate}} to {{endDate}}",
+    pregnancyReviewRowLabel: "Medical leave due to pregnancy",
+    pregnancyReviewRowValue:
+      "<strong>Start</strong><br/>{{startDate}}<br/><strong>End</strong><br/>{{endDate}}",
     title: "$t(shared.claimsModifyTitle)",
+    withdrawalBody:
+      "Once your application has been withdrawn, you cannot make any changes. You will need to create a new application if you choose take leave.",
+    withdrawalHeading:
+      "Are you sure you want to withdraw your application for leave?",
   },
   claimsModifySuccess: {
     adjudicationProcess:
