@@ -55,7 +55,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v2
         with: { node-version: "14.x" }
-        if: if: steps.get-failed.outputs.failed_specs_count != 0
+        if: steps.get-failed.outputs.failed_specs_count != 0
       - name: "Install Node Modules"
         run: |
           echo "Install Node Modules"
