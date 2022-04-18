@@ -1,5 +1,5 @@
 import base64
-from typing import List
+from typing import List, Optional
 from uuid import UUID, uuid4
 
 import connexion
