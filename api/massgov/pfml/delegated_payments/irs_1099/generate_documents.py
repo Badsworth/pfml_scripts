@@ -19,13 +19,12 @@ class Generate1099DocumentsStep(Step):
         DOCUMENT_ERROR = "document_errors"
 
     def run_step(self) -> None:
-        self.pdfApiEndpoint = pfml_1099_util.get_pdf_api_generate_endpoint()
+        self.pdfApi = massgov.pfml.pdf_api.create_client()
         self._update_1099_template()
         self._generate_1099_documents()
 
     def _update_1099_template(self) -> None:
-        url = pfml_1099_util.get_pdf_api_update_template_endpoint()
-        response = requests.get(url)
+        response = self.pdfApi.updateTemplate()
 
         if response.ok:
             logger.info("1099 Template was successfully updated.")
@@ -61,9 +60,7 @@ class Generate1099DocumentsStep(Step):
                         s3_location = (
                             f"{batch_folder}/Forms/{sub_batch_folder}/{records[i].pfml_1099_id}.pdf"
                         )
-                        self.generate_document(
-                            records[i], sub_batch_folder, self.pdfApiEndpoint, s3_location
-                        )
+                        self.generate_document(records[i], sub_batch_folder, s3_location)
                         con += 1
 
                         if con > max_records_in_subbatch:
@@ -87,9 +84,7 @@ class Generate1099DocumentsStep(Step):
     def get_records(self, batch_id: str) -> List[Pfml1099]:
         return pfml_1099_util.get_1099_records_to_generate(self.db_session, batchId=batch_id)
 
-    def generate_document(
-        self, record: Pfml1099, sub_batch: str, url: str, s3_location: str
-    ) -> None:
+    def generate_document(self, record: Pfml1099, sub_batch: str, s3_location: str) -> None:
         ssn: Optional[str] = pfml_1099_util.get_tax_id(
             self.db_session, str(record.tax_identifier_id)
         )
@@ -99,39 +94,15 @@ class Generate1099DocumentsStep(Step):
             logger.error("%s has an invalid tax identifier.", str(record.tax_identifier_id))
             return
 
-        try:
-            documentDto = {
-                "id": str(record.pfml_1099_id),
-                "batchId": str(record.pfml_1099_batch_id),
-                "year": record.tax_year,
-                "corrected": record.correction_ind,
-                "paymentAmount": str(record.gross_payments),
-                "socialNumber": ssn,
-                "federalTaxesWithheld": str(record.federal_tax_withholdings),
-                "stateTaxesWithheld": str(record.state_tax_withholdings),
-                "repayments": str(record.overpayment_repayments),
-                "name": f"{sub_batch}/{record.first_name} {record.last_name}",
-                "address": record.address_line_1,
-                "address2": record.address_line_2,
-                "city": record.city,
-                "state": record.state,
-                "zipCode": record.zip,
-                "accountNumber": record.account_number,
-            }
+        documentDto = PDF1099(record, ssn=ssn, sub_batch=sub_batch)
 
-            response = requests.post(
-                url,
-                json=documentDto,
-                headers={"Content-type": "application/json", "Accept": "application/json"},
-            )
+        response = self.pdf_api.generate(documentDto)
 
-            if response.ok:
-                record.s3_location = s3_location
-                self.db_session.commit()
-                logger.info("Pdf was successfully generated.")
-                self.increment(self.Metrics.DOCUMENT_COUNT)
-            else:
-                logger.error(response.json())
-                self.increment(self.Metrics.DOCUMENT_ERROR)
-        except requests.exceptions.RequestException as error:
-            raise error
+        if response.ok:
+            record.s3_location = s3_location
+            self.db_session.commit()
+            logger.info("Pdf was successfully generated.")
+            self.increment(self.Metrics.DOCUMENT_COUNT)
+        else:
+            logger.error(response.json())
+            self.increment(self.Metrics.DOCUMENT_ERROR)

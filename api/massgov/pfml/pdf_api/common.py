@@ -1,5 +1,8 @@
 # PDF doc types
+PDF_1099 = "1099"
+PDF_CLAIMANT_INFO = "UserNotFound"
+
 DOC_TYPES = [
-  "1099",
-  "UserNotFound",
+    PDF_1099,
+    PDF_CLAIMANT_INFO,
 ]

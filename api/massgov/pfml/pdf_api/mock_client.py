@@ -19,7 +19,8 @@ from requests.models import Response
 import massgov.pfml.util.logging
 import massgov.pfml.util.logging.wrapper
 
-from . import client, exception, pdf_client, models
+from . import client, exception, models, pdf_client
+
 # from .mock.field import fake_customer_no
 # from .models.customer_api import ChangeRequestPeriod, ChangeRequestReason
 
@@ -38,6 +39,7 @@ TEST_IMAGE_FILE_PATH = pathlib.Path(__file__).parent / "mock_files" / "test.png"
 def fake_date_of_birth(fake):
     """Generate a fake date of birth in a reproducible way."""
     return fake.date_between(datetime.date(1930, 1, 1), datetime.date(2010, 1, 1))
+
 
 # def mock_document(
 #     absence_id: str,
@@ -66,11 +68,11 @@ class MockPDFClient(client.AbstractPDFClient):
         self,
         # mock_eforms: Iterable[EForm] = MOCK_EFORMS,
     ):
+        pass
         # self.mock_eforms = mock_eforms
 
     # def read_employer(self, employer_fein: str) -> models.OCOrganisation:
     #     _capture_call("read_employer", None, employer_fein=employer_fein)
-
 
 
 massgov.pfml.util.logging.wrapper.log_all_method_calls(MockPDFClient, logger)

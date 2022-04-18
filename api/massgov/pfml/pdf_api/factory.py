@@ -2,16 +2,14 @@
 # PDF client - factory.
 #
 
-from typing import Optional
-
 import urllib.parse
+from typing import Optional
 
 import massgov.pfml.util.logging
 import massgov.pfml.util.pydantic
-
 from massgov.pfml.util.pydantic import PydanticBaseSettings
 
-from . import client, pdf_client, mock_client
+from . import client, mock_client, pdf_client
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -22,16 +20,16 @@ class PDFClientSettings(PydanticBaseSettings):
     class Config:
         env_prefix = "pdf_api_"
 
+
 class PDFClientConfig:
     host: str
 
     def __init__(self, settings: PDFClientSettings):
-            
+
         if os.environ.get("PDF_API_HOST") is None:
             raise Exception("Env var 'PDF_API_HOST' has not being defined.")
 
         self.host = urllib.parse.urljoin(os.environ.get("PDF_API_HOST"), "/api/pdf")
-
 
 
 def create_client(config: Optional[PDFClientConfig] = None) -> client.AbstractPDFClient:

@@ -87,10 +87,10 @@ class PDFClientBadResponse(PDFClientError):
             self.message,
         )
 
+
 class PDFNotFound(PDFClientBadResponse):
     """The PDF API returned a Not Found (404) error"""
 
 
 class PDFForbidden(PDFClientBadResponse):
     """The PDF API returned an authorization (403) error"""
-
