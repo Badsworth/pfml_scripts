@@ -104,8 +104,6 @@ const cmd: CommandModule<SystemWideArgs, PresetArgs> = {
       "TESTMAIL_APIKEY" as const,
       "FINEOS_USERS" as const,
       "LST_FILE_RANGE" as const,
-      "API_SNOW_CLIENT_ID" as const,
-      "API_SNOW_CLIENT_SECRET" as const,
     ];
     const environment = secretNames.reduce(
       (env, name) => {
@@ -129,7 +127,20 @@ const cmd: CommandModule<SystemWideArgs, PresetArgs> = {
           "run",
           "-e",
           deploy_type,
-          "dist/cloud.snow.yml",
+          "dist/cloud.agents.yml",
+        ],
+        instances: containers,
+        environment,
+      },
+      {
+        name: "artillery-claimant",
+        image: remote_tag,
+        command: [
+          "node_modules/.bin/artillery",
+          "run",
+          "-e",
+          deploy_type,
+          "dist/cloud.claimants.yml",
         ],
         instances: containers,
         environment,
