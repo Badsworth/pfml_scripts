@@ -1408,6 +1408,18 @@ def test_process_extract_additional_payment_types(test_db_session, payment_extra
     add_db_records_from_fineos_data(test_db_session, employer_reimbursement_data, add_eft=False)
     datasets.append(employer_reimbursement_data)
 
+    # Create a record for an employer reimbursement and overpayment
+    employer_reimbursement_overpayment_data = FineosPaymentData(
+        event_reason=extractor.AUTO_ALT_EVENT_REASON,
+        event_type="Overpayment Adjustment",
+        payee_identifier=extractor.TAX_IDENTIFICATION_NUMBER,
+        payment_method="Elec Funds Transfer",
+    )
+    add_db_records_from_fineos_data(
+        test_db_session, employer_reimbursement_overpayment_data, add_eft=False
+    )
+    datasets.append(employer_reimbursement_overpayment_data)
+
     stage_data(datasets, test_db_session)
 
     # Run the extract process
@@ -1493,6 +1505,17 @@ def test_process_extract_additional_payment_types(test_db_session, payment_extra
 
     validate_non_standard_payment_state(
         employer_payment, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
+    )
+
+    # Employer reimbursement should be in DELEGATED_PAYMENT_PROCESSED_OVERPAYMENT
+    employer_payment_overpayment = (
+        test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_i_value == employer_reimbursement_overpayment_data.i_value)
+        .one_or_none()
+    )
+
+    validate_non_standard_payment_state(
+        employer_payment_overpayment, State.DELEGATED_PAYMENT_PROCESSED_OVERPAYMENT
     )
 
 

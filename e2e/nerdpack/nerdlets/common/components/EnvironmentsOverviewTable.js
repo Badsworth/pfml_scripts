@@ -141,7 +141,7 @@ export class EnvironmentsOverviewTable extends React.Component {
                       <td className={"env"}>
                         <Link
                           to={navigation.getOpenStackedNerdletLocation({
-                            id: "env-timeline",
+                            id: "panel-env-timeline",
                             urlState: {
                               environment: env,
                             },
@@ -166,7 +166,7 @@ export class EnvironmentsOverviewTable extends React.Component {
                             <td className="version">
                               <Link
                                 to={navigation.getOpenStackedNerdletLocation({
-                                  id: "deployments",
+                                  id: "panel-deployments",
                                   urlState: {
                                     environment: env,
                                     component: component,

@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional, Tuple, Union
 
 import phonenumbers
 
@@ -24,8 +24,8 @@ def convert_to_E164(
 def parse_number(phone: str, int_code: Optional[str] = None) -> Optional[phonenumbers.PhoneNumber]:
     """Converts a str to E.164 format - for example, 1-123-4567 to +11234567"""
     parsed_phone_number: Optional[phonenumbers.PhoneNumber] = None
-
     # First, try parsing the number as provided
+
     try:
         parsed_phone_number = phonenumbers.parse(phone)
     except phonenumbers.NumberParseException:
@@ -47,3 +47,13 @@ def parse_number(phone: str, int_code: Optional[str] = None) -> Optional[phonenu
             return None
 
     return parsed_phone_number
+
+
+def get_area_code_and_number(phone: str) -> Tuple:
+    """Receives phone str and returns area code and number remainder separately."""
+    parsed_phone_number = parse_number(phone)
+    if not parsed_phone_number:
+        return None, None
+    area_code = str(parsed_phone_number.national_number)[:3]
+    number_remainder = str(parsed_phone_number.national_number)[-7:]
+    return area_code, number_remainder

@@ -15,7 +15,7 @@ import ClaimDetail from "../../../../src/models/ClaimDetail";
 import { Holiday } from "../../../../src/models/Holiday";
 import LeaveReason from "../../../../src/models/LeaveReason";
 import { NotFoundError } from "../../../../src/errors";
-import { Payments } from "../../../../src/pages/applications/status/payments";
+import Payments from "../../../../src/pages/applications/status/payments";
 import { createMockBenefitsApplicationDocument } from "../../../../lib/mock-helpers/createMockDocument";
 import { createMockPayment } from "lib/mock-helpers/createMockPayment";
 import dayjs from "dayjs";
@@ -45,6 +45,7 @@ interface SetupOptions {
   includeApprovalNotice?: boolean;
   holidays?: Holiday[];
   useDefaultClaim?: boolean;
+  errors?: Error[];
 }
 
 const setupHelper =
@@ -56,6 +57,7 @@ const setupHelper =
     includeApprovalNotice = false,
     holidays = defaultHolidays,
     useDefaultClaim = true,
+    errors = [],
   }: SetupOptions) =>
   (appLogicHook: AppLogic) => {
     appLogicHook.claims.claimDetail = useDefaultClaim
@@ -65,7 +67,7 @@ const setupHelper =
         })
       : undefined;
     appLogicHook.claims.loadClaimDetail = jest.fn();
-    appLogicHook.errors = [];
+    appLogicHook.errors = errors;
     appLogicHook.documents.loadAll = jest.fn();
     appLogicHook.documents.hasLoadedClaimDocuments = () => true;
     appLogicHook.holidays.holidays = holidays;
@@ -430,33 +432,10 @@ describe("Payments", () => {
   it("does not render payments if the is a 404 status", () => {
     const { container } = renderPage(
       Payments,
-      {},
       {
-        query: { absence_id: "foo" },
-        appLogic: {
-          claims: {
-            loadClaimDetail: jest.fn(),
-            claimDetail: undefined,
-            isLoadingClaimDetail: false,
-          },
-          errors: [new NotFoundError()],
-          documents: {
-            loadAll: { loadAllClaimDocuments: jest.fn() },
-          },
-          holidays: {
-            holidays: defaultHolidays,
-            loadHolidays: jest.fn(),
-            hasLoadedHolidays: true,
-            isLoadingHolidays: false,
-          },
-          payments: {
-            loadPayments: jest.fn(),
-            loadedPaymentsData: [],
-            hasLoadedPayments: jest.fn,
-            isLoadingPayments: false,
-          },
-        },
-      }
+        addCustomSetup: setupHelper({ errors: [new NotFoundError()] }),
+      },
+      props
     );
 
     expect(screen.queryByText(/Payments/)).not.toBeInTheDocument();

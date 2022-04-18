@@ -55,6 +55,9 @@ class UserResponse(PydanticBaseModel):
     email_address: str
     mfa_delivery_preference: Optional[MFADeliveryPreference]
     mfa_phone_number: Optional[MaskedPhoneResponse]
+    first_name: Optional[str]
+    last_name: Optional[str]
+    phone_number: Optional[MaskedPhoneResponse]
     # Optional since it isn't populated at first in from_orm(). After that it
     # should always be a potentially empty list.
     application_names: Optional[List[ApplicationNamesResponse]]
@@ -87,6 +90,8 @@ class UserResponse(PydanticBaseModel):
             )
             for n in application_names_data
         ]
+        if user_response.phone_number:
+            user_response.phone_number.extension = user.phone_extension
         return user_response
 
 

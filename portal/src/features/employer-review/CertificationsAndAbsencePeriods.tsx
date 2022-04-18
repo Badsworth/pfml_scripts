@@ -1,7 +1,7 @@
 import { ClaimDocument, DocumentType } from "../../models/Document";
 import { AbsencePeriod } from "../../models/AbsencePeriod";
 import DownloadableDocument from "../../components/DownloadableDocument";
-import EmployerClaim from "../../models/EmployerClaim";
+import EmployerClaimReview from "../../models/EmployerClaimReview";
 import Heading from "../../components/core/Heading";
 import LeaveReason from "../../models/LeaveReason";
 import PaginatedAbsencePeriodsTable from "./PaginatedAbsencePeriodsTable";
@@ -15,7 +15,7 @@ import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
 interface CertificationsAndAbsencePeriodsProps {
-  claim: EmployerClaim;
+  claim: EmployerClaimReview;
   documents: ClaimDocument[];
   downloadDocument: (
     document: ClaimDocument,

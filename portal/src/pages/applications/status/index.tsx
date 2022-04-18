@@ -13,8 +13,9 @@ import {
   paymentStatusViewHelper,
   showPaymentsTab,
 } from "./payments";
-import withUser, { WithUserProps } from "../../../hoc/withUser";
-
+import withClaimDetail, {
+  WithClaimDetailProps,
+} from "../../../hoc/withClaimDetail";
 import { AbsencePeriod } from "../../../models/AbsencePeriod";
 import AbsencePeriodStatusTag from "../../../components/AbsencePeriodStatusTag";
 import Alert from "../../../components/core/Alert";
@@ -43,8 +44,9 @@ const containerClassName = "border-bottom border-base-lighter padding-y-4";
 
 export const Status = ({
   appLogic,
+  claim_detail,
   query,
-}: WithUserProps & {
+}: WithClaimDetailProps & {
   query: {
     absence_case_id?: string;
     absence_id?: string;
@@ -53,7 +55,6 @@ export const Status = ({
 }) => {
   const { t } = useTranslation();
   const {
-    claims: { claimDetail, loadClaimDetail, isLoadingClaimDetail },
     documents: {
       documents: allClaimDocuments,
       download: downloadDocument,
@@ -64,19 +65,16 @@ export const Status = ({
     payments: { loadPayments, loadedPaymentsData },
   } = appLogic;
   const { absence_case_id, absence_id, uploaded_document_type } = query;
-  const application_id = claimDetail?.application_id;
+  const application_id = claim_detail.application_id;
   const absenceId = absence_id || absence_case_id;
-  const hasDocuments = hasLoadedClaimDocuments(
-    claimDetail?.application_id || ""
-  );
+  const hasDocuments = hasLoadedClaimDocuments(claim_detail.application_id);
   const hasDocumentsError = hasDocumentsLoadError(
     appLogic.errors,
-    claimDetail?.application_id || ""
+    claim_detail.application_id
   );
 
   useEffect(() => {
     if (absenceId) {
-      loadClaimDetail(absenceId);
       loadPayments(absenceId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -99,7 +97,7 @@ export const Status = ({
       const anchorId = document.getElementById(location.hash.substring(1));
       if (anchorId) anchorId.scrollIntoView();
     }
-  }, [hasDocuments, hasDocumentsError, isLoadingClaimDetail]);
+  }, [hasDocuments, hasDocumentsError]);
 
   /**
    * If there is no absence_id query parameter,
@@ -121,26 +119,17 @@ export const Status = ({
     );
   }
 
-  // Check both because claimDetail could be cached from a different status page.
-  if (isLoadingClaimDetail || !claimDetail) {
-    return (
-      <div className="text-center">
-        <Spinner aria-label={t("pages.claimsStatus.loadingClaimDetailLabel")} />
-      </div>
-    );
-  }
-
   const absenceDetails = AbsencePeriod.groupByReason(
-    claimDetail.absence_periods
+    claim_detail.absence_periods
   );
 
   const documentsForApplication = filterByApplication(
     allClaimDocuments.items,
-    claimDetail.application_id
+    claim_detail.application_id
   );
 
   const helper = paymentStatusViewHelper(
-    claimDetail,
+    claim_detail,
     allClaimDocuments,
     loadedPaymentsData || new Payment()
   );
@@ -184,7 +173,7 @@ export const Status = ({
     );
 
     // How many claim decisions
-    const expectedNoticeCount = claimDetail.absence_periods.reduce(
+    const expectedNoticeCount = claim_detail.absence_periods.reduce(
       (previousValue, { request_decision }) => {
         const shouldHaveNotice =
           request_decision === "Approved" ||
@@ -319,31 +308,31 @@ export const Status = ({
             </Heading>
             <p className="text-bold">{absenceId}</p>
           </div>
-          {claimDetail.employer && (
+          {claim_detail.employer && (
             <div>
               <Heading weight="normal" level="2" size="4">
                 {t("pages.claimsStatus.employerEIN")}
               </Heading>
-              <p className="text-bold">{claimDetail.employer.employer_fein}</p>
+              <p className="text-bold">{claim_detail.employer.employer_fein}</p>
             </div>
           )}
         </div>
 
         {hasPendingStatus && (
           <Timeline
-            absencePeriods={claimDetail.absence_periods}
+            absencePeriods={claim_detail.absence_periods}
             employerFollowUpDate={
-              claimDetail.managedRequirementByFollowUpDate[0]?.follow_up_date
+              claim_detail.managedRequirementByFollowUpDate[0]?.follow_up_date
             }
-            applicationId={claimDetail.application_id}
+            applicationId={claim_detail.application_id}
             docList={documentsForApplication}
-            absenceId={claimDetail.fineos_absence_id}
+            absenceId={claim_detail.fineos_absence_id}
             appLogic={appLogic}
           />
         )}
         <LeaveDetails
           absenceDetails={absenceDetails}
-          absenceId={claimDetail.fineos_absence_id}
+          absenceId={claim_detail.fineos_absence_id}
           isPaymentsTab={isPaymentsTab}
         />
         {viewYourNotices()}
@@ -375,7 +364,7 @@ export const Status = ({
               href={appLogic.portalFlow.getNextPageRoute(
                 "UPLOAD_DOC_OPTIONS",
                 {},
-                { absence_id: claimDetail.fineos_absence_id }
+                { absence_id: claim_detail.fineos_absence_id }
               )}
             >
               {t("pages.claimsStatus.uploadDocumentsButton")}
@@ -438,7 +427,7 @@ export const Status = ({
   );
 };
 
-export default withUser(Status);
+export default withClaimDetail(Status);
 
 interface LeaveDetailsProps {
   absenceDetails?: { [key: string]: AbsencePeriod[] };

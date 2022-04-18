@@ -154,6 +154,7 @@ class Phone(PydanticBaseModel):
     phone_number: Optional[str]
     phone_type: Optional[PhoneType]
     e164: Optional[str]
+    extension: Optional[str]
 
     @validator("phone_number")
     def check_phone_number(cls, phone_number, values):  # noqa: B902
@@ -259,6 +260,7 @@ class MaskedPhoneResponse(PydanticBaseModel):
     int_code: Optional[str]
     phone_number: Optional[str]
     phone_type: Optional[PhoneType]
+    extension: Optional[str]
 
     @classmethod
     def from_orm(cls, phone: Union[db_application_models.Phone, str]) -> "MaskedPhoneResponse":
@@ -269,6 +271,7 @@ class MaskedPhoneResponse(PydanticBaseModel):
             int_code=phone_response.int_code,
             phone_number=phone_response.phone_number,
             phone_type=phone_response.phone_type,
+            extension=phone_response.extension,
         )
 
 
@@ -278,6 +281,7 @@ class PhoneResponse(PydanticBaseModel):
     phone_number: Optional[str]
     phone_type: Optional[PhoneType]
     e164: Optional[str]
+    extension: Optional[str]
 
     @classmethod
     def from_orm(cls, phone: Union[db_application_models.Phone, str]) -> "PhoneResponse":

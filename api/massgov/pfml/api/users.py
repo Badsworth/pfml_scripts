@@ -1,4 +1,5 @@
 import connexion
+import flask
 from werkzeug.exceptions import BadRequest
 
 import massgov.pfml.api.app as app
@@ -11,7 +12,7 @@ from massgov.pfml.api.models.users.requests import (
     UserUpdateRequest,
 )
 from massgov.pfml.api.models.users.responses import UserResponse
-from massgov.pfml.api.services.users import update_user
+from massgov.pfml.api.services.users import handle_user_patch_fineos_side_effects, update_user
 from massgov.pfml.api.util.deepgetattr import deepgetattr
 from massgov.pfml.api.validation.exceptions import IssueType, ValidationErrorDetail
 from massgov.pfml.api.validation.user_rules import (
@@ -178,24 +179,49 @@ def users_patch(user_id):
     """This endpoint modifies the user specified by the user_id"""
     body = UserUpdateRequest.parse_obj(connexion.request.json)
 
-    issues = get_users_patch_issues(body)
-    if issues:
-        logger.info("users_patch failure - request has invalid fields")
-        return response_util.error_response(
-            status_code=BadRequest,
-            message="Request does not include valid fields.",
-            errors=issues,
-            data={},
-        ).to_api_response()
-
     with app.db_session() as db_session:
         user = get_or_404(db_session, User, user_id)
 
         ensure(EDIT, user)
+        issues = get_users_patch_issues(body, user)
+        if issues:
+            logger.info("users_patch failure - request has invalid fields")
+            return response_util.error_response(
+                status_code=BadRequest,
+                message="Request does not include valid fields.",
+                errors=issues,
+                data={},
+            ).to_api_response()
 
-    updated_user = update_user(db_session, user, body)
+    headers = flask.request.headers
+    # Each request will have an authorization header in the format "Bearer <jwt token>". This header
+    # is required and the auth token is verified as part of our openapi configuration. To read more see
+    # massgov.pfml.api.authentication.decode_jwt
+    auth_header = headers.get("Authorization")
+    assert auth_header
+    # Strip off the "Bearer " prefix so we're left with just the auth token
+    cognito_auth_token = auth_header[7:]
+    # TODO (PORTAL-1828): Remove X-FF-Sync-Cognito-Preferences feature flag header
+    save_mfa_preference_to_cognito = headers.get("X-FF-Sync-Cognito-Preferences", None) == "true"
+
+    handle_user_patch_fineos_side_effects(user, body)
+
+    updated_user = update_user(
+        db_session, user, body, save_mfa_preference_to_cognito, cognito_auth_token
+    )
     data = UserResponse.from_orm(updated_user).dict()
 
+    logger.info(
+        "user_patch success",
+        extra={
+            "user_id": user.user_id,
+            "is_leave_admin_update": bool(
+                updated_user.first_name and updated_user.last_name and updated_user.phone_number
+            ),
+        },
+    )
+
     return response_util.success_response(
-        message="Successfully updated user", data=data
+        message="Successfully updated user",
+        data=data,
     ).to_api_response()

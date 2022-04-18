@@ -12,6 +12,7 @@ class CreateOrUpdateLeaveAdmin(pydantic.BaseModel):
     admin_area_code: Optional[str]
     admin_phone_number: Optional[str]
     admin_email: str
+    admin_phone_extension: Optional[str]
 
 
 class PhoneNumber(pydantic.BaseModel):

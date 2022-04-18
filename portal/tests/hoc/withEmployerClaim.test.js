@@ -1,5 +1,5 @@
 import { screen, waitFor } from "@testing-library/react";
-import EmployerClaim from "../../src/models/EmployerClaim";
+import EmployerClaimReview from "../../src/models/EmployerClaimReview";
 import React from "react";
 import { renderPage } from "../test-utils";
 import withEmployerClaim from "../../src/hoc/withEmployerClaim";
@@ -66,7 +66,7 @@ describe("withEmployerClaim", () => {
   });
 
   it("renders the page when claim state is loaded", async () => {
-    const mockClaim = new EmployerClaim({
+    const mockClaim = new EmployerClaimReview({
       absence_periods: [],
       fineos_absence_id: mockAbsenceId,
     });

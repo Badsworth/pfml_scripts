@@ -399,7 +399,7 @@ def test_e2e_pub_payments(
         assert len(test_db_session.query(Pfml1099Request).all()) <= len(
             test_db_session.query(FineosExtractVbi1099DataSom).all()
         )
-        # split payments added for withholding
+        # split payments added for withholding and employer reimbursement
         split_payment_scenarios = [
             ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
             ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
@@ -411,6 +411,12 @@ def test_e2e_pub_payments(
             ScenarioName.TAX_WITHHOLDING_CANCELLATION_PAYMENT,
             ScenarioName.TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
             ScenarioName.TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+            ScenarioName.EMPLOYER_REIMBURSEMENT_WITH_STANDARD_PAYMENT,
+            ScenarioName.EMPLOYER_REIMBURSEMENT_WITH_STANDARD_PAYMENT,
+            ScenarioName.STANDARD_PAYMENT_WITH_TW_AND_ER,
+            ScenarioName.STANDARD_PAYMENT_WITH_TW_AND_ER,
+            ScenarioName.STANDARD_PAYMENT_WITH_TW_AND_ER,
+            ScenarioName.STANDARD_PAYMENT_WITH_TW_AND_ER,
         ]
 
         assert len(payments) == len(test_dataset.scenario_dataset) + len(
@@ -540,8 +546,21 @@ def test_e2e_pub_payments(
 
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
-            scenario_names=[ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT],
-            end_state=State.DELEGATED_PAYMENT_EMPLOYER_REIMBURSEMENT_RESTARTABLE,
+            scenario_names=[
+                ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT,
+                ScenarioName.EMPLOYER_REIMBURSEMENT_WITH_STANDARD_PAYMENT,
+                ScenarioName.STANDARD_PAYMENT_WITH_TW_AND_ER,
+            ],
+            end_state=State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
+            db_session=test_db_session,
+        )
+
+        assert_payment_state_for_scenarios(
+            test_dataset=test_dataset,
+            scenario_names=[
+                ScenarioName.EMPLOYER_REIMBURSEMENT_INVALID_ADDRESS_WITH_VALID_STANDARD_PAYMENT
+            ],
+            end_state=State.DELEGATED_PAYMENT_CASCADED_ERROR,
             db_session=test_db_session,
         )
 
@@ -703,6 +722,10 @@ def test_e2e_pub_payments(
                 ScenarioName.TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT,
                 ScenarioName.IN_REVIEW_LEAVE_REQUEST_ADHOC_PAYMENTS_DECISION,
                 ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED,
+                ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT,
+                ScenarioName.EMPLOYER_REIMBURSEMENT_WITH_STANDARD_PAYMENT,
+                ScenarioName.STANDARD_PAYMENT_WITH_TW_AND_ER,
+                ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT_AMOUNT_OVER_CAP,
             ]
         )
 
@@ -760,12 +783,28 @@ def test_e2e_pub_payments(
                 if test_dataset.is_payment_scenario(
                     p, ScenarioName.TAX_WITHHOLDING_MISSING_PRIMARY_PAYMENT
                 )
-                else ""
-                if test_dataset.is_payment_scenario(p, ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED)
-                else "There were less than three previous payments",
+                else (
+                    "Orphaned Employer Reimbursement"
+                    if (
+                        test_dataset.is_payment_scenario(
+                            p, ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT
+                        )
+                        or test_dataset.is_payment_scenario(
+                            p, ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT_AMOUNT_OVER_CAP
+                        )
+                    )
+                    else (
+                        ""
+                        if test_dataset.is_payment_scenario(
+                            p, ScenarioName.HAPPY_PATH_PAYMENT_PREAPPROVED
+                        )
+                        else "There were less than three previous payments"
+                    )
+                ),
             }
             for p in audit_report_sent_payments
         ]
+
         assert_csv_content(audit_report_parsed_csv_rows, audit_report_expected_rows)
 
         # == Writeback
@@ -782,7 +821,10 @@ def test_e2e_pub_payments(
 
         # Removed writeback for employer remibursement payments
         stage_1_writeback_scenarios.remove(ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT)
-
+        stage_1_writeback_scenarios.remove(
+            ScenarioName.EMPLOYER_REIMBURSEMENT_WITH_STANDARD_PAYMENT
+        )
+        stage_1_writeback_scenarios.remove(ScenarioName.STANDARD_PAYMENT_WITH_TW_AND_ER)
         assert_writeback_for_stage(test_dataset, stage_1_writeback_scenarios, test_db_session)
 
         # Now add records to the list for tax withholding scenarios so the counts
@@ -797,6 +839,8 @@ def test_e2e_pub_payments(
                 ScenarioName.TAX_WITHHOLDING_CANCELLATION_PAYMENT,
                 ScenarioName.TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
                 ScenarioName.TAX_WITHHOLDING_ADDRESS_NO_MATCHES_FROM_EXPERIAN,
+                ScenarioName.EMPLOYER_REIMBURSEMENT_WITH_INVALID_ADDRESS,
+                ScenarioName.EMPLOYER_REIMBURSEMENT_WITH_STANDARD_PAYMENT_INVALID_ADDRESS,
             ]
         )
 
@@ -1331,6 +1375,13 @@ def test_e2e_pub_payments(
                 scenario_descriptor.payment_method != PaymentMethod.CHECK
                 or not scenario_descriptor.pub_check_response
             ):
+                continue
+
+            if scenario_descriptor.scenario_name in [
+                ScenarioName.EMPLOYER_REIMBURSEMENT_WITH_INVALID_ADDRESS,
+                ScenarioName.EMPLOYER_REIMBURSEMENT_WITH_STANDARD_PAYMENT_INVALID_ADDRESS,
+                ScenarioName.EMPLOYER_REIMBURSEMENT_INVALID_ADDRESS_WITH_VALID_STANDARD_PAYMENT,
+            ]:
                 continue
 
             employee = scenario_data.employee
@@ -2322,7 +2373,7 @@ def setup_common_env_variables(monkeypatch):
     monkeypatch.setenv("DFML_PUB_ROUTING_NUMBER", "234567890")
     monkeypatch.setenv("PUB_PAYMENT_STARTING_CHECK_NUMBER", "100")
     monkeypatch.setenv("USE_AUDIT_REJECT_TRANSACTION_STATUS", "1")
-    monkeypatch.setenv("ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS", "0")
+    monkeypatch.setenv("ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS", "1")
 
 
 # == Assertion Helpers ==

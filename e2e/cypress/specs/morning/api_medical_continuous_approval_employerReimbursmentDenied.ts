@@ -106,12 +106,14 @@ import { config } from "../../actions/common";
           } else {
             task.assertTaskExists("SOM Autopay After Appeal Reminder");
           }
+          // Force in the click at the end of the chainable is causing
+          // issue in cps-preview and stage environments.
           cy.get("[id^=MENUBAR\\.CaseSubjectMenu]")
             .findByText("Correspondence")
             .click({ force: true })
             .parents("li")
             .findByText("Employer Reimbursement Denial Notice")
-            .click({ force: true });
+            .click({ force: config("HAS_APRIL_UPGRADE") === "true" });
           fineos.clickBottomWidgetButton("Next");
           claimPage.documents((document) => {
             document.setDocumentComplete(

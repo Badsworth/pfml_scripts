@@ -10,7 +10,7 @@ import PaymentDetail, {
   isAfterDelayProcessingTime,
 } from "../../../models/Payment";
 import React, { useEffect } from "react";
-import withUser, { WithUserProps } from "../../../hoc/withUser";
+import withClaimDetail, { WithClaimDetailProps } from "src/hoc/withClaimDetail";
 import { AbsencePeriod } from "../../../models/AbsencePeriod";
 import Accordion from "../../../components/core/Accordion";
 import AccordionItem from "../../../components/core/AccordionItem";
@@ -44,9 +44,10 @@ dayjs.extend(dayjsBusinessTime);
 dayjs.extend(weekday);
 
 export const Payments = ({
+  claim_detail,
   appLogic,
   query,
-}: WithUserProps & {
+}: WithClaimDetailProps & {
   query: {
     absence_id?: string;
   };
@@ -55,7 +56,6 @@ export const Payments = ({
   const { absence_id } = query;
   const {
     errors,
-    claims: { claimDetail, isLoadingClaimDetail, loadClaimDetail },
     documents: {
       documents: allClaimDocuments,
       loadAll: loadAllClaimDocuments,
@@ -66,11 +66,10 @@ export const Payments = ({
     portalFlow,
   } = appLogic;
 
-  const application_id = claimDetail?.application_id;
+  const application_id = claim_detail.application_id;
 
   useEffect(() => {
     if (absence_id) {
-      loadClaimDetail(absence_id);
       loadPayments(absence_id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -100,9 +99,6 @@ export const Payments = ({
 
   // Check both because claimDetail could be cached from a different status page.
   if (
-    isLoadingClaimDetail ||
-    !claimDetail ||
-    claimDetail.fineos_absence_id !== absence_id ||
     !hasLoadedPayments(absence_id) ||
     !hasLoadedClaimDocuments(application_id || "")
   ) {
@@ -114,7 +110,7 @@ export const Payments = ({
   }
 
   const helper = paymentStatusViewHelper(
-    claimDetail,
+    claim_detail,
     allClaimDocuments,
     loadedPaymentsData || new Payment()
   );
@@ -563,7 +559,7 @@ export const Payments = ({
   );
 };
 
-export default withUser(Payments);
+export default withClaimDetail(Payments);
 
 type PaymentStatusViewHelper = ReturnType<typeof paymentStatusViewHelper>;
 

@@ -1,6 +1,0 @@
-{
-  "schemaType": "NERDLET",
-  "id": "e2e-tests",
-  "displayName": "E2E Test Viewer",
-  "description": "Displays information about one or more E2E test runs."
-}
