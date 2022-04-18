@@ -12,6 +12,7 @@ from massgov.pfml.api.models.applications.common import (
     EmploymentStatus,
     Gender,
     Ethnicity,
+    Race,
     Occupation,
     OrganizationUnitSelection,
     OtherIncome,
@@ -88,7 +89,8 @@ class ApplicationRequestBody(PydanticBaseModel):
     last_name: Optional[str]
     date_of_birth: Optional[date]
     gender: Optional[Gender]
-    race: Optional[str]
+    race: Optional[Race]
+    race_custom: Optional[str]
     ethnicity: Optional[Ethnicity]
     has_continuous_leave_periods: Optional[bool]
     has_intermittent_leave_periods: Optional[bool]

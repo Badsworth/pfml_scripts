@@ -11,6 +11,7 @@ from massgov.pfml.api.models.applications.common import (
     EmploymentStatus,
     Gender,
     Ethnicity,
+    Race,
     MaskedAddress,
     MaskedApplicationLeaveDetails,
     MaskedPaymentPreference,
@@ -85,7 +86,8 @@ class ApplicationResponse(PydanticBaseModel):
     date_of_birth: Optional[MaskedDateStr]
     gender: Optional[Gender]
     ethnicity: Optional[Ethnicity]
-    race: Optional[str]
+    race: Optional[Race]
+    race_custom: Optional[str]
     has_continuous_leave_periods: Optional[bool]
     has_intermittent_leave_periods: Optional[bool]
     has_reduced_schedule_leave_periods: Optional[bool]

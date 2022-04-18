@@ -2759,7 +2759,19 @@ components:
                 - Prefer not to answer
             race:
               type: string
-              example: "Prefer not to answer"
+              nullable: true
+              enum:
+                - American Indian/Alaska Native
+                - Asian/Asian American
+                - Black/African American
+                - Native Hawaiian/Other Pacific Islander
+                - White
+                - Prefer not to answer
+                - Another race not listed above
+                - Multiracial
+            race_custom:
+              type: string
+              example: "Black/Asian"
               nullable: true
             ethnicity:
               type: string
@@ -2968,7 +2980,19 @@ components:
             - Prefer not to answer
         race:
           type: string
-          example: "Prefer not to answer"
+          nullable: true
+          enum:
+            - American Indian/Alaska Native
+            - Asian/Asian American
+            - Black/African American
+            - Native Hawaiian/Other Pacific Islander
+            - White
+            - Prefer not to answer
+            - Another race not listed above
+            - Multiracial
+        race_custom:
+          type: string
+          example: "Black/Asian"
           nullable: true
         ethnicity:
           type: string

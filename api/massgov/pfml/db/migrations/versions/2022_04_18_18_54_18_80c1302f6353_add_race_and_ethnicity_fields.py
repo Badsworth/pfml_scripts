@@ -1,15 +1,15 @@
 """Add Race and Ethnicity fields
 
-Revision ID: 13b837291087
+Revision ID: 80c1302f6353
 Revises: 626ad4463740
-Create Date: 2022-04-15 18:11:42.438782
+Create Date: 2022-04-18 18:54:18.842480
 
 """
 import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "13b837291087"
+revision = "80c1302f6353"
 down_revision = "626ad4463740"
 branch_labels = None
 depends_on = None
@@ -23,18 +23,13 @@ def upgrade():
         sa.Column("ethnicity_description", sa.Text(), nullable=False),
         sa.PrimaryKeyConstraint("ethnicity_id"),
     )
-    op.add_column("application", sa.Column("race", sa.Text(), nullable=True))
+    op.add_column("application", sa.Column("race_id", sa.Integer(), nullable=True))
+    op.add_column("application", sa.Column("race_custom", sa.Text(), nullable=True))
     op.add_column("application", sa.Column("ethnicity_id", sa.Integer(), nullable=True))
-    op.create_foreign_key(
-        "application_ethnicity_id_fkey",
-        "application",
-        "lk_ethnicity",
-        ["ethnicity_id"],
-        ["ethnicity_id"],
-    )
+    op.create_foreign_key("application_race_id_fkey", "application", "lk_race", ["race_id"], ["race_id"])
+    op.create_foreign_key("application_ethnicity_id_fkey", "application", "lk_ethnicity", ["ethnicity_id"], ["ethnicity_id"])
     op.drop_constraint("employee_race_type_fkey", "employee", type_="foreignkey")
     op.drop_column("employee", "race_id")
-    op.drop_table("lk_race")
     # ### end Alembic commands ###
 
 
@@ -46,14 +41,10 @@ def downgrade():
     op.create_foreign_key(
         "employee_race_type_fkey", "employee", "lk_race", ["race_id"], ["race_id"]
     )
+    op.drop_constraint("application_race_id_fkey", "application", type_="foreignkey")
     op.drop_constraint("application_ethnicity_id_fkey", "application", type_="foreignkey")
     op.drop_column("application", "ethnicity_id")
-    op.drop_column("application", "race")
-    op.create_table(
-        "lk_race",
-        sa.Column("race_id", sa.INTEGER(), autoincrement=True, nullable=False),
-        sa.Column("race_description", sa.TEXT(), autoincrement=False, nullable=False),
-        sa.PrimaryKeyConstraint("race_id", name="lk_race_pkey"),
-    )
+    op.drop_column("application", "race_custom")
+    op.drop_column("application", "race_id")
     op.drop_table("lk_ethnicity")
     # ### end Alembic commands ###

@@ -229,6 +229,16 @@ class LkEthnicity(Base):
         self.ethnicity_description = ethnicity_description
 
 
+class LkRace(Base):
+    __tablename__ = "lk_race"
+    race_id = Column(Integer, primary_key=True)
+    race_description = Column(Text, nullable=False)
+
+    def __init__(self, race_id, race_description):
+        self.race_id = race_id
+        self.race_description = race_description
+
+
 class ConcurrentLeave(Base, TimestampMixin):
     __tablename__ = "concurrent_leave"
     concurrent_leave_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
@@ -306,7 +316,8 @@ class Application(Base, TimestampMixin):
     occupation_id = Column(Integer, ForeignKey("lk_occupation.occupation_id"))
     organization_unit_selection = Column(Text)
     gender_id = Column(Integer, ForeignKey("lk_gender.gender_id"))
-    race = Column(Text)
+    race_id = Column(Integer, ForeignKey("lk_race.race_id"))
+    race_custom = Column(Text)
     ethnicity_id = Column(Integer, ForeignKey("lk_ethnicity.ethnicity_id"))
     hours_worked_per_week = Column(Numeric)
     relationship_to_caregiver_id = Column(
@@ -364,6 +375,7 @@ class Application(Base, TimestampMixin):
     organization_unit = relationship(OrganizationUnit)
     gender = relationship(LkGender)
     ethnicity = relationship(LkEthnicity)
+    race = relationship(LkRace)
     leave_reason = relationship(LkLeaveReason)
     leave_reason_qualifier = relationship(LkLeaveReasonQualifier)
     employment_status = relationship(LkEmploymentStatus)
@@ -768,9 +780,23 @@ class Ethnicity(LookupTable):
     model = LkEthnicity
     column_names = ("ethnicity_id", "ethnicity_description")
 
-    PREFER_NOT_TO_ANSWER = LkEthnicity(3, "Prefer not to answer")
-    HISPANIC_OR_LATINO = LkEthnicity(1, "Hispanic or Latino")
-    NOT_HISPANIC_OR_LATINO = LkEthnicity(2, "Not Hispanic or Latino")
+    PREFER_NOT_TO_ANSWER = LkEthnicity(1, "Prefer not to answer")
+    HISPANIC_OR_LATINO = LkEthnicity(2, "Hispanic or Latino")
+    NOT_HISPANIC_OR_LATINO = LkEthnicity(3, "Not Hispanic or Latino")
+
+
+class Race(LookupTable):
+    model = LkRace
+    column_names = ("race_id", "race_description")
+
+    PREFER_NOT_TO_ANSWER = LkRace(1, "Prefer not to answer")
+    AMERICAN_INDIAN_ALASKA_NATIVE = LkRace(2, "American Indian/Alaska Native")
+    ASIAN_ASIAN_AMERICAN = LkRace(3, "Asian/Asian American")
+    BLACK_AFRICAN_AMERICAN = LkRace(4, "Black/African American")
+    NATIVE_HAWAIIAN_OTHER_PACIFIC_ISLANDER = LkRace(5, "Native Hawaiian/Other Pacific Islander")
+    WHITE = LkRace(6, "White")
+    ANOTHER_RACE_NOT_LISTED_ABOVE = LkRace(7, "Another race not listed above")
+    MULTIRACIAL = LkRace(8, "Multiracial")
 
 
 class NotificationMethod(LookupTable):
@@ -1151,6 +1177,7 @@ def sync_holidays(db_session):
 def sync_lookup_tables(db_session):
     """Synchronize lookup tables to the database."""
     Ethnicity.sync_to_database(db_session)
+    Race.sync_to_database(db_session)
     LeaveReason.sync_to_database(db_session)
     LeaveReasonQualifier.sync_to_database(db_session)
     RelationshipToCaregiver.sync_to_database(db_session)

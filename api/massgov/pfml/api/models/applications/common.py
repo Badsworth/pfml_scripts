@@ -420,6 +420,17 @@ class Ethnicity(str, LookupEnum):
     prefer_not_to_answer = "Prefer not to answer"
 
 
+class Race(str, LookupEnum):
+    american_indian_alaska_native = "American Indian/Alaska Native"
+    asian_asian_american = "Asian/Asian American"
+    black_african_american = "Black/African American"
+    native_hawaiian_other_pacific_islander = "Native Hawaiian/Other Pacific Islander"
+    white = "White"
+    prefer_not_to_answer = "Prefer not to answer"
+    another_race_not_listed_above = "Another race not listed above"
+    multiracial = "Multiracial"
+
+
 class DocumentResponse(PydanticBaseModel):
     user_id: UUID4
     application_id: UUID4
