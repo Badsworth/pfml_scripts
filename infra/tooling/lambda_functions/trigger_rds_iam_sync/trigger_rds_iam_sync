@@ -1,8 +1,0 @@
-digraph "Trigger RDS IAM Sync" {
-	graph [fontcolor="#2D3436" fontname="Sans-Serif" fontsize=15 label="Trigger RDS IAM Sync" nodesep=0.60 pad=2.0 rankdir=LR ranksep=0.75 splines=ortho]
-	node [fixedsize=true fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13 height=1.4 imagescale=true labelloc=b shape=box style=rounded width=1.4]
-	edge [color="#7B8894"]
-	"1e5827eb441b482482012dcc07572d22" [label="Training Database" height=1.9 image="/home/wokoro/pfml/infra/tooling/lambda_functions/trigger_rds_iam_sync/.venv/lib/python3.8/site-packages/resources/aws/database/rds.png" shape=none]
-	"429f0e8115184b8abd994be4210ac010" [label=trigger_rds_iam_sync height=1.9 image="/home/wokoro/pfml/infra/tooling/lambda_functions/trigger_rds_iam_sync/.venv/lib/python3.8/site-packages/resources/aws/compute/lambda.png" shape=none]
-	"1e5827eb441b482482012dcc07572d22" -> "429f0e8115184b8abd994be4210ac010" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
-}
