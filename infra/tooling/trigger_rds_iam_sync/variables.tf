@@ -8,7 +8,7 @@ variable "prefix" {
   description = "naming convention prefix"
 }
 
-variable "rds_cluster_arn" {
-  type        = string
-  description = "source arn for rds cluster"
+variable "rds_cluster_arns" {
+  type        = list
+  description = "source arns for rds cluster"
 }

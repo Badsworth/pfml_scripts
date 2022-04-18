@@ -36,7 +36,7 @@ resource "aws_cloudwatch_event_rule" "trigger_rds_iam_sync" {
   "detail": {
     "EventCategories": ["creation"],
     "SourceType": ["SNAPSHOT"],
-    "SourceArn": ["${var.rds_cluster_arn}"],
+    "SourceArn": var.rds_cluster_arns,
     "Message": ["Automated snapshot created"]
   }
 }
