@@ -5,8 +5,7 @@ data "archive_file" "trigger_rds_iam_sync" {
   type        = "zip"
   output_path = "lambda_functions/${local.name}/${local.name}.zip"
   source_file = "lambda_functions/${local.name}/${local.name}.py"
-  excludes    = ["${local.name}.zip"]
-}
+  }
 resource "aws_lambda_function" "trigger_rds_iam_sync" {
   description      = "Trigger RDS IAM Sync GitHub Action"
   filename         = data.archive_file.trigger_rds_iam_sync.output_path
