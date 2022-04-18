@@ -18,7 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         environment:
-          [ "test", "stage", "performance", "cps-preview", "training", "long", "trn2" ]
+          [ "test" ]
     env:
       NEW_RELIC_ACCOUNT_ID: 2837112
     steps:
@@ -38,7 +38,7 @@ jobs:
       # - run: ./bin/ci/publish-fineos-deployment-events.sh ${{ matrix.environment }}
       #   id: publish-deployments
       - name: Query NR to get list of failed specs
-        run: sh ./bin/ci/get-list-failed-specs.sh cps-preview EOLWD/pfml-2183613726-1
+        run: sh ./bin/ci/get-list-failed-specs.sh test EOLWD/pfml-2185315633-1
         id: get-failed
       - name: Print string of failed specs for auto trigger
         run: |
