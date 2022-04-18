@@ -23,7 +23,8 @@ def handler(event, context=None):
 
 if __name__ == "__main__":
     handler(None)
-
+else:
+    exit()
 # to do
 # connect event bridge to lambda
 # setup pattern for event bridge to trigger lambda
