@@ -20,5 +20,10 @@
             "s3:GetBucketNotificationConfiguration",
             "s3:ListAllMyBuckets"
         ]
+    },
+    "rds": {
+        "actions": [
+            "rds:DescribeDBClusters"
+        ]
     }
 }
