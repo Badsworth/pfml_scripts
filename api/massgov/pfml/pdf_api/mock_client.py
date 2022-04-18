@@ -5,21 +5,25 @@
 # used in deployed environments when needed.
 #
 
-import base64
-import copy
+# import base64
+# import copy
 import datetime
 import pathlib
-from decimal import Decimal
-from typing import Any, Iterable, List, Optional, Tuple, Union
+import urllib
 
-import faker
+# from decimal import Decimal
+from typing import List, Optional
+
+# import faker
 import requests
-from requests.models import Response
 
 import massgov.pfml.util.logging
 import massgov.pfml.util.logging.wrapper
 
-from . import client, exception, models, pdf_client
+from . import client, models  # , exception, pdf_client
+
+# from requests.models import Response
+
 
 # from .mock.field import fake_customer_no
 # from .models.customer_api import ChangeRequestPeriod, ChangeRequestReason
@@ -64,15 +68,26 @@ def fake_date_of_birth(fake):
 class MockPDFClient(client.AbstractPDFClient):
     """Mock PDF API client that returns fake responses."""
 
-    def __init__(
-        self,
-        # mock_eforms: Iterable[EForm] = MOCK_EFORMS,
-    ):
-        pass
-        # self.mock_eforms = mock_eforms
+    def __init__(self, host: str):
+        self.host = host
+        self.updateTemplateEndpoint = urllib.parse.urljoin(self.host, "/updateTemplate")
+        self.generateEndpoint = urllib.parse.urljoin(self.host, "/generate")
+        self.mergeEndpoint = urllib.parse.urljoin(self.host, "/merge")
+        logger.info("mock host %s", self.host)
 
-    # def read_employer(self, employer_fein: str) -> models.OCOrganisation:
-    #     _capture_call("read_employer", None, employer_fein=employer_fein)
+    def updateTemplate(self) -> requests.Response:
+        _capture_call("updateTemplate", None)
+
+        # return
+        pass
+
+    def generate(self, request: models.GeneratePDFRequest) -> requests.Response:
+        _capture_call("generate", None, request=request)
+        pass
+
+    def merge(self, request: models.MergePDFRequest) -> requests.Response:
+        _capture_call("merge", None, request=request)
+        pass
 
 
 massgov.pfml.util.logging.wrapper.log_all_method_calls(MockPDFClient, logger)

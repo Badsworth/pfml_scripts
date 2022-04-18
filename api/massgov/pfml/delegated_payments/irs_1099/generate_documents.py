@@ -2,13 +2,12 @@ import enum
 import math
 from typing import List, Optional
 
-import requests
-
 import massgov.pfml.delegated_payments.irs_1099.pfml_1099_util as pfml_1099_util
 import massgov.pfml.util.logging
 import massgov.pfml.util.pydantic.mask as mask_util
 from massgov.pfml.db.models.payments import Pfml1099
 from massgov.pfml.delegated_payments.step import Step
+from massgov.pfml.pdf_api.models import PDF1099
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -94,9 +93,9 @@ class Generate1099DocumentsStep(Step):
             logger.error("%s has an invalid tax identifier.", str(record.tax_identifier_id))
             return
 
-        documentDto = PDF1099(record, ssn=ssn, sub_batch=sub_batch)
+        documentDto = PDF1099(record, socialNumber=ssn, sub_batch=sub_batch)
 
-        response = self.pdf_api.generate(documentDto)
+        response = self.pdfApi.generate(documentDto)
 
         if response.ok:
             record.s3_location = s3_location

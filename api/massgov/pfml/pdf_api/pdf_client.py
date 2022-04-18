@@ -2,71 +2,71 @@
 # PDF client - PDF implementation.
 #
 
-import base64
+# import base64
 import datetime
-import json
-import os.path
+
+# import json
+# import os.path
 import urllib.parse
-import xml.etree.ElementTree
-from decimal import Decimal
-from typing import Any, Dict, List, Mapping, Optional, Tuple, Union, cast
-from xml.etree.ElementTree import Element
+from typing import Any  # , Dict, Optional
 
 import flask
 import newrelic.agent
-import oauthlib.oauth2
-import pydantic
+
+# import pydantic
 import requests
-import xmlschema
-from requests.models import Response
 
 import massgov.pfml.util.logging
 
 from . import client, common, exception, models
 
+# from requests.models import Response
+
+
 logger = massgov.pfml.util.logging.get_logger(__name__)
+MILLISECOND = datetime.timedelta(milliseconds=1)
 
 
 class PDFClient(client.AbstractPDFClient):
     """PDF API client."""
 
     host: str
-    updateTemplate: str
-    generate: str
-    merge: str
-
-    request_count: int
+    updateTemplateEndpoint: str
+    generateEndpoint: str
+    mergeEndpoint: str
 
     def __init__(self, host: str):
+        # if host is None:
+        #     raise Exception("Env var 'PDF_API_HOST' has not been defined.")
+
         self.host = host
         # TBD, remove this endpoint?
         # Why do we need to have the template in S3?
-        self.updateTemplate = urllib.parse.urljoin(self.host, "/updateTemplate")
-        self.generate = urllib.parse.urljoin(self.host, "/generate")
-        self.merge = urllib.parse.urljoin(self.host, "/merge")
+        self.updateTemplateEndpoint = urllib.parse.urljoin(self.host, "/updateTemplate")
+        self.generateEndpoint = urllib.parse.urljoin(self.host, "/generate")
+        self.mergeEndpoint = urllib.parse.urljoin(self.host, "/merge")
 
         logger.info("host %s", self.host)
         # auth needed?
 
-    def updateTemplate(self):
+    def updateTemplate(self) -> requests.Response:
         try:
-            response = self._request("get", self.updateTemplate)
+            response = self._request("get", self.updateTemplateEndpoint)
             return response
         except requests.exceptions.RequestException as error:
             logger.error(error)
             raise Exception("Api error to update Pdf template.")
 
-    def generate(self, request: GeneratePDFRequest):
+    def generate(self, request: models.GeneratePDFRequest) -> requests.Response:
         try:
-            url = self.generate
+            url = self.generateEndpoint
             if request.type in common.DOC_TYPES:
-                url = f"{self.generate}/{request.type}"
+                url = f"{self.generateEndpoint}/{request.type}"
 
             response = self._request(
                 "post",
                 url,
                 json=request,
-                headers={"Content-type": "application/json", "Accept": "application/json"},
             )
 
             return response
@@ -75,13 +75,12 @@ class PDFClient(client.AbstractPDFClient):
             logger.error(error)
             raise Exception("Api error to generate Pdf.")
 
-    def merge(self, request: MergePDFRequest):
+    def merge(self, request: models.MergePDFRequest) -> requests.Response:
         try:
             response = self._request(
                 "post",
-                self.merge,
+                self.mergeEndpoint,
                 json=request,
-                headers={"Content-type": "application/json", "Accept": "application/json"},
             )
 
             if response.ok:
@@ -93,19 +92,18 @@ class PDFClient(client.AbstractPDFClient):
             logger.error(error)
             raise Exception("Api error to merge Pdf.")
 
-    def _request(
-        self, method: str, url: str, headers: Dict[str, str], **args: Any
-    ) -> requests.Response:
+    def _request(self, method: str, url: str, **args: Any) -> requests.Response:
         """Make a request and handle errors."""
-        self.request_count += 1
+        # self.request_count += 1
         has_flask_context = flask.has_request_context()
         logger.debug("%s %s start", method, url)
         method_name = url.split("/")[-1]
+        headers = {"Content-type": "application/json", "Accept": "application/json"}
 
         try:
-            response = requests[method](url, headers=headers, **args)
+            response = requests.request(method, url, headers=headers, **args)
         except (requests.exceptions.RequestException, requests.exceptions.Timeout) as ex:
-            self._handle_client_side_exception(method, url, ex)
+            self._handle_client_side_exception(method, url, ex, method_name)
 
         if response.status_code != requests.codes.ok:
 
