@@ -22,9 +22,6 @@ def handler(event, context=None):
         print('Triggering API RDS IAM Sync for Training Database')
     else:
         exit()
-        
-if __name__ == "__main__":
-    handler(None)
 
 # to do
 # connect event bridge to lambda
