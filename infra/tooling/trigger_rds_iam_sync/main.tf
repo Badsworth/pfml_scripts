@@ -3,8 +3,8 @@ locals {
 }
 data "archive_file" "trigger_rds_iam_sync" {
   type        = "zip"
-  output_path = "./lambda_functions/${local.name}/${local.name}.zip"
-  source_dir  = "./lambda_functions/${local.name}"
+  output_path = "lambda_functions/${local.name}/${local.name}.zip"
+  source_file = "lambda_functions/${local.name}/${local.name}.py"
   excludes    = ["${local.name}.zip"]
 }
 resource "aws_lambda_function" "trigger_rds_iam_sync" {
@@ -22,8 +22,8 @@ resource "aws_lambda_function" "trigger_rds_iam_sync" {
 }
 
 resource "aws_lambda_layer_version" "lambda_layer" {
-  filename            = "../layers/github_layer.zip"
-  layer_name          = "GitHub Library"
+  filename            = "lambda_layers/github_layer.zip"
+  layer_name          = "GitHub_Library"
   compatible_runtimes = ["python3.8"]
 }
 
