@@ -1,6 +1,13 @@
+""" Get an inventory of all Lambda Functions in the account
+    Writes inventory to dynamodb table
+"""
+
 import boto3
 import os
 import datetime
+import concurrent.futures
+import sys
+import traceback
 
 class Function:
 
@@ -115,15 +122,25 @@ def list_functions():
     ]
 
 def write_to_dynamodb(data):
-    return TABLE.put_item(Item=data)
+    return TABLE.put_item(Item=data.to_dict())
+
+def display_results(executions):
+    for execution in concurrent.futures.as_completed(executions):
+        try:
+            print(f'{executions[execution]} succeeded: {execution.result()}')
+        except Exception:
+            print(f'{executions[execution]} failed: ')
+            traceback.print_exception(*sys.exc_info())
 
 def handler(event, context):
-    for lambda_function in list_functions():
-        lambda_function_name = lambda_function['FunctionName']
-        print(f'Auditing Lambda Function: {lambda_function_name}')
-        write_to_dynamodb(
-            Function(lambda_function).to_dict()
-        )
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        display_results({
+            executor.submit(
+                write_to_dynamodb,
+                lambda_function,
+            ): f'auditing {lambda_function["FunctionName"]}'
+            for lambda_function in list_functions()
+        })
 
 LAMBDA = boto3.session.Session(region_name=region()).client('lambda')
 PAGINATED_LIST_OF_FUNCTIONS = LAMBDA.get_paginator('list_functions')

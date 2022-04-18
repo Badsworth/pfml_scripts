@@ -33,19 +33,41 @@ const baseScenario: ScenarioSpecification = {
   },
 };
 
+// Using a mix of leave types to increase covererage of our post submission actions
+const scenarios: ScenarioSpecification[] = [
+  {
+    ...baseScenario,
+    claim: {
+      ...baseScenario.claim,
+      intermittent_leave_spec: true,
+    },
+  },
+  {
+    ...baseScenario,
+    claim: {
+      ...baseScenario.claim,
+      reduced_leave_spec: "0,240,240,240,240,240,0",
+    },
+  },
+  baseScenario,
+];
+
 const submitter = getPortalSubmitter();
 
+/**
+ * @group morning
+ */
 describe("Claim post-submit processing:", () => {
   // Generate a test for every post submit command
   // @todo We should add those post processing commands to metadata type for ScenarioSpecification
   ["APPROVE", "DENY", "APPROVEDOCS", "APPROVEDOCSEROPEN"].forEach(
-    (postSubmitCommand) => {
+    (postSubmitCommand, i) => {
       test(`Can complete Post Submit Action: ${postSubmitCommand} on a submitted claim`, async () => {
-        // Create a scenario using base
-        const scenario = {
-          ...baseScenario,
+        const scenario = scenarios[Math.min(i, scenarios.length - 1)];
+        const scenarioWithPostSubmit = {
+          ...scenario,
           claim: {
-            ...baseScenario.claim,
+            ...scenario.claim,
             metadata: {
               postSubmit: postSubmitCommand,
             },
@@ -54,8 +76,8 @@ describe("Claim post-submit processing:", () => {
         // Generate claim
         const application = ClaimGenerator.generate(
           await getEmployeePool(),
-          scenario.employee,
-          scenario.claim
+          scenarioWithPostSubmit.employee,
+          scenarioWithPostSubmit.claim
         );
         console.info("Claim generated");
         assertValidClaim(application.claim);
@@ -85,7 +107,7 @@ describe("Claim post-submit processing:", () => {
         } catch (error) {
           // Catch post-processing errors and log them
           console.info(
-            `Post-submit error! Claim ID: ${apiResponse.fineos_absence_id}`
+            `${scenarioWithPostSubmit.claim.metadata.postSubmit} error! Claim ID: ${apiResponse.fineos_absence_id}`
           );
           throw error;
         }

@@ -10,30 +10,6 @@ export default class Navigation extends React.PureComponent {
     return (
       <nav className={"nav"}>
         <Link
-          className={this.active === "environment-v1" ? "active" : ""}
-          to={navigation.getOpenNerdletLocation({
-            id: "environments",
-          })}
-        >
-          Environments
-        </Link>
-        <Link
-          className={this.active === "error-v1" ? "active" : ""}
-          to={navigation.getOpenNerdletLocation({
-            id: "errorlist",
-          })}
-        >
-          Error List
-        </Link>
-        <Link
-          className={this.active === "morning-v1" ? "active" : ""}
-          to={navigation.getOpenNerdletLocation({
-            id: "morning",
-          })}
-        >
-          Daily Overview
-        </Link>
-        <Link
           className={
             this.active === "view-environment-overview" ? "active" : ""
           }
@@ -41,7 +17,7 @@ export default class Navigation extends React.PureComponent {
             id: "view-environment-overview",
           })}
         >
-          Beta - Environment Overview
+          Environment Overview
         </Link>
         <Link
           className={this.active === "view-daily-overview" ? "active" : ""}
@@ -49,7 +25,7 @@ export default class Navigation extends React.PureComponent {
             id: "view-daily-overview",
           })}
         >
-          Beta - Daily Overview
+          Daily Overview
         </Link>
       </nav>
     );

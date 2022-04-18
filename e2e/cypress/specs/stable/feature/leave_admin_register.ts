@@ -50,8 +50,10 @@ describe("Leave Admin Self-Registration", () => {
         // Test that we can filter claims by organization.
         // This is currently the only place where we can test it.
         cy.findByText("Back to Dashboard").click();
+        portal.clickShowFilterButton();
         // Select the second option, as we only care we can filter at all.
-        portal.filterLADashboardBy({ organization: 1 });
+        portal.selectOrgFilter({ organization: 1 });
+        portal.clickApplyFilters();
       });
     });
   });

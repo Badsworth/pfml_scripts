@@ -1,3 +1,5 @@
+import { LeavePeriodTypes } from "./../types";
+import { extractLeavePeriodType } from "../util/claims";
 import { Page } from "playwright-chromium";
 import { GeneratedClaim } from "../generation/Claim";
 import { getDocumentReviewTaskName } from "../util/documents";
@@ -58,7 +60,9 @@ export async function approveClaim(
   logger?.debug("Attempting to approve claim ...", {
     fineos_absence_id,
   });
-  const [, endDate] = extractLeavePeriod(claim.claim);
+  const leavePeriodType =
+    LeavePeriodTypes[extractLeavePeriodType(claim.claim.leave_details)];
+  const [, endDate] = extractLeavePeriod(claim.claim, leavePeriodType);
   await claimPage.approve(endDate);
   logger?.debug("Claim was approved in Fineos", {
     fineos_absence_id,

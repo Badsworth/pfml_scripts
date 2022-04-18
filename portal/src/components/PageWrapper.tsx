@@ -1,7 +1,7 @@
 import {
   isInMaintenanceWindow,
-  isMaintenanceOneDayInFuture,
   isMaintenancePageRoute,
+  isMaintenanceUpcoming,
   maintenanceTime,
 } from "../utils/maintenance";
 import { AppLogic } from "../hooks/useAppLogic";
@@ -54,17 +54,19 @@ const PageWrapper = (props: PageWrapperProps) => {
   /**
    * Should this page display the maintenance alert bar?
    * Only shows on routes that are included in maintenance page_routes
-   * and if the current date/time is within 24 hours of the
+   * and if the current date/time is within 48 hours of the
    * maintenance start date/time
    * @type {boolean}
    */
   const showUpcomingMaintenanceAlertBar =
-    maintenanceEnabled &&
-    isMaintenancePageRoute(
-      maintenancePageRoutes,
-      appLogic.portalFlow.pathname
-    ) &&
-    isMaintenanceOneDayInFuture(maintenanceStart);
+    (maintenanceEnabled &&
+      maintenanceStart &&
+      isMaintenancePageRoute(
+        maintenancePageRoutes,
+        appLogic.portalFlow.pathname
+      ) &&
+      isMaintenanceUpcoming(maintenanceStart, 2)) ||
+    false;
 
   /**
    * Should this page display a maintenance message instead of its normal content?

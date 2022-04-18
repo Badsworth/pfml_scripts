@@ -165,6 +165,7 @@ export const DefaultStory = (
 
   return (
     <Status
+      claim_detail={claimDetail}
       appLogic={appLogic}
       query={{ absence_id: claimDetail.fineos_absence_id }}
       user={new User({})}
