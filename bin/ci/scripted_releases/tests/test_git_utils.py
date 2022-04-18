@@ -9,10 +9,10 @@ from unittest.mock import Mock, patch
 
 def test_to_semver_admin_portal():
     with pytest.raises(ValueError):
-        git_utils.to_semver("admin-portal/v23.4.9")
+        git_utils.to_semver("admin-portal/v23.4")
 
-    assert git_utils.to_semver("admin-portal/v19.1") == VersionInfo(major=0, minor=19, patch=1)
-    assert git_utils.to_semver("admin-portal/v15.0-rc1") == VersionInfo(major=0, minor=15, patch=0, prerelease="rc1")
+    assert git_utils.to_semver("admin-portal/v23.9.0") == VersionInfo(major=23, minor=9, patch=0)
+    assert git_utils.to_semver("admin-portal/v24.7.0-rc1") == VersionInfo(major=24, minor=7, patch=0, prerelease="rc1")
 
 
 def test_to_semver_api():
@@ -36,9 +36,9 @@ def test_to_semver_portal():
 
 
 def test_from_semver_admin_portal():
-    assert git_utils.from_semver(VersionInfo(major=0, minor=19, patch=1), app='admin-portal') == "admin-portal/v19.1"
-    assert git_utils.from_semver(VersionInfo(major=0, minor=15, patch=0, prerelease='rc1'),
-                                 app='admin-portal') == "admin-portal/v15.0-rc1"
+    assert git_utils.from_semver(VersionInfo(major=1, minor=2, patch=0), app='admin-portal') == "admin-portal/v1.2.0"
+    assert git_utils.from_semver(VersionInfo(major=1, minor=2, patch=0, prerelease='rc1'),
+                                 app='admin-portal') == "admin-portal/v1.2.0-rc1"
 
 
 def test_from_semver_api():

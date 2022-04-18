@@ -17,8 +17,8 @@ repo = Repo(os.path.join(os.path.dirname(__file__), "../../.."))
 gitcmd = repo.git
 
 # regex to enforce pattern matching in tags
-PROD_RELEASE_VERSION_REGEX = re.compile(r"(api|portal|foobar)\/v([0-9]+)\.([0-9]+)(\.{0,1}([0-9]+){0,1})$")
-RELEASE_VERSION_REGEX = r"(api|portal|foobar)\/v([0-9]+)\.([0-9]+)(\.{0,1}([0-9]+){0,1})(\-rc\d+)?"
+PROD_RELEASE_VERSION_REGEX = re.compile(r"(admin-portal|api|portal|foobar)\/v([0-9]+)\.([0-9]+)(\.{0,1}([0-9]+){0,1})$")
+RELEASE_VERSION_REGEX = r"(admin-portal|api|portal|foobar)\/v([0-9]+)\.([0-9]+)(\.{0,1}([0-9]+){0,1})(\-rc\d+)?"
 
 @contextmanager
 def rollback(old_head=None) -> Generator:
@@ -111,7 +111,7 @@ def get_latest_version(app, branch_name):
 
     # returns the highest semver from list, which should be the most recent
     latest_tag = max(tags)
-  
+
     # convert back to str
     tag = from_semver(latest_tag, app)
     sha = get_sha(tag)
@@ -162,9 +162,7 @@ def to_semver(version_str: str) -> semver.VersionInfo:
         ver = "0." + version_str.split("portal/v")[-1]
         return semver.VersionInfo.parse(ver)
     elif version_str.startswith("admin-portal/v"):
-        # The same as portal above.
-        ver = "0." + version_str.split("admin-portal/v")[-1]
-        return semver.VersionInfo.parse(ver)
+        return semver.VersionInfo.parse(version_str.split("admin-portal/v")[-1])
     elif version_str.startswith("api/v"):
         return semver.VersionInfo.parse(version_str.split("api/v")[-1])
     elif version_str.startswith("foobar/v"):
@@ -177,7 +175,7 @@ def from_semver(sem_ver: semver.VersionInfo, app) -> str:
     if app == "portal":
         return "portal/v" + str(sem_ver).split(".", 1)[1]
     elif app == "admin-portal":
-        return "admin-portal/v" + str(sem_ver).split(".", 1)[1]
+        return "admin-portal/v" + str(sem_ver)
     elif app == "api":
         return "api/v" + str(sem_ver)
     elif app == "foobar":

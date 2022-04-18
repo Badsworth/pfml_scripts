@@ -33,6 +33,8 @@ You can always provide the `-h / --help` flag instead of any other args to see d
   - 1️⃣**Application**: `api` 2️⃣**Scripted Release Task**: `finalize-release` 3️⃣**Arguments**: `-r release/api/v2.25.0`
   - 1️⃣**Application**: `api` 2️⃣**Scripted Release Task**: `hotfix` 3️⃣**Arguments**: `-r release/api/v2.25.0 -c DEADBEEF -c ABADCAFE`
   - 1️⃣**Application**: `portal` 2️⃣**Scripted Release Task**: `update-release` 3️⃣**Arguments**: `-r release/portal/v49.0 -c ABCDEFGH`
+  - 1️⃣**Application**: `admin-portal` 2️⃣**Scripted Release Task**: `start-release` 3️⃣**Arguments**:
+  - 1️⃣**Application**: `admin-portal` 2️⃣**Scripted Release Task**: `update-release` 3️⃣**Arguments**: `-r release/admin-portal/v2.1.0 -c ABCDEFGH`
 - ⚠️ Merge conflicts must be resolved manually using `git` then the Action can be re-ran ⚠️
 
 ### ...via Poetry
@@ -43,9 +45,9 @@ You can always provide the `-h / --help` flag instead of any other args to see d
   - `poetry run scripted-releases -a portal update-release -r release/portal/v49.0 --with-branch main`
   - `poetry run scripted-releases -a portal finalize-release -r release/portal/v49.0`
   - `poetry run scripted-releases -a portal hotfix -r release/portal/v49.0 -c DEADBEEF -c ABADCAFE`
-  - `poetry run scripted-releases -a admin-portal update-release -r release/admin-portal/v2.0 --with-branch main`
-  - `poetry run scripted-releases -a admin-portal finalize-release -r release/admin-portal/v2.0`
-  - `poetry run scripted-releases -a admin-portal hotfix -r release/admin-portal/v2.0 -c DEADBEEF -c ABADCAFE`
+  - `poetry run scripted-releases -a admin-portal update-release -r release/admin-portal/v2.0.0 --with-branch main`
+  - `poetry run scripted-releases -a admin-portal finalize-release -r release/admin-portal/v2.0.0`
+  - `poetry run scripted-releases -a admin-portal hotfix -r release/admin-portal/v2.0.0 -c DEADBEEF -c ABADCAFE`
 
 ### ...via API or Portal makefiles
 - There are some convenient hooks for invoking the various release tasks from the API, Portal or Admin Portal makefiles.
@@ -72,9 +74,9 @@ You can always provide the `-h / --help` flag instead of any other args to see d
   - `python release.py -a portal update-release -r release/portal/v49.0 --with-branch main`
   - `python release.py -a portal finalize-release -r release/portal/v49.0`
   - `python release.py -a portal hotfix -r release/portal/v49.0 -c DEADBEEF -c ABADCAFE`
-  - `python release.py -a admin-portal update-release -r release/admin-portal/v2.0 --with-branch main`
-  - `python release.py -a admin-portal finalize-release -r release/admin-portal/v2.0`
-  - `python release.py -a admin-portal hotfix -r release/admin-portal/v2.0 -c DEADBEEF -c ABADCAFE`
+  - `python release.py -a admin-portal update-release -r release/admin-portal/v2.0.0 --with-branch main`
+  - `python release.py -a admin-portal finalize-release -r release/admin-portal/v2.0.0`
+  - `python release.py -a admin-portal hotfix -r release/admin-portal/v2.0.0 -c DEADBEEF -c ABADCAFE`
 
 ---
 

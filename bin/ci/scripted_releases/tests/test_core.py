@@ -73,9 +73,9 @@ def test_no_blowups_in_correctly_invoked_subcommands():
     release.main(["--app", "portal", "hotfix", "-r", "release/portal/v4.0", "-c", "d4e5f6107"])
 
     release.main(["--app", "admin-portal", "start-release"])
-    release.main(["--app", "admin-portal", "update-release", "-r", "release/admin-portal/v4.0", "-c", "a1b2c3d4"])
-    release.main(["--app", "admin-portal", "finalize-release", "-r", "release/admin-portal/v4.0"])
-    release.main(["--app", "admin-portal", "hotfix", "-r", "release/admin-portal/v4.0", "-c", "d4e5f6107"])
+    release.main(["--app", "admin-portal", "update-release", "-r", "release/admin-portal/v1.2.0", "-c", "a1b2c3d4"])
+    release.main(["--app", "admin-portal", "finalize-release", "-r", "release/admin-portal/v1.2.0"])
+    release.main(["--app", "admin-portal", "hotfix", "-r", "release/admin-portal/v1.2.0", "-c", "d4e5f6107"])
 
 
 def test_start_release_arg_handling():
@@ -120,7 +120,7 @@ def test_update_release_arg_handling():
         )
         release.main(
             ["--app", "admin-portal", "update-release",
-             "-r", "release/admin-portal/v4.0",
+             "-r", "release/admin-portal/v1.2.0",
              "-c", "a1b2c3d4",
              "--with-branch", "main"]
         )
@@ -145,7 +145,7 @@ def test_finalize_release_arg_handling():
         release.main(["--app", "portal", "finalize-release", "-r", "relsear://portal/.5:67:890"])
         release.main(["--app", "api", "finalize-release", "-r", "iam.defintelynotan.api_release"])
 
-    release.main(["--app", "admin-portal", "finalize-release", "-r", "release/admin-portal/v4.0"])
+    release.main(["--app", "admin-portal", "finalize-release", "-r", "release/admin-portal/v1.2.0"])
     release.main(["--app", "api", "finalize-release", "-r", "release/api/v1.2.0"])
     release.main(["--app", "portal", "finalize-release", "-r", "release/portal/v4.0"])
 
