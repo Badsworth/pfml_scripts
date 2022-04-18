@@ -18,6 +18,13 @@ resource "aws_lambda_function" "trigger_rds_iam_sync" {
   memory_size      = 128
   publish          = "false"
   timeout          = 10
+  layers           = [aws_lambda_layer_version.lambda_layer.arn]
+}
+
+resource "aws_lambda_layer_version" "lambda_layer" {
+  filename            = "../layers/github_layer.zip"
+  layer_name          = "GitHub Library"
+  compatible_runtimes = ["python3.8"]
 }
 
 resource "aws_cloudwatch_event_rule" "trigger_rds_iam_sync" {
