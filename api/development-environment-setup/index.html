@@ -1,0 +1,1716 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.3.0, mkdocs-material-8.2.9">
+    
+    
+      
+        <title>Development Environment Setup - PFML</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.120efc48.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.9647289d.min.css">
+        
+      
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#development-environment-setup" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="PFML" class="md-header__button md-logo" aria-label="PFML" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            PFML
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Development Environment Setup
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/EOLWD/PFML/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    EOLWD/pfml
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="PFML" class="md-nav__button md-logo" aria-label="PFML" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    PFML
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/EOLWD/PFML/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    EOLWD/pfml
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        Massachusetts PFML (Portal and API)
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../archiving-code/" class="md-nav__link">
+        Process for Archiving Code
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../code-reviews/" class="md-nav__link">
+        Code Reviews
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        Contributing
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../creating-environments/" class="md-nav__link">
+        Setting up a new environment
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deployment/" class="md-nav__link">
+        Deployment
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../test_fineos_from_local_setup/" class="md-nav__link">
+        Test Fineos server from local setup
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tools/" class="md-nav__link">
+        Tools
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_9" type="checkbox" id="__nav_9" checked>
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_9">
+          Api
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Api" data-md-level="1">
+        <label class="md-nav__title" for="__nav_9">
+          <span class="md-nav__icon md-icon"></span>
+          Api
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../archive-reference/" class="md-nav__link">
+        Archived Features Overview (API)
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../automated-tests/" class="md-nav__link">
+        Automated Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../database-migrations/" class="md-nav__link">
+        Database Migrations
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../db-roles-and-users/" class="md-nav__link">
+        Database Users
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Development Environment Setup
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Development Environment Setup
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#setup-methods" class="md-nav__link">
+    Setup Methods
+  </a>
+  
+    <nav class="md-nav" aria-label="Setup Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#preferred-docker-gnu-make" class="md-nav__link">
+    (Preferred) Docker + GNU Make
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#native-developer-setup" class="md-nav__link">
+    Native Developer Setup
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ide-configuration" class="md-nav__link">
+    IDE Configuration
+  </a>
+  
+    <nav class="md-nav" aria-label="IDE Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vscode" class="md-nav__link">
+    VSCode
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environment-configuration" class="md-nav__link">
+    Environment Configuration
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#development-workflow" class="md-nav__link">
+    Development Workflow
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#makefile-utilities" class="md-nav__link">
+    Makefile utilities
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#managing-python-dependencies" class="md-nav__link">
+    Managing Python dependencies
+  </a>
+  
+    <nav class="md-nav" aria-label="Managing Python dependencies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#poetrylock-conflicts" class="md-nav__link">
+    poetry.lock conflicts
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../environment-variables/" class="md-nav__link">
+        Environment Variables
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fields-and-validations/" class="md-nav__link">
+        Fields and validations
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../local-integration-with-aws/" class="md-nav__link">
+        Local Integration with AWS
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../monitoring/" class="md-nav__link">
+        API Monitoring
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../running-the-application-docker/" class="md-nav__link">
+        Running the Application (Docker)
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security/" class="md-nav__link">
+        API Security
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ses/" class="md-nav__link">
+        Ses
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../technical-overview/" class="md-nav__link">
+        Technical Overview
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../working-with-releases/" class="md-nav__link">
+        Working With Releases
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../writing-tests/" class="md-nav__link">
+        Writing Tests
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_10" type="checkbox" id="__nav_10" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_10">
+          Infra
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Infra" data-md-level="1">
+        <label class="md-nav__title" for="__nav_10">
+          <span class="md-nav__icon md-icon"></span>
+          Infra
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/1-first-time-setup/" class="md-nav__link">
+        First-time Setup
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/2-testing-infra-changes/" class="md-nav__link">
+        Testing Infrastructure changes
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/3-creating-ecs-tasks/" class="md-nav__link">
+        Creating ECS Tasks
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/4-viewing-ecs-task-logs/" class="md-nav__link">
+        Viewing ECS Task logs
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/5-making-changes-to-alerts/" class="md-nav__link">
+        Making Changes to Alerts
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/6-github-action-workflows/" class="md-nav__link">
+        Github Action Workflows
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/7-environment-management/" class="md-nav__link">
+        Environment Management
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_10_8" type="checkbox" id="__nav_10_8" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_10_8">
+          Extras
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Extras" data-md-level="2">
+        <label class="md-nav__title" for="__nav_10_8">
+          <span class="md-nav__icon md-icon"></span>
+          Extras
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/extras/adding-ses-email-address/" class="md-nav__link">
+        Adding a new SES email address
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/extras/testing-github-action-permissions/" class="md-nav__link">
+        Testing Github Actions permissions
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_11" type="checkbox" id="__nav_11" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_11">
+          Portal
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Portal" data-md-level="1">
+        <label class="md-nav__title" for="__nav_11">
+          <span class="md-nav__icon md-icon"></span>
+          Portal
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../portal/browser-support/" class="md-nav__link">
+        Browser support
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../portal/creating-environments/" class="md-nav__link">
+        Setting up a new environment
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../portal/development/" class="md-nav__link">
+        Portal Development
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../portal/environment-variables/" class="md-nav__link">
+        Environment variables
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../portal/error-handling/" class="md-nav__link">
+        Error handling
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../portal/feature-flags/" class="md-nav__link">
+        Feature flags
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../portal/internationalization/" class="md-nav__link">
+        Internationalization
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../portal/maintenance-pages/" class="md-nav__link">
+        Maintenance pages
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../portal/monitoring/" class="md-nav__link">
+        Monitoring
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../portal/naming-conventions/" class="md-nav__link">
+        Naming conventions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../portal/software-architecture/" class="md-nav__link">
+        Software Architecture
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../portal/storybook/" class="md-nav__link">
+        Storybook
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../portal/tests/" class="md-nav__link">
+        Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../portal/typescript/" class="md-nav__link">
+        TypeScript
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../portal/web-analytics/" class="md-nav__link">
+        Web Analytics
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_12" type="checkbox" id="__nav_12" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_12">
+          Releases
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Releases" data-md-level="1">
+        <label class="md-nav__title" for="__nav_12">
+          <span class="md-nav__icon md-icon"></span>
+          Releases
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/admin-portal/" class="md-nav__link">
+        Admin portal
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/api/" class="md-nav__link">
+        Api
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/infra/" class="md-nav__link">
+        Infra
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../releases/portal/" class="md-nav__link">
+        Portal
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#setup-methods" class="md-nav__link">
+    Setup Methods
+  </a>
+  
+    <nav class="md-nav" aria-label="Setup Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#preferred-docker-gnu-make" class="md-nav__link">
+    (Preferred) Docker + GNU Make
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#native-developer-setup" class="md-nav__link">
+    Native Developer Setup
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ide-configuration" class="md-nav__link">
+    IDE Configuration
+  </a>
+  
+    <nav class="md-nav" aria-label="IDE Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vscode" class="md-nav__link">
+    VSCode
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environment-configuration" class="md-nav__link">
+    Environment Configuration
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#development-workflow" class="md-nav__link">
+    Development Workflow
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#makefile-utilities" class="md-nav__link">
+    Makefile utilities
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#managing-python-dependencies" class="md-nav__link">
+    Managing Python dependencies
+  </a>
+  
+    <nav class="md-nav" aria-label="Managing Python dependencies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#poetrylock-conflicts" class="md-nav__link">
+    poetry.lock conflicts
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+  <a href="https://github.com/EOLWD/PFML/edit/master/docs/api/development-environment-setup.md" title="Edit this page" class="md-content__button md-icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+  </a>
+
+
+
+<h1 id="development-environment-setup">Development Environment Setup</h1>
+<ul>
+<li><a href="#setup-methods">Setup Methods</a></li>
+<li><a href="#preferred-docker--gnu-make">(Preferred) Docker + GNU Make</a></li>
+<li><a href="#native-developer-setup">Native Developer Setup</a></li>
+<li><a href="#environment-configuration">Environment Configuration</a></li>
+<li><a href="#development-workflow">Development Workflow</a></li>
+<li><a href="#makefile-utilities">Makefile utilities</a></li>
+<li><a href="#managing-python-dependencies">Managing Python dependencies</a></li>
+<li><a href="#poetrylock-conflicts">poetry.lock conflicts</a></li>
+</ul>
+<h2 id="setup-methods">Setup Methods</h2>
+<p>You can set up your development environment in one of the following ways:</p>
+<ol>
+<li>(Preferred) Docker + GNU Make</li>
+<li>Native developer setup: Install dependencies directly on your OS</li>
+</ol>
+<h3 id="preferred-docker-gnu-make">(Preferred) Docker + GNU Make</h3>
+<p>Docker is heavily recommended for a local development environment. It sets up Python, Poetry and installs development
+dependencies automatically, and can create a full environment including the API application and a backing database.</p>
+<p>Follow instructions here to <a href="https://docs.docker.com/get-docker/">install Docker</a> for your OS.</p>
+<p>In a docker-centric environment, we support a couple different developer workflows:</p>
+<table>
+<thead>
+<tr>
+<th>Start command from:</th>
+<th>Container Lifetime</th>
+<th>RUN_CMD_OPT</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>your host 🙋‍♀️</td>
+<td>Long-running</td>
+<td>DOCKER_EXEC</td>
+</tr>
+<tr>
+<td>inside docker 🐳</td>
+<td>Long-running</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>your host 🙋‍♀️</td>
+<td>Single-use</td>
+<td>DOCKER_RUN</td>
+</tr>
+<tr>
+<td>Mixed</td>
+<td>Mixed</td>
+<td>Mixed</td>
+</tr>
+</tbody>
+</table>
+<p>The default is <code>DOCKER_RUN</code> and should always just work™. But this spins up a new container for every command, which can
+be slow. If you are working on the API a lot, you may want to consider one of the alternative setups below and/or
+the <a href="#native-developer-setup">Native Developer Setup</a>.</p>
+<p><strong>Note: Some tasks, including initial setup, will usually need to be run with <code>DOCKER_RUN</code></strong> regardless of the workflow
+used otherwise. Examples include generating an initial local JWKS
+(<code>make jwks.json</code>) or running migrations (<code>make db-upgrade</code>).</p>
+<details><summary>Send commands from your host to a long-running container</summary>
+<p>
+If you want to re-use a docker application for various Python and development
+ <code>make</code> commands (e.g. linting and testing), you should set
+ <code>RUN_CMD_OPT</code> to <code>DOCKER_EXEC</code>.
+
+<div class="highlight"><pre><span></span><code>$ <span class="nb">export</span> <span class="nv">RUN_CMD_OPT</span><span class="o">=</span>DOCKER_EXEC
+$ make <span class="nb">test</span>
+</code></pre></div>
+
+</p>
+</details>
+
+<details><summary>Log into a docker container to run commands</summary>
+<p>If you intend to start a Docker environment and log into it like a remote server,
+ you can leave <code>RUN_CMD_OPT</code> alone and use <code>make login</code> instead.
+
+<div class="highlight"><pre><span></span><code>$ make login
+&gt; make <span class="nb">test</span>
+</code></pre></div>
+
+</p>
+</details>
+
+<details><summary>Start a new docker container for every command</summary>
+<p>If you plan to run commands through temporary, single-use Docker containers, you
+ should set your <code>RUN_CMD_OPT</code> to <code>DOCKER_RUN</code>:
+
+<div class="highlight"><pre><span></span><code>$ <span class="nb">export</span> <span class="nv">RUN_CMD_OPT</span><span class="o">=</span>DOCKER_RUN
+$ make <span class="nb">test</span>
+</code></pre></div>
+
+Note this is the default setting.
+
+</p>
+</details>
+
+<details><summary>Mix and Match</summary>
+ <p>If you plan to mix and match things, you'll have to juggle <code>RUN_CMD_OPT</code> yourself.
+
+For example:
+
+- running static lints outside of Docker with native developer setup: <code>RUN_CMD_OPT=NATIVE make lint</code>
+- running tests inside of Docker after a <code>make start</code>: <code>RUN_CMD_OPT=DOCKER_EXEC make test</code>
+
+</p>
+</details>
+
+<h3 id="native-developer-setup">Native Developer Setup</h3>
+<p>To setup a development environment outside of Docker, you'll need to install a few things. Note that these instructions are for running the <em>application</em> natively, and the database will still run within Docker.</p>
+<ol>
+<li>Install Python 3.9.
+   <a href="https://github.com/pyenv/pyenv#installation">pyenv</a> is one popular option for installing Python,
+   or <a href="https://asdf-vm.com/">asdf</a>.</li>
+<li>After installing and activating the right version of Python, install
+   <a href="https://python-poetry.org/docs/#installation">poetry</a>.</li>
+<li>Run <code>poetry config virtualenvs.in-project true</code> so that the project dependencies are installed inside the project at <code>pfml/api/.venv</code>.</li>
+<li>Set <code>RUN_CMD_OPT</code> to <code>NATIVE</code> in your development environment.</li>
+<li>If you are using an M1 mac, you will need to install postgres as well: <code>brew install postgresql</code> (The psycopg2-binary is built from source on M1 macs which requires the postgres executable to be present)</li>
+<li>Run <code>make deps</code> to install Python dependencies and development tooling.</li>
+</ol>
+<p>You should now be able to run developer tooling natively, like linting.</p>
+<p>To run the application:</p>
+<ol>
+<li>You'll need some environment variables set. You can largely copy-paste the env vars
+   in <code>docker-compose.yml</code> to your native environment. <code>DB_HOST</code> should be changed to <code>localhost</code>.</li>
+<li>Start the database within Docker: <code>make start-db</code></li>
+<li>Start the API server: <code>make run-native</code></li>
+</ol>
+<p><strong>Troubleshooting tips for native setup:</strong></p>
+<p>If you run into <code>sqlalchemy.exc.OperationalError</code> errors when first trying to run natively, make sure you don't have postgres running locally on the same port as the
+postgres in Docker.</p>
+<p>If you installed and ran <code>postgresql</code> via Homebrew, you can stop it by running:</p>
+<div class="highlight"><pre><span></span><code>brew services stop postgresql
+</code></pre></div>
+<h2 id="ide-configuration">IDE Configuration</h2>
+<p>If the IDE of your choice does not appear below, refer to the VS Code instructions for hints on what needs to get configured.</p>
+<h3 id="vscode">VSCode</h3>
+<p>Make sure that you have completed the native development setup first.  These instructions also assume that root workspace is <code>pfml</code> and not <code>pfml/api</code>.</p>
+<ol>
+<li>Set the python interpreter to the python binary installed in the virtual environment</li>
+<li>Create <code>pfml/api/.env</code> file. <strong>The variables here are sourced from docker-compose.yml.  The primary difference is that the DB_HOST=localhost.</strong></li>
+<li>Update the workspace settings at to <code>pfml/.vscode/settings.json</code>.  Make sure to update the mypy.configFile to the correct path</li>
+</ol>
+<div class="highlight"><pre><span></span><code># pfml/api/.env
+ENVIRONMENT=local
+DB_HOST=localhost
+DB_NAME=pfml
+DB_ADMIN_USERNAME=pfml
+DB_ADMIN_PASSWORD=secret123
+DB_USERNAME=pfml_api
+DB_PASSWORD=secret123
+DB_NESSUS_PASSWORD=nessussecret123
+CORS_ORIGINS=http://localhost:3000,http://localhost:3001
+COGNITO_USER_POOL_KEYS_URL=file://./jwks.json
+COGNITO_USER_POOL_ID=us-east-1_HpL4XslLg
+COGNITO_USER_POOL_CLIENT_ID=10rjcp71r8bnk4459c67bn18t8
+DASHBOARD_PASSWORD=secret123
+LOGGING_LEVEL=massgov.pfml.fineos.fineos_client=DEBUG,massgov.pfml.servicenow.client=DEBUG
+ENABLE_EMPLOYEE_ENDPOINTS=1
+FOLDER_PATH=dor_mock
+FINEOS_FOLDER_PATH=fineos_mock
+RMV_API_BEHAVIOR=fully_mocked
+RMV_CHECK_MOCK_SUCCESS=1
+ENABLE_MOCK_SERVICE_NOW_CLIENT=1
+ENABLE_EMPLOYER_REIMBURSEMENT_PAYMENTS=1
+PORTAL_BASE_URL=https://paidleave.mass.gov
+ENABLE_APPLICATION_FRAUD_CHECK=0
+ENABLE_DOCUMENT_MULTIPART_UPLOAD=0
+AGENCY_REDUCTIONS_EMAIL_ADDRESS=EOL-DL-DFML-Agency-Reductions@mass.gov
+DFML_PROJECT_MANAGER_EMAIL_ADDRESS=
+DISABLE_SENDING_EMAILS=1
+PFML_EMAIL_ADDRESS=PFML_DoNotReply@eol.mass.gov
+BOUNCE_FORWARDING_EMAIL_ADDRESS=PFML_DoNotReply@eol.mass.gov
+PDF_API_HOST=https://mass-pfml-pdf-api
+ENABLE_GENERATE_1099_PDF=1
+GENERATE_1099_MAX_FILES=1000
+ENABLE_MERGE_1099_PDF=1
+ENABLE_UPLOAD_1099_PDF=1
+UPLOAD_MAX_FILES_TO_FINEOS=10
+TEST_FILE_GENERATION_1099=0
+IRS_1099_CORRECTION_IND=0
+IRS_1099_TAX_YEAR=2021
+MOVEIT_SFTP_URI=sftp://foo@mass-pfml-sftp:22
+SFTP_URI=sftp://foo@mass-pfml-sftp:22
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="err">//</span><span class="w"> </span><span class="err">p</span><span class="kc">f</span><span class="err">ml/.vscode/se</span><span class="kc">tt</span><span class="err">i</span><span class="kc">n</span><span class="err">gs.jso</span><span class="kc">n</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;python.testing.unittestEnabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;python.testing.pytestEnabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;python.linting.mypyEnabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;python.linting.pycodestyleEnabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;python.linting.enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;python.testing.pytestArgs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">    </span><span class="s2">&quot;api/tests&quot;</span><span class="w"></span>
+<span class="w">  </span><span class="p">],</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;python.envFile&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;${workspaceFolder}/api/.env&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;python.formatting.provider&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;black&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;mypy.configFile&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/Users/{path to pfml project}/pfml/api/pyproject.toml&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;python.linting.flake8Args&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">    </span><span class="s2">&quot;--config=${workspaceFolder}/api/setup.cfg&quot;</span><span class="w"></span>
+<span class="w">  </span><span class="p">],</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;python.linting.mypyArgs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">    </span><span class="s2">&quot;--exclude=\&quot;api/tests/&quot;</span><span class="w"></span>
+<span class="w">  </span><span class="p">],</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;python.analysis.extraPaths&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;${workspaceFolder}/api&quot;</span><span class="p">],</span><span class="w"> </span><span class="err">//</span><span class="w"> </span><span class="err">Se</span><span class="kc">tt</span><span class="err">i</span><span class="kc">n</span><span class="err">g</span><span class="w"> </span><span class="err">is</span><span class="w"> </span><span class="err">o</span><span class="kc">nl</span><span class="err">y</span><span class="w"> </span><span class="err">required</span><span class="w"> </span><span class="err">i</span><span class="kc">f</span><span class="w"> </span><span class="err">your</span><span class="w"> </span><span class="err">workspace</span><span class="w"> </span><span class="err">is</span><span class="w"> </span><span class="kc">t</span><span class="err">he</span><span class="w"> </span><span class="err">e</span><span class="kc">nt</span><span class="err">ire</span><span class="w"> </span><span class="err">PFML</span><span class="w"> </span><span class="err">repo</span><span class="w"></span>
+<span class="w">  </span><span class="nt">&quot;[python]&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;editor.codeActionsOnSave&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="nt">&quot;source.organizeImports&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">  </span><span class="p">},</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+<h2 id="environment-configuration">Environment Configuration</h2>
+<p>Environment variables for the local app are in the <code>docker-compose.yml</code> file.</p>
+<div class="highlight"><pre><span></span><code><span class="nt">services</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="l l-Scalar l-Scalar-Plain">...</span><span class="w"></span>
+<span class="w">  </span><span class="l l-Scalar l-Scalar-Plain">mass-pfml-api</span><span class="p p-Indicator">:</span><span class="w"></span>
+<span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">...</span><span class="w"></span>
+<span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">environment</span><span class="p p-Indicator">:</span><span class="w"></span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ENVIRONMENT=local</span><span class="w"></span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DB_HOST=mass-pfml-db</span><span class="w"></span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">...</span><span class="w"></span>
+</code></pre></div>
+<p>Changes here will be picked up next time <code>make start</code> is run.</p>
+<h2 id="development-workflow">Development Workflow</h2>
+<p>All mandatory checks run as part of the Github CI pull request process. See the
+<code>api-*.yml</code> files in <a href="https://github.com/EOLWD/pfml/tree/main/.github/workflows">/.github/workflows</a> to see what gets run.</p>
+<p>You can run these checks on your local machine before the PR stage (such as before each commit or before pushing to
+Github):</p>
+<ul>
+<li><code>make format</code> to fix any formatting issues</li>
+<li><code>make check</code> to run checks (e.g. linting, testing)<ul>
+<li>See the other <code>check-static</code> and <code>lint-*</code> make targets, as well as the Tests section below to run more targeted
+  versions of these checks</li>
+</ul>
+</li>
+</ul>
+<p>Note that should you wish to try out a backend change against a locally running instance of the portal, this is available to you by starting the backend with <code>make logs-local</code>. See <a href="https://github.com/EOLWD/pfml/tree/main/portal/development#Frontend&lt;&gt;BackendConfiguration">development.md</a> for details.</p>
+<h2 id="makefile-utilities">Makefile utilities</h2>
+<p>Many of the utilities and scripts to developing and managing the application have been standardized into
+a (<a href="https://www.gnu.org/software/make/manual/make.html">GNU make/Makefile</a>. This makes the command format more
+consistent, and centralizes where the tools are managed.</p>
+<blockquote>
+<p>If you need an automated script to perform a task, check the Makefile! It may already exist!</p>
+</blockquote>
+<p>Each component of the system may have its own set of <code>make</code> "targets" with their own in-depth documentation.</p>
+<p>TODO: Update w/ link to more detailed documentation (<a href="https://lwd.atlassian.net/browse/API-1477">API-1477</a>)</p>
+<h2 id="managing-python-dependencies">Managing Python dependencies</h2>
+<p>Python dependencies are managed through <code>poetry</code>. See <a href="https://python-poetry.org/docs/">its docs</a> for
+adding/removing/running Python things
+(or see <code>poetry --help</code>).</p>
+<p>Cheatsheet:</p>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Command</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Add a dependency</td>
+<td><code>poetry add &lt;package name&gt; [--dev]</code></td>
+</tr>
+<tr>
+<td>Update a dependency</td>
+<td><code>poetry update &lt;package name&gt;</code></td>
+</tr>
+<tr>
+<td>Remove a dependency</td>
+<td><code>poetry remove &lt;package name&gt;</code></td>
+</tr>
+<tr>
+<td>See installed package info</td>
+<td><code>poetry show [package name]</code></td>
+</tr>
+<tr>
+<td>Run a command in Python environment</td>
+<td><code>poetry run &lt;cmd&gt;</code></td>
+</tr>
+<tr>
+<td>See all package info</td>
+<td><code>poetry show [--outdated] [--latest]</code></td>
+</tr>
+<tr>
+<td>Upgrade package to latest version</td>
+<td><code>poetry add &lt;package name&gt;@latest [--dev]</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="poetrylock-conflicts">poetry.lock conflicts</h3>
+<p>Poetry maintains a <code>metadata.content-hash</code> value in its lock file
+(<code>poetry.lock</code>) which is the hash of the sorted contents of the <code>pyproject.toml</code>
+(helps keep track of if the lock file is out of date with declared dependencies and such).</p>
+<p>This can be a cause of merge conflicts.</p>
+<p>To resolve:</p>
+<ul>
+<li>Pick either side of the conflict (i.e., edit the <code>content-hash</code> line to either hash)</li>
+<li>Then run <code>make update-poetry-lock-hash</code> to update the hash to the correct value</li>
+</ul>
+
+              
+            </article>
+          </div>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        
+        <a href="../db-roles-and-users/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Database Users" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Database Users
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../environment-variables/" class="md-footer__link md-footer__link--next" aria-label="Next: Environment Variables" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Environment Variables
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2a1c317c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.6e54b5cd.min.js"></script>
+      
+    
+  </body>
+</html>
