@@ -69,7 +69,7 @@ def list_alarms():
     ]
 
 def write_to_dynamodb(data):
-    return TABLE.put_item(Item=data.to_dict())
+    return TABLE.put_item(Item=MetricAlarm(data).to_dict())
 
 def display_results(executions):
     for execution in concurrent.futures.as_completed(executions):

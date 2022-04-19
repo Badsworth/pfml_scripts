@@ -3,6 +3,7 @@ import os
 import datetime
 import concurrent.futures
 import traceback
+import sys
 
 
 class Database(object):
@@ -20,17 +21,10 @@ class Database(object):
         return ", ".join(self.get('AvailabilityZones'))
 
     def get_security_group_ids(self):
-        result = []
-        for security_group in self.get('VpcSecurityGroups'):
-            result.append(security_group['VpcSecurityGroupId'])
-        return {}
+        return ', '.join(security_group['VpcSecurityGroupId'] for security_group in self.get('VpcSecurityGroups'))
 
     def get_iam_roles(self):
         return ', '.join(role['RoleArn'] for role in self.get('AssociatedRoles'))
-        result = []
-        for role in self.get('AssociatedRoles'):
-            result.append(role['RoleArn'])
-        return result
 
     def get_tags(self):
         try:
@@ -60,7 +54,7 @@ class Database(object):
             'PerformanceInsightsEnabled': self.get('PerformanceInsightsEnabled'),
             'AutoMinorVersionUpgrade': self.get('AutoMinorVersionUpgrade'),
             'StorageType': self.get('StorageType'),
-            **self.get_security_group_ids(),
+            'SecurityGroupIds': self.get_security_group_ids(),
             **self.get_tags(),
         }
 
@@ -74,7 +68,7 @@ def get_list_of_databases():
     )
 
 def write_to_dynamodb(data):
-    return TABLE.put_item(Item=data.to_dict())
+    return TABLE.put_item(Item=Database(data).to_dict())
 
 def display_results(executions):
     for execution in concurrent.futures.as_completed(executions):

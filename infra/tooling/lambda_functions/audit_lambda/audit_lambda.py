@@ -122,7 +122,7 @@ def list_functions():
     ]
 
 def write_to_dynamodb(data):
-    return TABLE.put_item(Item=data.to_dict())
+    return TABLE.put_item(Item=Function(data).to_dict())
 
 def display_results(executions):
     for execution in concurrent.futures.as_completed(executions):
