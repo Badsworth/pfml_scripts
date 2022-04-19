@@ -45,7 +45,7 @@ class MetricAlarm:
             'EvaluationPeriods': self.get('EvaluationPeriods'),
             'Unit': self.get('Unit'),
             'DatapointsToAlarm': self.get('DatapointsToAlarm'),
-            'Threshold': self.get('Threshold'),
+            'Threshold': str(self.get('Threshold')),
             'ComparisonOperator': self.get('ComparisonOperator'),
         }
 
