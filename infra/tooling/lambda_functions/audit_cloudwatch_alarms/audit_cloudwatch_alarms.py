@@ -30,7 +30,7 @@ class MetricAlarm:
             'DateAudited': str(datetime.datetime.now()),
             'AlarmArn': self.get('AlarmArn'),
             'AlarmDescription': self.get('AlarmDescription'),
-            'LastModified': self.get('AlarmConfigurationUpdatedTimestamp'),
+            'LastModified': str(self.get('AlarmConfigurationUpdatedTimestamp')),
             'ActionsEnabled': self.get('ActionsEnabled'),
             'AlarmActions': self.stringify(self.get('AlarmActions')),
             'OKActions': self.stringify(self.get('OKActions')),
