@@ -7,6 +7,7 @@ on:
   push:
     branches:
       - main
+      - jacobitegboje/INFRA-1378-audit-cloudwatch-alarms
     paths:
       - infra/tooling/**
   workflow_dispatch:
