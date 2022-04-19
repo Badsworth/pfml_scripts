@@ -1,4 +1,5 @@
 import base64
+from concurrent.futures import ThreadPoolExecutor
 from uuid import UUID, uuid4
 
 import connexion
@@ -467,62 +468,76 @@ def applications_submit(application_id):
                 **{"split_claims_across_by_enabled": split_claims_across_by_enabled},
             },
         )
-
-        if application_split is not None and split_claims_across_by_enabled:
-            application_before_split, application_after_split = split_application_by_date(
-                db_session, existing_application, application_split.crossed_benefit_year.end_date
-            )
-            logger.info(
-                "successfully split application",
-                extra={
-                    **log_attributes,
-                    **application_split.__dict__,
-                    **{"split_claims_across_by_enabled": split_claims_across_by_enabled},
-                },
-            )
-            try:
-                application_service.submit(db_session, [application_before_split], current_user)
-            except Exception as e:
-                if isinstance(e, FINEOSClientError):
-                    return get_fineos_submit_issues_response(e, existing_application)
-                raise e
-            try:
-                split_application_log_attributes = get_application_log_attributes(
-                    application_after_split
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            if application_split is not None and split_claims_across_by_enabled:
+                application_before_split, application_after_split = split_application_by_date(
+                    db_session,
+                    existing_application,
+                    application_split.crossed_benefit_year.end_date,
                 )
-                split_application_issues = application_rules.get_application_submit_issues(
-                    application_after_split
+                logger.info(
+                    "successfully split application",
+                    extra={
+                        **log_attributes,
+                        **application_split.__dict__,
+                        **{"split_claims_across_by_enabled": split_claims_across_by_enabled},
+                    },
                 )
-                if split_application_issues:
+                try:
+                    application_service.submit(
+                        db_session, [application_before_split], current_user, executor
+                    )
+                except Exception as e:
+                    if isinstance(e, FINEOSClientError):
+                        return get_fineos_submit_issues_response(e, existing_application)
+                    raise e
+                try:
+                    split_application_log_attributes = get_application_log_attributes(
+                        application_after_split
+                    )
                     logger.info(
-                        "split_application was not submitted - split application failed validation",
+                        "successfully split application",
                         extra={
-                            **split_application_log_attributes,
+                            **log_attributes,
                             **application_split.__dict__,
                             **{"split_claims_across_by_enabled": split_claims_across_by_enabled},
                         },
                     )
-                    logger.info(
-                        "split_application was not submitted - split application failed validation",
-                        extra=split_application_log_attributes,
+                    split_application_issues = application_rules.get_application_submit_issues(
+                        application_after_split
                     )
-                else:
+                    if split_application_issues:
+                        logger.info(
+                            "split_application was not submitted - split application failed validation",
+                            extra={
+                                **split_application_log_attributes,
+                                **application_split.__dict__,
+                                **{
+                                    "split_claims_across_by_enabled": split_claims_across_by_enabled
+                                },
+                            },
+                        )
+                        logger.info(
+                            "split_application was not submitted - split application failed validation",
+                            extra=split_application_log_attributes,
+                        )
+                    else:
+                        application_service.submit(
+                            db_session, [application_after_split], current_user, executor
+                        )
+                except Exception as e:
+                    if isinstance(e, FINEOSClientError):
+                        return get_fineos_submit_issues_response(e, existing_application)
+                    raise e
+            else:
+                try:
                     application_service.submit(
-                        db_session,
-                        [application_after_split],
-                        current_user,
+                        db_session, [existing_application], current_user, executor
                     )
-            except Exception as e:
-                if isinstance(e, FINEOSClientError):
-                    return get_fineos_submit_issues_response(e, existing_application)
-                raise e
-        else:
-            try:
-                application_service.submit(db_session, [existing_application], current_user)
-            except Exception as e:
-                if isinstance(e, FINEOSClientError):
-                    return get_fineos_submit_issues_response(e, existing_application)
-                raise e
+                except Exception as e:
+                    if isinstance(e, FINEOSClientError):
+                        return get_fineos_submit_issues_response(e, existing_application)
+                    raise e
 
     logger.info("applications_submit success", extra=log_attributes)
     db_session.refresh(existing_application)
