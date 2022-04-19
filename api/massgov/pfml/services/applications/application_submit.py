@@ -285,12 +285,18 @@ def submit(
     calls required based on the data conditions of the passed applications and make the calls to the FINEOS API
     concurrently when possible.
 
-    Flow of API calls (per application); each line break represents calls that have to occur sequentially:
+    Flow of API calls (per application) when the claim has not been created; each line break represents calls that have to occur sequentially:
     register_api_user ->
     (update_customer_details, get_customer_occupations_customer_api -> get_customer_occupation -> (update_week_based_work_pattern, update_occupation), update_customer_contact_details) ->
     start_absence ->
     update_reflexive_questions ->
-    complete_intake
+    complete_intake ->
+    customer_create_eform
+
+    Flow of API calls (per application) when the claim has been created; each line break represents calls that have to occur sequentially:
+    register_api_user ->
+    complete_intake ->
+    customer_create_eform
 
     """
     # Collect created fineos web ids and read all the employers that the applications reference
