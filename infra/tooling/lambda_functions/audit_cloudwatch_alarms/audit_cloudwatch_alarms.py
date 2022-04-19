@@ -85,7 +85,7 @@ def handler(event, context):
             executor.submit(
                 write_to_dynamodb,
                 cloudwatch_alarm,
-            ): f'auditing {cloudwatch_alarm["FunctionName"]}'
+            ): f'auditing {cloudwatch_alarm["AlarmName"]}'
             for cloudwatch_alarm in list_alarms()
         })
 
