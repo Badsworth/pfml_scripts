@@ -25,5 +25,10 @@
         "actions": [
             "rds:DescribeDBClusters"
         ]
+    },
+    "cloudwatch": {
+        "actions": [
+            "cloudwatch:DescribeAlarms"
+        ]
     }
 }
