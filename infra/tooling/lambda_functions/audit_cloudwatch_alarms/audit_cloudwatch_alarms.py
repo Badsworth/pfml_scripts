@@ -24,15 +24,6 @@ class MetricAlarm:
     def stringify(iterable):
         return ', '.join(iterable)
 
-    def get_alarm_actions(self):
-        return self.stringify(self.get('AlarmActions'))
-
-    def get_ok_actions(self):
-        return self.stringify(self.get('OKActions'))
-
-    def get_insufficient_data_actions(self):
-        return self.stringify(self.get('InsufficientDataActions'))
-
     def to_dict(self):
         return {
             'ResourceName': self.alarm_name(),
