@@ -61,6 +61,11 @@ resource "aws_iam_role_policy_attachment" "ci_iam_policy_attachment" {
   policy_arn = aws_iam_policy.developers_and_ci_iam_policy.arn
 }
 
+resource "aws_iam_role_policy_attachment" "ci_route53_iam_policy_attachment" {
+  role       = aws_iam_role.ci_run_deploys.id
+  policy_arn = aws_iam_policy.ci_route53_iam_policy.arn
+}
+
 # 3. Setup additional permissions for CI to run deploys with some restrictions.
 #
 data "aws_iam_policy_document" "ci_run_deploys_policy" {

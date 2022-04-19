@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import ApiResourceCollection from "../models/ApiResourceCollection";
 import { ClaimDocument } from "../models/Document";
 import { ClaimsLogic } from "./useClaimsLogic";
-import EmployerClaim from "../models/EmployerClaim";
+import EmployerClaimReview from "../models/EmployerClaimReview";
 import EmployersApi from "../api/EmployersApi";
 import { ErrorsLogic } from "./useErrorsLogic";
 import { PortalFlow } from "./usePortalFlow";
@@ -22,7 +22,7 @@ const useEmployersLogic = ({
   portalFlow: PortalFlow;
   setUser: UsersLogic["setUser"];
 }) => {
-  const [claim, setEmployerClaim] = useState<EmployerClaim | null>(null);
+  const [claim, setEmployerClaim] = useState<EmployerClaimReview | null>(null);
   const [claimDocumentsMap, setClaimDocumentsMap] = useState<
     Map<string, ApiResourceCollection<ClaimDocument>>
   >(new Map());

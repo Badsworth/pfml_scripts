@@ -16,16 +16,17 @@ export const isInMaintenanceWindow = (
   return isAfterStart && isBeforeEnd;
 };
 
-export const isMaintenanceOneDayInFuture = (
-  start?: ISO8601Timestamp | null
+export const isMaintenanceUpcoming = (
+  start: ISO8601Timestamp,
+  days: number
 ) => {
   if (!start) return false;
 
   const now = dayjs();
   const maintenanceStartTime = dayjs(start);
   // We want to avoid showing maintenance-related content too far ahead
-  // of the beginning of the window, so we check if it's within a day.
-  const bannerWindow = dayjs(start).subtract(1, "day");
+  // of the beginning of the window.
+  const bannerWindow = dayjs(start).subtract(days, "day");
   const isBeforeStart = start
     ? now < maintenanceStartTime && now >= bannerWindow
     : true;

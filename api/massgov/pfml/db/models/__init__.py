@@ -12,6 +12,7 @@ from . import (  # noqa: F401
     azure,
     dua,
     employees,
+    flags,
     geo,
     industry_codes,
     payments,
@@ -30,6 +31,7 @@ def init_lookup_tables(db_session):
     geo.sync_lookup_tables(db_session)
     state.sync_lookup_tables(db_session)
     employees.sync_lookup_tables(db_session)
+    flags.sync_lookup_tables(db_session)
     verifications.sync_lookup_tables(db_session)
     industry_codes.sync_lookup_tables(db_session)
     azure.sync_lookup_tables(db_session)

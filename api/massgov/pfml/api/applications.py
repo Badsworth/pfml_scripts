@@ -26,6 +26,7 @@ from massgov.pfml.api.models.applications.requests import (
 )
 from massgov.pfml.api.models.applications.responses import ApplicationResponse
 from massgov.pfml.api.models.common import OrderDirection
+from massgov.pfml.api.services.application_import import ApplicationImportService
 from massgov.pfml.api.services.applications import (
     get_application_split,
     get_document_by_id,
@@ -131,14 +132,23 @@ def application_imports():
     user = app.current_user()
     application.user = user
 
+    body = connexion.request.json
+    application_import_request = ApplicationImportRequestBody.parse_obj(body)
+
+    logger.info(
+        "beginning import for application",
+        extra={
+            "absence_case_id": application_import_request.absence_case_id,
+            "application_id": application.application_id,
+        },
+    )
+
     is_cognito_user_mfa_verified = cognito.is_mfa_phone_verified(application.user.email_address, app.get_app_config().cognito_user_pool_id)  # type: ignore
     if not is_cognito_user_mfa_verified:
         logger.info(
             "application import failure - mfa not verified",
             extra={
-                "absence_case_id": application.claim.fineos_absence_id
-                if application.claim
-                else None,
+                "absence_case_id": application_import_request.absence_case_id,
                 "user_id": application.user.user_id,
             },
         )
@@ -152,9 +162,6 @@ def application_imports():
             ]
         )
 
-    body = connexion.request.json
-    application_import_request = ApplicationImportRequestBody.parse_obj(body)
-
     claim = get_claim_from_db(application_import_request.absence_case_id)
 
     application_rules.validate_application_import_request_for_claim(
@@ -167,60 +174,16 @@ def application_imports():
 
         db_session.add(application)
         fineos = massgov.pfml.fineos.create_client()
+
         # we have already check that the claim is not None in
         # claim_is_valid_for_application_import
-        applications_service.set_application_fields_from_db_claim(
-            fineos, application, claim, db_session  # type: ignore
-        )
         fineos_web_id = register_employee(
-            fineos, claim.employee_tax_identifier, application.employer_fein, db_session  # type: ignore
+            fineos, claim.employee_tax_identifier, claim.employer_fein, db_session  # type: ignore
         )
-        applications_service.set_application_absence_and_leave_period(
-            fineos, fineos_web_id, application, application_import_request.absence_case_id
-        )
-        applications_service.set_customer_detail_fields(
-            fineos, fineos_web_id, application, db_session
-        )
-        applications_service.set_customer_contact_detail_fields(
-            fineos, fineos_web_id, application, db_session
-        )
-        applications_service.set_employment_status_and_occupations(
-            fineos, fineos_web_id, application
-        )
-        applications_service.set_payment_preference_fields(
-            fineos, fineos_web_id, application, db_session
-        )
-        eform_cache: applications_service.EFORM_CACHE = {}
-        eform_summaries = fineos.customer_get_eform_summary(
-            fineos_web_id, application_import_request.absence_case_id
-        )
-        applications_service.set_other_leaves(
-            fineos,
-            fineos_web_id,
-            application,
-            db_session,
-            application_import_request.absence_case_id,
-            eform_summaries,
-            eform_cache,
-        )
-        applications_service.set_employer_benefits_from_fineos(
-            fineos,
-            fineos_web_id,
-            application,
-            db_session,
-            application_import_request.absence_case_id,
-            eform_summaries,
-            eform_cache,
-        )
-        applications_service.set_other_incomes_from_fineos(
-            fineos,
-            fineos_web_id,
-            application,
-            db_session,
-            application_import_request.absence_case_id,
-            eform_summaries,
-            eform_cache,
-        )
+
+        import_service = ApplicationImportService(fineos, fineos_web_id, application, db_session, claim, application_import_request.absence_case_id)  # type: ignore
+        import_service.import_data()
+
         db_session.refresh(application)
         db_session.commit()
 
@@ -495,16 +458,12 @@ def applications_submit(application_id):
                     split_application_log_attributes = get_application_log_attributes(
                         application_after_split
                     )
-                    logger.info(
-                        "successfully split application",
-                        extra={
-                            **log_attributes,
-                            **application_split.__dict__,
-                            **{"split_claims_across_by_enabled": split_claims_across_by_enabled},
-                        },
-                    )
                     split_application_issues = application_rules.get_application_submit_issues(
                         application_after_split
+                    )
+                    logger.info(
+                        "split_application was submitted: False",
+                        extra=split_application_log_attributes,
                     )
                     if split_application_issues:
                         logger.info(
@@ -524,6 +483,10 @@ def applications_submit(application_id):
                     else:
                         application_service.submit(
                             db_session, [application_after_split], current_user, executor
+                        )
+                        logger.info(
+                            "split_application was submitted: True",
+                            extra=split_application_log_attributes,
                         )
                 except Exception as e:
                     if isinstance(e, FINEOSClientError):

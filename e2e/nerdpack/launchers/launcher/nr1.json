@@ -3,5 +3,5 @@
   "id": "launcher",
   "displayName": "PFML Environments",
   "description": "Dashboards and visualizations to track PFML Environment stability",
-  "rootNerdletId": "1561bd97-7e69-4def-9d9c-29156cb5c149.environments"
+  "rootNerdletId": "1561bd97-7e69-4def-9d9c-29156cb5c149.view-environment-overview"
 }

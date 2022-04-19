@@ -115,4 +115,25 @@ describe("withClaims", () => {
       search: "foo",
     });
   });
+
+  it("makes request without the invalid order_by value", () => {
+    let spy;
+    const apiParams = {
+      page_offset: "1",
+      order_by: "invalid_param",
+    };
+
+    setup(
+      {
+        addCustomSetup: (appLogic) => {
+          spy = jest.spyOn(appLogic.claims, "loadPage");
+        },
+      },
+      apiParams
+    );
+
+    expect(spy).toHaveBeenLastCalledWith({
+      page_offset: "1",
+    });
+  });
 });

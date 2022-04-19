@@ -20,19 +20,12 @@ export const GROUPS = [
   "Targeted",
 ];
 export const ENV_NOT_CONFIGURED = ["prod", "infra-test"];
-export const ENV_OFFLINE = {
-  trn2: "Env expected offline",
-};
-
-export const extractGroup = (item, name) => {
-  const group = item.metadata.groups.find((g) => g.name === name);
-  if (group) {
-    return group.value;
-  }
-  throw new Error(`Unable to determine ${name}`);
-};
+export const ENV_OFFLINE = {};
 
 export const labelComponent = (name) => {
+  if (!name) {
+    return name;
+  }
   switch (name) {
     case "api":
       return "API";

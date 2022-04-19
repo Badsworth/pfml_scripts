@@ -64,6 +64,8 @@ module "tasks" {
   fineos_error_export_path      = "s3://fin-sompre-data-export/UAT/errorExtracts"
   fineos_report_export_path     = "s3://fin-sompre-data-export/UAT/reportExtract"
 
+  fineos_is_running_v21 = "true"
+
   enable_pub_automation_fineos                     = true
   enable_pub_automation_create_pub_files           = true
   enable_pub_automation_process_returns            = false

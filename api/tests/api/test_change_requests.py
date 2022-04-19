@@ -54,6 +54,7 @@ class TestPostChangeRequest:
         )
         response_body = response.get_json().get("data")
         assert response.status_code == 201
+        assert response_body.get("change_request_id") is not None
         assert response_body.get("change_request_type") == request_body["change_request_type"]
         assert response_body.get("fineos_absence_id") == claim.fineos_absence_id
         assert response_body.get("start_date") == request_body["start_date"]
@@ -90,6 +91,7 @@ class TestGetChangeRequests:
         assert response.status_code == 200
         response_body = response.get_json()
         assert len(response_body["data"]["change_requests"]) == 1
+        assert response_body["data"]["change_requests"][0]["change_request_id"] is not None
         assert response_body["data"]["change_requests"][0]["change_request_type"] == "Modification"
         assert response_body["message"] == "Successfully retrieved change requests"
 
@@ -132,21 +134,36 @@ class TestSubmitChangeRequest:
     @mock.patch(
         "massgov.pfml.api.change_requests.claim_rules.get_change_request_issues", return_value=[]
     )
+    @mock.patch("massgov.pfml.api.change_requests.submit_change_request_to_fineos")
+    @mock.patch("massgov.pfml.api.change_requests.app.db_session")
     def test_successful_call(
-        self, mock_get_issues, mock_get_or_404, auth_token, change_request, client
+        self,
+        mock_db,
+        mock_submit,
+        mock_get_issues,
+        mock_get_or_404,
+        auth_token,
+        change_request,
+        client,
     ):
+        db_mock = mock.MagicMock()
+        mock_db.return_value = db_mock
         mock_get_or_404.return_value = change_request
+        mock_submit.return_value = change_request
         response = client.post(
             "/v1/change-request/5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32/submit",
             headers={"Authorization": f"Bearer {auth_token}"},
         )
-        assert change_request.submitted_time is not None
         assert response.status_code == 200
+        mock_submit.assert_called_once_with(
+            change_request, change_request.claim, db_mock.__enter__.return_value
+        )
 
     @mock.patch("massgov.pfml.api.change_requests.get_or_404")
     @mock.patch("massgov.pfml.api.change_requests.claim_rules.get_change_request_issues")
+    @mock.patch("massgov.pfml.api.change_requests.submit_change_request_to_fineos")
     def test_validation_issues(
-        self, mock_get_issues, mock_get_or_404, auth_token, change_request, client
+        self, mock_submit, mock_get_issues, mock_get_or_404, auth_token, change_request, client
     ):
         mock_get_or_404.return_value = change_request
         mock_get_issues.return_value = [
@@ -162,6 +179,7 @@ class TestSubmitChangeRequest:
         )
         assert response.status_code == 400
         assert response.get_json()["message"] == "Invalid change request"
+        mock_submit.assert_not_called()
 
     def test_missing_claim(self, auth_token, claim, client):
         response = client.post(
@@ -287,3 +305,28 @@ class TestUploadDocument:
         assert response_data["name"] == "passport.png"
         assert response_data["user_id"] == str(consented_user.user_id)
         assert response_data["created_at"] is not None
+
+    def test_document_submitted_at(
+        self, application, change_request, client, consented_user, consented_user_token
+    ):
+        form_data = {"document_type": "Passport", "name": "passport.png", "description": "Passport"}
+        form_data["file"] = (io.BytesIO(b"abcdef"), "test.png")
+
+        application.user = consented_user
+
+        client.post(
+            "/v1/change-request/{}/documents".format(change_request.change_request_id),
+            headers={"Authorization": f"Bearer {consented_user_token}"},
+            content_type="multipart/form-data",
+            data=form_data,
+        )
+
+        response = client.get(
+            "/v1/change-request?fineos_absence_id={}".format(
+                change_request.claim.fineos_absence_id
+            ),
+            headers={"Authorization": f"Bearer {consented_user_token}"},
+        )
+        response_body = response.get_json()
+
+        assert response_body["data"]["change_requests"][0]["documents_submitted_at"] is not None

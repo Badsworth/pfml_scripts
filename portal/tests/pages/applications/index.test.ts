@@ -3,7 +3,7 @@ import ApiResourceCollection from "src/models/ApiResourceCollection";
 import { AppLogic } from "../../../src/hooks/useAppLogic";
 import BenefitsApplication from "src/models/BenefitsApplication";
 import Index from "../../../src/pages/applications/index";
-import dayjs from "dayjs";
+import { createBenefitYearStartEndDates } from "lib/mock-helpers/createMockApplicationSplit";
 import formatDate from "src/utils/formatDate";
 import routes from "../../../src/routes";
 import { screen } from "@testing-library/react";
@@ -50,8 +50,7 @@ describe("Applications", () => {
       splitClaimsAcrossBY: true,
     });
 
-    const startDate = new Date();
-    const endDate = dayjs(startDate).add(1, "year");
+    const { startDate, endDate } = createBenefitYearStartEndDates();
 
     renderPage(Index, {
       pathname: routes.applications.index,
@@ -61,8 +60,8 @@ describe("Applications", () => {
         appLogicHook.benefitYears.getCurrentBenefitYear = jest
           .fn()
           .mockReturnValue({
-            benefit_year_start_date: startDate.toUTCString(),
-            benefit_year_end_date: endDate.toDate().toUTCString(),
+            benefit_year_start_date: startDate,
+            benefit_year_end_date: endDate,
             employee_id: "2a340cf8-6d2a-4f82-a075-73588d003f8f",
             current_benefit_year: true,
           });
@@ -70,8 +69,8 @@ describe("Applications", () => {
     });
 
     const byText = new RegExp(
-      `is ${formatDate(startDate.toISOString()).short()} to ${formatDate(
-        endDate.toISOString()
+      `is ${formatDate(startDate).short()} to ${formatDate(
+        endDate
       ).short()}. Most Massachusetts employees are eligible for up to 26 weeks of combined family and medical leave per benefit year.`
     );
     expect(screen.getByText(byText)).toBeInTheDocument();

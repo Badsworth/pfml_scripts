@@ -13,6 +13,7 @@ on:
         required: true
         type: choice
         options:
+          - admin-portal
           - api
           - portal
           - foobar
@@ -34,6 +35,9 @@ on:
         required: false
         type: string
 
+env: 
+  GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
+
 jobs:
   run-scripted-releases:
     runs-on: ubuntu-latest
@@ -43,6 +47,11 @@ jobs:
           echo "Application: ${{ github.event.inputs.application }}"
           echo "Scripted Release Task: ${{ github.event.inputs.scripted-release-task }}"
           echo "Arguments: ${{ github.event.inputs.arguments }}"
+      
+      - name: Configure git
+        run: |
+          git config --global user.email "pfmldevops@mass.gov"
+          git config --global user.name "PFMLDevOps" 
 
       - name: Checkout PMFL repo
         uses: actions/checkout@v3
@@ -63,12 +72,12 @@ jobs:
         working-directory: ./bin/ci
         run: poetry run scripted-releases -a ${{ github.event.inputs.application }} ${{ github.event.inputs.scripted-release-task }} ${{ github.event.inputs.arguments }}
 
-      # Previous step must finish successfully and only allow api & portal to create release
       # Fetch all tags and create variable capturing the tag created in previous job
-      - name: Fetch tag
+      # Will not run if Application == foobar
+      - name: Fetch latest tag
         id: version
-        if: steps.run-scripted-releases.outcome == 'success' && contains(github.event.inputs.application, 'api') || contains(github.event.inputs.application, 'portal')
-        working-directory: ./${{ github.event.inputs.application }}
+        if: steps.run-scripted-releases.outcome == 'success' && !contains(github.event.inputs.application, 'foobar')
+        working-directory: ./bin/ci
         # The production-ready tag created from "finalize-release" will come before the "rc" tags due to lexicographic ordering. To correct this, the appended "-rc#" is removed
         # Resulting in an accurate, latest tag return
         run: |
@@ -84,12 +93,25 @@ jobs:
           fi
 
       # Create release and notes in GitHub
-      - name: Create release and notes
-        if: steps.version.outcome == 'success'
+      - name: Create release
+        if: steps.version.outcome == 'success' && !contains(github.event.inputs.application, 'admin-portal')
         working-directory: ./${{ github.event.inputs.application }}
-        env:
-        # Use DevOps token so job will have enough permissions to create final release
-          GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
+        # If there's "-rc" in the tag, then label the release as a pre-release 
+        # If the tag is production ready, title the release accordingly i.e: api/v1.2.3 -> API v1.2.3
+        run: |
+          if [[ "${{ steps.version.outputs.tag }}" == *"-rc"* ]]
+          then
+            gh release create ${{ steps.version.outputs.tag }} --notes "$(make release-notes)" --title "${{ steps.version.outputs.tag }}" --prerelease
+          else
+            NAME="${{ steps.version.outputs.tag }}"
+            NAME=$(echo $NAME | sed 's/\// /g' | sed -r 's/([a-z]+)\s/\U&/g')
+            gh release create ${{ steps.version.outputs.tag }} --notes "$(make release-notes)" --title "$NAME"
+          fi
+
+      # Same as above, but for Admin Portal since the application's directory is named "admin" instead of "admin-portal"
+      - name: Create release | Admin Portal
+        if: steps.version.outcome == 'success' && contains(github.event.inputs.application, 'admin-portal')
+        working-directory: ./admin
         # If there's "-rc" in the tag, then label the release as a pre-release 
         # If the tag is production ready, title the release accordingly i.e: api/v1.2.3 -> API v1.2.3
         run: |

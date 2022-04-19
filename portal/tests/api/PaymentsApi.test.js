@@ -33,8 +33,6 @@ describe("PaymentsApi", () => {
           amount: 764.89,
           expected_send_date_end: null,
           expected_send_date_start: null,
-          fineos_c_value: "7326",
-          fineos_i_value: "30885",
           payment_id: "5f28224f-2a73-4737-96bc-0915d14069b2",
           payment_method: "Check",
           period_end_date: "2021-01-15",

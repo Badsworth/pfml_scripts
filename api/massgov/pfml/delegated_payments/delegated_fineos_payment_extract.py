@@ -44,6 +44,8 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVpeiPaymentLine,
     FineosWritebackTransactionStatus,
     LkFineosWritebackTransactionStatus,
+    LkPaymentEventType,
+    PaymentEventType,
     PaymentLine,
 )
 from massgov.pfml.db.models.state import Flow, LkState, State
@@ -79,6 +81,18 @@ OVERPAYMENT_PAYMENT_TRANSACTION_TYPES = [
     PaymentTransactionType.OVERPAYMENT_RECOVERY_CANCELLATION,
     PaymentTransactionType.OVERPAYMENT_ACTUAL_RECOVERY_CANCELLATION,
     PaymentTransactionType.OVERPAYMENT_ADJUSTMENT_CANCELLATION,
+]
+
+PAYMENT_EVENT_TYPES = [
+    PaymentEventType.PAYMENT_OUT,
+    PaymentEventType.PAYMENT_OUT_CANCELLATIONS,
+    PaymentEventType.OVERPAYMENT,
+    PaymentEventType.OVERPAYMENT_ADJUSTMENT,
+    PaymentEventType.OVERPAYMENT_ADJUSTMENT_CANCELLATION,
+    PaymentEventType.OVERPAYMENT_ACTUAL_RECOVERY,
+    PaymentEventType.OVERPAYMENT_RECOVERY_CANCELLATION,
+    PaymentEventType.OVERPAYMENT_ACTUAL_RECOVERY_CANCELLATION,
+    PaymentEventType.OVERPAYMENT_RECOVERY_REVERSE,
 ]
 
 OVERPAYMENT_PAYMENT_TRANSACTION_TYPE_IDS = set(
@@ -474,6 +488,12 @@ class PaymentData:
                 return overpayment_transaction_type
         return None
 
+    def get_payment_event_type(self) -> Optional[LkPaymentEventType]:
+        for payment_event_type in PAYMENT_EVENT_TYPES:
+            if self.event_type == payment_event_type.payment_event_type_description:
+                return payment_event_type
+        return None
+
     def get_relevant_party(self) -> LkPaymentRelevantParty:
         """
         Determine the relevant party for the payment. Payment transaction type
@@ -489,10 +509,7 @@ class PaymentData:
 
         if (
             self.event_reason == AUTO_ALT_EVENT_REASON
-            and (
-                self.event_type == PAYMENT_OUT_TRANSACTION_TYPE
-                or self.event_type == CANCELLATION_PAYMENT_TRANSACTION_TYPE
-            )
+            and self.get_payment_event_type()
             and self.payee_identifier == TAX_IDENTIFICATION_NUMBER
         ):
             return PaymentRelevantParty.REIMBURSED_EMPLOYER

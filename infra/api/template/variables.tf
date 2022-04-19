@@ -363,7 +363,7 @@ variable "use_claim_status_url" {
 variable "enable_employee_endpoints" {
   description = "Specifies if the /employees/* API endpoints are enabled"
   type        = string
-  default     = "0"
+  default     = "1"
 }
 
 variable "limit_ssn_fein_max_attempts" {

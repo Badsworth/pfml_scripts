@@ -60,7 +60,6 @@ import {
 import { DocumentUploadRequest } from "../../src/api";
 import { fineos } from ".";
 import { LeaveReason } from "../../src/generation/Claim";
-import { config } from "./common";
 import { FineosCorrespondanceType, FineosDocumentType } from "./fineos.enums";
 import { convertToTimeZone } from "date-fns-timezone";
 
@@ -1764,6 +1763,12 @@ type PaidLeaveCorrespondenceDocument =
   | "Benefit Amount Change Notice"
   | "Maximum Weekly Benefit Change Notice"
   | "Overpayment Notice - Full Balance Recovery";
+
+type PendingAmount = Record<
+  "netAmount" | "netPaymentAmount" | "processingDate",
+  string
+>;
+
 /**
  * Class representing the Absence Paid Leave Case,
  * Claim should be adjudicated and approved before trying to access this.
@@ -2284,25 +2289,26 @@ class PaidLeavePage {
     return new RecoveryPlanPage();
   }
 
-  getAmountsPending(): Cypress.Chainable<
-    Record<"netAmount" | "netPaymentAmount", string>[]
-  > {
+  getAmountsPending(): Cypress.Chainable<PendingAmount[]> {
     this.onTab("Financials", "Payment History", "Amounts Pending");
     waitForAjaxComplete();
     // net amount
     return cy.get("td[id$='benefit_amount_money0']").then(([...netPymt]) => {
       // net payment amount
       return cy.get("td[id$='payment_amount_money0']").then((netPymtCols) => {
-        return cy.wrap(
-          [...netPymtCols].reduce((acc, netPaymentAmountCol, idx) => {
-            const rowData = {
-              netAmount: netPymt[idx].textContent as string,
-              netPaymentAmount: netPaymentAmountCol.textContent as string,
-            };
-            acc.push(rowData);
-            return acc;
-          }, [] as Record<"netAmount" | "netPaymentAmount", string>[])
-        );
+        return cy.get("td[id$='processing_date0']").then((processingDates) => {
+          return cy.wrap(
+            [...netPymtCols].reduce((acc, netPaymentAmountCol, idx) => {
+              const rowData = {
+                netAmount: netPymt[idx].textContent as string,
+                netPaymentAmount: netPaymentAmountCol.textContent as string,
+                processingDate: processingDates[idx].textContent as string,
+              };
+              acc.push(rowData);
+              return acc;
+            }, [] as PendingAmount[])
+          );
+        });
       });
     });
   }
@@ -2946,23 +2952,19 @@ export class ClaimantPage {
                   .applyStandardWorkWeek();
                 return absenceDetails.nextStep((wrapUp) => {
                   // tax withholdings
-                  if (
-                    config("FINEOS_HAS_UPDATED_WITHHOLDING_SELECTION") ===
-                    "true"
-                  ) {
-                    fineos.waitForAjaxComplete();
-                    if (withholdingPreference) {
-                      cy.get(
-                        "input[type='checkbox'][name$='_somSITFITOptIn_CHECKBOX']"
-                      ).click();
-                    }
-                    // must be selected to proceed
+                  fineos.waitForAjaxComplete();
+                  if (withholdingPreference) {
                     cy.get(
-                      "input[type='checkbox'][name$='_somSITFITVerification_CHECKBOX']"
+                      "input[type='checkbox'][name$='_somSITFITOptIn_CHECKBOX']"
                     ).click();
-
-                    fineos.waitForAjaxComplete();
                   }
+                  // must be selected to proceed
+                  cy.get(
+                    "input[type='checkbox'][name$='_somSITFITVerification_CHECKBOX']"
+                  ).click();
+
+                  fineos.waitForAjaxComplete();
+
                   // Fill military Caregiver description if needed.
                   if (reason === "Military Caregiver")
                     absenceDetails.addMilitaryCaregiverDescription();

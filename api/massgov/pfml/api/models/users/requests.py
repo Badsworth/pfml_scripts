@@ -26,6 +26,9 @@ class UserUpdateRequest(PydanticBaseModel):
     consented_to_data_sharing: Optional[bool]
     mfa_delivery_preference: Optional[str]
     mfa_phone_number: Optional[Phone]
+    first_name: Optional[str]
+    last_name: Optional[str]
+    phone_number: Optional[Phone]
 
 
 class UserConvertEmployerRequest(PydanticBaseModel):

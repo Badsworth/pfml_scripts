@@ -1641,29 +1641,97 @@ const pages: {
     title: "$t(shared.claimsLeaveSpansBenefitYears.title)",
   },
   claimsModifyCancel: {
-    sectionLabel: "Are you sure you want to cancel your leave?",
+    cancelBody:
+      "Once your application has been canceled, you cannot make any changes to your application.",
+    cancelButton: "Yes, cancel my leave",
+    overpaymentsWarning:
+      "If you have received payments for the leave dates you are cancelling, you will need to return the money to the Department. Read more about$t(chars.nbsp)<overpayments-link>overpayments</overpayments-link>.",
+    sectionLabel: "Are you sure you want to cancel your entire PFML leave?",
     title: "$t(shared.claimsModifyTitle)",
   },
   claimsModifyChecklist: {
     backButtonLabel: "$t(shared.backToYourApplicationsLink)",
     title: "Welcome back to your in-progress change request",
   },
-  claimsModifyGetReady: {
+  claimsModifyIndex: {
     backButtonLabel: "$t(shared.backToYourApplicationsLink)",
     button: "Continue",
-    title: "Request a change to your application",
+    heading: "Request a change to your application",
+    instructions:
+      "<p>Make sure you've notified your employer of any changes to your leave. You will also need to upload updated documentation that covers your new leave dates if applicable.</p><p>Your change request activity will be saved automatically. You may exit the application and return to where you left off at a later time. The original, previously submitted, application will not be altered until all steps of the change request are complete and the request is submitted.</p>",
+    onlineBody:
+      "<p>You can make the following changes online:</p><ul><li>Change your leave end date</li><li>Cancel your entire leave</li><li>Transition your medical leave due to pregnancy to bonding leave to care for your child</li></ul>",
+    onlineHeading: "Make your change online",
+    phoneBody:
+      "<p>Apply by calling the Department of Family and Medical Leave Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumber)</contact-center-phone-link> if any of the following are true:</p><ul><li>You need to change your leave start date</li><li>Your work schedule has changed</li><li>You need to change your leave schedule (ie from continuous to reduced leave)</li><li>You need to report additional other leaves or benefits you will be receiving during your leave.</li></ul>",
+    phoneHeading: "Make your change by phone",
+    title: "Only some changes can be made online for now",
   },
   claimsModifyReview: {
-    sectionLabel: "Review and submit your requested change",
+    bondingReviewRowLabel: "Leave to bond with a child",
+    bondingReviewRowValue:
+      "<strong>Start</strong><br/>{{startDate}}<br/><strong>End</strong><br/>{{endDate}}",
+    buttonText_cancellation: "Yes, cancel my leave",
+    buttonText_medicalToBonding: "Submit your request",
+    buttonText_modification: "Submit",
+    buttonText_withdrawal: "Yes, withdraw my application",
+    cancellationAlert:
+      "If you have received payments for the leave dates you are cancelling, you will need to return the money to the Department. Read more about <overpayments-link>overpayments</overpayments-link>.",
+    cancellationBody:
+      "Once your application has been canceled, you cannot make any changes.",
+    cancellationHeading:
+      "Are you sure you want to cancel your entire PFML leave?",
+    medicalReviewRowLabel: "Medical leave due to pregnancy",
+    medicalReviewRowValue:
+      "<strong>Start</strong><br/>{{startDate}}<br/><strong>End</strong><br/>{{endDate}}",
+    medicalToBondingBody1:
+      "Once you review and submit your leave changes, we will send a copy of your change request to your employer.",
+    medicalToBondingBody2_doesNotHaveProof:
+      "Please upload proof of birth within 90 days of submitting this request. The addition of bonding leave to your application will not impact your medical leave payment schedule.",
+    medicalToBondingBody2_hasProof:
+      "The addition of bonding leave to your application will not impact your medical leave payment schedule.",
+    medicalToBondingHeading: "Review and submit your change",
+    modificationBody_endingEarly:
+      "Once you review and submit your leave changes, we will send a copy of your change request to your employer. ",
+    modificationBody_extension:
+      "Once you review and submit your leave changes, we will send a copy of your change request to your employer. They will also get a copy of the certification documents.",
+    modificationHeading: "Review and submit your requested change",
+    modificationReviewRowLabel: "Updated leave dates",
+    modificationReviewRowValue: "{{startDate}} to {{endDate}}",
+    pregnancyReviewRowLabel: "Medical leave due to pregnancy",
+    pregnancyReviewRowValue:
+      "<strong>Start</strong><br/>{{startDate}}<br/><strong>End</strong><br/>{{endDate}}",
     title: "$t(shared.claimsModifyTitle)",
+    withdrawalBody:
+      "Once your application has been withdrawn, you cannot make any changes. You will need to create a new application if you choose take leave.",
+    withdrawalHeading:
+      "Are you sure you want to withdraw your application for leave?",
   },
   claimsModifySuccess: {
+    adjudicationProcess:
+      "<ul> <li>Your employer has 10 business days to provide feedback on your application.</li> <li>We’ll confirm your eligibility and make sure that your documents are valid.</li> <li>We will notify you once we’ve made a decision. You’ll be able to read the details of the decision on this website. Your employer will also get a copy of the decision.</li><li>Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.</li><li>$t(shared.trackStatus)</li></ul>",
+    adjudicationProcessHeading: "What happens next",
     backButtonLabel: "$t(shared.backToYourApplicationsLink)",
+    claimantApplicationId:
+      "Your application ID is <strong>{{absence_id}}</strong>",
     title: "You've submitted your change request",
+    viewStatus: "View status and details for your application",
   },
   claimsModifyType: {
-    sectionLabel: "How do you want to change your application?",
+    choiceHint:
+      "We will ask some questions about your desired change. You may be asked to upload updated documentation. Your employer will be notified of any changes you make.",
+    choiceLabel: "How do you want to change your application?",
+    currentLeaveDatesLabel: "Current leave dates",
+    currentLeaveDatesValue: "{{startDate}} to {{endDate}}",
+    endDateLabel: "Requested last day of leave",
+    modificationChoiceHint: "I need to end my leave early or extend my leave",
+    modificationChoiceLabel: "Change my leave end date",
+    modificationLegend: "Enter your new leave end date",
+    modificationLegendHint:
+      "<p>If you are requesting more time, you will need an updated certification form which covers your new leave dates.</p><p>If you are ending your leave early and have received payments for the leave dates you are canceling, you will need to return the money to the Department. <overpayments-link>Read more about overpayments</overpayments-link>.</p>",
     title: "$t(shared.claimsModifyTitle)",
+    withdrawalChoiceHint: "I no longer need to take this leave through PFML",
+    withdrawalChoiceText: "Cancel my entire leave application",
   },
   claimsName: {
     firstNameLabel: "First name",
@@ -2027,6 +2095,14 @@ const pages: {
       "Estimated {{frequency}} absences per week, each lasting {{duration}} hours.",
     isForCurrentEmployer_false: "From a different employer",
     isForCurrentEmployer_true: "From this employer",
+    leaveDetailsBenefitYearsIntroduction:
+      "<p>Your current <benefit-year-guide-link>benefit year</benefit-year-guide-link> is {{startDate}} to {{endDate}}. After you submit Part 1 of your application, we'll automatically split this application into two, one for each benefit year. You can upload the same supporting documentation for both applications.",
+    leaveDetailsBenefitYearsSixtyYearsAndBelow:
+      "<p>Your current <benefit-year-guide-link>benefit year</benefit-year-guide-link> is {{startDate}} to {{endDate}}. After you submit Part 1 of your application, we'll automatically split this application into two, one for each benefit year. You can upload the same supporting documentation for both applications.</p><ul><li><strong>Current benefit year:</strong> leave dates from 2/14/2022 to 2/26/2022</li><li><strong>New benefit year:</strong> leave dates from 2/27/2022 to 4/19/2022</li></ul><p>We’ll review each application separately. This means that:</p><ul><li>The Department's determination for one application may be different from its determination for the other.</li><li> The Department will calculate your weekly benefit amount for each application separately. You may receive different payment amounts for each application. Learn more about how PFML weekly benefit amounts are calculated.</li><li>You'll have two 7-day waiting periods, one at the start of each period of your leave. Learn more about the <benefit-year-guide-link>7-day waiting period.</benefit-year-guide-link></li></ul>",
+    leaveDetailsCurrentBenefitYearsDates:
+      "<strong>Current benefit year:</strong> leave dates from {{startDate}} to {{endDate}}",
+    leaveDetailsNewBenefitYearsDates:
+      "<strong>New benefit year:</strong> leave dates from {{startDate}} to {{endDate}}",
     leaveDetailsSectionHeading: "$t(shared.leaveDetailsStepTitle)",
     leavePeriodLabel_continuous: "$t(shared.claimDurationTypeContinuous)",
     leavePeriodLabel_intermittent: "$t(shared.claimDurationTypeIntermittent)",
@@ -2299,6 +2375,7 @@ const pages: {
       "<ul><li>Your employer has 10 business days to provide feedback on your application.</li> <li>We’ll confirm your eligibility and make sure that your documents are valid.</li> <li>We will notify you once we’ve made a decision. You’ll be able to read the details of the decision on this website. Your employer will also get a copy of the decision.</li><li>Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.</li><li>If you need to end your leave early, you must call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</li><li>$t(shared.trackStatus)</li><li>$t(shared.viewPostSubmissionVideo)</li></ul>",
     adjudicationProcess_medicalPregnantFuture:
       "<ul><li>Your employer has 10 days to provide feedback on your application.</li><li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li><li>If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.</li><li>$t(shared.trackStatus)</li><li>$t(shared.viewPostSubmissionVideo)</li></ul>",
+    backButtonLabel: "$t(shared.backToYourApplicationsLink)",
     claimantApplicationId:
       "Your application ID is <strong>{{absence_id}}</strong>",
     exitLink: "View your application",
@@ -2942,6 +3019,12 @@ const components: {
       "$t(shared.claimsLeaveSpansBenefitYears.newBenefitYearLeaveDates)",
     secondCannotBeSubmittedCurrent:
       "$t(shared.claimsLeaveSpansBenefitYears.secondCannotBeSubmittedCurrent)",
+    secondCannotBeSubmittedCurrentFinalContentPart1:
+      "Your in-progress application will be viewable by our Contact Center staff. If you need to make edits to Part 1, you’ll need to call our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>",
+    secondCannotBeSubmittedCurrentFinalContentPart2:
+      "We’ll also notify your employer that you’ve started an application for paid family and medical leave.",
+    secondCannotBeSubmittedCurrentFinalContentPart3:
+      "Next, you’ll be able to work on Parts 2 and 3, and submit your application.",
     secondCannotBeSubmittedNew:
       "$t(shared.claimsLeaveSpansBenefitYears.secondCannotBeSubmittedNew)",
   },
@@ -3375,6 +3458,9 @@ const components: {
   },
   withBenefitsApplications: {
     loadingLabel: "Loading applications",
+  },
+  withChangeRequests: {
+    loadingLabel: "Loading requests",
   },
   withClaimDocuments: {
     loadingLabel: "$t(shared.loadingDocumentsLabel)",

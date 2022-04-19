@@ -14,13 +14,17 @@ export const NewApplication = (props: PageProps) => {
    * so we want to preserve the URL and redirect to the new destination.
    */
   useEffect(() => {
-    props.appLogic.portalFlow.goToPageFor(
-      "REDIRECT",
-      {},
-      { absence_id: props.query.absence_id },
-      { redirect: true }
-    );
+    // The query is empty on initial page load, so we want to only redirect when we have the necessary params
+    if (props.query?.absence_id) {
+      props.appLogic.portalFlow.goToPageFor(
+        "REDIRECT",
+        {},
+        { absence_id: props.query.absence_id },
+        { redirect: true }
+      );
+    }
   });
+
   return null;
 };
 

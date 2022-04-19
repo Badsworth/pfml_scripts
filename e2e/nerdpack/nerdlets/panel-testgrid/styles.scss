@@ -98,59 +98,6 @@ table.testGridTable {
     }
   }
 
-  .runProgress {
-    background: $PROGRESS_DEFAULT_FILL;
-    width: 100%;
-    position: relative;
-    border-radius: 15px;
-    height: 30px;
-    min-width: 50px;
-    margin: 3px;
-
-    &.fail {
-      background: $PROGRESS_ERROR_FILL;
-    }
-
-    &.clickable {
-      cursor: pointer;
-
-      &:hover {
-        outline: 1px dotted #000;
-        outline-offset: 4px;
-      }
-    }
-
-    .progress {
-      left: 0;
-      position: absolute;
-      height: 30px;
-      border-radius: 15px;
-      text-align: center;
-      color: #000 !important;
-      line-height: 30px !important;
-      font-weight: bold;
-
-      &.fail {
-        @include COLOR_FILTER();
-        background: $COLOR_FAIL;
-      }
-
-      &.skip {
-        background: $COLOR_WARN;
-      }
-
-      &.flake {
-        @include COLOR_FILTER();
-        background: $COLOR_FLAKE;
-      }
-
-      &.pass {
-        @include COLOR_FILTER();
-        background: $COLOR_PASS;
-      }
-    }
-  }
-
   table.runDetails {
     border-bottom: 2px #ccc solid;
     margin-bottom: 5px;

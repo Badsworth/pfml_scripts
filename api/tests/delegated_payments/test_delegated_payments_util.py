@@ -805,30 +805,30 @@ def test_find_existing_address_pair(test_db_session, initialize_factories_sessio
     assert not find_existing_address_pair(employee2, experian_lookup_address, test_db_session)
 
 
-def test_find_existing_eft():
-    eft1 = PubEftFactory.build(prenote_state_id=PrenoteState.PENDING_PRE_PUB.prenote_state_id)
+def test_find_existing_eft(initialize_factories_session):
+    eft1 = PubEftFactory.create(prenote_state_id=PrenoteState.PENDING_PRE_PUB.prenote_state_id)
 
-    employee = EmployeeFactory.build()
+    employee = EmployeeFactory.create()
 
     # Employee has no EFT info
     assert len(employee.pub_efts.all()) == 0
     assert not find_existing_eft(employee, eft1)
 
     # Add a few associated EFT objects
-    EmployeePubEftPairFactory.build(employee=employee)
-    EmployeePubEftPairFactory.build(employee=employee)
+    EmployeePubEftPairFactory.create(employee=employee)
+    EmployeePubEftPairFactory.create(employee=employee)
     assert len(employee.pub_efts.all()) == 2
     assert not find_existing_eft(employee, eft1)
 
     # Add another EFT info with the same account info
     # but currently in a different state
-    EmployeePubEftPairFactory.build(
+    EmployeePubEftPairFactory.create(
         employee=employee,
-        pub_eft=PubEftFactory.build(
+        pub_eft=PubEftFactory.create(
             routing_nbr=eft1.routing_nbr,
             account_nbr=eft1.account_nbr,
             bank_account_type_id=eft1.bank_account_type_id,
-            prenote_state_id=PrenoteState.REJECTED,
+            prenote_state_id=PrenoteState.REJECTED.prenote_state_id,
         ),
     )
     assert len(employee.pub_efts.all()) == 3

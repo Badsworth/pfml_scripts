@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import ConcurrentLeave from "../../../src/features/employer-review/ConcurrentLeave";
 import ConcurrentLeaveModel from "../../../src/models/ConcurrentLeave";
+import { MockEmployerClaimBuilder } from "lib/mock-helpers/mock-model-builder";
 import React from "react";
-import { createMockEmployerClaim } from "../../test-utils";
 
 const CONCURRENT_LEAVE = new ConcurrentLeaveModel({
   is_for_current_employer: true,
@@ -14,7 +14,7 @@ const defaultProps = {
   addedConcurrentLeave: null,
   errors: [],
   concurrentLeave: CONCURRENT_LEAVE,
-  claim: createMockEmployerClaim("completed"),
+  claim: new MockEmployerClaimBuilder().completed().create(),
   onAdd: jest.fn(),
   onChange: jest.fn(),
   onRemove: jest.fn(),
@@ -84,7 +84,9 @@ describe("ConcurrentLeave", () => {
   it("displays correct conditional text for reduced concurrent leave", () => {
     renderComponent({
       addedConcurrentLeave: CONCURRENT_LEAVE,
-      claim: createMockEmployerClaim("reducedScheduleAbsencePeriod"),
+      claim: new MockEmployerClaimBuilder()
+        .reducedScheduleAbsencePeriod()
+        .create(),
       concurrentLeave: null,
     });
 
@@ -98,7 +100,7 @@ describe("ConcurrentLeave", () => {
   it("displays correct conditional text for continuous concurrent leave", () => {
     renderComponent({
       addedConcurrentLeave: CONCURRENT_LEAVE,
-      claim: createMockEmployerClaim("continuousAbsencePeriod"),
+      claim: new MockEmployerClaimBuilder().continuousAbsencePeriod().create(),
       concurrentLeave: null,
     });
 
@@ -112,7 +114,9 @@ describe("ConcurrentLeave", () => {
   it("displays correct conditional text for intermittent concurrent leave", () => {
     renderComponent({
       addedConcurrentLeave: CONCURRENT_LEAVE,
-      claim: createMockEmployerClaim("intermittent"),
+      claim: new MockEmployerClaimBuilder()
+        .intermittentAbsencePeriod()
+        .create(),
       concurrentLeave: null,
     });
     expect(

@@ -72,7 +72,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Flag"
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Flag"
         "503":
           $ref: "#/components/responses/ServiceUnavailableError"
   /users:
@@ -442,7 +444,7 @@ paths:
           schema:
             type: string
             enum: ["approved", "denied", "withdrawn", "pending", "cancelled"]
-          description: > 
+          description: >
             request decision used in filtering, request_decision is a status associated with an absence_period
           required: false
       responses:
@@ -588,7 +590,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "404":
-          $ref: "#/components/responses/NotFound"  
+          $ref: "#/components/responses/NotFound"
     patch:
       summary: Update an in-progress ChangeRequest
       operationId: massgov.pfml.api.change_requests.update_change_request
@@ -619,8 +621,8 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "404":
-          $ref: "#/components/responses/NotFound"  
-                              
+          $ref: "#/components/responses/NotFound"
+
   /change-request/{change_request_id}/submit:
     post:
       summary: Submit a completed change request to FINEOS
@@ -722,7 +724,7 @@ paths:
                   - properties:
                       data:
                         $ref: '#/components/schemas/PaymentsResponse'
-  
+
   /employers/claims/{fineos_absence_id}/documents/{fineos_document_id}:
     get:
       summary: Retrieve a FINEOS documents for a specified absence ID and document ID
@@ -1430,7 +1432,7 @@ paths:
                     current_benefit_year: false
       requestBody:
         $ref: '#/components/requestBodies/BenefitYearsSearchRequest'
-  
+
   /holidays/search:
     post:
       security:
@@ -1534,7 +1536,7 @@ paths:
       responses:
         "200":
           description: Retrieved logout url
-          content: 
+          content:
             application/json:
               schema:
                 $ref: "#/components/schemas/AdminLogoutResponse"
@@ -2311,6 +2313,14 @@ components:
           example: "SMS"
         mfa_phone_number:
           $ref: "#/components/schemas/Phone"
+        first_name: 
+          type: string
+          nullable: true
+        last_name: 
+          type: string
+          nullable: true
+        phone_number:
+          $ref: "#/components/schemas/Phone"
 
     ClaimSearchRequest:
       type: object
@@ -3072,11 +3082,11 @@ components:
       properties:
         crossed_benefit_year:
           $ref: '#/components/schemas/BenefitYearResponse'
-        application_dates_in_benefit_year: 
+        application_dates_in_benefit_year:
           $ref: '#/components/schemas/StartEndDates'
-        application_dates_outside_benefit_year: 
+        application_dates_outside_benefit_year:
           $ref: '#/components/schemas/StartEndDates'
-        application_outside_benefit_year_submittable_on: 
+        application_outside_benefit_year_submittable_on:
           type: string
           format: date
           example: "2020-11-02"
@@ -3084,15 +3094,15 @@ components:
     StartEndDates:
       type: object
       properties:
-        start_date: 
+        start_date:
           type: string
           format: date
           example: "2021-01-01"
-        end_date: 
+        end_date:
           type: string
           format: date
           example: "2021-01-12"
-    
+
     DocumentUploadRequest:
       type: object
       properties:
@@ -3397,7 +3407,49 @@ components:
         transaction_date_could_change:
           type: boolean
           example: false
-  
+        payment_details:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaymentDetailsResponse"
+
+    PaymentDetailsResponse:
+      type: object
+      properties:
+        payment_detail_id:
+          type: string
+          format: uuid
+          example: "fabd09ed-0ea9-4091-843e-2e37d2c61482"
+        period_start_date:
+          type: string
+          format: date
+          example: "2022-05-01"
+        period_end_date:
+          type: string
+          format: date
+          example: "2022-06-01"
+        amount:
+          type: number
+          example: 750.25
+        payment_lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaymentLineResponse"
+
+    PaymentLineResponse:
+      type: object
+      properties:
+        payment_line_id:
+          type: string
+          format: uuid
+          example: "fabd09ed-0ea9-4091-843e-2e37d2c61482"
+        amount:
+          type: number
+          example: 750.25
+        line_type:
+          type: string
+          example: "Auto Gross Entitlement"
+          description: "A description of why this line was added or subtracted to the overall payment"
+
     ChangeRequestsResponse:
       type: array
       items:
@@ -4398,6 +4450,9 @@ components:
             - Cell
             - Fax
             - Phone
+        extension:
+          type: string
+          nullable: true
 
     MaskedPhone:
       type: object
@@ -4468,7 +4523,7 @@ components:
           minItems: 2
           maxItems: 2
           example: ['2020-12-12','2021-01-10']
-    
+
     BenefitYearsSearchRequest:
       type: object
       properties:
@@ -4509,7 +4564,7 @@ components:
         request_decision:
           type: string
           enum: ["approved", "denied", "withdrawn", "pending", "cancelled"]
-          description: > 
+          description: >
             request decision used in filtering, request_decision is a status associated with an absence_period
 
     EmployeeSearchRequestTerms:
@@ -4592,7 +4647,7 @@ components:
             - Modification
             - Withdrawal
             - Medical To Bonding Transition
-        start_date: 
+        start_date:
           $ref: "#/components/schemas/Date"
           nullable: true
         end_date:
@@ -4609,7 +4664,7 @@ components:
             - Withdrawal
             - Medical To Bonding Transition
           nullable: true
-        start_date: 
+        start_date:
           $ref: "#/components/schemas/Date"
           nullable: true
         end_date:
@@ -4619,6 +4674,8 @@ components:
     ChangeRequestResponse:
       type: object
       properties:
+        change_request_id:
+          type: string
         fineos_absence_id:
           type: string
         change_request_type:
@@ -4627,13 +4684,18 @@ components:
             - Modification
             - Withdrawal
             - Medical To Bonding Transition
-        start_date: 
+        start_date:
           $ref: "#/components/schemas/Date"
           nullable: true
         end_date:
           $ref: "#/components/schemas/Date"
           nullable: true
         submitted_time:
+          type: string
+          format: date-time
+          example: "2020-06-26T01:02:03.967736+00:00"
+          nullable: true
+        documents_submitted_at:
           type: string
           format: date-time
           example: "2020-06-26T01:02:03.967736+00:00"

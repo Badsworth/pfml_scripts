@@ -120,12 +120,14 @@ import { config } from "../../actions/common";
             claimPage.tasks((task) => {
               task.close("Employer Reimbursement Adjustment");
             });
+            // Force in the click at the end of the chainable is causing
+            // issue in cps-preview and stage environments.
             cy.get("[id^=MENUBAR\\.CaseSubjectMenu]")
               .findByText("Correspondence")
               .click({ force: true })
               .parents("li")
               .findByText("Employer Reimbursement Approval Notice")
-              .click({ force: true });
+              .click({ force: config("HAS_APRIL_UPGRADE") === "true" });
             fineos.clickBottomWidgetButton("Next");
             claimPage.documents((document) => {
               document.setDocumentComplete(
@@ -191,34 +193,18 @@ import { config } from "../../actions/common";
             throw new Error("expected_weekly_payment must be defined");
           }
           claimPage.paidLeave((paidLeave) => {
-            if (config("HAS_FEB_RELEASE") === "true") {
-              paidLeave.assertAmountsPending([
-                {
-                  net_payment_amount:
-                    parseFloat(expected_weekly_payment) -
-                    (claim.metadata?.employerReAmount as number),
-                  paymentInstances: 2,
-                },
-                {
-                  net_payment_amount: claim.metadata
-                    ?.employerReAmount as number,
-                  paymentInstances: 2,
-                },
-              ]);
-            } else {
-              paidLeave.assertAmountsPending([
-                {
-                  net_payment_amount:
-                    parseFloat(expected_weekly_payment) -
-                    (claim.metadata?.employerReAmount as number),
-                },
-                {
-                  net_payment_amount: claim.metadata
-                    ?.employerReAmount as number,
-                  paymentInstances: 2,
-                },
-              ]);
-            }
+            paidLeave.assertAmountsPending([
+              {
+                net_payment_amount:
+                  parseFloat(expected_weekly_payment) -
+                  (claim.metadata?.employerReAmount as number),
+                paymentInstances: 2,
+              },
+              {
+                net_payment_amount: claim.metadata?.employerReAmount as number,
+                paymentInstances: 2,
+              },
+            ]);
           });
         });
       });

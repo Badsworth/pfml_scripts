@@ -3,6 +3,7 @@ import useApplicationImportsLogic from "./useApplicationImportsLogic";
 import useAuthLogic from "./useAuthLogic";
 import useBenefitYearsLogic from "./useBenefitYearsLogic";
 import useBenefitsApplicationsLogic from "./useBenefitsApplicationsLogic";
+import useChangeRequestsLogic from "./useChangeRequestsLogic";
 import useClaimsLogic from "./useClaimsLogic";
 import useDocumentsLogic from "./useDocumentsLogic";
 import useEmployersLogic from "./useEmployersLogic";
@@ -68,6 +69,11 @@ const useAppLogic = () => {
     errorsLogic,
   });
 
+  const changeRequests = useChangeRequestsLogic({
+    errorsLogic,
+    portalFlow,
+  });
+
   return {
     // `_errorsLogic` should not be used except for testing
     _errorsLogic: errorsLogic,
@@ -76,6 +82,7 @@ const useAppLogic = () => {
     benefitYears,
     benefitsApplications,
     catchError: errorsLogic.catchError,
+    changeRequests,
     claims,
     // TODO (CP-886): remove once all API calls are behind appLogic
     clearErrors: errorsLogic.clearErrors,

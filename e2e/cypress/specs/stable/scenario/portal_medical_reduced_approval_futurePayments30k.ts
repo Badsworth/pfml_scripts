@@ -50,39 +50,46 @@ describe("Submit medical application via the web portal: Adjudication Approval &
       });
     });
 
-  const approval = it(
-    "CSR rep will approve reduced medical application",
-    { retries: 0 },
-    () => {
+  const approval =
+    it("CSR rep will approve reduced medical application", () => {
       cy.dependsOnPreviousPass([erApproval]);
       fineos.before();
       cy.unstash<DehydratedClaim>("claim").then((claim) => {
         cy.unstash<Submission>("submission").then((submission) => {
-          const claimPage = fineosPages.ClaimPage.visit(
-            submission.fineos_absence_id
-          );
-          claimPage.adjudicate((adjudication) => {
-            adjudication.evidence((evidence) => {
-              // Receive all of the claim documentation.
-              claim.documents.forEach((document) => {
-                evidence.receive(document.document_type);
+          cy.tryCount().then((tryCount) => {
+            const claimPage = fineosPages.ClaimPage.visit(
+              submission.fineos_absence_id
+            );
+            if (tryCount > 0) {
+              fineos.assertClaimStatus("Approved");
+              claimPage.triggerNotice("Designation Notice");
+              return;
+            }
+            claimPage.adjudicate((adjudication) => {
+              adjudication.evidence((evidence) => {
+                // Receive all of the claim documentation.
+                claim.documents.forEach((document) => {
+                  evidence.receive(document.document_type);
+                });
               });
+              adjudication.certificationPeriods((cert) => cert.prefill());
+              adjudication.acceptLeavePlan();
             });
-            adjudication.certificationPeriods((cert) => cert.prefill());
-            adjudication.acceptLeavePlan();
+            claimPage.shouldHaveStatus("Applicability", "Applicable");
+            claimPage.shouldHaveStatus("Eligibility", "Met");
+            claimPage.shouldHaveStatus("Evidence", "Satisfied");
+            claimPage.shouldHaveStatus("Availability", "Time Available");
+            claimPage.shouldHaveStatus("Restriction", "Passed");
+            claimPage.shouldHaveStatus("PlanDecision", "Accepted");
+            claimPage.approve(
+              "Approved",
+              config("HAS_APRIL_UPGRADE") === "true"
+            );
+            claimPage.triggerNotice("Designation Notice");
           });
-          claimPage.shouldHaveStatus("Applicability", "Applicable");
-          claimPage.shouldHaveStatus("Eligibility", "Met");
-          claimPage.shouldHaveStatus("Evidence", "Satisfied");
-          claimPage.shouldHaveStatus("Availability", "Time Available");
-          claimPage.shouldHaveStatus("Restriction", "Passed");
-          claimPage.shouldHaveStatus("PlanDecision", "Accepted");
-          claimPage.approve("Approved", config("HAS_APRIL_UPGRADE") === "true");
-          claimPage.triggerNotice("Designation Notice");
         });
       });
-    }
-  );
+    });
 
   it(
     "Should be able to confirm the weekly payment amount for a reduced schedule",

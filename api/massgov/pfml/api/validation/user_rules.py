@@ -1,6 +1,9 @@
-from typing import List, Optional
+from typing import List, Optional, Union
+
+from werkzeug.exceptions import Forbidden
 
 import massgov.pfml.db as db
+from massgov.pfml.api.models.common import Phone
 from massgov.pfml.api.models.users.requests import UserCreateRequest, UserUpdateRequest
 from massgov.pfml.api.util.deepgetattr import deepgetattr
 from massgov.pfml.api.validation.exceptions import IssueRule, IssueType, ValidationErrorDetail
@@ -127,7 +130,9 @@ def get_users_post_employer_issues(employer: Optional[Employer]) -> List[Validat
     return issues
 
 
-def get_users_patch_issues(user_patch_request: UserUpdateRequest) -> List[ValidationErrorDetail]:
+def get_users_patch_issues(
+    user_patch_request: UserUpdateRequest, user: Optional[User] = None
+) -> List[ValidationErrorDetail]:
     """Validate that the patch request has all required fields"""
     issues = []
 
@@ -144,5 +149,34 @@ def get_users_patch_issues(user_patch_request: UserUpdateRequest) -> List[Valida
                         ),
                     )
                 )
+    if (
+        user_patch_request.first_name
+        or user_patch_request.last_name
+        or user_patch_request.phone_number
+    ):
+        ## Currently we only update these fields for Employer Users
+        if user and user.is_worker_user:
+            raise Forbidden()
 
+        ## Each field is required
+        required_fields = ["first_name", "last_name", "phone_number"]
+        for field in required_fields:
+            if _field_is_empty(deepgetattr(user_patch_request, field)):
+                issues.append(
+                    ValidationErrorDetail(
+                        field=field,
+                        type=IssueType.required,
+                        message="{} is required".format(field),
+                    )
+                )
     return issues
+
+
+def _field_is_empty(required_field: Union[Phone, str, None]) -> bool:
+    if required_field is None:
+        return True
+    elif isinstance(required_field, str) and len(required_field) < 1:
+        return True
+    elif isinstance(required_field, Phone) and required_field.phone_number is None:
+        return True
+    return False
